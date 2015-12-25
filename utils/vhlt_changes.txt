@@ -1,0 +1,13 @@
+all the new versions on VHLT must be updated by Xash-specified features. See below:
+
+1. disable HLBSP_MERGECLIPNODE (not compiled by MSVC 6.0)
+2. disable HLBSP_BRINKHACK (not merged for BSP31)
+3. disable HLBSP_WARNMIXEDCONTENTS (just not needs)
+4. disable ZHLT_CONSOLE (not compatible with QuArK console out)
+5. replace all fprintf(stdout with normal printf (not compatible with QuArK console out)
+6. add support for Xash entity func_light (qscg.cpp->SetLightStyles)
+7. expand limit for MAXEDGES and MAXPOINTS up to 256 (bsp5.h)
+8. get support for ZHLT_NEW_BSP_VERSION
+9. enable ZHLT_XASH
+
+	Thats all!

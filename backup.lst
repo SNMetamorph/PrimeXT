@@ -1,0 +1,35 @@
+//=======================================================================
+//			Copyright XashXT Group 2007 ©
+//			list with backup directories
+//=======================================================================
+
+// global stuff
+xash_main.dsw
+debug.bat
+backup.lst
+backup.bat
+release.bat
+
+client\
+client\render\
+common\
+server\
+server\monsters\
+server\physics\
+game_shared\
+game_launch\
+phys_shared\
+phys_shared\cloth\
+phys_shared\fluids\
+phys_shared\softbody\
+phys_shared\win\
+engine\
+utils\
+utils\common\
+utils\hlbsp\
+utils\hlcsg\
+utils\hlrad\
+utils\hlvis\
+utils\template\
+utils\studiomdl\
+utils\decal2tga\
