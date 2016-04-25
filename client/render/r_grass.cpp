@@ -123,7 +123,10 @@ void R_AddGrass( grasspinfo_t *ppinfo )
 	for( i = 0; i < worldmodel->numtextures; i++ )
 	{
 		if( !Q_stricmp( ppinfo->stex, worldmodel->textures[i]->name ))
+		{
 			stex = worldmodel->textures[i];
+			break;
+		}
 	}
 
 	if( !stex ) 

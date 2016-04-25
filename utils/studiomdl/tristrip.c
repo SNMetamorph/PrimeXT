@@ -297,8 +297,8 @@ int BuildTris (s_trianglevert_t (*x)[3], s_mesh_t *y, byte **ppdata )
 			}
 			else
 			{
-				commands[numcommands++] = floatToHalf( tri->u );
-				commands[numcommands++] = floatToHalf( tri->v );
+				commands[numcommands++] = FloatToHalf( tri->u );
+				commands[numcommands++] = FloatToHalf( tri->v );
 			}
 		}
 		// printf("%d ", bestlen - 2 );

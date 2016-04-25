@@ -37,6 +37,7 @@ EXTERN	int			split_textures;
 EXTERN	int			clip_texcoords;
 EXTERN  qboolean		keep_all_bones;
 EXTERN  qboolean		store_uv_coords;
+EXTERN  qboolean		allow_tileing;
 
 #define ROLL	2
 #define PITCH	0

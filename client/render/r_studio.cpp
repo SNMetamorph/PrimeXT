@@ -639,6 +639,10 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	if( m_fDoInterp && m_clTime >= m_pCurrentEntity->curstate.animtime )
 	{
 		dfdt = (m_clTime - m_pCurrentEntity->curstate.animtime) * m_pCurrentEntity->curstate.framerate * pseqdesc->fps;
+#if 0
+		if( m_pCurrentEntity->curstate.animtime != 0 )
+			ALERT( at_console, "dfdt %g, animtime %g\n", dfdt, m_clTime - m_pCurrentEntity->curstate.animtime );
+#endif
 	}
 
 	if( pseqdesc->numframes > 1)
@@ -3114,8 +3118,8 @@ void CStudioModelRenderer::StudioDrawMesh( short *ptricmds, float s, float t, in
 				}
 				else if( FBitSet( nFaceFlags, STUDIO_NF_UV_COORDS ))
 				{
-					uv.x = m_chrome[ptricmds[1]][0] * (1.0f / 32768.0f);
-					uv.y = m_chrome[ptricmds[1]][1] * (1.0f / 32768.0f);
+					uv.x = HalfToFloat( ptricmds[2] );
+					uv.y = HalfToFloat( ptricmds[3] );
 				}
 				else
 				{

@@ -71,8 +71,8 @@ void AngleQuaternion( const vec3_t angles, vec4_t quaternion );
 void QuaternionMatrix( const vec4_t quaternion, float (*matrix)[4] );
 void QuaternionSlerp( const vec4_t p, vec4_t q, float t, vec4_t qt );
 
-float halfToFloat( const unsigned short in );
-unsigned short floatToHalf( const float in );
+unsigned short FloatToHalf( float v );
+float HalfToFloat( unsigned short h );
 
 #ifdef __cplusplus
 }

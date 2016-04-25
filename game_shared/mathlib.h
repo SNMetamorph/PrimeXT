@@ -100,6 +100,9 @@ int BoxOnPlaneSide( const Vector emins, const Vector emaxs, const struct mplane_
 #define PlaneDist(point,plane) ((plane)->type < 3 ? (point)[(plane)->type] : DotProduct((point), (plane)->normal))
 #define PlaneDiff(point,plane) (((plane)->type < 3 ? (point)[(plane)->type] : DotProduct((point), (plane)->normal)) - (plane)->dist)
 
+unsigned short FloatToHalf( float v );
+float HalfToFloat( unsigned short h );
+
 // fast math for non-class vestors
 #define DotProductFast( x,y )	((x)[0]*(y)[0]+(x)[1]*(y)[1]+(x)[2]*(y)[2])
 #define VectorMAFast( a, scale, b, c ) ((c)[0] = (a)[0] + (scale) * (b)[0],(c)[1] = (a)[1] + (scale) * (b)[1],(c)[2] = (a)[2] + (scale) * (b)[2])

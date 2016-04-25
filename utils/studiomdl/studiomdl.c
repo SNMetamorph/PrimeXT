@@ -1242,14 +1242,17 @@ void TextureCoordRanges( s_mesh_t *pmesh, s_texture_t *ptexture  )
 	}
 	else if( store_uv_coords )
 	{
-		for (i=0 ; i<pmesh->numtris ; i++) 
+		if( !allow_tileing )
 		{
-			for (j = 0; j < 3; j++) 
+			for (i=0 ; i<pmesh->numtris ; i++) 
 			{
-				if (pmesh->triangle[i][j].u < 0) pmesh->triangle[i][j].u = 0.0;
-				if (pmesh->triangle[i][j].u > 1) pmesh->triangle[i][j].u = 1.0f;
-				if (pmesh->triangle[i][j].v < 0) pmesh->triangle[i][j].v = 0.0f;
-				if (pmesh->triangle[i][j].v > 1) pmesh->triangle[i][j].v = 1.0f;
+				for (j = 0; j < 3; j++) 
+				{
+					if (pmesh->triangle[i][j].u < 0) pmesh->triangle[i][j].u = 0.0;
+					if (pmesh->triangle[i][j].u > 1) pmesh->triangle[i][j].u = 1.0f;
+					if (pmesh->triangle[i][j].v < 0) pmesh->triangle[i][j].v = 0.0f;
+					if (pmesh->triangle[i][j].v > 1) pmesh->triangle[i][j].v = 1.0f;
+				}
 			}
 		}
 
@@ -3087,6 +3090,11 @@ void ParseScript (void)
 		}
 		else if (!strcmp (token, "$fixedcoords"))
 		{
+			store_uv_coords = 1;
+		}
+		else if (!strcmp (token, "$freecords"))
+		{
+			allow_tileing =  1;
 			store_uv_coords = 1;
 		}
 		else if (!strcmp (token, "$renamebone"))

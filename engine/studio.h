@@ -318,8 +318,7 @@ typedef struct
 typedef struct mstudiotex_s
 {
 	char		name[64];
-	unsigned short	flags;
-	unsigned short	shader;		// lower 16 bit is a user area
+	unsigned int	flags;
 	int		width;
 	int		height;
 	int		index;
