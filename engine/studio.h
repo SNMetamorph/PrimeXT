@@ -31,8 +31,8 @@ Studio models are position independent, so the cache manager can move them.
 #define IDSEQGRPHEADER	(('Q'<<24)+('S'<<16)+('D'<<8)+'I') // little-endian "IDSQ"
 
 // studio limits
-#define MAXSTUDIOTRIANGLES		32768	// max triangles per model
-#define MAXSTUDIOVERTS		4096	// max vertices per submodel
+#define MAXSTUDIOTRIANGLES		65536	// max triangles per model
+#define MAXSTUDIOVERTS		32768	// max vertices per submodel
 #define MAXSTUDIOSEQUENCES		256	// total animation sequences
 #define MAXSTUDIOSKINS		128	// total textures
 #define MAXSTUDIOSRCBONES		512	// bones allowed at source movement

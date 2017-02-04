@@ -1533,6 +1533,12 @@ BOOL HUD_SpeedsMessage( char *out, size_t size )
 	return true;
 }
 
+void HUD_ProcessEntData( qboolean allocate )
+{
+	if( allocate ) Mod_PrepareModelInstances();
+	else Mod_ThrowModelInstances();
+}
+
 //
 // Xash3D render interface
 //
@@ -1547,6 +1553,8 @@ static render_interface_t gRenderInterface =
 	R_ClearStudioDecals,
 	HUD_SpeedsMessage,
 	HUD_DrawCubemapView,
+	NULL,
+	HUD_ProcessEntData,
 };
 
 int HUD_GetRenderInterface( int version, render_api_t *renderfuncs, render_interface_t *callback )
@@ -1558,6 +1566,9 @@ int HUD_GetRenderInterface( int version, render_api_t *renderfuncs, render_inter
 
 	size_t iImportSize = sizeof( render_interface_t );
 	size_t iExportSize = sizeof( render_api_t );
+
+	if( g_iXashEngineBuildNumber <= 3500 )
+		iImportSize -= 4; // skip the HUD_ProcessEntData
 
 	// copy new physics interface
 	memcpy( &gRenderfuncs, renderfuncs, iExportSize );

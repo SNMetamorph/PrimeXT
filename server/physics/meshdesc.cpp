@@ -118,7 +118,7 @@ bool CMeshDesc :: InitMeshBuild( const char *debug_name, int numTriangles )
 		return false;
 
 	// perfomance warning
-	if( numTriangles >= 5000 )
+	if( numTriangles >= 16384 )
 		ALERT( at_warning, "%s have too many triangles (%i)\n", debug_name, numTriangles );
 
 	if( numTriangles >= 256 )

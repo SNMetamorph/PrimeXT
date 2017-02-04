@@ -622,6 +622,57 @@ void HUD_StudioEvent( const struct mstudioevent_s *event, const struct cl_entity
 }
 
 /*
+=================
+Mod_PrepareModelInstances
+
+throw all the instances before
+loading the new map
+=================
+*/
+void Mod_PrepareModelInstances( void )
+{
+	// invalidate model handles
+	for( int i = 1; i < RENDER_GET_PARM( PARM_MAX_ENTITIES, 0 ); i++ )
+	{
+		cl_entity_t *e = GET_ENTITY( i );
+		if( !e ) break;
+		e->modelhandle = INVALID_HANDLE;
+	}
+
+	GET_VIEWMODEL()->modelhandle = INVALID_HANDLE;
+}
+
+/*
+=================
+Mod_ThrowModelInstances
+
+throw all the instances before
+loading the new map
+=================
+*/
+void Mod_ThrowModelInstances( void )
+{
+	// engine already released entity array so we can't release
+	// model instance for each entity personally 
+	g_StudioRenderer.DestroyAllModelInstances();
+}
+
+/*
+==================
+Mod_SampleSizeForFace
+
+return the current lightmap resolution per face
+==================
+*/
+int Mod_SampleSizeForFace( msurface_t *surf )
+{
+	if( !surf || !surf->texinfo || !surf->texinfo->faceinfo )
+		return LM_SAMPLE_SIZE;
+
+	return surf->texinfo->faceinfo->texture_step;
+}
+
+/*
 ==================
 R_NewMap
 

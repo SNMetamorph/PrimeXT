@@ -3815,7 +3815,7 @@ StudioSetupRenderer
 void CStudioModelRenderer::StudioSetupRenderer( int rendermode )
 {
 	m_iRenderMode = bound( 0, rendermode, kRenderTransAdd );
-	if(!( RI.params & RP_SHADOWVIEW )) pglShadeModel( GL_SMOOTH ); // enable gouraud shading
+	if( RI.params & RP_SHADOWVIEW ) pglShadeModel( GL_FLAT );
 	if( glState.faceCull != GL_NONE ) GL_Cull( GL_FRONT );
 }
 
@@ -3828,7 +3828,7 @@ StudioRestoreRenderer
 void CStudioModelRenderer::StudioRestoreRenderer( void )
 {
 	pglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
-	pglShadeModel( GL_FLAT );
+	if( RI.params & RP_SHADOWVIEW ) pglShadeModel( GL_SMOOTH );
 
 	// restore depthmask state for sprites etc
 	if( glState.drawTrans )

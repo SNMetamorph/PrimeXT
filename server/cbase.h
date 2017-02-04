@@ -52,6 +52,7 @@ CBaseEntity
 #define MF_TRIGGER			BIT( 1 )		// mark entity as invisible solid for debug purposes
 #define MF_GROUNDMOVE		BIT( 2 )		// my ground is pusher and it moving
 #define MF_LADDER			BIT( 3 )		// ladders is sended to client for predict reasons
+#define MF_TEMP_PARENT		BIT( 4 )		// temporare parent on teleport
 
 #include "saverestore.h"
 #include "schedule.h"
@@ -633,6 +634,24 @@ public:
 			pev->movetype = m_iOldMoveType;
 			m_iOldMoveType = MOVETYPE_NONE;
 		}
+	}
+
+	void MakeTempParent( CBaseEntity *pParent )
+	{
+		if(( m_hParent != NULL ) || FBitSet( m_iFlags, MF_TEMP_PARENT ))
+			return;
+
+		SetBits( m_iFlags, MF_TEMP_PARENT );
+		SetParent( pParent );
+	}
+
+	void ClearTempParent( void )
+	{
+		if( !FBitSet( m_iFlags, MF_TEMP_PARENT ))
+			return;
+
+		ClearBits( m_iFlags, MF_TEMP_PARENT );
+		SetParent( NULL );
 	}
 
 	inline modtype_t GetModelType( void )

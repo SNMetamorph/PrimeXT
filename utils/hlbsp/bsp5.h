@@ -51,7 +51,7 @@
 #else
 #define MAX_MAXNODE_SIZE        8192
 #endif
-#define DEFAULT_MAXNODE_SIZE    1024
+#define DEFAULT_MAXNODE_SIZE    8192
 
 #define DEFAULT_NOFILL          false
 #ifdef HLBSP_FILL

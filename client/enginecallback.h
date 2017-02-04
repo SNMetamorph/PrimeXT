@@ -89,7 +89,7 @@ inline void PlaySound( int iSound, float vol ) { gEngfuncs.pfnPlaySoundByIndex( 
 #define CREATE_TEXTURE		(*gRenderfuncs.GL_CreateTexture)
 #define FIND_TEXTURE		(*gRenderfuncs.GL_FindTexture)
 #define FREE_TEXTURE		(*gRenderfuncs.GL_FreeTexture)
-#define TEX_CACHE_FRAME		(*gRenderfuncs.GL_TextureCacheFrame)
+#define CREATE_TEXTURE_ARRAY		(*gRenderfuncs.GL_CreateTextureArray)
 #define STORE_EFRAGS		(*gRenderfuncs.R_StoreEfrags)
 #define INIT_BEAMCHAINS		(*gRenderfuncs.GetBeamChains)
 #define DRAW_PARTICLES		(*gRenderfuncs.GL_DrawParticles)

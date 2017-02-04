@@ -1,7 +1,14 @@
 #include "csg.h"
 
+#define PLANE_HASHES	8192
+
 plane_t         g_mapplanes[MAX_INTERNAL_MAP_PLANES];
 int             g_nummapplanes;
+
+#ifdef HLCSG_PLANE_HASHING
+int		g_planehash[PLANE_HASHES];
+#endif
+
 #ifdef HLCSG_HULLBRUSH
 hullshape_t		g_defaulthulls[NUM_HULLS];
 int				g_numhullshapes;
@@ -14,6 +21,7 @@ hullshape_t		g_hullshapes[MAX_HULLSHAPES];
 #define DIST_EPSILON   0.01
 #endif
 
+#if !defined HLCSG_PLANE_HASHING
 #if !defined HLCSG_FASTFIND
 
 /*
@@ -268,7 +276,175 @@ int FindIntPlane(const vec_t* const normal, const vec_t* const origin)
 }
 
 #endif //HLCSG_FASTFIND
+#else //HLCSG_PLANE_HASHING
+/*
+================
+PlaneEqual
+================
+*/
+bool PlaneEqual( const plane_t *p, const vec3_t normal, vec_t dist, vec_t norm_epsilon )
+{
+	vec_t	t;
 
+	if( -DIST_EPSILON < ( t = p->dist - dist ) && t < DIST_EPSILON
+	 && -norm_epsilon < ( t = p->normal[0] - normal[0] ) && t < norm_epsilon
+	 && -norm_epsilon < ( t = p->normal[1] - normal[1] ) && t < norm_epsilon
+	 && -norm_epsilon < ( t = p->normal[2] - normal[2] ) && t < norm_epsilon )
+		return true;
+
+	return false;
+}
+
+/*
+================
+AddPlaneToHash
+================
+*/
+void AddPlaneToHash( plane_t *p )
+{
+	int hash;
+
+	hash = (PLANE_HASHES - 1) & (int)fabs( p->dist );
+	p->hash_chain = g_planehash[hash];
+	g_planehash[hash] = p - g_mapplanes + 1;
+}
+
+/*
+================
+CreateNewFloatPlane
+================
+*/
+int CreateNewIntPlane( const vec_t* const srcnormal, const vec_t* const origin )
+{
+	plane_t *p0, *p1, temp;
+	vec3_t normal;
+	vec_t dist;
+	planetypes type;
+
+	if( VectorLength( srcnormal ) < 0.5 )
+		return -1;
+
+	// create a new plane
+	hlassume(g_nummapplanes+1 < MAX_INTERNAL_MAP_PLANES, assume_MAX_INTERNAL_MAP_PLANES);
+
+	p0 = &g_mapplanes[g_nummapplanes+0];
+	p1 = &g_mapplanes[g_nummapplanes+1];
+	VectorCopy( srcnormal, normal );
+	type = PlaneTypeForNormal( normal );
+	dist = DotProduct( origin, normal );
+#ifdef ZHLT_PLANETYPE_FIX
+	// snap normal to nearest axial if possible
+	if( type <= last_axial )
+	{
+		for( int i = 0; i < 3; i++ )
+		{
+			if( i == type )
+				normal[i] = normal[i] > 0 ? 1 : -1;
+			else normal[i] = 0;
+		}
+	}
+#endif
+	p0->origin[0] = origin[0];
+	p0->origin[1] = origin[1];
+	p0->origin[2] = origin[2];
+
+	p1->origin[0] = origin[0];
+	p1->origin[1] = origin[1];
+	p1->origin[2] = origin[2];
+
+	p0->normal[0] = normal[0];
+	p0->normal[1] = normal[1];
+	p0->normal[2] = normal[2];
+
+	p1->normal[0] = -normal[0];
+	p1->normal[1] = -normal[1];
+	p1->normal[2] = -normal[2];
+
+	p0->dist = dist;
+	p1->dist = -dist;
+	p0->type = type;
+	p1->type = type;
+	g_nummapplanes += 2;
+
+	// always put axial planes facing positive first
+#ifdef ZHLT_PLANETYPE_FIX
+	if( normal[(type) % 3] < 0 )
+#else
+	if( type <= last_axial && ( normal[0] < 0 || normal[1] < 0 || normal[2] < 0 ))	// flip order
+#endif
+	{
+		// flip order
+		temp = *p0;
+		*p0 = *p1;
+		*p1 = temp;
+
+		AddPlaneToHash( p0 );
+		AddPlaneToHash( p1 );
+
+		return g_nummapplanes - 1;
+	}
+
+	AddPlaneToHash( p0 );
+	AddPlaneToHash( p1 );
+
+	return g_nummapplanes - 2;
+}
+
+/*
+=============
+FindIntPlane
+
+hash version
+=============
+*/
+int FindIntPlane( const vec_t* const normal, const vec_t* const origin )
+{
+	int	i, hash, h;
+	vec_t	dist;
+	plane_t	*p;
+
+	dist = DotProduct( origin, normal );
+
+	// IMPORTANT: snap only plane.dist but don't touch the normal!
+	if( fabs( dist - Q_rint( dist )) < DIST_EPSILON )
+		dist = Q_rint( dist );
+
+	hash = (PLANE_HASHES - 1) & (int)fabs( dist );
+
+	ThreadLock();
+
+	// search the border bins as well
+	for( i = -1; i <= 1; i++ )
+	{
+		h = (hash + i) & (PLANE_HASHES - 1);
+		for( int pidx = g_planehash[h] - 1; pidx != -1; pidx = g_mapplanes[pidx].hash_chain - 1 )
+		{
+			p = &g_mapplanes[pidx];
+#ifdef HLCSG_FACENORMALEPSILON
+			if( PlaneEqual( p, normal, dist, DIR_EPSILON ))
+			{
+				ThreadUnlock();
+				return p - g_mapplanes;
+			}
+#else
+			if( PlaneEqual( p, normal, dist, NORMAL_EPSILON ))
+			{
+				ThreadUnlock();
+				return p - g_mapplanes;
+			}
+#endif
+		}
+	}
+
+	// allocate a new two opposite planes
+	int returnval = CreateNewIntPlane( normal, origin );
+
+	ThreadUnlock();
+
+	return returnval;
+}
+
+#endif
 
 int PlaneFromPoints(const vec_t* const p0, const vec_t* const p1, const vec_t* const p2)
 {

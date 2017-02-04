@@ -656,7 +656,7 @@ static void GL_FreePorgrams( void )
 void R_CreateSpotLightTexture( void )
 {
 #ifdef EXTERNAL_SPOTLIGHT_TEXTURE
-	tr.spotlightTexture = LOAD_TEXTURE( "gfx/flashlight.tga", NULL, 0, TF_SPOTLIGHT|TF_STATIC );
+	tr.spotlightTexture = LOAD_TEXTURE( "gfx/flashlight.tga", NULL, 0, TF_SPOTLIGHT );
 #else
 	int width = 64, height = 64;
 	byte *data = new byte[width*height*4];
@@ -682,7 +682,7 @@ void R_CreateSpotLightTexture( void )
 		}
 	}
 
-	tr.spotlightTexture = CREATE_TEXTURE( "*spotlight", width, height, data, TF_SPOTLIGHT|TF_STATIC ); 
+	tr.spotlightTexture = CREATE_TEXTURE( "*spotlight", width, height, data, TF_SPOTLIGHT ); 
 
 	delete [] data;
 #endif
@@ -708,7 +708,7 @@ void R_CreateNoiseTexture( void )
 	}
 
 	// water ripples texture
-	tr.noiseTexture = CREATE_TEXTURE( "*noise3D", 64, 64, data, TF_TEXTURE_3D|TF_NOMIPMAP|TF_STATIC ); 
+	tr.noiseTexture = CREATE_TEXTURE( "*noise3D", 64, 64, data, TF_TEXTURE_3D|TF_NOMIPMAP ); 
 
 	delete [] data;
 }

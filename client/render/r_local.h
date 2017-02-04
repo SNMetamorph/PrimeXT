@@ -556,6 +556,9 @@ void R_DrawMirrors( cl_entity_t *ignoreent = NULL );
 // r_misc.cpp
 //
 void R_NewMap( void );
+void Mod_ThrowModelInstances( void );
+void Mod_PrepareModelInstances( void );
+int Mod_SampleSizeForFace( msurface_t *surf );
 
 //
 // r_movie.cpp

@@ -15,7 +15,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "server"=".\sevrer\server.dsp" - Package Owner=<4>
+Project: "server"=".\server\server.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{

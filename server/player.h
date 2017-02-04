@@ -298,6 +298,7 @@ public:
 	void ItemPostFrame( void );
 	void GiveNamedItem( const char *szName );
 	void EnableControl(BOOL fControl);
+	void HideWeapons( BOOL fHideWeapons );
 	void SnapEyeAngles( const Vector &viewAngles );
 
 	int  GiveAmmo( int iAmount, char *szName, int iMax );

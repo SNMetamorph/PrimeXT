@@ -1179,6 +1179,32 @@ static void BuildTeleportList_r( CBaseEntity *pTeleport, CUtlArray<TeleportListE
 	}
 }
 
+static void BuildTeleportListTouch( CBaseEntity *pTeleport, CUtlArray<TeleportListEntry_t> &teleportList )
+{
+	edict_t *pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
+	TeleportListEntry_t entry;
+	TraceResult trace;
+
+	for ( int i = 1; i < gpGlobals->maxEntities; i++, pEdict++ )
+	{
+		if ( pEdict->free )	// Not in use
+			continue;
+
+		CBaseEntity *pEntity = CBaseEntity::Instance( pEdict );
+		if( !pEntity || ( pEntity == pTeleport ) || ( pEntity->m_hParent != NULL ) || !pEntity->pev->model )
+			continue;	// filter unneeded ents
+
+		if( BoundsIntersect( pTeleport->pev->absmin, pTeleport->pev->absmax, pEntity->pev->absmin, pEntity->pev->absmax ))
+		{
+			Msg( "add to teleport list %s\n", pEntity->GetClassname());
+			entry.pEntity = pEntity;
+			entry.prevAbsOrigin = pEntity->GetAbsOrigin();
+			entry.prevAbsAngles = pEntity->GetAbsAngles();
+			teleportList.AddToTail( entry );
+		}
+	}
+}
+
 void CBaseEntity :: Teleport( const Vector *newPosition, const Vector *newAngles, const Vector *newVelocity )
 {
 	if( g_TeleportStack.Find( this ) >= 0 )
@@ -1188,6 +1214,12 @@ void CBaseEntity :: Teleport( const Vector *newPosition, const Vector *newAngles
 
 	CUtlArray<TeleportListEntry_t> teleportList;
 	BuildTeleportList_r( this, teleportList );
+
+	// also teleport all ents that stay on train
+	if( FClassnameIs( this, "func_tracktrain" ))
+	{
+//		BuildTeleportListTouch( this, teleportList );
+	}
 
 	for( int i = 0; i < teleportList.Count(); i++ )
 	{

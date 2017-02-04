@@ -777,6 +777,8 @@ void CMultiManager :: ManagerReport ( void )
 //=======================================================================
 // 		   multi_watcher
 //=======================================================================
+#define SF_WATCHER_START_OFF	1
+
 #define LOGIC_AND  		0 // fire if all objects active
 #define LOGIC_OR   		1 // fire if any object active
 #define LOGIC_NAND 		2 // fire if not all objects active
@@ -792,6 +794,7 @@ public:
 	void Think( void );
 	void KeyValue( KeyValueData *pkvd );
 	int ObjectCaps( void ) { return (BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION); }
+	virtual void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	virtual STATE GetState( CBaseEntity *pActivator ) { return EvalLogic( pActivator ) ? STATE_ON : STATE_OFF; };
 	virtual STATE GetState( void ) { return m_iState; };
 	int GetLogicModeForString( const char *string );
@@ -888,7 +891,8 @@ void CMultiMaster :: Spawn( void )
 		m_iSharedState = (STATE)-1;
 	}
 
-	SetNextThink( 0.1 );
+	if( !FBitSet( pev->spawnflags, SF_WATCHER_START_OFF ))
+		SetNextThink( 0.1 );
 }
 
 bool CMultiMaster :: CheckState( STATE state, int targetnum )
@@ -904,6 +908,23 @@ bool CMultiMaster :: CheckState( STATE state, int targetnum )
 	if((STATE)m_iTargetState[targetnum] == state )
 		return TRUE;
 	return FALSE;
+}
+
+void CMultiMaster :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+{
+	if( !ShouldToggle( useType, ( pev->nextthink != 0 )))
+		return;
+
+	if( pev->nextthink == 0 )
+	{
+ 		SetNextThink( 0.01 );
+	}
+	else
+	{
+		// disabled watcher is always off
+		m_iState = STATE_OFF;
+		DontThink();
+	}
 }
 
 void CMultiMaster :: Think ( void )
@@ -3946,6 +3967,32 @@ void CTriggerPlayerFreeze::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, U
 	if (pActivator->pev->flags & FL_FROZEN)
 		((CBasePlayer *)((CBaseEntity *)pActivator))->EnableControl(TRUE);
 	else ((CBasePlayer *)((CBaseEntity *)pActivator))->EnableControl(FALSE);
+
+	SUB_UseTargets( pActivator, USE_TOGGLE, 0 );
+}
+
+class CTriggerHideWeapon : public CBaseDelay
+{
+	DECLARE_CLASS( CTriggerHideWeapon, CBaseDelay );
+public:
+	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+	int ObjectCaps( void ) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+};
+LINK_ENTITY_TO_CLASS( trigger_hideweapon, CTriggerHideWeapon );
+
+void CTriggerHideWeapon::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+{
+	if ( !pActivator || !pActivator->IsPlayer() )
+		pActivator = CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex( 1 ));
+
+	CBasePlayer *pPlayer = (CBasePlayer *)pActivator;
+
+	if( !ShouldToggle( useType, FBitSet( pPlayer->m_iHideHUD, HIDEHUD_WEAPONS )))
+		return;
+
+	if (pPlayer->m_iHideHUD & HIDEHUD_WEAPONS)
+		pPlayer->HideWeapons(FALSE);
+	else pPlayer->HideWeapons(TRUE);
 
 	SUB_UseTargets( pActivator, USE_TOGGLE, 0 );
 }

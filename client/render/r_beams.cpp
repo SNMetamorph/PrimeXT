@@ -31,7 +31,6 @@ typedef struct
 	Vector	color;
 	float	texcoord;	// Y texture coordinate
 	float	width;
-	float	alpha;
 } beamseg_t;
 
 static float	rgNoise[NOISE_DIVISIONS+1];	// global noise array
@@ -270,7 +269,6 @@ static void CL_DrawSegs( int modelIndex, float frame, int rendermode, const Vect
 		Vector vPoint1, vPoint2;
 	
 		assert( noiseIndex < ( NOISE_DIVISIONS << 16 ));
-		nextSeg.alpha = 1.0f;
 
 		fraction = i * div;
 
@@ -298,7 +296,6 @@ static void CL_DrawSegs( int modelIndex, float frame, int rendermode, const Vect
 		brightness = bound( 0.0f, brightness, 1.0f );
 		nextSeg.color = color * brightness;
 
-		// UNDONE: Make this a spline instead of just a line?
 		nextSeg.pos = source + fraction * delta;
 
 		// distort using noise
@@ -350,12 +347,12 @@ static void CL_DrawSegs( int modelIndex, float frame, int rendermode, const Vect
 			vPoint1 = curSeg.pos + ( curSeg.width * 0.5f ) * vAveNormal;
 			vPoint2 = curSeg.pos + (-curSeg.width * 0.5f ) * vAveNormal;
 
-			pglColor4f( curSeg.color[0], curSeg.color[1], curSeg.color[2], curSeg.alpha );
+			pglColor4f( curSeg.color[0], curSeg.color[1], curSeg.color[2], 1.0f );
 			pglTexCoord2f( 0.0f, curSeg.texcoord );
 			pglNormal3fv( vAveNormal );
 			pglVertex3fv( vPoint1 );
 
-			pglColor4f( curSeg.color[0], curSeg.color[1], curSeg.color[2], curSeg.alpha );
+			pglColor4f( curSeg.color[0], curSeg.color[1], curSeg.color[2], 1.0f );
 			pglTexCoord2f( 1.0f, curSeg.texcoord );
 			pglNormal3fv( vAveNormal );
 			pglVertex3fv( vPoint2 );
@@ -371,12 +368,12 @@ static void CL_DrawSegs( int modelIndex, float frame, int rendermode, const Vect
 			vPoint2 = curSeg.pos + (-curSeg.width * 0.5f ) * vLastNormal;
 
 			// specify the points.
-			pglColor4f( curSeg.color[0], curSeg.color[1], curSeg.color[2], curSeg.alpha );
+			pglColor4f( curSeg.color[0], curSeg.color[1], curSeg.color[2], 1.0f );
 			pglTexCoord2f( 0.0f, curSeg.texcoord );
 			pglNormal3fv( vLastNormal );
 			pglVertex3fv( vPoint1 );
 
-			pglColor4f( curSeg.color[0], curSeg.color[1], curSeg.color[2], curSeg.alpha );
+			pglColor4f( curSeg.color[0], curSeg.color[1], curSeg.color[2], 1.0f );
 			pglTexCoord2f( 1.0f, curSeg.texcoord );
 			pglNormal3fv( vLastNormal );
 			pglVertex3fv( vPoint2 );
@@ -1276,12 +1273,10 @@ void CL_DrawBeam( BEAM *pbeam )
 
 		if( pStart && pStart->curstate.rendermode != kRenderNormal )
 			pbeam->brightness = pStart->curstate.renderamt;
+
+		color *= ( pbeam->brightness / 255.0f );
+		color *= ( 1.0f / 255.0f );
 	}
-
-	color *= ( pbeam->brightness / 255.0f );
-	color *= ( 1.0f / 255.0f );
-
-	pglShadeModel( GL_SMOOTH );
 
 	switch( pbeam->type )
 	{
@@ -1312,7 +1307,6 @@ void CL_DrawBeam( BEAM *pbeam )
 		ALERT( at_error, "CL_DrawBeam: Unknown beam type %i\n", pbeam->type );
 		break;
 	}
-	pglShadeModel( GL_FLAT );
 }
 
 /*
@@ -1351,9 +1345,9 @@ void CL_DrawServerBeam( cl_entity_t *pbeam )
 	beam.width = pbeam->curstate.scale;
 	beam.amplitude = (float)(pbeam->curstate.body * 0.1f);
 	beam.brightness = pbeam->curstate.renderamt;
-	beam.r = pbeam->curstate.rendercolor.r;
-	beam.g = pbeam->curstate.rendercolor.g;
-	beam.b = pbeam->curstate.rendercolor.b;
+	beam.r = pbeam->curstate.rendercolor.r / 255.0f;
+	beam.g = pbeam->curstate.rendercolor.g / 255.0f;
+	beam.b = pbeam->curstate.rendercolor.b / 255.0f;
 	beam.flags = 0;
 
 	beam.delta = beam.target - beam.source;

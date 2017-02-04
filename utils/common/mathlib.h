@@ -23,6 +23,8 @@
 #define qmin(a,b)            (((a) < (b)) ? (a) : (b)) // changed 'min' to 'qmin'. --vluzacn
 #endif
 
+#define Q_rint( x )		((x) < 0 ? ((int)((x)-0.5f)) : ((int)((x)+0.5f)))
+
 #define	Q_PI	3.14159265358979323846
 
 extern const vec3_t vec3_origin;

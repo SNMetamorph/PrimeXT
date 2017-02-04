@@ -967,22 +967,24 @@ static bool R_RecursiveLightPoint( model_t *model, mnode_t *node, const Vector &
 		if( surf->flags & ( SURF_DRAWSKY|SURF_DRAWTURB ))
 			continue;	// no lightmaps
 
+		int sample_size = Mod_SampleSizeForFace( surf );
+
 		s = DotProduct( mid, tex->vecs[0] ) + tex->vecs[0][3] - surf->texturemins[0];
 		t = DotProduct( mid, tex->vecs[1] ) + tex->vecs[1][3] - surf->texturemins[1];
 
 		if(( s < 0 || s > surf->extents[0] ) || ( t < 0 || t > surf->extents[1] ))
 			continue;
 
-		s /= LM_SAMPLE_SIZE;
-		t /= LM_SAMPLE_SIZE;
+		s /= sample_size;
+		t /= sample_size;
 
 		if( !surf->samples )
 			return true;
 
 		r_pointColor[0] = r_pointColor[1] = r_pointColor[2] = 0;
 
-		lm = surf->samples + (t * ((surf->extents[0] / LM_SAMPLE_SIZE ) + 1) + s);
-		size = ((surf->extents[0] / LM_SAMPLE_SIZE) + 1) * ((surf->extents[1] / LM_SAMPLE_SIZE) + 1);
+		lm = surf->samples + (t * ((surf->extents[0] / sample_size) + 1) + s);
+		size = ((surf->extents[0] / sample_size) + 1) * ((surf->extents[1] / sample_size) + 1);
 
 		for( map = 0; map < MAXLIGHTMAPS && surf->styles[map] != 255; map++ )
 		{

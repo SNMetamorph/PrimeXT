@@ -121,9 +121,10 @@ typedef struct
     vec3_t          origin;
     vec_t           dist;
     planetypes      type;
+#ifdef HLCSG_PLANE_HASHING
+	int	hash_chain;
+#endif
 } plane_t;
-
-
 
 typedef struct
 {

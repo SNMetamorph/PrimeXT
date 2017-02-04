@@ -816,33 +816,40 @@ Returns the descriptive name of this .dll.  E.g., Half-Life, or Team Fortress 2
 */
 const char *GetGameDescription()
 {
-	char token[256];
-          char szbuffer[128];
-	static char text[128];
+	char		token[256];
+	char		game[128];
+	char		version[32];
+	static char	text[128];
 	
 	char *afile = (char *)LOAD_FILE_FOR_ME( "gameinfo.txt", NULL );
 	char *pfile = afile;
 
-	if(pfile)
+	if( pfile )
 	{
+		Q_strncpy( game, "Xash", sizeof( game ));
+		version[0] = '\0';
+
 		while ( pfile )
 		{
-			if ( !stricmp( token, "game" )) 
+			pfile = COM_ParseFile( pfile, token );
+
+			if( !Q_stricmp( token, "title" )) 
+			{                                          
+				pfile = COM_ParseFile( pfile, token );
+				Q_strncpy( game, token, sizeof( game ));
+			}
+			else if( !Q_stricmp( token, "version" )) 
 			{                                          
 				pfile = COM_ParseFile(pfile, token);
-				sprintf( szbuffer, "%s ", token );
-				strcat( text, szbuffer );
+				Q_strncpy( version, token, sizeof( version ));
 			}
-			else if ( !stricmp( token, "version" )) 
-			{                                          
-				pfile = COM_ParseFile(pfile, token);
-				strcat( text, token );
-			}
-			pfile = COM_ParseFile(pfile, token);
 		}
+
+		Q_snprintf( text, sizeof( text ), "%s %s", game, version );
 		FREE_FILE( afile );
 		return text;
 	}
+
 	return "Xash";
 }
 

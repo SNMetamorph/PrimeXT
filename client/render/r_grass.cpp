@@ -35,6 +35,7 @@ Just find lightmap point and update grass color
 void R_ReLightGrass( msurface_t *surf, bool force )
 {
 	mextrasurf_t *es = SURF_INFO( surf, RI.currentmodel );
+	int sample_size = Mod_SampleSizeForFace( surf );
 	grasshdr_t *hdr = es->grass;
 
 	if( !hdr ) return;
@@ -66,10 +67,10 @@ void R_ReLightGrass( msurface_t *surf, bool force )
 
 				// NOTE: don't need to call R_LightForPoint here because we already have a valid surface spot
 				// just read lightmap color and out
-				int s = (DotProduct( g->pos, tex->vecs[0] ) + tex->vecs[0][3] - surf->texturemins[0]) / LM_SAMPLE_SIZE;
-				int t = (DotProduct( g->pos, tex->vecs[1] ) + tex->vecs[1][3] - surf->texturemins[1]) / LM_SAMPLE_SIZE;
-				color24 *lm = surf->samples + (t * ((surf->extents[0] / LM_SAMPLE_SIZE ) + 1) + s);
-				int size = ((surf->extents[0] / LM_SAMPLE_SIZE) + 1) * ((surf->extents[1] / LM_SAMPLE_SIZE) + 1);
+				int s = (DotProduct( g->pos, tex->vecs[0] ) + tex->vecs[0][3] - surf->texturemins[0]) / sample_size;
+				int t = (DotProduct( g->pos, tex->vecs[1] ) + tex->vecs[1][3] - surf->texturemins[1]) / sample_size;
+				color24 *lm = surf->samples + (t * ((surf->extents[0] / sample_size) + 1) + s);
+				int size = ((surf->extents[0] / sample_size) + 1) * ((surf->extents[1] / sample_size) + 1);
 				lightcolor[0] = lightcolor[1] = lightcolor[2] = 0;
 
 				for( int map = 0; map < MAXLIGHTMAPS && surf->styles[map] != 255; map++ )

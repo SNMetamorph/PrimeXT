@@ -3913,12 +3913,13 @@ void CBasePlayer::ItemPostFrame()
 	if ( m_pTank != NULL )
 		return;
 
-	if ( gpGlobals->time < m_flNextAttack )
-	{
-		return;
-	}
-
 	ImpulseCommands();
+
+	if ( gpGlobals->time < m_flNextAttack )
+		return;
+
+	if( FBitSet( m_iHideHUD, HIDEHUD_WEAPONS ))
+		return;
 
 	if (!m_pActiveItem)
 		return;
@@ -4405,6 +4406,28 @@ void CBasePlayer :: EnableControl(BOOL fControl)
 
 }
 
+void CBasePlayer :: HideWeapons( BOOL fHideWeapons )
+{
+	if( fHideWeapons )
+	{
+		if( m_pActiveItem )
+		{
+			m_pActiveItem->Holster();
+			pev->weaponmodel = 0;
+			// viewmodel reset in tank
+		}
+
+		m_iHideHUD |= HIDEHUD_WEAPONS;
+	}
+	else
+	{
+		// bring back player's weapons
+		if( m_pActiveItem )
+			m_pActiveItem->Deploy();
+
+		m_iHideHUD &= ~HIDEHUD_WEAPONS;
+	}
+}
 
 #define DOT_1DEGREE   0.9998476951564
 #define DOT_2DEGREE   0.9993908270191

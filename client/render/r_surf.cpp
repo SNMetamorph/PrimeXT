@@ -287,8 +287,9 @@ static void R_BuildLightMap( msurface_t *surf, byte *dest, int stride )
 	int i, map, size, s, t;
 	color24 *lm;
 
-	smax = ( surf->extents[0] / LM_SAMPLE_SIZE ) + 1;
-	tmax = ( surf->extents[1] / LM_SAMPLE_SIZE ) + 1;
+	int sample_size = Mod_SampleSizeForFace( surf );
+	smax = ( surf->extents[0] / sample_size ) + 1;
+	tmax = ( surf->extents[1] / sample_size ) + 1;
 	size = smax * tmax;
 
 	lm = surf->samples;
@@ -484,8 +485,9 @@ void R_BlendLightmaps( void )
 			int	smax, tmax;
 			byte	*base;
 
-			smax = ( surf->extents[0] / LM_SAMPLE_SIZE ) + 1;
-			tmax = ( surf->extents[1] / LM_SAMPLE_SIZE ) + 1;
+			int sample_size = Mod_SampleSizeForFace( surf );
+			smax = ( surf->extents[0] / sample_size ) + 1;
+			tmax = ( surf->extents[1] / sample_size ) + 1;
 			info = SURF_INFO( surf, RI.currentmodel );
 
 			if( LM_AllocBlock( smax, tmax, &info->dlight_s, &info->dlight_t ))
@@ -947,11 +949,12 @@ void R_AddSurfaceLayers( msurface_t *fa )
 	{
 		if( fa->styles[maps] >= 32 || fa->styles[maps] == 0 )
 		{
-			byte	temp[68*68*4];
+			byte	temp[132*132*4];
 			int	smax, tmax;
 
-			smax = ( fa->extents[0] / LM_SAMPLE_SIZE ) + 1;
-			tmax = ( fa->extents[1] / LM_SAMPLE_SIZE ) + 1;
+			int sample_size = Mod_SampleSizeForFace( fa );
+			smax = ( fa->extents[0] / sample_size ) + 1;
+			tmax = ( fa->extents[1] / sample_size ) + 1;
 
 			R_BuildLightMap( fa, temp, smax * 4 );
 			R_SetCacheState( fa );
@@ -2311,8 +2314,9 @@ void GL_CreateSurfaceLightmap( msurface_t *surf )
 	if( surf->flags & SURF_DRAWTILED )
 		return;
 
-	smax = ( surf->extents[0] / LM_SAMPLE_SIZE ) + 1;
-	tmax = ( surf->extents[1] / LM_SAMPLE_SIZE ) + 1;
+	int sample_size = Mod_SampleSizeForFace( surf );
+	smax = ( surf->extents[0] / sample_size ) + 1;
+	tmax = ( surf->extents[1] / sample_size ) + 1;
 
 	if( !LM_AllocBlock( smax, tmax, &surf->light_s, &surf->light_t ))
 	{
@@ -2356,20 +2360,23 @@ void HUD_BuildLightmaps( void )
 	// not a gamma change, just a restart or change level
 	if( !RENDER_GET_PARM( PARM_REBUILD_GAMMA, 0 ))
 	{
-		// Engine already released entity array so we can't release
-		// model instance for each entity pesronally 
-		g_StudioRenderer.DestroyAllModelInstances();
-
-		// invalidate model handles
-		for( i = 1; i < RENDER_GET_PARM( PARM_MAX_ENTITIES, 0 ); i++ )
+		if( g_iXashEngineBuildNumber <= 3500 )
 		{
-			cl_entity_t *e = GET_ENTITY( i );
-			if( !e ) break;
+			// Engine already released entity array so we can't release
+			// model instance for each entity pesronally 
+			g_StudioRenderer.DestroyAllModelInstances();
 
-			e->modelhandle = INVALID_HANDLE;
+			// invalidate model handles
+			for( i = 1; i < RENDER_GET_PARM( PARM_MAX_ENTITIES, 0 ); i++ )
+			{
+				cl_entity_t *e = GET_ENTITY( i );
+				if( !e ) break;
+
+				e->modelhandle = INVALID_HANDLE;
+			}
+
+			GET_VIEWMODEL()->modelhandle = INVALID_HANDLE;
 		}
-
-		GET_VIEWMODEL()->modelhandle = INVALID_HANDLE;
 
 		// clear partsystem
 		g_pParticleSystems->ClearSystems();

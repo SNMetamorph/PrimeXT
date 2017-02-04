@@ -25,7 +25,7 @@
 // abitrary, 512Kb of string data should be plenty even with TFC FGD's
 
 #define MAX_MAP_PLANES      65536 // TODO: This can be larger, because although faces can only use plane 0~32767, clipnodes can use plane 0-65535. --vluzacn
-#define MAX_INTERNAL_MAP_PLANES (256*1024)
+#define MAX_INTERNAL_MAP_PLANES (512*1024)
 // (from email): I have been building a rather complicated map, and using your latest 
 // tools (1.61) it seemed to compile fine.  However, in game, the engine was dropping
 // a lot of faces from almost every FUNC_WALL, and also caused a strange texture 

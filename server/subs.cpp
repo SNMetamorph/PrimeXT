@@ -227,16 +227,15 @@ BEGIN_DATADESC( CBaseToggle )
 	DEFINE_KEYFIELD( m_flLip, FIELD_FLOAT, "lip" ),
 	DEFINE_FIELD( m_flTWidth, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flTLength, FIELD_FLOAT ),
-	DEFINE_FIELD( m_vecPosition1, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_vecPosition2, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_vecPosition3, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_vecFinalDest, FIELD_POSITION_VECTOR ),
+	DEFINE_FIELD( m_vecPosition1, FIELD_VECTOR ),
+	DEFINE_FIELD( m_vecPosition2, FIELD_VECTOR ),
+	DEFINE_FIELD( m_vecPosition3, FIELD_VECTOR ),
 	DEFINE_FIELD( m_vecAngle1, FIELD_VECTOR ),		// UNDONE: Position could go through transition, but also angle?
 	DEFINE_FIELD( m_vecAngle2, FIELD_VECTOR ),		// UNDONE: Position could go through transition, but also angle?
 	DEFINE_FIELD( m_cTriggersLeft, FIELD_INTEGER ),
 	DEFINE_FIELD( m_flHeight, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flWidth, FIELD_FLOAT ),
-	DEFINE_FIELD( m_vecFinalDest, FIELD_POSITION_VECTOR ),
+	DEFINE_FIELD( m_vecFinalDest, FIELD_VECTOR ),
 	DEFINE_FIELD( m_vecFinalAngle, FIELD_VECTOR ),
 	DEFINE_FIELD( m_bitsDamageInflict, FIELD_INTEGER ),	// damage type inflicted
 	DEFINE_FIELD( m_movementType, FIELD_INTEGER ),
@@ -264,7 +263,7 @@ int CBaseToggle::Restore( CRestore &restore )
 //		m_vecPosition1 += parentSpaceOffset;
 //		m_vecPosition2 += parentSpaceOffset;
 //		m_vecPosition3 += parentSpaceOffset;
-		m_vecFinalDest += parentSpaceOffset;
+//		m_vecFinalDest += parentSpaceOffset;
 //		m_vecFloor += parentSpaceOffset;
 	}
 

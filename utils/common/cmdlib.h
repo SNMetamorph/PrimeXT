@@ -112,6 +112,7 @@
 
 #define HLCSG_PRECISIONCLIP
 #define HLCSG_FASTFIND
+#define HLCSG_PLANE_HASHING
 #ifdef ZHLT_NULLTEX
         #define HLCSG_NULLIFY_INVISIBLE //requires null textures as prerequisite
 #endif
@@ -151,7 +152,7 @@
 #define HLCSG_HLBSP_CONTENTSNULL_FIX //--vluzacn
 	#endif
 #define HLCSG_HLBSP_ALLOWEMPTYENTITY // needs more testing --vluzacn
-//#define HLBSP_ChooseMidPlane_FIX //--vluzacn
+#define HLBSP_ChooseMidPlane_FIX //--vluzacn
 	#ifdef HLBSP_ChooseMidPlane_FIX
 #define HLBSP_ChoosePlane_VL //--vluzacn
 	#endif
