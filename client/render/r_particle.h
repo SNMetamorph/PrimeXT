@@ -149,6 +149,7 @@ public:
 	// returns false if the CParticle has died
 	bool		UpdateParticle( CParticle *part, float frametime );
 	void		DrawParticle( CParticle *part, Vector &right, Vector &up );
+	inline void	DrawQuad( const Vector &p0, const Vector &p1, const Vector &p2, const Vector &p3 );
 
 	void		MarkForDeletion( void );
 

@@ -114,13 +114,13 @@ void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType )
 	if ( RANDOM_FLOAT( 0 , 1 ) < 0.5 )
 	{
 		if( pEntity && UTIL_GetModelType( pEntity->pev->modelindex ) == mod_studio )
-			UTIL_StudioDecalTrace( GetAbsOrigin() + Vector ( 0, 0, 8 ), pTrace, DECAL_SCORCH1, 0 );
+			UTIL_StudioDecalTrace( pTrace, DECAL_SCORCH1 );
 		else UTIL_DecalTrace( pTrace, DECAL_SCORCH1 );
 	}
 	else
 	{
 		if( pEntity && UTIL_GetModelType( pEntity->pev->modelindex ) == mod_studio )
-			UTIL_StudioDecalTrace( GetAbsOrigin() + Vector ( 0, 0, 8 ), pTrace, DECAL_SCORCH2, 0 );
+			UTIL_StudioDecalTrace( pTrace, DECAL_SCORCH2 );
 		else UTIL_DecalTrace( pTrace, DECAL_SCORCH2 );
 	}
 

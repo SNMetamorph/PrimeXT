@@ -74,6 +74,12 @@ inline void MESSAGE_BEGIN( int msg_dest, int msg_type, const float *pOrigin = NU
 }
 #define MESSAGE_END		(*g_engfuncs.pfnMessageEnd)
 #define WRITE_BYTE		(*g_engfuncs.pfnWriteByte)
+
+inline void WRITE_BYTES( const byte *data, int nBytes ) {
+	for( int i = 0; i < nBytes; i++, data++ )
+		WRITE_BYTE( *data );
+}
+
 #define WRITE_CHAR		(*g_engfuncs.pfnWriteChar)
 #define WRITE_SHORT		(*g_engfuncs.pfnWriteShort)
 #define WRITE_LONG		(*g_engfuncs.pfnWriteLong)
@@ -117,7 +123,7 @@ inline void *GET_PRIVATE( edict_t *pent )
 #define GET_ATTACHMENT			(*g_engfuncs.pfnGetAttachment)
 #define SET_VIEW				(*g_engfuncs.pfnSetView)
 #define SET_CROSSHAIRANGLE		(*g_engfuncs.pfnCrosshairAngle)
-#define LOAD_FILE_FOR_ME		(*g_engfuncs.pfnLoadFileForMe)
+#define LOAD_FILE			(*g_engfuncs.pfnLoadFileForMe)
 #define FREE_FILE				(*g_engfuncs.pfnFreeFile)
 #define COMPARE_FILE_TIME		(*g_engfuncs.pfnCompareFileTime)
 #define GET_GAME_DIR			(*g_engfuncs.pfnGetGameDir)
@@ -153,9 +159,6 @@ inline void *GET_PRIVATE( edict_t *pent )
 #define ENGINE_FORCE_UNMODIFIED	( *g_engfuncs.pfnForceUnmodified )
 
 #define PLAYER_CNX_STATS		( *g_engfuncs.pfnGetPlayerStats )
-
-#define QUERY_CLIENT_CVAR_VALUE	( *g_engfuncs.pfnQueryClientCvarValue )
-#define QUERY_CLIENT_CVAR_VALUE2	( *g_engfuncs.pfnQueryClientCvarValue2 )
 
 void Msg( const char *szText, ... );
 

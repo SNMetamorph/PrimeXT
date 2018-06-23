@@ -43,8 +43,8 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /c
-# ADD CPP /nologo /MD /W3 /GX /Ox /Ot /Og /Oi /Op /Ob2 /I ".\\" /I "..\engine" /I "..\common" /I "..\game_shared" /I ".\render" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "CLIENT_DLL" /FD /c
-# SUBTRACT CPP /Oa /Ow /Os /Gf /Gy /Fr /YX
+# ADD CPP /nologo /MD /W3 /GX /O2 /Op /Oy /Ob2 /I ".\\" /I "..\engine" /I "..\common" /I "..\game_shared" /I ".\render" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "CLIENT_DLL" /FD /c
+# SUBTRACT CPP /Fr /YX
 # ADD BASE MTL /nologo /D "NDEBUG" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -57,8 +57,8 @@ LINK32=link.exe
 # ADD LINK32 msvcrt.lib user32.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /nodefaultlib:"libc.lib" /libpath:"..\common\libs"
 # SUBTRACT LINK32 /map
 # Begin Custom Build
-TargetDir=\Xash3D\xash\devkit\source_code\temp\client\!release
-InputPath=\Xash3D\xash\devkit\source_code\temp\client\!release\client.dll
+TargetDir=\Xash3D\xash\src_main\temp\client\!release
+InputPath=\Xash3D\xash\src_main\temp\client\!release\client.dll
 SOURCE="$(InputPath)"
 
 "D:\Xash3D\xash\bin\client.dll" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -97,8 +97,8 @@ LINK32=link.exe
 # ADD LINK32 msvcrtd.lib user32.lib opengl32.lib glu32.lib /nologo /subsystem:windows /dll /incremental:yes /debug /machine:I386 /nodefaultlib:"libc" /libpath:"..\common\libs"
 # SUBTRACT LINK32 /map
 # Begin Custom Build
-TargetDir=\Xash3D\xash\devkit\source_code\temp\client\!debug
-InputPath=\Xash3D\xash\devkit\source_code\temp\client\!debug\client.dll
+TargetDir=\Xash3D\xash\src_main\temp\client\!debug
+InputPath=\Xash3D\xash\src_main\temp\client\!debug\client.dll
 SOURCE="$(InputPath)"
 
 "D:\Xash3D\xash\bin\client.dll" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -130,6 +130,10 @@ SOURCE=.\ammohistory.cpp
 # Begin Source File
 
 SOURCE=.\battery.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\game_shared\bone_setup.cpp
 # End Source File
 # Begin Source File
 
@@ -173,11 +177,19 @@ SOURCE=.\hud_update.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\game_shared\ikcontext.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\input.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\inputw32.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\game_shared\jigglebones.cpp
 # End Source File
 # Begin Source File
 
@@ -205,11 +217,11 @@ SOURCE=.\parsemsg.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\game_shared\parser.cpp
+SOURCE=..\game_shared\playermove.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\game_shared\playermove.cpp
+SOURCE=..\game_shared\procbones.cpp
 # End Source File
 # Begin Source File
 
@@ -217,11 +229,7 @@ SOURCE=.\render\r_backend.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\render\r_beams.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\render\r_bloom.cpp
+SOURCE=.\render\r_brushdecals.cpp
 # End Source File
 # Begin Source File
 
@@ -233,6 +241,10 @@ SOURCE=.\render\r_debug.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\render\r_frustum.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\render\r_grass.cpp
 # End Source File
 # Begin Source File
@@ -241,19 +253,15 @@ SOURCE=.\render\r_light.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\render\r_lightmap.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\render\r_main.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\render\r_mirror.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\render\r_misc.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\render\r_monitor.cpp
 # End Source File
 # Begin Source File
 
@@ -269,7 +277,11 @@ SOURCE=.\render\r_particle.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\render\r_portal.cpp
+SOURCE=.\render\r_postprocess.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\render\r_shader.cpp
 # End Source File
 # Begin Source File
 
@@ -282,6 +294,14 @@ SOURCE=.\render\r_sprite.cpp
 # Begin Source File
 
 SOURCE=.\render\r_studio.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\render\r_studiodecal.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\render\r_subview.cpp
 # End Source File
 # Begin Source File
 
@@ -302,6 +322,10 @@ SOURCE=.\render\r_warp.cpp
 # Begin Source File
 
 SOURCE=.\render\r_weather.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\render\r_world.cpp
 # End Source File
 # Begin Source File
 
@@ -333,6 +357,10 @@ SOURCE=.\train.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\render\tri.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\utils.cpp
 # End Source File
 # End Group
@@ -349,6 +377,10 @@ SOURCE=.\ammohistory.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\game_shared\bs_defs.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\game_shared\cdll_dll.h
 # End Source File
 # Begin Source File
@@ -362,6 +394,18 @@ SOURCE=.\hud_events.h
 # Begin Source File
 
 SOURCE=.\hud_health.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\game_shared\ikcontext.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\game_shared\iksolver.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\game_shared\jigglebones.h
 # End Source File
 # Begin Source File
 
@@ -397,6 +441,10 @@ SOURCE=..\game_shared\pm_shared.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\render\r_frustum.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\render\r_grass.h
 # End Source File
 # Begin Source File
@@ -409,7 +457,7 @@ SOURCE=.\render\r_particle.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\render\r_programs.h
+SOURCE=.\render\r_shader.h
 # End Source File
 # Begin Source File
 
@@ -422,6 +470,10 @@ SOURCE=.\render\r_view.h
 # Begin Source File
 
 SOURCE=.\render\r_weather.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\render\r_world.h
 # End Source File
 # Begin Source File
 

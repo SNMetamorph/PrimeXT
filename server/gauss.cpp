@@ -581,8 +581,8 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 					WRITE_BYTE( n * flDamage * 0.3 );				// count
 					WRITE_BYTE( 10 );				// life * 10
 					WRITE_BYTE( RANDOM_LONG( 1, 2 ) );				// size * 10
-					WRITE_BYTE( 10 );				// amplitude * 0.1
-					WRITE_BYTE( 20 );				// speed * 100
+					WRITE_BYTE( 100 );				// amplitude * 0.1
+					WRITE_BYTE( 100 );				// speed * 100
 				MESSAGE_END();
 
 				nTotal += 21;
@@ -594,7 +594,7 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 			else
 			{
 				// tunnel
-				DecalGunshot( &tr, BULLET_MONSTER_12MM, vecSrc );
+				DecalGunshot( &tr, BULLET_MONSTER_12MM );
 
 				// entry wall glow
 				MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos );
@@ -645,8 +645,8 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 								WRITE_BYTE( 3 );				// count
 								WRITE_BYTE( 10 );				// life * 10
 								WRITE_BYTE( RANDOM_LONG( 1, 2 ) );				// size * 10
-								WRITE_BYTE( 10 );				// amplitude * 0.1
-								WRITE_BYTE( 1 );				// speed * 100
+								WRITE_BYTE( 100 );				// amplitude * 0.1
+								WRITE_BYTE( 100 );				// speed * 100
 							MESSAGE_END();
 							nTotal += 21;
 
@@ -654,7 +654,7 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 							m_pPlayer->RadiusDamage( beam_tr.vecEndPos + vecDir * 8, pev, m_pPlayer->pev, flDamage, CLASS_NONE, DMG_BLAST );
 							CSoundEnt::InsertSound ( bits_SOUND_COMBAT, GetAbsOrigin(), NORMAL_EXPLOSION_VOLUME, 3.0 );
 
-							DecalGunshot( &beam_tr, BULLET_MONSTER_12MM, vecSrc );
+							DecalGunshot( &beam_tr, BULLET_MONSTER_12MM );
 							nTotal += 19;
 
 							// exit wall glow
@@ -683,7 +683,7 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 								WRITE_BYTE( flDamage * 0.3 );				// count
 								WRITE_BYTE( 10 );				// life * 10
 								WRITE_BYTE( RANDOM_LONG( 1, 2 ) );				// size * 10
-								WRITE_BYTE( 20 );				// amplitude * 0.1
+								WRITE_BYTE( 200 );				// amplitude * 0.1
 								WRITE_BYTE( 40 );				// speed * 100
 							MESSAGE_END();
 							nTotal += 21;
@@ -729,8 +729,8 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 							WRITE_BYTE( 8 );				// count
 							WRITE_BYTE( 6 );				// life * 10
 							WRITE_BYTE( RANDOM_LONG( 1, 2 ) );	// size * 10
-							WRITE_BYTE( 10 );				// amplitude * 0.1
-							WRITE_BYTE( 20 );				// speed * 100
+							WRITE_BYTE( 100 );				// amplitude * 0.1
+							WRITE_BYTE( 200 );				// speed * 100
 						MESSAGE_END();
 					}
 

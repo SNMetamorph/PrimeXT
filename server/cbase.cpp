@@ -529,6 +529,16 @@ void CBaseEntity::TouchLinks( edict_t *ent, const Vector &entmins, const Vector 
 		touch = EDICT_FROM_AREA( l );
 		pTouch = CBaseEntity::Instance( touch );
 
+		if( !pTouch )
+		{
+			if( !touch->free )
+			{
+				ALERT( at_error, "bad entity in trigger list!\n" );
+				SetBits( touch->v.flags, FL_KILLME ); // let the engine kill invalid entity
+			}
+			break;
+		}
+
 		if( pTouch == pEnt || pTouch->pev->solid != SOLID_TRIGGER ) // disabled ?
 			continue;
 
@@ -663,7 +673,80 @@ void CBaseEntity::ClipLinks( edict_t *ent, const Vector &entmins, const Vector &
 		ClipLinks( ent, entmins, entmaxs, node->children[1] );
 }
 
-void CBaseEntity::RelinkEntity( BOOL touch_triggers, const Vector *pPrevOrigin )
+/*
+====================
+SleepPortals
+
+put portals to sleep for some time
+====================
+*/
+void CBaseEntity :: SleepPortals( edict_t *ent, const Vector &entmins, const Vector &entmaxs, areanode_t *node )
+{
+	edict_t *touch;
+	link_t *l, *next;
+	CBaseEntity *pTouch, *pEnt;
+	Vector test, offset;
+
+	pEnt = CBaseEntity::Instance( ent );
+
+	// touch linked edicts
+	for( l = node->trigger_edicts.next; l != &node->trigger_edicts; l = next )
+	{
+		next = l->next;
+		touch = EDICT_FROM_AREA( l );
+		pTouch = CBaseEntity::Instance( touch );
+
+		if( !pTouch->IsPortal( ))
+			continue;
+
+		if( !BoundsIntersect( entmins, entmaxs, touch->v.absmin, touch->v.absmax ))
+			continue;
+
+		// check brush triggers accuracy
+		if( UTIL_GetModelType( pTouch->pev->modelindex ) == mod_brush )
+		{
+			// force to select bsp-hull
+			hull_t *hull = UTIL_HullForBsp( pTouch, pEnt->pev->mins, pEnt->pev->maxs, offset );
+
+			// support for rotational triggers
+			if( UTIL_CanRotate( pTouch ) && pTouch->GetAbsAngles() != g_vecZero )
+			{
+				matrix4x4	matrix( offset, pTouch->GetAbsAngles() );
+				test = matrix.VectorITransform( pEnt->GetAbsOrigin() );
+			}
+			else
+			{
+				// offset the test point appropriately for this hull.
+				test = pEnt->GetAbsOrigin() - offset;
+			}
+
+			// test hull for intersection with this model
+			if( UTIL_HullPointContents( hull, hull->firstclipnode, test ) != CONTENTS_SOLID )
+				continue;
+		}
+
+		// complex two-side portals may activate twice
+		// so we need put to sleep them to avoid back teleportation
+		pTouch->PortalSleep( 0.2f );
+
+		// make backside portal is active now
+		if( pTouch->pev->sequence > 0 )
+		{
+			CBaseEntity *pPortalCamera = CBaseEntity::Instance( INDEXENT( pTouch->pev->sequence ));
+			if( pPortalCamera ) SetBits( pPortalCamera->pev->effects, EF_MERGE_VISIBILITY ); // visible now
+		}
+	}
+	
+	// recurse down both sides
+	if( node->axis == -1 ) return;
+	
+	if( entmaxs[node->axis] > node->dist )
+		SleepPortals( ent, entmins, entmaxs, node->children[0] );
+	if( entmins[node->axis] < node->dist )
+		SleepPortals( ent, entmins, entmaxs, node->children[1] );
+}
+
+void CBaseEntity::RelinkEntity( BOOL touch_triggers, const Vector *pPrevOrigin, BOOL sleep_portals )
 {
 	if( !g_fPhysicInitialized )
 	{
@@ -677,10 +760,8 @@ void CBaseEntity::RelinkEntity( BOOL touch_triggers, const Vector *pPrevOrigin )
 	LINK_ENTITY( edict(), FALSE );
 
 	// custom trigger handler used an accurate collision on fast moving objects with triggers
-	if( touch_triggers && !g_fTouchLinkSemaphore )
+	if( touch_triggers )
 	{
-		g_fTouchLinkSemaphore = TRUE;
-
 		Vector entmins, entmaxs;
 
 		// only point entities needs to check with special case:
@@ -691,14 +772,22 @@ void CBaseEntity::RelinkEntity( BOOL touch_triggers, const Vector *pPrevOrigin )
 			UTIL_MoveBounds( *pPrevOrigin, pev->mins, pev->maxs, GetAbsOrigin(), entmins, entmaxs );
 		else UTIL_MoveBounds( GetAbsOrigin(), pev->mins, pev->maxs, GetAbsOrigin(), entmins, entmaxs );
 
-		// moving triggers retouches objects
-#if 0		// g-cont. disabled until is done
-		if( pev->solid == SOLID_TRIGGER )
-			ClipLinks( edict(), entmins, entmaxs, GET_AREANODE() );
-		else
+		if( sleep_portals )
+			SleepPortals( edict(), entmins, entmaxs, GET_AREANODE() );
+
+		if( !g_fTouchLinkSemaphore )
+		{
+			g_fTouchLinkSemaphore = TRUE;
+ 
+			// moving triggers retouches objects
+#if 0			// g-cont. disabled until is done
+			if( pev->solid == SOLID_TRIGGER )
+				ClipLinks( edict(), entmins, entmaxs, GET_AREANODE() );
+			else
 #endif
-			TouchLinks( edict(), entmins, entmaxs, pPrevOrigin, GET_AREANODE() );
-		g_fTouchLinkSemaphore = FALSE;
+				TouchLinks( edict(), entmins, entmaxs, pPrevOrigin, GET_AREANODE() );
+			g_fTouchLinkSemaphore = FALSE;
+		}
 	}
 #endif
 }
@@ -1253,6 +1342,7 @@ BEGIN_DATADESC_NO_BASE( CBaseEntity )
 	DEFINE_FIELD( m_flMoveDoneTime, FIELD_FLOAT ),		// local time saved as float, not time!
 	DEFINE_FIELD( m_fPicked, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_iStyle, FIELD_INTEGER ),
+	DEFINE_FIELD( m_flGaitYaw, FIELD_FLOAT ),
 
 	DEFINE_FIELD( m_pfnThink, FIELD_FUNCTION ),		// UNDONE: Build table of these!!!
 	DEFINE_FIELD( m_pfnTouch, FIELD_FUNCTION ),
@@ -1438,6 +1528,22 @@ int CBaseEntity :: AreaIntersect( Vector mins, Vector maxs )
 	||  pev->absmax.z <= mins.z )
 		return FALSE;
 	return TRUE;
+}
+
+int CBaseEntity :: TriggerIntersects( CBaseEntity *pOther )
+{
+	if ( !Intersects( pOther ))
+		 return 0;
+
+	int hullNumber = human_hull;
+	TraceResult trace;
+
+	if( FBitSet( pOther->pev->flags, FL_DUCKING ))
+		hullNumber = head_hull;
+
+	UTIL_TraceModel( pOther->GetAbsOrigin(), pOther->GetAbsOrigin(), hullNumber, edict(), &trace );
+
+	return trace.fStartSolid;
 }
 
 int CBaseEntity :: IsWater( void )

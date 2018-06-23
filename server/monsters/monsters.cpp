@@ -61,6 +61,7 @@ BEGIN_DATADESC( CBaseMonster )
 
 	DEFINE_KEYFIELD( m_iClass, FIELD_INTEGER, "m_iClass" ),
 	DEFINE_KEYFIELD( m_iPlayerReact, FIELD_INTEGER, "m_iPlayerReact" ),
+	DEFINE_AUTO_ARRAY( m_iWeapons, FIELD_CHARACTER ),
 
 	DEFINE_FIELD( m_flFieldOfView, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flWaitFinished, FIELD_TIME ),
@@ -3103,6 +3104,21 @@ void CBaseMonster :: KeyValue( KeyValueData *pkvd )
 	else if (FStrEq(pkvd->szKeyName, "m_iPlayerReact") ) //LRC
 	{
 		m_iPlayerReact = atoi( pkvd->szValue );
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "weapons") )
+	{
+		int	weapons = atoi( pkvd->szValue );
+
+		if( weapons ) m_bHaveWeapons = TRUE;
+
+		// convert bits to weapons
+		for( int i = 0; i < 32; i++ )
+		{
+			if( FBitSet( weapons, BIT( i )))
+				AddWeapon( i );
+		}
+
 		pkvd->fHandled = TRUE;
 	}
 	else

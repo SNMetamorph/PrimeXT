@@ -279,6 +279,10 @@ typedef unsigned int GLhandleARB;
 #define GL_BLUE_SCALE			0x0D1A
 #define GL_ALPHA_SCALE			0x0D1C
 
+#define GL_POINT_SMOOTH_HINT			0x0C51
+#define GL_LINE_SMOOTH_HINT			0x0C52
+#define GL_POLYGON_SMOOTH_HINT		0x0C53
+
 /* AttribMask */
 #define GL_CURRENT_BIT			0x00000001
 #define GL_POINT_BIT			0x00000002
@@ -422,6 +426,12 @@ typedef unsigned int GLhandleARB;
 #define GL_SAMPLER_2D_SHADOW_ARB		0x8B62
 #define GL_SAMPLER_2D_RECT_ARB		0x8B63
 #define GL_SAMPLER_2D_RECT_SHADOW_ARB		0x8B64
+#define GL_SAMPLER_1D_ARRAY_EXT		0x8DC0
+#define GL_SAMPLER_2D_ARRAY_EXT		0x8DC1
+#define GL_SAMPLER_BUFFER_EXT			0x8DC2
+#define GL_SAMPLER_1D_ARRAY_SHADOW_EXT		0x8DC3
+#define GL_SAMPLER_2D_ARRAY_SHADOW_EXT		0x8DC4
+#define GL_SAMPLER_CUBE_SHADOW_EXT		0x8DC5
 
 #define GL_PACK_SKIP_IMAGES			0x806B
 #define GL_PACK_IMAGE_HEIGHT			0x806C
@@ -488,6 +498,8 @@ typedef unsigned int GLhandleARB;
 #define GL_FLOAT_MAT2_ARB			0x8B5A
 #define GL_FLOAT_MAT3_ARB			0x8B5B
 #define GL_FLOAT_MAT4_ARB			0x8B5C
+
+#define GL_HALF_FLOAT_ARB			0x140B
 
 #define GL_FRAGMENT_SHADER_ARB		0x8B30
 #define GL_MAX_FRAGMENT_UNIFORM_COMPONENTS_ARB	0x8B49
@@ -723,6 +735,29 @@ typedef unsigned int GLhandleARB;
 #define GL_RENDERBUFFER_ALPHA_SIZE_EXT		0x8D53
 #define GL_RENDERBUFFER_DEPTH_SIZE_EXT		0x8D54
 #define GL_RENDERBUFFER_STENCIL_SIZE_EXT	0x8D55
+
+#define GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB		0x8242
+#define GL_MAX_DEBUG_MESSAGE_LENGTH_ARB		0x9143
+#define GL_MAX_DEBUG_LOGGED_MESSAGES_ARB	0x9144
+#define GL_DEBUG_LOGGED_MESSAGES_ARB		0x9145
+#define GL_DEBUG_NEXT_LOGGED_MESSAGE_LENGTH_ARB	0x8243
+#define GL_DEBUG_CALLBACK_FUNCTION_ARB		0x8244
+#define GL_DEBUG_CALLBACK_USER_PARAM_ARB	0x8245
+#define GL_DEBUG_SOURCE_API_ARB		0x8246
+#define GL_DEBUG_SOURCE_WINDOW_SYSTEM_ARB	0x8247
+#define GL_DEBUG_SOURCE_SHADER_COMPILER_ARB	0x8248
+#define GL_DEBUG_SOURCE_THIRD_PARTY_ARB		0x8249
+#define GL_DEBUG_SOURCE_APPLICATION_ARB		0x824A
+#define GL_DEBUG_SOURCE_OTHER_ARB		0x824B
+#define GL_DEBUG_TYPE_ERROR_ARB		0x824C
+#define GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB	0x824D
+#define GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB	0x824E
+#define GL_DEBUG_TYPE_PORTABILITY_ARB		0x824F
+#define GL_DEBUG_TYPE_PERFORMANCE_ARB		0x8250
+#define GL_DEBUG_TYPE_OTHER_ARB		0x8251
+#define GL_DEBUG_SEVERITY_HIGH_ARB		0x9146
+#define GL_DEBUG_SEVERITY_MEDIUM_ARB		0x9147
+#define GL_DEBUG_SEVERITY_LOW_ARB		0x9148
 
 // helper opengl functions
 EXTERN GLenum ( APIENTRY *pglGetError )(void);
@@ -1133,12 +1168,20 @@ EXTERN void ( APIENTRY *pglBlendEquationEXT)(GLenum);
 EXTERN void ( APIENTRY *pglStencilOpSeparate)(GLenum, GLenum, GLenum, GLenum);
 EXTERN void ( APIENTRY *pglStencilFuncSeparate)(GLenum, GLenum, GLint, GLuint);
 EXTERN void ( APIENTRY *pglActiveStencilFaceEXT)(GLenum);
+EXTERN void ( APIENTRY *pglBlendFuncSeparate)( GLenum sfactorRGB, GLenum dfactorRGB, GLenum sfactorAlpha, GLenum dfactorAlpha );
 EXTERN void ( APIENTRY *pglVertexAttribPointerARB)(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer);
 EXTERN void ( APIENTRY *pglEnableVertexAttribArrayARB)(GLuint index);
 EXTERN void ( APIENTRY *pglDisableVertexAttribArrayARB)(GLuint index);
 EXTERN void ( APIENTRY *pglBindAttribLocationARB)(GLhandleARB programObj, GLuint index, const GLcharARB *name);
 EXTERN void ( APIENTRY *pglGetActiveAttribARB)(GLhandleARB programObj, GLuint index, GLsizei maxLength, GLsizei *length, GLint *size, GLenum *type, GLcharARB *name);
 EXTERN GLint ( APIENTRY *pglGetAttribLocationARB)(GLhandleARB programObj, const GLcharARB *name);
+EXTERN void ( APIENTRY *pglBindFragDataLocation)(GLuint programObj, GLuint index, const GLcharARB *name);
+EXTERN void ( APIENTRY *pglVertexAttrib2fARB)( GLuint index, GLfloat x, GLfloat y );
+EXTERN void ( APIENTRY *pglVertexAttrib2fvARB)( GLuint index, const GLfloat *v );
+EXTERN void ( APIENTRY *pglVertexAttrib3fvARB)( GLuint index, const GLfloat *v );
+EXTERN void ( APIENTRY *pglVertexAttrib4fARB)( GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w );
+EXTERN void ( APIENTRY *pglVertexAttrib4fvARB)( GLuint index, const GLfloat *v );
+EXTERN void ( APIENTRY *pglVertexAttrib4ubvARB)( GLuint index, const GLubyte *b );
 EXTERN void ( APIENTRY *pglBindBufferARB) (GLenum target, GLuint buffer);
 EXTERN void ( APIENTRY *pglDeleteBuffersARB) (GLsizei n, const GLuint *buffers);
 EXTERN void ( APIENTRY *pglGenBuffersARB) (GLsizei n, GLuint *buffers);
@@ -1177,7 +1220,19 @@ EXTERN void ( APIENTRY *pglFramebufferTextureLayer )(GLenum target, GLenum attac
 EXTERN void ( APIENTRY *pglFramebufferRenderbuffer )(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
 EXTERN void ( APIENTRY *pglGetFramebufferAttachmentParameteriv )(GLenum target, GLenum attachment, GLenum pname, GLint *params);
 EXTERN void ( APIENTRY *pglBlitFramebuffer )(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
+EXTERN void ( APIENTRY *pglCopyImageSubData )( GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei srcWidth, GLsizei srcHeight, GLsizei srcDepth );
 EXTERN void ( APIENTRY *pglGenerateMipmap )(GLenum target);
 EXTERN PROC ( WINAPI *pwglGetProcAddress)( const char * );
+
+EXTERN void ( APIENTRY *pglBindVertexArray )( GLuint array );
+EXTERN void ( APIENTRY *pglDeleteVertexArrays )( GLsizei n, const GLuint *arrays );
+EXTERN void ( APIENTRY *pglGenVertexArrays )( GLsizei n, const GLuint *arrays );
+EXTERN GLboolean ( APIENTRY *pglIsVertexArray )( GLuint array );
+
+typedef void ( APIENTRY *pglDebugProcARB)( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLcharARB* message, GLvoid* userParam );
+EXTERN void ( APIENTRY *pglDebugMessageControlARB)( GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint* ids, GLboolean enabled );
+EXTERN void ( APIENTRY *pglDebugMessageInsertARB)( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const char* buf );
+EXTERN void ( APIENTRY *pglDebugMessageCallbackARB)( pglDebugProcARB callback, void* userParam );
+EXTERN GLuint ( APIENTRY *pglGetDebugMessageLogARB)( GLuint count, GLsizei bufsize, GLenum* sources, GLenum* types, GLuint* ids, GLuint* severities, GLsizei* lengths, char* messageLog );
 
 #endif//R_OPENGL_H

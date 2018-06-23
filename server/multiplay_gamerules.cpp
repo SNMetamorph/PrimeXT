@@ -528,7 +528,7 @@ void CHalfLifeMultiplay :: PlayerSpawn( CBasePlayer *pPlayer )
 	BOOL		addDefault;
 	CBaseEntity	*pWeaponEntity = NULL;
 
-	pPlayer->pev->weapons |= (1<<WEAPON_SUIT);
+	pPlayer->AddWeapon( WEAPON_SUIT );
 	
 	addDefault = TRUE;
 
@@ -1186,7 +1186,7 @@ int ReloadMapCycleFile( char *filename, mapcycle_t *cycle )
 	char szMap[ 32 ];
 	int length;
 	char *pFileList;
-	char *aFileList = pFileList = (char*)LOAD_FILE_FOR_ME( filename, &length );
+	char *aFileList = pFileList = (char*)LOAD_FILE( filename, &length );
 	int hasbuffer;
 	mapcycle_item_s *item, *newlist = NULL, *next;
 	char szToken[512];
@@ -1521,7 +1521,7 @@ void CHalfLifeMultiplay :: SendMOTDToClient( edict_t *client )
 	// read from the MOTD.txt file
 	int length, char_count = 0;
 	char *pFileList;
-	char *aFileList = pFileList = (char*)LOAD_FILE_FOR_ME( (char *)CVAR_GET_STRING( "motdfile" ), &length );
+	char *aFileList = pFileList = (char*)LOAD_FILE( (char *)CVAR_GET_STRING( "motdfile" ), &length );
 
 	// send the server name
 	MESSAGE_BEGIN( MSG_ONE, gmsgServerName, NULL, client );

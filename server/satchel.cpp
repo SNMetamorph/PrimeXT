@@ -233,7 +233,7 @@ int CSatchel::AddToPlayer( CBasePlayer *pPlayer )
 {
 	int bResult = CBasePlayerItem::AddToPlayer( pPlayer );
 
-	pPlayer->pev->weapons |= (1<<m_iId);
+	pPlayer->AddWeapon( m_iId );
 	m_chargeReady = 0;// this satchel charge weapon now forgets that any satchels are deployed by it.
 
 	if ( bResult )
@@ -346,7 +346,7 @@ void CSatchel::Holster( void )
 
 	if ( !m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] && !m_chargeReady )
 	{
-		m_pPlayer->pev->weapons &= ~(1<<WEAPON_SATCHEL);
+		m_pPlayer->RemoveWeapon( WEAPON_SATCHEL );
 		SetThink( DestroyItem );
 		pev->nextthink = gpGlobals->time + 0.1;
 	}
@@ -420,6 +420,8 @@ void CSatchel::Throw( void )
 		Vector vecSrc = m_pPlayer->GetAbsOrigin();
 
 		Vector vecThrow = gpGlobals->v_forward * 274 + m_pPlayer->GetAbsVelocity();
+		if( m_pPlayer->GetGroundEntity( ))
+			vecThrow += m_pPlayer->GetGroundEntity( )->GetAbsVelocity();
 
 		CBaseEntity *pSatchel = Create( "monster_satchel", vecSrc, g_vecZero, m_pPlayer->edict() );
 		pSatchel->SetAbsVelocity( vecThrow );

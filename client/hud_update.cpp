@@ -21,7 +21,7 @@ int CHud::UpdateClientData(client_data_t *cdata, float time)
 	m_vecOrigin = cdata->origin;
 	m_vecAngles = cdata->viewangles;
 	m_iKeyBits = CL_ButtonBits( 0 );
-	m_iWeaponBits = cdata->iWeaponBits;
+//	m_iWeaponBits = cdata->iWeaponBits;
 
 	Think();
 

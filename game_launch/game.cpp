@@ -19,8 +19,8 @@ GNU General Public License for more details.
 
 #ifdef WIN32
 // enable NVIDIA High Performance Graphics while using Integrated Graphics.
-__declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
-__declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 1;
+extern "C" __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+extern "C" __declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 1;
 #endif
 
 typedef void (*pfnChangeGame)( const char *progname );
@@ -47,7 +47,7 @@ void Sys_LoadEngine( void )
 
 	if(( Host_Main = (pfnInit)GetProcAddress( hEngine, "Host_Main" )) == NULL )
 	{
-		Sys_Error( "core.dll missed 'Host_Main' export" );
+		Sys_Error( "xash.dll missed 'Host_Main' export" );
 	}
 
 	// this is non-fatal for us but change game will not working

@@ -27,6 +27,7 @@
 #pragma warning( disable : 4305 )	// disable 'truncation from 'const double' to 'float' warning message
 
 class NxVec3;
+class Radian;
 
 inline void SinCos( float angle, float *sine, float *cosine ) 
 {
@@ -132,6 +133,7 @@ public:
 	inline Vector(const Vector& v)		{ x = v.x; y = v.y; z = v.z;		   }
 	inline Vector( const float *rgfl )		{ x = rgfl[0]; y = rgfl[1]; z = rgfl[2];   }
 	inline Vector(float rgfl[3])			{ x = rgfl[0]; y = rgfl[1]; z = rgfl[2];   }
+	inline Vector( float fill )			{ x = fill; y = fill; z = fill;            }
 	Vector(const NxVec3& v);
 
 	// Initialization
@@ -206,19 +208,47 @@ public:
 	{
 		return Vector(start.x + scale * direction.x, start.y + scale * direction.y, start.z + scale * direction.z) ;
 	}
+
+	_forceinline bool Compare( const Vector &vec, const float epsilon ) const
+	{
+		if( fabs( x - vec.x ) > epsilon ) return false;
+		if( fabs( y - vec.y ) > epsilon ) return false;
+		if( fabs( z - vec.z ) > epsilon ) return false;
+
+		return true;
+	}
 	
 	// Methods
-	inline void CopyToArray(float* rgfl) const	{ rgfl[0] = x, rgfl[1] = y, rgfl[2] = z;   }
-	inline float Length(void) const		{ return sqrt(x*x + y*y + z*z); }
+	inline void CopyToArray( float *rgfl ) const	{ rgfl[0] = x, rgfl[1] = y, rgfl[2] = z; }
+	inline float Length(void) const		{ return sqrt( x*x + y*y + z*z ); }
+	inline float LengthSqr(void) const		{ return (x*x + y*y + z*z); }
 	operator float *()				{ return &x; } // Vectors will now automatically convert to float * when needed
 	operator const float *() const		{ return &x; } 
 		
-	inline Vector Normalize(void) const
+	inline Vector Normalize( void ) const
 	{
 		float flLen = Length();
-		if (flLen == 0) return Vector(0,0,1); // ????
-		flLen = 1 / flLen;
-		return Vector(x * flLen, y * flLen, z * flLen);
+
+		if( flLen )
+		{
+			flLen = 1.0f / flLen;
+			return Vector( x * flLen, y * flLen, z * flLen );
+		}
+
+		return *this; // can't normalize
+	}
+
+	inline float NormalizeLength( void )
+	{
+		float flLen = Length();
+
+		if( flLen )
+		{
+			float flInvLen = 1.0f / flLen;
+			x *= flInvLen, y *= flInvLen, z *= flInvLen;
+		}
+
+		return flLen;
 	}
 
 	float Dot( Vector const& vOther ) const
@@ -271,6 +301,8 @@ public:
 	inline Vector4D( float X, float Y, float Z, float W ) { x = X; y = Y; z = Z; w = W; }
 	inline Vector4D( const Vector4D& v ) { x = v.x; y = v.y; z = v.z, w = v.w; } 
 	inline Vector4D( const float *pFloat ) { x = pFloat[0]; y = pFloat[1]; z = pFloat[2]; w = pFloat[3];}
+	inline Vector4D( const Vector& v ) { x = v.x; y = v.y; z = v.z; w = 1.0f; }
+	inline Vector4D( Radian const &angle );	// evil auto type promotion!!!
 
 	// Initialization
 	void Init( float ix = 0.0f, float iy = 0.0f, float iz = 0.0f, float iw = 0.0f )
@@ -286,11 +318,109 @@ public:
 	operator Vector()					{ return Vector( x, y, z ); }
 	operator const Vector() const				{ return Vector( x, y, z ); } 
 
+	inline float Length(void) const		{ return sqrt( x*x + y*y + z*z + w*w); }
+	inline float LengthSqr(void) const		{ return (x*x + y*y + z*z + w*w); }
+
+	inline Vector4D Normalize( void ) const
+	{
+		float flLen = Length();
+
+		if( flLen )
+		{
+			flLen = 1.0f / flLen;
+			return Vector4D( x * flLen, y * flLen, z * flLen, w * flLen );
+		}
+
+		return *this; // can't normalize
+	}
+
 	// equality
 	bool operator==(const Vector4D& v) const { return v.x==x && v.y==y && v.z==z && v.w==w; }
 	bool operator!=(const Vector4D& v) const { return !(*this==v); }
+	inline Vector4D operator+(const Vector4D& v) const { return Vector4D(x+v.x, y+v.y, z+v.z, w+v.w); }
+	inline Vector4D operator-(const Vector4D& v) const { return Vector4D(x-v.x, y-v.y, z-v.z, w-v.w); }
 };
 
+inline float DotProduct( const Vector4D& a, const Vector4D& b ) { return( a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w ); }
+
+#define vec4_t Vector4D
+
+class Radian
+{
+public:
+	inline Radian( void ) { }
+	inline Radian( float X, float Y, float Z )	{ x = X; y = Y; z = Z; }
+	inline Radian( Vector4D const &q );	// evil auto type promotion!!!
+
+	// initialization
+	inline void Init( float ix = 0.0f, float iy = 0.0f, float iz = 0.0f )	{ x = ix; y = iy; z = iz; }
+
+	// Vectors will now automatically convert to float * when needed
+	operator float *()				{ return &x; }
+	operator const float *() const		{ return &x; } 
+
+	// Operators
+	inline Radian operator-(void) const		{ return Radian(-x,-y,-z);		   }
+	inline int operator==(const Radian& v) const	{ return x==v.x && y==v.y && z==v.z;	   }
+	inline int operator!=(const Radian& v) const	{ return !(*this==v);		   }
+	inline Radian operator+(const Radian& v) const	{ return Radian(x+v.x, y+v.y, z+v.z);	   }
+	inline Radian operator-(const Radian& v) const	{ return Radian(x-v.x, y-v.y, z-v.z);	   }
+	inline Radian operator+(float fl) const		{ return Radian(x+fl, y+fl, z+fl);	   }
+	inline Radian operator-(float fl) const		{ return Radian(x-fl, y-fl, z-fl);	   }
+	inline Radian operator*(float fl) const		{ return Radian(x*fl, y*fl, z*fl);	   }
+	inline Radian operator/(float fl) const		{ return Radian(x/fl, y/fl, z/fl);	   }
+	inline Radian operator*(const Radian& v) const	{ return Radian(x*v.x, y*v.y, z*v.z);	   }
+	const Radian& operator=(const NxVec3& v);
+	
+	_forceinline Radian& operator+=(const Radian &v)
+	{
+		x+=v.x; y+=v.y; z += v.z;	
+		return *this;
+	}			
+	_forceinline Radian& operator-=(const Radian &v)
+	{
+		x-=v.x; y-=v.y; z -= v.z;	
+		return *this;
+	}		
+	_forceinline Radian& operator*=(const Radian &v)
+	{
+		x *= v.x; y *= v.y; z *= v.z;
+		return *this;
+	}
+	_forceinline Radian& operator*=(float s)
+	{
+		x *= s; y *= s; z *= s;
+		return *this;
+	}
+	_forceinline Radian& operator/=(const Radian &v)
+	{
+		x /= v.x; y /= v.y; z /= v.z;
+		return *this;
+	}		
+	_forceinline Radian& operator/=(float s)
+	{
+		float oofl = 1.0f / s;
+		x *= oofl; y *= oofl; z *= oofl;
+		return *this;
+	}
+
+	float x, y, z;
+};
+
+extern void AngleQuaternion( Radian const &angles, Vector4D &qt );
+extern void QuaternionAngle( Vector4D const &q, Radian &angles );
+
+inline Radian :: Radian( Vector4D const &q )
+{
+	QuaternionAngle( q, *this );
+}
+
+inline Vector4D :: Vector4D( Radian const &angle )
+{
+	AngleQuaternion( angle, *this );
+}
+
 extern const Vector g_vecZero;
+extern const Radian g_radZero;
 
 #endif//VECTOR_H

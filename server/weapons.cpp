@@ -154,7 +154,7 @@ int DamageDecal( CBaseEntity *pEntity, int bitsDamageType )
 	return pEntity->DamageDecal( bitsDamageType );
 }
 
-void DecalGunshot( TraceResult *pTrace, int iBulletType, const Vector &vecSrc )
+void DecalGunshot( TraceResult *pTrace, int iBulletType )
 {
 	// Is the entity valid
 	if ( !UTIL_IsValidEntity( pTrace->pHit ) )
@@ -208,15 +208,15 @@ void DecalGunshot( TraceResult *pTrace, int iBulletType, const Vector &vecSrc )
 		case BULLET_PLAYER_357:
 		default:
 			// smoke and decal
-			UTIL_StudioDecalTrace( vecSrc, pTrace, DamageDecal( pEntity, DMG_BULLET ));
+			UTIL_StudioDecalTrace( pTrace, DamageDecal( pEntity, DMG_BULLET ));
 			break;
 		case BULLET_MONSTER_12MM:
 			// smoke and decal
-			UTIL_StudioDecalTrace( vecSrc, pTrace, DamageDecal( pEntity, DMG_BULLET ));
+			UTIL_StudioDecalTrace( pTrace, DamageDecal( pEntity, DMG_BULLET ));
 			break;
 		case BULLET_PLAYER_CROWBAR:
 			// wall decal
-			UTIL_StudioDecalTrace( vecSrc, pTrace, DamageDecal( pEntity, DMG_CLUB ));
+			UTIL_StudioDecalTrace( pTrace, DamageDecal( pEntity, DMG_CLUB ));
 			break;
 		}
 	}
@@ -749,7 +749,7 @@ int CBasePlayerWeapon::AddToPlayer( CBasePlayer *pPlayer )
 {
 	int bResult = CBasePlayerItem::AddToPlayer( pPlayer );
 
-	pPlayer->pev->weapons |= (1<<m_iId);
+	pPlayer->AddWeapon( m_iId );
 
 	if ( !m_iPrimaryAmmoType )
 	{

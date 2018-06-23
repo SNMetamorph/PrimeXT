@@ -22,6 +22,12 @@
 #define stackalloc( _size )		_alloca( ALIGN_VALUE( _size, 16 ) )
 #define stackfree( _p )		0
 
+template <typename T>
+inline T AlignValue( T val, unsigned alignment )
+{
+	return (T)( ( (unsigned int)val + alignment - 1 ) & ~( alignment - 1 ) );
+}
+
 //-----------------------------------------------------------------------------
 // Methods to invoke the constructor, copy constructor, and destructor
 //-----------------------------------------------------------------------------
@@ -50,6 +56,8 @@ inline void Destruct( T* pMemory )
 
 #pragma warning (disable:4100)
 #pragma warning (disable:4514)
+// identifier was truncated to '255' characters in the debug information
+#pragma warning(disable: 4786)
 
 //-----------------------------------------------------------------------------
 // The CUtlMemory class:

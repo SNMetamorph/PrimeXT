@@ -51,7 +51,7 @@ public:
 
 	virtual int ObjectCaps( void )
 	{
-		int flags = CBaseEntity :: ObjectCaps();
+		int flags = CBaseEntity :: ObjectCaps() | FCAP_HOLD_ANGLES;
 		if (FBitSet (pev->spawnflags, SF_PHYS_HOLDABLE))
 			flags |= FCAP_HOLDABLE_ITEM;
 		if( UTIL_GetModelType( pev->modelindex ) == mod_brush )
@@ -192,6 +192,8 @@ void CPhysEntity :: Spawn( void )
 	}
 
 	SET_MODEL( edict(), GetModel( ));
+
+	SetLocalAngles( m_vecTempAngles );
 	UTIL_SetOrigin( this, GetLocalOrigin() );
 
 	// set size in case we need have something valid

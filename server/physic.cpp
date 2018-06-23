@@ -25,9 +25,11 @@ GNU General Public License for more details.
 #include	"com_model.h"
 #include	"movelist.h"
 #include	"features.h"
+#include  "render_api.h"
 #include	"physic.h"
 #include  "triangleapi.h"
 #include  "pm_defs.h"
+#include  "player.h"
 
 #define MOVE_EPSILON	0.01f
 #define MAX_CLIP_PLANES	5
@@ -38,11 +40,9 @@ CPhysicsPushedEntities	*g_pPushedEntities = &s_PushedEntities;
 
 unsigned int EngineSetFeatures( void )
 {
-	unsigned int flags = (ENGINE_WRITE_LARGE_COORD|ENGINE_BUILD_SURFMESHES|ENGINE_TRANSFORM_TRACE_AABB);
+	unsigned int flags = (ENGINE_WRITE_LARGE_COORD|ENGINE_TRANSFORM_TRACE_AABB|ENGINE_COMPUTE_STUDIO_LERP);
 
-	if( g_iXashEngineBuildNumber >= 2148 )
-		flags |= ENGINE_LARGE_LIGHTMAPS;
-
+	flags |= ENGINE_LARGE_LIGHTMAPS|ENGINE_LOAD_DELUXEDATA;
 	flags |= ENGINE_COMPENSATE_QUAKE_BUG;
 
 	return flags;
@@ -76,6 +76,26 @@ void DrawOrthoTriangles( void )
 {
 	if( p_speeds != NULL && p_speeds->value > 0.0f )
 		WorldPhysic->DrawPSpeeds();
+}
+
+/*
+============
+SV_AllowPushRotate
+
+Allows to change entity yaw?
+============
+*/
+BOOL SV_AllowPushRotate( CBaseEntity *pEntity )
+{
+	model_t	*mod;
+
+	mod = (model_t *)MODEL_HANDLE( pEntity->pev->modelindex );
+	if( !mod || mod->type != mod_brush )
+		return TRUE;
+
+	// NOTE: flag 2 it's a internal engine flag (see model.c for details)
+	// we can recalc real model origin here but this check is faster :)
+	return (mod->flags & 2) ? TRUE : FALSE;
 }
 
 void SV_ClipMoveToEntity( edict_t *ent, const float *start, float *mins, float *maxs, const float *end, trace_t *trace )
@@ -123,6 +143,71 @@ void SV_ClipPMoveToEntity( physent_t *pe, const float *start, float *mins, float
 	else tr->ent = -1;
 }
 
+int SV_RestoreDecal( decallist_t *entry, edict_t *pEdict, qboolean adjacent )
+{
+	int	flags = entry->flags;
+	int	entityIndex = ENTINDEX( pEdict );
+	int	cacheID = 0, modelIndex = 0;
+
+	if( flags & FDECAL_STUDIO )
+	{
+		if( FBitSet( pEdict->v.iuser1, CF_STATIC_ENTITY ))
+			cacheID = pEdict->v.colormap;
+		UTIL_RestoreStudioDecal( entry->position, entry->impactPlaneNormal, entityIndex,
+		pEdict->v.modelindex, entry->name, flags, &entry->studio_state, cacheID );
+		return TRUE;
+          }
+
+	return FALSE; // let the engine restore bsp decals
+}
+
+// handle player touching ents
+void PM_PlayerTouch( playermove_t *pmove, edict_t *client )
+{
+	CBasePlayer *pPlayer = (CBasePlayer *)CBaseEntity :: Instance( client );
+
+	if( !pPlayer || !pmove ) return; // ???
+
+	// touch triggers
+	pPlayer->RelinkEntity( true );
+
+	// save original velocity
+	Vector oldAbsVelocity = pPlayer->GetAbsVelocity();
+
+	// touch other objects
+	for( int i = 0; i < pmove->numtouch; i++ )
+	{
+		pmtrace_t *pmtrace = &pmove->touchindex[i];
+		CBaseEntity *pTouch = CBaseEntity :: Instance( INDEXENT( pmove->physents[pmtrace->ent].info ) );
+
+		// touch himself?
+		if( !pTouch || pTouch == pPlayer )
+			continue;
+
+		// set momentum velocity to allow player pushing boxes
+		pPlayer->SetAbsVelocity( pmtrace->deltavelocity );
+
+		TraceResult tr;
+
+		tr.fAllSolid = pmtrace->allsolid;
+		tr.fStartSolid = pmtrace->startsolid;
+		tr.fInOpen = pmtrace->inopen;
+		tr.fInWater = pmtrace->inwater;
+		tr.flFraction = pmtrace->fraction;
+		tr.vecEndPos = pmtrace->endpos;
+		tr.flPlaneDist = pmtrace->plane.dist;
+		tr.vecPlaneNormal = pmtrace->plane.normal;
+		tr.iHitgroup = pmtrace->hitgroup;
+		tr.pHit = pTouch->edict();
+
+		// IMPORTANT: don't change order!
+		SV_Impact( pTouch, pPlayer, &tr );
+	}
+
+	// restore velocity
+	pPlayer->SetAbsVelocity( oldAbsVelocity );
+}
+
 string_t SV_AllocString( const char *szValue )
 {
 	return g_GameStringPool.AllocString( szValue );
@@ -157,13 +242,19 @@ static physics_interface_t gPhysicsInterface =
 	SV_ClipMoveToEntity,
 	SV_ClipPMoveToEntity,
 	EndFrame,
-	DispatchCreateEntitiesInTransitionList,
+	NULL, // obsolete
 	DispatchCreateEntitiesInRestoreList,
 #ifdef HAVE_STRINGPOOL
 	SV_AllocString,
 	SV_MakeString,
 	SV_GetString,
+#else
+	NULL,
+	NULL,
+	NULL,
 #endif
+	SV_RestoreDecal,
+	PM_PlayerTouch
 };
 
 int Server_GetPhysicsInterface( int iVersion, server_physics_api_t *pfuncsFromEngine, physics_interface_t *pFunctionTable )
@@ -173,18 +264,11 @@ int Server_GetPhysicsInterface( int iVersion, server_physics_api_t *pfuncsFromEn
 		return FALSE;
 	}
 
+	if( g_iXashEngineBuildNumber < 4140 )
+		return FALSE;
+
 	size_t iExportSize = sizeof( server_physics_api_t );
 	size_t iImportSize = sizeof( physics_interface_t );
-
-	// NOTE: the very old versions NOT have information about current build in any case
-	if( g_iXashEngineBuildNumber <= 1910 )
-	{
-		ALERT( at_console, "old version of Xash3D was detected. Engine features was disabled.\n" );
-
-		// interface sizes for build 1905 and older
-		iExportSize = 28;
-		iImportSize = 24;
-	}
 
 	// copy new physics interface
 	memcpy( &g_physfuncs, pfuncsFromEngine, iExportSize );
@@ -370,7 +454,7 @@ void CPhysicsPushedEntities::CalcRotationalPushDirection( CBaseEntity *pBlocker,
 	// "start" is relative to the *root* pusher, world orientation
 	Vector start;
 
-	if( pBlocker->pev->movetype == MOVETYPE_STEP || pBlocker->pev->movetype == MOVETYPE_PUSHSTEP )
+	if( !SV_AllowPushRotate( pBlocker ) || pBlocker->pev->movetype == MOVETYPE_STEP )
 		start = pBlocker->Center();
 	else start = pBlocker->GetAbsOrigin();
 
@@ -588,22 +672,28 @@ void CPhysicsPushedEntities::FinishPushers()
 void CPhysicsPushedEntities::FinishRotPushedEntity( CBaseEntity *pPushedEntity, const RotatingPushMove_t &rotPushMove )
 {
 	// impart angular velocity of push onto pushed objects
-	if( pPushedEntity->IsPlayer( ))
+	if( pPushedEntity->IsNetClient( ))
 	{
-		if( GET_SERVER_STATE() == SERVER_ACTIVE && rotPushMove.amove[YAW] != 0.0f )
+		if( rotPushMove.amove[YAW] != 0.0f )
 		{
 			pPushedEntity->pev->avelocity[YAW] += rotPushMove.amove[YAW];
-			pPushedEntity->pev->fixangle = 2;
+			SetBits( pPushedEntity->pev->fixangle, 2 );
 		}
 	}
-	else
-	{
-		Vector angles = pPushedEntity->GetAbsAngles();
+
+	Vector angles = pPushedEntity->GetAbsAngles();
+
+	// update goal if monster try turning on the rotational platform
+	if( FBitSet( pPushedEntity->pev->flags, FL_MONSTER ))
+		pPushedEntity->pev->ideal_yaw += rotPushMove.amove[YAW];
 		
-		// only rotate YAW with pushing.
-		angles.y += rotPushMove.amove.y;
-		pPushedEntity->SetAbsAngles( angles );
-	}
+	// only rotate YAW with pushing.
+	angles.y += rotPushMove.amove.y;
+	pPushedEntity->SetAbsAngles( angles );
+
+	// keep gait yaw is actual
+	if( pPushedEntity->IsPlayer( ) && rotPushMove.amove.y != 0.0f )
+		pPushedEntity->m_flGaitYaw = pPushedEntity->pev->angles[YAW];
 }
 
 //-----------------------------------------------------------------------------
@@ -625,7 +715,7 @@ void CPhysicsPushedEntities::FinishPush( bool bIsRotPush, const RotatingPushMove
 		// register physics impacts...
 		if( info.m_trace.pHit )
 		{
-			SV_Impact( pPushedEntity, &info.m_trace );
+			SV_Impact( pPushedEntity, NULL, &info.m_trace );
 		}
 
 		if( bIsRotPush )
@@ -660,7 +750,7 @@ CBaseEntity *CPhysicsPushedEntities::RegisterBlockage( void )
 
 	if( info.m_trace.pHit )
 	{
-		SV_Impact( info.m_pEntity, &info.m_trace );
+		SV_Impact( info.m_pEntity, NULL, &info.m_trace );
 	}
 
 	// this is the dude 
@@ -849,7 +939,7 @@ void CPhysicsPushedEntities::RotateRootEntity( CBaseEntity *pRoot, float movetim
 //-----------------------------------------------------------------------------
 CBaseEntity *CPhysicsPushedEntities::PerformRotatePush( CBaseEntity *pRoot, float movetime )
 {
-	m_bIsUnblockableByPlayer = false;
+	m_bIsUnblockableByPlayer = FBitSet( pRoot->pev->flags, FL_UNBLOCKABLE ) ? true : false;
 
 	// build a list of this entity + all its children because we're going to try to move them all
 	// this will also make sure each entity is linked in the appropriate place
@@ -902,7 +992,7 @@ void CPhysicsPushedEntities::LinearlyMoveRootEntity( CBaseEntity *pRoot, float m
 //-----------------------------------------------------------------------------
 CBaseEntity *CPhysicsPushedEntities::PerformLinearPush( CBaseEntity *pRoot, float movetime )
 {
-	m_bIsUnblockableByPlayer = false;
+	m_bIsUnblockableByPlayer = FBitSet( pRoot->pev->flags, FL_UNBLOCKABLE ) ? true : false;
 
 	// build a list of this entity + all its children because we're going to try to move them all
 	// this will also make sure each entity is linked in the appropriate place
@@ -1009,13 +1099,14 @@ SV_Impact
 Two entities have touched, so run their touch functions
 ==================
 */
-void SV_Impact( CBaseEntity *pEntity1, TraceResult *trace )
+void SV_Impact( CBaseEntity *pEntity1, CBaseEntity *pEntity2, TraceResult *trace )
 {
-	CBaseEntity *pEntity2 = CBaseEntity::Instance( trace->pHit );
+	// get it from trace
+	if( !pEntity2 ) pEntity2 = CBaseEntity::Instance( trace->pHit );
 
 	gpGlobals->time = PHYSICS_TIME(); // ouch!
 
-	if(( pEntity1->pev->flags|pEntity2->pev->flags ) & FL_SPECTATOR )
+	if(( pEntity1->pev->flags|pEntity2->pev->flags ) & FL_KILLME )
 		return;
 
 	// group trace support
@@ -1452,7 +1543,7 @@ int SV_FlyMove( CBaseEntity *pEntity, float time, TraceResult *steptrace )
 		}
 
 		// run the impact function
-		SV_Impact( pEntity, &trace );
+		SV_Impact( pEntity, NULL, &trace );
 
 		// break if removed by the impact function
 		if( ed->free || pEntity->pev->flags & FL_KILLME )
@@ -1580,29 +1671,6 @@ void SV_AddHalfGravity( CBaseEntity *pEntity, float timestep )
 
 /*
 ============
-SV_AllowPushRotate
-
-Allows to change entity yaw?
-============
-*/
-BOOL SV_AllowPushRotate( CBaseEntity *pEntity )
-{
-	model_t	*mod;
-
-	mod = (model_t *)MODEL_HANDLE( pEntity->pev->modelindex );
-	if( !mod || mod->type != mod_brush )
-		return TRUE;
-
-	if( !CVAR_GET_FLOAT( "sv_allow_rotate_pushables" ))
-		return FALSE;
-
-	// NOTE: flag 2 it's a internal engine flag (see model.c for details)
-	// we can recalc real model origin here but this check is faster :)
-	return (mod->flags & 2) ? TRUE : FALSE;
-}
-
-/*
-============
 SV_PushEntity
 
 Does not change the entities velocity at all
@@ -1632,6 +1700,10 @@ TraceResult SV_PushEntity( CBaseEntity *pEntity, const Vector &lpush, const Vect
 			Vector vecAngles = pEntity->GetAbsAngles();
 			vecAngles[YAW] += trace.flFraction * apush[YAW];
 			pEntity->SetAbsAngles( vecAngles );
+
+			// keep gait yaw is actual
+			if( pEntity->IsPlayer( ) && apush[YAW] != 0.0f )
+				pEntity->m_flGaitYaw = pEntity->pev->angles[YAW];
 		}
 	}
 
@@ -1645,7 +1717,7 @@ TraceResult SV_PushEntity( CBaseEntity *pEntity, const Vector &lpush, const Vect
 	}
 
 	// so we can run impact function afterwards.
-	if( trace.pHit ) SV_Impact( pEntity, &trace );
+	if( trace.pHit ) SV_Impact( pEntity, NULL, &trace );
 
 	return trace;
 }
@@ -2238,7 +2310,7 @@ usedown:
 
 			// hentacle impact code
 			if(( trace.flFraction < 1.0f || trace.fStartSolid )  && trace.pHit )
-				SV_Impact( pEntity, &trace );
+				SV_Impact( pEntity, NULL, &trace );
 		}
 	}
 

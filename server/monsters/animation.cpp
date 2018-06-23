@@ -17,6 +17,8 @@
 #include "util.h"
 
 #include "studio.h"
+#include "bs_defs.h"
+#include "r_studioint.h"
 
 #ifndef ACTIVITY_H
 #include "activity.h"
@@ -33,6 +35,91 @@
 #endif
 
 #include "cbase.h"
+
+// Global engine <-> studio model rendering code interface
+float m_poseparameter[MAXSTUDIOPOSEPARAM]; // stub
+server_studio_api_t IEngineStudio;
+model_t *m_pSubModel = NULL;
+
+class CBaseBoneSetup : public CStudioBoneSetup
+{
+public:
+	virtual void debugMsg( char *szFmt, ... )
+	{
+		char	buffer[2048];	// must support > 1k messages
+		va_list	args;
+
+		va_start( args, szFmt );
+		Q_vsnprintf( buffer, 2048, szFmt, args );
+		va_end( args );
+
+		ALERT( at_console, "%s", buffer );
+	}
+
+	virtual mstudioanim_t *GetAnimSourceData( mstudioseqdesc_t *pseqdesc )
+	{
+		mstudioseqgroup_t *pseqgroup;
+		cache_user_t *paSequences;
+
+		pseqgroup = (mstudioseqgroup_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqgroupindex) + pseqdesc->seqgroup;
+
+		if( pseqdesc->seqgroup == 0 )
+			return (mstudioanim_t *)((byte *)m_pStudioHeader + pseqgroup->data + pseqdesc->animindex);
+
+		if( !m_pSubModel )
+			return NULL; // model was not set!
+
+		paSequences = (cache_user_t *)m_pSubModel->submodels;
+
+		if( paSequences == NULL )
+		{
+			paSequences = (cache_user_t *)IEngineStudio.Mem_Calloc( MAXSTUDIOGROUPS, sizeof( cache_user_t ));
+			m_pSubModel->submodels = (dmodel_t *)paSequences;
+		}
+
+		// check for already loaded
+		if( !IEngineStudio.Cache_Check(( struct cache_user_s *)&(paSequences[pseqdesc->seqgroup] )))
+		{
+			char filepath[128], modelpath[128], modelname[64];
+
+			COM_FileBase( m_pSubModel->name, modelname );
+			COM_ExtractFilePath( m_pSubModel->name, modelpath );
+
+			// NOTE: here we build real sub-animation filename because stupid user may rename model without recompile
+			Q_snprintf( filepath, sizeof( filepath ), "%s/%s%i%i.mdl", modelpath, modelname, pseqdesc->seqgroup / 10, pseqdesc->seqgroup % 10 );
+
+			ALERT( at_console, "loading: %s\n", filepath );
+			IEngineStudio.LoadCacheFile( filepath, (struct cache_user_s *)&paSequences[pseqdesc->seqgroup] );			
+		}
+
+		return (mstudioanim_t *)((byte *)paSequences[pseqdesc->seqgroup].data + pseqdesc->animindex);
+	}
+};
+
+static CBaseBoneSetup g_boneSetup;
+
+//================================================================================================
+//			HUD_GetStudioModelInterface
+//	Export this function for the engine to use the studio renderer class to render objects.
+//================================================================================================
+int Server_GetBlendingInterface( int version, sv_blending_interface_t **ppinterface, server_studio_api_t *pstudio, float (*transform)[3][4], float (*bones)[MAXSTUDIOBONES][3][4] )
+{
+	if( version != SV_BLENDING_INTERFACE_VERSION  )
+		return 0;
+
+	ALERT( at_aiconsole, "Server_GetBlendingInterface()\n" );
+
+	// Copy in engine helper functions
+	memcpy( &IEngineStudio, pstudio, sizeof( IEngineStudio ));
+
+	// Success
+	return 1;
+}
+
+void SetupModelBones( studiohdr_t *header )
+{
+	g_boneSetup.SetStudioPointers( header, m_poseparameter );
+}
 
 int ExtractBbox( void *pmodel, int sequence, Vector &mins, Vector &maxs )
 {
@@ -186,12 +273,42 @@ void SequencePrecache( void *pmodel, const char *pSequenceName )
 	}
 }
 
-void GetSequenceInfo( void *pmodel, int sequence, float *pflFrameRate, float *pflGroundSpeed )
+void CalcGaitFrame( void *pmodel, int &gaitsequence, float &flGaitFrame, float flGaitMovement )
 {
 	studiohdr_t *pstudiohdr;
 
 	if( !( pstudiohdr = (studiohdr_t *)pmodel ))
 		return;	
+
+	mstudioseqdesc_t *pseqdesc;
+
+	if( gaitsequence < 0 || gaitsequence >= pstudiohdr->numseq ) 
+		gaitsequence = 0;
+
+	pseqdesc = (mstudioseqdesc_t *)((byte *)pstudiohdr + pstudiohdr->seqindex) + gaitsequence;
+
+	// calc gait frame
+	if( pseqdesc->linearmovement[0] > 0.0f )
+		flGaitFrame += (flGaitMovement / pseqdesc->linearmovement[0]) * pseqdesc->numframes;
+	else flGaitFrame += pseqdesc->fps * gpGlobals->frametime;
+
+	// g-cont. don't to modulo here to avoid confuse lerping
+#if 0
+	// do modulo
+	flGaitFrame -= (int)(flGaitFrame / pseqdesc->numframes) * pseqdesc->numframes;
+	if( flGaitFrame < 0.0f ) flGaitFrame += pseqdesc->numframes;
+#endif
+}
+
+void GetSequenceInfo( void *pmodel, int sequence, float *pflFrameRate, float *pflGroundSpeed )
+{
+	studiohdr_t *pstudiohdr;
+	Vector vecMove, vecAngle;
+
+	if( !( pstudiohdr = (studiohdr_t *)pmodel ))
+		return;	
+
+	SetupModelBones( pstudiohdr );
 
 	mstudioseqdesc_t *pseqdesc;
 
@@ -203,11 +320,12 @@ void GetSequenceInfo( void *pmodel, int sequence, float *pflFrameRate, float *pf
 	}
 
 	pseqdesc = (mstudioseqdesc_t *)((byte *)pstudiohdr + pstudiohdr->seqindex) + sequence;
+	g_boneSetup.SeqMovement( sequence, 0.0f, 1.0f, vecMove, vecAngle );
 
 	if( pseqdesc->numframes > 1 )
 	{
 		*pflFrameRate = 256 * pseqdesc->fps / (pseqdesc->numframes - 1);
-		*pflGroundSpeed = pseqdesc->linearmovement.Length();
+		*pflGroundSpeed = vecMove.Length();
 		*pflGroundSpeed = *pflGroundSpeed * pseqdesc->fps / (pseqdesc->numframes - 1);
 	}
 	else

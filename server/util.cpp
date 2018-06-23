@@ -33,6 +33,7 @@
 #include "studio.h"
 #include "trace.h"
 #include "utldict.h"
+#include "render_api.h"
 
 //-----------------------------------------------------------------------------
 // Entity creation factory
@@ -556,6 +557,7 @@ void UTIL_Teleport( CBaseEntity *pSource, TeleportListEntry_t &entry, const Vect
 	Vector prevOrigin = pTeleport->GetAbsOrigin();
 	Vector prevAngles = pTeleport->GetAbsAngles();
 
+	pTeleport->m_iTeleportFilter = TRUE;
 	pTeleport->MakeNonSolid();
 
 	// i'm teleporting myself
@@ -628,9 +630,10 @@ void UTIL_Teleport( CBaseEntity *pSource, TeleportListEntry_t &entry, const Vect
 	}
 
 	pTeleport->RestoreSolid();
-	pTeleport->RelinkEntity( TRUE );	// need to move back in solid list
+	pTeleport->RelinkEntity( TRUE, NULL, TRUE );	// need to move back in solid list
 	pTeleport->ClearGroundEntity();
 	pTeleport->OnTeleport();		// call event
+	pTeleport->m_iTeleportFilter = FALSE;
 }
 
 int UTIL_EntitiesInBox( CBaseEntity **pList, int listMax, const Vector &mins, const Vector &maxs, int flagMask )
@@ -1770,14 +1773,14 @@ void UTIL_BloodDecalTrace( TraceResult *pTrace, int bloodColor )
 	}
 }
 
-void UTIL_BloodStudioDecalTrace( const Vector &vecSrc, TraceResult *pTrace, int bloodColor )
+void UTIL_BloodStudioDecalTrace( TraceResult *pTrace, int bloodColor )
 {
 	if ( UTIL_ShouldShowBlood( bloodColor ) )
 	{
 		if ( bloodColor == BLOOD_COLOR_RED )
-			UTIL_StudioDecalTrace( vecSrc, pTrace, DECAL_BLOOD1 + RANDOM_LONG(0,5), 0 );
+			UTIL_StudioDecalTrace( pTrace, DECAL_BLOOD1 + RANDOM_LONG(0,5), 0 );
 		else
-			UTIL_StudioDecalTrace( vecSrc, pTrace, DECAL_YBLOOD1 + RANDOM_LONG(0,5), 0 );
+			UTIL_StudioDecalTrace( pTrace, DECAL_YBLOOD1 + RANDOM_LONG(0,5), 0 );
 	}
 }
 
@@ -1839,7 +1842,7 @@ void UTIL_DecalTrace( TraceResult *pTrace, int decalNumber )
 	MESSAGE_END();
 }
 
-void UTIL_StudioDecalTrace( const Vector &vecSrc, TraceResult *pTrace, int decalNumber, int flags )
+void UTIL_StudioDecalTrace( TraceResult *pTrace, int decalNumber, int flags )
 {
 	short entityIndex;
 	int decalIndex;
@@ -1871,16 +1874,26 @@ void UTIL_StudioDecalTrace( const Vector &vecSrc, TraceResult *pTrace, int decal
 	{
 		return;
 	} 
-	
-	MESSAGE_BEGIN( MSG_BROADCAST, SVC_STUDIODECAL );
-		WRITE_COORD( pTrace->vecEndPos.x );	// write pos
-		WRITE_COORD( pTrace->vecEndPos.y );
-		WRITE_COORD( pTrace->vecEndPos.z );
+
+	Vector vecSrc = pTrace->vecEndPos + pTrace->vecPlaneNormal * 5.0f;	// magic Valve constant
+	Vector vecEnd = pTrace->vecEndPos;
+#if 1
+	// write local coords to avoid reduce precision
+	matrix4x4 mat = pEntity->EntityToWorldTransform();
+	vecSrc = mat.VectorITransform( vecSrc );
+	vecEnd = mat.VectorITransform( vecEnd );
+	SetBits( flags, FDECAL_LOCAL_SPACE ); // now it's in local space
+#endif	
+	MESSAGE_BEGIN( MSG_BROADCAST, gmsgStudioDecal );
+		WRITE_COORD( vecEnd.x );		// write pos
+		WRITE_COORD( vecEnd.y );
+		WRITE_COORD( vecEnd.z );
 		WRITE_COORD( vecSrc.x );		// write start
 		WRITE_COORD( vecSrc.y );
 		WRITE_COORD( vecSrc.z );
 		WRITE_SHORT( decalIndex );		// decal texture
 		WRITE_SHORT( entityIndex );
+		WRITE_SHORT( pEntity->pev->modelindex );
 		WRITE_BYTE( flags );
 
 		// write model state for correct restore
@@ -1892,9 +1905,41 @@ void UTIL_StudioDecalTrace( const Vector &vecSrc, TraceResult *pTrace, int decal
 		WRITE_BYTE( pEntity->pev->controller[1] );
 		WRITE_BYTE( pEntity->pev->controller[2] );
 		WRITE_BYTE( pEntity->pev->controller[3] );
-		WRITE_SHORT( pEntity->pev->modelindex );
 		WRITE_BYTE( pEntity->pev->body );
 		WRITE_BYTE( pEntity->pev->skin );
+
+		if( FBitSet( pEntity->pev->iuser1, CF_STATIC_ENTITY ))
+			WRITE_SHORT( pEntity->pev->colormap );
+		else WRITE_SHORT( 0 );
+	MESSAGE_END();
+}
+
+void UTIL_RestoreStudioDecal( const Vector &vecEnd, const Vector &vecSrc, int entityIndex, int modelIndex, const char *name, int flags, modelstate_t *state, int lightcache )
+{
+	MESSAGE_BEGIN( MSG_INIT, gmsgStudioDecal );
+		WRITE_COORD( vecEnd.x );	// write pos
+		WRITE_COORD( vecEnd.y );
+		WRITE_COORD( vecEnd.z );
+		WRITE_COORD( vecSrc.x );	// write start
+		WRITE_COORD( vecSrc.y );
+		WRITE_COORD( vecSrc.z );
+		WRITE_SHORT( DECAL_INDEX( name ));	// decal texture
+		WRITE_SHORT( entityIndex );
+		WRITE_SHORT( modelIndex );
+		WRITE_BYTE( flags );
+
+		// write model state for correct restore
+		WRITE_SHORT( state->sequence );
+		WRITE_SHORT( state->frame );	// already premultiplied by 8
+		WRITE_BYTE( state->blending[0] );
+		WRITE_BYTE( state->blending[1] );
+		WRITE_BYTE( state->controller[0] );
+		WRITE_BYTE( state->controller[1] );
+		WRITE_BYTE( state->controller[2] );
+		WRITE_BYTE( state->controller[3] );
+		WRITE_BYTE( state->body );
+		WRITE_BYTE( state->skin );
+		WRITE_SHORT( lightcache );
 	MESSAGE_END();
 }
 
@@ -2308,7 +2353,7 @@ int UTIL_PrecacheSound( const char* s )
 	const char *ext = UTIL_FileExtension( s );
 
 	if( FStrEq( ext, "wav" ) || FStrEq( ext, "mp3" ))
-		ALERT( at_warning, "sound \"%s\" not found!\n", s );
+		ALERT( at_warning, "sound \"%s\" not found!\n", path );
 	else ALERT( at_error, "invalid name \"%s\"!\n", s );
 
 	return MAKE_STRING( "common/null.wav" ); // set null sound
@@ -2330,7 +2375,7 @@ unsigned short UTIL_PrecacheMovie( const char *s )
 	// g-cont. idea! use COMPARE_FILE_TIME instead of LOAD_FILE_FOR_ME
 	if( COMPARE_FILE_TIME( path, path, &iCompare ))
 	{
-		return g_engfuncs.pfnPrecacheEvent( 1, s );
+		return g_engfuncs.pfnPrecacheGeneric( s );
 	}
 
 	ALERT( at_console, "Warning: video (%s) not found!\n", s );
@@ -2561,7 +2606,7 @@ static void UTIL_RecursiveWalkNodes( areaclip_t *clip, areanode_t *node )
 	else if( clip->area_type == AREA_TRIGGERS )
 		start = &node->trigger_edicts;
 	else if( clip->area_type == AREA_WATER )
-		start = &node->trigger_edicts;
+		start = &node->solid_edicts;
 	else return;
 
 	// touch linked edicts
@@ -2570,6 +2615,12 @@ static void UTIL_RecursiveWalkNodes( areaclip_t *clip, areanode_t *node )
 		next = l->next;
 
 		CBaseEntity *pCheck = CBaseEntity :: Instance( EDICT_FROM_AREA( l ));
+
+		if( clip->area_type == AREA_SOLID && pCheck->pev->solid == SOLID_NOT )
+			continue;
+
+		if( clip->area_type == AREA_WATER && pCheck->pev->solid != SOLID_NOT )
+			continue;
 
 		if( pCheck && pCheck->AreaIntersect( clip->vecAbsMin, clip->vecAbsMax ))
 		{
@@ -2613,7 +2664,8 @@ int UTIL_DropToFloor( CBaseEntity *pEntity )
 	Vector vecStart = pEntity->GetAbsOrigin();
 	Vector vecEnd = pEntity->GetAbsOrigin() - Vector( 0, 0, 256 );
 
-	TRACE_MONSTER_HULL( pEntity->edict(), vecStart, vecEnd, dont_ignore_monsters, pEntity->edict(), &trace );
+	if( FBitSet( pEntity->pev->iuser1, CF_STATIC_ENTITY )) TRACE_LINE( vecStart, vecEnd, TRUE, pEntity->edict(), &trace );
+	else TRACE_MONSTER_HULL( pEntity->edict(), vecStart, vecEnd, dont_ignore_monsters, pEntity->edict(), &trace );
 
 	if( trace.fAllSolid )
 		return -1;

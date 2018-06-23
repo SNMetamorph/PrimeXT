@@ -39,6 +39,7 @@ BEGIN_DATADESC( CPathTrack )
 	DEFINE_FIELD( m_paltpath, FIELD_CLASSPTR ),
 	DEFINE_FIELD( m_pprevious, FIELD_CLASSPTR ),
 	DEFINE_KEYFIELD( m_altName, FIELD_STRING, "altpath" ),
+	DEFINE_KEYFIELD( m_eOrientationType, FIELD_INTEGER, "type" ),
 	DEFINE_KEYFIELD( m_iszFireFow, FIELD_STRING, "m_iszFireFow" ),
 	DEFINE_KEYFIELD( m_iszFireRev, FIELD_STRING, "m_iszFireRev" ),
 #ifdef PATH_SPARKLE_DEBUG
@@ -47,6 +48,11 @@ BEGIN_DATADESC( CPathTrack )
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( path_track, CPathTrack );
+
+CPathTrack :: CPathTrack()
+{
+	m_eOrientationType = TrackOrientation_FacePath;
+}
 
 //
 // Cache user-entity-field values until spawn is called.
@@ -66,6 +72,11 @@ void CPathTrack :: KeyValue( KeyValueData *pkvd )
 	else if( FStrEq( pkvd->szKeyName, "m_iszFireRev" ))
 	{
 		m_iszFireRev = ALLOC_STRING( pkvd->szValue );
+		pkvd->fHandled = TRUE;
+	}
+	else if( FStrEq( pkvd->szKeyName, "type" ))
+	{
+		m_eOrientationType = Q_atoi( pkvd->szValue );
 		pkvd->fHandled = TRUE;
 	}
 	else BaseClass::KeyValue( pkvd );
@@ -108,7 +119,7 @@ void CPathTrack :: Link( void  )
 
 		if( pTarget == this )
 		{
-			ALERT( at_error, "path_track (%s) refers to itself as a target!\n", GetTargetname( ));
+			ALERT( at_error, "path_track (%s) refers to itself as a target!\n", GetDebugName());
 		}
 		else if( pTarget )
 		{
@@ -120,7 +131,7 @@ void CPathTrack :: Link( void  )
 		}
 		else
 		{
-			ALERT( at_console, "Dead end link %s\n", GetTarget());
+			ALERT( at_warning, "Dead end link %s\n", GetTarget());
 		}
 	}
 
@@ -128,12 +139,14 @@ void CPathTrack :: Link( void  )
 	if( m_altName )
 	{
 		pTarget = UTIL_FindEntityByTargetname( NULL, STRING( m_altName ));
-		m_paltpath = CPathTrack :: Instance( pTarget->edict() );
 
-		if( m_paltpath )
+		if( pTarget )
 		{
+			m_paltpath = CPathTrack :: Instance( pTarget->edict() );
+
 			// if no next pointer, this is the end of a path
-			m_paltpath->SetPrevious( this );
+			if( m_paltpath )
+				m_paltpath->SetPrevious( this );
 		}
 	}
 }
@@ -155,6 +168,8 @@ void CPathTrack :: Spawn( void )
 
 void CPathTrack :: Activate( void )
 {
+	BaseClass::Activate();
+
 	// link to next, and back-link
 	if( !FStringNull( pev->targetname ))
 		Link();
@@ -171,13 +186,13 @@ CPathTrack *CPathTrack :: ValidPath( CPathTrack *ppath, int testFlag )
 	return ppath;
 }
 
-void CPathTrack :: Project( CPathTrack *pstart, CPathTrack *pend, Vector *origin, float dist )
+void CPathTrack :: Project( CPathTrack *pstart, CPathTrack *pend, Vector &origin, float dist )
 {
 	if( pstart && pend )
 	{
 		Vector dir = (pend->GetLocalOrigin() - pstart->GetLocalOrigin());
 		dir = dir.Normalize();
-		*origin = pend->GetLocalOrigin() + dir * dist;
+		origin = pend->GetLocalOrigin() + dir * dist;
 	}
 }
 
@@ -197,105 +212,101 @@ CPathTrack *CPathTrack::GetPrevious( void )
 	return m_pprevious;
 }
 
-void CPathTrack::SetPrevious( CPathTrack *pprev )
+void CPathTrack :: SetPrevious( CPathTrack *pprev )
 {
 	// Only set previous if this isn't my alternate path
 	if( pprev && !FStrEq( pprev->GetTargetname(), STRING( m_altName )))
 		m_pprevious = pprev;
 }
 
-// Assumes this is ALWAYS enabled
-CPathTrack *CPathTrack :: LookAhead( Vector *origin, float dist, int move )
+CPathTrack *CPathTrack :: GetNextInDir( bool bForward )
 {
-	CPathTrack *pcurrent;
+	if ( bForward )
+		return GetNext();
+
+	return GetPrevious();
+}
+
+// Assumes this is ALWAYS enabled
+CPathTrack *CPathTrack :: LookAhead( Vector &origin, float dist, int move, CPathTrack **pNextNext )
+{
+	CPathTrack *pcurrent = this;
 	float originalDist = dist;
-	
-	pcurrent = this;
-	Vector currentPos = *origin;
+	Vector currentPos = origin;
 
-	if( dist < 0 )	// Travelling backwards through path
+	bool bForward = true;
+	if ( dist < 0 )
 	{
+		// Travelling backwards along the path.
 		dist = -dist;
+		bForward = false;
+	}
 
-		while( dist > 0 )
+	// Move along the path, until we've gone 'dist' units or run out of path.
+	while ( dist > 0 )
+	{
+		// If there is no next path track, or it's disabled, we're done.
+		if ( !ValidPath( pcurrent->GetNextInDir( bForward ), move ) )
 		{
-			Vector dir = pcurrent->GetLocalOrigin() - currentPos;
-			float length = dir.Length();
+			if ( !move )
+			{
+				Project( pcurrent->GetNextInDir( !bForward ), pcurrent, origin, dist );
+			}
 
-			if( !length )
-			{
-			 	// If there is no previous node, or it's disabled, return now.
-				if ( !ValidPath( pcurrent->GetPrevious(), move ))
-				{
-					if( !move )
-						Project( pcurrent->GetNext(), pcurrent, origin, dist );
-					return NULL;
-				}
-				pcurrent = pcurrent->GetPrevious();
-			}
-			else if( length > dist )	// enough left in this path to move
-			{
-				*origin = currentPos + (dir * (dist / length));
-				return pcurrent;
-			}
-			else
-			{
-				dist -= length;
-				currentPos = pcurrent->GetLocalOrigin();
-				*origin = currentPos;
-				if( !ValidPath( pcurrent->GetPrevious(), move ))	// If there is no previous node, or it's disabled, return now.
-					return NULL;
-
-				pcurrent = pcurrent->GetPrevious();
-			}
+			return NULL;
 		}
 
-		*origin = currentPos;
+		// The next path track is valid. How far are we from it?
+		Vector dir = pcurrent->GetNextInDir( bForward )->GetLocalOrigin() - currentPos;
+		float length = dir.Length();
 
-		return pcurrent;
-	}
-	else 
-	{
-		while( dist > 0 )
+		// If we are at the next node and there isn't one beyond it, return the next node.
+		if ( !length  && !ValidPath( pcurrent->GetNextInDir( bForward )->GetNextInDir( bForward ), move ) )
 		{
-			if( !ValidPath( pcurrent->GetNext(), move ))	// If there is no next node, or it's disabled, return now.
+			if ( pNextNext )
 			{
-				if( !move )
-					Project( pcurrent->GetPrevious(), pcurrent, origin, dist );
+				*pNextNext = NULL;
+			}
+
+			if ( dist == originalDist )
+			{
+				// Didn't move at all, must be in a dead end.
 				return NULL;
 			}
 
-			Vector dir = pcurrent->GetNext()->GetLocalOrigin() - currentPos;
-			float length = dir.Length();
-
-			if( !length && !ValidPath( pcurrent->GetNext()->GetNext(), move ))
-			{
-				if( dist == originalDist ) // HACK -- up against a dead end
-					return NULL;
-				return pcurrent;
-			}
-
-			if( length > dist )	// enough left in this path to move
-			{
-				*origin = currentPos + (dir * (dist / length));
-				return pcurrent;
-			}
-			else
-			{
-				dist -= length;
-				currentPos = pcurrent->GetNext()->GetLocalOrigin();
-				pcurrent = pcurrent->GetNext();
-				*origin = currentPos;
-			}
+			return pcurrent->GetNextInDir( bForward );
 		}
-		*origin = currentPos;
+
+		// If we don't hit the next path track within the distance remaining, we're done.
+		if ( length > dist )
+		{
+			origin = currentPos + ( dir * ( dist / length ) );
+			if ( pNextNext )
+			{
+				*pNextNext = pcurrent->GetNextInDir( bForward );
+			}
+
+			return pcurrent;
+		}
+
+		// We hit the next path track, advance to it.
+		dist -= length;
+		currentPos = pcurrent->GetNextInDir( bForward )->GetLocalOrigin();
+		pcurrent = pcurrent->GetNextInDir( bForward );
+		origin = currentPos;
+	}
+
+	// We consumed all of the distance, and exactly landed on a path track.
+	if ( pNextNext )
+	{
+		*pNextNext = pcurrent->GetNextInDir( bForward );
 	}
 
 	return pcurrent;
 }
 	
 // Assumes this is ALWAYS enabled
-CPathTrack *CPathTrack :: Nearest( Vector origin )
+CPathTrack *CPathTrack :: Nearest( const Vector &origin )
 {
 	int		deadCount;
 	float		minDist, dist;
@@ -317,7 +328,7 @@ CPathTrack *CPathTrack :: Nearest( Vector origin )
 
 		if( deadCount > 9999 )
 		{
-			ALERT( at_error, "Bad sequence of path_tracks from %s", GetTargetname( ));
+			ALERT( at_error, "Bad sequence of path_tracks from %s", GetDebugName());
 			return NULL;
 		}
 
@@ -337,16 +348,13 @@ CPathTrack *CPathTrack :: Nearest( Vector origin )
 	return pnearest;
 }
 
-CPathTrack *CPathTrack::GetNextInDir( bool bForward )
-{
-	if( bForward )
-		return GetNext();
-	
-	return GetPrevious();
-}
-
 Vector CPathTrack :: GetOrientation( bool bForwardDir )
 {
+	if( m_eOrientationType == TrackOrientation_FacePathAngles )
+	{
+		return GetLocalAngles();
+	}
+
 	CPathTrack *pPrev = this;
 	CPathTrack *pNext = GetNextInDir( bForwardDir );
 

@@ -58,10 +58,10 @@ extern DLL_GLOBAL int		g_iSkillLevel;
 #define HGRUNT_MINIMUM_HEADSHOT_DAMAGE	15 // must do at least this much damage in one shot to head to score a headshot kill
 #define HGRUNT_SENTENCE_VOLUME			(float)0.35 // volume of grunt sentences
 
-#define HGRUNT_9MMAR				( 1 << 0)
-#define HGRUNT_HANDGRENADE			( 1 << 1)
-#define HGRUNT_GRENADELAUNCHER		( 1 << 2)
-#define HGRUNT_SHOTGUN				( 1 << 3)
+#define HGRUNT_9MMAR			1
+#define HGRUNT_HANDGRENADE			2
+#define HGRUNT_GRENADELAUNCHER		3
+#define HGRUNT_SHOTGUN			4
 
 #define HEAD_GROUP					1
 #define HEAD_GRUNT					0
@@ -273,11 +273,12 @@ void CHGrunt :: GibMonster ( void )
 	Vector	vecGunAngles;
 
 	if ( GetBodygroup( 2 ) != 2 && !( pev->spawnflags & SF_MONSTER_NO_WPN_DROP ))
-	{// throw a gun if the grunt has one
+	{
+		// throw a gun if the grunt has one
 		GetAttachment( 0, vecGunPos, vecGunAngles );
 		
 		CBaseEntity *pGun;
-		if (FBitSet( pev->weapons, HGRUNT_SHOTGUN ))
+		if( HasWeapon( HGRUNT_SHOTGUN ))
 		{
 			pGun = DropItem( "weapon_shotgun", vecGunPos, vecGunAngles );
 		}
@@ -291,7 +292,7 @@ void CHGrunt :: GibMonster ( void )
 			pGun->SetLocalAvelocity( Vector( 0, RANDOM_FLOAT( 200, 400 ), 0 ));
 		}
 	
-		if (FBitSet( pev->weapons, HGRUNT_GRENADELAUNCHER ))
+		if( HasWeapon( HGRUNT_GRENADELAUNCHER ))
 		{
 			pGun = DropItem( "ammo_ARgrenades", vecGunPos, vecGunAngles );
 			if ( pGun )
@@ -466,7 +467,7 @@ BOOL CHGrunt :: CheckRangeAttack1 ( float flDot, float flDist )
 //=========================================================
 BOOL CHGrunt :: CheckRangeAttack2 ( float flDot, float flDist )
 {
-	if (! FBitSet(pev->weapons, (HGRUNT_HANDGRENADE | HGRUNT_GRENADELAUNCHER)))
+	if( !HasWeapon( HGRUNT_HANDGRENADE ) && !HasWeapon( HGRUNT_GRENADELAUNCHER ))
 	{
 		return FALSE;
 	}
@@ -495,7 +496,7 @@ BOOL CHGrunt :: CheckRangeAttack2 ( float flDot, float flDist )
 	
 	Vector vecTarget;
 
-	if (FBitSet( pev->weapons, HGRUNT_HANDGRENADE))
+	if( HasWeapon( HGRUNT_HANDGRENADE ))
 	{
 		// find feet
 		if (RANDOM_LONG(0,1))
@@ -542,7 +543,7 @@ BOOL CHGrunt :: CheckRangeAttack2 ( float flDot, float flDist )
 	}
 
 		
-	if (FBitSet( pev->weapons, HGRUNT_HANDGRENADE))
+	if( HasWeapon( HGRUNT_HANDGRENADE ))
 	{
 		Vector vecToss = VecCheckToss( pev, GetGunPosition(), vecTarget, 0.5 );
 
@@ -853,7 +854,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			SetBodygroup( GUN_GROUP, GUN_NONE );
 
 			// now spawn a gun.
-			if (FBitSet( pev->weapons, HGRUNT_SHOTGUN ))
+			if (HasWeapon( HGRUNT_SHOTGUN ))
 			{
 				 DropItem( "weapon_shotgun", vecGunPos, vecGunAngles );
 			}
@@ -861,7 +862,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			{
 				 DropItem( "weapon_9mmAR", vecGunPos, vecGunAngles );
 			}
-			if (FBitSet( pev->weapons, HGRUNT_GRENADELAUNCHER ))
+			if (HasWeapon( HGRUNT_GRENADELAUNCHER ))
 			{
 				DropItem( "ammo_ARgrenades", BodyTarget( GetAbsOrigin() ), vecGunAngles );
 			}
@@ -908,7 +909,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 		case HGRUNT_AE_BURST1:
 		{
-			if ( FBitSet( pev->weapons, HGRUNT_9MMAR ))
+			if ( HasWeapon( HGRUNT_9MMAR ))
 			{
 				Shoot();
 
@@ -1000,15 +1001,17 @@ void CHGrunt :: Spawn()
 
 	m_HackedGunPos = Vector ( 0, 0, 55 );
 
-	if (pev->weapons == 0)
+	if (!m_bHaveWeapons)
 	{
 		// initialize to original values
-		pev->weapons = HGRUNT_9MMAR | HGRUNT_HANDGRENADE;
-		// pev->weapons = HGRUNT_SHOTGUN;
-		// pev->weapons = HGRUNT_9MMAR | HGRUNT_GRENADELAUNCHER;
+		AddWeapon( HGRUNT_9MMAR );
+		AddWeapon( HGRUNT_HANDGRENADE );
+		// AddWeapon( HGRUNT_SHOTGUN );
+		// AddWeapon( HGRUNT_9MMAR );
+		// AddWeapon( HGRUNT_GRENADELAUNCHER );
 	}
 
-	if (FBitSet( pev->weapons, HGRUNT_SHOTGUN ))
+	if (HasWeapon( HGRUNT_SHOTGUN ))
 	{
 		SetBodygroup( GUN_GROUP, GUN_SHOTGUN );
 		m_cClipSize		= 8;
@@ -1024,11 +1027,11 @@ void CHGrunt :: Spawn()
 	else
 		pev->skin = 1;	// dark skin
 
-	if (FBitSet( pev->weapons, HGRUNT_SHOTGUN ))
+	if ( HasWeapon( HGRUNT_SHOTGUN ))
 	{
 		SetBodygroup( HEAD_GROUP, HEAD_SHOTGUN);
 	}
-	else if (FBitSet( pev->weapons, HGRUNT_GRENADELAUNCHER ))
+	else if ( HasWeapon( HGRUNT_GRENADELAUNCHER ))
 	{
 		SetBodygroup( HEAD_GROUP, HEAD_M203 );
 		pev->skin = 1; // alway dark skin
@@ -1874,7 +1877,7 @@ void CHGrunt :: SetActivity ( Activity NewActivity )
 	{
 	case ACT_RANGE_ATTACK1:
 		// grunt is either shooting standing or shooting crouched
-		if (FBitSet( pev->weapons, HGRUNT_9MMAR))
+		if (HasWeapon( HGRUNT_9MMAR ))
 		{
 			if ( m_fStanding )
 			{
@@ -1904,7 +1907,7 @@ void CHGrunt :: SetActivity ( Activity NewActivity )
 	case ACT_RANGE_ATTACK2:
 		// grunt is going to a secondary long range attack. This may be a thrown 
 		// grenade or fired grenade, we must determine which and pick proper sequence
-		if ( pev->weapons & HGRUNT_HANDGRENADE )
+		if ( HasWeapon( HGRUNT_HANDGRENADE ))
 		{
 			// get toss anim
 			iSequence = LookupSequence( "throwgrenade" );
@@ -2133,7 +2136,7 @@ Schedule_t *CHGrunt :: GetSchedule( void )
 			}
 // can grenade launch
 
-			else if ( FBitSet( pev->weapons, HGRUNT_GRENADELAUNCHER) && HasConditions ( bits_COND_CAN_RANGE_ATTACK2 ) && OccupySlot( bits_SLOTS_HGRUNT_GRENADE ) )
+			else if ( HasWeapon( HGRUNT_GRENADELAUNCHER ) && HasConditions ( bits_COND_CAN_RANGE_ATTACK2 ) && OccupySlot( bits_SLOTS_HGRUNT_GRENADE ) )
 			{
 				// shoot a grenade if you can
 				return GetScheduleOfType( SCHED_RANGE_ATTACK2 );

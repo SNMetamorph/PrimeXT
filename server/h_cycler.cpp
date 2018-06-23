@@ -197,7 +197,7 @@ public:
 	void Spawn( void );
 	void Think( void );
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	virtual int ObjectCaps( void ) { return (BaseClass :: ObjectCaps() | FCAP_DONT_SAVE | FCAP_IMPULSE_USE); }
+	virtual int ObjectCaps( void ) { return (BaseClass :: ObjectCaps() | FCAP_IMPULSE_USE); }
 	virtual int TakeDamage( entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType );
 	void Animate( float frames );
 

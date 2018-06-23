@@ -16,16 +16,38 @@ GNU General Public License for more details.
 #ifndef PHYSINT_H
 #define PHYSINT_H
 
-#define SV_PHYSICS_INTERFACE_VERSION		6
+#define SV_PHYSICS_INTERFACE_VERSION	6
 
-#define STRUCT_FROM_LINK( l, t, m )		((t *)((byte *)l - (int)&(((t *)0)->m)))
-#define EDICT_FROM_AREA( l )			STRUCT_FROM_LINK( l, edict_t, area )
-#define FACET_FROM_AREA( l )			STRUCT_FROM_LINK( l, mfacet_t, area )
+#define STRUCT_FROM_LINK( l, t, m )	((t *)((byte *)l - (int)&(((t *)0)->m)))
+#define EDICT_FROM_AREA( l )		STRUCT_FROM_LINK( l, edict_t, area )
+#define FACET_FROM_AREA( l )		STRUCT_FROM_LINK( l, mfacet_t, area )
 
 // values that can be returned with pfnServerState
-#define SERVER_DEAD		0
-#define SERVER_LOADING	1
-#define SERVER_ACTIVE	2
+#define SERVER_DEAD			0
+#define SERVER_LOADING		1
+#define SERVER_ACTIVE		2
+
+// LUMP reading errors
+#define LUMP_LOAD_OK		0
+#define LUMP_LOAD_COULDNT_OPEN	1
+#define LUMP_LOAD_BAD_HEADER		2
+#define LUMP_LOAD_BAD_VERSION		3
+#define LUMP_LOAD_NO_EXTRADATA	4
+#define LUMP_LOAD_INVALID_NUM		5
+#define LUMP_LOAD_NOT_EXIST		6
+#define LUMP_LOAD_MEM_FAILED		7
+#define LUMP_LOAD_CORRUPTED		8
+
+// LUMP saving errors
+#define LUMP_SAVE_OK		0
+#define LUMP_SAVE_COULDNT_OPEN	1
+#define LUMP_SAVE_BAD_HEADER		2
+#define LUMP_SAVE_BAD_VERSION		3
+#define LUMP_SAVE_NO_EXTRADATA	4
+#define LUMP_SAVE_INVALID_NUM		5
+#define LUMP_SAVE_ALREADY_EXIST	6
+#define LUMP_SAVE_NO_DATA		7
+#define LUMP_SAVE_CORRUPTED		8
 
 typedef struct areanode_s
 {
@@ -34,7 +56,7 @@ typedef struct areanode_s
 	struct areanode_s	*children[2];
 	link_t		trigger_edicts;
 	link_t		solid_edicts;
-	link_t		water_edicts;	// func water
+	link_t		portal_edicts;
 } areanode_t;
 
 typedef struct server_physics_api_s
@@ -44,7 +66,7 @@ typedef struct server_physics_api_s
 	double		( *pfnGetServerTime )( void ); // unclamped
 	double		( *pfnGetFrameTime )( void );	// unclamped
 	void*		( *pfnGetModel )( int modelindex );
-	areanode_t*	( *pfnGetHeadnode )( void ); // BSP tree for all physic entities
+	areanode_t*	( *pfnGetHeadnode )( void ); // AABB tree for all physic entities
 	int		( *pfnServerState )( void );
 	void		( *pfnHost_Error )( const char *error, ... );	// cause Host Error
 // ONLY ADD NEW FUNCTIONS TO THE END OF THIS STRUCT.  INTERFACE VERSION IS FROZEN AT 6
@@ -58,6 +80,33 @@ typedef struct server_physics_api_s
 	void		( *Con_NXPrintf )( struct con_nprint_s *info, char *fmt, ... );
 	const char	*( *pfnGetLightStyle )( int style ); // read custom appreance for selected lightstyle
 	void		( *pfnUpdateFogSettings )( unsigned int packed_fog );
+	char		**(*pfnGetFilesList)( const char *pattern, int *numFiles, int gamedironly );
+	struct msurface_s	*(*pfnTraceSurface)( edict_t *pTextureEntity, const float *v1, const float *v2 );
+	const byte	*(*pfnGetTextureData)( unsigned int texnum );
+
+	// static allocations
+	void		*(*pfnMemAlloc)( size_t cb, const char *filename, const int fileline );
+	void		(*pfnMemFree)( void *mem, const char *filename, const int fileline );
+
+	// trace & contents
+	int		(*pfnMaskPointContents)( const float *pos, int groupmask );
+	trace_t		(*pfnTrace)( const float *p0, float *mins, float *maxs, const float *p1, int type, edict_t *e );
+	trace_t		(*pfnTraceNoEnts)( const float *p0, float *mins, float *maxs, const float *p1, int type, edict_t *e );
+	int		(*pfnBoxInPVS)( const float *org, const float *boxmins, const float *boxmaxs );
+
+	// message handler (missed function to write raw bytes)
+	void		(*pfnWriteBytes)( byte *bytes, int count );
+
+	// BSP lump management
+	int		(*pfnCheckLump)( const char *filename, const int lump, int *lumpsize );
+	int		(*pfnReadLump)( const char *filename, const int lump, void **lumpdata, int *lumpsize );
+	int		(*pfnSaveLump)( const char *filename, const int lump, void *lumpdata, int lumpsize );
+
+	// FS tools
+	int		(*pfnSaveFile)( const char *filename, const void *data, long len );
+	const byte	*(*pfnLoadImagePixels)( const char *filename, int *width, int *height );
+
+	const char*	(*pfnGetModelName)( int modelindex );
 } server_physics_api_t;
 
 // physic callbacks
@@ -65,7 +114,7 @@ typedef struct physics_interface_s
 {
 	int		version;
 	// passed through pfnCreate (0 is attempt to create, -1 is reject)
-	int		( *SV_CreateEntity	)( edict_t *pent, const char *szName );
+	int		( *SV_CreateEntity )( edict_t *pent, const char *szName );
 	// run custom physics for each entity (return 0 to use built-in engine physic)
 	int		( *SV_PhysicsEntity	)( edict_t *pEntity );
 	// spawn entities with internal mod function e.g. for re-arrange spawn order (0 - use engine parser, 1 - use mod parser)
@@ -91,16 +140,26 @@ typedef struct physics_interface_s
 	void		( *ClipPMoveToEntity)( struct physent_s *pe, const float *start, float *mins, float *maxs, const float *end, struct pmtrace_s *tr );
 	// called at end the frame of SV_Physics call
 	void		( *SV_EndFrame )( void );
+	// obsolete
+	void		(*pfnReserved)( void );
 	// called through save\restore process
-	void		(*pfnCreateEntitiesInTransitionList)( SAVERESTOREDATA*, int levelMask );
-	// called through save\restore process
-	void		(*pfnCreateEntitiesInRestoreList)( SAVERESTOREDATA*, int createPlayers );
+	void		(*pfnCreateEntitiesInRestoreList)( SAVERESTOREDATA *pSaveData, int levelMask, qboolean create_world );
 	// allocate custom string (e.g. using user implementation of stringtable, not engine strings)
 	string_t		(*pfnAllocString)( const char *szValue );
 	// make custom string (e.g. using user implementation of stringtable, not engine strings)
 	string_t		(*pfnMakeString)( const char *szValue );
 	// read custom string (e.g. using user implementation of stringtable, not engine strings)
 	const char*	(*pfnGetString)( string_t iString );
+	// helper for restore custom decals that have custom message (e.g. Paranoia)
+	int		(*pfnRestoreDecal)( struct decallist_s *entry, edict_t *pEdict, qboolean adjacent );
+	// handle custom trigger touching for player
+	void		(*PM_PlayerTouch)( struct playermove_s *ppmove, edict_t *client );
+	// alloc or destroy model custom data (called only for dedicated servers, otherwise using an client version)
+	void		(*Mod_ProcessUserData)( struct model_s *mod, qboolean create, const byte *buffer );
+	// select BSP-hull for trace with specified mins\maxs
+	void		*(*SV_HullForBsp)( edict_t *ent, const float *mins, const float *maxs, float *offset );
+	// handle player custom think function
+	int		(*SV_PlayerThink)( edict_t *ent, float frametime, double time );
 } physics_interface_t;
 
 #endif//PHYSINT_H

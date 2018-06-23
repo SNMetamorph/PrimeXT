@@ -426,7 +426,7 @@ static void R_Bloom_DownsampleView( void )
 R_BloomBlend
 =================
 */
-void R_BloomBlend( const ref_params_t *fd )
+void R_BloomBlend( void )
 {
 	if( !r_bloom->value )
 		return;
@@ -458,10 +458,10 @@ void R_BloomBlend( const ref_params_t *fd )
 	pglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
 	// set up current sizes
-	curView_x = fd->viewport[0];
-	curView_y = fd->viewport[1];
-	curView_width = fd->viewport[2];
-	curView_height = fd->viewport[3];
+	curView_x = RI->viewport[0];
+	curView_y = RI->viewport[1];
+	curView_width = RI->viewport[2];
+	curView_height = RI->viewport[3];
 
 	screenTex_tcw = ( (float)curView_width / (float)screen_texture_width );
 	screenTex_tch = ( (float)curView_height / (float)screen_texture_height );
@@ -499,20 +499,5 @@ void R_BloomBlend( const ref_params_t *fd )
 		r_screenbackuptexture_height * sampleText_tch,
 		sampleText_tcw, sampleText_tch );
 
-	pglScissor( RI.scissor[0], RI.scissor[1], RI.scissor[2], RI.scissor[3] );
-
 	R_Bloom_DrawEffect();
-
-	pglViewport( RI.viewport[0], RI.viewport[1], RI.viewport[2], RI.viewport[3] );
-
-	pglMatrixMode( GL_PROJECTION );
-	GL_LoadMatrix( RI.projectionMatrix );
-
-	pglMatrixMode( GL_MODELVIEW );
-	GL_LoadMatrix( RI.worldviewMatrix );
-
-	pglEnable( GL_DEPTH_TEST );
-	pglDepthMask( GL_TRUE );
-	pglDisable( GL_BLEND );
-	GL_Cull( GL_FRONT );
 }

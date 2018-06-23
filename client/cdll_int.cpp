@@ -24,6 +24,7 @@
 #include <mathlib.h>
 #include "usercmd.h"
 #include "entity_state.h"
+#include "r_particle.h"
 #include "cdll_exp.h"
 
 int developer_level;
@@ -141,9 +142,6 @@ int HUD_VidInit( void )
 {
 	gHUD.VidInit();
 
-	if( g_fRenderInitialized )
-		R_VidInit();
-
 	return 1;
 }
 
@@ -163,6 +161,9 @@ void HUD_Init( void )
 
 	if( g_fRenderInitialized )
 		R_Init();
+
+	// particles allowed in anyway
+	g_pParticleSystems = new CParticleSystemManager();
 }
 
 void HUD_Shutdown( void )
@@ -171,6 +172,12 @@ void HUD_Shutdown( void )
 
 	if( g_fRenderInitialized )
 		R_Shutdown();
+
+	if( g_pParticleSystems )
+	{
+		delete g_pParticleSystems;
+		g_pParticleSystems = NULL;
+	}
 }
 
 /*
@@ -272,14 +279,6 @@ void HUD_DirectorMessage( int iSize, void *pbuf )
 {
 }
 
-void HUD_DrawNormalTriangles( void )
-{
-}
-
-void HUD_DrawTransparentTriangles( void )
-{
-}
-
 void Demo_ReadBuffer( int size, unsigned char *buffer )
 {
 }
@@ -332,13 +331,11 @@ cldll_func_t cldll_func =
 	HUD_DirectorMessage,
 	HUD_GetStudioModelInterface,
 	NULL,	// HUD_ChatInputPosition,
-	NULL,	// HUD_GetPlayerTeam
-	NULL,	// HUD_GetClientFactory
 	HUD_GetRenderInterface,
 	NULL,	/// HUD_ClipMoveToEntity
 };
 
-extern "C" void DLLEXPORT F( void *pv )
+extern "C" void DLLEXPORT GetClientAPI( void *pv )
 {
 	cldll_func_t *pcldll_func = (cldll_func_t *)pv;
 	*pcldll_func = cldll_func;

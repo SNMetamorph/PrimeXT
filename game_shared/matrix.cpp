@@ -20,18 +20,12 @@ void matrix3x3::Identity( void )
 
 void matrix3x3 :: FromVector( const Vector &forward )
 {
-	if( forward.x || forward.y )
-	{
-		mat[0] = forward;
-		mat[1] = Vector( forward.y, -forward.x, 0.0f ).Normalize();
-		mat[2] = CrossProduct( mat[0], mat[1] );
-	}
-	else
-	{
-		mat[0] = forward;
-		mat[1] = Vector( 1.0f, 0.0f, 0.0f );
-		mat[2] = Vector( 0.0f, 1.0f, 0.0f );
-	}
+	mat[0] = forward;
+	mat[1] = Vector( forward.z, -forward.x, forward.y );
+	float d = DotProduct( mat[0], mat[1] );
+	mat[1] = (mat[1] + mat[0] * -d).Normalize();
+	mat[2] = CrossProduct( mat[1], mat[0] );
+	mat[2] = mat[2].Normalize();
 }
 
 // from class matrix3x4 to class matrix3x3
@@ -85,6 +79,47 @@ Vector matrix3x3::VectorIRotate( const Vector &v ) const
 	out[2] = v[0] * mat[2][0] + v[1] * mat[2][1] + v[2] * mat[2][2];
 
 	return out;
+}
+
+Vector4D matrix3x3 :: GetQuaternion( void )
+{
+	float trace = mat[0][0] + mat[1][1] + mat[2][2];
+	Vector4D quat;
+
+	if(trace > 0.0f)
+	{
+		float r = sqrt(1.0f + trace), inv = 0.5f / r;
+		quat[0] = (mat[1][2] - mat[2][1]) * inv;
+		quat[1] = (mat[2][0] - mat[0][2]) * inv;
+		quat[2] = (mat[0][1] - mat[1][0]) * inv;
+		quat[3] = 0.5f * r;
+	}
+	else if(mat[0][0] > mat[1][1] && mat[0][0] > mat[2][2])
+	{
+		float r = sqrt(1.0f + mat[0][0] - mat[1][1] - mat[2][2]), inv = 0.5f / r;
+		quat[0] = 0.5f * r;
+		quat[1] = (mat[0][1] + mat[1][0]) * inv;
+		quat[2] = (mat[2][0] + mat[0][2]) * inv;
+		quat[3] = (mat[1][2] - mat[2][1]) * inv;
+	}
+	else if(mat[1][1] > mat[2][2])
+	{
+		float r = sqrt(1.0f + mat[1][1] - mat[0][0] - mat[2][2]), inv = 0.5f / r;
+		quat[0] = (mat[0][1] + mat[1][0]) * inv;
+		quat[1] = 0.5f * r;
+		quat[2] = (mat[1][2] + mat[2][1]) * inv;
+		quat[3] = (mat[2][0] - mat[0][2]) * inv;
+	}
+	else
+	{
+		float r = sqrt(1.0f + mat[2][2] - mat[0][0] - mat[1][1]), inv = 0.5f / r;
+		quat[0] = (mat[2][0] + mat[0][2]) * inv;
+		quat[1] = (mat[1][2] + mat[2][1]) * inv;
+		quat[2] = 0.5f * r;
+		quat[3] = (mat[0][1] - mat[1][0]) * inv;
+	}
+
+	return quat;
 }
 
 matrix3x3 matrix3x3 :: Concat( const matrix3x3 mat2 )
@@ -164,6 +199,47 @@ Vector matrix3x4::VectorIRotate( const Vector &v ) const
 	return out;
 }
 
+Vector4D matrix3x4 :: GetQuaternion( void )
+{
+	float trace = mat[0][0] + mat[1][1] + mat[2][2];
+	Vector4D quat;
+
+	if( trace > 0.0f )
+	{
+		float r = sqrt(1.0f + trace), inv = 0.5f / r;
+		quat[0] = (mat[1][2] - mat[2][1]) * inv;
+		quat[1] = (mat[2][0] - mat[0][2]) * inv;
+		quat[2] = (mat[0][1] - mat[1][0]) * inv;
+		quat[3] = 0.5f * r;
+	}
+	else if( mat[0][0] > mat[1][1] && mat[0][0] > mat[2][2] )
+	{
+		float r = sqrt(1.0f + mat[0][0] - mat[1][1] - mat[2][2]), inv = 0.5f / r;
+		quat[0] = 0.5f * r;
+		quat[1] = (mat[0][1] + mat[1][0]) * inv;
+		quat[2] = (mat[2][0] + mat[0][2]) * inv;
+		quat[3] = (mat[1][2] - mat[2][1]) * inv;
+	}
+	else if( mat[1][1] > mat[2][2] )
+	{
+		float r = sqrt(1.0f + mat[1][1] - mat[0][0] - mat[2][2]), inv = 0.5f / r;
+		quat[0] = (mat[0][1] + mat[1][0]) * inv;
+		quat[1] = 0.5f * r;
+		quat[2] = (mat[1][2] + mat[2][1]) * inv;
+		quat[3] = (mat[2][0] - mat[0][2]) * inv;
+	}
+	else
+	{
+		float r = sqrt(1.0f + mat[2][2] - mat[0][0] - mat[1][1]), inv = 0.5f / r;
+		quat[0] = (mat[2][0] + mat[0][2]) * inv;
+		quat[1] = (mat[1][2] + mat[2][1]) * inv;
+		quat[2] = 0.5f * r;
+		quat[3] = (mat[0][1] - mat[1][0]) * inv;
+	}
+
+	return quat;
+}
+
 matrix3x4 matrix3x4 :: Invert( void ) const
 {
 	// we only support uniform scaling, so assume the first row is enough
@@ -195,6 +271,26 @@ matrix3x4 matrix3x4 :: Invert( void ) const
 }
 
 matrix3x4 matrix3x4 :: ConcatTransforms( const matrix3x4 mat2 )
+{
+	matrix3x4 out;
+
+	out[0][0] = mat[0][0] * mat2[0][0] + mat[1][0] * mat2[0][1] + mat[2][0] * mat2[0][2];
+	out[1][0] = mat[0][0] * mat2[1][0] + mat[1][0] * mat2[1][1] + mat[2][0] * mat2[1][2];
+	out[2][0] = mat[0][0] * mat2[2][0] + mat[1][0] * mat2[2][1] + mat[2][0] * mat2[2][2];
+	out[3][0] = mat[0][0] * mat2[3][0] + mat[1][0] * mat2[3][1] + mat[2][0] * mat2[3][2] + mat[3][0];
+	out[0][1] = mat[0][1] * mat2[0][0] + mat[1][1] * mat2[0][1] + mat[2][1] * mat2[0][2];
+	out[1][1] = mat[0][1] * mat2[1][0] + mat[1][1] * mat2[1][1] + mat[2][1] * mat2[1][2];
+	out[2][1] = mat[0][1] * mat2[2][0] + mat[1][1] * mat2[2][1] + mat[2][1] * mat2[2][2];
+	out[3][1] = mat[0][1] * mat2[3][0] + mat[1][1] * mat2[3][1] + mat[2][1] * mat2[3][2] + mat[3][1];
+	out[0][2] = mat[0][2] * mat2[0][0] + mat[1][2] * mat2[0][1] + mat[2][2] * mat2[0][2];
+	out[1][2] = mat[0][2] * mat2[1][0] + mat[1][2] * mat2[1][1] + mat[2][2] * mat2[1][2];
+	out[2][2] = mat[0][2] * mat2[2][0] + mat[1][2] * mat2[2][1] + mat[2][2] * mat2[2][2];
+	out[3][2] = mat[0][2] * mat2[3][0] + mat[1][2] * mat2[3][1] + mat[2][2] * mat2[3][2] + mat[3][2];
+
+	return out;
+}
+
+matrix3x4 matrix3x4 :: ConcatTransforms( const matrix3x4 mat2 ) const
 {
 	matrix3x4 out;
 
@@ -271,6 +367,18 @@ Vector matrix4x4::VectorTransform( const Vector &v ) const
 	out[0] = v[0] * mat[0][0] + v[1] * mat[1][0] + v[2] * mat[2][0] + mat[3][0];
 	out[1] = v[0] * mat[0][1] + v[1] * mat[1][1] + v[2] * mat[2][1] + mat[3][1];
 	out[2] = v[0] * mat[0][2] + v[1] * mat[1][2] + v[2] * mat[2][2] + mat[3][2];
+
+	return out;
+}
+
+Vector4D matrix4x4::VectorTransform( const Vector4D &v ) const
+{
+	Vector4D out;
+
+	out[0] = v[0] * mat[0][0] + v[1] * mat[1][0] + v[2] * mat[2][0] + v[3] * mat[3][0];
+	out[1] = v[0] * mat[0][1] + v[1] * mat[1][1] + v[2] * mat[2][1] + v[3] * mat[3][1];
+	out[2] = v[0] * mat[0][2] + v[1] * mat[1][2] + v[2] * mat[2][2] + v[3] * mat[3][2];
+	out[3] = v[0] * mat[0][3] + v[1] * mat[1][3] + v[2] * mat[2][3] + v[3] * mat[3][3];
 
 	return out;
 }
@@ -368,6 +476,47 @@ void matrix4x4::TransformStandardPlane( const plane_t &in, plane_t &out )
 	out = tmp;
 }
 
+Vector4D matrix4x4 :: GetQuaternion( void )
+{
+	float trace = mat[0][0] + mat[1][1] + mat[2][2];
+	Vector4D quat;
+
+	if( trace > 0.0f )
+	{
+		float r = sqrt(1.0f + trace), inv = 0.5f / r;
+		quat[0] = (mat[1][2] - mat[2][1]) * inv;
+		quat[1] = (mat[2][0] - mat[0][2]) * inv;
+		quat[2] = (mat[0][1] - mat[1][0]) * inv;
+		quat[3] = 0.5f * r;
+	}
+	else if( mat[0][0] > mat[1][1] && mat[0][0] > mat[2][2] )
+	{
+		float r = sqrt(1.0f + mat[0][0] - mat[1][1] - mat[2][2]), inv = 0.5f / r;
+		quat[0] = 0.5f * r;
+		quat[1] = (mat[0][1] + mat[1][0]) * inv;
+		quat[2] = (mat[2][0] + mat[0][2]) * inv;
+		quat[3] = (mat[1][2] - mat[2][1]) * inv;
+	}
+	else if( mat[1][1] > mat[2][2] )
+	{
+		float r = sqrt(1.0f + mat[1][1] - mat[0][0] - mat[2][2]), inv = 0.5f / r;
+		quat[0] = (mat[0][1] + mat[1][0]) * inv;
+		quat[1] = 0.5f * r;
+		quat[2] = (mat[1][2] + mat[2][1]) * inv;
+		quat[3] = (mat[2][0] - mat[0][2]) * inv;
+	}
+	else
+	{
+		float r = sqrt(1.0f + mat[2][2] - mat[0][0] - mat[1][1]), inv = 0.5f / r;
+		quat[0] = (mat[2][0] + mat[0][2]) * inv;
+		quat[1] = (mat[1][2] + mat[2][1]) * inv;
+		quat[2] = 0.5f * r;
+		quat[3] = (mat[0][1] - mat[1][0]) * inv;
+	}
+
+	return quat;
+}
+
 matrix4x4 matrix4x4 :: Invert( void ) const
 {
 	// we only support uniform scaling, so assume the first row is enough
@@ -381,13 +530,13 @@ matrix4x4 matrix4x4 :: Invert( void ) const
 	// invert the rotation by transposing and multiplying by the squared
 	// recipricol of the input matrix scale as described above
 	out[0][0] = mat[0][0] * scale;
-	out[0][1] = mat[1][0] * scale;
-	out[0][2] = mat[2][0] * scale;
 	out[1][0] = mat[0][1] * scale;
-	out[1][1] = mat[1][1] * scale;
-	out[1][2] = mat[2][1] * scale;
 	out[2][0] = mat[0][2] * scale;
+	out[0][1] = mat[1][0] * scale;
+	out[1][1] = mat[1][1] * scale;
 	out[2][1] = mat[1][2] * scale;
+	out[0][2] = mat[2][0] * scale;
+	out[1][2] = mat[2][1] * scale;
 	out[2][2] = mat[2][2] * scale;
 
 	// invert the translate
@@ -785,7 +934,7 @@ matrix4x4& matrix4x4 :: operator=(const matrix4x4 &vOther)
 	return *this;
 }
 
-void matrix4x4::CreateProjection( float xMax, float xMin, float yMax, float yMin, float zNear, float zFar )
+void matrix4x4 :: CreateProjection( float xMax, float xMin, float yMax, float yMin, float zNear, float zFar )
 {
 	mat[0][0] = ( 2.0f * zNear ) / ( xMax - xMin );
 	mat[1][1] = ( 2.0f * zNear ) / ( yMax - yMin );
@@ -800,7 +949,19 @@ void matrix4x4::CreateProjection( float xMax, float xMin, float yMax, float yMin
 	mat[3][2] = -( 2.0f * zFar * zNear ) / ( zFar - zNear );
 }
 
-void matrix4x4::CreateOrtho( float xLeft, float xRight, float yBottom, float yTop, float zNear, float zFar )
+void matrix4x4 :: CreateProjection( float fov_x, float fov_y, float zNear, float zFar )
+{
+	mat[0][0] = 1.0f / tan( fov_x * M_PI / 360.0f );
+	mat[1][1] = 1.0f / tan( fov_y * M_PI / 360.0f );
+	mat[2][2] = -( zFar + zNear ) / ( zFar - zNear );
+	mat[3][2] = -( 2.0 * zFar * zNear ) / ( zFar - zNear );
+	mat[2][3] = -1.0f;
+
+	mat[0][1] = mat[1][0] = mat[3][0] = mat[0][3] = mat[3][1] = mat[1][3] = 0.0f;
+	mat[0][2] = mat[2][0] = mat[2][1] = mat[1][2] = mat[3][3] = 0.0f;
+}
+
+void matrix4x4 :: CreateOrtho( float xLeft, float xRight, float yBottom, float yTop, float zNear, float zFar )
 {
 	mat[0][0] = 2.0f / (xRight - xLeft);
 	mat[1][1] = 2.0f / (yTop - yBottom);
@@ -825,6 +986,26 @@ void matrix4x4::CreateModelview( void )
 	mat[0][1] = mat[2][0] = mat[1][2] = 0.0f;
 	mat[0][2] = mat[1][0] = -1.0f;
 	mat[2][1] = 1.0f;
+}
+
+void matrix4x4::CreateTexture( void )
+{
+	mat[0][0] = 0.5f;
+	mat[1][0] = 0.0f;
+	mat[2][0] = 0.0f;
+	mat[3][0] = 0.5f;
+	mat[0][1] = 0.0f;
+	mat[1][1] = 0.5f;
+	mat[2][1] = 0.0f;
+	mat[3][1] = 0.5f;
+	mat[0][2] = 0.0f;
+	mat[1][2] = 0.0f;
+	mat[2][2] = 0.5f;
+	mat[3][2] = 0.5f;
+	mat[0][3] = 0.0f;
+	mat[1][3] = 0.0f;
+	mat[2][3] = 0.0f;
+	mat[3][3] = 1.0f;
 }
 
 void matrix4x4::CreateTranslate( float x, float y, float z )

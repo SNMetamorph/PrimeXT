@@ -3155,7 +3155,7 @@ void CEnvProjector::Precache( void )
 	{
 		if( FBitSet( pev->iuser1, ( CF_TEXTURE|CF_SPRITE )))
 		{
-			pev->sequence = g_engfuncs.pfnPrecacheEvent( 1, STRING( pev->message ));
+			pev->sequence = g_engfuncs.pfnPrecacheGeneric( STRING( pev->message ));
 
 			if( FBitSet( pev->iuser1, CF_SPRITE ))
 				pev->frags = MODEL_FRAMES( PRECACHE_MODEL( (char *)STRING( pev->message )) );	// BUGBUG: this loaded sprites twice
@@ -3478,6 +3478,7 @@ public:
 	void	CheckState( void );
 	void	KeyValue( KeyValueData *pkvd );
 	void	Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+	virtual int ObjectCaps( void ) { return BaseClass :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 	float 	Frames( void ) { return MODEL_FRAMES( pev->modelindex ) - 1; }
 	float	curframe( void ) { return Q_rint( pev->frame ); }
 private:
@@ -3526,6 +3527,7 @@ void CDecLED :: Spawn( void )
 
 	SetLocalAngles( angles );	
 	RelinkEntity( FALSE );
+	pev->framerate = -1.0f;
 	pev->button = 1;
 }
 
@@ -3848,26 +3850,65 @@ void CEnvModel :: SetSequence( void )
 // =================== ENV_STATIC ==============================================
 #define SF_STATIC_SOLID	BIT( 0 )
 #define SF_STATIC_DROPTOFLOOR	BIT( 1 )
+#define SF_STATIC_NOSHADOW	BIT( 2 )	// hlrad
+#define SF_STATIC_NOVLIGHT	BIT( 4 )	// hlrad
 
 class CEnvStatic : public CBaseEntity
 {
 	DECLARE_CLASS( CEnvStatic, CBaseEntity );
 public:
 	void Spawn( void );
+	void Precache( void );
 	void AutoSetSize( void );
 	virtual int ObjectCaps( void ) { return FCAP_IGNORE_PARENT; }
 	void SetObjectCollisionBox( void );
+	void KeyValue( KeyValueData *pkvd );
+	int vertex_light_cache;
 };
 
 LINK_ENTITY_TO_CLASS( env_static, CEnvStatic );
 
+void CEnvStatic :: Precache( void )
+{
+	PRECACHE_MODEL( GetModel() );
+}
+
+void CEnvStatic :: KeyValue( KeyValueData *pkvd )
+{
+	if( FStrEq(pkvd->szKeyName, "xform"))
+	{
+		UTIL_StringToVector( (float*)pev->vuser2, pkvd->szValue );
+		pkvd->fHandled = TRUE;
+	}
+	else if( FStrEq(pkvd->szKeyName, "vlight_cache"))
+	{
+		vertex_light_cache = atoi( pkvd->szValue );
+		pkvd->fHandled = TRUE;
+	}
+	else BaseClass::KeyValue( pkvd );
+}
+
 void CEnvStatic :: Spawn( void )
 {
-	// don't allow to change scale
-	pev->scale = 1.0f;
+	if( pev->vuser2 == g_vecZero )
+		pev->vuser2 = Vector( pev->scale, pev->scale, pev->scale );
 
-	PRECACHE_MODEL( GetModel() );
+	// HACKHACK: store vertex light cache number
+	pev->colormap = vertex_light_cache;
+
+	// check xform values
+	if( pev->vuser2.x < 0.01f ) pev->vuser2.x = 1.0f;
+	if( pev->vuser2.y < 0.01f ) pev->vuser2.y = 1.0f;
+	if( pev->vuser2.z < 0.01f ) pev->vuser2.z = 1.0f;
+	if( pev->vuser2.x > 16.0f ) pev->vuser2.x = 16.0f;
+	if( pev->vuser2.y > 16.0f ) pev->vuser2.y = 16.0f;
+	if( pev->vuser2.z > 16.0f ) pev->vuser2.z = 16.0f;
+
+	Precache();
 	SET_MODEL( edict(), GetModel() );
+
+	// tell the client about static entity
+	SetBits( pev->iuser1, CF_STATIC_ENTITY );
 
 	if( FBitSet( pev->spawnflags, SF_STATIC_SOLID ))
 	{
@@ -3928,7 +3969,7 @@ void CEnvStatic :: AutoSetSize( void )
 	}
 
 	mstudioseqdesc_t *pseqdesc = (mstudioseqdesc_t *)((byte *)pstudiohdr + pstudiohdr->seqindex);
-	UTIL_SetSize( pev, pseqdesc[pev->sequence].bbmin, pseqdesc[pev->sequence].bbmax );
+	UTIL_SetSize( pev, pseqdesc[pev->sequence].bbmin * pev->vuser2, pseqdesc[pev->sequence].bbmax * pev->vuser2 );
 }
 
 #define SF_REMOVE_ON_FIRE		0x0001

@@ -2049,6 +2049,11 @@ void PM_Duck( void )
 			
 			if ( pmove->bInDuck )
 			{
+#if 0
+				pmove->usehull = 1;
+				pmove->view_ofs[2] = VEC_DUCK_VIEW;
+				pmove->flags |= FL_DUCKING;
+#endif
 				// Finish ducking immediately if duck time is over or not on ground
 				if ( ( (float)pmove->flDuckTime / 1000.0 <= ( 1.0 - TIME_TO_DUCK ) ) ||
 					 ( pmove->onground == -1 ) )

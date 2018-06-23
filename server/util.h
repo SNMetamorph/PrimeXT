@@ -378,9 +378,10 @@ extern void		UTIL_BloodDrips( const Vector &origin, const Vector &direction, int
 extern Vector		UTIL_RandomBloodVector( void );
 extern BOOL		UTIL_ShouldShowBlood( int bloodColor );
 extern void		UTIL_BloodDecalTrace( TraceResult *pTrace, int bloodColor );
-extern void		UTIL_BloodStudioDecalTrace( const Vector &vecSrc, TraceResult *pTrace, int bloodColor );
+extern void		UTIL_BloodStudioDecalTrace( TraceResult *pTrace, int bloodColor );
 extern void		UTIL_DecalTrace( TraceResult *pTrace, int decalNumber );
-extern void		UTIL_StudioDecalTrace( const Vector &vecSrc, TraceResult *pTrace, int decalNumber, int flags = FDECAL_CLIPTEST );
+extern void		UTIL_StudioDecalTrace( TraceResult *pTrace, int decalNumber, int flags = 0 );
+extern void		UTIL_RestoreStudioDecal( const Vector &vecEnd, const Vector &vecSrc, int entityIndex, int modelIndex, const char *name, int flags, struct modelstate_s *state, int lightcache );
 extern void		UTIL_PlayerDecalTrace( TraceResult *pTrace, int playernum, int decalNumber, BOOL bIsCustom );
 extern void		UTIL_GunshotDecalTrace( TraceResult *pTrace, int decalNumber );
 extern void		UTIL_Sparks( const Vector &position );
@@ -557,7 +558,6 @@ extern DLL_GLOBAL int		g_iXashEngineBuildNumber;	// may be 0 for old versions or
 #define SVC_WEAPONANIM	35
 #define SVC_ROOMTYPE	37
 #define SVC_DIRECTOR	51
-#define SVC_STUDIODECAL	52
 
 #define SF_LIGHT_START_OFF		1
 
@@ -573,9 +573,9 @@ extern DLL_GLOBAL int		g_iXashEngineBuildNumber;	// may be 0 for old versions or
 // Sound Utilities
 
 // sentence groups
-#define CBSENTENCENAME_MAX 16
-#define CVOXFILESENTENCEMAX		1536		// max number of sentences in game. NOTE: this must match
-											// CVOXFILESENTENCEMAX in engine\sound.h!!!
+#define CBSENTENCENAME_MAX		16
+#define CVOXFILESENTENCEMAX		4096		// max number of sentences in game. NOTE: this must match
+						// MAX_SENTENCES in engine\vox.h!!!
 
 extern char gszallsentencenames[CVOXFILESENTENCEMAX][CBSENTENCENAME_MAX];
 extern int gcallsentences;
@@ -652,7 +652,7 @@ void UTIL_UnsetGroupTrace( void );
 extern BOOL UTIL_CanRotate( CBaseEntity *pEntity );
 extern BOOL UTIL_CanRotateBModel( CBaseEntity *pEntity );
 extern modtype_t UTIL_GetModelType( int modelindex );
-extern void SV_Impact( CBaseEntity *pEntity1, TraceResult *trace );
+extern void SV_Impact( CBaseEntity *pEntity1, CBaseEntity *pEntity2, TraceResult *trace );
 extern BOOL SV_TestEntityPosition( CBaseEntity *pEntity, CBaseEntity *pBlocker );
 extern void SV_UpdateBaseVelocity( CBaseEntity *pEntity );
 extern BOOL UITL_ExternalBmodel( int modelindex );

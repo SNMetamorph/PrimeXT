@@ -69,9 +69,6 @@ extern int ShouldCollide( edict_t *pentTouched, edict_t *pentOther );
 
 extern void OnFreeEntPrivateData( edict_s *pEdict );
 
-extern void CvarValue( const edict_t *pEnt, const char *value );
-extern void CvarValue2( const edict_t *pEnt, int requestID, const char *cvarName, const char *value );
-
 extern void EntvarsKeyvalue( entvars_t *pev, KeyValueData *pkvd );
 
 extern void PM_Move ( struct playermove_s *ppmove, int server );

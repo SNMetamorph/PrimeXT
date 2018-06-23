@@ -76,6 +76,7 @@ extern "C" EXPORT int GetEntityAPI( DLL_FUNCTIONS *pFunctionTable, int interface
 extern "C" EXPORT int GetEntityAPI2( DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion );
 extern "C" EXPORT int GetNewDLLFunctions( NEW_DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion );
 extern "C" EXPORT int Server_GetPhysicsInterface( int iVersion, server_physics_api_t *pfuncsFromEngine, physics_interface_t *pFunctionTable );
+extern "C" EXPORT int Server_GetBlendingInterface( int, struct sv_blending_interface_s**, struct server_studio_api_s*, float (*t)[3][4], float (*b)[128][3][4] );
 
 extern int DispatchSpawn( edict_t *pent );
 extern void DispatchKeyValue( edict_t *pentKeyvalue, KeyValueData *pkvd );
@@ -88,8 +89,7 @@ extern int  DispatchRestore( edict_t *pent, SAVERESTOREDATA *pSaveData, int glob
 extern void DispatchObjectCollsionBox( edict_t *pent );
 extern void SaveWriteFields( SAVERESTOREDATA *pSaveData, const char *pname, void *pBaseData, ENGTYPEDESCRIPTION *pFields, int fieldCount );
 extern void SaveReadFields( SAVERESTOREDATA *pSaveData, const char *pname, void *pBaseData, ENGTYPEDESCRIPTION *pFields, int fieldCount );
-extern void DispatchCreateEntitiesInTransitionList( SAVERESTOREDATA *pSaveData, int levelMask );
-extern void DispatchCreateEntitiesInRestoreList( SAVERESTOREDATA *pSaveData, int createPlayers );
+extern void DispatchCreateEntitiesInRestoreList( SAVERESTOREDATA *pSaveData, int levelMask, qboolean create_world );
 extern void SaveGlobalState( SAVERESTOREDATA *pSaveData );
 extern void RestoreGlobalState( SAVERESTOREDATA *pSaveData );
 extern void ResetGlobalState( void );
@@ -167,9 +167,11 @@ public:
 	CBaseEntity	*m_pRootParent;	// don't save\restore this. It's temporary handler
 	int		m_iParentFilter;	// we are moving by pusher
 	int		m_iPushableFilter;	// we are moving by pushable
+	int		m_iTeleportFilter;	// we are teleporting
 
 	// local time the movement has ended
 	float		m_flMoveDoneTime;
+	float		m_flGaitYaw;	// player stuff
 
 	// physics stuff
 	unsigned int	m_iPhysicsFrame;	// to avoid executing one entity twice per frame
@@ -279,6 +281,16 @@ public:
 	const char*	GetModel() { return STRING( pev->model ); }
 	void		ReportInfo( void );
 
+	const char*	GetDebugName()
+	{
+		if( this == NULL || pev == NULL )
+			return "null";
+
+		if( pev->targetname != NULL_STRING ) 
+			return GetTargetname();
+		return GetClassname();
+	}
+
 	void		SetClassname( const char *pszClassName ) { pev->classname = MAKE_STRING( pszClassName ); }
 
 	float		GetLocalTime( void ) const;
@@ -334,6 +346,7 @@ public:
 	virtual void	Activate( void ) {}
 	virtual void	OnChangeLevel( void ) {}
 	virtual void	OnTeleport( void ) {}
+	virtual void	PortalSleep( float seconds ) {}
           virtual void	StartMessage( CBasePlayer *pPlayer ) {}
 	virtual float	GetPosition( void ) { return 0.0f; }
 	virtual void	OnChangeParent( void ) {}
@@ -483,6 +496,7 @@ public:
 	// Do the bounding boxes of these two intersect?
 	int	Intersects( CBaseEntity *pOther );
 	int	AreaIntersect( Vector mins, Vector maxs );
+	int	TriggerIntersects( CBaseEntity *pOther );
 	void	MakeDormant( void );
 	int	IsDormant( void );
 	int	IsWater( void );
@@ -557,9 +571,10 @@ public:
 		return func;
 	}
 #endif
-	void RelinkEntity( BOOL touch_triggers = FALSE, const Vector *pPrevOrigin = NULL );
+	void RelinkEntity( BOOL touch_triggers = FALSE, const Vector *pPrevOrigin = NULL, BOOL sleep_portals = FALSE );
 	void TouchLinks( edict_t *ent, const Vector &entmins, const Vector &entmaxs, const Vector *pPrevOrigin, areanode_t *node );
 	void ClipLinks( edict_t *ent, const Vector &entmins, const Vector &entmaxs, areanode_t *node );
+	void SleepPortals( edict_t *ent, const Vector &entmins, const Vector &entmaxs, areanode_t *node );
 
 	CBaseEntity *GetGroundEntity( void ) { return Instance( pev->groundentity ); }
 	void SetGroundEntity( CBaseEntity *pGround )
@@ -862,10 +877,13 @@ class CBaseAnimating : public CBaseDelay
 public:
 	// Basic Monster Animation functions
 	float StudioFrameAdvance( float flInterval = 0.0 ); // accumulate animation frame time from last time called until now
+	float StudioGaitFrameAdvance( void );	// accumulate gait frame time from last time called until now
 	int GetSequenceFlags( void );
 	int LookupActivity ( int activity );
 	int LookupActivityHeaviest ( int activity );
 	int LookupSequence ( const char *label );
+	static void *GetModelPtr( int modelindex );
+	void *GetModelPtr( void );
 	void ResetSequenceInfo ( );
 	void DispatchAnimEvents ( float flFutureInterval = 0.1 ); // Handle events that have happend since last time called up until X seconds into the future
 	virtual void HandleAnimEvent( MonsterEvent_t *pEvent ) { return; };
@@ -887,6 +905,9 @@ public:
 	float	m_flLastEventCheck;	// last time the event list was checked
 	BOOL	m_fSequenceFinished;// flag set when StudioAdvanceFrame moves across a frame boundry
 	BOOL	m_fSequenceLoops;	// true if the sequence loops
+
+	// gaitsequence needs
+	float	m_flGaitMovement;
 
 	DECLARE_DATADESC();
 };

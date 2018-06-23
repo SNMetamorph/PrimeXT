@@ -87,7 +87,7 @@ typedef struct
 class CRestore : public CSaveRestoreBuffer
 {
 public:
-	CRestore( SAVERESTOREDATA *pdata ) : CSaveRestoreBuffer( pdata ) { m_global = 0; m_precache = TRUE; }
+	CRestore( SAVERESTOREDATA *pdata ) : CSaveRestoreBuffer( pdata ) { m_global = 0; m_precache = TRUE; modelOriginOffset = modelSpaceOffset = g_vecZero; }
 	int	ReadAll( void *pLeafObject, DATAMAP *pLeafMap )	{ return DoReadAll( pLeafObject, pLeafMap, pLeafMap ); }
 	int	DoReadAll( void *pLeafObject, DATAMAP *pLeafMap, DATAMAP *pCurMap );
 	
@@ -124,6 +124,7 @@ struct globalentity_s
 	char		name[64];
 	char		levelName[32];
 	GLOBALESTATE	state;
+	float		global_time;
 	globalentity_t	*pNext;
 };
 
@@ -134,11 +135,13 @@ public:
 			CGlobalState();
 	void		Reset( void );
 	void		ClearStates( void );
-	void		EntityAdd( string_t globalname, string_t mapName, GLOBALESTATE state );
+	void		EntityAdd( string_t globalname, string_t mapName, GLOBALESTATE state, float time = 0.0f );
 	void		EntitySetState( string_t globalname, GLOBALESTATE state );
+	void		EntitySetTime( string_t globalname, float time );
 	void		EntityUpdate( string_t globalname, string_t mapname );
 	const globalentity_t *EntityFromTable( string_t globalname );
 	GLOBALESTATE	EntityGetState( string_t globalname );
+	float		EntityGetTime( string_t globalname );
 	int		EntityInTable( string_t globalname ) { return (Find( globalname ) != NULL) ? 1 : 0; }
 	int		Save( CSave &save );
 	int		Restore( CRestore &restore );

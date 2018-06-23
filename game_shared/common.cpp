@@ -143,8 +143,9 @@ COM_ParseFile
 safe version text parser
 ==============
 */
-char *COM_ParseFileExt( char *data, char *token, long token_size )
+char *COM_ParseFileExt( char *data, char *token, long token_size, bool allowNewLines )
 {
+	bool newline = false;
 	int c, len;
 
 	if( !token || !token_size )
@@ -162,8 +163,15 @@ skipwhite:
 	{
 		if( c == 0 )
 			return NULL;	// end of file;
+		if( c == '\n' )
+			newline = true;
 		data++;
 	}
+
+	if( newline && !allowNewLines )
+		return data;
+
+	newline = false;
 	
 	// skip // comments
 	if( c == '/' && data[1] == '/' )
@@ -194,7 +202,7 @@ skipwhite:
 	}
 
 	// parse single characters
-	if( c == '{' || c == '}' || c == ')' || c == '(' || c == '\'' || c == ',' )
+	if( c == '{' || c == '}' || c == ')' || c == '(' || c == '\'' || c == ',' || c == '|' )
 	{
 		if( len < token_size )
 			token[len] = c;
@@ -216,7 +224,7 @@ skipwhite:
 		len++;
 		c = ((byte)*data);
 
-		if( c == '{' || c == '}' || c == ')' || c == '(' || c == '\'' || c == ',' )
+		if( c == '{' || c == '}' || c == ')' || c == '(' || c == '\'' || c == ',' || c == '|' )
 			break;
 	} while( c > 32 );
 	
@@ -225,6 +233,63 @@ skipwhite:
 	else token[0] = 0;	// string is too long
 
 	return data;
+}
+
+/*
+=================
+COM_SkipBracedSection
+
+The next token should be an open brace.
+Skips until a matching close brace is found.
+Internal brace depths are properly skipped.
+=================
+*/
+char *COM_SkipBracedSection( char *pfile )
+{
+	char	token[256];
+	int	depth = 0;
+
+	do {
+		pfile = COM_ParseFile( pfile, token );
+
+		if( token[1] == 0 )
+		{
+			if( token[0] == '{' )
+				depth++;
+			else if( token[0] == '}' )
+				depth--;
+		}
+	} while( depth && pfile != NULL );
+
+	return pfile;
+}
+
+/*
+============
+COM_FileExtension
+============
+*/
+const char *COM_FileExtension( const char *in )
+{
+	const char *separator, *backslash, *colon, *dot;
+
+	separator = Q_strrchr( in, '/' );
+	backslash = Q_strrchr( in, '\\' );
+
+	if( !separator || separator < backslash )
+		separator = backslash;
+
+	colon = Q_strrchr( in, ':' );
+
+	if( !separator || separator < colon )
+		separator = colon;
+
+	dot = Q_strrchr( in, '.' );
+
+	if( dot == NULL || ( separator && ( dot < separator )))
+		return "";
+
+	return dot + 1;
 }
 
 /*

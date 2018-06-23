@@ -79,7 +79,7 @@ TYPEDESCRIPTION gEntvarsDescription[] =
 	DEFINE_ENTITY_FIELD( animtime, FIELD_TIME ),
 	DEFINE_ENTITY_FIELD( framerate, FIELD_FLOAT ),
 	DEFINE_ENTITY_FIELD( controller, FIELD_INTEGER ),
-	DEFINE_ENTITY_FIELD( blending, FIELD_INTEGER ),
+	DEFINE_ENTITY_FIELD( blending, FIELD_SHORT ),
 
 	DEFINE_ENTITY_FIELD( rendermode, FIELD_INTEGER ),
 	DEFINE_ENTITY_FIELD( renderamt, FIELD_FLOAT ),
@@ -88,7 +88,7 @@ TYPEDESCRIPTION gEntvarsDescription[] =
 
 	DEFINE_ENTITY_FIELD( health, FIELD_FLOAT ),
 	DEFINE_ENTITY_FIELD( frags, FIELD_FLOAT ),
-	DEFINE_ENTITY_FIELD( weapons, FIELD_INTEGER ),
+//	DEFINE_ENTITY_FIELD( weapons, FIELD_INTEGER ),
 	DEFINE_ENTITY_FIELD( takedamage, FIELD_FLOAT ),
 
 	DEFINE_ENTITY_FIELD( deadflag, FIELD_FLOAT ),
@@ -137,6 +137,7 @@ TYPEDESCRIPTION gEntvarsDescription[] =
 	DEFINE_ENTITY_FIELD( radsuit_finished, FIELD_TIME ),
 
 	DEFINE_ENTITY_GLOBAL_FIELD( vuser1, FIELD_VECTOR ),	// same as origin but not subtracted from landmark pos !!!
+	DEFINE_ENTITY_FIELD( vuser2, FIELD_VECTOR ),		// entity scale by three axis
 	DEFINE_ENTITY_FIELD( iuser1, FIELD_INTEGER ),		// custom shared flags
 	DEFINE_ENTITY_FIELD( iuser2, FIELD_INTEGER ),		// custom variable
 	DEFINE_ENTITY_FIELD( fuser1, FIELD_FLOAT ),

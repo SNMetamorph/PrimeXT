@@ -72,9 +72,9 @@ edict_t *CGameRules :: GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 	pPlayer->pev->punchangle = g_vecZero;
 	pPlayer->pev->fixangle = TRUE;
 
-	if( pSpawnSpot->pev->spawnflags & 1 ) // the START WITH SUIT flag
+	if( FBitSet( pSpawnSpot->pev->spawnflags, 1 )) // the START WITH SUIT flag
 	{
-		pPlayer->pev->weapons |= BIT( WEAPON_SUIT );
+		pPlayer->AddWeapon( WEAPON_SUIT );
 	}
 	
 	return pentSpawnSpot;

@@ -29,14 +29,9 @@ extern "C" {
 #include "const.h"
 #include <alert.h>
 
-#define MAX_ALIAS_NAME	32
-
-typedef struct cmdalias_s
-{
-	struct cmdalias_s	*next;
-	char		name[MAX_ALIAS_NAME];
-	char		*value;
-} cmdalias_t;
+#ifndef offsetof
+#define offsetof(s,m)	(size_t)&(((s *)0)->m)
+#endif
 
 // this file is included by both the engine and the client-dll,
 // so make sure engine declarations aren't done twice
@@ -106,8 +101,6 @@ typedef struct hud_player_info_s
 	char		*model;
 	short		topcolor;
 	short		bottomcolor;
-
-	unsigned __int64	m_nSteamID;
 } hud_player_info_t;
 
 typedef struct cl_enginefuncs_s
@@ -260,44 +253,39 @@ typedef struct cl_enginefuncs_s
 	void	(*pfnGetMousePos)( struct tagPOINT *ppt );
 	void	(*pfnSetMousePos)( int x, int y );
 	void	(*pfnSetMouseEnable)( qboolean fEnable );
-
-	// undocumented interface starts here
-	struct cvar_s*	(*pfnGetFirstCvarPtr)( void );
-	void*		(*pfnGetFirstCmdFunctionHandle)( void );
-	void*		(*pfnGetNextCmdFunctionHandle)( void *cmdhandle );
-	const char*	(*pfnGetCmdFunctionName)( void *cmdhandle );
-	float		(*pfnGetClientOldTime)( void );
-	float		(*pfnGetGravity)( void );
-	struct model_s*	(*pfnGetModelByIndex)( int index );
-	void		(*pfnSetFilterMode)( int mode ); // same as gl_texsort in original Quake
-	void		(*pfnSetFilterColor)( float red, float green, float blue );
-	void		(*pfnSetFilterBrightness)( float brightness );
-	void		*(*pfnSequenceGet)( const char *fileName, const char *entryName );
-	void		(*pfnSPR_DrawGeneric)( int frame, int x, int y, const wrect_t *prc, int blendsrc, int blenddst, int width, int height );
-	void		*(*pfnSequencePickSentence)( const char *groupName, int pickMethod, int *entryPicked );
-	int		(*pfnDrawString)( int x, int y, const char *str, int r, int g, int b );
-	int		(*pfnDrawStringReverse)( int x, int y, const char *str, int r, int g, int b );
-	const char	*(*LocalPlayerInfo_ValueForKey)( const char* key );
-	int		(*pfnVGUI2DrawCharacter)( int x, int y, int ch, unsigned int font );
-	int		(*pfnVGUI2DrawCharacterAdditive)( int x, int y, int ch, int r, int g, int b, unsigned int font );
-	unsigned int	(*pfnGetApproxWavePlayLen)( char *filename );
-	void*		(*GetCareerGameUI)( void );	// g-cont. !!!! potential crash-point!
-	void		(*Cvar_Set)( char *name, char *value );
-	int		(*pfnIsPlayingCareerMatch)( void );
-	void		(*pfnPlaySoundVoiceByName)( char *szSound, float volume, int pitch );
-	void		(*pfnPrimeMusicStream)( char *filename, int looping );
-	double		(*pfnSys_FloatTime)( void );
-
-	// decay funcs
-	void		(*pfnProcessTutorMessageDecayBuffer)( int *buffer, int buflen );
-	void		(*pfnConstructTutorMessageDecayBuffer)( int *buffer, int buflen );
-	void		(*pfnResetTutorMessageDecayData)( void );
-
-	void		(*pfnPlaySoundByNameAtPitch)( char *szSound, float volume, int pitch );
-	void		(*pfnFillRGBABlend)( int x, int y, int width, int height, int r, int g, int b, int a );
-	int		(*pfnGetAppID)( void );
-	cmdalias_t	*(*pfnGetAliases)( void );
-	void		(*pfnVguiWrap2_GetMouseDelta)( int *x, int *y );
+	void	(*pfnUnused1)( void );
+	void	(*pfnUnused2)( void );
+	void	(*pfnUnused3)( void );
+	void	(*pfnUnused4)( void );
+	float	(*GetClientOldTime)( void );
+	float	(*pfnGetGravity)( void );
+	struct model_s*(*pfnGetModelByIndex)( int index );
+	void	(*pfnUnused5)( void );
+	void	(*pfnUnused6)( void );
+	void	(*pfnUnused7)( void );
+	void	(*pfnUnused8)( void );
+	void	(*pfnUnused9)( void );
+	void	(*pfnUnused10)( void );
+	void	(*pfnUnused11)( void );
+	void	(*pfnUnused12)( void );
+	const char*(*LocalPlayerInfo_ValueForKey)( const char* key );
+	void	(*pfnUnused13)( void );
+	void	(*pfnUnused14)( void );
+	void	(*pfnUnused15)( void );
+	void	(*pfnUnused16)( void );
+	void	(*Cvar_Set)( char *name, char *value );
+	void	(*pfnUnused17)( void );
+	void	(*pfnUnused18)( void );
+	void	(*pfnUnused19)( void );
+	double	(*pfnSys_FloatTime)( void );
+	void	(*pfnUnused20)( void );
+	void	(*pfnUnused21)( void );
+	void	(*pfnUnused22)( void );
+	void	(*pfnUnused23)( void );
+	void	(*pfnFillRGBABlend)( int x, int y, int width, int height, int r, int g, int b, int a );
+	int	(*pfnGetAppID)( void );
+	void	(*pfnUnused24)( void );
+	void	(*pfnUnused25)( void );
 } cl_enginefunc_t;
 
 #define CLDLL_INTERFACE_VERSION	7

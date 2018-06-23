@@ -20,6 +20,7 @@ extern cl_enginefunc_t gEngfuncs;
 extern render_api_t gRenderfuncs;
 
 #define GET_CLIENT_TIME	(*gEngfuncs.GetClientTime)
+#define GET_CLIENT_OLDTIME	(*gEngfuncs.GetClientOldTime)
 #define CVAR_REGISTER	(*gEngfuncs.pfnRegisterVariable)
 #define CVAR_GET_FLOAT	(*gEngfuncs.pfnGetCvarFloat)
 #define CVAR_GET_STRING	(*gEngfuncs.pfnGetCvarString)
@@ -59,7 +60,6 @@ extern render_api_t gRenderfuncs;
 #define SPR_Height		(*gEngfuncs.pfnSPR_Height)
 #define SPR_Width		(*gEngfuncs.pfnSPR_Width)
 #define SPR_GetList		(*gEngfuncs.pfnSPR_GetList)
-#define SPR_LoadEx		(*gRenderfuncs.SPR_LoadExt)
 
 #define ConsolePrint	(*gEngfuncs.pfnConsolePrint)
 #define CenterPrint		(*gEngfuncs.pfnCenterPrint)
@@ -74,14 +74,17 @@ inline void PlaySound( char *szSound, float vol ) { gEngfuncs.pfnPlaySoundByName
 inline void PlaySound( int iSound, float vol ) { gEngfuncs.pfnPlaySoundByIndex( iSound, vol ); }
 
 // render api callbacks
+#define SPR_LoadEx			(*gRenderfuncs.SPR_LoadExt)
 #define RENDER_GET_PARM		(*gRenderfuncs.RenderGetParm)
 #define SET_CURRENT_ENTITY		(*gRenderfuncs.R_SetCurrentEntity)
 #define SET_CURRENT_MODEL		(*gRenderfuncs.R_SetCurrentModel)
+#define ENGINE_SET_PVS		(*gRenderfuncs.R_FatPVS)
 #define HOST_ERROR			(*gRenderfuncs.Host_Error)
 #define GET_LIGHTSTYLE		(*gRenderfuncs.GetLightStyle)
 #define GET_DYNAMIC_LIGHT		(*gRenderfuncs.GetDynamicLight)
 #define GET_ENTITY_LIGHT		(*gRenderfuncs.GetEntityLight)
-#define TEXTURE_TO_TEXGAMMA		(*gRenderfuncs.TextureToTexGamma)
+#define TEXTURE_TO_TEXGAMMA		(*gRenderfuncs.LightToTexGamma)
+#define GET_FRAMETIME		(*gRenderfuncs.GetFrameTime)
 #define DRAW_SINGLE_DECAL		(*gRenderfuncs.DrawSingleDecal)
 #define DECAL_SETUP_VERTS		(*gRenderfuncs.R_DecalSetupVerts)
 #define GET_DETAIL_SCALE		(*gRenderfuncs.GetDetailScaleForTexture)
@@ -94,7 +97,7 @@ inline void PlaySound( int iSound, float vol ) { gEngfuncs.pfnPlaySoundByIndex( 
 #define INIT_BEAMCHAINS		(*gRenderfuncs.GetBeamChains)
 #define DRAW_PARTICLES		(*gRenderfuncs.GL_DrawParticles)
 #define SET_ENGINE_WORLDVIEW_MATRIX	(*gRenderfuncs.GL_SetWorldviewProjectionMatrix)
-#define GET_FOG_PARAMS		(*gRenderfuncs.GetFogParamsForTexture)
+#define GET_FOG_PARAMS		(*gRenderfuncs.GetExtraParmsForTexture)
 #define GET_TEXTURE_NAME		(*gRenderfuncs.GL_TextureName)
 #define GET_TEXTURE_DATA		(*gRenderfuncs.GL_TextureData)
 #define COMPARE_FILE_TIME		(*gRenderfuncs.COM_CompareFileTime)
@@ -104,6 +107,7 @@ inline void PlaySound( int iSound, float vol ) { gEngfuncs.pfnPlaySoundByIndex( 
 #define FS_SEARCH			(*gRenderfuncs.pfnGetFilesList)
 
 #define LOAD_TEXTURE		(*gRenderfuncs.GL_LoadTexture)
+#define LOAD_TEXTURE_ARRAY		(*gRenderfuncs.GL_LoadTextureArray)
 
 // AVIKit interface
 #define OPEN_CINEMATIC		(*gRenderfuncs.AVI_LoadVideo)
@@ -121,18 +125,25 @@ inline void PlaySound( int iSound, float vol ) { gEngfuncs.pfnPlaySoundByIndex( 
 #define GL_LoadTextureMatrix		(*gRenderfuncs.GL_LoadTextureMatrix)
 #define GL_LoadIdentityTexMatrix	(*gRenderfuncs.GL_TexMatrixIdentity)
 #define GL_CleanUpTextureUnits	(*gRenderfuncs.GL_CleanUpTextureUnits)
-#define GL_SetTextureType		(*gRenderfuncs.GL_SetTextureType)
 #define GL_TexCoordArrayMode		(*gRenderfuncs.GL_TexCoordArrayMode)
+#define GL_TextureTarget		(*gRenderfuncs.GL_TextureTarget)
 
 #define RANDOM_SEED			(*gRenderfuncs.SetRandomSeed)
 #define MUSIC_FADE_VOLUME		(*gRenderfuncs.S_FadeMusicVolume)
-#define TESS_SURFACE_POLYGON		(*gRenderfuncs.TessPolygon)
+
+#define GL_GetProcAddress		(*gRenderfuncs.GL_GetProcAddress)
+
+#define MOD_HANDLE			(*gRenderfuncs.pfnGetModel)
+
+#define R_LightVec( p0, p1 )		(*gRenderfuncs.LightVec)( p0, p1, NULL )
 
 // built-in memory manager
 #define Mem_Alloc( x )		(*gRenderfuncs.pfnMemAlloc)( x, __FILE__, __LINE__ )
 #define Mem_Free( x )		(*gRenderfuncs.pfnMemFree)( x, __FILE__, __LINE__ )
 
 #define ASSERT( exp )		if(!( exp )) HOST_ERROR( "assert failed at %s:%i\n", __FILE__, __LINE__ )
+
+#define IMAGE_EXISTS( path )		( FILE_EXISTS( va( "%s.tga", path )) || FILE_EXISTS( va( "%s.dds", path )))
 	
 inline bool FILE_EXISTS( const char *filename )
 {
@@ -144,5 +155,10 @@ inline bool FILE_EXISTS( const char *filename )
 		return true;
 	return false;
 }
+
+#define FILE_CRC32			(*gRenderfuncs.pfnFileBufferCRC32)
+#define CVAR_TO_BOOL( x )		((x) && ((x)->value != 0.0f) ? true : false )
+#define Sys_DoubleTime		(*gEngfuncs.pfnSys_FloatTime)
+#define GET_MAX_CLIENTS		(*gEngfuncs.GetMaxClients)
 
 #endif//ENGINECALLBACK_H

@@ -449,7 +449,7 @@ void CGlobalState :: DumpGlobals( void )
 //#endif
 
 
-void CGlobalState :: EntityAdd( string_t globalname, string_t mapName, GLOBALESTATE state )
+void CGlobalState :: EntityAdd( string_t globalname, string_t mapName, GLOBALESTATE state, float time )
 {
 	ASSERT( !Find(globalname) );
 
@@ -459,6 +459,7 @@ void CGlobalState :: EntityAdd( string_t globalname, string_t mapName, GLOBALEST
 	m_pList = pNewEntity;
 	strcpy( pNewEntity->name, STRING( globalname ) );
 	strcpy( pNewEntity->levelName, STRING(mapName) );
+	pNewEntity->global_time = time;
 	pNewEntity->state = state;
 	m_listCount++;
 }
@@ -468,10 +469,19 @@ void CGlobalState :: EntitySetState( string_t globalname, GLOBALESTATE state )
 {
 	globalentity_t *pEnt = Find( globalname );
 
-	if ( pEnt )
-		pEnt->state = state;
+	if ( !pEnt ) return;
+
+	pEnt->state = state;
 }
 
+void CGlobalState :: EntitySetTime( string_t globalname, float time )
+{
+	globalentity_t *pEnt = Find( globalname );
+
+	if ( !pEnt ) return;
+
+	pEnt->global_time = time;
+}
 
 const globalentity_t *CGlobalState :: EntityFromTable( string_t globalname )
 {
@@ -490,6 +500,14 @@ GLOBALESTATE CGlobalState :: EntityGetState( string_t globalname )
 	return GLOBAL_OFF;
 }
 
+float CGlobalState :: EntityGetTime( string_t globalname )
+{
+	globalentity_t *pEnt = Find( globalname );
+	if ( pEnt )
+		return pEnt->global_time;
+
+	return -1.0f;
+}
 
 // Global Savedata for Delay
 BEGIN_SIMPLE_DATADESC( CGlobalState )
@@ -501,6 +519,7 @@ BEGIN_SIMPLE_DATADESC( globalentity_t )
 	DEFINE_AUTO_ARRAY( name, FIELD_CHARACTER ),
 	DEFINE_AUTO_ARRAY( levelName, FIELD_CHARACTER ),
 	DEFINE_FIELD( state, FIELD_INTEGER ),
+	DEFINE_FIELD( global_time, FIELD_FLOAT ), // to save global time instead of state
 END_DATADESC()
 
 int CGlobalState::Save( CSave &save )
@@ -798,9 +817,7 @@ void CWorld :: Precache( void )
 
 	// g-cont. moved here so cheats will working on restore level
 	g_flWeaponCheat = CVAR_GET_FLOAT( "sv_cheats" );  // Is the impulse 101 command allowed?
-
-	if( g_iXashEngineBuildNumber >= 2009 )
-		UPDATE_PACKED_FOG( pev->impulse );
+	UPDATE_PACKED_FOG( pev->impulse );
 }
 
 

@@ -1,0 +1,104 @@
+version 0.65 rev. 3
+
+Render: get support for tiling on studiomodels
+Tools: replace fatal error on warning if texture not found (bsp, csg)
+
+version 0.65 rev. 2
+
+Client: apply default extension to the all aurora files
+Render: recalculate grass size density
+Render: store all the attachments into the model instance instead of interpolation circular array (which is now used by interpolation code in engine)
+Render: fixed another bug with non-solid env_static entities
+Render: fixed bug with crash render after change vid_mode during game
+Render: some bug fixes for monitors.
+Render: bug fix in PCF shader for shadowmapping
+Render: get support for 'fixedcoords' studiomodels feature
+Server: increase multi_manager targets up to 32 (it's may possible break to gameplay in original Half-Life)
+Server: update func_monitor code to right searching client in PVS 
+Tools: update BSP compilers to VHLT 34
+Tools: update studiomdl to get support 'fixedcoords' feature
+
+version 0.65
+
+Client: all exports merged into single export that called 'F'
+Client: RenderAPI was updated to version 35
+Client: rewrite background track. Now use engine player instead of fmod.dll
+Client: add MusicFade like in Paranoia modification
+Render: add overbrights from XashXT: Custom Build 0.7 (thx SovietCoder)
+Render: add fog code from XashXT: Custom Build 0.7 (thx SovietCoder)
+Render: fix beam code (solid beams was drawn in translucent pass)
+Render: add grass code (modified by me) from XashXT: Custom Build 0.7 (thx SovietCoder)
+Render: get support for a new system of lightstyle local times (way to save too long light sequences)
+Render: fix bug with disappearing dynamic shadows
+Render: fix frustum bug with far plane
+Render: fix func_monitor some bugs
+Render: fix some bugs in aurora code
+Render: restore mode kRenderWorldGlow for sprites
+Render: finalize studio cache code
+Render: rewrite studiomodels event code (get more predictable results)
+Render: optimize rain and snow code, increase limits
+Server: env_spark now supports prefixes +\-
+Server: momentary_rot_button immediately stopped on prefix >
+Server: func_rotating toggles directon on prefix > (only when stopped)
+Server: func_rotating ignore toggles direction from momentary entities
+Server: entities who attached with player use him yaw-angle now
+Server: momentary_door immediately stopped on prefix >
+Server: fix some bugs in env_laser code
+Server: get to work air shake for env_shake
+Server: create cvar sv_allow_PhysX for user-control
+Server: func_pushable can be walk on stairs now (test option)
+Server: func_tracktrain can reverse direction on prefix > (only when stopped)
+Server: add "parent" field for multi_manager and multi_watcher (this needs in some cases)
+Server: now all the triggers supports prefixes +\-
+Server: angle-based trigger now get angle transform from parent
+Server: rewrite ichthyosaur code (stupid quake bug)
+
+
+version 0.63
+
+Render: fix bug with flashlight shadow culling for local player
+Render: get to work function R_ScreenToWorld
+Render: fix static entities issues for multi-pass rendering
+Server: fix func_pushable bug (can't pulling)
+Render: fix bloom bug when viewmodel is drawing
+Render: fix ugly blinking for portals and screens when map is started
+Server: stupid quake bug is gone away
+Render: fix bug with lighting additive surfaces on studiomodels
+Render: apply renderamt for studiodecals
+Render: finalize orthogonal renderer (for custom drawing in dev_overview mode)
+Render: replace dlights with custom pointlights (looks better the original)
+Render: remove all unused stuff
+Render: fix decals rendering on 'additive' surfaces
+Server: remove all unused stuff
+Server: revision code of env_spritetrain
+Server: fix a little bug in func_tank entity
+
+
+version 0.61
+
+Render: get support for new engine feature "Large lightmaps"
+Render: get support for BSP31 map format
+Render: fix sorting translucent surfaces
+Render: update mirrors and portals code to prevent draw himself through another mirror\portal
+Render: recalc player view for flashlight while player looks through camera
+Render: recalc player view for func_monitor while player looks through camera
+Render: add new flag for FUNC_MONITOR - CF_NOASPECT (render the image with aspect 1:1 instead of 4:3)
+Render: fix bug with FBO and func_monitor
+Render: fix crash when static entities is present on a level
+Server: added a target for func_rotating (fire when blocked by somewhat)
+Server: do check for invalid lightstyle for func_light (prevent to disable light for all map)
+Server: added a extra velocity for crossbow bolt if player standing on a moving surface
+Server: rewrite code for env_static old version was bugly
+Server: fix a litle bug in pushablemaker and physboxmaker
+Server: fix a few bugs in func_platform code
+Server: added a new entity (came from SOHL) - scripted_trainsequence
+Server: fix a few bugs in func_train, added new event - activate field 'netname' while train rest at the corner
+Server: added a extra velocity for snarks if player standing on a moving surface
+Server: fix bug in UTIL_FireTargets when trying to extract activator name from the targetname
+Server: add feature for multi_manager - USE_SET causes firing all the targets immediately
+Server: let the trigger_push find him target and simulate trigger_push from Q3 Arena
+Server: new entity - trigger_impulse. Fire the target on a map while player a send impulse command like "impulse 1"
+Tools: update BSP compilers to VHLT 30
+
+version 0.6
+First stable release

@@ -821,7 +821,7 @@ const char *GetGameDescription()
 	char		version[32];
 	static char	text[128];
 	
-	char *afile = (char *)LOAD_FILE_FOR_ME( "gameinfo.txt", NULL );
+	char *afile = (char *)LOAD_FILE( "gameinfo.txt", NULL );
 	char *pfile = afile;
 
 	if( pfile )
@@ -1204,6 +1204,12 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 		}
 	}
 
+	state->onground = -1;
+	if ( FBitSet( ent->v.flags, FL_ONGROUND ) && ent->v.groundentity != NULL )
+	{
+		state->onground = ENTINDEX( ent->v.groundentity );
+	}
+
 	// HACK:  Somewhat...
 	// Class is overridden for non-players to signify a breakable glass object ( sort of a class? )
 	if ( !player )
@@ -1220,7 +1226,7 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 		state->gaitsequence = ent->v.gaitsequence;
 		state->spectator = ent->v.flags & FL_SPECTATOR;
 		state->friction     = ent->v.friction;
-
+		state->fuser1	= ent->v.fuser1;	// gaitframe
 		state->gravity      = ent->v.gravity;
 //		state->team			= ent->v.team;
 //		
@@ -1248,8 +1254,9 @@ void CreateBaseline( int player, int eindex, struct entity_state_s *baseline, st
 {
 	baseline->origin		= entity->v.origin;
 	baseline->angles		= entity->v.angles;
-	baseline->frame			= entity->v.frame;
-	baseline->skin			= (short)entity->v.skin;
+	baseline->frame		= entity->v.frame;
+	baseline->skin		= (short)entity->v.skin;
+	baseline->body		= entity->v.body;
 
 	// render information
 	baseline->rendermode	= (byte)entity->v.rendermode;
@@ -1261,33 +1268,36 @@ void CreateBaseline( int player, int eindex, struct entity_state_s *baseline, st
 
 	if ( player )
 	{
-		baseline->mins			= player_mins;
-		baseline->maxs			= player_maxs;
+		baseline->mins		= player_mins;
+		baseline->maxs		= player_maxs;
 
 		baseline->colormap		= eindex;
 		baseline->modelindex	= playermodelindex;
 		baseline->friction		= 1.0;
 		baseline->movetype		= MOVETYPE_WALK;
 
-		baseline->scale			= entity->v.scale;
-		baseline->solid			= SOLID_SLIDEBOX;
+		baseline->scale		= entity->v.scale;
+		baseline->solid		= SOLID_SLIDEBOX;
 		baseline->framerate		= 1.0;
 		baseline->gravity		= 1.0;
 
 	}
 	else
 	{
-		baseline->mins			= entity->v.mins;
-		baseline->maxs			= entity->v.maxs;
+		baseline->mins		= entity->v.mins;
+		baseline->maxs		= entity->v.maxs;
 
-		baseline->colormap		= 0;
+		baseline->sequence		= entity->v.sequence;
+		baseline->colormap		= entity->v.colormap;
 		baseline->modelindex	= entity->v.modelindex;//SV_ModelIndex(pr_strings + entity->v.model);
 		baseline->movetype		= entity->v.movetype;
 
-		baseline->scale			= entity->v.scale;
-		baseline->solid			= entity->v.solid;
+		baseline->scale		= entity->v.scale;
+		baseline->solid		= entity->v.solid;
 		baseline->framerate		= entity->v.framerate;
 		baseline->gravity		= entity->v.gravity;
+		baseline->vuser2		= entity->v.vuser2;	// xform
+		baseline->iuser1		= entity->v.iuser1;	// flags
 	}
 }
 
@@ -1329,7 +1339,6 @@ void Entity_FieldInit( struct delta_s *pFields )
 Entity_Encode
 
 Callback for sending entity_state_t info over network. 
-FIXME:  Move to script
 ==================
 */
 void Entity_Encode( struct delta_s *pFields, const unsigned char *from, const unsigned char *to )
@@ -1483,7 +1492,6 @@ void Custom_Entity_FieldInit( struct delta_s *pFields )
 Custom_Encode
 
 Callback for sending entity_state_t info ( for custom entities ) over network. 
-FIXME:  Move to script
 ==================
 */
 void Custom_Encode( struct delta_s *pFields, const unsigned char *from, const unsigned char *to )
@@ -1569,7 +1577,7 @@ void UpdateClientData ( const struct edict_s *ent, int sendweapons, struct clien
 
 	cd->waterlevel		= ent->v.waterlevel;
 	cd->watertype		= ent->v.watertype;
-	cd->weapons			= ent->v.weapons;
+	cd->weapons		= 0; // not used
 
 	// Vectors
 	cd->origin			= ent->v.origin;
@@ -1768,14 +1776,4 @@ int ShouldCollide( edict_t *pentTouched, edict_t *pentOther )
 		return pOther->ShouldCollide( pTouch );
 
 	return 1;
-}
-
-void CvarValue( const edict_t *pEnt, const char *value ) 
-{
-//	ALERT( at_console, "ReadingCvarValue: [%i], value %s\n", ENTINDEX( (edict_t *)pEnt ), value );
-}
-
-void CvarValue2( const edict_t *pEnt, int requestID, const char *cvarName, const char *value )
-{
-//	ALERT( at_console, "ReadingCvarValue: [%i], id %d, cvar %s, value %s\n", ENTINDEX( (edict_t *)pEnt ), requestID, cvarName, value );
 }

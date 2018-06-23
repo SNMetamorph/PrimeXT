@@ -25,7 +25,7 @@ GNU General Public License for more details.
 #define SF_MONITOR_START_ON		BIT( 0 )
 #define SF_MONITOR_PASSABLE		BIT( 1 )
 #define SF_MONITOR_USEABLE		BIT( 2 )
-
+#define SF_MONITOR_HIDEHUD		BIT( 3 )
 #define SF_MONITOR_MONOCRHOME		BIT( 4 )	// black & white
 
 class CFuncMonitor : public CBaseDelay
@@ -208,6 +208,8 @@ void CFuncMonitor :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 				{
 					UTIL_SetView( pActivator, pev->target );
 					m_pController = (CBasePlayer *)pActivator;
+					if( FBitSet( pev->spawnflags, SF_MONITOR_HIDEHUD ))
+						m_pController->m_iHideHUD |= HIDEHUD_ALL;
 					m_pController->m_pMonitor = this;
 
 					// remember where the player's standing, so we can tell when he walks away
@@ -221,6 +223,8 @@ void CFuncMonitor :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 			}
 			else if( useType == USE_RESET )
 			{
+				if( FBitSet( pev->spawnflags, SF_MONITOR_HIDEHUD ))
+					((CBasePlayer *)pActivator)->m_iHideHUD &= ~HIDEHUD_ALL;
 				UTIL_SetView( pActivator );
 			}
 			return;
@@ -277,6 +281,7 @@ public:
 	void KeyValue( KeyValueData *pkvd );
 	virtual int ObjectCaps( void ) { return CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+	virtual void PortalSleep( float seconds ) { m_flDisableTime = gpGlobals->time + seconds; }
 	virtual STATE GetState( void ) { return m_iState; };
 	virtual BOOL IsPortal( void ) { return TRUE; }
 	void StartMessage( CBasePlayer *pPlayer ) {};
@@ -370,6 +375,9 @@ void CFuncPortal :: Touch( CBaseEntity *pOther )
 
 	if( m_iState == STATE_OFF || m_flDisableTime > gpGlobals->time )
 		return; // disabled
+
+	if( pOther->m_iTeleportFilter )
+		return;	// we already teleporting somewhere
 
 	// Only teleport monsters or clients or physents
 	if( !pOther->IsPlayer() && !pOther->IsMonster() && !pOther->IsPushable() && !pOther->IsProjectile( ) && !pOther->IsRigidBody())

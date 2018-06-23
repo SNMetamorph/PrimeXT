@@ -39,24 +39,30 @@ public:
 	virtual void SpriteDrawModelShadowPass( void );
 private:
 	// Get Sprite description for frame
-	virtual mspriteframe_t *GetSpriteFrame( int frame );
+	virtual mspriteframe_t *GetSpriteFrame( int frame, float yaw );
 
 	// Get interpolated Sprite description for frame
-	virtual float GetSpriteFrameInterpolant( int frame, mspriteframe_t **oldframe, mspriteframe_t **curframe );
+	virtual float GetSpriteFrameInterpolant( mspriteframe_t **oldframe, mspriteframe_t **curframe );
 
-	virtual int SpriteComputeBBox( cl_entity_t *e, Vector bbox[8] );
+	virtual void SpriteComputeOrigin( cl_entity_t *e );
 
-	virtual int CullSpriteModel( const Vector &origin );
+	virtual void SpriteComputeBBox( cl_entity_t *e, Vector bbox[8] );
 
-	virtual float GlowSightDistance( const Vector &glowOrigin );
+	virtual bool CullSpriteModel( void );
 
-	virtual float SpriteGlowBlend( const Vector &origin, int rendermode, int renderfx, int alpha, float &scale );
+	virtual float GlowSightDistance( void );
 
-	virtual int SpriteOccluded( const Vector &origin, int &alpha, float &scale );
+	virtual float SpriteGlowBlend( int rendermode, int renderfx, float &scale );
+
+	virtual int SpriteOccluded( float &pscale );
 
 	virtual void DrawSpriteQuad( mspriteframe_t *frame, const Vector &org, const Vector &right, const Vector &up, float scale );
 
+	void DrawLighting( mspriteframe_t *frame, const Vector &org, const Vector &right, const Vector &up, const Vector &light, float scale, float a );
+
 	virtual int SpriteHasLightmap( int texFormat );
+
+	virtual int SpriteAllowLerping( cl_entity_t *e, msprite_t *psprite );
 
 	inline void *Mod_Extradata( model_t *mod )
 	{
@@ -65,21 +71,15 @@ private:
 		return NULL;
 	}
 
-	Vector			sprite_mins, sprite_maxs;
-	float			sprite_radius;
+	Vector			sprite_origin;
+	Vector			sprite_absmin, sprite_absmax;
 	// Do interpolation?
 	int			m_fDoInterp;
-	// Client clock
-	double			m_clTime;
-	// Old Client clock
-	double			m_clOldTime;
-	// Current render frame #
-	int			m_nFrameCount;
 
 	// Cvars that sprite model code needs to reference
 	cvar_t			*m_pCvarLerping;	// Use lerping for animation?
 	cvar_t			*m_pCvarLighting;	// lighting mode
-	cvar_t			*m_pCvarFlareSize;	// flare scale factor
+	cvar_t			*m_pCvarTraceGlow;
 
 	// The entity which we are currently rendering.
 	cl_entity_t		*m_pCurrentEntity;		

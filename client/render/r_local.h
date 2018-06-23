@@ -20,6 +20,7 @@ GNU General Public License for more details.
 #include "matrix.h"
 #include "ref_params.h"
 #include "com_model.h"
+#include "r_frustum.h"
 #include "dlight.h"
 #include "r_cvars.h"
 #include "studio.h"
@@ -27,64 +28,90 @@ GNU General Public License for more details.
 #include "r_studio.h"
 #include "r_grass.h"
 
-#define INVALID_HANDLE	0xFFFF
-
 // brush model flags (stored in model_t->flags)
 #define MODEL_CONVEYOR	BIT( 0 )
 #define MODEL_HAS_ORIGIN	BIT( 1 )
+
+#define R_SurfCmp( a, b )	(( a.shaderNum > b.shaderNum ) ? true : ( a.shaderNum < b.shaderNum ))
+#define R_ModelOpaque( rm )	(( rm == kRenderNormal ) || ( rm == kRenderTransAlpha ))
 
 // refparams
 #define RP_NONE		0
 #define RP_MIRRORVIEW	BIT( 0 )	// lock pvs at vieworg
 #define RP_ENVVIEW		BIT( 1 )	// used for cubemapshot
-#define RP_OLDVIEWLEAF	BIT( 2 )
-#define RP_CLIPPLANE	BIT( 3 )	// mirrors used
-#define RP_FLIPFRONTFACE	BIT( 4 )	// e.g. for mirrors drawing
+#define RP_OLDVIEWLEAF	BIT( 2 )	// g-cont. it's even needed ?
+#define RP_CLIPPLANE	BIT( 3 )	// mirrors and portals used
+#define RP_FORCE_NOPLAYER	BIT( 4 )	// ignore player drawing in some special cases
 #define RP_SKYPORTALVIEW	BIT( 5 )	// view through env_sky
 #define RP_PORTALVIEW	BIT( 6 )	// view through portal
 #define RP_SCREENVIEW	BIT( 7 )	// view through screen
 #define RP_SHADOWVIEW	BIT( 8 )	// view through light
-#define RP_WORLDSURFVISIBLE	BIT( 9 )	// indicates what we view at least one surface from the current vieworg
+#define RP_OVERVIEW		BIT( 9 )	// draw orthogonal projection (overview)
 #define RP_MERGEVISIBILITY	BIT( 10 )	// merge visibility for additional passes
-#define RP_FORCE_NOPLAYER	BIT( 11 )	// ignore player drawing in some special cases
+#define RP_SKYVISIBLE	BIT( 11 )	// sky is visible
+#define RP_NOGRASS		BIT( 12 )	// don't draw grass
+#define RP_THIRDPERSON	BIT( 13 )	// camera is thirdperson
 
 #define RP_NONVIEWERREF	(RP_MIRRORVIEW|RP_PORTALVIEW|RP_ENVVIEW|RP_SCREENVIEW|RP_SKYPORTALVIEW|RP_SHADOWVIEW)
-#define RP_LOCALCLIENT( e )	(gEngfuncs.GetLocalPlayer() && ((e)->index == gEngfuncs.GetLocalPlayer()->index && e->curstate.entityType == ET_PLAYER ))
-#define RP_NORMALPASS()	((RI.params & RP_NONVIEWERREF) == 0 )
+#define RP_LOCALCLIENT( e )	(gEngfuncs.GetLocalPlayer() && ((e)->index == gEngfuncs.GetLocalPlayer()->index && e->player ))
+#define RP_NORMALPASS()	( FBitSet( RI->params, RP_NONVIEWERREF ) == 0 )
+#define R_StaticEntity( ent )	( ent->origin == g_vecZero && ent->angles == g_vecZero )
+#define R_FullBright()	( CVAR_TO_BOOL( r_fullbright ) || !worldmodel->lightdata )
+#define RP_OUTSIDE( leaf )	(((( leaf ) - worldmodel->leafs ) - 1 ) == -1 )
 
-#define MAX_MIRROR_DEPTH	2
+#define LM_SAMPLE_SIZE	16
+#define LM_SAMPLE_EXTRASIZE	8
 
-#define LM_SAMPLE_SIZE	tr.lm_sample_size	// lightmap resoultion
+#define TF_LIGHTMAP		(TF_NOMIPMAP|TF_CLAMP|TF_ATLAS_PAGE|TF_HAS_ALPHA)
+#define TF_DELUXMAP		(TF_CLAMP|TF_NOMIPMAP|TF_NORMALMAP|TF_ATLAS_PAGE)
+#define TF_SCREEN		(TF_NOMIPMAP|TF_CLAMP)
+#define TF_SPOTLIGHT	(TF_BORDER)
+#define TF_SHADOW		(TF_CLAMP|TF_DEPTHMAP)
 
-#define AREA_NODES		32
-#define AREA_DEPTH		4
+#define TF_DEPTHBUFFER	(TF_SCREEN|TF_DEPTHMAP|TF_NEAREST|TF_LUMINANCE|TF_NOCOMPARE)
+#define TF_COLORBUFFER	(TF_SCREEN|TF_NEAREST)
 
-#define TF_LIGHTMAP		(TF_UNCOMPRESSED|TF_NOPICMIP|TF_NOMIPMAP|TF_CLAMP)
-#define TF_IMAGE		(TF_UNCOMPRESSED|TF_NOPICMIP|TF_NOMIPMAP|TF_CLAMP)
-#define TF_SCREEN		(TF_UNCOMPRESSED|TF_NOPICMIP|TF_NOMIPMAP)
-#define TF_SPOTLIGHT	(TF_UNCOMPRESSED|TF_NOMIPMAP|TF_BORDER)
-#define TF_SHADOW		(TF_UNCOMPRESSED|TF_NOMIPMAP|TF_CLAMP|TF_DEPTHMAP)
-
-// overbright helper macroses
-#define R_OVERBRIGHT()		(r_overbright->value && !r_fullbright->value)
-#define R_OVERBRIGHT_SILENT() 	(r_overbright->value >= 2.0f && !r_fullbright->value)
-#define R_OVERBRIGHT_SFACTOR()	(R_OVERBRIGHT() ? GL_DST_COLOR : GL_ZERO)
+#define CULL_VISIBLE	0		// not culled
+#define CULL_BACKSIDE	1		// backside of transparent wall
+#define CULL_FRUSTUM	2		// culled by frustum
+#define CULL_OTHER		3		// culled by other reason
 
 enum
 {
+	GL_KEEP_UNIT = -1,		// alternative way - change the unit by GL_SelectTexture
 	GL_TEXTURE0 = 0,
 	GL_TEXTURE1,
 	GL_TEXTURE2,
 	GL_TEXTURE3,
+	GL_TEXTURE4,
+	GL_TEXTURE5,
+	GL_TEXTURE6,
+	GL_TEXTURE7,
 	MAX_TEXTURE_UNITS
 };
 
-// mirror entity
-typedef struct gl_entity_s
+typedef struct
 {
-	cl_entity_t	*ent;
-	mextrasurf_t	*chain;
-} gl_entity_t;
+	GLfloat		modelMatrix[16];			// matrix4x4( origin, angles, scale )
+	matrix4x4		transform;			// entity transformation matrix 
+} gl_state_t;
+
+typedef enum
+{
+	LM_FREE = 0,	// lightmap is clear
+	LM_USED,		// partially used, has free space
+	LM_DONE,		// completely full
+} lmstate_t;
+
+typedef struct
+{
+	lmstate_t		state;
+	unsigned short	allocated[BLOCK_SIZE];
+	int		lightmap;
+	int		deluxmap;
+} gl_lightmap_t;
+
+typedef void (*pfnShaderCallback)( struct glsl_prog_s *shader );
 
 typedef struct gl_movie_s
 {
@@ -93,6 +120,14 @@ typedef struct gl_movie_s
 	float		length;		// total cinematic length
 	long		xres, yres;	// size of cinematic
 } gl_movie_t;
+
+typedef struct gl_texbuffer_s
+{
+	int		framebuffer;
+	int		texturenum;
+	int		texframe;		// this frame texture was used
+	matrix4x4		matrix;		// texture matrix
+} gl_texbuffer_t;
 
 typedef struct gl_fbo_s
 {
@@ -105,82 +140,113 @@ typedef struct gl_fbo_s
 // plight - projected light
 typedef struct plight_s
 {
-	mplane_t		frustum[6];	// light frustum
-	unsigned int	clipflags;	// probably not needs
-	unsigned int	flags;		// flashlight flags (typically come from iuser1)
+	Vector		origin;		// cached origin and angles
+	Vector		angles;
+	float		radius;
+	color24		color;		// ignored for spotlights, they have a texture
+	float		die;		// stop lighting after this time
+	float		decay;		// drop this each second
+	int		key;
+	bool		pointlight;	// it's a point light (may be with cubemap)
+	bool		update;		// light needs update
+	bool		culled;		// culled by scissor for this pass
 
 	matrix4x4		projectionMatrix;	// light projection matrix
 	matrix4x4		modelviewMatrix;	// light modelview
-	matrix4x4		textureMatrix;	// result texture matrix	
-	matrix4x4		textureMatrix2;	// for bmodels
-	matrix4x4		shadowMatrix;	// result texture matrix	
-	matrix4x4		shadowMatrix2;	// for bmodels
-	Vector		origin, angles;	// cached origin and angles
+	matrix4x4		lightviewProjMatrix;// lightview projection
+
+	Vector		absmin, absmax;	// world bounds
+	CFrustum		frustum;		// light frustum
 
 	int		projectionTexture;	// 2D projection texture (e.g. flashlight.tga)
-	int		attenuationTexture;	// 1D attenuation texture
 	struct model_s	*pSprite;		// animated sprite
 	int		cinTexturenum;	// not gltexturenum!
 	int		lastframe;	// cinematic lastframe
-	bool		pointlight;	// it's a point light (may be with cubemap)
 	int		shadowTexture;	// shadowmap for this light
 
+	// scissor data
+	float		x, y, w, h;
+
 	// light params
-	color24		color;
-	float		radius;	// FOV
-	float		die;	// stop lighting after this time
-	float		decay;	// drop this each second
-	int		key;
+	float		lightFalloff;	// falloff factor
+	int		flags;
 	float		fov;
 } plight_t;
 
-typedef struct areanode_s
+// 68 bytes here
+typedef struct bvert_s
 {
-	int		axis;		// -1 = leaf node
-	float		dist;
-	struct areanode_s	*children[2];
-	link_t		lights;		// world lights
-} areanode_t;
+	Vector		vertex;			// position
+	Vector		normal;			// normal (for dynamic lighting)
+	float		stcoord0[4];		// ST texture coords
+	float		lmcoord0[MAXLIGHTMAPS];	// LM texture coords for styles 0-1
+	float		lmcoord1[MAXLIGHTMAPS];	// LM texture coords for styles 2-3
+	byte		styles[MAXLIGHTMAPS];	// light styles
+} bvert_t;
+
+// 6 bytes here
+typedef struct
+{
+	msurface_t	*surface;
+	unsigned short	hProgram;		// handle to glsl program
+} gl_bmodelface_t;
 
 typedef struct
 {
-	int		params;		// rendering parameters
+	char		name[64];
+	char		diffuse[64];
+	unsigned short	gl_diffuse_id;	// diffuse texture
+	unsigned short	gl_heightmap_id;
+	unsigned short	width, height;
+	byte		maxHeight;
+	byte		numLayers;	// layers that specified on heightmap
+	byte		*pixels;		// pixels are immediately goes here
+} indexMap_t;
 
-	qboolean		drawWorld;	// ignore world for drawing PlayerModel
-	qboolean		thirdPerson;	// thirdperson camera is enabled
-	qboolean		isSkyVisible;	// sky is visible
-	qboolean		drawOrtho;	// draw world as orthogonal projection	
+typedef struct
+{
+	char		pathes[MAX_LANDSCAPE_LAYERS][64];	// path to texture (may include extension etc)
+	char		names[MAX_LANDSCAPE_LAYERS][64];	// basenames
+	unsigned short	gl_diffuse_id;			// diffuse texture array
+	unsigned short	gl_detail_id;			// detail texture
+} layerMap_t;
 
-	ref_params_t	refdef;		// actual refdef
+// simple version of P2:Savior landscape: global texture only
+typedef struct terrain_s
+{
+	char		name[16];
+	indexMap_t	indexmap;
+	layerMap_t	layermap;
+	int		numLayers;	// count of array textures
+	float		texScale;		// global texture scale
+	bool		valid;		// if heightmap was actual
+} terrain_t;
+
+typedef struct
+{
+	int		params;			// rendering parameters
+	int		viewentity;
+
+	float		fov_x, fov_y;		// current view fov
 
 	cl_entity_t	*currententity;
 	model_t		*currentmodel;
-	cl_entity_t	*currentbeam;	// same as above but for beams
-	const plight_t	*currentlight;	// only valid for shadow passes
+	plight_t		*currentlight;		// only valid for shadow passes
+	struct glsl_prog_s	*currentshader;
 
 	int		viewport[4];
-	int		scissor[4];
-	mplane_t		frustum[6];
+	CFrustum		frustum;
 
+	mleaf_t		*viewleaf;
+	mleaf_t		*oldviewleaf;
 	Vector		pvsorigin;
-	Vector		vieworg;		// locked vieworigin
+	Vector		viewangles;
+	Vector		vieworg;			// locked vieworigin
 	Vector		vforward;
 	Vector		vright;
 	Vector		vup;
 
 	float		farClip;
-	unsigned int	clipFlags;
-
-	qboolean		fogCustom;
-	qboolean		fogEnabled;
-	Vector		fogColor;
-	float		fogDensity;
-	float		fogStart;
-	float		fogEnd;
-	int		cached_contents;	// in water
-
-	float		waveHeight;	// global waveHeight
-	float		currentWaveHeight;	// current entity waveHeight
 
 	float		skyMins[2][6];
 	float		skyMaxs[2][6];
@@ -191,138 +257,139 @@ typedef struct
 
 	matrix4x4		projectionMatrix;
 	matrix4x4		worldviewProjectionMatrix;	// worldviewMatrix * projectionMatrix
-	int		lightstylevalue[MAX_LIGHTSTYLES];	// value 0 - 65536
-	float		lightcache[MAX_LIGHTSTYLES];
 	byte		visbytes[MAX_MAP_LEAFS/8];	// individual visbytes for each pass
-	
+	byte		visfaces[MAX_MAP_FACES/8];	// actual visible faces for current frame (world only)
+	int		visframecount;
+
+	msurface_t	*subview_faces[MAX_SUBVIEWS];
+	int		num_subview_faces;
+	msurface_t	*reject_face;		// avoid recursion to himself
+
 	float		viewplanedist;
 	mplane_t		clipPlane;
 } ref_instance_t;
 
 typedef struct
 {
-	char		worldname[64];	// for catch map changes
+	bool		fResetVis;
+	bool		fCustomRendering;
+	bool		fClearScreen;			// force clear if world shaders failed to build
+	int		fGamePaused;
 
-	int		cinTexture;      	// cinematic texture
-	int		skyTexture;	// default sky texture
+	double		time;		// cl.time
+	double		oldtime;		// cl.oldtime
+	double		frametime;	// special frametime for multipass rendering (will set to 0 on a nextview)
+
 	int		whiteTexture;
 	int		grayTexture;
-	int		blackTexture;
+	int		depthTexture;	// stub
 	int		defaultTexture;   	// use for bad textures
-	int		particleTexture;	// particle texture
-	int		particleTexture2;	// unsmoothed particle texture
-	int		solidskyTexture;	// quake1 solid-sky layer
-	int		alphaskyTexture;	// quake1 alpha-sky layer
-	int		lightmapTextures[MAX_LIGHTMAPS];
-	int		dlightTexture;	// custom dlight texture (128x128)
-	int		dlightTexture2;	// custom dlight texture (256x256)
-	int		attenuationTexture;	// normal attenuation
-	int		attenuationTexture2;// dark attenuation
-	int		attenuationTexture3;// bright attenuation
-	int		attenuationTexture3D;// 3D attenuation
-	int		attenuationStubTexture;
-	int		chromeTexture;	// for shiny faces
-	int		normalizeTexture;
+	int		alphaContrastTexture;
 	int		dlightCubeTexture;	// for point lights
 	int		skyboxTextures[6];	// skybox sides
-	int		mirrorTextures[MAX_MIRRORS];
-	int		portalTextures[MAX_MIRRORS];
-	int		screenTextures[MAX_MIRRORS];
+	gl_texbuffer_t	subviewTextures[MAX_SUBVIEW_TEXTURES];
 	int		cinTextures[MAX_MOVIE_TEXTURES];
 	int		shadowTextures[MAX_SHADOWS];
-	int		num_mirrors_used;	// used mirror textures per full frame
-	int		num_portals_used;	// used portal textures per full frame
-	int		num_screens_used;	// used screen textures per full frame
-	int		num_cin_used;	// used movie textures per full frame
+	int		num_subview_used;	// used mirror textures per full frame
 	int		num_shadows_used;	// used shadow textures per full frame
+	int		num_cin_used;	// used movie textures per full frame
 
-	int		skytexturenum;	// this not a gl_texturenum!
+	int		screen_depth;
+	int		screen_color;
+	int		target_rgb[2];
+
 	int		spotlightTexture;
-	int		noiseTexture;
-	int		fogTexture2D;
-	int		fogTexture1D;
-
-	int		lm_sample_size;
 
 	// framebuffers
 	gl_fbo_t		frame_buffers[MAX_FRAMEBUFFERS];
 	int		num_framebuffers;
 
-	int		fbo[FBO_NUM_TYPES];
+	gl_state_t	cached_state[MAX_CACHED_STATES];
+	int		num_cached_states;
+
+	// lighting stuff
+	int		lightstylevalue[MAX_LIGHTSTYLES];	// value 0 - 65536
+	float		lightstyles[MAX_LIGHTSTYLES];		// GLSL cache-friendly array
+	gl_lightmap_t	lightmaps[MAX_LIGHTMAPS];
+	byte		current_lightmap_texture;
 
 	// entity lists
-	cl_entity_t	*static_entities[MAX_VISIBLE_PACKET];	// opaque non-moved brushes
-	gl_entity_t	mirror_entities[MAX_VISIBLE_PACKET];	// an entities that has mirror
-	gl_entity_t	portal_entities[MAX_VISIBLE_PACKET];	// an entities that has portal
-	gl_entity_t	screen_entities[MAX_VISIBLE_PACKET];	// an entities that has screen
 	cl_entity_t	*solid_entities[MAX_VISIBLE_PACKET];	// opaque moving or alpha brushes
 	cl_entity_t	*trans_entities[MAX_VISIBLE_PACKET];	// translucent brushes
-	cl_entity_t	*child_entities[MAX_VISIBLE_PACKET];	// entities with MOVETYPE_FOLLOW
-	cl_entity_t	*beams_entities[MAX_VISIBLE_PACKET];	// server beams
 	gl_movie_t	cinematics[MAX_MOVIES];		// precached cinematics
-	int		num_static_entities;
-	int		num_mirror_entities;
-	int		num_portal_entities;
-	int		num_screen_entities;
 	int		num_solid_entities;
 	int		num_trans_entities;
-	int		num_child_entities;
-	int		num_beams_entities;
+
+	gl_bmodelface_t	draw_surfaces[MAX_MAP_FACES];		// 390 kB here
+	int		num_draw_surfaces;
+
+	gl_bmodelface_t	light_surfaces[MAX_MAP_FACES];	// 390 kB here
+	int		num_light_surfaces;
+
+	msurface_t	*draw_decals[MAX_DECAL_SURFS];
+	int		num_draw_decals;
 
 	cl_entity_t	*sky_camera;
-	bool		fIgnoreSkybox;
-	bool		fResetVis;
-	bool		fCustomRendering;
-	int		insideView;	// this is view through portal or mirror
+	bool		fIgnoreSkybox;		// we already draw 3d skybox, so don't overwrite it in current pass
+	ref_params_t	viewparams;		// local copy of ref_params_t
+	struct movevars_s	*movevars;
+
+	bool		fogEnabled;
+	Vector		fogColor;
+	float		fogDensity;
+
+	float		blend;
          
 	// OpenGL matrix states
 	bool		modelviewIdentity;
 	
-	int		visframecount;	// PVS frame
-	int		realframecount;	// not including passes
-	int		traceframecount;	// to avoid checked each surface multiple times
-	int		grassframecount;
-	int		framecount;
+	int		traceframecount;		// to avoid checked each surface multiple times
+	int		realframecount;		// complete frame with passes
 
-	bool		world_has_portals;	// indicate a surfaces with SURF_PORTAL bit set
-	bool		world_has_screens;	// indicate a surfaces with SURF_SCREEN bit set
-	bool		world_has_movies;	// indicate a surfaces with SURF_MOVIE bit set
-	bool		local_client_added;	// indicate what a local client already been added into renderlist
+	bool		params_changed;		// some cvars are toggled, shaders needs to recompile and resort
+	bool		local_client_added;		// indicate what a local client already been added into renderlist
+	bool		shadows_notsupport;		// no shadow textures
+	int		glsl_valid_sequence;	// reloas shaders while some render cvars was changed
+	bool		show_uniforms_peak;		// print the maxcount of used uniforms
+	int		num_draw_grass;		// number of bushes per normal or shadow pass
+	int		num_light_grass;		// number of bushes per dynamic light
+	int		grassunloadframe;		// unload too far grass to save video memory
 
-	const ref_params_t	*cached_refdef;	// pointer to viewer refdef
+	// cached shadernums for dynamic lighting
+	bool		nodlights;
+	unsigned short	omniLightShaderNum;		// cached omni light shader for this face
+	unsigned short	projLightShaderNum[2];	// cached proj light shader for this face
+	unsigned short	glsl_sequence_omni;		// same as above but for omnilights
+	unsigned short	glsl_sequence_proj[2];	// same as above but for projlights
+
+	Vector4D		gamma_table[64];
+
+	// original player vieworg and angles
+	Vector		cached_vieworigin;
+	Vector		cached_viewangles;
+
+	double		buildtime;
+
+	Vector		sky_normal;		// sky vector
+	Vector		sky_ambient;		// sky ambient color
 
 	// cull info
-	Vector		modelorg;		// relative to viewpoint
+	Vector		modelorg;			// relative to viewpoint
 
-	size_t		grass_total_size;	// debug
+	size_t		grass_total_size;		// debug
 } ref_globals_t;
 
 typedef struct
 {
-	unsigned int	screen_shader;
-	unsigned int	shadow_shader;
-	unsigned int	liquid_shader;
-
-	unsigned int	decal0_shader;
-	unsigned int	decal1_shader;
-	unsigned int	decal2_shader;
-	unsigned int	decal3_shader;	// for pointlights
-} ref_programs_t;
-
-typedef struct
-{
 	unsigned int	c_world_polys;
-	unsigned int	c_brush_polys;
 	unsigned int	c_studio_polys;
 	unsigned int	c_sprite_polys;
 	unsigned int	c_world_leafs;
 	unsigned int	c_grass_polys;
 
-	unsigned int	c_view_beams_count;
 	unsigned int	c_active_tents_count;
 	unsigned int	c_studio_models_drawn;
 	unsigned int	c_sprite_models_drawn;
-	unsigned int	c_particle_count;
 
 	unsigned int	c_portal_passes;
 	unsigned int	c_mirror_passes;
@@ -330,32 +397,31 @@ typedef struct
 	unsigned int	c_shadow_passes;
 	unsigned int	c_sky_passes;	// drawing through portal or monitor will be increase counter
 
+	unsigned int	c_total_tris;	// triangle count
+
 	unsigned int	c_plights;	// count of actual projected lights
 	unsigned int	c_client_ents;	// entities that moved to client
 
-	unsigned int	num_drawed_ents;
+	unsigned int	c_screen_copy;	// how many times screen was copied
 	unsigned int	num_passes;
 
-	unsigned int	num_drawed_particles;
-	unsigned int	num_particle_systems;
+	unsigned int	num_shader_binds;
 	unsigned int	num_flushes;
 
 	msurface_t	*debug_surface;
+	double		t_world_node;
+	double		t_world_draw;
 } ref_stats_t;
 
 extern engine_studio_api_t	IEngineStudio;
-extern mleaf_t		*r_viewleaf, *r_oldviewleaf;
-extern mleaf_t		*r_viewleaf2, *r_oldviewleaf2;
 extern float		gldepthmin, gldepthmax;
 extern model_t		*worldmodel;
-extern ref_params_t		r_lastRefdef;
-extern ref_instance_t	RI;
+extern ref_instance_t	*RI;
 extern ref_globals_t	tr;
-extern ref_programs_t	cg;
 extern ref_stats_t		r_stats;
 extern cl_entity_t		*v_intermission_spot;
 extern plight_t		cl_plights[MAX_PLIGHTS];
-#define r_numEntities	(tr.num_solid_entities + tr.num_trans_entities + tr.num_child_entities + tr.num_static_entities - r_stats.c_client_ents)
+#define r_numEntities	(tr.num_solid_entities + tr.num_trans_entities - r_stats.c_client_ents)
 #define r_numStatics	(r_stats.c_client_ents)
 
 /*
@@ -370,42 +436,32 @@ enum
 	R_OPENGL_110 = 0,		// base
 	R_WGL_PROCADDRESS,
 	R_ARB_VERTEX_BUFFER_OBJECT_EXT,
-	R_ENV_COMBINE_EXT,
+	R_ARB_VERTEX_ARRAY_OBJECT_EXT,
+	R_EXT_GPU_SHADER4,		// shaders only
+	R_TEXTURE_ARRAY_EXT,	// shaders only
 	R_ARB_MULTITEXTURE,
 	R_TEXTURECUBEMAP_EXT,
-	R_DOT3_ARB_EXT,
-	R_ANISOTROPY_EXT,
-	R_TEXTURE_LODBIAS,
-	R_OCCLUSION_QUERIES_EXT,
-	R_TEXTURE_COMPRESSION_EXT,
 	R_SHADER_GLSL100_EXT,
-	R_SGIS_MIPMAPS_EXT,
 	R_DRAW_RANGEELEMENTS_EXT,
-	R_LOCKARRAYS_EXT,
 	R_TEXTURE_3D_EXT,
-	R_CLAMPTOEDGE_EXT,
-	R_BLEND_MINMAX_EXT,
-	R_STENCILTWOSIDE_EXT,
-	R_BLEND_SUBTRACT_EXT,
 	R_SHADER_OBJECTS_EXT,
-	R_VERTEX_PROGRAM_EXT,	// cg vertex program
-	R_FRAGMENT_PROGRAM_EXT,	// cg fragment program
 	R_VERTEX_SHADER_EXT,	// glsl vertex program
 	R_FRAGMENT_SHADER_EXT,	// glsl fragment program	
-	R_EXT_POINTPARAMETERS,
-	R_SEPARATESTENCIL_EXT,
 	R_ARB_TEXTURE_NPOT_EXT,
-	R_CUSTOM_VERTEX_ARRAY_EXT,
-	R_TEXTURE_ENV_ADD_EXT,
-	R_CLAMP_TEXBORDER_EXT,
 	R_DEPTH_TEXTURE,
 	R_SHADOW_EXT,
 	R_FRAMEBUFFER_OBJECT,
 	R_PARANOIA_EXT,		// custom OpenGL32.dll with hacked function glDepthRange
+	R_DEBUG_OUTPUT,
 	R_EXTCOUNT,		// must be last
 };
 
-#define MAX_TEXTURE_UNITS	4
+typedef enum
+{
+	GLHW_GENERIC,		// where everthing works the way it should
+	GLHW_RADEON,		// where you don't have proper GLSL support
+	GLHW_NVIDIA		// Geforce 8/9 class DX10 hardware
+} glHWType_t;
 
 typedef struct
 {
@@ -416,11 +472,13 @@ typedef struct
 	int		faceCull;
 	int		frontFace;
 	int		frameBuffer;
+	GLint		depthmask;
 
-	qboolean		drawTrans;
-	qboolean		drawProjection;
+	qboolean		drawTrans;		// FIXME: get rid of this
 	qboolean		stencilEnabled;
-	qboolean		in2DMode;
+
+	ref_instance_t	stack[MAX_REF_STACK];
+	GLuint		stack_position;
 } glState_t;
 
 typedef struct
@@ -429,21 +487,24 @@ typedef struct
 	const char	*version_string;
 	const char	*vendor_string;
 
+	glHWType_t	hardware_type;
+
 	// list of supported extensions
 	const char	*extensions_string;
 	bool		extension[R_EXTCOUNT];
 
-	int		block_size;		// lightmap blocksize
-	
 	int		max_texture_units;
 	GLint		max_2d_texture_size;
-	GLint		max_2d_rectangle_size;
 	GLint		max_3d_texture_size;
 	GLint		max_cubemap_size;
 	GLint		texRectangle;
 
-	GLfloat		max_texture_anisotropy;
-	GLfloat		max_texture_lodbias;
+	int		max_vertex_uniforms;
+	int		max_vertex_attribs;
+	int		max_varying_floats;
+	int		max_skinning_bones;		// total bones that can be transformed with GLSL
+	int		peak_used_uniforms;
+	bool		uniforms_economy;
 } glConfig_t;
 
 extern glState_t glState;
@@ -456,57 +517,56 @@ bool R_Init( void );
 void R_VidInit( void );
 void R_Shutdown( void );
 bool GL_Support( int r_ext );
+#define GL_CheckForErrors() GL_CheckForErrors_( __FILE__, __LINE__ )
+void GL_CheckForErrors_( const char *filename, const int fileline );
 
 //
 // r_backend.cpp
 //
 void GL_LoadMatrix( const matrix4x4 source );
 void GL_LoadTexMatrix( const matrix4x4 source );
-void GL_DisableAllTexGens( void );
 void GL_FrontFace( GLenum front );
-void GL_SetRenderMode( int mode );
 void GL_Cull( GLenum cull );
-qboolean R_SetupFogProjection( void );
-void R_BeginDrawProjection( const plight_t *pl, bool decalPass = false );
-void R_EndDrawProjection( void );
-int TriSpriteTexture( model_t *pSpriteModel, int frame );
+bool R_BeginDrawProjectionGLSL( plight_t *pl, float lightscale = 1.0f );
+void R_EndDrawProjectionGLSL( void );
 int R_GetSpriteTexture( const model_t *m_pSpriteModel, int frame );
-int R_AllocFrameBuffer( void );
+int R_AllocFrameBuffer( int viewport[4] );
 void GL_BindFrameBuffer( int buffer, int texture );
 void R_FreeFrameBuffer( int buffer );
-void R_SetupOverbright( qboolean active );
-
-//
-// r_beams.cpp
-//
-void R_InitViewBeams( void );
-void R_AddServerBeam( cl_entity_t *pEnvBeam );
-void CL_DrawBeams( int fTrans );
-
-//
-// r_bloom.cpp
-//
-void R_InitBloomTextures( void );
-void R_BloomBlend( const ref_params_t *fd );
+void GL_DepthMask( GLint enable );
+void GL_AlphaTest( GLint enable );
+void GL_Blend( GLint enable );
+void GL_BindFBO( GLint buffer );
+void GL_Setup2D( void );
+void GL_Setup3D( void );
 
 //
 // r_cull.cpp
 //
-bool R_CullBoxExt( const mplane_t frustum[6], const Vector &mins, const Vector &maxs, unsigned int clipflags );
-bool R_CullSphereExt( const mplane_t frustum[6], const Vector &centre, float radius, unsigned int clipflags );
-bool R_CullModel( cl_entity_t *e, const Vector &origin, const Vector &mins, const Vector &maxs, float radius );
-bool R_CullSurfaceExt( msurface_t *surf, const mplane_t frustum[6], unsigned int clipflags );
-bool R_VisCullBox( const Vector &mins, const Vector &maxs );
-bool R_VisCullSphere( const Vector &origin, float radius );
+bool R_CullModel( cl_entity_t *e, const Vector &absmin, const Vector &absmax );
+int R_CullSurfaceExt( msurface_t *surf, CFrustum *frustum );
+bool R_CullNodeTopView( const struct mworldnode_s *node );
 
-#define R_CullBox( mins, maxs, clipFlags )	R_CullBoxExt( RI.frustum, mins, maxs, clipFlags )
-#define R_CullSphere( centre, radius, clipFlags )	R_CullSphereExt( RI.frustum, centre, radius, clipFlags )
-#define R_CullSurface( surf, clipFlags )	R_CullSurfaceExt( surf, RI.frustum, clipFlags )
+#define R_CullBox( mins, maxs )	( RI->frustum.CullBox( mins, maxs ))
+#define R_CullSphere( centre, radius )	( RI->frustum.CullSphere( centre, radius ))
+#define R_CullSurface( surf )		R_CullSurfaceExt( surf, &RI->frustum )
 
 //
 // r_debug.c
 //
-msurface_t *R_TraceLine( pmtrace_t *result, const Vector &start, const Vector &end, int traceFlags );
+void R_DrawScissorRectangle( float x, float y, float w, float h );
+void R_DrawRenderPasses( int passnum );
+void R_DrawLightScissors( void );
+void DrawLightProbes( void );
+void DrawWireFrame( void );
+void DrawNormals( void );
+
+//
+// r_decals.c
+//
+void DrawDecalsBatch( void );
+void DrawSurfaceDecals( msurface_t *fa, qboolean single, qboolean reverse );
+void DrawSingleDecal( decal_t *pDecal, msurface_t *fa );
 
 //
 // r_light.c
@@ -514,43 +574,53 @@ msurface_t *R_TraceLine( pmtrace_t *result, const Vector &start, const Vector &e
 void R_AnimateLight( void );
 void R_PushDlights( void );
 int R_CountPlights( bool countShadowLights = false );
-void R_LightForPoint( const Vector &point, color24 *ambientLight, bool invLight, bool useAmbient, float radius );
-void R_RecursiveLightNode( mnode_t *node, const mplane_t frustum[6], unsigned int clipflags );
+Vector R_LightsForPoint( const Vector &point, float radius );
 void R_GetLightVectors( cl_entity_t *pEnt, Vector &origin, Vector &angles );
 void R_SetupLightProjection( plight_t *pl, const Vector &origin, const Vector &angles, float radius, float fov );
-void R_MergeLightProjection( plight_t *pl );
 void R_SetupLightProjectionTexture( plight_t *pl, cl_entity_t *pEnt );
 void R_SetupLightAttenuationTexture( plight_t *pl, int falloff = -1 );
-void R_LightStaticBrushes( const plight_t *pl );
 plight_t *CL_AllocPlight( int key );
-void R_DrawShadowChains( void );
-void R_DrawLightChains( void );
 void CL_DecayLights( void );
 void CL_ClearPlights( void );
+
+//
+// r_lightmap.cpp
+//
+void R_UpdateSurfaceParams( msurface_t *surf );
+void GL_BeginBuildingLightmaps( void );
+void GL_AllocLightmapForFace( msurface_t *surf );
+void GL_EndBuildingLightmaps( bool lightmap, bool deluxmap );
+void R_TextureCoords( msurface_t *surf, const Vector &vec, float *out );
+void R_GlobalCoords( msurface_t *surf, const Vector &point, float *out );
+void R_LightmapCoords( msurface_t *surf, const Vector &vec, float *coords, int style );
 
 //
 // r_main.cpp
 //
 void R_ClearScene( void );
+word GL_CacheState( const Vector &origin, const Vector &angles );
 qboolean R_AddEntity( struct cl_entity_s *clent, int entityType );
 qboolean R_WorldToScreen( const Vector &point, Vector &screen );
 void R_SetupProjectionMatrix( float fov_x, float fov_y, matrix4x4 &m );
 void R_ScreenToWorld( const Vector &screen, Vector &point );
-void R_RenderScene( const ref_params_t *pparams );
-int R_ComputeFxBlend( cl_entity_t *e );
+void R_SetupModelviewMatrix( matrix4x4 &m );
+void R_DrawParticles( qboolean trans );
+void R_CheckChanges( void );
+void R_RenderScene( void );
+int CL_FxBlend( cl_entity_t *e );
 void R_LoadIdentity( void );
 void R_RotateForEntity( cl_entity_t *e );
 void R_TranslateForEntity( cl_entity_t *e );
+void R_TransformForEntity( const matrix4x4 &transform );
+const char *R_GetNameForView( void );
+void R_AllowFog( int allowed );
 void R_FindViewLeaf( void );
 void R_SetupFrustum( void );
-
-//
-// r_mirror.cpp
-//
-void R_BeginDrawMirror( msurface_t *fa );
-void R_EndDrawMirror( void );
-bool R_FindMirrors( const ref_params_t *fd );
-void R_DrawMirrors( cl_entity_t *ignoreent = NULL );
+void R_InitRefState( void );
+void R_ResetRefState( void );
+void R_PushRefState( void );
+void R_PopRefState( void );
+ref_instance_t *R_GetPrevInstance( void );
 
 //
 // r_misc.cpp
@@ -559,6 +629,9 @@ void R_NewMap( void );
 void Mod_ThrowModelInstances( void );
 void Mod_PrepareModelInstances( void );
 int Mod_SampleSizeForFace( msurface_t *surf );
+void R_LoadLandscapes( const char *filename );
+terrain_t *R_FindTerrain( const char *texname );
+void R_FreeLandscapes( void );
 
 //
 // r_movie.cpp
@@ -566,22 +639,15 @@ int Mod_SampleSizeForFace( msurface_t *surf );
 int R_PrecacheCinematic( const char *cinname );
 void R_InitCinematics( void );
 void R_FreeCinematics( void );
-int R_DrawCinematic( msurface_t *surf, texture_t *t );
 int R_AllocateCinematicTexture( unsigned int txFlags );
+void R_UpdateCinematic( const msurface_t *surf );
 
 //
-// r_portal.cpp
+// r_postprocess.cpp
 //
-bool R_FindPortals( const ref_params_t *fd );
-void R_DrawPortals( cl_entity_t *ignoreent = NULL );
-
-//
-// r_screen.cpp
-//
-void R_BeginDrawScreen( msurface_t *fa );
-void R_EndDrawScreen( void );
-bool R_FindScreens( const ref_params_t *fd );
-void R_DrawScreens( cl_entity_t *ignoreent = NULL );
+void InitPostTextures( void );
+void InitPostEffects( void );
+void RenderSunShafts( void );
 
 //
 // r_shadows.cpp
@@ -592,16 +658,30 @@ void R_RenderShadowmaps( void );
 // r_surf.cpp
 //
 void R_MarkLeaves( void );
-void R_DrawWorld( void );
-void R_DrawWaterSurfaces( bool fTrans );
-void R_DrawBrushModel( cl_entity_t *e );
 void HUD_BuildLightmaps( void );
-void HUD_SetOrthoBounds( const float *mins, const float *maxs );
+texture_t *R_TextureAnimation( msurface_t *s );
+void GL_InitRandomTable( void );
 
 //
-// r_textures.cpp
+// r_subview.cpp
 //
-qboolean HUD_LoadTextures( const void *in, model_t *out, int *sky1, int *sky2 );
+void R_RenderSubview( void );
+
+//
+// gl_shader.cpp
+//
+const char *GL_PretifyListOptions( const char *options, bool newlines = false );
+void GL_BindShader( struct glsl_prog_s *shader );
+void GL_FreeUberShaders( void );
+void GL_InitGPUShaders( void );
+void GL_FreeGPUShaders( void );
+word GL_UberShaderForSolidBmodel( msurface_t *s, bool translucent = false );
+word GL_UberShaderForBmodelDlight( const plight_t *pl, msurface_t *s, bool translucent = false );
+word GL_UberShaderForBmodelDecal( decal_t *decal );
+word GL_UberShaderForDlightGeneric( const plight_t *pl );
+word GL_UberShaderForSolidStudio( struct mstudiomat_s *mat, bool vertex_lighting, bool bone_weighting, bool fullbright, int numbones = 0 );
+word GL_UberShaderForDlightStudio( const plight_t *dl, struct mstudiomat_s *mat, bool bone_weighting, int numbones = 0 );
+word GL_UberShaderForStudioDecal( struct mstudiomat_s *mat );
 
 //
 // r_util.cpp
@@ -613,18 +693,27 @@ float V_CalcFov( float &fov_x, float width, float height );
 void V_AdjustFov( float &fov_x, float &fov_y, float width, float height, bool lock_x );
 
 //
+// r_world.cpp
+//
+void R_DrawWorld( void );
+void R_DrawWorldShadowPass( void );
+void R_DrawBrushModel( cl_entity_t *e );
+void R_DrawBrushModelShadow( cl_entity_t *e );
+void R_ProcessWorldData( model_t *mod, qboolean create, const byte *buffer );
+bool Mod_CheckLayerNameForSurf( msurface_t *surf, const char *checkName );
+bool Mod_CheckLayerNameForPixel( mfaceinfo_t *land, const Vector &point, const char *checkName );
+void Mod_SetOrthoBounds( const float *mins, const float *maxs );
+void R_SetRenderColor( cl_entity_t *e );
+void R_WorldSetupVisibility( void );
+void Mod_ResortFaces( void );
+
+//
 // r_warp.cpp
 //
 void R_DrawSkyBox( void );
 void R_ClearSkyBox( void );
-void EmitWaterPolys( glpoly_t *polys, qboolean noCull, qboolean reflection = false );
-void R_RecursiveSkyNode( mnode_t *node, unsigned int clipflags );
-void EmitWaterPolysReflection( msurface_t *fa );
 void R_CheckSkyPortal( cl_entity_t *skyPortal );
 void R_DrawSkyPortal( cl_entity_t *skyPortal );
 void R_AddSkyBoxSurface( msurface_t *fa );
-void EmitSkyPolys( msurface_t *fa );
-void R_DrawSkyChain( msurface_t *s );
-void EmitSkyLayers( msurface_t *fa );
 
 #endif//R_LOCAL_H

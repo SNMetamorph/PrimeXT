@@ -175,6 +175,28 @@ public:
 
 	void	GetAngles( Vector &angles ) { angles = GetAngles(); }
 
+	void	GetAngles( Radian &angles )
+	{
+		float xyDist = sqrt( mat[0][0] * mat[0][0] + mat[0][1] * mat[0][1] );
+
+		// enough here to get angles?
+		if( xyDist > 0.001f )
+		{
+			angles.y = atan2( -mat[0][2], xyDist );
+			angles.z = atan2( mat[0][1], mat[0][0] );
+			angles.x = atan2( mat[1][2], mat[2][2] );
+		}
+		else	// forward is mostly Z, gimbal lock
+		{
+			angles.y = atan2( -mat[0][2], xyDist );
+			angles.z = atan2( -mat[1][0], mat[1][1] );
+			angles.x = 0.0f;
+		}
+	}
+
+	Vector4D	GetQuaternion( void );
+	void	GetQuaternion( Vector4D &quat ) { quat = GetQuaternion(); }
+
 	// Transpose.
 	matrix3x3	Transpose() const
 	{
@@ -186,6 +208,27 @@ public:
 
 	Vector matrix3x3::VectorRotate( const Vector &v ) const;
 	Vector matrix3x3::VectorIRotate( const Vector &v ) const;
+
+	// copy as OpenGl matrix
+	inline void CopyToArray( float *rgfl ) const
+	{
+		rgfl[ 0] = mat[0][0];
+		rgfl[ 1] = mat[0][1];
+		rgfl[ 2] = mat[0][2];
+		rgfl[ 3] = 0.0f;
+		rgfl[ 4] = mat[1][0];
+		rgfl[ 5] = mat[1][1];
+		rgfl[ 6] = mat[1][2];
+		rgfl[ 7] = 0.0f;
+		rgfl[ 8] = mat[2][0];
+		rgfl[ 9] = mat[2][1];
+		rgfl[10] = mat[2][2];
+		rgfl[11] = 0.0f;
+		rgfl[12] = 0.0f;
+		rgfl[13] = 0.0f;
+		rgfl[14] = 0.0f;
+		rgfl[15] = 1.0f;
+	}
 
 	matrix3x3 Concat( const matrix3x3 mat2 );
 
@@ -216,7 +259,88 @@ public:
 	}
 
 	// init from entity
-	_forceinline matrix3x4( Vector origin, Vector angles, float scale = 1.0f )
+	_forceinline matrix3x4( const Vector &origin, const Vector &angles, const Vector &scale )
+	{
+		float	angle, sr, sp, sy, cr, cp, cy;
+
+		if( angles[ROLL] )
+		{
+			angle = angles[YAW] * (M_PI*2 / 360);
+			SinCos( angle, &sy, &cy );
+			angle = angles[PITCH] * (M_PI*2 / 360);
+			SinCos( angle, &sp, &cp );
+			angle = angles[ROLL] * (M_PI*2 / 360);
+			SinCos( angle, &sr, &cr );
+
+			mat[0][0] = (cp*cy) * scale.x;
+			mat[1][0] = (sr*sp*cy+cr*-sy) * scale.y;
+			mat[2][0] = (cr*sp*cy+-sr*-sy) * scale.z;
+			mat[3][0] = origin.x;
+			mat[0][1] = (cp*sy) * scale.x;
+			mat[1][1] = (sr*sp*sy+cr*cy) * scale.y;
+			mat[2][1] = (cr*sp*sy+-sr*cy) * scale.z;
+			mat[3][1] = origin.y;
+			mat[0][2] = (-sp) * scale.x;
+			mat[1][2] = (sr*cp) * scale.y;
+			mat[2][2] = (cr*cp) * scale.z;
+			mat[3][2] = origin.z;
+		}
+		else if( angles[PITCH] )
+		{
+			angle = angles[YAW] * (M_PI*2 / 360);
+			SinCos( angle, &sy, &cy );
+			angle = angles[PITCH] * (M_PI*2 / 360);
+			SinCos( angle, &sp, &cp );
+
+			mat[0][0] = (cp*cy) * scale.x;
+			mat[1][0] = (-sy) * scale.y;
+			mat[2][0] = (sp*cy) * scale.z;
+			mat[3][0] = origin.x;
+			mat[0][1] = (cp*sy) * scale.x;
+			mat[1][1] = (cy) * scale.y;
+			mat[2][1] = (sp*sy) * scale.z;
+			mat[3][1] = origin.y;
+			mat[0][2] = (-sp) * scale.x;
+			mat[1][2] = 0;
+			mat[2][2] = (cp) * scale.z;
+			mat[3][2] = origin.z;
+		}
+		else if( angles[YAW] )
+		{
+			angle = angles[YAW] * (M_PI*2 / 360);
+			SinCos( angle, &sy, &cy );
+
+			mat[0][0] = (cy) * scale.x;
+			mat[1][0] = (-sy) * scale.y;
+			mat[2][0] = 0;
+			mat[3][0] = origin.x;
+			mat[0][1] = (sy) * scale.x;
+			mat[1][1] = (cy) * scale.y;
+			mat[2][1] = 0;
+			mat[3][1] = origin.y;
+			mat[0][2] = 0;
+			mat[1][2] = 0;
+			mat[2][2] = scale.z;
+			mat[3][2] = origin.z;
+		}
+		else
+		{
+			mat[0][0] = scale.x;
+			mat[1][0] = 0;
+			mat[2][0] = 0;
+			mat[3][0] = origin.x;
+			mat[0][1] = 0;
+			mat[1][1] = scale.y;
+			mat[2][1] = 0;
+			mat[3][1] = origin.y;
+			mat[0][2] = 0;
+			mat[1][2] = 0;
+			mat[2][2] = scale.z;
+			mat[3][2] = origin.z;
+		}
+	}
+
+	_forceinline matrix3x4( const Vector &origin, const Vector &angles, float scale = 1.0f )
 	{
 		float	angle, sr, sp, sy, cr, cp, cy;
 
@@ -297,8 +421,33 @@ public:
 		}
 	}
 
+	_forceinline matrix3x4( const Vector &origin, const Radian &angles )
+	{
+		float	angle, sr, sp, sy, cr, cp, cy;
+
+		angle = angles[ROLL];	// YAW -> ROLL
+		SinCos( angle, &sy, &cy );
+		angle = angles[YAW];	// PITCH -> YAW
+		SinCos( angle, &sp, &cp );
+		angle = angles[PITCH];	// ROLL -> PITCH
+		SinCos( angle, &sr, &cr );
+
+		mat[0][0] = (cp*cy);
+		mat[0][1] = (cp*sy);
+		mat[0][2] = (-sp);
+		mat[1][0] = (sr*sp*cy+cr*-sy);
+		mat[1][1] = (sr*sp*sy+cr*cy);
+		mat[1][2] = (sr*cp);
+		mat[2][0] = (cr*sp*cy+-sr*-sy);
+		mat[2][1] = (cr*sp*sy+-sr*cy);
+		mat[2][2] = (cr*cp);
+		mat[3][0] = origin.x;
+		mat[3][1] = origin.y;
+		mat[3][2] = origin.z;
+	}
+
 	// init from quaternion + origin
-	_forceinline matrix3x4( Vector origin, Vector4D quaternion )
+	_forceinline matrix3x4( const Vector &origin, const Vector4D &quaternion )
 	{
 		mat[0][0] = 1.0f - 2.0f * (quaternion.y * quaternion.y + quaternion.z * quaternion.z);
 		mat[1][0] = 2.0f * (quaternion.x * quaternion.y - quaternion.z * quaternion.w);
@@ -386,19 +535,91 @@ public:
 		{
 			angles[0] = RAD2DEG( atan2( -mat[0][2], xyDist ) );
 			angles[1] = RAD2DEG( atan2( -mat[1][0], mat[1][1] ) );
-			angles[2] = 0;
+			angles[2] = 0.0f;
 		}
 
 		return angles;
 	}
 
+	void GetStudioTransform( Vector &position, Radian &angles )
+	{
+		float xyDist = sqrt( mat[0][0] * mat[0][0] + mat[0][1] * mat[0][1] );
+
+		// enough here to get angles?
+		if( xyDist > 0.001f )
+		{
+			angles.y = atan2( -mat[0][2], xyDist );
+			angles.z = atan2( mat[0][1], mat[0][0] );
+			angles.x = atan2( mat[1][2], mat[2][2] );
+		}
+		else	// forward is mostly Z, gimbal lock
+		{
+			angles.y = atan2( -mat[0][2], xyDist );
+			angles.z = atan2( -mat[1][0], mat[1][1] );
+			angles.x = 0.0f;
+		}
+
+		position = mat[3];
+	}
+
 	void	GetAngles( Vector &angles ) { angles = GetAngles(); }
+
+	void	GetAngles( Radian &angles )
+	{
+		float xyDist = sqrt( mat[0][0] * mat[0][0] + mat[0][1] * mat[0][1] );
+
+		// enough here to get angles?
+		if( xyDist > 0.001f )
+		{
+			angles.y = atan2( -mat[0][2], xyDist );
+			angles.z = atan2( mat[0][1], mat[0][0] );
+			angles.x = atan2( mat[1][2], mat[2][2] );
+		}
+		else	// forward is mostly Z, gimbal lock
+		{
+			angles.y = atan2( -mat[0][2], xyDist );
+			angles.z = atan2( -mat[1][0], mat[1][1] );
+			angles.x = 0.0f;
+		}
+	}
+
+	Vector4D	GetQuaternion( void );
+	void	GetQuaternion( Vector4D &quat ) { quat = GetQuaternion(); }
 
 	// transform point and normal
 	Vector	VectorTransform( const Vector &v ) const;
 	Vector	VectorITransform( const Vector &v ) const;
 	Vector	VectorRotate( const Vector &v ) const;
 	Vector	VectorIRotate( const Vector &v ) const;
+
+	// copy as OpenGl matrix
+	inline void CopyToArray( float *rgfl ) const
+	{
+		rgfl[ 0] = mat[0][0];
+		rgfl[ 1] = mat[0][1];
+		rgfl[ 2] = mat[0][2];
+		rgfl[ 3] = 0.0f;
+		rgfl[ 4] = mat[1][0];
+		rgfl[ 5] = mat[1][1];
+		rgfl[ 6] = mat[1][2];
+		rgfl[ 7] = 0.0f;
+		rgfl[ 8] = mat[2][0];
+		rgfl[ 9] = mat[2][1];
+		rgfl[10] = mat[2][2];
+		rgfl[11] = 0.0f;
+		rgfl[12] = mat[3][0];
+		rgfl[13] = mat[3][1];
+		rgfl[14] = mat[3][2];
+		rgfl[15] = 1.0f;
+	}
+
+	// copy as Vector4D array
+	inline void CopyToArray4x3( Vector4D array[] ) const
+	{
+		array[0] = Vector4D( mat[0][0], mat[0][1], mat[0][2], mat[3][0] );
+		array[1] = Vector4D( mat[1][0], mat[1][1], mat[1][2], mat[3][1] );
+		array[2] = Vector4D( mat[2][0], mat[2][1], mat[2][2], mat[3][2] );
+	}
 
 	// Transpose.
 	matrix3x4	Transpose() const
@@ -412,6 +633,7 @@ public:
 
 	matrix3x4 Invert( void ) const;	// basic orthonormal invert
 	matrix3x4 ConcatTransforms( const matrix3x4 mat2 );
+	matrix3x4 ConcatTransforms( const matrix3x4 mat2 ) const;
 
 	Vector mat[4];
 };
@@ -562,6 +784,104 @@ public:
 		}
 	}
 
+	// init from entity
+	_forceinline matrix4x4( const Vector &origin, const Vector &angles, const Vector &scale )
+	{
+		float	angle, sr, sp, sy, cr, cp, cy;
+
+		if( angles[ROLL] )
+		{
+			angle = angles[YAW] * (M_PI*2 / 360);
+			SinCos( angle, &sy, &cy );
+			angle = angles[PITCH] * (M_PI*2 / 360);
+			SinCos( angle, &sp, &cp );
+			angle = angles[ROLL] * (M_PI*2 / 360);
+			SinCos( angle, &sr, &cr );
+
+			mat[0][0] = (cp*cy) * scale.x;
+			mat[1][0] = (sr*sp*cy+cr*-sy) * scale.y;
+			mat[2][0] = (cr*sp*cy+-sr*-sy) * scale.z;
+			mat[3][0] = origin.x;
+			mat[0][1] = (cp*sy) * scale.x;
+			mat[1][1] = (sr*sp*sy+cr*cy) * scale.y;
+			mat[2][1] = (cr*sp*sy+-sr*cy) * scale.z;
+			mat[3][1] = origin.y;
+			mat[0][2] = (-sp) * scale.x;
+			mat[1][2] = (sr*cp) * scale.y;
+			mat[2][2] = (cr*cp) * scale.z;
+			mat[3][2] = origin.z;
+			mat[0][3] = 0;
+			mat[1][3] = 0;
+			mat[2][3] = 0;
+			mat[3][3] = 1;
+		}
+		else if( angles[PITCH] )
+		{
+			angle = angles[YAW] * (M_PI*2 / 360);
+			SinCos( angle, &sy, &cy );
+			angle = angles[PITCH] * (M_PI*2 / 360);
+			SinCos( angle, &sp, &cp );
+
+			mat[0][0] = (cp*cy) * scale.x;
+			mat[1][0] = (-sy) * scale.y;
+			mat[2][0] = (sp*cy) * scale.z;
+			mat[3][0] = origin.x;
+			mat[0][1] = (cp*sy) * scale.x;
+			mat[1][1] = (cy) * scale.y;
+			mat[2][1] = (sp*sy) * scale.z;
+			mat[3][1] = origin.y;
+			mat[0][2] = (-sp) * scale.x;
+			mat[1][2] = 0;
+			mat[2][2] = (cp) * scale.z;
+			mat[3][2] = origin.z;
+			mat[0][3] = 0;
+			mat[1][3] = 0;
+			mat[2][3] = 0;
+			mat[3][3] = 1;
+		}
+		else if( angles[YAW] )
+		{
+			angle = angles[YAW] * (M_PI*2 / 360);
+			SinCos( angle, &sy, &cy );
+
+			mat[0][0] = (cy) * scale.x;
+			mat[1][0] = (-sy) * scale.y;
+			mat[2][0] = 0;
+			mat[3][0] = origin.x;
+			mat[0][1] = (sy) * scale.x;
+			mat[1][1] = (cy) * scale.y;
+			mat[2][1] = 0;
+			mat[3][1] = origin.y;
+			mat[0][2] = 0;
+			mat[1][2] = 0;
+			mat[2][2] = scale.z;
+			mat[3][2] = origin.z;
+			mat[0][3] = 0;
+			mat[1][3] = 0;
+			mat[2][3] = 0;
+			mat[3][3] = 1;
+		}
+		else
+		{
+			mat[0][0] = scale.x;
+			mat[1][0] = 0;
+			mat[2][0] = 0;
+			mat[3][0] = origin.x;
+			mat[0][1] = 0;
+			mat[1][1] = scale.y;
+			mat[2][1] = 0;
+			mat[3][1] = origin.y;
+			mat[0][2] = 0;
+			mat[1][2] = 0;
+			mat[2][2] = scale.z;
+			mat[3][2] = origin.z;
+			mat[0][3] = 0;
+			mat[1][3] = 0;
+			mat[2][3] = 0;
+			mat[3][3] = 1;
+		}
+	}
+
 	// init from quaternion + origin
 	_forceinline matrix4x4( const Vector &origin, const Vector4D &quaternion )
 	{
@@ -608,6 +928,8 @@ public:
 
 	// creates some non-identity states
 	void CreateModelview( void );
+	void CreateTexture( void );
+	void CreateProjection( float fov_x, float fov_y, float zNear, float zFar );
 	void CreateProjection( float xMax, float xMin, float yMax, float yMin, float zNear, float zFar );
 	void CreateOrtho( float xLeft, float xRight, float yBottom, float yTop, float zNear, float zFar );
 	void CreateTranslate( float x, float y, float z );
@@ -649,6 +971,9 @@ public:
 	void	SetForward( const Vector4D &vForward ) { mat[0] = vForward; };
 	void	SetRight( const Vector4D &vRight ) { mat[1] = vRight; };
 	void	SetUp( const Vector4D &vUp ) { mat[2] = vUp; };
+	void	SetForward( const Vector &vForward ) { mat[0] = Vector4D( vForward.x, vForward.y, vForward.z, 1.0f ); };
+	void	SetRight( const Vector &vRight ) { mat[1] = Vector4D( vRight.x, vRight.y, vRight.z, 1.0f ); };
+	void	SetUp( const Vector &vUp ) { mat[2] = Vector4D( vUp.x, vUp.y, vUp.z, 1.0f ); };
 
 	void	SetOrigin( const Vector &vOrigin ) { mat[3] = Vector4D( vOrigin.x, vOrigin.y, vOrigin.z, 1.0f ); };
 	void	GetOrigin( Vector &vOrigin ) { vOrigin = mat[3]; };
@@ -677,8 +1002,33 @@ public:
 
 	void	GetAngles( Vector &angles ) { angles = GetAngles(); }
 
+	void GetStudioTransform( Vector &position, Radian &angles )
+	{
+		float xyDist = sqrt( mat[0][0] * mat[0][0] + mat[0][1] * mat[0][1] );
+
+		// enough here to get angles?
+		if( xyDist > 0.001f )
+		{
+			angles.y = atan2( -mat[0][2], xyDist );
+			angles.z = atan2( mat[0][1], mat[0][0] );
+			angles.x = atan2( mat[1][2], mat[2][2] );
+		}
+		else	// forward is mostly Z, gimbal lock
+		{
+			angles.y = atan2( -mat[0][2], xyDist );
+			angles.z = atan2( -mat[1][0], mat[1][1] );
+			angles.x = 0.0f;
+		}
+
+		position = mat[3];
+	}
+
+	Vector4D	GetQuaternion( void );
+	void	GetQuaternion( Vector4D &quat ) { quat = GetQuaternion(); }
+
 	// transform point and normal
 	Vector	VectorTransform( const Vector &v ) const;
+	Vector4D	VectorTransform( const Vector4D &v ) const;
 	Vector	VectorITransform( const Vector &v ) const;
 	Vector	VectorRotate( const Vector &v ) const;
 	Vector	VectorIRotate( const Vector &v ) const;

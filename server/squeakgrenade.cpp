@@ -495,7 +495,7 @@ void CSqueak::Holster( void )
 	
 	if (!m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
 	{
-		m_pPlayer->pev->weapons &= ~(1<<WEAPON_SNARK);
+		m_pPlayer->RemoveWeapon( WEAPON_SNARK );
 		SetThink( DestroyItem );
 		pev->nextthink = gpGlobals->time + 0.1;
 		return;

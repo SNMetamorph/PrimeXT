@@ -24,11 +24,10 @@ GNU General Public License for more details.
 #include "pm_defs.h"
 #include <mathlib.h>
 #include "r_view.h"
+#include "r_world.h"
 
-#define FLASHLIGHT_DISTANCE		2048	// in units
-
-// experimental stuff
-#define FLASHLIGHT_SPOT		// use new-style flashlight like in Paranoia
+#define DEFAULT_SMOOTHNESS	0.35f
+#define FILTER_SIZE		2
 
 /*
 ================
@@ -40,67 +39,46 @@ update client flashlight
 void HUD_UpdateFlashlight( cl_entity_t *pEnt )
 {
 	Vector	v_angles, forward, right, up;
-	Vector	v_origin;
+	Vector	v_origin, view_ofs;
 
 	if( UTIL_IsLocal( pEnt->index ))
 	{
-		ref_params_t tmpRefDef = RI.refdef;
+		gEngfuncs.GetViewAngles( v_angles );
 
 		// player seen through camera. Restore firstperson view here
-		if( RI.refdef.viewentity > RI.refdef.maxclients )
-			V_CalcFirstPersonRefdef( &tmpRefDef );
+		if( tr.viewparams.viewentity > tr.viewparams.maxclients )
+		{
+			V_CalcFirstPersonRefdef( &tr.viewparams );
+			v_origin = tr.viewparams.vieworg;
+		}
+		else v_origin = pEnt->origin;
 
-		v_angles = tmpRefDef.viewangles;
-		v_origin = tmpRefDef.vieworg;
+		gEngfuncs.pEventAPI->EV_LocalPlayerViewheight( view_ofs );
+		v_origin += view_ofs;
 	}
 	else
 	{
-		// restore viewangles from angles
-		v_angles[PITCH] = -pEnt->angles[PITCH] * 3;
+		// NOTE: pitch divided by 3.0 twice. So we need apply 3^2 = 9
+		v_angles[PITCH] = pEnt->curstate.angles[PITCH] * 9.0f;
 		v_angles[YAW] = pEnt->angles[YAW];
 		v_angles[ROLL] = 0;	// no roll
 		v_origin = pEnt->origin;
+
+		// FIXME: these values are hardcoded ...
+		if( pEnt->curstate.usehull == 1 )
+			v_origin.z += 12.0f;	// VEC_DUCK_VIEW;
+		else v_origin.z += 28.0f;		// DEFAULT_VIEWHEIGHT
 	}
 
-	AngleVectors( v_angles, forward, NULL, NULL );
-
-#ifdef FLASHLIGHT_SPOT
 	plight_t	*pl = CL_AllocPlight( pEnt->curstate.number );
 
-	pl->die = GET_CLIENT_TIME() + 0.05f; // die at next frame
+	pl->die = tr.time + 0.05f; // die at next frame
 	pl->color.r = pl->color.g = pl->color.b = 255;
 	pl->flags = CF_NOSHADOWS;
 
 	R_SetupLightProjectionTexture( pl, pEnt );
 	R_SetupLightProjection( pl, v_origin, v_angles, 768, 50 );
 	R_SetupLightAttenuationTexture( pl );
-#else
-	Vector vecEnd = v_origin + forward * FLASHLIGHT_DISTANCE;
-
-	pmtrace_t	trace;
-	int traceFlags = PM_STUDIO_BOX;
-
-	if( r_lighting_extended->value < 2 )
-		traceFlags |= PM_GLASS_IGNORE;
-
-	gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
-	gEngfuncs.pEventAPI->EV_PlayerTrace( v_origin, vecEnd, traceFlags, -1, &trace );
-	float falloff = trace.fraction * FLASHLIGHT_DISTANCE;
-
-	if( falloff < 250.0f ) falloff = 1.0f;
-	else falloff = 250.0f / falloff;
-
-	falloff *= falloff;
-
-	// update flashlight endpos
-	dlight_t	*dl = gEngfuncs.pEfxAPI->CL_AllocDlight( pEnt->curstate.number );
-	dl->origin = trace.endpos;
-	dl->die = GET_CLIENT_TIME() + 0.01f; // die on next frame
-	dl->color.r = bound( 0, 255 * falloff, 255 );
-	dl->color.g = bound( 0, 255 * falloff, 255 );
-	dl->color.b = bound( 0, 255 * falloff, 255 );
-	dl->radius = 72;
-#endif
 }
 
 /*
@@ -126,10 +104,7 @@ int HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname )
 		}
 
 		if( type == ET_BEAM )
-		{
-			R_AddServerBeam( ent );
-			return 0;
-		}
+			return 1;	// let the engine draw beams
 
 		if( !R_AddEntity( ent, type ))
 			return 0;
@@ -195,7 +170,7 @@ int HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname )
 			dlight_t	*dl = gEngfuncs.pEfxAPI->CL_AllocDlight( 0 );
 			dl->origin = ent->origin;
 			dl->origin.z += 16;
-			dl->die = GET_CLIENT_TIME() + 0.001f; // die at next frame
+			dl->die = gEngfuncs.GetClientTime() + 0.001f; // die at next frame
 			dl->color.r = 255;
 			dl->color.g = 255;
 			dl->color.b = 255;
@@ -213,7 +188,7 @@ int HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname )
 
 			if( ent->curstate.renderfx )
 			{
-				factor = RI.lightstylevalue[ent->curstate.renderfx] * (1.0f/255.0f);
+				factor = tr.lightstylevalue[ent->curstate.renderfx] * (1.0f/255.0f);
 			}
 
 			if( ent->curstate.rendercolor.r == 0 && ent->curstate.rendercolor.g == 0 && ent->curstate.rendercolor.b == 0 )
@@ -233,7 +208,7 @@ int HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname )
 
 			float radius = ent->curstate.scale ? (ent->curstate.scale * 8.0f) : 500; // default light radius
 			float fov = ent->curstate.iuser2 ? ent->curstate.iuser2 : 50;
-			pl->die = GET_CLIENT_TIME() + 0.05f; // die at next frame
+			pl->die = gEngfuncs.GetClientTime() + 0.05f; // die at next frame
 			pl->flags = ent->curstate.iuser1;
 			Vector origin, angles;
 
@@ -246,90 +221,62 @@ int HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname )
 		// dynamic light can be attached like as normal dlight
 		if( ent->curstate.effects & EF_DYNAMIC_LIGHT )
 		{
-			if( tr.attenuationTexture3D && tr.dlightCubeTexture )
+			plight_t	*pl = CL_AllocPlight( ent->curstate.number );
+			unsigned int lightcolor[3];
+			int factor = 256;
+
+			if( ent->curstate.renderfx )
+				factor = tr.lightstylevalue[ent->curstate.renderfx];
+
+			if( ent->curstate.rendercolor.r || ent->curstate.rendercolor.g || ent->curstate.rendercolor.b )
 			{
-				plight_t	*pl = CL_AllocPlight( ent->curstate.number );
-				float factor = 1.0f;
+				lightcolor[0] = ent->curstate.rendercolor.r * factor;
+				lightcolor[1] = ent->curstate.rendercolor.g * factor;
+				lightcolor[2] = ent->curstate.rendercolor.b * factor;
 
-				if( ent->curstate.renderfx )
-				{
-					factor = RI.lightstylevalue[ent->curstate.renderfx] * (1.0f/255.0f);
-					factor = bound( 0.0f, factor, 1.0f );
-				}
+				pl->color.r = Q_min((lightcolor[0] >> 7), 255 );
+				pl->color.g = Q_min((lightcolor[1] >> 7), 255 );
+				pl->color.b = Q_min((lightcolor[2] >> 7), 255 );
+			}
+			else pl->color.r = pl->color.g = pl->color.b = 255;
 
-				if( ent->curstate.rendercolor.r == 0 && ent->curstate.rendercolor.g == 0 && ent->curstate.rendercolor.b == 0 )
-				{
-					pl->color.r = pl->color.g = pl->color.b = 255;
-				}
-				else
-				{
-					pl->color.r = ent->curstate.rendercolor.r;
-					pl->color.g = ent->curstate.rendercolor.g;
-					pl->color.b = ent->curstate.rendercolor.b;
-				}
+			float radius = ent->curstate.scale ? (ent->curstate.scale * 8.0f) : 300; // default light radius
+			pl->die = gEngfuncs.GetClientTime() + 0.05f; // die at next frame
+			pl->flags = ent->curstate.iuser1;
+			pl->projectionTexture = tr.dlightCubeTexture;
+			pl->pointlight = true;
+			Vector origin, angles;
 
-				pl->color.r *= factor;
-				pl->color.g *= factor;
-				pl->color.b *= factor;
+			R_GetLightVectors( ent, origin, angles );
 
-				float radius = ent->curstate.scale ? (ent->curstate.scale * 8.0f) : 300; // default light radius
-				pl->die = GET_CLIENT_TIME() + 0.05f; // die at next frame
-				pl->flags = ent->curstate.iuser1;
-				pl->projectionTexture = tr.dlightCubeTexture;
-				pl->pointlight = true;
-				Vector origin, angles;
+			if( pl->flags & CF_NOLIGHT_IN_SOLID )
+			{
+				pmtrace_t	tr;
 
-				R_GetLightVectors( ent, origin, angles );
+				// test the lights who stuck in the solid geometry
+				gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
+				gEngfuncs.pEventAPI->EV_PlayerTrace( origin, origin, PM_STUDIO_IGNORE, -1, &tr );
 
-				if( pl->flags & CF_NOLIGHT_IN_SOLID )
-				{
-					pmtrace_t	tr;
+				// an experimental feature for point lights
+				if( tr.allsolid ) radius = 0.0f;
+			}
 
-					// test the lights who stuck in the solid geometry
-					gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
-					gEngfuncs.pEventAPI->EV_PlayerTrace( origin, origin, PM_STUDIO_IGNORE, -1, &tr );
-
-					// an experimental feature for point lights
-					if( tr.allsolid ) radius = 0.0f;
-				}
-
-				if( radius != 0.0f )
-				{
-					R_SetupLightProjection( pl, origin, angles, radius, 90.0f );
-					R_SetupLightAttenuationTexture( pl );
-				}
-				else
-				{
-					// light in solid
-					pl->radius = 0.0f;
-				}
+			if( radius != 0.0f )
+			{
+				R_SetupLightProjection( pl, origin, angles, radius, 90.0f );
+				R_SetupLightAttenuationTexture( pl );
 			}
 			else
 			{
-				// cubemaps or 3d textures isn't supported: use old-style dlights
-				dlight_t	*dl = gEngfuncs.pEfxAPI->CL_AllocDlight( 0 );
-
-				if( ent->curstate.rendercolor.r == 0 && ent->curstate.rendercolor.g == 0 && ent->curstate.rendercolor.b == 0 )
-				{
-					dl->color.r = dl->color.g = dl->color.b = 255;
-				}
-				else
-				{
-					dl->color.r = ent->curstate.rendercolor.r;
-					dl->color.g = ent->curstate.rendercolor.g;
-					dl->color.b = ent->curstate.rendercolor.b;
-				}
-
-				dl->radius = ent->curstate.scale ? (ent->curstate.scale * 8.0f) : 300; // default light radius
-				dl->die = GET_CLIENT_TIME() + 0.001f; // die at next frame
-				dl->origin = ent->origin;
+				// light in solid
+				pl->radius = 0.0f;
 			}
 		}
 
 		if( ent->model->type == mod_studio )
 		{
 			if (ent->model->flags & STUDIO_ROTATE)
-				ent->angles[1] = anglemod(100 * GET_CLIENT_TIME());
+				ent->angles[1] = anglemod( 100 * gEngfuncs.GetClientTime() );
 
 			if( ent->model->flags & STUDIO_GIB )
 				gEngfuncs.pEfxAPI->R_RocketTrail( ent->prevstate.origin, ent->curstate.origin, 2 );
@@ -351,7 +298,7 @@ int HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname )
 				if( ent->curstate.rendermode != kRenderNormal )
 					dl->radius = max( 0, ent->curstate.renderamt - 55 );
 				else dl->radius = 200;
-				dl->die = GET_CLIENT_TIME() + 0.01;
+				dl->die = gEngfuncs.GetClientTime() + 0.01;
 
 				gEngfuncs.pEfxAPI->R_RocketTrail( ent->prevstate.origin, ent->curstate.origin, 0 );
 			}
@@ -509,9 +456,10 @@ void HUD_CreateEntities( void )
 	// e.g., create a persistent cl_entity_t somewhere.
 	// Load an appropriate model into it ( gEngfuncs.CL_LoadModel )
 	// Call gEngfuncs.CL_CreateVisibleEntity to add it to the visedicts list
-
-	if( tr.world_has_portals || tr.world_has_screens )
+#if 0
+	if( FBitSet( world->features, WORLD_HAS_SCREENS|WORLD_HAS_PORTALS|WORLD_HAS_MIRRORS ))
 		HUD_AddEntity( ET_PLAYER, GET_LOCAL_PLAYER(), GET_LOCAL_PLAYER()->model->name );
+#endif
 }
 
 //======================
@@ -568,8 +516,8 @@ void HUD_EjectShell( const struct mstudioevent_s *event, const struct cl_entity_
 
 	for( i = 0; i < 3; i++ )
 	{
-		ShellVelocity[i] = RI.refdef.simvel[i] + right[i] * fR + up[i] * fU + forward[i] * 25;
-		ShellOrigin[i]   = RI.refdef.vieworg[i] + up[i] * -12 + forward[i] * 20 + right[i] * 4;
+		ShellVelocity[i] = tr.viewparams.simvel[i] + right[i] * fR + up[i] * fU + forward[i] * 25;
+		ShellOrigin[i]   = tr.viewparams.vieworg[i] + up[i] * -12 + forward[i] * 20 + right[i] * 4;
 	}
 
 	gEngfuncs.pEfxAPI->R_TempModel( ShellOrigin, ShellVelocity, angles, RANDOM_LONG( 5, 10 ), shell, TE_BOUNCE_SHELL );
@@ -609,6 +557,26 @@ void HUD_StudioEvent( const struct mstudioevent_s *event, const struct cl_entity
 		gEngfuncs.pEventAPI->EV_PlaySound( entity->index, (float *)&entity->attachment[0], CHAN_WEAPON, (char *)event->options,
 		RANDOM_FLOAT( 0.7f, 0.9f ), ATTN_NORM, 0, 85 + RANDOM_LONG( 0, 0x1f ));
 		break;
+	case 5040:
+		// make aurora for origin
+		UTIL_CreateAurora((cl_entity_t *)entity, event->options, 0, 0.0f );
+		break;
+	case 5041:
+		// make aurora for attachment #1
+		UTIL_CreateAurora((cl_entity_t *)entity, event->options, 1, 0.0f );
+		break;
+	case 5042:
+		// make aurora for attachment #2
+		UTIL_CreateAurora((cl_entity_t *)entity, event->options, 2, 0.0f );
+		break;
+	case 5043:
+		// make aurora for attachment #3
+		UTIL_CreateAurora((cl_entity_t *)entity, event->options, 3, 0.0f );
+		break;
+	case 5044:
+		// make aurora for attachment #4
+		UTIL_CreateAurora((cl_entity_t *)entity, event->options, 4, 0.0f );
+		break;
 	case 5050: // Special event for displacer
 		HUD_DrawBeam();
 		break;
@@ -616,60 +584,392 @@ void HUD_StudioEvent( const struct mstudioevent_s *event, const struct cl_entity
 	          HUD_EjectShell( event, entity );
 		break;
 	default:
-		ALERT( at_error, "Unknown event %i with options %i\n", event->event, event->options );
+		ALERT( at_aiconsole, "Unknown event %i with options %i\n", event->event, event->options );
 		break;
 	}
 }
 
 /*
-=================
-Mod_PrepareModelInstances
+========================
+LoadHeightMap
 
-throw all the instances before
-loading the new map
-=================
+parse heightmap pixels and remap it
+to real layer count
+========================
 */
-void Mod_PrepareModelInstances( void )
+bool LoadHeightMap( indexMap_t *im, int numLayers )
 {
-	// invalidate model handles
-	for( int i = 1; i < RENDER_GET_PARM( PARM_MAX_ENTITIES, 0 ); i++ )
+	unsigned int	*src;
+	int		i, tex;
+	int		depth = 1;
+
+	if( numLayers <= 0 )
+		return false;
+
+	// loading heightmap and keep the source pixels
+	if( !( tex = LOAD_TEXTURE( im->name, NULL, 0, TF_KEEP_SOURCE|TF_EXPAND_SOURCE )))
+		return false;
+
+	if(( src = (unsigned int *)GET_TEXTURE_DATA( tex )) == NULL )
 	{
-		cl_entity_t *e = GET_ENTITY( i );
-		if( !e ) break;
-		e->modelhandle = INVALID_HANDLE;
+		ALERT( at_error, "LoadHeightMap: couldn't get source pixels for %s\n", im->name );
+		FREE_TEXTURE( tex );
+		return false;
 	}
 
-	GET_VIEWMODEL()->modelhandle = INVALID_HANDLE;
+	im->gl_diffuse_id = LOAD_TEXTURE( im->diffuse, NULL, 0, 0 );
+
+	int width = RENDER_GET_PARM( PARM_TEX_SRC_WIDTH, tex );
+	int height = RENDER_GET_PARM( PARM_TEX_SRC_HEIGHT, tex );
+
+	im->pixels = (byte *)Mem_Alloc( width * height );
+	im->numLayers = bound( 1, numLayers, 255 );
+	im->height = height;
+	im->width = width;
+
+	for( i = 0; i < ( im->width * im->height ); i++ )
+	{
+		byte rawHeight = ( src[i] & 0xFF );
+		im->maxHeight = Q_max(( 16 * (int)ceil( rawHeight / 16 )), im->maxHeight ); 
+	}
+
+	// merge layers count
+	im->numLayers = (im->maxHeight / 16) + 1;
+	depth = Q_max((int)Q_ceil((float)im->numLayers / 4.0f ), 1 );
+
+	// clamp to layers count
+	for( i = 0; i < ( im->width * im->height ); i++ )
+		im->pixels[i] = (( src[i] & 0xFF ) * ( im->numLayers - 1 )) / im->maxHeight;
+
+	size_t lay_size = im->width * im->height * 4;
+	size_t img_size = lay_size * depth;
+	byte *layers = (byte *)Mem_Alloc( img_size );
+	byte *pixels = (byte *)src;
+
+	for( int x = 0; x < im->width; x++ )
+	{
+		for( int y = 0; y < im->height; y++ )
+		{
+			float weights[MAX_LANDSCAPE_LAYERS];
+
+			memset( weights, 0, sizeof( weights ));
+
+			for( int pos_x = 0; pos_x < FILTER_SIZE; pos_x++ ) 
+			{ 
+				for( int pos_y = 0; pos_y < FILTER_SIZE; pos_y++ ) 
+				{ 
+					int img_x = (x - (FILTER_SIZE / 2) + pos_x + im->width) % im->width; 
+					int img_y = (y - (FILTER_SIZE / 2) + pos_y + im->height) % im->height; 
+
+					float rawHeight = (float)( src[img_y * im->width + img_x] & 0xFF );
+					float curLayer = ( rawHeight * ( im->numLayers - 1 )) / (float)im->maxHeight;
+
+					if( curLayer != (int)curLayer )
+					{
+						byte layer0 = (int)floor( curLayer );
+						byte layer1 = (int)ceil( curLayer );
+						float factor = curLayer - (int)curLayer;
+						weights[layer0] += (1.0 - factor) * (1.0 / (FILTER_SIZE * FILTER_SIZE));
+						weights[layer1] += (factor ) * (1.0 / (FILTER_SIZE * FILTER_SIZE));
+					}
+					else
+					{
+						weights[(int)curLayer] += (1.0 / (FILTER_SIZE * FILTER_SIZE));
+					}
+				}
+			}
+
+			// encode layers into RGBA channels
+			layers[lay_size * 0 + (y * im->width + x)*4+0] = weights[0] * 255;
+			layers[lay_size * 0 + (y * im->width + x)*4+1] = weights[1] * 255;
+			layers[lay_size * 0 + (y * im->width + x)*4+2] = weights[2] * 255;
+			layers[lay_size * 0 + (y * im->width + x)*4+3] = weights[3] * 255;
+
+			if( im->numLayers <= 4 ) continue;
+
+			layers[lay_size * 1 + ((y * im->width + x)*4+0)] = weights[4] * 255;
+			layers[lay_size * 1 + ((y * im->width + x)*4+1)] = weights[5] * 255;
+			layers[lay_size * 1 + ((y * im->width + x)*4+2)] = weights[6] * 255;
+			layers[lay_size * 1 + ((y * im->width + x)*4+3)] = weights[7] * 255;
+
+			if( im->numLayers <= 8 ) continue;
+
+			layers[lay_size * 2 + ((y * im->width + x)*4+0)] = weights[8] * 255;
+			layers[lay_size * 2 + ((y * im->width + x)*4+1)] = weights[9] * 255;
+			layers[lay_size * 2 + ((y * im->width + x)*4+2)] = weights[10] * 255;
+			layers[lay_size * 2 + ((y * im->width + x)*4+3)] = weights[11] * 255;
+
+			if( im->numLayers <= 12 ) continue;
+
+			layers[lay_size * 3 + ((y * im->width + x)*4+0)] = weights[12] * 255;
+			layers[lay_size * 3 + ((y * im->width + x)*4+1)] = weights[13] * 255;
+			layers[lay_size * 3 + ((y * im->width + x)*4+2)] = weights[14] * 255;
+			layers[lay_size * 3 + ((y * im->width + x)*4+3)] = weights[15] * 255;
+		}
+	}
+
+	// release source texture
+	FREE_TEXTURE( tex );
+
+	tex = CREATE_TEXTURE_ARRAY( im->name, im->width, im->height, depth, layers, TF_CLAMP|TF_HAS_ALPHA );
+	Mem_Free( layers );
+
+	im->gl_heightmap_id = tex;
+
+	return true;
 }
 
 /*
-=================
-Mod_ThrowModelInstances
+========================
+LoadTerrainLayers
 
-throw all the instances before
-loading the new map
-=================
+loading all the landscape layers
+into texture arrays
+========================
 */
-void Mod_ThrowModelInstances( void )
+bool LoadTerrainLayers( layerMap_t *lm, int numLayers )
 {
-	// engine already released entity array so we can't release
-	// model instance for each entity personally 
-	g_StudioRenderer.DestroyAllModelInstances();
+	char	*texnames[MAX_LANDSCAPE_LAYERS];
+	char	*ptr, buffer[1024];
+	size_t	nameLen = 64;
+	int	i;
+
+	memset( buffer, 0, sizeof( buffer )); // list must be null terminated
+
+	// initialize names array
+	for( i = 0, ptr = buffer; i < MAX_LANDSCAPE_LAYERS; i++, ptr += nameLen )
+		texnames[i] = ptr;
+
+	// process diffuse textures
+	for( i = 0; i < numLayers; i++ )
+		Q_snprintf( texnames[i], nameLen, "textures/%s", lm->pathes[i] );
+
+	if(( lm->gl_diffuse_id = LOAD_TEXTURE_ARRAY( (const char **)texnames, 0 )) == 0 )
+		return false;
+	return true;
 }
 
 /*
-==================
-Mod_SampleSizeForFace
+========================
+R_FreeLandscapes
 
-return the current lightmap resolution per face
-==================
+free the landscape definitions
+========================
 */
-int Mod_SampleSizeForFace( msurface_t *surf )
+void R_FreeLandscapes( void )
 {
-	if( !surf || !surf->texinfo || !surf->texinfo->faceinfo )
-		return LM_SAMPLE_SIZE;
+	for( int i = 0; i < world->num_terrains; i++ )
+	{
+		terrain_t *terra = &world->terrains[i];
+		indexMap_t *im = &terra->indexmap;
+		layerMap_t *lm = &terra->layermap;
 
-	return surf->texinfo->faceinfo->texture_step;
+		if( im->pixels ) Mem_Free( im->pixels );
+
+		if( lm->gl_diffuse_id )
+			FREE_TEXTURE( lm->gl_diffuse_id );
+
+		if( im->gl_diffuse_id != 0 )
+			FREE_TEXTURE( im->gl_diffuse_id );
+		FREE_TEXTURE( im->gl_heightmap_id );
+	}
+
+	if( world->terrains )
+		Mem_Free( world->terrains );
+	world->num_terrains = 0;
+	world->terrains = NULL;
+}
+
+/*
+========================
+R_LoadLandscapes
+
+load the landscape definitions
+========================
+*/
+void R_LoadLandscapes( const char *filename )
+{
+	char filepath[256];
+
+	Q_snprintf( filepath, sizeof( filepath ), "maps/%s_land.txt", filename );
+
+	char *afile = (char *)gEngfuncs.COM_LoadFile( filepath, 5, NULL );
+	if( !afile ) return;
+
+	ALERT( at_aiconsole, "loading %s\n", filepath );
+
+	char *pfile = afile;
+	char token[256];
+	int depth = 0;
+
+	// count materials
+	while( pfile != NULL )
+	{
+		pfile = COM_ParseFile( pfile, token );
+		if( !pfile ) break;
+
+		if( Q_strlen( token ) > 1 )
+			continue;
+
+		if( token[0] == '{' )
+		{
+			depth++;
+		}
+		else if( token[0] == '}' )
+		{
+			world->num_terrains++;
+			depth--;
+		}
+	}
+
+	if( depth > 0 ) ALERT( at_warning, "%s: EOF reached without closing brace\n", filepath );
+	if( depth < 0 ) ALERT( at_warning, "%s: EOF reached without opening brace\n", filepath );
+
+	world->terrains = (terrain_t *)Mem_Alloc( sizeof( terrain_t ) * world->num_terrains );
+	pfile = afile; // start real parsing
+
+	int current = 0;
+
+	while( pfile != NULL )
+	{
+		pfile = COM_ParseFile( pfile, token );
+		if( !pfile ) break;
+
+		if( current >= world->num_terrains )
+		{
+			ALERT ( at_error, "landscape parse is overrun %d > %d\n", current, world->num_terrains );
+			break;
+		}
+
+		terrain_t *terra = &world->terrains[current];
+
+		// read the landscape name
+		Q_strncpy( terra->name, token, sizeof( terra->name ));
+		terra->texScale = 1.0f;
+
+		// read opening brace
+		pfile = COM_ParseFile( pfile, token );
+		if( !pfile ) break;
+
+		if( token[0] != '{' )
+		{
+			ALERT( at_error, "found %s when expecting {\n", token );
+			break;
+		}
+
+		while( pfile != NULL )
+		{
+			pfile = COM_ParseFile( pfile, token );
+			if( !pfile )
+			{
+				ALERT( at_error, "EOF without closing brace\n" );
+				goto land_getout;
+			}
+
+			// description end goto next material
+			if( token[0] == '}' )
+			{
+				current++;
+				break;
+			}
+			else if( !Q_stricmp( token, "indexMap" ))
+			{
+				pfile = COM_ParseFile( pfile, token );
+				if( !pfile )
+				{
+					ALERT( at_error, "hit EOF while parsing 'indexMap'\n" );
+					goto land_getout;
+				}
+
+				Q_strncpy( terra->indexmap.name, token, sizeof( terra->indexmap.name ));
+			}
+			else if( !Q_stricmp( token, "diffuseMap" ))
+			{
+				pfile = COM_ParseFile( pfile, token );
+				if( !pfile )
+				{
+					ALERT( at_error, "hit EOF while parsing 'diffuseMap'\n" );
+					goto land_getout;
+				}
+
+				Q_strncpy( terra->indexmap.diffuse, token, sizeof( terra->indexmap.diffuse ));
+			}
+			else if( !Q_strnicmp( token, "layer", 5 ))
+			{
+				int	layerNum = Q_atoi( token + 5 );
+
+				pfile = COM_ParseFile( pfile, token );
+				if( !pfile )
+				{
+					ALERT( at_error, "hit EOF while parsing 'layer'\n" );
+					goto land_getout;
+				}
+
+				if( layerNum < 0 || layerNum > ( MAX_LANDSCAPE_LAYERS - 1 ))
+				{
+					ALERT( at_error, "%s is out of range. Ignored\n", token );
+				}
+				else
+				{
+					Q_strncpy( terra->layermap.pathes[layerNum], token, sizeof( terra->layermap.pathes[0] ));
+					COM_FileBase( token, terra->layermap.names[layerNum] );
+				}
+
+				terra->numLayers = Q_max( terra->numLayers, layerNum + 1 );
+			}
+			else if( !Q_stricmp( token, "tessSize" ))
+			{
+				pfile = COM_ParseFile( pfile, token );
+				if( !pfile )
+				{
+					ALERT( at_error, "hit EOF while parsing 'tessSize'\n" );
+					goto land_getout;
+				}
+			}
+			else if( !Q_stricmp( token, "texScale" ))
+			{
+				pfile = COM_ParseFile( pfile, token );
+				if( !pfile )
+				{
+					ALERT( at_error, "hit EOF while parsing 'texScale'\n" );
+					goto land_getout;
+				}
+
+				terra->texScale = Q_atof( token );
+				terra->texScale = 1.0 / (bound( 0.000001f, terra->texScale, 16.0f ));
+			}
+			else ALERT( at_warning, "Unknown landscape token %s\n", token );
+		}
+
+		if( LoadHeightMap( &terra->indexmap, terra->numLayers ))
+		{
+			// NOTE: layers may be missed
+			LoadTerrainLayers( &terra->layermap, terra->numLayers );
+			terra->valid = true; // all done
+		}
+	}
+
+land_getout:
+	gEngfuncs.COM_FreeFile( afile );
+	ALERT( at_console, "%d landscapes parsed\n", current );
+}
+
+/*
+========================
+R_FindTerrain
+
+find the terrain description
+========================
+*/
+terrain_t *R_FindTerrain( const char *texname )
+{
+	for( int i = 0; i < world->num_terrains; i++ )
+	{
+		if( !Q_stricmp( texname, world->terrains[i].name ) && world->terrains[i].valid )
+			return &world->terrains[i];
+	}
+
+	return NULL;
 }
 
 /*
@@ -681,29 +981,24 @@ Called always when map is changed or restarted
 */
 void R_NewMap( void )
 {
-	int	i;
+	int	i, j;
+	model_t	*m;
+
+	if( g_pParticleSystems )
+		g_pParticleSystems->ClearSystems();
+
+	if( !g_fRenderInitialized )
+		return;
 
 	// get the actual screen size
 	glState.width = RENDER_GET_PARM( PARM_SCREEN_WIDTH, 0 );
 	glState.height = RENDER_GET_PARM( PARM_SCREEN_HEIGHT, 0 );
 
-	// release old mirror textures
-	for( i = 0; i < MAX_MIRRORS; i++ )
+	// release old subview textures
+	for( i = 0; i < MAX_SUBVIEW_TEXTURES; i++ )
 	{
-		if( !tr.mirrorTextures[i] ) break;
-		FREE_TEXTURE( tr.mirrorTextures[i] );
-	}
-
-	for( i = 0; i < MAX_MIRRORS; i++ )
-	{
-		if( !tr.portalTextures[i] ) break;
-		FREE_TEXTURE( tr.portalTextures[i] );
-	}
-
-	for( i = 0; i < MAX_MIRRORS; i++ )
-	{
-		if( !tr.screenTextures[i] ) break;
-		FREE_TEXTURE( tr.screenTextures[i] );
+		if( !tr.subviewTextures[i].texturenum ) break;
+		FREE_TEXTURE( tr.subviewTextures[i].texturenum );
 	}
 
 	for( i = 0; i < MAX_SHADOWS; i++ )
@@ -718,43 +1013,53 @@ void R_NewMap( void )
 		R_FreeFrameBuffer( i );
 	}
 
+	// clear weather system
+	R_ResetWeather();
+
 	CL_ClearPlights();
 
-	R_FreeCinematics(); // free old cinematics
-
-	memset( tr.mirrorTextures, 0, sizeof( tr.mirrorTextures ));
-	memset( tr.portalTextures, 0, sizeof( tr.portalTextures ));
-	memset( tr.screenTextures, 0, sizeof( tr.screenTextures ));
+	memset( tr.subviewTextures, 0, sizeof( tr.subviewTextures ));
 	memset( tr.shadowTextures, 0, sizeof( tr.shadowTextures ));
 	memset( tr.frame_buffers, 0, sizeof( tr.frame_buffers ));
-	tr.num_framebuffers = 0;
 
-	r_viewleaf = r_viewleaf2 = NULL;
-	tr.framecount = tr.visframecount = 1;	// no dlight cache
-
-	if( GL_Support( R_FRAMEBUFFER_OBJECT ))
-	{
-		// allocate FBO's
-		tr.fbo[FBO_MIRRORS] = R_AllocFrameBuffer();
-		tr.fbo[FBO_SCREENS] = R_AllocFrameBuffer();
-		tr.fbo[FBO_PORTALS] = R_AllocFrameBuffer();
-	}
+	tr.num_framebuffers = tr.realframecount = 0;
+	tr.num_subview_used = 0;
+	RI->viewleaf = NULL; // it's may be data from previous map
 
 	// setup the skybox sides
 	for( i = 0; i < 6; i++ )
 		tr.skyboxTextures[i] = RENDER_GET_PARM( PARM_TEX_SKYBOX, i );
 
-	tr.skytexturenum = RENDER_GET_PARM( PARM_TEX_SKYTEXNUM, 0 ); // not a gl_texturenum!
-
 	v_intermission_spot = NULL;
+	tr.num_cin_used = 0;
 
-	R_InitCinematics();
+	InitPostTextures();
 
-	R_InitBloomTextures();
-
-	if( Q_stricmp( worldmodel->name, tr.worldname ))
+	// reset some world variables
+	for( i = 1; i < MAX_MODELS; i++ )
 	{
-		Q_strncpy( tr.worldname, worldmodel->name, sizeof( tr.worldname ));
-		R_ParseGrassFile();
+		if(( m = IEngineStudio.GetModelByIndex( i )) == NULL )
+			continue;
+
+		if( m->name[0] == '*' || m->type != mod_brush )
+			continue;
+
+		RI->currentmodel = m;
+
+		for( j = 0; j < m->numsurfaces; j++ )
+		{
+			msurface_t *fa = m->surfaces + j;
+			texture_t *tex = fa->texinfo->texture;
+			mextrasurf_t *info = fa->info;
+
+			memset( info->subtexture, 0, sizeof( info->subtexture ));
+			info->checkcount = -1;
+		}
+	}
+
+	if( tr.buildtime > 0.0 )
+	{
+		ALERT( at_aiconsole, "total build time %g\n", tr.buildtime );
+		tr.buildtime = 0.0;
 	}
 }

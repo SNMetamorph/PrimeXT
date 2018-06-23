@@ -141,7 +141,7 @@ LINK_ENTITY_TO_CLASS( ambient_generic, CAmbientGeneric );
 
 BEGIN_DATADESC( CAmbientGeneric )
 	DEFINE_FIELD( m_flAttenuation, FIELD_FLOAT ),
-	DEFINE_FIELD( m_fActive, FIELD_BOOLEAN ),
+//	DEFINE_FIELD( m_fActive, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_fLooping, FIELD_BOOLEAN ),
 
 	// HACKHACK - This is not really in the spirit of the save/restore design, but save this
@@ -1023,12 +1023,13 @@ void CEnvSound :: Think( void )
 			// send room_type command to player's server.
 			// this should be a rare event - once per change of room_type
 			// only!
+			pPlayer->m_iSndRoomtype = (short)m_flRoomtype;
 
 			//CLIENT_COMMAND(pentPlayer, "room_type %f", m_flRoomtype);
 			
-			MESSAGE_BEGIN( MSG_ONE, SVC_ROOMTYPE, NULL, pentPlayer );		// use the magic #1 for "one client"
-				WRITE_SHORT( (short)m_flRoomtype );					// sequence number
-			MESSAGE_END();
+			//MESSAGE_BEGIN( MSG_ONE, SVC_ROOMTYPE, NULL, pentPlayer );		// use the magic #1 for "one client"
+			//	WRITE_SHORT( (short)m_flRoomtype );					// sequence number
+			//MESSAGE_END();
 
 			// crank up nextthink rate for new active sound entity
 			// by falling through to think_fast...
@@ -1099,11 +1100,8 @@ void CTriggerSound :: Touch( CBaseEntity *pOther )
 		{
 			pPlayer->m_pentSndLast = ENT(pev);
 			pPlayer->m_flSndRoomtype = pev->frags;
+			pPlayer->m_iSndRoomtype = (short)pev->frags;
 			pPlayer->m_flSndRange = 0;
-
-			MESSAGE_BEGIN( MSG_ONE, SVC_ROOMTYPE, NULL, pPlayer->edict() );		// use the magic #1 for "one client"
-				WRITE_SHORT( (short)pev->frags );					// sequence number
-			MESSAGE_END();
 
 			SUB_UseTargets(pPlayer, USE_TOGGLE, 0);
 		}
@@ -1120,7 +1118,7 @@ void CTriggerSound :: Spawn( void )
 
 // ==================== SENTENCE GROUPS, UTILITY FUNCTIONS  ======================================
 
-#define CSENTENCE_LRU_MAX	32		// max number of elements per sentence group
+#define CSENTENCE_LRU_MAX	64		// max number of elements per sentence group
 
 // group of related sentences
 
@@ -1132,7 +1130,7 @@ typedef struct sentenceg
 
 } SENTENCEG;
 
-#define CSENTENCEG_MAX 200					// max number of sentence groups
+#define CSENTENCEG_MAX	1024		// max number of sentence groups
 // globals
 
 SENTENCEG rgsentenceg[CSENTENCEG_MAX];

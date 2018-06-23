@@ -50,7 +50,7 @@
 #define FL_WORLDBRUSH	(1<<25)	// Not moveable/removeable brush entity (really part of the world, but represented as an entity for transparency or something)
 #define FL_SPECTATOR	(1<<26)	// This client is a spectator, don't run touch functions, etc.
 #define FL_STUCKED		(1<<27)	// Client or monster that stuck in the BSP-geometry or convex hull
-
+#define FL_UNBLOCKABLE	(1<<28)	// pusher that can't be blocked by the player or npc
 #define FL_CUSTOMENTITY	(1<<29)	// This is a custom entity
 #define FL_KILLME		(1<<30)	// This entity is marked for death -- This allows the engine to kill ents at the appropriate time
 #define FL_DORMANT		(1<<31)	// Entity is dormant, no updates to client
@@ -123,7 +123,7 @@
 
 #define EF_NOREFLECT		(1<<24)	// Entity won't reflecting in mirrors
 #define EF_REFLECTONLY		(1<<25)	// Entity will be drawing only in mirrors
-#define EF_NOWATERCSG		(1<<26)	// Do not remove sides for func_water entity
+#define EF_WATERSIDES		(1<<26)	// Do not remove sides for func_water entity
 #define EF_FULLBRIGHT		(1<<27)	// Just get fullbright
 #define EF_NOSHADOW			(1<<28)	// ignore shadow for this entity
 #define EF_MERGE_VISIBILITY		(1<<29)	// this entity allowed to merge vis (e.g. env_sky or portal camera)
@@ -144,7 +144,7 @@
 #define CF_MOVIE			(1<<3)	// custom movie specified
 #define CF_ASPECT4X3		(1<<4)	// use normal aspect instead of quad
 #define CF_ASPECT3X4		(1<<5)	// use portrait aspect instead of quad
-
+#define CF_STATIC_ENTITY		(1<<6)	// this entity is completely static (non-moving brush or env_static)
 #define CF_CUBEMAP			(1<<7)	// auto set on the client
 #define CF_NOWORLD_PROJECTION		(1<<8)	// don't apply projection to the world brushes
 #define CF_NOLIGHT_IN_SOLID		(1<<9)	// check lights who currently stuck in solid and disable this (point lights only)
@@ -561,6 +561,7 @@
 #define TEFIRE_FLAG_LOOP	4 // if set, sprite plays at 15 fps, otherwise plays at whatever rate stretches the animation over the sprite's duration.
 #define TEFIRE_FLAG_ALPHA	8 // if set, sprite is rendered alpha blended at 50% else, opaque
 #define TEFIRE_FLAG_PLANAR	16 // if set, all fire sprites have same initial Z instead of randomly filling a cube. 
+#define TEFIRE_FLAG_ADDITIVE	32 // if set, sprite is rendered as additive
 
 #define TE_PLAYERATTACHMENT		124	// attaches a TENT to a player (this is a high-priority tent)
 // byte (entity index of player)
@@ -726,7 +727,6 @@ enum
 	kRenderGlow,		// src*a+dest -- No Z buffer checks
 	kRenderTransAlpha,		// src*srca+dest*(1-srca)
 	kRenderTransAdd,		// src*a+dest
-	kRenderWorldGlow		// Same as kRenderGlow but not fixed size in screen space
 };
 
 enum 

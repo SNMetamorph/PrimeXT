@@ -16,11 +16,10 @@ GNU General Public License for more details.
 #include "hud.h"
 #include "utils.h"
 #include "r_local.h"
-#include "pm_movevars.h"
-#include <mathlib.h>
+#include "r_world.h"
+#include "r_shader.h"
 
 #define MAX_CLIP_VERTS	64 // skybox clip vertices
-static float		speedscale;
 static const int		r_skyTexOrder[6] = { 0, 2, 1, 3, 4, 5 };
 
 static const Vector	skyclip[6] = 
@@ -53,12 +52,6 @@ static const int vec_to_st[6][3] =
 { -1,  3, -2 },
 { -2, -1,  3 },
 { -2,  1, -3 }
-};
-
-// speed up sin calculations
-float r_turbsin[] =
-{
-	#include "warpsin.h"
 };
 
 void DrawSkyPolygon( int nump, Vector vecs[] )
@@ -97,10 +90,10 @@ void DrawSkyPolygon( int nump, Vector vecs[] )
 		j = vec_to_st[axis][1];
 		t = (j < 0) ? -(vecs[i])[-j-1] / dv : (vecs[i])[j-1] / dv;
 
-		if( s < RI.skyMins[0][axis] ) RI.skyMins[0][axis] = s;
-		if( t < RI.skyMins[1][axis] ) RI.skyMins[1][axis] = t;
-		if( s > RI.skyMaxs[0][axis] ) RI.skyMaxs[0][axis] = s;
-		if( t > RI.skyMaxs[1][axis] ) RI.skyMaxs[1][axis] = t;
+		if( s < RI->skyMins[0][axis] ) RI->skyMins[0][axis] = s;
+		if( t < RI->skyMins[1][axis] ) RI->skyMins[1][axis] = t;
+		if( s > RI->skyMaxs[0][axis] ) RI->skyMaxs[0][axis] = s;
+		if( t > RI->skyMaxs[1][axis] ) RI->skyMaxs[1][axis] = t;
 	}
 }
 
@@ -210,7 +203,7 @@ static void MakeSkyVec( float s, float t, int axis )
 	int	j, k, farclip;
 	Vector	v, b;
 
-	farclip = RI.farClip;
+	farclip = RI->farClip;
 
 	b[0] = s * (farclip >> 1);
 	b[1] = t * (farclip >> 1);
@@ -220,7 +213,7 @@ static void MakeSkyVec( float s, float t, int axis )
 	{
 		k = st_to_vec[axis][j];
 		v[j] = (k < 0) ? -b[-k-1] : b[k-1];
-		v[j] += RI.vieworg[j];
+		v[j] += RI->vieworg[j];
 	}
 
 	// avoid bilerp seam
@@ -251,9 +244,11 @@ void R_ClearSkyBox( void )
 {
 	for( int i = 0; i < 6; i++ )
 	{
-		RI.skyMins[0][i] = RI.skyMins[1][i] =  99999.0f;
-		RI.skyMaxs[0][i] = RI.skyMaxs[1][i] = -99999.0f;
+		RI->skyMins[0][i] = RI->skyMins[1][i] =  99999.0f;
+		RI->skyMaxs[0][i] = RI->skyMaxs[1][i] = -99999.0f;
 	}
+
+	ClearBits( RI->params, RP_SKYVISIBLE ); // now sky is invisible
 }
 
 /*
@@ -263,19 +258,6 @@ R_AddSkyBoxSurface
 */
 void R_AddSkyBoxSurface( msurface_t *fa )
 {
-	if( r_fastsky->value )
-		return;
-
-	if( RI.refdef.movevars->skyangle )
-	{
-		// HACK: force full sky to draw when it has angle
-		for( int i = 0; i < 6; i++ )
-		{
-			RI.skyMins[0][i] = RI.skyMins[1][i] = -1;
-			RI.skyMaxs[0][i] = RI.skyMaxs[1][i] = 1;
-		}
-	}
-
 	Vector verts[MAX_CLIP_VERTS];
 
 	// calculate vertex values for sky box
@@ -286,13 +268,15 @@ void R_AddSkyBoxSurface( msurface_t *fa )
 
 		for( int i = 0; i < p->numverts; i++ )
 		{
-			verts[i][0] = p->verts[i][0] - RI.vieworg[0];
-			verts[i][1] = p->verts[i][1] - RI.vieworg[1];
-			verts[i][2] = p->verts[i][2] - RI.vieworg[2];
+			verts[i][0] = p->verts[i][0] - RI->vieworg[0];
+			verts[i][1] = p->verts[i][1] - RI->vieworg[1];
+			verts[i][2] = p->verts[i][2] - RI->vieworg[2];
                     }
 
 		ClipSkyPolygon( p->numverts, verts, 0 );
 	}
+
+	SetBits( RI->params, RP_SKYVISIBLE ); // now sky is visible
 }
 
 /*
@@ -302,131 +286,97 @@ R_DrawSkyPortal
 */
 void R_DrawSkyPortal( cl_entity_t *skyPortal )
 {
-	ref_instance_t	oldRI;
+	R_PushRefState();
 
-	oldRI = RI;
-
-	int oldframecount = tr.framecount;
-	RI.params = ( RI.params|RP_SKYPORTALVIEW ) & ~(RP_OLDVIEWLEAF|RP_CLIPPLANE);
-	RI.pvsorigin = skyPortal->curstate.origin;
-
-	RI.clipFlags = 15;
+	RI->params = ( RI->params|RP_SKYPORTALVIEW ) & ~(RP_OLDVIEWLEAF|RP_CLIPPLANE);
+	RI->pvsorigin = skyPortal->curstate.origin;
+	RI->frustum.DisablePlane( FRUSTUM_FAR );
+	RI->frustum.DisablePlane( FRUSTUM_NEAR );
 
 	if( skyPortal->curstate.scale )
 	{
 		Vector	centre, diff;
 		float	scale;
 
-		scale = skyPortal->curstate.scale / 100.0f;
+		// TODO: use world->mins and world->maxs instead ?
 		centre = (worldmodel->mins + worldmodel->maxs) * 0.5f;
-		diff = centre - RI.vieworg;
+		scale = skyPortal->curstate.scale / 100.0f;
+		diff = centre - RI->vieworg;
 
-		RI.refdef.vieworg = skyPortal->curstate.origin + (-scale * diff);
+		RI->vieworg = skyPortal->curstate.origin + (-scale * diff);
 	}
 	else
 	{
-		RI.refdef.vieworg = skyPortal->curstate.origin;
+		RI->vieworg = skyPortal->curstate.origin;
 	}
 
 	// angle offset
-	RI.refdef.viewangles += skyPortal->curstate.angles;
+	RI->viewangles += skyPortal->curstate.angles;
 
 	if( skyPortal->curstate.fuser2 )
 	{
-		RI.refdef.fov_x = skyPortal->curstate.fuser2;
-		RI.refdef.fov_y = V_CalcFov( RI.refdef.fov_x, RI.refdef.viewport[2], RI.refdef.viewport[3] );
+		RI->fov_x = skyPortal->curstate.fuser2;
+		RI->fov_y = V_CalcFov( RI->fov_x, RI->viewport[2], RI->viewport[3] );
 
-		if( RENDER_GET_PARM( PARM_WIDESCREEN, 0 ) && r_adjust_fov->value )
-			V_AdjustFov( RI.refdef.fov_x, RI.refdef.fov_y, RI.refdef.viewport[2], RI.refdef.viewport[3], false );
+		if( RENDER_GET_PARM( PARM_WIDESCREEN, 0 ) && CVAR_TO_BOOL( r_adjust_fov ))
+			V_AdjustFov( RI->fov_x, RI->fov_y, RI->viewport[2], RI->viewport[3], false );
 	}
 
-	r_viewleaf = r_viewleaf2 = NULL;	// force markleafs next frame
-
-	R_RenderScene( &RI.refdef );
-
-	r_viewleaf = r_viewleaf2 = NULL;	// force markleafs next frame
-	tr.framecount = oldframecount;	// restore real framecount
 	r_stats.c_sky_passes++;
-	RI = oldRI;
+	R_RenderScene();
+	R_PopRefState();
 }
 
-/*
-================
-R_RecursiveSkyNode
-================
-*/
-void R_RecursiveSkyNode( mnode_t *node, unsigned int clipflags )
+void R_WorldFindSky( void )
 {
-	const mplane_t	*clipplane;
-	int		i, clipped;
+	CFrustum		*frustum = &RI->frustum;
 	msurface_t	*surf, **mark;
-	mleaf_t		*pleaf;
-	int		c, side;
-	float		dot;
+	mworldleaf_t	*leaf;
+	int		i, j;
 
-	if( node->contents == CONTENTS_SOLID )
-		return; // hit a solid leaf
+	memset( RI->visfaces, 0x00, ( world->numsortedfaces + 7) >> 3 );
 
-	if( node->visframe != tr.visframecount )
-		return;
-
-	if( clipflags )
+	// always skip the leaf 0, because is outside leaf
+	for( i = 1, leaf = &world->leafs[1]; i < world->numleafs; i++, leaf++ )
 	{
-		for( i = 0, clipplane = RI.frustum; i < 6; i++, clipplane++ )
+		if( CHECKVISBIT( RI->visbytes, leaf->cluster ) && ( leaf->efrags || leaf->nummarksurfaces ))
 		{
-			if(!( clipflags & ( 1<<i )))
+			if( RI->frustum.CullBox( leaf->mins, leaf->maxs ))
 				continue;
 
-			clipped = BoxOnPlaneSide( node->minmaxs, node->minmaxs + 3, clipplane );
-			if( clipped == 2 ) return;
-			if( clipped == 1 ) clipflags &= ~(1<<i);
-		}
-	}
-
-	// if a leaf node, draw stuff
-	if( node->contents < 0 )
-	{
-		pleaf = (mleaf_t *)node;
-
-		mark = pleaf->firstmarksurface;
-		c = pleaf->nummarksurfaces;
-
-		if( c )
-		{
-			do
+			if( leaf->nummarksurfaces )
 			{
-				(*mark)->visframe = tr.framecount;
-				mark++;
-			} while( --c );
+				for( j = 0, mark = leaf->firstmarksurface; j < leaf->nummarksurfaces; j++, mark++ )
+					SETVISBIT( RI->visfaces, *mark - worldmodel->surfaces );
+			}
 		}
-		return;
 	}
 
-	// node is just a decision point, so go down the apropriate sides
-
-	// find which side of the node we are on
-	dot = PlaneDiff( tr.modelorg, node->plane );
-	side = (dot >= 0) ? 0 : 1;
-
-	// recurse down the children, front side first
-	R_RecursiveSkyNode( node->children[side], clipflags );
-
-	// draw stuff
-	for( c = node->numsurfaces, surf = worldmodel->surfaces + node->firstsurface; c; c--, surf++ )
+	// create drawlist for faces, do additional culling for world faces
+	for( i = 0; i < world->numsortedfaces; i++ )
 	{
-		if( R_CullSurface( surf, clipflags ))
-			continue;
+		j = world->sortedfaces[i];
 
-		if( surf->flags & SURF_DRAWSKY )
+		if( j >= worldmodel->nummodelsurfaces )
+			continue;	// not a world face
+
+		surf = worldmodel->surfaces + j;
+
+		if( !FBitSet( surf->flags, SURF_DRAWSKY ))
+			continue;	// only skyfaces interesting us
+
+		if( CHECKVISBIT( RI->visfaces, j ))
 		{
-			// sky is visible, break
-			RI.isSkyVisible = true;
+			RI->currententity = GET_ENTITY( 0 );
+			RI->currentmodel = RI->currententity->model;
+
+			if( R_CullSurfaceExt( surf, frustum ))
+				continue;
+
+			SetBits( RI->params, RP_SKYVISIBLE ); // now sky is visible
 			return;
 		}
 	}
-
-	// recurse down the back side
-	R_RecursiveSkyNode( node->children[!side], clipflags );
 }
 
 /*
@@ -438,26 +388,34 @@ Build mirror chains for this frame
 */
 void R_CheckSkyPortal( cl_entity_t *skyPortal )
 {
-	if( RENDER_GET_PARM( PARM_SKY_SPHERE, 0 ) || !worldmodel || r_fastsky->value )
+	tr.fIgnoreSkybox = false;
+
+	if( tr.sky_camera == NULL )
 		return;
 
-	// build the transformation matrix for the given view angles
-	RI.vieworg = RI.pvsorigin; // grab the PVS origin in case of mirror and the portal origin may be out of world bounds
-	AngleVectors( RI.refdef.viewangles, RI.vforward, RI.vright, RI.vup );
+	if( !CVAR_TO_BOOL( r_drawentities ))
+		return;
 
-	R_FindViewLeaf();
+	if( FBitSet( RI->params, RP_OVERVIEW ))
+		return;
 
+	// don't allow recursive 3dsky
+	if( FBitSet( RI->params, RP_SKYPORTALVIEW ))
+		return;
+
+	if( !FBitSet( RI->params, RP_OLDVIEWLEAF ))
+		R_FindViewLeaf();
 	R_SetupFrustum();
-	R_MarkLeaves ();
+	R_MarkLeaves();
 
-	tr.modelorg = RI.pvsorigin;
-	RI.currententity = GET_ENTITY( 0 );
-	RI.currentmodel = RI.currententity->model;
-	RI.isSkyVisible = false;
+	if( FBitSet( RI->params, RP_MIRRORVIEW ))
+		tr.modelorg = RI->pvsorigin;
+	else tr.modelorg = RI->vieworg;
+	RI->currententity = GET_ENTITY( 0 );
+	RI->currentmodel = RI->currententity->model;
+	R_WorldFindSky();
 
-	R_RecursiveSkyNode( worldmodel->nodes, RI.clipFlags );
-
-	if( RI.isSkyVisible )
+	if( FBitSet( RI->params, RP_SKYVISIBLE ))
 	{
 		R_DrawSkyPortal( skyPortal );
 		tr.fIgnoreSkybox = true;
@@ -471,278 +429,40 @@ R_DrawSkybox
 */
 void R_DrawSkyBox( void )
 {
-	vec3_t	fogColor;
-	int	i;
-
-	if( RI.refdef.movevars->skyangle )
-	{	
-		// check for no sky at all
-		for( i = 0; i < 6; i++ )
-		{
-			if( RI.skyMins[0][i] < RI.skyMaxs[0][i] && RI.skyMins[1][i] < RI.skyMaxs[1][i] )
-				break;
-		}
-
-		if( i == 6 ) return; // nothing visible
-	}
-
-	RI.isSkyVisible = true;
-
-	if( r_skyfog->value && ( RI.fogCustom || RI.fogEnabled ))
-	{
-		pglEnable( GL_FOG );
-
-		if( RI.fogCustom )
-		{
-			pglFogi( GL_FOG_MODE, GL_LINEAR );
-			pglFogf( GL_FOG_START, RI.fogStart );
-			pglFogf( GL_FOG_END, RI.fogEnd );
-                    }
-                    else
-                    {
-			pglFogi( GL_FOG_MODE, GL_EXP );
-			pglFogf( GL_FOG_DENSITY, RI.fogDensity );
-                    }
-
-		pglFogfv( GL_FOG_COLOR, RI.fogColor );
-		pglHint( GL_FOG_HINT, GL_NICEST );
-	}
-
 	pglDisable( GL_BLEND );
 	pglDisable( GL_ALPHA_TEST );
 	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
 
-	Vector skyDir( RI.refdef.movevars->skydir_x, RI.refdef.movevars->skydir_y, RI.refdef.movevars->skydir_z );
-
-	if( RI.refdef.movevars->skyangle && skyDir != g_vecZero )
+	// make sure what light_environment is present
+	if( tr.sky_normal != g_vecZero && CheckShader( glsl.skyboxEnv ))
 	{
-		RI.modelviewMatrix = RI.worldviewMatrix;
-		RI.modelviewMatrix.ConcatRotate( RI.refdef.movevars->skyangle, skyDir.x, skyDir.y, skyDir.z );
-		RI.modelviewMatrix.ConcatTranslate( -RI.vieworg[0], -RI.vieworg[1], -RI.vieworg[2] );
+		Vector sky_color = tr.sky_ambient * (1.0f / 128.0f) * r_lighting_modulate->value;
+		Vector sky_vec = tr.sky_normal.Normalize();
 
-		GL_LoadMatrix( RI.modelviewMatrix );
-		tr.modelviewIdentity = false;
+		GL_BindShader( glsl.skyboxEnv );
+
+		ColorNormalize( sky_color, sky_color );
+		pglUniform3fARB( RI->currentshader->u_LightDir, sky_vec.x, sky_vec.y, sky_vec.z );
+		pglUniform3fARB( RI->currentshader->u_LightDiffuse, sky_color.x, sky_color.y, sky_color.z );
+		pglUniform3fARB( RI->currentshader->u_ViewOrigin, RI->vieworg.x, RI->vieworg.y, RI->vieworg.z );
+		pglUniform4fARB( RI->currentshader->u_FogParams, tr.fogColor[0], tr.fogColor[1], tr.fogColor[2], tr.fogDensity * 0.25f );
 	}
 
-	for( i = 0; i < 6; i++ )
+	for( int i = 0; i < 6; i++ )
 	{
-		if( RI.skyMins[0][i] >= RI.skyMaxs[0][i] || RI.skyMins[1][i] >= RI.skyMaxs[1][i] )
+		if( RI->skyMins[0][i] >= RI->skyMaxs[0][i] || RI->skyMins[1][i] >= RI->skyMaxs[1][i] )
 			continue;
 
 		GL_Bind( GL_TEXTURE0, tr.skyboxTextures[r_skyTexOrder[i]] );
 
 		pglBegin( GL_QUADS );
-		MakeSkyVec( RI.skyMins[0][i], RI.skyMins[1][i], i );
-		MakeSkyVec( RI.skyMins[0][i], RI.skyMaxs[1][i], i );
-		MakeSkyVec( RI.skyMaxs[0][i], RI.skyMaxs[1][i], i );
-		MakeSkyVec( RI.skyMaxs[0][i], RI.skyMins[1][i], i );
+		MakeSkyVec( RI->skyMins[0][i], RI->skyMins[1][i], i );
+		MakeSkyVec( RI->skyMins[0][i], RI->skyMaxs[1][i], i );
+		MakeSkyVec( RI->skyMaxs[0][i], RI->skyMaxs[1][i], i );
+		MakeSkyVec( RI->skyMaxs[0][i], RI->skyMins[1][i], i );
 		pglEnd();
 	}
 
+	GL_BindShader( NULL );
 	R_LoadIdentity();
-
-	if( r_skyfog->value && ( RI.fogCustom || RI.fogEnabled ))
-		pglDisable( GL_FOG );
-}
-
-/*
-=============
-EmitWaterPolys
-
-Does a water warp on the pre-fragmented glpoly_t chain
-=============
-*/
-void EmitWaterPolys( glpoly_t *polys, qboolean noCull, qboolean reflection )
-{
-	glpoly_t	*p;
-	float	*v, nv, waveHeight;
-	float	s, t, os, ot;
-	int	i;
-
-	if( noCull ) pglDisable( GL_CULL_FACE );
-
-	// set the current waveheight
-	waveHeight = RI.currentWaveHeight;
-
-	for( p = polys; p; p = p->next )
-	{
-		pglBegin( GL_POLYGON );
-
-		for( i = 0, v = p->verts[0]; i < p->numverts; i++, v += VERTEXSIZE )
-		{
-			if( reflection )
-			{
-				Vector stw = v;
-				stw = (stw.Normalize()) * ( 6.0f + sin( RI.refdef.time * 0.1f ));
-				stw.y += RI.refdef.time * 0.1f;
-
-				pglMultiTexCoord3f( GL_TEXTURE1_ARB, stw.x, stw.y, stw.z );
-				pglVertex3f( v[0], v[1], v[2] );
-				continue;
-			}
-
-			if( waveHeight )
-			{
-				nv = v[2] + waveHeight + ( waveHeight * sin(v[0] * 0.02 + gEngfuncs.GetClientTime())
-					* sin(v[1] * 0.02 + gEngfuncs.GetClientTime()) * sin(v[2] * 0.02 + gEngfuncs.GetClientTime()));
-				nv -= waveHeight;
-			}
-			else nv = v[2];
-
-			os = v[3];
-			ot = v[4];
-
-			s = os + r_turbsin[(int)((ot * 0.125f + gEngfuncs.GetClientTime() ) * TURBSCALE) & 255];
-			s *= ( 1.0f / SUBDIVIDE_SIZE );
-
-			t = ot + r_turbsin[(int)((os * 0.125f + gEngfuncs.GetClientTime() ) * TURBSCALE) & 255];
-			t *= ( 1.0f / SUBDIVIDE_SIZE );
-
-			pglTexCoord2f( s, t );
-			pglVertex3f( v[0], v[1], nv );
-		}
-		pglEnd();
-	}
-
-	// restore culling
-	if( noCull ) pglEnable( GL_CULL_FACE );
-}
-
-/*
-=============
-EmitWaterPolys
-
-Does a water warp on the pre-fragmented glpoly_t chain
-=============
-*/
-void EmitWaterPolysReflection( msurface_t *fa )
-{
-	mextrasurf_t *es = SURF_INFO( fa, RI.currentmodel );
-
-	if( !es || !es->mesh )
-	{
-		EmitWaterPolys( fa->polys, ( fa->flags & SURF_NOCULL ), ( fa->flags & SURF_REFLECT ));
-		return;
-	}
-
-	// set the current waveheight
-	float waveHeight = RI.currentWaveHeight;
-
-	msurfmesh_t *mesh = es->mesh;
-	Vector dir;
-
-	pglBegin( GL_POLYGON );
-	pglMultiTexCoord3f( GL_TEXTURE3_ARB, fa->plane->normal.x, fa->plane->normal.y, fa->plane->normal.z );
-
-	for( int i = 0; i < mesh->numVerts; i++ )
-	{
-		dir = mesh->verts[i].vertex - RI.refdef.vieworg;
-		Vector stw = mesh->verts[i].vertex.Normalize();
-		stw *= ( waveHeight + sin( RI.refdef.time * 0.1f ));
-		stw.x -= RI.refdef.time * 0.2f;
-		stw.y += RI.refdef.time * 0.1f;
-
-		pglMultiTexCoord3f( GL_TEXTURE1_ARB, stw.x, stw.y, mesh->verts[i].vertex.z );
-		pglMultiTexCoord3f( GL_TEXTURE2_ARB, dir.x, dir.y, dir.z );
-		pglVertex3fv( mesh->verts[i].vertex );
-          }
-	pglEnd();
-}
-
-/*
-=============
-EmitSkyPolys
-=============
-*/
-void EmitSkyPolys( msurface_t *fa )
-{
-	glpoly_t	*p;
-	float	*v;
-	int	i;
-	float	s, t;
-	Vector	dir;
-	float	length;
-
-	for( p = fa->polys; p; p = p->next )
-	{
-		pglBegin( GL_POLYGON );
-
-		for( i = 0, v = p->verts[0]; i < p->numverts; i++, v += VERTEXSIZE )
-		{
-			dir[0] = v[0] - RI.vieworg[0];
-			dir[1] = v[1] - RI.vieworg[1];
-			dir[2] = (v[2] - RI.vieworg[2]) * 3; // flatten the sphere
-
-			length = dir.Length();
-			length = 6 * 63 / length;
-
-			dir[0] *= length;
-			dir[1] *= length;
-
-			s = ( speedscale + dir[0] ) * (1.0f / 128);
-			t = ( speedscale + dir[1] ) * (1.0f / 128);
-
-			pglTexCoord2f( s, t );
-			pglVertex3fv( v );
-		}
-		pglEnd ();
-	}
-}
-
-/*
-=================
-R_DrawSkyChain
-=================
-*/
-void R_DrawSkyChain( msurface_t *s )
-{
-	msurface_t	*fa;
-
-	GL_Bind( GL_TEXTURE0, tr.solidskyTexture );
-
-	speedscale = gEngfuncs.GetClientTime() * 8;
-	speedscale -= (int)speedscale & ~127;
-
-	for( fa = s; fa; fa = fa->texturechain )
-		EmitSkyPolys( fa );
-
-	pglEnable( GL_BLEND );
-	GL_Bind( GL_TEXTURE0, tr.alphaskyTexture );
-
-	speedscale = gEngfuncs.GetClientTime() * 16;
-	speedscale -= (int)speedscale & ~127;
-
-	for( fa = s; fa; fa = fa->texturechain )
-		EmitSkyPolys( fa );
-
-	pglDisable( GL_BLEND );
-}
-
-/*
-===============
-EmitBothSkyLayers
-
-Does a sky warp on the pre-fragmented glpoly_t chain
-This will be called for brushmodels, the world
-will have them chained together.
-===============
-*/
-void EmitSkyLayers( msurface_t *fa )
-{
-	GL_Bind( GL_TEXTURE0, tr.solidskyTexture );
-
-	speedscale = gEngfuncs.GetClientTime() * 8;
-	speedscale -= (int)speedscale & ~127;
-
-	EmitSkyPolys( fa );
-
-	pglEnable( GL_BLEND );
-	GL_Bind( GL_TEXTURE0, tr.alphaskyTexture );
-
-	speedscale = gEngfuncs.GetClientTime() * 16;
-	speedscale -= (int)speedscale & ~127;
-
-	EmitSkyPolys( fa );
-
-	pglDisable( GL_BLEND );
 }

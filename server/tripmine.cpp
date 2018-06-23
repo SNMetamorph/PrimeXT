@@ -90,7 +90,8 @@ void CTripmineGrenade :: Spawn( void )
 	pev->sequence = TRIPMINE_WORLD;
 	ResetSequenceInfo( );
 	pev->framerate = 0;
-	
+	SetBits( pev->effects, EF_NOINTERP );
+		
 	UTIL_SetSize( pev, Vector( -8, -8, -8 ), Vector( 8, 8, 8 ));
 
 	if( !m_fSetAngles )
@@ -185,6 +186,8 @@ void CTripmineGrenade :: TransferReset( void )
 			m_hOwner = g_pWorld;
 		}
 	}
+
+	SetBits( pev->effects, EF_NOINTERP );
 
 	// create new beam on a next level
 	if ( !m_pBeam )
@@ -444,7 +447,7 @@ void CTripmine::Holster( void )
 	if (!m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
 	{
 		// out of mines
-		m_pPlayer->pev->weapons &= ~(1<<WEAPON_TRIPMINE);
+		m_pPlayer->RemoveWeapon( WEAPON_TRIPMINE );
 		SetThink( DestroyItem );
 		pev->nextthink = gpGlobals->time + 0.1;
 	}

@@ -26,13 +26,11 @@ CParticleSystemManager *g_pParticleSystems = NULL;
 
 void UTIL_CreateAurora( cl_entity_t *ent, const char *file, int attachment, float lifetime )
 {
-	if( !g_fRenderInitialized ) return;
-
 	int iCompare;
 
 	// verify file exists
 	// g-cont. idea! use COMPARE_FILE_TIME instead of LOAD_FILE_FOR_ME
-	if( COMPARE_FILE_TIME( file, file, &iCompare ))
+	if( !g_fRenderInitialized || COMPARE_FILE_TIME( file, file, &iCompare ))
 	{
 		CParticleSystem *pSystem = new CParticleSystem( ent, file, attachment, lifetime );
 		g_pParticleSystems->AddSystem( pSystem );
@@ -45,8 +43,6 @@ void UTIL_CreateAurora( cl_entity_t *ent, const char *file, int attachment, floa
 
 void UTIL_RemoveAurora( cl_entity_t *ent )
 {
-	if( !g_fRenderInitialized ) return;
-
 	CParticleSystem *pSystem = g_pParticleSystems->FindSystem( NULL, ent );
 
 	// find all the partsystems that attached with this entity
@@ -100,27 +96,15 @@ void CParticleSystemManager :: MarkSystemForDeletion( CParticleSystem *pSys )
 
 void CParticleSystemManager :: UpdateSystems( void )
 {
-	float		frametime;
-	static int	framecount = -1;
-	AURSTATE		state;
-
-	// HACKHACK: don't evaluate particles when executes many times at same frame
-	// e.g. mirror rendering
-	if( framecount != tr.realframecount )
-	{
-		frametime = RI.refdef.frametime;
-		framecount = tr.realframecount;
-	}
-	else frametime = 0.0f;
-	
 	CParticleSystem *pSystem;
 	CParticleSystem *pLast = NULL;
+	AURSTATE state;
 
 	pSystem = m_pFirstSystem;
 
 	while( pSystem )
 	{
-		state = pSystem->UpdateSystem( frametime );
+		state = pSystem->UpdateSystem( tr.frametime );
 
 		if( state != AURORA_REMOVE )
 		{
@@ -752,7 +736,7 @@ AURSTATE CParticleSystem :: UpdateSystem( float frametime )
 		// time-based particle system
 		if( m_fLifeTime != 0.0f )
 		{
-			enable = (m_fLifeTime >= RI.refdef.time) ? true : false;
+			enable = (m_fLifeTime >= tr.time) ? true : false;
 		}
 		else
 		{
@@ -860,14 +844,43 @@ void CParticleSystem :: DrawSystem( void )
 
 	for( pParticle = m_pActiveParticle; pParticle; pParticle = pParticle->nextpart )
 	{
-		DrawParticle( pParticle, RI.vright, RI.vup );
+		DrawParticle( pParticle, RI->vright, RI->vup );
+	}
+
+	if( m_iLightingModel >= 2 && R_CountPlights( ))
+	{
+		for( int i = 0; i < MAX_PLIGHTS; i++ )
+		{
+			plight_t *pl = &cl_plights[i];
+
+			if( pl->die < tr.time || !pl->radius || pl->culled )
+				continue;
+
+			if( !R_BeginDrawProjectionGLSL( pl ))
+				continue;
+
+			for( pParticle = m_pActiveParticle; pParticle; pParticle = pParticle->nextpart )
+			{
+				DrawParticle( pParticle, RI->vright, RI->vup );
+			}
+
+			R_EndDrawProjectionGLSL();
+		}
 	}
 }
 
 bool CParticleSystem :: ParticleIsVisible( CParticle *part )
 {
-	if( R_CullSphere( part->origin, part->m_fSize + 1, RI.clipFlags ))
-		return false;
+	if( RI->currentlight )
+	{
+		if( RI->currentlight->frustum.CullSphere( part->origin, part->m_fSize + 1 ))
+			return false;
+	}
+	else
+	{
+		if( R_CullSphere( part->origin, part->m_fSize + 1 ))
+			return false;
+	}
 	return true;
 }
 
@@ -1015,23 +1028,27 @@ void CParticleSystem :: DrawParticle( CParticle *part, Vector &right, Vector &up
 		{
 			if( pDraw->pType->m_iDrawCond == CONTENT_SPOTLIGHT )
 			{
-				if( !R_CountPlights( ))
-					continue;	// fast reject
-
-				for( int i = 0; i < MAX_PLIGHTS; i++ )
+				// test already paseed
+				if( !RI->currentlight )
 				{
-					plight_t *pl = &cl_plights[i];
+					if( !R_CountPlights( ))
+						continue;	// fast reject
 
-					if( pl->die < GET_CLIENT_TIME() || !pl->radius )
-						continue;
+					for( int i = 0; i < MAX_PLIGHTS; i++ )
+					{
+						plight_t *pl = &cl_plights[i];
 
-					if( !R_CullSphereExt( pl->frustum, part->origin, part->m_fSize + 1, pl->clipflags ))
-						break; // cone intersected with particle
+						if( pl->die < tr.time || !pl->radius )
+							continue;
 
+						if( !pl->frustum.CullSphere( part->origin, part->m_fSize + 1 ))
+							break; // cone intersected with particle
+
+					}
+
+					if( i == MAX_PLIGHTS )
+						continue;	// no intersection
 				}
-
-				if( i == MAX_PLIGHTS )
-					continue;	// no intersection
 			}
 			else
 			{
@@ -1052,66 +1069,70 @@ void CParticleSystem :: DrawParticle( CParticle *part, Vector &right, Vector &up
 		while (pDraw->frame < 0)
 			pDraw->frame += pModel->numframes;
 
-		if( !TriSpriteTexture( pModel, (int)pDraw->frame ))
+		if( !gEngfuncs.pTriAPI->SpriteTexture( pModel, (int)pDraw->frame ))
 			continue;
 
-		gEngfuncs.pTriAPI->RenderMode( pDraw->pType->m_iRenderMode );
-
-		if( m_iLightingModel >= 1 )
+		if( !RI->currentlight )
 		{
-			color24 lightColor;
-			Vector lightingColor;
+			gEngfuncs.pTriAPI->RenderMode( pDraw->pType->m_iRenderMode );
+			Vector partColor; 
+			float partAlpha;
 
-			if( m_iLightingModel == 1 )
-				R_LightForPoint( part->origin, &lightColor, false, true, fSize + 1 );
-			else R_LightForPoint( part->origin, &lightColor, false, true, 0.0f );
-			
-			// FIXME: this code is totally wrong.
-			// We need a fake lightmap here like in sprite implementation
-			lightingColor.x = pDraw->m_fRed * lightColor.r * (1.0f / 255.0f);
-			lightingColor.y = pDraw->m_fGreen * lightColor.g * (1.0f / 255.0f);
-			lightingColor.z = pDraw->m_fBlue * lightColor.b * (1.0f / 255.0f);
-			pglColor4f( lightingColor.x, lightingColor.y, lightingColor.z, pDraw->m_fAlpha );
-		}
-		else pglColor4f( pDraw->m_fRed, pDraw->m_fGreen, pDraw->m_fBlue, pDraw->m_fAlpha );
-
-		pglBegin( GL_QUADS );
-			pglTexCoord2f( 0.0f, 0.0f );
-			pglVertex3fv( point1 );
-
-			pglTexCoord2f( 1.0f, 0.0f );
-			pglVertex3fv( point2 );
-
-			pglTexCoord2f( 1.0f, 1.0f );
-			pglVertex3fv( point3 );
-
-			pglTexCoord2f( 0.0f, 1.0f );
-			pglVertex3fv( point4 );
-		pglEnd();
-
-		if( m_iLightingModel >=2 && R_CountPlights( ))
-		{
-			for( int i = 0; i < MAX_PLIGHTS; i++ )
+			if( m_iLightingModel >= 1 )
 			{
-				plight_t *pl = &cl_plights[i];
+				Vector lightColor;
 
-				if( pl->die < GET_CLIENT_TIME() || !pl->radius )
-					continue;
+				gEngfuncs.pTriAPI->LightAtPoint( part->origin, (float *)&lightColor );
+				lightColor *= (1.0f / 255.0f);
 
-				if( R_CullSphereExt( pl->frustum, part->origin, part->m_fSize + 1, pl->clipflags ))
-					continue;
+				if( m_iLightingModel == 1 ) // used single color for particle instead of perpixel projection
+					lightColor += R_LightsForPoint( part->origin, part->m_fSize + 1 );
 
-				R_BeginDrawProjection( pl );
-
-				pglBegin( GL_QUADS );
-					pglVertex3fv( point1 );
-					pglVertex3fv( point2 );
-					pglVertex3fv( point3 );
-					pglVertex3fv( point4 );
-				pglEnd();
-
-				R_EndDrawProjection();
+				// FIXME: this is not quite right but works
+				// We need a fake lightmap here like in sprite implementation
+				partColor.x = pDraw->m_fRed * lightColor.x;
+				partColor.y = pDraw->m_fGreen * lightColor.y;
+				partColor.z = pDraw->m_fBlue * lightColor.z;
+				partAlpha = pDraw->m_fAlpha;
 			}
+			else
+			{
+				partColor = Vector( pDraw->m_fRed, pDraw->m_fGreen, pDraw->m_fBlue );
+				partAlpha = pDraw->m_fAlpha;
+			}
+
+			if( tr.fogEnabled )
+			{
+				// do software fog here
+				float depth = DotProduct( part->origin, RI->vforward ) - RI->viewplanedist;
+				float fogFactor = pow( 2.0, -tr.fogDensity * depth );
+				fogFactor = bound( 0.0f, fogFactor, 1.0f );
+//				partColor = Lerp( fogFactor, tr.fogColor, partColor );
+				partAlpha = Lerp( fogFactor, 0.0f, partAlpha );
+			}
+			gEngfuncs.pTriAPI->Color4f( partColor.x, partColor.y, partColor.z, partAlpha );
 		}
+
+		DrawQuad( point1, point2, point3, point4 );
 	}
 }
+
+void CParticleSystem :: DrawQuad( const Vector &p0, const Vector &p1, const Vector &p2, const Vector &p3 )
+{
+	gEngfuncs.pTriAPI->Begin( TRI_QUADS );
+		gEngfuncs.pTriAPI->TexCoord2f( 0, 0 );
+		gEngfuncs.pTriAPI->Vertex3fv( (float *)&p0 );
+
+		gEngfuncs.pTriAPI->TexCoord2f( 1, 0 );
+		gEngfuncs.pTriAPI->Vertex3fv( (float *)&p1 );
+
+		gEngfuncs.pTriAPI->TexCoord2f( 1, 1 );
+		gEngfuncs.pTriAPI->Vertex3fv( (float *)&p2 );
+
+		gEngfuncs.pTriAPI->TexCoord2f( 0, 1 );
+		gEngfuncs.pTriAPI->Vertex3fv( (float *)&p3 );
+	gEngfuncs.pTriAPI->End();
+
+	r_stats.c_total_tris += 2;
+}
+

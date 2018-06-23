@@ -347,10 +347,7 @@ I CUtlLinkedList<T,I>::AllocInternal( bool multilist )
 		elem = (I)m_TotalElements;
 		++m_TotalElements;
 
-		if ( elem == InvalidIndex() )
-		{
-			HOST_ERROR( "CUtlLinkedList overflow!\n" );
-		}
+		assert( elem != InvalidIndex() );
 	} 
 	else
 	{

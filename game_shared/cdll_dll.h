@@ -20,8 +20,9 @@
 #ifndef CDLL_DLL_H
 #define CDLL_DLL_H
 
-#define WEAPON_SUIT			31
-#define MAX_WEAPONS			32
+#define MAX_WEAPONS			64
+#define MAX_WEAPON_BYTES		(( MAX_WEAPONS + 7 ) / 8 )
+#define WEAPON_SUIT			(MAX_WEAPONS - 1)
 
 #define MAX_WEAPON_SLOTS		5	// hud item selection slots
 #define MAX_ITEM_TYPES		6	// hud item selection slots
@@ -42,12 +43,12 @@
 
 // decal flags
 #define FDECAL_PERMANENT		0x01	// This decal should not be removed in favor of any new decals
-#define FDECAL_CUSTOM		0x02	// This is a custom clan logo and should not be saved/restored
-#define FDECAL_DONTSAVE		0x04	// Decal was loaded from adjacent level, don't save it for this level
-#define FDECAL_CLIPTEST		0x08	// Decal needs to be clip-tested
-#define FDECAL_NOCLIP		0x10	// Decal is not clipped by containing polygon
-#define FDECAL_USESAXIS		0x20	// Uses the s axis field to determine orientation (footprints)
+#define FDECAL_USE_LANDMARK		0x02	// This is a decal applied on a bmodel without origin-brush so we done in absoulute pos
+#define FDECAL_CUSTOM		0x04	// This is a custom clan logo and should not be saved/restored
+// reserved
+// reserved
+#define FDECAL_DONTSAVE		0x20	// Decal was loaded from adjacent level, don't save it for this level
 #define FDECAL_STUDIO		0x40	// Indicates a studio decal
-#define FDECAL_LOCAL_SPACE		0x80	// Decal is in local space (any decal after serialization)
+#define FDECAL_LOCAL_SPACE		0x80	// decal is in local space (any decal after serialization)
 
 #endif

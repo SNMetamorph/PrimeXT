@@ -42,7 +42,7 @@ cvar_t	defaultteam = {"mp_defaultteam","0" };
 cvar_t	allowmonsters={"mp_allowmonsters","0", FCVAR_SERVER };
 
 cvar_t	mp_chattime = {"mp_chattime","10", FCVAR_SERVER };
-cvar_t	debugdraw = { "phys_debug", "0", 0 };
+cvar_t	debugdraw = { "phys_debug", "0", FCVAR_ARCHIVE };
 cvar_t	physdebug = { "phys_qdebug", "0", 0 };
 cvar_t	physstats = { "p_speeds", "0", FCVAR_ARCHIVE };
 
@@ -532,14 +532,12 @@ void GameDLLInit( void )
 
 	CVAR_REGISTER (&mp_chattime);
 
-	if( g_iXashEngineBuildNumber >= 1940 )
-          {
-		// server debug drawing support requires build up to 1940
-		g_debugdraw = CVAR_GET_POINTER( "phys_debug" );
-		g_physdebug = CVAR_GET_POINTER( "qphys_debug" );
-		p_speeds = CVAR_GET_POINTER( "p_speeds" );
-		g_allow_physx = CVAR_GET_POINTER( "sv_allow_PhysX" );
-	}
+	// server debug drawing support requires build up to 1940
+	g_debugdraw = CVAR_GET_POINTER( "phys_debug" );
+	g_physdebug = CVAR_GET_POINTER( "qphys_debug" );
+	p_speeds = CVAR_GET_POINTER( "p_speeds" );
+	g_allow_physx = CVAR_GET_POINTER( "sv_allow_PhysX" );
+
 // REGISTER CVARS FOR SKILL LEVEL STUFF
 	// Agrunt
 	CVAR_REGISTER ( &sk_agrunt_health1 );// {"sk_agrunt_health1","0"};

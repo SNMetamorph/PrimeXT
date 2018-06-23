@@ -35,6 +35,7 @@
 #include "gamerules.h"
 #include "game.h"
 #include "hltv.h"
+#include "ropes/CRope.h"
 
 // #define DUCKFIX
 
@@ -146,6 +147,7 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_nCustomSprayFrames, FIELD_INTEGER ),
 	DEFINE_AUTO_ARRAY( m_szAnimExtention, FIELD_CHARACTER ),
 	DEFINE_FUNCTION( PlayerDeathThink ),
+	DEFINE_FIELD( m_iSndRoomtype, FIELD_INTEGER ),
 END_DATADESC()	
 
 
@@ -159,6 +161,7 @@ int gmsgResetHUD = 0;
 int gmsgInitHUD = 0;
 int gmsgShowGameTitle = 0;
 int gmsgCurWeapon = 0;
+int gmsgWeapons = 0;
 int gmsgHealth = 0;
 int gmsgDamage = 0;
 int gmsgBattery = 0;
@@ -191,10 +194,12 @@ int gmsgStatusValue = 0;
 // g-cont. begin custom Xash messages
 int gmsgParticle = 0;
 int gmsgKillPart = 0;
+int gmsgStudioDecal = 0;
 int gmsgKillDecals = 0;
 int gmsgMusicFade = 0;
 int gmsgRainData = 0;
 int gmsgStatusIcon = 0;
+int gmsgSetupBones = 0;
 
 void LinkUserMessages( void )
 {
@@ -206,6 +211,7 @@ void LinkUserMessages( void )
 
 	gmsgSelAmmo = REG_USER_MSG("SelAmmo", sizeof(SelAmmo));
 	gmsgCurWeapon = REG_USER_MSG("CurWeapon", 3);
+	gmsgWeapons = REG_USER_MSG("Weapons", MAX_WEAPON_BYTES );
 	gmsgGeigerRange = REG_USER_MSG("Geiger", 1);
 	gmsgFlashlight = REG_USER_MSG("Flashlight", 2);
 	gmsgFlashBattery = REG_USER_MSG("FlashBat", 1);
@@ -243,9 +249,11 @@ void LinkUserMessages( void )
 	gmsgParticle = REG_USER_MSG( "Particle", -1 );
 	gmsgKillPart = REG_USER_MSG( "KillPart", 2 );
 	gmsgKillDecals = REG_USER_MSG( "KillDecals", 2 );
+	gmsgStudioDecal = REG_USER_MSG("StudioDecal", 33);
 	gmsgRainData = REG_USER_MSG( "RainData", 16 );
 	gmsgMusicFade = REG_USER_MSG( "MusicFade", 2 );
 	gmsgStatusIcon = REG_USER_MSG( "StatusIcon", -1 );
+	gmsgSetupBones = REG_USER_MSG( "SetupBones", -1 );
 }
 
 LINK_ENTITY_TO_CLASS( player, CBasePlayer );
@@ -343,7 +351,7 @@ void CBasePlayer :: DeathSound( void )
 
 	// play one of the suit death alarms
 	//LRC- if no suit, then no flatline sound. (unless it's a deathmatch.)
-	if ( !(pev->weapons & (1<<WEAPON_SUIT)) && !g_pGameRules->IsDeathmatch() )
+	if ( !HasWeapon( WEAPON_SUIT ) && !g_pGameRules->IsDeathmatch() )
 		return;
 
 	// play one of the suit death alarms
@@ -811,46 +819,55 @@ void CBasePlayer::RemoveAllItems( BOOL removeSuit, BOOL removeCycler )
 	pev->weaponmodel	= 0;
 	
 	if ( removeSuit && removeCycler )
-		pev->weapons = 0;			// clear all the weapons
+	{
+		RemoveAllWeapons();	// clear all the weapons
+	}
 	else if( removeCycler )
 	{
-		if( pev->weapons & BIT( WEAPON_SUIT ) )
+		if( HasWeapon( WEAPON_SUIT ))
 		{
-			pev->weapons = BIT( WEAPON_SUIT );	// leave only suit
+			RemoveAllWeapons();		// clear all the weapons
+			AddWeapon( WEAPON_SUIT );	// leave only suit
 		}
 		else
 		{
-			pev->weapons = 0;
+			RemoveAllWeapons();		// clear all the weapons
 		}
 	}
 	else if( removeSuit )
 	{
-		if( pev->weapons & BIT( WEAPON_CYCLER ) )
+		if( HasWeapon( WEAPON_CYCLER ))
 		{
-			pev->weapons = BIT( WEAPON_CYCLER );	// leave only cycler
+			RemoveAllWeapons();		// clear all the weapons
+			AddWeapon( WEAPON_CYCLER );	// leave only cycler
 		}
 		else
 		{
-			pev->weapons = 0;
+			RemoveAllWeapons();		// clear all the weapons
 		}
 	}
 	else
 	{
-		if( pev->weapons & BIT( WEAPON_SUIT ) && pev->weapons & BIT( WEAPON_CYCLER ) )
+		if( HasWeapon( WEAPON_SUIT ) && HasWeapon( WEAPON_CYCLER ))
 		{
-			pev->weapons = BIT( WEAPON_CYCLER )|BIT( WEAPON_SUIT );	// leave both cycler and suit
+			// leave both cycler and suit
+			RemoveAllWeapons();		// clear all the weapons
+			AddWeapon( WEAPON_CYCLER );
+			AddWeapon( WEAPON_SUIT );
 		}
-		else if( pev->weapons & BIT( WEAPON_SUIT ) )
+		else if( HasWeapon( WEAPON_SUIT ))
 		{
-			pev->weapons = BIT( WEAPON_SUIT );	// leave only suit
+			RemoveAllWeapons();		// clear all the weapons
+			AddWeapon( WEAPON_SUIT );	// leave only suit
 		}
-		else if( pev->weapons & BIT( WEAPON_CYCLER ) )
+		else if( HasWeapon( WEAPON_CYCLER ))
 		{
-			pev->weapons = BIT( WEAPON_CYCLER );	// leave only cycler
+			RemoveAllWeapons();		// clear all the weapons
+			AddWeapon( WEAPON_CYCLER );	// leave only cycler
 		}
 		else
 		{
-			pev->weapons = 0;
+			RemoveAllWeapons();		// clear all the weapons
 		}
 	}
 
@@ -988,10 +1005,12 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 	{
 	case PLAYER_JUMP:
 		m_IdealActivity = ACT_HOP;
+		pev->fuser1 = 0.0f;
 		break;
 	
 	case PLAYER_SUPERJUMP:
 		m_IdealActivity = ACT_LEAP;
+		pev->fuser1 = 0.0f;
 		break;
 	
 	case PLAYER_DIE:
@@ -1465,7 +1484,7 @@ void CBasePlayer::PlayerUse ( void )
 				if ( pTrain && !(pev->button & IN_JUMP) && FBitSet(pev->flags, FL_ONGROUND) && (pTrain->ObjectCaps() & FCAP_DIRECTIONAL_USE) && pTrain->OnControls( this ))
 				{
 					m_afPhysicsFlags |= PFLAG_ONTRAIN;
-					m_iTrain = TrainSpeed(pTrain->pev->speed, pTrain->pev->impulse);
+					m_iTrain = TrainSpeed( pTrain->GetSpeed(), pTrain->GetMaxSpeed());
 
 					if( pTrain->IsLockedByMaster( this ))
 					{
@@ -1869,6 +1888,139 @@ void CBasePlayer::PreThink(void)
 	else 
 		pev->flags &= ~FL_ONTRAIN;
 
+	//We're on a rope. - Solokiller
+	if( m_afPhysicsFlags & PFLAG_ONROPE && m_pRope )
+	{
+		SetAbsVelocity( g_vecZero );
+
+		const Vector vecAttachPos = m_pRope->GetAttachedObjectsPosition();
+
+		SetAbsOrigin( vecAttachPos );
+
+		Vector vecForce;
+
+		/*
+		//TODO: This causes sideways acceleration that doesn't occur in Op4. - Solokiller
+		//TODO: should be IN_MOVERIGHT and IN_MOVELEFT - Solokiller
+		if( pev->button & IN_DUCK )
+		{
+			vecForce.x = gpGlobals->v_right.x;
+			vecForce.y = gpGlobals->v_right.y;
+			vecForce.z = 0;
+			
+			m_pRope->ApplyForceFromPlayer( vecForce );
+		}
+
+		if( pev->button & IN_JUMP )
+		{
+			vecForce.x = -gpGlobals->v_right.x;
+			vecForce.y = -gpGlobals->v_right.y;
+			vecForce.z = 0;
+			m_pRope->ApplyForceFromPlayer( vecForce );
+		}
+		*/
+
+		//Determine if any force should be applied to the rope, or if we should move around. - Solokiller
+		if( pev->button & ( IN_BACK | IN_FORWARD ) )
+		{
+			if( ( gpGlobals->v_forward.x * gpGlobals->v_forward.x + 
+				gpGlobals->v_forward.y * gpGlobals->v_forward.y - 
+				gpGlobals->v_forward.z * gpGlobals->v_forward.z ) <= 0.0 )
+			{
+				if( m_bIsClimbing )
+				{
+					const float flDelta = gpGlobals->time - m_flLastClimbTime;
+					m_flLastClimbTime = gpGlobals->time;
+					if( pev->button & IN_FORWARD )
+					{
+						if( gpGlobals->v_forward.z < 0.0 )
+						{
+							if( !m_pRope->MoveDown( flDelta ) )
+							{
+								//Let go of the rope, detach. - Solokiller
+								pev->movetype = MOVETYPE_WALK;
+								pev->solid = SOLID_SLIDEBOX;
+
+								m_afPhysicsFlags &= ~PFLAG_ONROPE;
+								m_pRope->DetachObject();
+								m_pRope = NULL;
+								m_bIsClimbing = false;
+							}
+						}
+						else
+						{
+							m_pRope->MoveUp( flDelta );
+						}
+					}
+
+					if( pev->button & IN_BACK )
+					{
+						if( gpGlobals->v_forward.z < 0.0 )
+						{
+							m_pRope->MoveUp( flDelta );
+						}
+						else if( !m_pRope->MoveDown( flDelta ) )
+						{
+							//Let go of the rope, detach. - Solokiller
+							pev->movetype = MOVETYPE_WALK;
+							pev->solid = SOLID_SLIDEBOX;
+							m_afPhysicsFlags &= ~PFLAG_ONROPE;
+							m_pRope->DetachObject();
+							m_pRope = NULL;
+							m_bIsClimbing = false;
+						}
+					}
+				}
+				else
+				{
+					m_bIsClimbing = true;
+					m_flLastClimbTime = gpGlobals->time;
+				}
+			}
+			else
+			{
+				vecForce.x = gpGlobals->v_forward.x;
+				vecForce.y = gpGlobals->v_forward.y;
+				vecForce.z = 0.0;
+				if( pev->button & IN_BACK )
+				{
+					vecForce.x = -gpGlobals->v_forward.x;
+					vecForce.y = -gpGlobals->v_forward.y;
+					vecForce.z = 0;
+				}
+				m_pRope->ApplyForceFromPlayer( vecForce );
+				m_bIsClimbing = false;
+			}
+		}
+		else
+		{
+			m_bIsClimbing = false;
+		}
+
+		if( m_afButtonPressed & IN_JUMP )
+		{
+			//We've jumped off the rope, give us some momentum - Solokiller
+			pev->movetype = MOVETYPE_WALK;
+			pev->solid = SOLID_SLIDEBOX;
+			this->m_afPhysicsFlags &= ~PFLAG_ONROPE;
+
+			Vector vecDir = gpGlobals->v_up * 165.0 + gpGlobals->v_forward * 150.0;
+
+			Vector vecVelocity = m_pRope->GetAttachedObjectsVelocity() * 2;
+
+			vecVelocity = vecVelocity.Normalize();
+
+			vecVelocity = vecVelocity * 200;
+
+			SetAbsVelocity( vecVelocity + vecDir );
+
+			m_pRope->DetachObject();
+			m_pRope = NULL;
+			m_bIsClimbing = false;
+		}
+		return;
+	}
+
 	// Train speed control
 	if ( m_afPhysicsFlags & PFLAG_ONTRAIN )
 	{
@@ -1922,7 +2074,7 @@ void CBasePlayer::PreThink(void)
 			}
 			else
 			{
-				m_iTrain = TrainSpeed(pTrain->pev->speed, pTrain->pev->impulse);
+				m_iTrain = TrainSpeed(pTrain->GetSpeed(), pTrain->GetMaxSpeed());
 			}
 			m_iTrain |= TRAIN_ACTIVE|TRAIN_NEW;
 		}
@@ -2253,7 +2405,7 @@ void CBasePlayer::CheckSuitUpdate()
 	int isearch = m_iSuitPlayNext;
 	
 	// Ignore suit updates if no suit
-	if ( !(pev->weapons & (1<<WEAPON_SUIT)) )
+	if ( !HasWeapon( WEAPON_SUIT ))
 		return;
 
 	// if in range of radiation source, ping geiger counter
@@ -2314,9 +2466,8 @@ void CBasePlayer::SetSuitUpdate(char *name, int fgroup, int iNoRepeatTime)
 	int isentence;
 	int iempty = -1;
 	
-	
 	// Ignore suit updates if no suit
-	if ( !(pev->weapons & (1<<WEAPON_SUIT)) )
+	if ( !HasWeapon( WEAPON_SUIT ))
 		return;
 
 	if ( g_pGameRules->IsMultiplayer() )
@@ -2612,7 +2763,7 @@ void CBasePlayer::PostThink()
 		{
 			SetAnimation( PLAYER_WALK );
 		}
-    }
+	}
 
 	if (FBitSet(pev->flags, FL_ONGROUND))
 	{		
@@ -2635,7 +2786,12 @@ void CBasePlayer::PostThink()
 			SetAnimation( PLAYER_WALK );
 	}
 
+	// calc gait animation
+	StudioGaitFrameAdvance( );
+
+	// calc player animation
 	StudioFrameAdvance( );
+
 	CheckPowerups(pev);
 
 	UpdatePlayerSound();
@@ -2808,6 +2964,7 @@ void CBasePlayer::Spawn( void )
 
 	pev->fov = m_iFOV				= 0;// init field of view.
 	m_iClientFOV		= -1; // make sure fov reset is sent
+	memset( m_iClientWeapons, -1, MAX_WEAPON_BYTES );
 
 	m_flNextDecalTime	= 0;// let this player decal as soon as he spawns.
 
@@ -2824,6 +2981,7 @@ void CBasePlayer::Spawn( void )
 
 	m_iFlashBattery = 99;
 	m_flFlashLightTime = 1; // force first message
+	m_iClientSndRoomtype = -1;
 
 // dont let uninitialized value here hurt the player
 	m_flFallVelocity = 0;
@@ -2858,6 +3016,7 @@ void CBasePlayer::Spawn( void )
 	m_fWeapon = FALSE;
 	m_pClientActiveItem = NULL;
 	m_iClientBattery = -1;
+	m_iClientSndRoomtype = -1;
 
 	UpdateKeyCatchers ();
 
@@ -2934,11 +3093,13 @@ void CBasePlayer :: Precache( void )
 	m_flgeigerRange = 1000;
 	m_igeigerRangePrev = 1000;
 
+	memset( m_iClientWeapons, -1, MAX_WEAPON_BYTES );
+
 	m_bitsDamageType = 0;
 	m_bitsHUDDamage = -1;
 
 	m_iClientBattery = -1;
-
+	m_iClientSndRoomtype = -1;
 	m_flFlashLightTime = 1;
 
 	m_bRainNeedsUpdate = 1;
@@ -3316,7 +3477,7 @@ void CSprayCan::Think( void )
 		CBaseEntity *pEntity = CBaseEntity::Instance( tr.pHit );
 
 		if( pEntity && UTIL_GetModelType( pEntity->pev->modelindex ) == mod_studio )
-			UTIL_StudioDecalTrace( GetAbsOrigin(), &tr, DECAL_LAMBDA6, 0 );
+			UTIL_StudioDecalTrace( &tr, DECAL_LAMBDA6 );
 		else UTIL_DecalTrace( &tr, DECAL_LAMBDA6 );
 
 		UTIL_Remove( this );
@@ -3362,7 +3523,7 @@ void CBloodSplat::Spray ( void )
 		CBaseEntity *pEntity = CBaseEntity::Instance( tr.pHit );
 
 		if( pEntity && UTIL_GetModelType( pEntity->pev->modelindex ) == mod_studio )
-			UTIL_BloodStudioDecalTrace( GetAbsOrigin(), &tr, BLOOD_COLOR_RED );
+			UTIL_BloodStudioDecalTrace( &tr, BLOOD_COLOR_RED );
 		else UTIL_BloodDecalTrace( &tr, BLOOD_COLOR_RED );
 	}
 
@@ -3418,7 +3579,7 @@ void CBasePlayer :: FlashlightTurnOn( void )
 		return;
 	}
 
-	if ( (pev->weapons & (1<<WEAPON_SUIT)) )
+	if ( HasWeapon( WEAPON_SUIT ))
 	{
 		EMIT_SOUND_DYN( ENT(pev), CHAN_WEAPON, SOUND_FLASHLIGHT_ON, 1.0, ATTN_NORM, 0, PITCH_NORM );
 		SetBits(pev->effects, EF_DIMLIGHT);
@@ -3459,6 +3620,8 @@ void CBasePlayer :: ForceClientDllUpdate( void )
 {
 	m_iClientHealth  = -1;
 	m_iClientBattery = -1;
+	m_iClientSndRoomtype = -1;
+	memset( m_iClientWeapons, -1, MAX_WEAPON_BYTES );
 	m_iStartMessage = 1; // send player init messages
 	m_iTrain |= TRAIN_NEW;  // Force new train message.
 	m_fWeapon = FALSE;          // Force weapon send
@@ -4030,6 +4193,15 @@ void CBasePlayer :: UpdateClientData( void )
 		m_iClientHideHUD = m_iHideHUD;
 	}
 
+	if ( memcmp( m_iWeapons, m_iClientWeapons, MAX_WEAPON_BYTES ))
+	{
+		MESSAGE_BEGIN( MSG_ONE, gmsgWeapons, NULL, pev );
+			WRITE_BYTES( m_iWeapons, MAX_WEAPON_BYTES );
+		MESSAGE_END();
+
+		memcpy( m_iClientWeapons, m_iWeapons, MAX_WEAPON_BYTES );
+	}
+
 	if ( m_iFOV != m_iClientFOV )
 	{
 		MESSAGE_BEGIN( MSG_ONE, gmsgSetFOV, NULL, pev );
@@ -4039,6 +4211,15 @@ void CBasePlayer :: UpdateClientData( void )
 		// cache FOV change at end of function, so weapon updates can see that FOV has changed
 	}
 
+          if( m_iSndRoomtype != m_iClientSndRoomtype )
+          {
+		//update dsp sound
+          	MESSAGE_BEGIN( MSG_ONE, SVC_ROOMTYPE, NULL, pev );
+			WRITE_SHORT( m_iSndRoomtype );
+		MESSAGE_END();
+          	m_iClientSndRoomtype = m_iSndRoomtype;
+          }
+  
 	// HACKHACK -- send the message to display the game title
 	if (gDisplayTitle)
 	{
@@ -4306,7 +4487,7 @@ void CBasePlayer :: UpdateClientData( void )
 				WRITE_BYTE(II.iMaxAmmo2);				// byte     Max Ammo 2
 				WRITE_BYTE(II.iSlot);					// byte		bucket
 				WRITE_BYTE(II.iPosition);				// byte		bucket pos
-				WRITE_BYTE(II.iId);						// byte		id (bit index into pev->weapons)
+				WRITE_BYTE(II.iId);						// byte		id (bit index into m_iWeapons)
 				WRITE_BYTE(II.iFlags);					// byte		Flags
 			MESSAGE_END();
 		}
@@ -4753,7 +4934,7 @@ void CBasePlayer::DropPlayerItem ( char *pszItemName )
 
 			UTIL_MakeVectors ( GetAbsAngles() ); 
 
-			pev->weapons &= ~(1<<pWeapon->m_iId);// take item off hud
+			RemoveWeapon( pWeapon->m_iId );	// take item off hud
 
 			CWeaponBox *pWeaponBox = (CWeaponBox *)CBaseEntity::Create( "weaponbox", GetAbsOrigin() + gpGlobals->v_forward * 10, GetAbsAngles(), edict() );
 			Vector vecAngles = pWeaponBox->GetAbsAngles();

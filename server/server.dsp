@@ -42,8 +42,8 @@ RSC=rc.exe
 # PROP Intermediate_Dir "..\temp\server\!release"
 # PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /YX /c
-# ADD CPP /nologo /MD /W3 /Gi /GX /O2 /I ".\\" /I "..\engine" /I "..\common" /I "..\game_shared" /I "..\phys_shared" /I ".\monsters" /I ".\physics" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /FD /c
+# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /YX /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /Oy- /I ".\\" /I "..\engine" /I "..\common" /I "..\game_shared" /I "..\phys_shared" /I ".\monsters" /I ".\physics" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /FD /c
 # SUBTRACT CPP /Fr /YX
 # ADD BASE MTL /nologo /D "NDEBUG" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
@@ -57,8 +57,8 @@ LINK32=link.exe
 # ADD LINK32 msvcrt.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /nodefaultlib:"libc.lib" /def:".\server.def"
 # SUBTRACT LINK32 /profile /map /debug
 # Begin Custom Build - Custom Build in progress
-TargetDir=\Xash3D\xash\devkit\source_code\temp\server\!release
-InputPath=\Xash3D\xash\devkit\source_code\temp\server\!release\server.dll
+TargetDir=\Xash3D\xash\src_main\temp\server\!release
+InputPath=\Xash3D\xash\src_main\temp\server\!release\server.dll
 SOURCE="$(InputPath)"
 
 "D:\Xash3D\xash\bin\server.dll" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -97,8 +97,8 @@ LINK32=link.exe
 # ADD LINK32 msvcrt.lib /nologo /subsystem:windows /dll /incremental:yes /debug /machine:I386 /nodefaultlib:"libc.lib" /def:".\server.def"
 # SUBTRACT LINK32 /profile /map
 # Begin Custom Build - Custom Build in progress
-TargetDir=\Xash3D\xash\devkit\source_code\temp\server\!debug
-InputPath=\Xash3D\xash\devkit\source_code\temp\server\!debug\server.dll
+TargetDir=\Xash3D\xash\src_main\temp\server\!debug
+InputPath=\Xash3D\xash\src_main\temp\server\!debug\server.dll
 SOURCE="$(InputPath)"
 
 "D:\Xash3D\xash\bin\server.dll" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -161,6 +161,10 @@ SOURCE=.\bmodels.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\game_shared\bone_setup.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\monsters\bullsquid.cpp
 # End Source File
 # Begin Source File
@@ -170,6 +174,10 @@ SOURCE=.\buttons.cpp
 # Begin Source File
 
 SOURCE=.\cbase.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ropes\CElectrifiedWire.cpp
 # End Source File
 # Begin Source File
 
@@ -186,6 +194,14 @@ SOURCE=..\game_shared\common.cpp
 # Begin Source File
 
 SOURCE=.\monsters\controller.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ropes\CRope.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ropes\CRopeSegment.cpp
 # End Source File
 # Begin Source File
 
@@ -321,6 +337,10 @@ SOURCE=.\monsters\ichthyosaur.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\game_shared\ikcontext.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\monsters\islave.cpp
 # End Source File
 # Begin Source File
@@ -398,10 +418,6 @@ SOURCE=.\physics\NxUserStream.cpp
 # Begin Source File
 
 SOURCE=.\monsters\osprey.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\game_shared\parser.cpp
 # End Source File
 # Begin Source File
 
@@ -617,7 +633,23 @@ SOURCE=..\engine\cdll_int.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ropes\CElectrifiedWire.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\client.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ropes\CRope.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ropes\CRopeSample.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ropes\CRopeSegment.h
 # End Source File
 # Begin Source File
 

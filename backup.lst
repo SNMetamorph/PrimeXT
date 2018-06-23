@@ -16,6 +16,7 @@ common\
 server\
 server\monsters\
 server\physics\
+server\ropes\
 game_shared\
 game_launch\
 phys_shared\
@@ -24,12 +25,3 @@ phys_shared\fluids\
 phys_shared\softbody\
 phys_shared\win\
 engine\
-utils\
-utils\common\
-utils\hlbsp\
-utils\hlcsg\
-utils\hlrad\
-utils\hlvis\
-utils\template\
-utils\studiomdl\
-utils\decal2tga\

@@ -30,7 +30,7 @@ UserStream :: UserStream( const char* filename, bool load ) : fp(NULL)
 		int size;
 
 		// load from pack or disk
-		buffer = LOAD_FILE_FOR_ME( filename, &size );
+		buffer = LOAD_FILE( filename, &size );
 		m_iLength = size;
 		m_iOffset = 0;
 	}

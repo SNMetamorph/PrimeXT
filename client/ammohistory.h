@@ -25,6 +25,9 @@ private:
 	// Information about weapons & ammo
 	WEAPON		rgWeapons[MAX_WEAPONS];	// Weapons Array
 
+	// ugly hack to compare array
+	byte		nullbits[MAX_WEAPON_BYTES];
+
 	// counts of weapons * ammo
 
 	// The slots currently in use by weapons.  The value is a pointer to the weapon;
@@ -38,18 +41,20 @@ public:
 	void Init( void )
 	{
 		memset( rgWeapons, 0, sizeof rgWeapons );
+		memset( nullbits, 0, MAX_WEAPON_BYTES );
+		SetBits( nullbits[WEAPON_SUIT >> 3], BIT( WEAPON_SUIT & 7 ));
 		Reset();
 	}
 
 	void Reset( void )
 	{
-		iOldWeaponBits = 0;
+		memset( iOldWeaponBits, 0, MAX_WEAPON_BYTES );
 		memset( rgSlots, 0, sizeof rgSlots );
 		memset( riAmmo, 0, sizeof riAmmo );
 	}
 
 ///// WEAPON /////
-	int	iOldWeaponBits;
+	byte	iOldWeaponBits[MAX_WEAPON_BYTES];
 
 	WEAPON *GetWeapon( int iId ) { return &rgWeapons[iId]; }
 	void AddWeapon( WEAPON *wp ) 

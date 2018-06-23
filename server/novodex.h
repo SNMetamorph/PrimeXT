@@ -46,6 +46,7 @@ private:
 	char		m_szMapName[256];
 	BOOL		m_fLoaded;	// collision tree is loaded and actual
 	BOOL		m_fDisableWarning;	// some warnings will be swallowed
+	BOOL		m_fWorldChanged;	// world is changed refresh the statics in case their scale was changed too
 
 	NxTriangleMesh	*m_pSceneMesh;
 	NxActor		*m_pSceneActor;	// scene with installed shape

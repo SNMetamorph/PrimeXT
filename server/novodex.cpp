@@ -351,7 +351,7 @@ NxConvexMesh *CPhysicNovodex :: ConvexMeshFromBmodel( entvars_t *pev, int modeli
 
 	if( bmodel->nummodelsurfaces <= 0 )
 	{
-		ALERT( at_aiconsole, "TriangleMeshFromBmodel: %s has no visible surfaces\n", bmodel->name );
+		ALERT( at_aiconsole, "ConvexMeshFromBmodel: %s has no visible surfaces\n", bmodel->name );
 		m_fDisableWarning = TRUE;
 		return NULL;
 	}
@@ -431,6 +431,13 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromBmodel( entvars_t *pev, int mo
 		return NULL;
 	}
 
+	// don't build hulls for water
+	if( FBitSet( bmodel->flags, MODEL_LIQUID ))
+	{
+		m_fDisableWarning = TRUE;
+		return NULL;
+	}
+
 	int i, numElems = 0, totalElems = 0;
 	NxTriangleMesh *pMesh = NULL;
 	msurface_t *psurf;
@@ -490,7 +497,7 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromBmodel( entvars_t *pev, int mo
 void CPhysicNovodex :: StudioCalcBoneQuaterion( mstudiobone_t *pbone, mstudioanim_t *panim, Vector4D &q )
 {
 	mstudioanimvalue_t *panimvalue;
-	Vector angle;
+	Radian angle;
 
 	for( int j = 0; j < 3; j++ )
 	{
@@ -724,10 +731,28 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromStudio( entvars_t *pev, int mo
 
 	model_t *smodel = (model_t *)MODEL_HANDLE( modelindex );
 	studiohdr_t *phdr = (studiohdr_t *)smodel->cache.data;
+	int solidMeshes = 0;
 
 	if( !phdr || phdr->numbones < 1 )
 	{
 		ALERT( at_error, "TriangleMeshFromStudio: bad model header\n" );
+		return NULL;
+	}
+
+	mstudiotexture_t *ptexture = (mstudiotexture_t *)((byte *)phdr + phdr->textureindex);
+
+	for( int i = 0; i < phdr->numtextures; i++ )
+	{
+		// skip this mesh it's probably foliage or somewhat
+		if( ptexture[i].flags & STUDIO_NF_MASKED )
+			continue;
+		solidMeshes++;
+	}
+
+	// model is non-solid
+	if( !solidMeshes )
+	{
+		m_fDisableWarning = TRUE;
 		return NULL;
 	}
 
@@ -736,7 +761,7 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromStudio( entvars_t *pev, int mo
 
 	MeshNameForModel( smodel->name, szMeshFilename, sizeof( szMeshFilename ));
 
-	if( CheckFileTimes( smodel->name, szMeshFilename ))
+	if( CheckFileTimes( smodel->name, szMeshFilename ) && !m_fWorldChanged )
 	{
 		// hull is never than studiomodel. Trying to load it
 		pMesh = m_pPhysics->createTriangleMesh( UserStream( szMeshFilename, true ));
@@ -784,7 +809,7 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromStudio( entvars_t *pev, int mo
 	static Vector pos[MAXSTUDIOBONES];
 	static Vector4D q[MAXSTUDIOBONES];
 
-	for( int i = 0; i < phdr->numbones; i++, pbone++, panim++ ) 
+	for( i = 0; i < phdr->numbones; i++, pbone++, panim++ ) 
 	{
 		StudioCalcBoneQuaterion( pbone, panim, q[i] );
 		StudioCalcBonePosition( pbone, panim, pos[i] );
@@ -792,7 +817,10 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromStudio( entvars_t *pev, int mo
 
 	pbone = (mstudiobone_t *)((byte *)phdr + phdr->boneindex);
 	matrix4x4	transform, bonematrix, bonetransform[MAXSTUDIOBONES];
-	transform.Identity();
+
+	if( pev->vuser2 != g_vecZero )
+		transform = matrix3x4( g_vecZero, g_vecZero, pev->vuser2 );
+	else transform.Identity();
 
 	// compute bones for default anim
 	for( i = 0; i < phdr->numbones; i++ ) 
@@ -819,7 +847,7 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromStudio( entvars_t *pev, int mo
 	for( i = 0; i < psubmodel->numverts; i++ )
 		m_verts[i] = bonetransform[pvertbone[i]].VectorTransform( pstudioverts[i] );
 
-	mstudiotexture_t *ptexture = (mstudiotexture_t *)((byte *)phdr + phdr->textureindex);
+	ptexture = (mstudiotexture_t *)((byte *)phdr + phdr->textureindex);
 	short *pskinref = (short *)((byte *)phdr + phdr->skinindex);
 
 	for( int j = 0; j < psubmodel->nummesh; j++ ) 
@@ -830,7 +858,7 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromStudio( entvars_t *pev, int mo
 		if( phdr->numtextures != 0 && phdr->textureindex != 0 )
 		{
 			// skip this mesh it's probably foliage or somewhat
-			if( ptexture[pskinref[pmesh->skinref]].flags & STUDIO_NF_TRANSPARENT )
+			if( ptexture[pskinref[pmesh->skinref]].flags & STUDIO_NF_MASKED )
 				continue;
 		}
 
@@ -1126,10 +1154,17 @@ void *CPhysicNovodex :: CreateStaticBodyFromEntity( CBaseEntity *pObject )
 	NxTriangleMesh *pCollision = TriangleMeshFromEntity( pObject );
 	if( !pCollision ) return NULL;
 
+	NxMat34 pose;
+	float mat[16];
+	matrix4x4( pObject->GetAbsOrigin(), pObject->GetAbsAngles(), 1.0f ).CopyToArray( mat );
+
+	pose.setColumnMajor44( mat );
+
 	NxActorDesc ActorDesc;
 	NxTriangleMeshShapeDesc meshShapeDesc;
 	ActorDesc.density = DENSITY_FACTOR;
 	ActorDesc.userData = pObject->edict();
+	ActorDesc.globalPose = pose;
 
 	if( pObject->pev->flags & FL_CONVEYOR )
 		meshShapeDesc.materialIndex = 1;
@@ -1144,13 +1179,7 @@ void *CPhysicNovodex :: CreateStaticBodyFromEntity( CBaseEntity *pObject )
 	}
 
 	pActor->setName( pObject->GetClassname( ));
-
-	NxMat34 pose;
-	float mat[16];
-	matrix4x4( pObject->GetAbsOrigin(), pObject->GetAbsAngles(), 1.0f ).CopyToArray( mat );
-
-	pose.setColumnMajor44( mat );
-	pActor->setGlobalPose( pose );
+//	pActor->setGlobalPose( pose );
 	pObject->m_iActorType = ACTOR_STATIC;
 	pObject->m_pUserData = pActor;
 
@@ -1567,8 +1596,9 @@ int CPhysicNovodex :: FLoadTree( char *szMapName )
 
 	char szHullFilename[MAX_PATH];
 
-	Q_snprintf( szHullFilename, sizeof( szHullFilename ), "maps/hulls/%s.bin", szMapName );
+	Q_snprintf( szHullFilename, sizeof( szHullFilename ), "cache/maps/%s.bin", szMapName );
 	m_pSceneMesh = m_pPhysics->createTriangleMesh( UserStream( szHullFilename, true ));
+	m_fWorldChanged = FALSE;
 
 	return (m_pSceneMesh != NULL) ? TRUE : FALSE;
 }
@@ -1582,7 +1612,7 @@ int CPhysicNovodex :: CheckBINFile( char *szMapName )
 	char szHullFilename[MAX_PATH];
 
 	Q_snprintf( szBspFilename, sizeof( szBspFilename ), "maps/%s.bsp", szMapName );
-	Q_snprintf( szHullFilename, sizeof( szHullFilename ), "maps/hulls/%s.bin", szMapName );
+	Q_snprintf( szHullFilename, sizeof( szHullFilename ), "cache/maps/%s.bin", szMapName );
 
 	BOOL retValue = TRUE;
 
@@ -1618,9 +1648,9 @@ void CPhysicNovodex :: HullNameForModel( const char *model, char *hullfile, size
 	COM_FileBase( model, szModelBasename );
 
 	if( szModelFilepath[0] )
-		Q_snprintf( hullfile, size, "materials/hulls/%s/%s.hull", szModelFilepath, szModelBasename );
+		Q_snprintf( hullfile, size, "cache/%s/%s.hull", szModelFilepath, szModelBasename );
 	else
-		Q_snprintf( hullfile, size, "materials/hulls/%s.hull", szModelBasename );
+		Q_snprintf( hullfile, size, "cache/%s.hull", szModelBasename );
 }
 
 void CPhysicNovodex :: MeshNameForModel( const char *model, char *hullfile, size_t size )
@@ -1637,14 +1667,14 @@ void CPhysicNovodex :: MeshNameForModel( const char *model, char *hullfile, size
 	COM_FileBase( model, szModelBasename );
 
 	if( szModelFilepath[0] )
-		Q_snprintf( hullfile, size, "materials/meshes/%s/%s.mesh", szModelFilepath, szModelBasename );
+		Q_snprintf( hullfile, size, "cache/%s/%s.mesh", szModelFilepath, szModelBasename );
 	else
-		Q_snprintf( hullfile, size, "materials/meshes/%s.mesh", szModelBasename );
+		Q_snprintf( hullfile, size, "cache/%s.mesh", szModelBasename );
 }
 
 //-----------------------------------------------------------------------------
-// hulls - convex hulls cooked with NxCookingConvexMesh routine and stored into materials\hulls\
-// meshes - triangle meshes cooked with NxCookingTriangleMesh routine and stored into materials\meshes\
+// hulls - convex hulls cooked with NxCookingConvexMesh routine and stored into cache\*.hull
+// meshes - triangle meshes cooked with NxCookingTriangleMesh routine and stored into cache\*.mesh
 //-----------------------------------------------------------------------------
 int CPhysicNovodex :: CheckFileTimes( const char *szFile1, const char *szFile2 )
 {
@@ -1712,6 +1742,10 @@ int CPhysicNovodex :: BuildCollisionTree( char *szMapName )
 	for( i = 0; i < m_pWorldModel->nummodelsurfaces; i++ )
 	{
 		psurf = &m_pWorldModel->surfaces[m_pWorldModel->firstmodelsurface + i];
+
+		if( psurf->flags & ( SURF_DRAWTURB|SURF_DRAWSKY ))
+			continue;
+
 		totalElems += (psurf->numedges - 2);
 	}
 
@@ -1723,7 +1757,7 @@ int CPhysicNovodex :: BuildCollisionTree( char *szMapName )
 		int k = psurf->firstedge;
 
 		// don't create collision for water
-		if( psurf->flags & SURF_DRAWTURB )
+		if( psurf->flags & ( SURF_DRAWTURB|SURF_DRAWSKY ))
 			continue;
 
 		for( int j = 0; j < psurf->numedges - 2; j++ )
@@ -1748,7 +1782,7 @@ int CPhysicNovodex :: BuildCollisionTree( char *szMapName )
 	levelDesc.flags = 0;
 
 	char szHullFilename[MAX_PATH];
-	Q_snprintf( szHullFilename, sizeof( szHullFilename ), "maps/hulls/%s.bin", szMapName );
+	Q_snprintf( szHullFilename, sizeof( szHullFilename ), "cache/maps/%s.bin", szMapName );
 
 	if( m_pCooking )
 	{
@@ -1759,6 +1793,7 @@ int CPhysicNovodex :: BuildCollisionTree( char *szMapName )
 	delete [] indices;
 
 	m_pSceneMesh = m_pPhysics->createTriangleMesh( UserStream( szHullFilename, true ));
+	m_fWorldChanged = TRUE;
 
 	return (m_pSceneMesh != NULL) ? TRUE : FALSE;
 }
@@ -2199,7 +2234,7 @@ void CPhysicNovodex :: SweepEntity( CBaseEntity *pEntity, const Vector &start, c
 	tr->vecPlaneNormal = result.normal;
 	tr->flPlaneDist = DotProduct( tr->vecEndPos, tr->vecPlaneNormal );
 	float flDot = DotProduct( vecDir, tr->vecPlaneNormal );
-	float moveDot = round( flDot, 0.1f );
+	float moveDot = Q_round( flDot, 0.1f );
 
 	// FIXME: this is incorrect. Find a better method?
 	if(( tr->flFraction < 0.1f ) && ( moveDot < 0.0f ))

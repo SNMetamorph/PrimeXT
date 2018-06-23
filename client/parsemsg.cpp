@@ -144,7 +144,7 @@ float READ_COORD( void )
 {
 	// g-cont. we loose precision here but keep old size of coord variable!
 	if( g_fRenderInitialized && RENDER_GET_PARM( PARM_FEATURES, 0 ) & ENGINE_WRITE_LARGE_COORD )
-		return (float)(READ_SHORT() * (1.0f / 2.0f));
+		return (float)(READ_SHORT());
 	return (float)(READ_SHORT() * (1.0f / 8.0f));
 }
 
@@ -156,4 +156,12 @@ float READ_ANGLE( void )
 float READ_HIRESANGLE( void )
 {
 	return (float)(READ_SHORT() * (360.0f / 65536.0f));
+}
+
+void READ_BYTES( byte *out, int count )
+{
+	for( int i = 0; i < count && !giBadRead; i++ )
+	{
+		out[i] = READ_BYTE();
+	}
 }

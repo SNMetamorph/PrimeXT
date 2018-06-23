@@ -24,9 +24,8 @@ typedef int		HIMAGE;		// handle to a graphic
 
 // flags for PIC_Load
 #define PIC_NEAREST		(1<<0)		// disable texfilter
-#define PIC_KEEP_RGBDATA	(1<<1)		// some images keep source
+#define PIC_KEEP_SOURCE	(1<<1)		// some images keep source
 #define PIC_NOFLIP_TGA	(1<<2)		// Steam background completely ignore tga attribute 0x20
-#define PIC_KEEP_8BIT	(1<<3)		// keep original 8-bit image (if present)
 
 typedef struct ui_globalvars_s
 {	
@@ -90,7 +89,7 @@ typedef struct ui_enginefuncs_s
 	void	(*pfnDrawLogo)( const char *filename, float x, float y, float width, float height );
 	int	(*pfnGetLogoWidth)( void );
 	int	(*pfnGetLogoHeight)( void );
-	float	(*pfnGetLogoLength)( void );
+	float	(*pfnGetLogoLength)( void );	// cinematic duration in seconds
 
 	// text message system
 	void	(*pfnDrawCharacter)( int x, int y, int width, int height, int ch, int ulRGBA, HIMAGE hFont );
@@ -103,7 +102,7 @@ typedef struct ui_enginefuncs_s
 	struct cl_entity_s* (*pfnGetPlayerModel)( void );	// for drawing playermodel previews
 	void	(*pfnSetModel)( struct cl_entity_s *ed, const char *path );
 	void	(*pfnClearScene)( void );
-	void	(*pfnRenderScene)( const struct ref_params_s *fd );
+	void	(*pfnRenderScene)( const struct ref_viewpass_s *rvp );
 	int	(*CL_CreateVisibleEntity)( int type, struct cl_entity_s *ent );
 
 	// misc handlers
@@ -142,7 +141,7 @@ typedef struct ui_enginefuncs_s
 	char 	**(*pfnGetFilesList)( const char *pattern, int *numFiles, int gamedironly );	// find in files
 	int 	(*pfnGetSaveComment)( const char *savename, char *comment );
 	int	(*pfnGetDemoComment)( const char *demoname, char *comment );
-	int	(*pfnCheckGameDll)( void );				// returns false if hl.dll is missed
+	int	(*pfnCheckGameDll)( void );				// returns false if hl.dll is missed or invalid
 	char	*(*pfnGetClipboardData)( void );
 
 	// engine launcher
@@ -161,6 +160,8 @@ typedef struct ui_enginefuncs_s
 	int	(*pfnIsMapValid)( char *filename );
 	void	(*pfnProcessImage)( int texnum, float gamma, int topColor, int bottomColor );
 	int	(*pfnCompareFileTime)( char *filename1, char *filename2, int *iCompare );
+
+	const char *(*pfnGetModeString)( int vid_mode );
 } ui_enginefuncs_t;
 
 typedef struct

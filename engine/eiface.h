@@ -86,7 +86,6 @@ typedef struct
 	int	fEnabled;
 	int	fPlayLooping;
 	float	cdvolume;
-	//BYTE 	remap[100];
 	int	fCDRom;
 	int	fPlayTrack;
 } CDStatus;
@@ -208,7 +207,7 @@ typedef struct enginefuncs_s
 	void	(*pfnSetClientKeyValue)( int clientIndex, char *infobuffer, char *key, char *value );
 	int	(*pfnIsMapValid)( char *filename );
 	void	(*pfnStaticDecal)( const float *origin, int decalIndex, int entityIndex, int modelIndex );
-	int	(*pfnPrecacheGeneric)( char *s );
+	int	(*pfnPrecacheGeneric)( const char *s );
 	int	(*pfnGetPlayerUserId)( edict_t *e ); // returns the server assigned userid for this player.  useful for logging frags, etc.  returns -1 if the edict couldn't be found in the list of clients
 	void	(*pfnBuildSoundMsg)( edict_t *entity, int channel, const char *sample, /*int*/float volume, float attenuation, int fFlags, int pitch, int msg_dest, int msg_type, const float *pOrigin, edict_t *ed );
 	int	(*pfnIsDedicatedServer)( void );			// is this a dedicated server?
@@ -255,20 +254,6 @@ typedef struct enginefuncs_s
 	qboolean	(*pfnVoice_SetClientListening)(int iReceiver, int iSender, qboolean bListen);
 
 	const char *(*pfnGetPlayerAuthId)		( edict_t *e );
-
-	void	*(*pfnSequenceGet)( const char *fileName, const char *entryName );
-	void	*(*pfnSequencePickSentence)( const char *groupName, int pickMethod, int *picked );
-	int	(*pfnGetFileSize)( char *filename );
-	unsigned int (*pfnGetApproxWavePlayLen)( const char *filepath );
-	int	(*pfnIsCareerMatch)( void );
-	int	(*pfnGetLocalizedStringLength)( const char *label );
-	void	(*pfnRegisterTutorMessageShown)( int mid );
-	int	(*pfnGetTimesTutorMessageShown)( int mid );
-	void	(*pfnProcessTutorMessageDecayBuffer)( int *buffer, int bufferLength );
-	void	(*pfnConstructTutorMessageDecayBuffer)( int *buffer, int bufferLength );
-	void	(*pfnResetTutorMessageDecayData)( void );
-	void	(*pfnQueryClientCvarValue)( const edict_t *player, const char *cvarName );
-	void	(*pfnQueryClientCvarValue2)( const edict_t *player, const char *cvarName, int requestID );
 } enginefuncs_t;
 // ONLY ADD NEW FUNCTIONS TO THE END OF THIS STRUCT.  INTERFACE VERSION IS FROZEN AT 138
 	
@@ -469,8 +454,6 @@ typedef struct
 	void	(*pfnOnFreeEntPrivateData)( edict_t *pEnt );
 	void	(*pfnGameShutdown)(void);
 	int	(*pfnShouldCollide)( edict_t *pentTouched, edict_t *pentOther );
-	void	(*pfnCvarValue)( const edict_t *pEnt, const char *value ); 
-	void	(*pfnCvarValue2)( const edict_t *pEnt, int requestID, const char *cvarName, const char *value );
 } NEW_DLL_FUNCTIONS;
 typedef int	(*NEW_DLL_FUNCTIONS_FN)( NEW_DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion );
 

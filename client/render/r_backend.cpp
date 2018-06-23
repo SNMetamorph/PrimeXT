@@ -7,9 +7,7 @@
 #include "r_local.h"
 #include "r_sprite.h"
 #include "mathlib.h"
-
-glState_t	glState;
-glConfig_t glConfig;
+#include "r_shader.h"
 
 /*
 =============
@@ -26,43 +24,45 @@ int R_GetSpriteTexture( const model_t *m_pSpriteModel, int frame )
 }
 
 /*
-=============
-TriSpriteTexture
-
-bind current texture
-=============
+==============
+GL_DepthMask
+==============
 */
-int TriSpriteTexture( model_t *pSpriteModel, int frame )
+void GL_DepthMask( GLint enable )
 {
-	int	gl_texturenum;
-	msprite_t	*psprite;
+	if( glState.depthmask == enable )
+		return;
 
-	if(( gl_texturenum = R_GetSpriteTexture( pSpriteModel, frame )) == 0 )
-		return 0;
-
-	psprite = (msprite_t *)pSpriteModel->cache.data;
-	if( psprite->texFormat == SPR_ALPHTEST )
-	{
-		pglEnable( GL_ALPHA_TEST );
-		pglAlphaFunc( GL_GREATER, 0.0f );
-	}
-
-	GL_Bind( GL_TEXTURE0, gl_texturenum );
-
-	return 1;
+	glState.depthmask = enable;
+	pglDepthMask( enable );
 }
 
 /*
 ==============
-GL_DisableAllTexGens
+GL_AlphaTest
 ==============
 */
-void GL_DisableAllTexGens( void )
+void GL_AlphaTest( GLint enable )
 {
-	GL_TexGen( GL_S, 0 );
-	GL_TexGen( GL_T, 0 );
-	GL_TexGen( GL_R, 0 );
-	GL_TexGen( GL_Q, 0 );
+	if( pglIsEnabled( GL_ALPHA_TEST ) == enable )
+		return;
+
+	if( enable ) pglEnable( GL_ALPHA_TEST );
+	else pglDisable( GL_ALPHA_TEST );
+}
+
+/*
+==============
+GL_Blend
+==============
+*/
+void GL_Blend( GLint enable )
+{
+	if( pglIsEnabled( GL_BLEND ) == enable )
+		return;
+
+	if( enable ) pglEnable( GL_BLEND );
+	else pglDisable( GL_BLEND );
 }
 
 /*
@@ -95,46 +95,48 @@ void GL_FrontFace( GLenum front )
 	glState.frontFace = front;
 }
 
-void GL_SetRenderMode( int mode )
+/*
+=================
+GL_Setup2D
+=================
+*/
+void GL_Setup2D( void )
 {
-	switch( mode )
-	{
-	case kRenderNormal:
-	default:
-		pglDisable( GL_BLEND );
-		pglDisable( GL_ALPHA_TEST );
-		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
-		break;
-	case kRenderTransColor:
-		pglEnable( GL_BLEND );
-		pglDisable( GL_ALPHA_TEST );
-		pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-		break;
-	case kRenderTransAlpha:
-		pglDisable( GL_BLEND );
-		pglEnable( GL_ALPHA_TEST );
-		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-		break;
-	case kRenderTransTexture:
-		pglEnable( GL_BLEND );
-		pglDisable( GL_ALPHA_TEST );
-		pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-		break;
-	case kRenderGlow:
-		pglEnable( GL_BLEND );
-		pglDisable( GL_ALPHA_TEST );
-		pglBlendFunc( GL_SRC_ALPHA, GL_ONE );
-		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-		break;
-	case kRenderTransAdd:
-		pglEnable( GL_BLEND );
-		pglDisable( GL_ALPHA_TEST );
-		pglBlendFunc( GL_SRC_ALPHA, GL_ONE );
-		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-		break;
-	}
+	// set up full screen workspace
+	pglMatrixMode( GL_PROJECTION );
+	pglLoadIdentity();
+
+	pglOrtho( 0, glState.width, glState.height, 0, -99999, 99999 );
+
+	pglMatrixMode( GL_MODELVIEW );
+	pglLoadIdentity();
+
+	pglDisable( GL_DEPTH_TEST );
+	GL_AlphaTest( GL_FALSE );
+	GL_DepthMask( GL_FALSE );
+	GL_Blend( GL_FALSE );
+
+	GL_Cull( GL_FRONT );
+	pglColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
+	pglViewport( 0, 0, glState.width, glState.height );
+}
+
+/*
+=================
+GL_Setup3D
+=================
+*/
+void GL_Setup3D( void )
+{
+	pglMatrixMode( GL_PROJECTION );
+	GL_LoadMatrix( RI->projectionMatrix );
+
+	pglMatrixMode( GL_MODELVIEW );
+	GL_LoadMatrix( RI->worldviewMatrix );
+
+	pglEnable( GL_DEPTH_TEST );
+	GL_DepthMask( GL_TRUE );
+	GL_Cull( GL_FRONT );
 }
 
 /*
@@ -165,243 +167,55 @@ void GL_LoadMatrix( const matrix4x4 source )
 
 /*
 ================
-R_BeginDrawProjection
+R_BeginDrawProjectionGLSL
 
 Setup texture matrix for light texture
 ================
 */
-void R_BeginDrawProjection( const plight_t *pl, bool decalPass )
+bool R_BeginDrawProjectionGLSL( plight_t *pl, float lightscale )
 {
-	GLfloat	genVector[4][4];
+	word	shaderNum = GL_UberShaderForDlightGeneric( pl );
+	GLfloat	gl_lightViewProjMatrix[16];
 
-	RI.currentlight = pl;
-	pglEnable( GL_BLEND );
+	if( !shaderNum || tr.nodlights )
+		return false;
+
+	GL_Blend( GL_TRUE );
+	GL_AlphaTest( GL_FALSE );
+	GL_DepthMask( GL_FALSE );
+	pglBlendFunc( GL_ONE, GL_ONE );
+	pglEnable( GL_SCISSOR_TEST );
 
 	if( glState.drawTrans )
-	{
-		// particle lighting
 		pglDepthFunc( GL_LEQUAL );
-		pglBlendFunc( GL_SRC_COLOR, GL_SRC_ALPHA );
-		pglColor4ub( pl->color.r*0.3, pl->color.g*0.3, pl->color.b*0.3, 255 );
-	}
-	else
-	{
-		pglBlendFunc( GL_ONE, GL_ONE );
+	else pglDepthFunc( GL_LEQUAL );
+	RI->currentlight = pl;
 
-		if( R_OVERBRIGHT_SILENT() && !decalPass )
-			pglColor4ub( pl->color.r / 2.0f, pl->color.g / 2.0f, pl->color.b / 2.0f, 255 );
-		else
-			pglColor4ub( pl->color.r, pl->color.g, pl->color.b, 255 );
+	float y2 = (float)RI->viewport[3] - pl->h - pl->y;
+	pglScissor( pl->x, y2, pl->w, pl->h );
 
-		if( decalPass ) pglDepthFunc( GL_LEQUAL );
-		else pglDepthFunc( GL_EQUAL );
-	}
+	GL_BindShader( &glsl_programs[shaderNum] );			
+	ASSERT( RI->currentshader != NULL );
+	R_LoadIdentity();
 
-	GL_Bind( GL_TEXTURE0, pl->projectionTexture );
-	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+	Vector lightdir = pl->frustum.GetPlane( FRUSTUM_FAR )->normal;
+	pl->lightviewProjMatrix.CopyToArray( gl_lightViewProjMatrix );
 
-	for( int i = 0; i < 4; i++ )
-	{
-		genVector[0][i] = i == 0 ? 1 : 0;
-		genVector[1][i] = i == 1 ? 1 : 0;
-		genVector[2][i] = i == 2 ? 1 : 0;
-		genVector[3][i] = i == 3 ? 1 : 0;
-	}
+	// write constants
+	pglUniformMatrix4fvARB( RI->currentshader->u_LightViewProjectionMatrix, 1, GL_FALSE, &gl_lightViewProjMatrix[0] );
+	float shadowWidth = 1.0f / (float)RENDER_GET_PARM( PARM_TEX_WIDTH, pl->shadowTexture );
+	float shadowHeight = 1.0f / (float)RENDER_GET_PARM( PARM_TEX_HEIGHT, pl->shadowTexture );
 
-	GL_TexGen( GL_S, GL_OBJECT_LINEAR );
-	GL_TexGen( GL_T, GL_OBJECT_LINEAR );
-	GL_TexGen( GL_R, GL_OBJECT_LINEAR );
-	GL_TexGen( GL_Q, GL_OBJECT_LINEAR );
+	// depth scale and bias and shadowmap resolution
+	pglUniform4fARB( RI->currentshader->u_LightDir, lightdir.x, lightdir.y, lightdir.z, pl->fov );
+	pglUniform4fARB( RI->currentshader->u_LightDiffuse, pl->color.r / 255.0f, pl->color.g / 255.0f, pl->color.b / 255.0f, pl->lightFalloff );
+	pglUniform4fARB( RI->currentshader->u_ShadowParams, shadowWidth, shadowHeight, -pl->projectionMatrix[2][2], pl->projectionMatrix[3][2] );
+	pglUniform4fARB( RI->currentshader->u_LightOrigin, pl->origin.x, pl->origin.y, pl->origin.z, ( 1.0f / pl->radius ));
+	pglUniform4fARB( RI->currentshader->u_FogParams, tr.fogColor[0], tr.fogColor[1], tr.fogColor[2], tr.fogDensity );
+	pglUniform1fARB( RI->currentshader->u_LightScale, lightscale );
 
-	pglTexGenfv( GL_S, GL_OBJECT_PLANE, genVector[0] );
-	pglTexGenfv( GL_T, GL_OBJECT_PLANE, genVector[1] );
-	pglTexGenfv( GL_R, GL_OBJECT_PLANE, genVector[2] );
-	pglTexGenfv( GL_Q, GL_OBJECT_PLANE, genVector[3] );
-
-	if( tr.modelviewIdentity )
-		GL_LoadTexMatrix( pl->textureMatrix );
-	else GL_LoadTexMatrix( pl->textureMatrix2 );
-
-	glState.drawProjection = true;
-
-	// setup attenuation texture
-	if( pl->attenuationTexture != 0 )
-	{
-		GL_Bind( GL_TEXTURE1, pl->attenuationTexture );
-		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-
-		if( pl->pointlight )
-		{
-			float r = 1.0f / (pl->radius * 2);
-			Vector origin;
-
-			if( !tr.modelviewIdentity )
-			{
-				// rotate attenuation texture into local space
-				if( RI.currententity->angles != g_vecZero )
-					origin = RI.objectMatrix.VectorITransform( pl->origin );
-				else origin = pl->origin - RI.currententity->origin;
-			}
-			else origin = pl->origin;
-
-			GLfloat planeS[] = { r, 0, 0, -origin[0] * r + 0.5 };
-			GLfloat planeT[] = { 0, r, 0, -origin[1] * r + 0.5 };
-			GLfloat planeR[] = { 0, 0, r, -origin[2] * r + 0.5 };
-
-			GL_TexGen( GL_S, GL_EYE_LINEAR );
-			GL_TexGen( GL_T, GL_EYE_LINEAR );
-			GL_TexGen( GL_R, GL_EYE_LINEAR );
-
-			pglTexGenfv( GL_S, GL_EYE_PLANE, planeS );
-			pglTexGenfv( GL_T, GL_EYE_PLANE, planeT );
-			pglTexGenfv( GL_R, GL_EYE_PLANE, planeR );
-                    }
-                    else
-                    {
-			GLfloat	genPlaneS[4];
-			Vector	origin, normal;
-
-			if( !tr.modelviewIdentity )
-			{
-				if( RI.currententity->angles != g_vecZero )
-				{
-					// rotate attenuation texture into local space
-					normal = RI.objectMatrix.VectorIRotate( pl->frustum[5].normal );
-					origin = RI.objectMatrix.VectorITransform( pl->origin );
-				}
-				else
-				{
-					normal = pl->frustum[5].normal;
-					origin = pl->origin - RI.currententity->origin;
-				}
-			}
-			else
-			{
-				normal = pl->frustum[5].normal;
-				origin = pl->origin;
-			}
-			genPlaneS[0] = normal[0] / pl->radius;
-			genPlaneS[1] = normal[1] / pl->radius;
-			genPlaneS[2] = normal[2] / pl->radius;
-			genPlaneS[3] = -(DotProduct( normal, origin ) / pl->radius);
-
-			GL_TexGen( GL_S, GL_OBJECT_LINEAR );
-			pglTexGenfv( GL_S, GL_OBJECT_PLANE, genPlaneS );
-		}
-
-		GL_LoadIdentityTexMatrix();
-	}
-	else
-	{
-		// can't draw shadows without attenuation texture
-		return;
-	}
-
-	if( decalPass )
-	{
-		if( cg.decal0_shader && ( r_shadows->value <= 0.0f || pl->pointlight || FBitSet( pl->flags, CF_NOSHADOWS )))
-		{
-			pglEnable( GL_FRAGMENT_PROGRAM_ARB );
-			pglBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, (pl->pointlight) ? cg.decal3_shader : cg.decal0_shader );
-		}
-		else if( r_shadows->value == 1.0f && cg.decal1_shader )
-		{
-			pglEnable( GL_FRAGMENT_PROGRAM_ARB );
-			pglBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, cg.decal1_shader );
-		} 
-		else if( r_shadows->value > 1.0f && cg.decal2_shader )
-		{
-			pglEnable( GL_FRAGMENT_PROGRAM_ARB );
-			pglBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, cg.decal2_shader );
-		}
-	}
-	else if( r_shadows->value > 1.0f && cg.shadow_shader && !pl->pointlight && !FBitSet( pl->flags, CF_NOSHADOWS ))
-	{
-		pglEnable( GL_FRAGMENT_PROGRAM_ARB );
-		pglBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, cg.shadow_shader );
-	}
-
-	// TODO: allow shadows for pointlights
-	if( r_shadows->value <= 0.0f || pl->pointlight || FBitSet( pl->flags, CF_NOSHADOWS ))
-		return;		
-
+	GL_Bind( GL_TEXTURE1, pl->projectionTexture );
 	GL_Bind( GL_TEXTURE2, pl->shadowTexture );
-	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-
-	GL_TexGen( GL_S, GL_EYE_LINEAR );
-	GL_TexGen( GL_T, GL_EYE_LINEAR );
-	GL_TexGen( GL_R, GL_EYE_LINEAR );
-	GL_TexGen( GL_Q, GL_EYE_LINEAR );
-
-	pglTexGenfv( GL_S, GL_EYE_PLANE, genVector[0] );
-	pglTexGenfv( GL_T, GL_EYE_PLANE, genVector[1] );
-	pglTexGenfv( GL_R, GL_EYE_PLANE, genVector[2] );
-	pglTexGenfv( GL_Q, GL_EYE_PLANE, genVector[3] );
-
-	if( tr.modelviewIdentity )
-		GL_LoadTexMatrix( pl->shadowMatrix );
-	else GL_LoadTexMatrix( pl->shadowMatrix2 );
-}
-
-/*
-================
-R_BeginDrawProjection
-
-Setup texture matrix for fog texture
-================
-*/
-qboolean R_SetupFogProjection( void )
-{
-	Vector	origin, vieworg;
-	float	r;
-
-	if( !RI.fogEnabled && !RI.fogCustom )
-		return false;
-
-	if( !tr.fogTexture2D || !tr.fogTexture1D )
-		return false;
-
-	if( RI.params & RP_SHADOWVIEW )
-		return false;
-	else if( RI.params & RP_MIRRORVIEW )
-		vieworg = r_lastRefdef.vieworg;
-	else vieworg = RI.vieworg;
-
-	if( !tr.modelviewIdentity )
-	{
-		// rotate attenuation texture into local space
-		if( RI.currententity->angles != g_vecZero )
-			origin = RI.objectMatrix.VectorITransform( vieworg );
-		else origin = vieworg - RI.currententity->origin;
-	}
-	else origin = vieworg;
-
-	if( RI.fogCustom )
-		r = 1.0f / (( RI.fogStart + RI.fogEnd ) * 2.0f );
-	else
-		r = 1.0f / (( 6.0f / RI.fogDensity ) * 2.0f );
-
-	GLfloat planeS[] = { r, 0, 0, -origin[0] * r + 0.5 };
-	GLfloat planeT[] = { 0, r, 0, -origin[1] * r + 0.5 };
-	GLfloat planeR[] = { 0, 0, r, -origin[2] * r + 0.5 };
-
-	pglEnable( GL_BLEND );
-	pglColor3fv( RI.fogColor );
-	pglBlendFunc( GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA );
-
-	GL_Bind( GL_TEXTURE0, tr.fogTexture2D );
-	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-
-	GL_TexGen( GL_S, GL_EYE_LINEAR );
-	GL_TexGen( GL_T, GL_EYE_LINEAR );
-	pglTexGenfv( GL_S, GL_EYE_PLANE, planeS );
-	pglTexGenfv( GL_T, GL_EYE_PLANE, planeT );
-
-	GL_Bind( GL_TEXTURE1, tr.fogTexture1D );
-	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-
-	GL_TexGen( GL_S, GL_EYE_LINEAR );
-	pglTexGenfv( GL_S, GL_EYE_PLANE, planeR );
 
 	return true;
 }
@@ -413,23 +227,19 @@ R_EndDrawProjection
 Restore identity texmatrix
 ================
 */
-void R_EndDrawProjection( void )
+void R_EndDrawProjectionGLSL( void )
 {
-	if( GL_Support( R_FRAGMENT_PROGRAM_EXT ))
-		pglDisable( GL_FRAGMENT_PROGRAM_ARB );
+	GL_BindShader( NULL );
 
+	GL_SelectTexture( glConfig.max_texture_units - 1 ); // force to cleanup all the units
 	GL_CleanUpTextureUnits( 0 );
-
-	pglMatrixMode( GL_MODELVIEW );
-	glState.drawProjection = false;
-	pglColor4ub( 255, 255, 255, 255 );
-
+	pglDisable( GL_SCISSOR_TEST );
 	pglDepthFunc( GL_LEQUAL );
-	pglDisable( GL_BLEND );
-	RI.currentlight = NULL;
+	RI->currentlight = NULL;
+	GL_Blend( GL_FALSE );
 }
 
-int R_AllocFrameBuffer( void )
+int R_AllocFrameBuffer( int viewport[4] )
 {
 	int i = tr.num_framebuffers;
 
@@ -448,26 +258,10 @@ int R_AllocFrameBuffer( void )
 		return i;
 	}
 
-	int width, height;
-
-	if( GL_Support( R_ARB_TEXTURE_NPOT_EXT ))
-	{
-		// allow screen size
-		width = bound( 96, glState.width, 1024 );
-		height = bound( 72, glState.height, 768 );
-	}
-	else
-	{
-		width = NearestPOW( glState.width, true );
-		height = NearestPOW( glState.height, true );
-		width = bound( 128, width, 1024 );
-		height = bound( 64, height, 512 );
-	}
-
 	// create a depth-buffer
 	pglGenRenderbuffers( 1, &fbo->renderbuffer );
 	pglBindRenderbuffer( GL_RENDERBUFFER_EXT, fbo->renderbuffer );
-	pglRenderbufferStorage( GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, width, height );
+	pglRenderbufferStorage( GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, viewport[2], viewport[3] );
 	pglBindRenderbuffer( GL_RENDERBUFFER_EXT, 0 );
 
 	// create frame-buffer
@@ -511,7 +305,8 @@ void GL_BindFrameBuffer( int buffer, int texture )
 		return;
 	}
 
-	if( glState.frameBuffer != buffer )
+	// at this point FBO index is always positive
+	if((unsigned int)glState.frameBuffer != fbo->framebuffer )
 	{
 		pglBindFramebuffer( GL_FRAMEBUFFER_EXT, fbo->framebuffer );
 		glState.frameBuffer = fbo->framebuffer;
@@ -526,22 +321,26 @@ void GL_BindFrameBuffer( int buffer, int texture )
 	}
 }
 
-void R_SetupOverbright( qboolean active )
+/*
+==============
+GL_BindFBO
+==============
+*/
+void GL_BindFBO( GLint buffer )
 {
-	if( R_OVERBRIGHT() )
+	if( !GL_Support( R_FRAMEBUFFER_OBJECT ))
+		return;
+
+	if( glState.frameBuffer == buffer )
+		return;
+
+	if( buffer < 0 )
 	{
-		if( active )
-		{
-			pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB );
-			pglTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE );
-			pglTexEnvi( GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_PREVIOUS_ARB );
-			pglTexEnvi( GL_TEXTURE_ENV, GL_SOURCE1_RGB_ARB, GL_TEXTURE );
-			pglTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, 2 );
-		}
-		else
-		{
-			pglTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, 1 );
-			pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-		}
+		pglBindFramebuffer( GL_FRAMEBUFFER_EXT, 0 );
+		glState.frameBuffer = buffer;
+		return;
 	}
+
+	pglBindFramebuffer( GL_FRAMEBUFFER_EXT, buffer );
+	glState.frameBuffer = buffer;
 }

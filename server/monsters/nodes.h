@@ -73,6 +73,8 @@ public:
 #define		NODE_LARGE_HULL			2
 #define		NODE_FLY_HULL			3
 
+class CVirtualFS;
+
 class CLink
 {
 public:
@@ -159,8 +161,8 @@ public:
 	int		m_iLastCoverSearch;
 
 	// functions to create the graph
-	int		LinkVisibleNodes ( CLink *pLinkPool, FILE *file, int *piBadNode );
-	int		RejectInlineLinks ( CLink *pLinkPool, FILE *file );
+	int		LinkVisibleNodes ( CLink *pLinkPool, CVirtualFS *file, int *piBadNode );
+	int		RejectInlineLinks ( CLink *pLinkPool, CVirtualFS *file );
 	int		FindShortestPath ( int *piPath, int iStart, int iDest, int iHull, int afCapMask);
 	int		FindNearestNode ( const Vector &vecOrigin, CBaseEntity *pEntity );
 	int		FindNearestNode ( const Vector &vecOrigin, int afNodeTypes );

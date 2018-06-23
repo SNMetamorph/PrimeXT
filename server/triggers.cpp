@@ -214,7 +214,7 @@ void CTrainSetSpeed :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_T
 		// activate train before set speed
 		if( FBitSet( pev->spawnflags, SF_TRAINSPEED_DEBUG ))
 			ALERT( at_console, "train is activated\n" );
-		m_pTrain->m_speed = (pev->speed < 0) ? -10 : 10;
+		m_pTrain->m_maxSpeed = (pev->speed < 0) ? -10 : 10;
 		m_pTrain->Use( this, this, USE_ON, 0.0f );
 	}
 
@@ -1028,6 +1028,7 @@ public:
 	DECLARE_DATADESC();
 
 	int m_iTargetName[MAX_MULTI_TARGETS]; // list if indexes into global string array
+	int m_iTargetOrder[MAX_MULTI_TARGETS];	// don't save\restore
 	int m_cTargets; // the total number of targets in this manager's fire list.
 	int m_index; // Current target
 };
@@ -1056,6 +1057,7 @@ void CSwitcher :: KeyValue( KeyValueData *pkvd )
 		char tmp[128];
 		UTIL_StripToken( pkvd->szKeyName, tmp );
 		m_iTargetName[m_cTargets] = ALLOC_STRING( tmp );
+		m_iTargetOrder[m_cTargets] = Q_atoi( pkvd->szValue ); 
 		m_cTargets++;
 		pkvd->fHandled = TRUE;
 	}
@@ -1063,23 +1065,30 @@ void CSwitcher :: KeyValue( KeyValueData *pkvd )
 
 void CSwitcher :: Spawn( void )
 {
-	int r_index = 0;
-	int w_index = m_cTargets - 1;
+	// Sort targets
+	// Quick and dirty bubble sort
+	int swapped = 1;
 
-	while( r_index < w_index )
+	while( swapped )
 	{
-		// we store target with right index in tempname
-		int name = m_iTargetName[r_index];
-		
-		// target with right name is free, record new value from wrong name
-		m_iTargetName[r_index] = m_iTargetName[w_index];
-		
-		// ok, we can swap targets
-		m_iTargetName[w_index] = name;
-		r_index++;
-		w_index--;
+		swapped = 0;
+
+		for( int i = 1; i < m_cTargets; i++ )
+		{
+			if( m_iTargetOrder[i] < m_iTargetOrder[i-1] )
+			{
+				// swap out of order elements
+				int name = m_iTargetName[i];
+				int order = m_iTargetOrder[i];
+				m_iTargetName[i] = m_iTargetName[i-1];
+				m_iTargetOrder[i] = m_iTargetOrder[i-1];
+				m_iTargetName[i-1] = name;
+				m_iTargetOrder[i-1] = order;
+				swapped = 1;
+			}
+		}
 	}
-	
+
 	m_iState = STATE_OFF;
 	m_index = 0;
 
@@ -2624,7 +2633,7 @@ END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( inout_register, CInOutRegister );
 
-BOOL CInOutRegister::IsRegistered ( CBaseEntity *pValue )
+BOOL CInOutRegister :: IsRegistered ( CBaseEntity *pValue )
 {
 	if (m_hValue == pValue)
 		return TRUE;
@@ -2636,12 +2645,12 @@ BOOL CInOutRegister::IsRegistered ( CBaseEntity *pValue )
 
 CInOutRegister *CInOutRegister::Add( CBaseEntity *pValue )
 {
-	if (m_hValue == pValue)
+	if( m_hValue == pValue )
 	{
 		// it's already in the list, don't need to do anything
 		return this;
 	}
-	else if (m_pNext)
+	else if( m_pNext )
 	{
 		// keep looking
 		m_pNext = m_pNext->Add( pValue );
@@ -2656,8 +2665,6 @@ CInOutRegister *CInOutRegister::Add( CBaseEntity *pValue )
 		pResult->m_pField = m_pField;
 		pResult->pev->classname = MAKE_STRING("inout_register");
 
-//		ALERT(at_console, "adding; max %.2f %.2f %.2f, min %.2f %.2f %.2f is inside max %.2f %.2f %.2f, min %.2f %.2f %.2f\n", pResult->m_hValue->pev->absmax.x, pResult->m_hValue->pev->absmax.y, pResult->m_hValue->pev->absmax.z, pResult->m_hValue->pev->absmin.x, pResult->m_hValue->pev->absmin.y, pResult->m_hValue->pev->absmin.z, pResult->m_pField->pev->absmax.x, pResult->m_pField->pev->absmax.y, pResult->m_pField->pev->absmax.z, pResult->m_pField->pev->absmin.x, pResult->m_pField->pev->absmin.y, pResult->m_pField->pev->absmin.z); //LRCT
-
 		m_pField->FireOnEntry( pValue );
 		return pResult;
 	}
@@ -2668,7 +2675,7 @@ CInOutRegister *CInOutRegister::Prune( void )
 	if ( m_hValue )
 	{
 		ASSERTSZ(m_pNext != NULL, "invalid InOut registry terminator\n");
-		if ( m_pField->Intersects(m_hValue) && !FBitSet( m_pField->pev->flags, FL_KILLME ))
+		if ( m_pField->TriggerIntersects( m_hValue ) && !FBitSet( m_pField->pev->flags, FL_KILLME ))
 		{
 			// this entity is still inside the field, do nothing
 			m_pNext = m_pNext->Prune();
@@ -2676,21 +2683,19 @@ CInOutRegister *CInOutRegister::Prune( void )
 		}
 		else
 		{
-//			ALERT(at_console, "removing; max %.2f %.2f %.2f, min %.2f %.2f %.2f is outside max %.2f %.2f %.2f, min %.2f %.2f %.2f\n", m_hValue->pev->absmax.x, m_hValue->pev->absmax.y, m_hValue->pev->absmax.z, m_hValue->pev->absmin.x, m_hValue->pev->absmin.y, m_hValue->pev->absmin.z, m_pField->pev->absmax.x, m_pField->pev->absmax.y, m_pField->pev->absmax.z, m_pField->pev->absmin.x, m_pField->pev->absmin.y, m_pField->pev->absmin.z); //LRCT
-
 			// this entity has just left the field, trigger
 			m_pField->FireOnLeaving( m_hValue );
-			SetThink(&CInOutRegister:: SUB_Remove );
+			SetThink( &CInOutRegister:: SUB_Remove );
 			SetNextThink( 0.1 );
 			return m_pNext->Prune();
 		}
 	}
 	else
 	{	// this register has a missing or null value
-		if (m_pNext)
+		if( m_pNext )
 		{
 			// this is an invalid list entry, remove it
-			SetThink(&CInOutRegister:: SUB_Remove );
+			SetThink( &CInOutRegister:: SUB_Remove );
 			SetNextThink( 0.1 );
 			return m_pNext->Prune();
 		}
@@ -2746,7 +2751,7 @@ void CTriggerInOut :: Touch( CBaseEntity *pOther )
 	m_pRegister = m_pRegister->Add( pOther );
 
 	if( pev->nextthink <= 0.0f && !m_pRegister->IsEmpty( ))
-		SetNextThink( 0.1 );
+		SetNextThink( 0.05 );
 }
 
 void CTriggerInOut :: Think( void )
@@ -2757,7 +2762,7 @@ void CTriggerInOut :: Think( void )
 	if (m_pRegister->IsEmpty())
 		DontThink();
 	else
-		SetNextThink( 0.1 );
+		SetNextThink( 0.05 );
 }
 
 void CTriggerInOut :: FireOnEntry( CBaseEntity *pOther )
@@ -2806,6 +2811,40 @@ void CTriggerGravityField :: FireOnLeaving( CBaseEntity *pOther )
 }
 
 LINK_ENTITY_TO_CLASS( trigger_gravity_field, CTriggerGravityField );
+
+class CTriggerDSPZone : public CTriggerInOut
+{
+	DECLARE_CLASS( CTriggerDSPZone, CTriggerInOut );
+public:
+	void KeyValue( KeyValueData* pkvd );
+	virtual void FireOnEntry( CBaseEntity *pOther );
+	virtual void FireOnLeaving( CBaseEntity *pOther );
+};
+
+void CTriggerDSPZone :: KeyValue( KeyValueData *pkvd )
+{
+	if (FStrEq(pkvd->szKeyName, "roomtype"))
+	{
+		pev->impulse = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+}
+
+void CTriggerDSPZone :: FireOnEntry( CBaseEntity *pOther )
+{
+	// Only save on clients
+	if( !pOther->IsPlayer( )) return;
+	pev->button = ((CBasePlayer *)pOther)->m_iSndRoomtype;
+	((CBasePlayer *)pOther)->m_iSndRoomtype = pev->impulse;
+}
+
+void CTriggerDSPZone :: FireOnLeaving( CBaseEntity *pOther )
+{
+	if( !pOther->IsPlayer( )) return;
+	((CBasePlayer *)pOther)->m_iSndRoomtype = pev->button;
+}
+
+LINK_ENTITY_TO_CLASS( trigger_dsp_zone, CTriggerDSPZone );
 
 // ========================= COUNTING TRIGGER =====================================
 
@@ -4146,8 +4185,9 @@ void CTriggerChangeParent :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller,
 }
 
 #define SF_CAMERA_PLAYER_POSITION	1
-#define SF_CAMERA_PLAYER_TARGET		2
-#define SF_CAMERA_PLAYER_TAKECONTROL 4
+#define SF_CAMERA_PLAYER_TARGET	2
+#define SF_CAMERA_PLAYER_TAKECONTROL	4
+#define SF_CAMERA_PLAYER_HIDEHUD	8
 
 class CTriggerCamera : public CBaseDelay
 {
@@ -4284,10 +4324,14 @@ void CTriggerCamera::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 		return;
 	}
 
-
 	if( FBitSet( pev->spawnflags, SF_CAMERA_PLAYER_TAKECONTROL ))
 	{
 		((CBasePlayer *)pActivator)->EnableControl( FALSE );
+	}
+
+	if( FBitSet( pev->spawnflags, SF_CAMERA_PLAYER_HIDEHUD ))
+	{
+		((CBasePlayer *)pActivator)->m_iHideHUD |= HIDEHUD_ALL;
 	}
 
 	if ( m_sPath )
@@ -4416,6 +4460,11 @@ void CTriggerCamera :: Stop( void )
 	{
 		SET_VIEW( m_hPlayer->edict(), m_hPlayer->edict() );
 		((CBasePlayer *)((CBaseEntity *)m_hPlayer))->EnableControl( TRUE );
+	}
+
+	if( FBitSet( pev->spawnflags, SF_CAMERA_PLAYER_HIDEHUD ))
+	{
+		((CBasePlayer *)((CBaseEntity *)m_hPlayer))->m_iHideHUD &= ~HIDEHUD_ALL;
 	}
 
 	SUB_UseTargets( this, USE_TOGGLE, 0 );

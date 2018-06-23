@@ -9,6 +9,7 @@
 #include <math.h>
 
 const Vector g_vecZero( 0, 0, 0 );
+const Radian g_radZero( 0, 0, 0 );
 
 /*
 =================
@@ -25,53 +26,85 @@ int SignbitsForPlane( const Vector &normal )
 	return bits;
 }
 
-void PerpendicularVector( Vector &dst, const Vector &src )
+/*
+=================
+PlaneTypeForNormal
+=================
+*/
+int PlaneTypeForNormal( const Vector &normal )
 {
-	// LordHavoc: optimized to death and beyond
-	int	pos;
-	float	minelem;
+	if( normal.x == 1.0f )
+		return PLANE_X;
+	if( normal.y == 1.0 )
+		return PLANE_Y;
+	if( normal.z == 1.0 )
+		return PLANE_Z;
+	return PLANE_NONAXIAL;
+}
 
-	if( src.x )
+/*
+=================
+SetPlane
+=================
+*/
+void SetPlane( mplane_t *plane, const Vector &vecNormal, float flDist )
+{
+	plane->type = PlaneTypeForNormal( vecNormal );
+	plane->signbits = SignbitsForPlane( vecNormal );
+	plane->normal = vecNormal;
+	plane->dist = flDist;
+}
+	
+/*
+=================
+PlanesGetIntersectionPoint
+
+=================
+*/
+bool PlanesGetIntersectionPoint( const mplane_t *plane1, const mplane_t *plane2, const mplane_t *plane3, Vector &out )
+{
+	Vector n1 = plane1->normal.Normalize();
+	Vector n2 = plane2->normal.Normalize();
+	Vector n3 = plane3->normal.Normalize();
+
+	Vector n1n2 = CrossProduct( n1, n2 );
+	Vector n2n3 = CrossProduct( n2, n3 );
+	Vector n3n1 = CrossProduct( n3, n1 );
+
+	float denom = DotProduct( n1, n2n3 );
+	out = g_vecZero;
+
+	// check if the denominator is zero (which would mean that no intersection is to be found
+	if( denom == 0.0f )
 	{
-		dst.x = 0;
-		if( src.y )
-		{
-			dst.y = 0;
-			if( src.z )
-			{
-				dst.z = 0;
-				pos = 0;
-				minelem = fabs( src.x );
-				if( fabs( src.y ) < minelem )
-				{
-					pos = 1;
-					minelem = fabs( src.y );
-				}
-				if( fabs( src.y ) < minelem )
-					pos = 2;
-
-				dst[pos] = 1;
-				dst.x -= src[pos] * src.x;
-				dst.y -= src[pos] * src.y;
-				dst.z -= src[pos] * src.z;
-
-				// normalize the result
-				dst = dst.Normalize();
-			}
-			else dst.z = 1;
-		}
-		else
-		{
-			dst.y = 1;
-			dst.z = 0;
-		}
+		// no intersection could be found, return <0,0,0>
+		return false;
 	}
-	else
-	{
-		dst.x = 1;
-		dst.y = 0;
-		dst.z = 0;
-	}
+
+	// compute intersection point
+	out += n2n3 * plane1->dist;
+	out += n3n1 * plane2->dist;
+	out += n1n2 * plane3->dist;
+	out *= (1.0f / denom );
+
+	return true;
+}
+
+/*
+=================
+PlaneIntersect
+
+find point where ray
+was intersect with plane
+=================
+*/
+Vector PlaneIntersect( mplane_t *plane, const Vector& p0, const Vector& p1 )
+{
+	float distToPlane = PlaneDiff( p0, plane );
+	float planeDotRay = DotProduct( plane->normal, p1 );
+	float sect = -(distToPlane) / planeDotRay;
+
+	return p0 + p1 * sect;
 }
 
 /*
@@ -210,12 +243,71 @@ void ClearBounds( Vector &mins, Vector &maxs )
 
 /*
 =================
+ClearBounds
+=================
+*/
+void ClearBounds( Vector2D &mins, Vector2D &maxs )
+{
+	// make bogus range
+	mins.x = mins.y =  999999;
+	maxs.x = maxs.y = -999999;
+}
+
+bool BoundsIsCleared( const Vector &mins, const Vector &maxs )
+{
+	if( mins.x <= maxs.x || mins.y <= maxs.y || mins.z <= maxs.z )
+		return false;
+	return true;
+}
+
+/*
+=================
+ExpandBounds
+=================
+*/
+void ExpandBounds( Vector &mins, Vector &maxs, float offset )
+{
+	mins[0] -= offset;
+	mins[1] -= offset;
+	mins[2] -= offset;
+	maxs[0] += offset;
+	maxs[1] += offset;
+	maxs[2] += offset;
+}
+
+/*
+=================
 AddPointToBounds
 =================
 */
-void AddPointToBounds( const Vector &v, Vector &mins, Vector &maxs )
+void AddPointToBounds( const Vector &v, Vector &mins, Vector &maxs, float limit )
 {
-	for( int i = 0; i < 3; i++ )
+	if( limit )
+	{
+		for( int i = 0; i < 3; i++ )
+		{
+			if( v[i] < mins[i] ) mins[i] = Q_max( v[i], mins[i] - limit );
+			if( v[i] > maxs[i] ) maxs[i] = Q_min( v[i], maxs[i] + limit );
+		}
+	}
+	else
+	{
+		for( int i = 0; i < 3; i++ )
+		{
+			if( v[i] < mins[i] ) mins[i] = v[i];
+			if( v[i] > maxs[i] ) maxs[i] = v[i];
+		}
+	}
+}
+
+/*
+=================
+AddPointToBounds
+=================
+*/
+void AddPointToBounds( const Vector2D &v, Vector2D &mins, Vector2D &maxs )
+{
+	for( int i = 0; i < 2; i++ )
 	{
 		if( v[i] < mins[i] ) mins[i] = v[i];
 		if( v[i] > maxs[i] ) maxs[i] = v[i];
@@ -238,6 +330,20 @@ bool BoundsIntersect( const Vector &mins1, const Vector &maxs1, const Vector &mi
 
 /*
 =================
+BoundsIntersect
+=================
+*/
+bool BoundsIntersect( const Vector2D &mins1, const Vector2D &maxs1, const Vector2D &mins2, const Vector2D &maxs2 )
+{
+	if( mins1.x > maxs2.x || mins1.y > maxs2.y )
+		return false;
+	if( maxs1.x < mins2.x || maxs1.y < mins2.y )
+		return false;
+	return true;
+}
+
+/*
+=================
 BoundsAndSphereIntersect
 =================
 */
@@ -246,6 +352,21 @@ bool BoundsAndSphereIntersect( const Vector &mins, const Vector &maxs, const Vec
 	if( mins.x > origin.x + radius || mins.y > origin.y + radius || mins.z > origin.z + radius )
 		return false;
 	if( maxs.x < origin.x - radius || maxs.y < origin.y - radius || maxs.z < origin.z - radius )
+		return false;
+	return true;
+}
+
+
+/*
+=================
+BoundsAndSphereIntersect
+=================
+*/
+bool BoundsAndSphereIntersect( const Vector2D &mins, const Vector2D &maxs, const Vector2D &origin, float radius )
+{
+	if( mins.x > origin.x + radius || mins.y > origin.y + radius )
+		return false;
+	if( maxs.x < origin.x - radius || maxs.y < origin.y - radius )
 		return false;
 	return true;
 }
@@ -269,28 +390,44 @@ float RadiusFromBounds( const Vector &mins, const Vector &maxs )
 //
 // quaternion operations
 //
+/*
+====================
+AngleQuaternion
+
+degrees euler XYZ version
+====================
+*/
+void AngleQuaternion( const Vector &angles, Vector4D &quat )
+{
+	float sr, sp, sy, cr, cp, cy;
+
+	SinCos( DEG2RAD( angles.y ) * 0.5f, &sy, &cy );
+	SinCos( DEG2RAD( angles.x ) * 0.5f, &sp, &cp );
+	SinCos( DEG2RAD( angles.z ) * 0.5f, &sr, &cr );
+
+	float srXcp = sr * cp, crXsp = cr * sp;
+	quat.x = srXcp * cy - crXsp * sy; // X
+	quat.y = crXsp * cy + srXcp * sy; // Y
+
+	float crXcp = cr * cp, srXsp = sr * sp;
+	quat.z = crXcp * sy - srXsp * cy; // Z
+	quat.w = crXcp * cy + srXsp * sy; // W (real component)
+}
 
 /*
 ====================
 AngleQuaternion
+
+radian euler YZX version
 ====================
 */
-void AngleQuaternion( const Vector &angles, Vector4D &quat, bool degrees )
+void AngleQuaternion( const Radian &angles, Vector4D &quat )
 {
 	float sr, sp, sy, cr, cp, cy;
 
-	if( degrees )
-	{
-		SinCos( DEG2RAD( angles.z ) * 0.5f, &sy, &cy );
-		SinCos( DEG2RAD( angles.x ) * 0.5f, &sp, &cp );
-		SinCos( DEG2RAD( angles.y ) * 0.5f, &sr, &cr );
-	}
-	else
-	{
-		SinCos( angles.z * 0.5f, &sy, &cy );
-		SinCos( angles.y * 0.5f, &sp, &cp );
-		SinCos( angles.x * 0.5f, &sr, &cr );
-	}
+	SinCos( angles.z * 0.5f, &sy, &cy );
+	SinCos( angles.y * 0.5f, &sp, &cp );
+	SinCos( angles.x * 0.5f, &sr, &cr );
 
 	float srXcp = sr * cp, crXsp = cr * sp;
 	quat.x = srXcp * cy - crXsp * sy; // X
@@ -305,10 +442,22 @@ void AngleQuaternion( const Vector &angles, Vector4D &quat, bool degrees )
 ====================
 QuaternionAngle
 
-NOTE: return only euler angles!
 ====================
 */
-void QuaternionAngle( const Vector4D &quat, Vector &angles, bool euler )
+void QuaternionAngle( const Vector4D &quat, Vector &angles )
+{
+	// g-cont. it's incredible stupid way but...
+	matrix3x3	temp( quat );
+	temp.GetAngles( angles );
+}
+
+/*
+====================
+QuaternionAngle
+
+====================
+*/
+void QuaternionAngle( const Vector4D &quat, Radian &angles )
 {
 	// g-cont. it's incredible stupid way but...
 	matrix3x3	temp( quat );
@@ -419,6 +568,243 @@ void QuaternionSlerp( const Vector4D &p, const Vector4D &q, float t, Vector4D &q
 	QuaternionSlerpNoAlign( p, q2, t, qt );
 }
 
+/*
+====================
+QuaternionSlerp
+
+Quaternion sphereical linear interpolation
+====================
+*/
+void QuaternionSlerp( const Radian &r0, const Radian &r1, float t, Radian &r2 )
+{
+	Vector4D	q0, q1, q2;
+
+	AngleQuaternion( r0, q0 );
+	AngleQuaternion( r1, q1 );
+	QuaternionSlerp( q0, q1, t, q2 );
+	QuaternionAngle( q2, r2 );
+}
+
+/*
+====================
+QuaternionBlend
+====================
+*/
+void QuaternionBlend( const Vector4D &p, const Vector4D &q, float t, Vector4D &qt )
+{
+	// decide if one of the quaternions is backwards
+	Vector4D	q2;
+
+	QuaternionAlign( p, q, q2 );
+	QuaternionBlendNoAlign( p, q2, t, qt );
+}
+
+/*
+====================
+QuaternionBlendNoAlign
+====================
+*/
+void QuaternionBlendNoAlign( const Vector4D &p, const Vector4D &q, float t, Vector4D &qt )
+{
+	float	sclp, sclq;
+
+	// 0.0 returns p, 1.0 return q.
+	sclp = 1.0f - t;
+	sclq = t;
+
+	for( int i = 0; i < 4; i++ )
+	{
+		qt[i] = sclp * p[i] + sclq * q[i];
+	}
+
+	qt = qt.Normalize();
+}
+
+void QuaternionAdd( const Vector4D &p, const Vector4D &q, Vector4D &qt )
+{
+	Vector4D	q2;
+	QuaternionAlign( p, q, q2 );
+	qt = p + q2;
+}
+
+/*
+====================
+QuaternionMultiply
+
+multiply two quaternions
+====================
+*/
+void QuaternionMultiply( const Vector4D &q1, const Vector4D &q2, Vector4D &out )
+{
+	out[0] = q1[3] * q2[0] + q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1];
+	out[1] = q1[3] * q2[1] + q1[1] * q2[3] + q1[2] * q2[0] - q1[0] * q2[2];
+	out[2] = q1[3] * q2[2] + q1[2] * q2[3] + q1[0] * q2[1] - q1[1] * q2[0];
+	out[3] = q1[3] * q2[3] - q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2];
+}
+
+/*
+====================
+QuaternionVectorTransform
+
+transform vector by quaternion
+====================
+*/
+void QuaternionVectorTransform( const Vector4D &q, const Vector &v, Vector &out )
+{
+	float	wx, wy, wz, xx, yy, yz, xy, xz, zz, x2, y2, z2;
+
+	// 9 muls, 3 adds
+	x2 = q[0] + q[0]; y2 = q[1] + q[1]; z2 = q[2] + q[2];
+	xx = q[0] * x2; xy = q[0] * y2; xz = q[0] * z2;
+	yy = q[1] * y2; yz = q[1] * z2; zz = q[2] * z2;
+	wx = q[3] * x2; wy = q[3] * y2; wz = q[3] * z2;
+
+	// 9 muls, 9 subs, 9 adds
+	out[0] = ( 1.0f - yy - zz ) * v[0] + ( xy - wz ) * v[1] + ( xz + wy ) * v[2];
+	out[1] = ( xy + wz ) * v[0] + ( 1.0f - xx - zz ) * v[1] + ( yz - wx ) * v[2];
+	out[2] = ( xz - wy ) * v[0] + ( yz + wx ) * v[1] + ( 1.0f - xx - yy ) * v[2];
+}
+
+/*
+====================
+QuaternionConcatTransforms
+
+transform quat\vector by another quat\vector
+====================
+*/
+void QuaternionConcatTransforms( const Vector4D &q1, const Vector &v1, const Vector4D &q2, const Vector &v2, Vector4D &q, Vector &v )
+{
+	QuaternionMultiply( q1, q2, q );
+	QuaternionVectorTransform( q1, v2, v );
+	v += v1;
+}
+
+void QuaternionMult( const Vector4D &p, const Vector4D &q, Vector4D &qt )
+{
+	if( &p == &qt )
+	{
+		Vector4D	p2 = p;
+		QuaternionMult( p2, q, qt );
+		return;
+	}
+
+	// decide if one of the quaternions is backwards
+	Vector4D	q2;
+
+	QuaternionAlign( p, q, q2 );
+	qt.x =  p.x * q2.w + p.y * q2.z - p.z * q2.y + p.w * q2.x;
+	qt.y = -p.x * q2.z + p.y * q2.w + p.z * q2.x + p.w * q2.y;
+	qt.z =  p.x * q2.y - p.y * q2.x + p.z * q2.w + p.w * q2.z;
+	qt.w = -p.x * q2.x - p.y * q2.y - p.z * q2.z + p.w * q2.w;
+}
+
+void QuaternionScale( const Vector4D &p, float t, Vector4D &q )
+{
+	float r;
+
+	// FIXME: nick, this isn't overly sensitive to accuracy, and it may be faster to 
+	// use the cos part (w) of the quaternion (sin(omega)*N,cos(omega)) to figure the new scale.
+#if 1
+	Vector ps = Vector( p.x, p.y, p.z );
+	float sinom = ps.Length(); // !!!
+#else
+	float sinom = p.Length(); // !!!
+#endif
+	sinom = Q_min( sinom, 1.0f );
+	float sinsom = sin( asin( sinom ) * t );
+
+	t = sinsom / (sinom + FLT_EPSILON);
+	q.x = p.x * t;
+	q.y = p.y * t;
+	q.z = p.z * t;
+
+	// rescale rotation
+	r = 1.0f - sinsom * sinsom;
+
+	if( r < 0.0f ) 
+		r = 0.0f;
+	r = sqrt( r );
+
+	// keep sign of rotation
+	if( p.w < 0 ) q.w = -r;
+	else q.w = r;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Converts an exponential map (ang/axis) to a quaternion
+//-----------------------------------------------------------------------------
+void AxisAngleQuaternion( const Vector &axis, float angle, Vector4D &q )
+{
+	float	sa, ca;
+
+	SinCos( DEG2RAD( angle ) * 0.5f, &sa, &ca );
+
+	q.x = axis.x * sa;
+	q.y = axis.y * sa;
+	q.z = axis.z * sa;
+	q.w = ca;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: qt = ( s * p ) * q
+//-----------------------------------------------------------------------------
+void QuaternionSM( float s, const Vector4D &p, const Vector4D &q, Vector4D &qt )
+{
+	Vector4D	p1, q1;
+
+	QuaternionScale( p, s, p1 );
+	QuaternionMult( p1, q, q1 );
+	qt = q1.Normalize();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: qt = p * ( s * q )
+//-----------------------------------------------------------------------------
+void QuaternionMA( const Vector4D &p, float s, const Vector4D &q, Vector4D &qt )
+{
+	Vector4D p1, q1;
+
+	QuaternionScale( q, s, q1 );
+	QuaternionMult( p, q1, p1 );
+	qt = p1.Normalize();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: qt = p + s * q
+//-----------------------------------------------------------------------------
+void QuaternionAccumulate( const Vector4D &p, float s, const Vector4D &q, Vector4D &qt )
+{
+	Vector4D	q2;
+
+	QuaternionAlign( p, q, q2 );
+	qt[0] = p[0] + s * q2[0];
+	qt[1] = p[1] + s * q2[1];
+	qt[2] = p[2] + s * q2[2];
+	qt[3] = p[3] + s * q2[3];
+}
+
+void QuaternionConjugate( const Vector4D &p, Vector4D &q )
+{
+	q.x = -p.x;
+	q.y = -p.y;
+	q.z = -p.z;
+	q.w = p.w;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Returns the angular delta between the two normalized quaternions in degrees.
+//-----------------------------------------------------------------------------
+float QuaternionAngleDiff( const Vector4D &p, const Vector4D &q )
+{
+	Vector4D qInv, diff;
+	QuaternionConjugate( q, qInv );
+	QuaternionMult( p, qInv, diff );
+
+	float sinang = sqrt( diff.x * diff.x + diff.y * diff.y + diff.z * diff.z );
+	float angle = RAD2DEG( 2 * asin( sinang ) );
+	return angle;
+}
+
 //
 // lerping stuff
 //
@@ -451,8 +837,8 @@ void InterpolateAngles( const Vector& start, const Vector& end, Vector& output, 
 	Vector4D src, dest;
 
 	// convert to quaternions
-	AngleQuaternion( start, src, true );
-	AngleQuaternion( end, dest, true );
+	AngleQuaternion( start, src );
+	AngleQuaternion( end, dest );
 
 	Vector4D result;
 	Vector out;
@@ -481,40 +867,6 @@ void InterpolateAngles( const Vector& start, const Vector& end, Vector& output, 
 		output[i] += d * frac;
 	}
 #endif
-}
-
-/*
-====================
-RotatePointAroundVector
-====================
-*/
-void RotatePointAroundVector( Vector &dst, const Vector &dir, const Vector &point, float degrees )
-{
-	float	t0, t1;
-	float	angle, c, s;
-	Vector	vr, vu, vf = dir;
-
-	angle = DEG2RAD( degrees );
-	SinCos( angle, &s, &c );
-	VectorMatrix( vf, vr, vu );
-
-	t0 = vr.x *  c + vu.x * -s;
-	t1 = vr.x *  s + vu.x *  c;
-	dst.x  = (t0 * vr.x + t1 * vu.x + vf.x * vf.x) * point.x
-	       + (t0 * vr.y + t1 * vu.y + vf.x * vf.y) * point.y
-	       + (t0 * vr.z + t1 * vu.z + vf.x * vf.z) * point.z;
-
-	t0 = vr.y *  c + vu.y * -s;
-	t1 = vr.y *  s + vu.y *  c;
-	dst.y  = (t0 * vr.x + t1 * vu.x + vf.y * vf.x) * point.x
-	       + (t0 * vr.y + t1 * vu.y + vf.y * vf.y) * point.y
-	       + (t0 * vr.z + t1 * vu.z + vf.y * vf.z) * point.z;
-
-	t0 = vr.z *  c + vu.z * -s;
-	t1 = vr.z *  s + vu.z *  c;
-	dst.z  = (t0 * vr.x + t1 * vu.x + vf.z * vf.x) * point.x
-	       + (t0 * vr.y + t1 * vu.y + vf.z * vf.y) * point.y
-	       + (t0 * vr.z + t1 * vu.z + vf.z * vf.z) * point.z;
 }
 
 void NormalizeAngles( Vector &angles )
@@ -561,8 +913,8 @@ void VectorMatrix( Vector &forward, Vector &right, Vector &up )
 	}
 	else
 	{
-		right = Vector( 1, 0, 0 );
-		up = Vector( 0, 1, 0 );
+		right = Vector( 1.0f, 0.0f, 0.0f );
+		up = Vector( 0.0f, 1.0f, 0.0f );
 	}
 }
 
@@ -573,7 +925,7 @@ BoxOnPlaneSide
 Returns 1, 2, or 1 + 2
 ==================
 */
-int BoxOnPlaneSide( const Vector emins, const Vector emaxs, const mplane_t *p )
+int BoxOnPlaneSide( const Vector &emins, const Vector &emaxs, const mplane_t *p )
 {
 	float	dist1, dist2;
 	int	sides = 0;
@@ -582,36 +934,36 @@ int BoxOnPlaneSide( const Vector emins, const Vector emaxs, const mplane_t *p )
 	switch( p->signbits )
 	{
 	case 0:
-		dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
-		dist2 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
+		dist1 = p->normal.x * emaxs.x + p->normal.y * emaxs.y + p->normal.z * emaxs.z;
+		dist2 = p->normal.x * emins.x + p->normal.y * emins.y + p->normal.z * emins.z;
 		break;
 	case 1:
-		dist1 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
-		dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
+		dist1 = p->normal.x * emins.x + p->normal.y * emaxs.y + p->normal.z * emaxs.z;
+		dist2 = p->normal.x * emaxs.x + p->normal.y * emins.y + p->normal.z * emins.z;
 		break;
 	case 2:
-		dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
-		dist2 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
+		dist1 = p->normal.x * emaxs.x + p->normal.y * emins.y + p->normal.z * emaxs.z;
+		dist2 = p->normal.x * emins.x + p->normal.y * emaxs.y + p->normal.z * emins.z;
 		break;
 	case 3:
-		dist1 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
-		dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
+		dist1 = p->normal.x * emins.x + p->normal.y * emins.y + p->normal.z * emaxs.z;
+		dist2 = p->normal.x * emaxs.x + p->normal.y * emaxs.y + p->normal.z * emins.z;
 		break;
 	case 4:
-		dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
-		dist2 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
+		dist1 = p->normal.x * emaxs.x + p->normal.y * emaxs.y + p->normal.z * emins.z;
+		dist2 = p->normal.x * emins.x + p->normal.y * emins.y + p->normal.z * emaxs.z;
 		break;
 	case 5:
-		dist1 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
-		dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
+		dist1 = p->normal.x * emins.x + p->normal.y * emaxs.y + p->normal.z * emins.z;
+		dist2 = p->normal.x * emaxs.x + p->normal.y * emins.y + p->normal.z * emaxs.z;
 		break;
 	case 6:
-		dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
-		dist2 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
+		dist1 = p->normal.x * emaxs.x + p->normal.y * emins.y + p->normal.z * emins.z;
+		dist2 = p->normal.x * emins.x + p->normal.y * emaxs.y + p->normal.z * emaxs.z;
 		break;
 	case 7:
-		dist1 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
-		dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
+		dist1 = p->normal.x * emins.x + p->normal.y * emins.y + p->normal.z * emins.z;
+		dist2 = p->normal.x * emaxs.x + p->normal.y * emaxs.y + p->normal.z * emaxs.z;
 		break;
 	default:
 		// shut up compiler
@@ -747,25 +1099,111 @@ void SnapPlaneToGrid( mplane_t *plane )
 }
 
 /*
-=================
-rsqrt
-=================
+==============
+VectorCompareEpsilon
+
+==============
 */
-float rsqrt( float number )
+bool VectorCompareEpsilon( const Vector &vec1, const Vector &vec2, float epsilon )
 {
-	int	i;
-	float	x, y;
+	float	ax, ay, az;
 
-	if( number == 0.0f )
-		return 0.0f;
+	ax = fabs( vec1.x - vec2.x );
+	ay = fabs( vec1.y - vec2.y );
+	az = fabs( vec1.z - vec2.z );
 
-	x = number * 0.5f;
-	i = *(int *)&number;	// evil floating point bit level hacking
-	i = 0x5f3759df - (i >> 1);	// what the fuck?
-	y = *(float *)&i;
-	y = y * (1.5f - (x * y * y));	// first iteration
+	if(( ax < epsilon ) && ( ay < epsilon ) && ( az < epsilon ))
+		return true;
+	return false;
+}
 
-	return y;
+bool RadianCompareEpsilon( const Radian &vec1, const Radian &vec2, float epsilon )
+{
+	for( int i = 0; i < 3; i++ )
+	{
+		// clamp to 2pi
+		float a1 = fmod( vec1[i], (float)(M_PI * 2));
+		float a2 = fmod( vec2[i], (float)(M_PI * 2));
+		float delta =  fabs( a1 - a2 );
+		
+		// use the smaller angle (359 == 1 degree off)
+		if( delta > M_PI )
+		{
+			delta = 2 * M_PI - delta;
+		}
+
+		if( delta > epsilon )
+			return 0;
+	}
+	return 1;
+}
+
+// rotate a vector around the Z axis (YAW)
+Vector VectorYawRotate( const Vector &in, float flYaw )
+{
+	Vector	out;
+	float	sy, cy;
+
+	SinCos( DEG2RAD(flYaw), &sy, &cy );
+
+	out.x = in.x * cy - in.y * sy;
+	out.y = in.x * sy + in.y * cy;
+	out.z = in.z;
+
+	return out;
+}
+
+// solve a x^2 + b x + c = 0
+bool SolveQuadratic( float a, float b, float c, float &root1, float &root2 )
+{
+	if( a == 0 )
+	{
+		if( b != 0 )
+		{
+			// no x^2 component, it's a linear system
+			root1 = root2 = -c / b;
+			return true;
+		}
+
+		if( c == 0 )
+		{
+			// all zero's
+			root1 = root2 = 0;
+			return true;
+		}
+		return false;
+	}
+
+	float tmp = b * b - 4.0f * a * c;
+
+	if( tmp < 0 )
+	{
+		// imaginary number, bah, no solution.
+		return false;
+	}
+
+	tmp = sqrt( tmp );
+	root1 = (-b + tmp) / (2.0f * a);
+	root2 = (-b - tmp) / (2.0f * a);
+
+	return true;
+}
+
+// solves for "a, b, c" where "a x^2 + b x + c = y", return true if solution exists
+bool SolveInverseQuadratic( float x1, float y1, float x2, float y2, float x3, float y3, float &a, float &b, float &c )
+{
+	float det = (x1 - x2) * (x1 - x3) * (x2 - x3);
+
+	// FIXME: check with some sort of epsilon
+	if( det == 0.0 ) return false;
+
+	a = (x3*(-y1 + y2) + x2*(y1 - y3) + x1*(-y2 + y3)) / det;
+
+	b = (x3*x3*(y1 - y2) + x1*x1*(y2 - y3) + x2*x2*(-y1 + y3)) / det;
+
+	c = (x1*x3*(-x1 + x3)*y2 + x2*x2*(x3*y1 - x1*y3) + x2*(-(x3*x3*y1) + x1*x1*y3)) / det;
+
+	return true;
 }
 
 float ColorNormalize( const Vector &in, Vector &out )

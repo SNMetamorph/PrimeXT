@@ -93,7 +93,7 @@ int CHudFlashlight::Draw( float flTime )
 	if( gHUD.m_iHideHUDDisplay & ( HIDEHUD_FLASHLIGHT|HIDEHUD_ALL ))
 		return 1;
 
-	if (!(gHUD.m_iWeaponBits & (1<<(WEAPON_SUIT)) ))
+	if (!gHUD.HasWeapon( WEAPON_SUIT ))
 		return 1;
 
 	int r, g, b, x, y, a;

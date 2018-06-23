@@ -47,5 +47,6 @@ extern char *READ_STRING( void );
 extern float READ_COORD( void );
 extern float READ_ANGLE( void );
 extern float READ_HIRESANGLE( void );
+extern void READ_BYTES( byte *out, int count );
 
 #endif//PARSEMSG_H

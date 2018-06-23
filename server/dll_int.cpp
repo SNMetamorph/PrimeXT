@@ -115,8 +115,6 @@ NEW_DLL_FUNCTIONS gNewDLLFunctions =
 	OnFreeEntPrivateData,	// pfnOnFreeEntPrivateData
 	GameDLLShutdown,		// pfnGameShutdown
 	ShouldCollide,		// pfnShouldCollide
-	CvarValue,		// pfnCvarValue
-	CvarValue2,		// pfnCvarValue2
 };
 
 int GetEntityAPI( DLL_FUNCTIONS *pFunctionTable, int interfaceVersion )
@@ -126,7 +124,7 @@ int GetEntityAPI( DLL_FUNCTIONS *pFunctionTable, int interfaceVersion )
 		return FALSE;
 	}
 
-	if( !CVAR_GET_POINTER( "host_gameloaded" ))
+	if( !CVAR_GET_POINTER( "host_gameloaded" ) || g_iXashEngineBuildNumber < 4140 )
 		return FALSE; // not a Xash3D
 
 	memcpy( pFunctionTable, &gFunctionTable, sizeof( DLL_FUNCTIONS ) );
@@ -142,7 +140,7 @@ int GetEntityAPI2( DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion )
 		return FALSE;
 	}
 
-	if( !CVAR_GET_POINTER( "host_gameloaded" ))
+	if( !CVAR_GET_POINTER( "host_gameloaded" ) || g_iXashEngineBuildNumber < 4140 )
 	{
 		// Tell engine what version we had, so it can figure out who is out of date.
 		*interfaceVersion = INTERFACE_VERSION;
@@ -161,7 +159,7 @@ int GetNewDLLFunctions( NEW_DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion
 		return FALSE;
 	}
 
-	if( !CVAR_GET_POINTER( "host_gameloaded" ))
+	if( !CVAR_GET_POINTER( "host_gameloaded" ) || g_iXashEngineBuildNumber < 4140 )
 	{
 		// Tell engine what version we had, so it can figure out who is out of date.
 		*interfaceVersion = NEW_DLL_FUNCTIONS_VERSION;
@@ -461,107 +459,57 @@ int DispatchRestore( edict_t *pent, SAVERESTOREDATA *pSaveData, int globalEntity
 	return 0;
 }
 
-void DispatchCreateEntitiesInTransitionList( SAVERESTOREDATA *pSaveData, int levelMask )
+void DispatchCreateEntitiesInRestoreList( SAVERESTOREDATA *pSaveData, int levelMask, qboolean create_world )
 {
-	CBaseEntity *pent;
+	ENTITYTABLE *pTable;
+	CBaseEntity *pEntity;
+	edict_t *pent;
 
 	// create entity list
 	for( int i = 0; i < pSaveData->tableCount; i++ )
 	{
-		ENTITYTABLE *pEntInfo = &pSaveData->pTable[i];
+		pTable = &pSaveData->pTable[i];
+		pEntity = NULL;
 		pent = NULL;
 
-		if( pEntInfo->size == 0 || pEntInfo->id == 0 )
-			continue;
-
-		if( pEntInfo->classname == NULL_STRING )
+		if( pTable->classname != NULL_STRING && pTable->size && ( !FBitSet( pTable->flags, FENTTABLE_REMOVED ) || !create_world ))
 		{
-			ALERT( at_warning, "Entity with data saved, but with no classname\n" );
-			continue;
-		}
+			int	active = FBitSet( pTable->flags, levelMask ) ? 1 : 0;
 
-		bool active = (pEntInfo->flags & levelMask) ? 1 : 0;
+			if( create_world )
+				active = 1;
 
-		// spawn players
-		if(( pEntInfo->id > 0) && ( pEntInfo->id <= gpGlobals->maxClients ))	
-		{
-			edict_t *ed = INDEXENT( pEntInfo->id );
-
-			if( active && ed && !ed->free )
-			{
-				if(!( pEntInfo->flags & FENTTABLE_PLAYER ))
-				{
-					ALERT( at_warning, "ENTITY IS NOT A PLAYER: %d\n", i );
-					ASSERT( 0 );
-				}
-				pent = CreateEntityByName( STRING( pEntInfo->classname ), VARS( ed ));
-			}
-		}
-		else if( active )
-		{
-			// create named entity
-			pent = CreateEntityByName( STRING( pEntInfo->classname ));
-		}
-
-		pEntInfo->pent = (pent) ? ENT(pent) : NULL;
-	}
-}
-
-void DispatchCreateEntitiesInRestoreList( SAVERESTOREDATA *pSaveData, int createPlayers )
-{
-	CBaseEntity *pent;
-
-	// create entity list
-	for( int i = 0; i < pSaveData->tableCount; i++ )
-	{
-		ENTITYTABLE *pEntInfo = &pSaveData->pTable[i];
-
-		if( pEntInfo->classname != NULL_STRING && pEntInfo->size && !( pEntInfo->flags & FENTTABLE_REMOVED ))
-		{
-			if( pEntInfo->id == 0 ) // worldspawn
+			if( pTable->id == 0 && create_world ) // worldspawn
 			{
 				ASSERT( i == 0 );
 
-				edict_t *ed = INDEXENT( pEntInfo->id );
+				edict_t *ed = INDEXENT( pTable->id );
 
 				memset( &ed->v, 0, sizeof( entvars_t ));
 				ed->v.pContainingEntity = ed;
 				ed->free = false;
-				pent = GetClassPtr( (CWorld *)VARS(ed));
+				pEntity = GetClassPtr( (CWorld *)VARS(ed));
 			}
-			else if(( pEntInfo->id > 0 ) && ( pEntInfo->id <= gpGlobals->maxClients ))
+			else if(( pTable->id > 0 ) && ( pTable->id <= gpGlobals->maxClients ))
 			{
-				if(!( pEntInfo->flags & FENTTABLE_PLAYER ))
-				{
+				if( !FBitSet( pTable->flags, FENTTABLE_PLAYER ))
 					ALERT( at_warning, "ENTITY IS NOT A PLAYER: %d\n", i );
-					ASSERT( 0 );
-				}
 
-				edict_t *ed = INDEXENT( pEntInfo->id );
+				edict_t *ed = INDEXENT( pTable->id );
 
-				if( ed && createPlayers )
-				{
-					ASSERT( ed->free == false );
-					
-					// create the player
-					pent = CreateEntityByName( STRING( pEntInfo->classname ), VARS( ed ));
-				}
-				else
-				{
-					pent = NULL;
-				}
+				// create the player
+				if( active && ed != NULL )
+					pEntity = CreateEntityByName( STRING( pTable->classname ), VARS( ed ));
 			}
-			else
+			else if( active )
 			{
-				pent = CreateEntityByName( STRING( pEntInfo->classname ));
+				pEntity = CreateEntityByName( STRING( pTable->classname ));
 			}
 
-			pEntInfo->pent = (pent) ? ENT(pent) : NULL;
+			pent = (pEntity) ? ENT(pEntity) : NULL;
 		}
-		else
-		{
-			pEntInfo->pent = NULL; // invalid
-		}
+
+		pTable->pent = pent;
 	}
 }
 

@@ -28,8 +28,7 @@ typedef enum
 	pt_blob2,
 	pt_vox_slowgrav,
 	pt_vox_grav,
-	pt_clientcustom,	// Must have callback function specified
-	pt_tracer		// Always have callback
+	pt_clientcustom	// Must have callback function specified
 } ptype_t;
 
 typedef struct particle_s

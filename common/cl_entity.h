@@ -97,7 +97,8 @@ struct cl_entity_s
 	struct efrag_s	*efrag;		// linked list of efrags
 	struct mnode_s	*topnode;		// for bmodels, first world node that splits bmodel, or NULL if not split
 
-	float		syncbase;		// for client-side animations -- used by obsolete alias animation system, remove?
+	word		hCachedMatrix;	// modelviewProjectionMatrix handle in matrix cache (was syncbase)
+	word		reserved;
 	int		visframe;		// last frame this entity was found in an active leaf
 	colorVec		cvFloorColor;
 };

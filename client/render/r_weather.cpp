@@ -48,7 +48,6 @@ double		rain_curtime;	// current time
 double		rain_oldtime;	// last time we have updated drips
 double		rain_timedelta;	// difference between old time and current time
 double		rain_nextspawntime;	// when the next drip should be spawned
-bool		rain_use_debugtrace;// use a custom trace that can traceline water
 int		dripcounter = 0;
 int		fxcounter = 0;
 
@@ -69,7 +68,7 @@ Must think every frame.
 void ProcessRain( void )
 {
 	rain_oldtime = rain_curtime; // save old time
-	rain_curtime = GET_CLIENT_TIME();
+	rain_curtime = tr.time;
 	rain_timedelta = rain_curtime - rain_oldtime;
 
 	// first frame
@@ -180,8 +179,8 @@ void ProcessRain( void )
 			float deathHeight = 0.0f;
 			Vector vecStart, vecEnd;
 
-			vecStart[0] = RANDOM_FLOAT( RI.vieworg.x - Rain.distFromPlayer, RI.vieworg.x + Rain.distFromPlayer );
-			vecStart[1] = RANDOM_FLOAT( RI.vieworg.y - Rain.distFromPlayer, RI.vieworg.y + Rain.distFromPlayer );
+			vecStart[0] = RANDOM_FLOAT( RI->vieworg.x - Rain.distFromPlayer, RI->vieworg.x + Rain.distFromPlayer );
+			vecStart[1] = RANDOM_FLOAT( RI->vieworg.y - Rain.distFromPlayer, RI->vieworg.y + Rain.distFromPlayer );
 			vecStart[2] = Rain.globalHeight;
 
 			float xDelta = Rain.windX + RANDOM_FLOAT( Rain.randX * -1, Rain.randX );
@@ -195,21 +194,12 @@ void ProcessRain( void )
 			pmtrace_t pmtrace;
 			int contents = CONTENTS_EMPTY;
 
-			if( rain_use_debugtrace )
-			{
-				msurface_t *surf = R_TraceLine( &pmtrace, vecStart, vecStart + vecEnd, FTRACE_SIMPLEBOX );
-				if( surf && surf->flags & SURF_DRAWTURB )
-					contents = CONTENTS_WATER;
-				else contents = CONTENTS_SOLID;
-			}
-			else
-			{
-				gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
-				gEngfuncs.pEventAPI->EV_PlayerTrace( vecStart, vecStart + vecEnd, PM_STUDIO_IGNORE, -1, &pmtrace );
+			// FIXME: use VisTraceLine instead to handle func_water
+			gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
+			gEngfuncs.pEventAPI->EV_PlayerTrace( vecStart, vecStart + vecEnd, PM_STUDIO_IGNORE, -1, &pmtrace );
 
-				// falling to water?
-				contents = POINT_CONTENTS( pmtrace.endpos );
-                              }
+			// falling to water?
+			contents = POINT_CONTENTS( pmtrace.endpos );
 
 			if( pmtrace.startsolid || pmtrace.allsolid )
 			{
@@ -218,43 +208,35 @@ void ProcessRain( void )
 				continue; // drip cannot be placed
 			}
 
-			if( rain_use_debugtrace )
+			if( contents == CONTENTS_WATER )
 			{
-				// has valid position in any case
-				deathHeight = pmtrace.endpos.z;
-			}
-			else
-			{
-				if( contents == CONTENTS_WATER )
+				int waterEntity = WATER_ENTITY( pmtrace.endpos );
+				if( waterEntity > 0 )
 				{
-					int waterEntity = WATER_ENTITY( pmtrace.endpos );
-					if( waterEntity > 0 )
+					cl_entity_t *pwater = GET_ENTITY( waterEntity );
+
+					if( pwater && ( pwater->model != NULL ))
 					{
-						cl_entity_t *pwater = GET_ENTITY( waterEntity );
+						deathHeight = pwater->curstate.maxs.z - 1.0f;
 
-						if( pwater && ( pwater->model != NULL ))
-						{
-							deathHeight = pwater->curstate.maxs.z - 1.0f;
-
-							if( !Mod_BoxVisible( pwater->curstate.mins, pwater->curstate.maxs, Mod_GetCurrentVis( )))
-								contents = CONTENTS_EMPTY; // not error, just water out of PVS
-						}
-						else
-						{
-							ALERT( at_error, "rain: can't get water entity\n");
-							continue;
-						}
+						if( !Mod_BoxVisible( pwater->curstate.mins, pwater->curstate.maxs, Mod_GetCurrentVis( )))
+							contents = CONTENTS_EMPTY; // not error, just water out of PVS
 					}
 					else
 					{
-						ALERT( at_error, "rain: water is not func_water entity\n");
+						ALERT( at_error, "rain: can't get water entity\n");
 						continue;
 					}
 				}
 				else
 				{
-					deathHeight = pmtrace.endpos.z;
+					ALERT( at_error, "rain: water is not func_water entity\n");
+					continue;
 				}
+			}
+			else
+			{
+				deathHeight = pmtrace.endpos.z;
 			}
 
 			// just in case..
@@ -341,7 +323,7 @@ void WaterLandingEffect( cl_drip *drip )
 	newFX->origin = drip->origin; 
 	newFX->origin.z = drip->minHeight - 1; // correct position
 			
-	newFX->birthTime = GET_CLIENT_TIME();
+	newFX->birthTime = tr.time;
 	newFX->life = RANDOM_FLOAT( 0.7f, 1.0f );
 
 	// add to first place in chain
@@ -409,9 +391,6 @@ initialze system
 void R_InitWeather( void )
 {
 	cl_debug_rain = CVAR_REGISTER( "cl_debug_rain", "0", 0 ); 
-	// don't use debug trace (hit the perf 146%)
-	rain_use_debugtrace = false;//(RENDER_GET_PARM( PARM_FEATURES, 0 ) & ENGINE_BUILD_SURFMESHES) ? true : false;
-	
 	memset( &Rain, 0, sizeof( Rain ));
 
 	rain_nextspawntime = 0;
@@ -585,7 +564,7 @@ void DrawRain( void )
 		while( Drip != NULL )
 		{
 			// cull invisible drips
-			if( R_CullSphere( Drip->origin, SNOW_SPRITE_HALFSIZE + 1, RI.clipFlags ))
+			if( R_CullSphere( Drip->origin, SNOW_SPRITE_HALFSIZE + 1 ))
 			{
 				g_dripsArray.MoveNext();
 				Drip = g_dripsArray.GetCurrent();
@@ -598,12 +577,14 @@ void DrawRain( void )
 				if( GL_Support( R_DRAW_RANGEELEMENTS_EXT ))
 					pglDrawRangeElementsEXT( GL_TRIANGLES, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 				else pglDrawElements( GL_TRIANGLES, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
+				r_stats.c_total_tris += (m_iNumVerts - 2);
 				m_iNumVerts = m_iNumIndex = 0;
+				r_stats.num_flushes++;
 			}
 
 			Vector2D toPlayer; 
-			toPlayer.x = RI.vieworg[0] - Drip->origin[0];
-			toPlayer.y = RI.vieworg[1] - Drip->origin[1];
+			toPlayer.x = RI->vieworg[0] - Drip->origin[0];
+			toPlayer.y = RI->vieworg[1] - Drip->origin[1];
 			toPlayer = toPlayer.Normalize();
 	
 			toPlayer.x *= DRIP_SPRITE_HALFWIDTH;
@@ -651,6 +632,8 @@ void DrawRain( void )
 			if( GL_Support( R_DRAW_RANGEELEMENTS_EXT ))
 				pglDrawRangeElementsEXT( GL_TRIANGLES, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 			else pglDrawElements( GL_TRIANGLES, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
+			r_stats.c_total_tris += (m_iNumVerts - 2);
+			r_stats.num_flushes++;
 		}
 	}
 	else if( Rain.weatherMode == MODE_SNOW )
@@ -658,7 +641,7 @@ void DrawRain( void )
 		while( Drip != NULL )
 		{
 			// cull invisible flakes
-			if( R_CullSphere( Drip->origin, SNOW_SPRITE_HALFSIZE + 1, RI.clipFlags ))
+			if( R_CullSphere( Drip->origin, SNOW_SPRITE_HALFSIZE + 1 ))
 			{
 				g_dripsArray.MoveNext();
 				Drip = g_dripsArray.GetCurrent();
@@ -671,7 +654,9 @@ void DrawRain( void )
 				if( GL_Support( R_DRAW_RANGEELEMENTS_EXT ))
 					pglDrawRangeElementsEXT( GL_QUADS, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 				else pglDrawElements( GL_QUADS, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
+				r_stats.c_total_tris += (m_iNumVerts / 2);
 				m_iNumVerts = m_iNumIndex = 0;
+				r_stats.num_flushes++;
 			}
 
 			// apply start fading effect
@@ -688,7 +673,7 @@ void DrawRain( void )
 			m_colorarray[m_iNumVerts][1] = 255;
 			m_colorarray[m_iNumVerts][2] = 255;
 			m_colorarray[m_iNumVerts][3] = alpha;
-			m_vertexarray[m_iNumVerts] = Drip->origin + RI.vright * -SNOW_SPRITE_HALFSIZE + RI.vup * -SNOW_SPRITE_HALFSIZE;
+			m_vertexarray[m_iNumVerts] = Drip->origin + RI->vright * -SNOW_SPRITE_HALFSIZE + RI->vup * -SNOW_SPRITE_HALFSIZE;
 			m_indexarray[m_iNumIndex++] = m_iNumVerts++;
 
 			// set left top corner
@@ -698,7 +683,7 @@ void DrawRain( void )
 			m_colorarray[m_iNumVerts][1] = 255;
 			m_colorarray[m_iNumVerts][2] = 255;
 			m_colorarray[m_iNumVerts][3] = alpha;
-			m_vertexarray[m_iNumVerts] = Drip->origin + RI.vright * -SNOW_SPRITE_HALFSIZE + RI.vup * SNOW_SPRITE_HALFSIZE;
+			m_vertexarray[m_iNumVerts] = Drip->origin + RI->vright * -SNOW_SPRITE_HALFSIZE + RI->vup * SNOW_SPRITE_HALFSIZE;
 			m_indexarray[m_iNumIndex++] = m_iNumVerts++;
 
 			// set right top corner
@@ -708,7 +693,7 @@ void DrawRain( void )
 			m_colorarray[m_iNumVerts][1] = 255;
 			m_colorarray[m_iNumVerts][2] = 255;
 			m_colorarray[m_iNumVerts][3] = alpha;
-			m_vertexarray[m_iNumVerts] = Drip->origin + RI.vright * SNOW_SPRITE_HALFSIZE + RI.vup * SNOW_SPRITE_HALFSIZE;
+			m_vertexarray[m_iNumVerts] = Drip->origin + RI->vright * SNOW_SPRITE_HALFSIZE + RI->vup * SNOW_SPRITE_HALFSIZE;
 			m_indexarray[m_iNumIndex++] = m_iNumVerts++;
 
 			// set right bottom corner
@@ -718,7 +703,7 @@ void DrawRain( void )
 			m_colorarray[m_iNumVerts][1] = 255;
 			m_colorarray[m_iNumVerts][2] = 255;
 			m_colorarray[m_iNumVerts][3] = alpha;
-			m_vertexarray[m_iNumVerts] = Drip->origin + RI.vright * SNOW_SPRITE_HALFSIZE + RI.vup * -SNOW_SPRITE_HALFSIZE;
+			m_vertexarray[m_iNumVerts] = Drip->origin + RI->vright * SNOW_SPRITE_HALFSIZE + RI->vup * -SNOW_SPRITE_HALFSIZE;
 			m_indexarray[m_iNumIndex++] = m_iNumVerts++;
 
 			g_dripsArray.MoveNext();
@@ -731,6 +716,8 @@ void DrawRain( void )
 			if( GL_Support( R_DRAW_RANGEELEMENTS_EXT ))
 				pglDrawRangeElementsEXT( GL_QUADS, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 			else pglDrawElements( GL_QUADS, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
+			r_stats.c_total_tris += (m_iNumVerts / 2);
+			r_stats.num_flushes++;
 		}
 	}
 
@@ -784,11 +771,13 @@ void DrawFXObjects( void )
 			if( GL_Support( R_DRAW_RANGEELEMENTS_EXT ))
 				pglDrawRangeElementsEXT( GL_QUADS, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 			else pglDrawElements( GL_QUADS, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
+			r_stats.c_total_tris += (m_iNumVerts / 2);
 			m_iNumVerts = m_iNumIndex = 0;
+			r_stats.num_flushes++;
 		}
 
 		// cull invisible rings
-		if( R_CullSphere( curFX->origin, MAX_RING_HALFSIZE + 1, RI.clipFlags ))
+		if( R_CullSphere( curFX->origin, MAX_RING_HALFSIZE + 1 ))
 		{
 			g_fxArray.MoveNext();
 			curFX = g_fxArray.GetCurrent();
@@ -845,6 +834,8 @@ void DrawFXObjects( void )
 		if( GL_Support( R_DRAW_RANGEELEMENTS_EXT ))
 			pglDrawRangeElementsEXT( GL_QUADS, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 		else pglDrawElements( GL_QUADS, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
+		r_stats.c_total_tris += (m_iNumVerts / 2);
+		r_stats.num_flushes++;
 	}
 
 	pglDisableClientState( GL_TEXTURE_COORD_ARRAY );
@@ -861,7 +852,7 @@ R_DrawWeather
 */
 void R_DrawWeather( void )
 {
-	if( RI.params & RP_SKYPORTALVIEW )
+	if( FBitSet( RI->params, RP_SKYPORTALVIEW ))
 		return;
 
 	ProcessRain();

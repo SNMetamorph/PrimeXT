@@ -335,11 +335,12 @@ public:
 	CLight	*m_pLight;
 	char	m_cFrom;
 	char	m_cTo;
-	char	m_szCurStyle[2];
+	char	m_szCurStyle[256];
 	float	m_fEndTime;
 	string_t	m_iszPattern;
 	float	m_fStep;
 	int	m_iWait;
+	int	m_iHardwareLerped;
 };
 
 LINK_ENTITY_TO_CLASS( lightfader, CLightFader );
@@ -353,17 +354,21 @@ BEGIN_DATADESC( CLightFader )
 	DEFINE_FIELD( m_iszPattern, FIELD_STRING ),
 	DEFINE_FIELD( m_fStep, FIELD_FLOAT ),
 	DEFINE_FIELD( m_iWait, FIELD_INTEGER ),
+	DEFINE_FIELD( m_iHardwareLerped, FIELD_BOOLEAN ),
 	DEFINE_FUNCTION( FadeThink ),
 	DEFINE_FUNCTION( WaitThink ),
 END_DATADESC()
 
 void CLightFader::FadeThink( void )
 {
-	if (m_fEndTime > gpGlobals->time)
+	if( m_fEndTime > gpGlobals->time )
 	{
-		m_szCurStyle[0] = m_cTo + (char)((m_cFrom - m_cTo) * (m_fEndTime - gpGlobals->time) * m_fStep);
-		m_szCurStyle[1] = 0; // null terminator
-		m_pLight->SetStyle(MAKE_STRING(m_szCurStyle));
+		if( !m_iHardwareLerped )
+		{
+			m_szCurStyle[0] = m_cTo + (char)((m_cFrom - m_cTo) * (m_fEndTime - gpGlobals->time) * m_fStep);
+			m_szCurStyle[1] = 0; // null terminator
+			m_pLight->SetStyle(MAKE_STRING(m_szCurStyle));
+		}
 		SetNextThink( 0.1 );
 	}
 	else
@@ -446,7 +451,8 @@ void CTriggerLightstyle::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE
 	if ( !pev->target )
 		return;
 
-	//ALERT( at_console, "Lightstyle change for: (%s)\n", STRING(pev->target) );
+	// ALERT( at_console, "Lightstyle change for: (%s)\n", STRING(pev->target) );
+	bool fFisrt = true;
 
 	while( 1 )
 	{
@@ -483,13 +489,41 @@ void CTriggerLightstyle::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE
 				pFader->m_iWait = m_iWait;
 				pFader->SetThink( &CLightFader::FadeThink );
 				pFader->SetNextThink( 0.1 );
+
+				float	time = 1.0;
+				float	end = time + m_iFade;
+				char	lerpedPattern[256];
+				char	*lpPattern = lerpedPattern;
+				pFader->m_iHardwareLerped = TRUE;
+
+				while( end > time )
+				{
+					*lpPattern = pFader->m_cTo + (char)((pFader->m_cFrom - pFader->m_cTo) * (end - time) * pFader->m_fStep);
+					time += 0.09; // to prevent loop the style
+					lpPattern++;
+
+					// exceed hardware pattern length?
+					if(( lpPattern - lerpedPattern ) > 250 )
+					{
+						pFader->m_iHardwareLerped = FALSE;
+						break;
+					}
+				}
+				*lpPattern = '\0';
+
+				if( pFader->m_iHardwareLerped )
+				{
+					// build the lerped sequence and let the engine lerping the lightstyle
+					pFader->m_pLight->SetStyle( ALLOC_STRING( lerpedPattern ));
+				}
 			}
 			else
 			{
-				if( g_iXashEngineBuildNumber >= 2000 )
+				if( fFisrt )
 				{
 					// save old pattern in case we needs to be restore it
 					Q_strncpy( m_szOldPattern, GET_LIGHT_STYLE( pLight->m_iStyle ), 256 ); 
+					fFisrt = false;
 				}
 
 				pLight->SetStyle( iszPattern );
@@ -499,11 +533,8 @@ void CTriggerLightstyle::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE
 					CLightFader *pFader = GetClassPtr( (CLightFader*)NULL );
 					pFader->pev->classname = MAKE_STRING( "lightfader" );
 					pFader->m_pLight = pLight;
-					if( g_iXashEngineBuildNumber >= 2000 )
-					{
-						// i'm hope somebody don't delete this entity from map :-)
-						pFader->m_iszPattern = MAKE_STRING( m_szOldPattern );
-					}
+					// i'm hope somebody don't delete this entity from map :-)
+					pFader->m_iszPattern = MAKE_STRING( m_szOldPattern );
 					pFader->SetThink( &CLightFader::WaitThink );
 					pFader->SetNextThink( m_iWait );
 				}

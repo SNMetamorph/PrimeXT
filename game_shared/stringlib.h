@@ -52,18 +52,12 @@ void COM_ExtractFilePath( const char *path, char *dest );
 void COM_StripExtension( char *path );
 void COM_StripExtension( const char *in, char *out, int destsize );
 void COM_DefaultExtension( char *path, const char *extension );
-char *COM_ParseFileExt( char *data, char *token, long token_size );
-#define COM_ParseFile( data, token ) COM_ParseFileExt( data, token, sizeof( token ))
-unsigned int COM_HashKey( const char *string, unsigned int hashSize );
-
-//
-// parser.cpp
-//
 void COM_SkipBracedSection( char **program );
-void COM_SkipRestOfLine( char **data );
-char *COM_ParseExt( char **data_p, bool allowLineBreaks );
-#define COM_Parse( data_p )	COM_ParseExt( data_p, true )
-int COM_CompressText( char *data_p );
+const char *COM_FileExtension( const char *in );
+char *COM_ParseFileExt( char *data, char *token, long token_size, bool allowNewLines );
+#define COM_ParseFile( data, token ) COM_ParseFileExt( data, token, sizeof( token ), true )
+#define COM_ParseLine( data, token ) COM_ParseFileExt( data, token, sizeof( token ), false )
+unsigned int COM_HashKey( const char *string, unsigned int hashSize );
 int COM_TokenWaiting( char *buffer );
 
 #endif//STRINGLIB_H

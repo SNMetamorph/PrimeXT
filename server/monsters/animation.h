@@ -28,6 +28,7 @@ int LookupActivityHeaviest( void *pmodel, int activity );
 int LookupSequence( void *pmodel, const char *label );
 void GetSequenceInfo( void *pmodel, int sequence, float *pflFrameRate, float *pflGroundSpeed );
 int GetSequenceFlags( void *pmodel, int sequence );
+void CalcGaitFrame( void *pmodel, int &gaitsequence, float &flGaitFrame, float flGaitMovement );
 int LookupAnimationEvents( void *pmodel, CBaseEntity *pEnt, float flStart, float flEnd );
 float SetController( void *pmodel, byte *controller, int iController, float flValue );
 float SetBlending( void *pmodel, int sequence, byte *blending, int iBlender, float flValue );

@@ -35,6 +35,13 @@ extern float v_idlescale;
 extern int g_iXashEngineBuildNumber;
 extern BOOL g_fRenderInitialized;
 
+enum
+{
+	DEV_NONE = 0,
+	DEV_NORMAL,
+	DEV_EXTENDED
+};
+
 typedef HMODULE dllhandle_t;
 
 typedef struct dllfunc_s
@@ -65,6 +72,9 @@ void Sys_FreeLibrary( dllhandle_t *handle );
 #define XPROJECT( x )	(( 1.0f + (x)) * ScreenWidth * 0.5f )
 #define YPROJECT( y )	(( 1.0f - (y)) * ScreenHeight * 0.5f )
 
+extern float g_hullcolor[8][3];
+extern int g_boxpnt[6][4];
+
 inline int ConsoleStringLen( const char *string )
 {
 	int _width, _height;
@@ -90,7 +100,7 @@ typedef struct leaflist_s
 	bool		overflowed;
 	short		*list;
 	Vector		mins, maxs;
-	int		topnode;		// for overflows where each leaf can't be stored individually
+	struct mnode_s	*headnode;	// for overflows where each leaf can't be stored individually
 } leaflist_t;
 
 struct mleaf_s *Mod_PointInLeaf( Vector p, struct mnode_s *node );
@@ -98,9 +108,18 @@ bool Mod_BoxVisible( const Vector mins, const Vector maxs, const byte *visbits )
 bool Mod_CheckEntityPVS( cl_entity_t *ent );
 bool Mod_CheckTempEntityPVS( struct tempent_s *pTemp );
 bool Mod_CheckEntityLeafPVS( const Vector &absmin, const Vector &absmax, struct mleaf_s *leaf );
+bool Mod_CheckBoxVisible( const Vector &absmin, const Vector &absmax );
 void Mod_GetFrames( int modelIndex, int &numFrames );
 int Mod_GetType( int modelIndex );
 
+bool R_ScissorForAABB( const Vector &absmin, const Vector &absmax, float *x, float *y, float *w, float *h );
+bool R_ScissorForCorners( const Vector bbox[8], float *x, float *y, float *w, float *h );
+bool R_AABBToScreen( const Vector &absmin, const Vector &absmax, Vector2D &scrmin, Vector2D &scrmax, wrect_t *rect = NULL );
+void R_DrawScissorRectangle( float x, float y, float w, float h );
+void R_TransformWorldToDevice( const Vector &world, Vector &ndc );
+void R_TransformDeviceToScreen( const Vector &ndc, Vector &screen );
+bool R_ClipPolygon( int numPoints, Vector *points, const struct mplane_s *plane, int *numClipped, Vector *clipped );
+void R_SplitPolygon( int numPoints, Vector *points, const struct mplane_s *plane, int *numFront, Vector *front, int *numBack, Vector *back );
 bool UTIL_IsPlayer( int idx );
 bool UTIL_IsLocal( int idx );
 
@@ -132,9 +151,13 @@ extern void IN_Accumulate( void );
 extern void IN_ClearStates( void );
 extern void *KB_Find( const char *name );
 extern void CL_CreateMove( float frametime, struct usercmd_s *cmd, int active );
+extern int CL_IsDead( void );
 
 extern int HUD_GetRenderInterface( int version, render_api_t *renderfuncs, render_interface_t *callback );
 extern int HUD_GetStudioModelInterface( int version, struct r_studio_interface_s **ppinterface, struct engine_studio_api_s *pstudio );
+
+extern void HUD_DrawNormalTriangles( void );
+extern void HUD_DrawTransparentTriangles( void );
 
 extern void PM_Init( struct playermove_s *ppmove );
 extern void PM_Move( struct playermove_s *ppmove, int server );
@@ -152,12 +175,5 @@ extern int CL_IsThirdPerson( void );
 // xxx need client dll function to get and clear impuse
 extern cvar_t *in_joystick;
 extern int g_weaponselect;
-
-void ClearLink( link_t *l );
-void RemoveLink( link_t *l );
-void InsertLinkBefore( link_t *l, link_t *before );
-
-extern float noise( float vx, float vy, float vz );
-extern void init_noise( void );
    
 #endif // UTILS_H

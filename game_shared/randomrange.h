@@ -55,6 +55,7 @@ public:
 
 	// a simple implementation of RANDOM_FLOAT for now	
 	float Random() { return RANDOM_FLOAT(m_flMin, m_flMax); }
+	float Random() const { return RANDOM_FLOAT(m_flMin, m_flMax); }
 
 	float GetInstance() { return Random(); }
 	float GetOffset( float fBasis ) { return Random() - fBasis; }

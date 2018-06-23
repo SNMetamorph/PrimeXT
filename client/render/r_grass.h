@@ -21,46 +21,29 @@ GNU General Public License for more details.
 #define GRASS_ANIM_TIME		0.05f
 #define GRASS_ANIM_DIST		512.0f
 #define GRASS_SCALE_STEP		16.0f
-#define GRASS_DENSITY( size, density )	( sqrtf( size.x * size.x + size.y * size.y ) / 64.0f * density )
-
-#define ParceGrassFirstPass()\
-pfile = COM_ParseFile( pfile, token );\
-if( !pfile )\
-{\
-	ALERT( at_error, "R_ParseGrass: unexpected end of the file %s\n", file );\
-	break;\
-}\
-
-typedef enum
-{
-	GRASS_PASS_NORMAL = 0,
-	GRASS_PASS_SHADOW,
-	GRASS_PASS_AMBIENT,
-	GRASS_PASS_LIGHT,
-	GRASS_PASS_DIFFUSE,
-	GRASS_PASS_FOG,
-} GrassPassMode;
 
 // 20 bytes here
 typedef struct grassvert_s
 {
-	float	v[3];
-	byte	c[4];
-	short	t[2];
+	float		v[3];
+	byte		c[4];
+	short		t[2];
 } grassvert_t;
 
+// all the grassdata for one polygon and specified texture
+// stored into single vbo
 typedef struct grass_s
 {
 	Vector		pos;
 	float		size;
-	byte		color[3];
+	byte		color[4];
 	byte		texture;	// not a real texture just index into array
 	grassvert_t	*mesh;
+	struct grass_s	*chain;
 } grass_t;
 
 typedef struct grasshdr_s
 {
-	int		renderframe, cullframe;
 	int		cached_light[MAXLIGHTMAPS];
 	Vector		mins, maxs;
 	float		animtime;
@@ -68,8 +51,6 @@ typedef struct grasshdr_s
 	float		scale;
 	int		count;	// total bush count for this poly
 	float		dist;	// dist to player
-
-	struct grasshdr_s	*chain[3];
 	grass_t		g[1];	// variable sized
 } grasshdr_t;
 
@@ -77,22 +58,26 @@ typedef struct grasstex_s
 {
 	char		name[256];
 	int		gl_texturenum;
+	grass_t		*grasschain;	// for sequentially draw
 } grasstex_t;
 
-typedef struct grasspinfo_s
+typedef struct grassentry_s
 {
-	char		stex[16];
-	char		gtex[256];
-	byte		texture;
-	float		density;
-	float		min;
-	float		max;
-	int		seed;
-} grasspinfo_t;
+	char		name[16];		// name of level texture
+	byte		texture;		// number in array of grass textures
+	float		density;		// grass density (0 - 100)
+	float		min;		// min grass scale
+	float		max;		// max grass scale
+	int		seed;		// seed for predictable random (auto-filled)
+} grassentry_t;
 
-extern void R_DrawGrass( int pass );
-extern void R_ParseGrassFile( void );
+extern void R_GrassInit( void );
+extern void R_GrassShutdown( void );
+extern void R_GrassInitForSurface( msurface_t *surf );
+extern void R_DrawGrass( qboolean lightpass = false );
 extern void R_ReLightGrass( msurface_t *surf, bool force = false );
-extern void R_AddToGrassChain( msurface_t *surf, const mplane_t frustum[6], unsigned int clipflags, qboolean lightpass );
+extern bool R_AddGrassToChain( msurface_t *s, CFrustum *frustum, bool lightpass = false, struct mworldleaf_s *leaf = NULL );
+extern void R_DrawGrassLight( struct plight_s *pl );
+extern void R_UnloadFarGrass( void );
 
 #endif//R_GRASS_H

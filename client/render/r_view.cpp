@@ -15,7 +15,7 @@
 #include <mathlib.h>
 
 // thirdperson camera
-void CAM_Think( void ) { R_ClearScene(); }
+void CAM_Think( void ) {}
 void CL_CameraOffset( float *ofs ) { g_vecZero.CopyToArray( ofs ); }
 int CL_IsThirdPerson( void ){ return (gHUD.m_iCameraMode ? 1 : 0); }
 
@@ -24,6 +24,7 @@ float v_idlescale;
 int pause = 0;
 
 cvar_t	*r_test;
+cvar_t	*r_extensions;
 cvar_t	*cl_bobcycle;
 cvar_t	*cl_bob;
 cvar_t	*cl_bobup;
@@ -35,50 +36,43 @@ cvar_t	*v_centermove;
 cvar_t	*v_centerspeed;
 cvar_t	*cl_viewsize;
 cvar_t	*gl_renderer;
-cvar_t	*r_overview;
+cvar_t	*gl_check_errors;
 cvar_t	*r_finish;
-cvar_t	*r_fastsky;
+cvar_t	*r_clear;
 cvar_t	*r_speeds;
-cvar_t	*r_stencilbits;
-cvar_t	*r_draw_beams;
-cvar_t	*r_width;
-cvar_t	*r_height;
 cvar_t	*r_novis;
 cvar_t	*r_nocull;
+cvar_t	*r_nosort;
 cvar_t	*r_lockpvs;
 cvar_t	*r_dynamic;
 cvar_t	*r_shadows;
-cvar_t	*mod_allow_materials;
 cvar_t	*r_lightmap;
+cvar_t	*vid_gamma;
+cvar_t	*vid_brightness;
 cvar_t	*r_adjust_fov;
 cvar_t	*r_wireframe;
 cvar_t	*r_fullbright;
-cvar_t	*r_allow_static;
 cvar_t	*r_allow_mirrors;
 cvar_t	*r_allow_portals;
 cvar_t	*r_allow_screens;
 cvar_t	*r_drawentities;
-cvar_t	*r_faceplanecull;
 cvar_t	*r_detailtextures;
-cvar_t	*r_lighting_ambient;
+cvar_t	*r_recursion_depth;
 cvar_t	*r_lighting_modulate;
 cvar_t	*r_lighting_extended;
 cvar_t	*r_lightstyle_lerping;
-cvar_t	*r_bloom_alpha;
-cvar_t	*r_bloom_diamond_size;
-cvar_t	*r_bloom_intensity;
-cvar_t	*r_bloom_darken;
-cvar_t	*r_bloom_sample_size;
-cvar_t	*r_bloom_fast_sample;
-cvar_t	*r_bloom;
+cvar_t	*r_recursive_world_node;
+cvar_t	*r_polyoffset;
 cvar_t	*r_grass;
 cvar_t	*r_grass_alpha;
 cvar_t	*r_grass_lighting;
 cvar_t	*r_grass_shadows;
 cvar_t	*r_grass_fade_start;
 cvar_t	*r_grass_fade_dist;
-cvar_t	*r_overbright;
-cvar_t	*r_skyfog;
+cvar_t	*r_show_renderpass;
+cvar_t	*r_show_light_scissors;
+cvar_t	*r_show_normals;
+cvar_t	*r_show_lightprobes;
 
 cvar_t	v_iyaw_cycle	= { "v_iyaw_cycle", "2", 0, 2 };
 cvar_t	v_iroll_cycle	= { "v_iroll_cycle", "0.5", 0, 0.5 };
@@ -128,33 +122,29 @@ void V_Init( void )
 	cl_weaponlag	= CVAR_REGISTER( "cl_weaponlag", "0.3", FCVAR_ARCHIVE );
 
 	// setup some engine cvars for custom rendering
-	mod_allow_materials = CVAR_GET_POINTER( "host_allow_materials" );
-	r_overview	= CVAR_GET_POINTER( "dev_overview" );
+	r_extensions	= CVAR_GET_POINTER( "gl_allow_extensions" );
 	r_finish		= CVAR_GET_POINTER( "gl_finish" );
-	r_fastsky		= CVAR_GET_POINTER( "r_fastsky" );
+	r_clear		= CVAR_GET_POINTER( "gl_clear" );
 	r_speeds		= CVAR_GET_POINTER( "r_speeds" );
-	r_stencilbits	= CVAR_GET_POINTER( "gl_stencilbits" );
-	r_width		= CVAR_GET_POINTER( "width" );
-	r_height		= CVAR_GET_POINTER( "height" );
 	r_test		= CVAR_GET_POINTER( "gl_test" );
 	cl_viewsize	= CVAR_GET_POINTER( "viewsize" );
 
 	r_novis		= CVAR_GET_POINTER( "r_novis" );
 	r_nocull		= CVAR_GET_POINTER( "r_nocull" );
+	r_nosort		= CVAR_GET_POINTER( "gl_nosort" );
 	r_lockpvs		= CVAR_GET_POINTER( "r_lockpvs" );
 	r_dynamic		= CVAR_GET_POINTER( "r_dynamic" );
 	r_lightmap	= CVAR_GET_POINTER( "r_lightmap" );
 	r_wireframe	= CVAR_GET_POINTER( "gl_wireframe" );
-	r_draw_beams	= CVAR_GET_POINTER( "cl_draw_beams" );
 	r_adjust_fov	= CVAR_GET_POINTER( "r_adjust_fov" );
+	gl_check_errors	= CVAR_GET_POINTER( "gl_check_errors" );
+	vid_gamma		= CVAR_GET_POINTER( "gamma" );
+	vid_brightness	= CVAR_GET_POINTER( "brightness" );
+	r_polyoffset	= CVAR_GET_POINTER( "gl_polyoffset" );
 
 	r_fullbright	= CVAR_GET_POINTER( "r_fullbright" );
 	r_drawentities	= CVAR_GET_POINTER( "r_drawentities" );
-	r_allow_static	= CVAR_GET_POINTER( "gl_allow_static" );
-	r_allow_mirrors	= CVAR_GET_POINTER( "gl_allow_mirrors" );
 	r_detailtextures	= CVAR_GET_POINTER( "r_detailtextures" );
-	r_faceplanecull	= CVAR_GET_POINTER( "r_faceplanecull" );
-	r_lighting_ambient	= CVAR_GET_POINTER( "r_lighting_ambient" );
 	r_lighting_modulate	= CVAR_GET_POINTER( "r_lighting_modulate" );
 	r_lightstyle_lerping= CVAR_GET_POINTER( "cl_lightstyle_lerping" );
 	r_lighting_extended	= CVAR_GET_POINTER( "r_lighting_extended" );
@@ -164,25 +154,21 @@ void V_Init( void )
 	r_allow_screens	= CVAR_REGISTER( "gl_allow_screens", "1", FCVAR_ARCHIVE|FCVAR_CLIENTDLL );
 	gl_renderer	= CVAR_REGISTER( "gl_renderer", "1", FCVAR_CLIENTDLL|FCVAR_ARCHIVE ); 
 	r_shadows		= CVAR_REGISTER( "r_shadows", "2", FCVAR_CLIENTDLL|FCVAR_ARCHIVE ); 
-
-	r_bloom		= CVAR_REGISTER( "r_bloom", "0", FCVAR_ARCHIVE );
-	r_bloom_alpha	= CVAR_REGISTER( "r_bloom_alpha", "0.1", FCVAR_ARCHIVE );
-	r_bloom_diamond_size = CVAR_REGISTER( "r_bloom_diamond_size", "8", FCVAR_ARCHIVE );
-	r_bloom_intensity	= CVAR_REGISTER( "r_bloom_intensity", "1", FCVAR_ARCHIVE );
-	r_bloom_darken	= CVAR_REGISTER( "r_bloom_darken", "4", FCVAR_ARCHIVE );
-	r_bloom_sample_size = CVAR_REGISTER( "r_bloom_sample_size", "320", FCVAR_ARCHIVE );
-	r_bloom_fast_sample = CVAR_REGISTER( "r_bloom_fast_sample", "0", FCVAR_ARCHIVE );
+	r_allow_mirrors	= CVAR_REGISTER( "gl_allow_mirrors", "1", FCVAR_ARCHIVE );
+	r_recursion_depth	= CVAR_REGISTER( "gl_recursion_depth", "1", FCVAR_ARCHIVE );
+	r_recursive_world_node = CVAR_REGISTER( "gl_recursive_world_node", "0", FCVAR_ARCHIVE );
 
 	r_grass = CVAR_REGISTER( "r_grass", "1", FCVAR_ARCHIVE );
 	r_grass_alpha = CVAR_REGISTER( "r_grass_alpha", "0.5", FCVAR_ARCHIVE );
 	r_grass_lighting = CVAR_REGISTER( "r_grass_lighting", "1", FCVAR_ARCHIVE );
 	r_grass_shadows = CVAR_REGISTER( "r_grass_shadows", "1", FCVAR_ARCHIVE );
-	r_grass_fade_start = CVAR_REGISTER( "r_grass_fade_start", "1280", FCVAR_ARCHIVE );
-	r_grass_fade_dist = CVAR_REGISTER( "r_grass_fade_dist", "512", FCVAR_ARCHIVE );
+	r_grass_fade_start = CVAR_REGISTER( "r_grass_fade_start", "2048", FCVAR_ARCHIVE );
+	r_grass_fade_dist = CVAR_REGISTER( "r_grass_fade_dist", "2048", FCVAR_ARCHIVE );
 
-	r_overbright = CVAR_REGISTER( "r_overbright", "0", FCVAR_ARCHIVE );
-
-	r_skyfog = CVAR_REGISTER( "r_skyfog", "0", FCVAR_ARCHIVE );
+	r_show_renderpass = CVAR_REGISTER( "r_show_renderpass", "0", 0 );
+	r_show_light_scissors = CVAR_REGISTER( "r_show_light_scissors", "0", 0 );
+	r_show_normals = CVAR_REGISTER( "r_show_normals", "0", 0 );
+	r_show_lightprobes = CVAR_REGISTER( "r_show_lightprobes", "0", 0 );
 
 	ADD_COMMAND( "thirdperson", V_ThirdPerson );
 	ADD_COMMAND( "firstperson", V_FirstPerson );
@@ -544,34 +530,6 @@ void V_CalcCameraRefdef( struct ref_params_s *pparams )
 		pparams->vieworg = view->origin;
 		pparams->viewangles = view->angles;
 
-		// interpolate position for monsters
-		if( view->curstate.movetype == MOVETYPE_STEP ) 
-		{
-			float f;
-                    
-			// don't do it if the goalstarttime hasn't updated in a while.
-			// NOTE:  Because we need to interpolate multiplayer characters, the interpolation time limit
-			//  was increased to 1.0 s., which is 2x the max lag we are accounting for.
-			if(( GET_CLIENT_TIME() < view->curstate.animtime + 1.0f ) && ( view->curstate.animtime != view->latched.prevanimtime ))
-			{
-				f = (GET_CLIENT_TIME() - view->curstate.animtime) / (view->curstate.animtime - view->latched.prevanimtime);
-			}
-
-			if( !( view->curstate.effects & EF_NOINTERP ))
-			{
-				// ugly hack to interpolate angle, position.
-				// current is reached 0.1 seconds after being set
-				f = f - 1.0f;
-			}
-			else
-			{
-				f = 0.0f;
-			}
-
-			InterpolateOrigin( view->latched.prevorigin, view->origin, pparams->vieworg, f, true );
-			InterpolateAngles( view->latched.prevangles, view->angles, pparams->viewangles, f, true );
-		}
-
 		studiohdr_t *viewmonster = (studiohdr_t *)IEngineStudio.Mod_Extradata( view->model );
 
 		if( viewmonster && view->curstate.eflags & EFLAG_SLERP )
@@ -585,8 +543,7 @@ void V_CalcCameraRefdef( struct ref_params_s *pparams )
 				viewpos = Vector( 0, 0, 8 );	// monster_cockroach
 
 			pparams->vieworg += viewpos + forward * 8;	// best value for humans
-			pparams->fov_x = 100; // adjust fov for monster view
-			pparams->fov_y = V_CalcFov( pparams->fov_x, pparams->viewport[2], pparams->viewport[3] );
+			// NOTE: fov computation moved into r_main.cpp
 		}
 
 		// this is smooth stair climbing in thirdperson mode but not affected for client model :(
@@ -981,42 +938,13 @@ void V_CalcFirstPersonRefdef( struct ref_params_s *pparams )
 }
 
 //==========================
-// V_CalcGlobalFog
-//==========================
-void V_CalcGlobalFog( struct ref_params_s *pparams )
-{
-	if( !g_fRenderInitialized || RI.fogEnabled )
-		return;
-
-	bool bOn = pparams->waterlevel < 2 && gHUD.m_fStartDist > 0 && gHUD.m_fEndDist > 0;
-
-#if 0	// enable for fog testing
-	gHUD.m_vecFogColor[0] = 107;
-	gHUD.m_vecFogColor[1] = 112;
-	gHUD.m_vecFogColor[2] = 125;
-	gHUD.m_fStartDist = 0;
-	gHUD.m_fEndDist = 4096;
-	bOn = true;
-#endif
-	if( bOn )
-	{
-		RI.fogCustom = true;
-
-		// copy fog params
-		RI.fogColor[0] = TEXTURE_TO_TEXGAMMA( gHUD.m_vecFogColor.x ) / 255.0f;
-		RI.fogColor[1] = TEXTURE_TO_TEXGAMMA( gHUD.m_vecFogColor.y ) / 255.0f;
-		RI.fogColor[2] = TEXTURE_TO_TEXGAMMA( gHUD.m_vecFogColor.z ) / 255.0f;
-		RI.fogStart = gHUD.m_fStartDist;
-		RI.fogEnd = gHUD.m_fEndDist;
-		RI.fogDensity = 0.0f;
-	}
-}
-
-//==========================
 // V_CalcRefdef
 //==========================
 void V_CalcRefdef( struct ref_params_s *pparams )
 {
+	// store a local copy in case we need to calc firstperson later
+	memcpy( &tr.viewparams, pparams, sizeof( ref_params_t ));
+
 	pause = pparams->paused;
 	if( pause ) return;
 
@@ -1036,7 +964,4 @@ void V_CalcRefdef( struct ref_params_s *pparams )
 	{
 		V_CalcFirstPersonRefdef( pparams );
 	}
-
-	// fog that can be controlled from server-side
-	V_CalcGlobalFog( pparams );
 }

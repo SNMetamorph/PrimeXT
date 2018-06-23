@@ -34,6 +34,23 @@ BEGIN_DATADESC( CBaseAnimating )
 	DEFINE_FIELD( m_fSequenceLoops, FIELD_BOOLEAN ),
 END_DATADESC()
 
+void *CBaseAnimating :: GetModelPtr( void )
+{
+	return GET_MODEL_PTR( edict() );
+}
+
+void *CBaseAnimating :: GetModelPtr( int modelindex )
+{
+	if( !g_fPhysicInitialized || modelindex <= 1 )
+		return NULL;
+
+	model_t *mod = (model_t *)MODEL_HANDLE( modelindex );
+
+	if( mod && mod->type == mod_studio )
+		return mod->cache.data;
+	return NULL;
+}
+
 //=========================================================
 // StudioFrameAdvance - advance the animation frame up to the current time
 // if an flInterval is passed in, only advance animation that number of seconds
@@ -66,6 +83,95 @@ float CBaseAnimating :: StudioFrameAdvance ( float flInterval )
 
 	return flInterval;
 }
+
+float CBaseAnimating :: StudioGaitFrameAdvance( void ) 
+{
+	if( !pev->gaitsequence || ( IsNetClient() && FBitSet( pev->fixangle, 1 )))
+	{
+		if( IsPlayer( ))
+		{
+			// reset torso controllers
+			pev->controller[0] = 0x7F;
+			pev->controller[1] = 0x7F;
+			pev->controller[2] = 0x7F;
+			pev->controller[3] = 0x7F;
+		}
+		return 0.0f;
+	}
+
+	float delta = gpGlobals->frametime;
+
+	m_flGaitMovement = pev->velocity.Length() * delta;
+
+	if( pev->velocity.x == 0.0f && pev->velocity.y == 0.0f )
+	{
+		float flYawDiff = pev->angles[YAW] - m_flGaitYaw;
+		flYawDiff = flYawDiff - (int)(flYawDiff / 360) * 360;
+
+		if( flYawDiff > 180 ) flYawDiff -= 360;
+		if( flYawDiff < -180 ) flYawDiff += 360;
+
+		if( delta < 0.25f )
+			flYawDiff *= delta * 4.0f;
+		else flYawDiff *= delta;
+
+		m_flGaitYaw += flYawDiff;
+		m_flGaitYaw -= (int)(m_flGaitYaw / 360) * 360;
+
+		m_flGaitMovement = 0.0f;
+	}
+	else
+	{
+		float gaityaw = RAD2DEG( atan2( pev->velocity.y, pev->velocity.x ));
+		m_flGaitYaw = bound( -180.0f, gaityaw, 180.0f );
+	}
+
+	// calc side to side turning
+	float flYaw = pev->angles[YAW] - m_flGaitYaw; // view direction relative to movement
+	flYaw -= (int)(flYaw / 360) * 360;
+
+	if( flYaw < -180.0f ) flYaw += 360.0f;
+	if( flYaw > 180.0f ) flYaw -= 360.0f;
+
+	flYaw = (int)flYaw;
+
+	// kill the yaw jitter
+	if( flYaw > -1.0f && flYaw < 1.0f )
+		flYaw = 0.0f;
+
+	if( flYaw > 120.0f )
+	{
+		m_flGaitYaw -= 180.0f;
+		m_flGaitMovement = -m_flGaitMovement;
+		flYaw -= 180.0f;
+	}
+	else if( flYaw < -120.0f )
+	{
+		m_flGaitYaw += 180.0f;
+		m_flGaitMovement = -m_flGaitMovement;
+		flYaw += 180.0f;
+	}
+
+	// classic Half-Life method
+	byte iTorsoAdjust = (byte)bound( 0, ((flYaw / 4.0f) + 30) / (60.0f / 255.0f), 255 );
+
+	// value it's already in range 0-255
+	pev->controller[0] = iTorsoAdjust;
+	pev->controller[1] = iTorsoAdjust;
+	pev->controller[2] = iTorsoAdjust;
+	pev->controller[3] = iTorsoAdjust;
+
+	SetBlending( 0, -(pev->angles[PITCH] * 3.0f));
+	pev->angles[YAW] = m_flGaitYaw;
+
+	if( pev->angles[YAW] < -0.0f )
+		pev->angles[YAW] += 360.0f;
+
+	CalcGaitFrame( GetModelPtr(), pev->gaitsequence, pev->fuser1, m_flGaitMovement );
+
+	return m_flGaitMovement;
+}
+
 
 //=========================================================
 // LookupActivity
@@ -204,6 +310,12 @@ void CBaseAnimating :: GetBonePosition ( int iBone, Vector &origin, Vector &angl
 void CBaseAnimating :: GetAttachment ( int iAttachment, Vector &origin, Vector &angles )
 {
 	GET_ATTACHMENT( ENT(pev), iAttachment, origin, angles );
+
+	if( m_hParent != NULL )
+	{
+		matrix4x4 parentSpace = GetParentToWorldTransform();
+		origin = parentSpace.VectorITransform( origin );
+	}
 }
 
 //=========================================================

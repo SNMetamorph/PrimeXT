@@ -33,8 +33,6 @@ typedef struct IVoiceTweak_s
 	// Get/set control values.
 	void	(*SetControlFloat)( VoiceTweakControl iControl, float value );
 	float	(*GetControlFloat)( VoiceTweakControl iControl );
-
-	int	(*GetSpeakingVolume)( void );
 } IVoiceTweak;
 
 #endif//IVOICETWEAK_H

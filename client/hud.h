@@ -25,7 +25,7 @@
 
 #include "wrect.h"
 #include "windows.h"
-#include "vector.h"
+#include "mathlib.h"
 #include "cdll_int.h"
 #include "cdll_dll.h"
 #include "render_api.h"
@@ -529,11 +529,6 @@ public:
 	int DrawHudNumberString( int xpos, int ypos, int iMinX, int iNumber, int r, int g, int b );
 	int GetNumWidth( int iNumber, int iFlags );
 	int m_iHUDColor;
-
-	// fog stuff
-	Vector m_vecFogColor;
-	float m_fStartDist;
-	float m_fEndDist;
 private:
 	// the memory for these arrays are allocated in the first call to CHud::VidInit()
 	// when the hud.txt and associated sprites are loaded. freed in ~CHud()
@@ -583,7 +578,6 @@ public:
 	int _cdecl MsgFunc_Concuss( const char *pszName, int iSize, void *pbuf );
 	int _cdecl MsgFunc_RainData( const char *pszName, int iSize, void *pbuf ); 
 	int _cdecl MsgFunc_HUDColor(const char *pszName,  int iSize, void *pbuf);
-	int _cdecl MsgFunc_SetFog( const char *pszName, int iSize, void *pbuf );
 	int _cdecl MsgFunc_SetBody( const char *pszName, int iSize, void *pbuf );
 	int _cdecl MsgFunc_SetSkin( const char *pszName, int iSize, void *pbuf );
 	int _cdecl MsgFunc_Particle( const char *pszName, int iSize, void *pbuf );
@@ -591,11 +585,14 @@ public:
 	int _cdecl MsgFunc_KillDecals( const char *pszName, int iSize, void *pbuf );
 	int _cdecl MsgFunc_WeaponAnim( const char *pszName, int iSize, void *pbuf );
 	int _cdecl MsgFunc_MusicFade( const char *pszName, int iSize, void *pbuf );
+	int _cdecl MsgFunc_Weapons( const char *pszName, int iSize, void *pbuf );
+	int  _cdecl MsgFunc_StudioDecal( const char *pszName, int iSize, void *pbuf );
+	int  _cdecl MsgFunc_SetupBones( const char *pszName, int iSize, void *pbuf );
 		
 	// Screen information
 	SCREENINFO m_scrinfo;
 
-	int m_iWeaponBits;
+	byte m_iWeaponBits[MAX_WEAPON_BYTES];
 	int m_fPlayerDead;
 	int m_iIntermission;
 
@@ -608,6 +605,8 @@ public:
 	
 	void AddHudElem( CHudBase *p );
 	float GetSensitivity() { return m_flMouseSensitivity; }
+	BOOL HasWeapon( int weaponnum ) { return FBitSet( m_iWeaponBits[weaponnum >> 3], BIT( weaponnum & 7 )); }
+	void AddWeapon( int weaponnum ) { SetBits( m_iWeaponBits[weaponnum >> 3], BIT( weaponnum & 7 )); }
 };
 
 extern CHud		gHUD;

@@ -17,6 +17,7 @@
 
 activity_map_t activity_map[] =
 {
+_A( 	ACT_RESET ),
 _A( 	ACT_IDLE ),
 _A(	ACT_GUARD ),
 _A(	ACT_WALK ),

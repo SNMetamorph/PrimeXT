@@ -17,7 +17,7 @@ GNU General Public License for more details.
 #include "utils.h"
 #include "r_local.h"
 #include "mathlib.h"
-#include "event_api.h"
+#include "r_world.h"
 
 int R_PrecacheCinematic( const char *cinname )
 {
@@ -60,7 +60,7 @@ int R_PrecacheCinematic( const char *cinname )
 	}
 
 	ALERT( at_aiconsole, "Loading cinematic %s\n", cinname );
-	tr.cinematics[i].state = OPEN_CINEMATIC( tr.cinematics[i].name, true );
+	tr.cinematics[i].state = OPEN_CINEMATIC( tr.cinematics[i].name );
 
 	// grab info about movie
 	if( tr.cinematics[i].state != NULL )
@@ -74,13 +74,14 @@ void R_InitCinematics( void )
 	const char *name, *ext;
 
 	// make sure what we have texture to draw cinematics
-	if( !tr.world_has_movies ) return;
+	if( !FBitSet( world->features, WORLD_HAS_MOVIES ))
+		return;
 
 	for( int i = 1; i < 1024; i++ )
 	{
-		name = gEngfuncs.pEventAPI->EV_EventForIndex( i );
+		name = gRenderfuncs.GetFileByIndex( i );
 
-		if( !name || !*name ) break; // end of events array
+		if( !name || !*name ) break; // end of files array
 
 		ext = UTIL_FileExtension( name );
 		if( Q_stricmp( ext, "avi" )) continue;	// not AVI
@@ -137,62 +138,50 @@ int R_AllocateCinematicTexture( unsigned int txFlags )
 	return (i+1);
 }
 
-int R_DrawCinematic( msurface_t *surf, texture_t *t )
+void R_UpdateCinematic( const msurface_t *surf )
 {
-	if( !RI.currententity->curstate.body )
-	{
-		GL_Bind( GL_TEXTURE0, t->gl_texturenum );
-		return 0;	// just disabled
-	}
+	if( !RI->currententity->curstate.body )
+		return; // just disabled
 
 	// draw the cinematic
-	mextrasurf_t *es = SURF_INFO( surf, RI.currentmodel );
+	mextrasurf_t *es = surf->info;
 
 	// found the corresponding cinstate
-	const char *cinname = gEngfuncs.pEventAPI->EV_EventForIndex( RI.currententity->curstate.sequence );
+	const char *cinname = gRenderfuncs.GetFileByIndex( RI->currententity->curstate.sequence );
 	int cinhandle = R_PrecacheCinematic( cinname );
 
-	if( cinhandle >= 0 && es->mirrortexturenum <= 0 )
-		es->mirrortexturenum = R_AllocateCinematicTexture( TF_SCREEN );
+	if( cinhandle >= 0 && es->cintexturenum <= 0 )
+		es->cintexturenum = R_AllocateCinematicTexture( TF_SCREEN );
 
-	if( cinhandle == -1 || es->mirrortexturenum <= 0 || CIN_IS_ACTIVE( tr.cinematics[cinhandle].state ) == false )
+	if( cinhandle == -1 || es->cintexturenum <= 0 || CIN_IS_ACTIVE( tr.cinematics[cinhandle].state ) == false )
 	{
 		// cinematic textures limit exceeded, so remove SURF_MOVIE flag
-		GL_Bind( GL_TEXTURE0, t->gl_texturenum );
-		surf->flags &= ~SURF_MOVIE;
-		return 0;
+		((msurface_t *)surf)->flags &= ~SURF_MOVIE;
+		return;
 	}
 
 	gl_movie_t *cin = &tr.cinematics[cinhandle];
 	float cin_time;
 
-	if( RI.currententity->curstate.iuser1 & CF_LOOPED_MOVIE )
+	if( FBitSet( RI->currententity->curstate.iuser1, CF_LOOPED_MOVIE ))
 	{
 		// advances cinematic time
-		cin_time = fmod( RI.currententity->curstate.fuser2, cin->length );
+		cin_time = fmod( RI->currententity->curstate.fuser2, cin->length );
 	}
 	else
 	{
-		cin_time = RI.currententity->curstate.fuser2;
+		cin_time = RI->currententity->curstate.fuser2;
 	}
 
 	// read the next frame
 	int cin_frame = CIN_GET_FRAME_NUMBER( cin->state, cin_time );
 
+	// upload the new frame
 	if( cin_frame != es->checkcount )
 	{
-		GL_SelectTexture( GL_TEXTURE0 );
-
-		// upload the new frame
+		GL_SelectTexture( GL_TEXTURE0 ); // doesn't matter. select 0-th unit just as default
 		byte *raw = CIN_GET_FRAMEDATA( cin->state, cin_frame );
-		CIN_UPLOAD_FRAME( tr.cinTextures[es->mirrortexturenum-1], cin->xres, cin->yres, cin->xres, cin->yres, raw );
+		CIN_UPLOAD_FRAME( tr.cinTextures[es->cintexturenum-1], cin->xres, cin->yres, cin->xres, cin->yres, raw );
 		es->checkcount = cin_frame;
 	}
-	else
-	{
-		// have valid cinematic texture
-		GL_Bind( GL_TEXTURE0, tr.cinTextures[es->mirrortexturenum-1] );
-	}
-
-	return 1;
 }

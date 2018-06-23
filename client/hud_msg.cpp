@@ -25,7 +25,7 @@
 // CHud message handlers
 DECLARE_HUDMESSAGE( Logo );
 DECLARE_HUDMESSAGE( HUDColor );
-DECLARE_HUDMESSAGE( SetFog );
+DECLARE_HUDMESSAGE( Weapons );
 DECLARE_HUDMESSAGE( RainData );
 DECLARE_HUDMESSAGE( SetBody );
 DECLARE_HUDMESSAGE( SetSkin );
@@ -40,6 +40,8 @@ DECLARE_HUDMESSAGE( GameMode );
 DECLARE_HUDMESSAGE( MusicFade );
 DECLARE_HUDMESSAGE( WeaponAnim );
 DECLARE_HUDMESSAGE( KillDecals );
+DECLARE_HUDMESSAGE( StudioDecal );
+DECLARE_HUDMESSAGE( SetupBones );
 
 int CHud :: InitHUDMessages( void )
 {
@@ -50,16 +52,18 @@ int CHud :: InitHUDMessages( void )
 	HOOK_MESSAGE( ViewMode );
 	HOOK_MESSAGE( SetFOV );
 	HOOK_MESSAGE( Concuss );
+	HOOK_MESSAGE( Weapons );
 	HOOK_MESSAGE( HUDColor );
 	HOOK_MESSAGE( Particle );
 	HOOK_MESSAGE( KillPart );
-	HOOK_MESSAGE( SetFog );
 	HOOK_MESSAGE( RainData ); 
 	HOOK_MESSAGE( SetBody );
 	HOOK_MESSAGE( SetSkin );
 	HOOK_MESSAGE( MusicFade );
 	HOOK_MESSAGE( WeaponAnim );
 	HOOK_MESSAGE( KillDecals );
+	HOOK_MESSAGE( StudioDecal );
+	HOOK_MESSAGE( SetupBones );
 
 	m_iFOV = 0;
 	m_iHUDColor = 0x00FFA000; // 255,160,0
@@ -106,10 +110,6 @@ int CHud :: MsgFunc_ResetHUD( const char *pszName, int iSize, void *pbuf )
 	// reset concussion effect
 	m_iConcussionEffect = 0;
 
-	// reset fog
-	m_fStartDist = 0;
-	m_fEndDist = 0;
-
 	return 1;
 }
 
@@ -125,6 +125,18 @@ int CHud :: MsgFunc_Logo( const char *pszName, int iSize, void *pbuf )
 	return 1;
 }
 
+int CHud :: MsgFunc_Weapons( const char *pszName, int iSize, void *pbuf )
+{
+	BEGIN_READ( pszName, pbuf, iSize );
+
+	// update weapon bits
+	READ_BYTES( m_iWeaponBits, MAX_WEAPON_BYTES );
+
+	END_READ();
+
+	return 1;
+}
+
 int CHud :: MsgFunc_ViewMode( const char *pszName, int iSize, void *pbuf )
 {
 	return 1;
@@ -132,9 +144,6 @@ int CHud :: MsgFunc_ViewMode( const char *pszName, int iSize, void *pbuf )
 
 int CHud :: MsgFunc_InitHUD( const char *pszName, int iSize, void *pbuf )
 {
-	m_fStartDist = 0;
-	m_fEndDist = 0;
-
 	// prepare all hud data
 	HUDLIST *pList = m_pHudList;
 
@@ -181,22 +190,6 @@ int CHud::MsgFunc_HUDColor( const char *pszName, int iSize, void *pbuf )
 {
 	BEGIN_READ( pszName, pbuf, iSize );
 	m_iHUDColor = READ_LONG();
-	END_READ();
-	
-	return 1;
-}
-
-int CHud :: MsgFunc_SetFog( const char *pszName, int iSize, void *pbuf )
-{
-	BEGIN_READ( pszName, pbuf, iSize );
-
-	m_vecFogColor.x = (float)READ_BYTE() * (1.0f / 255.0f);
-	m_vecFogColor.y = (float)READ_BYTE() * (1.0f / 255.0f);
-	m_vecFogColor.z = (float)READ_BYTE() * (1.0f / 255.0f);
-
-	m_fStartDist = (float)READ_SHORT();
-          m_fEndDist = (float)READ_SHORT();
-
 	END_READ();
 	
 	return 1;
@@ -338,11 +331,12 @@ int CHud :: MsgFunc_KillDecals( const char *pszName, int iSize, void *pbuf )
 
 	int entityIndex = READ_SHORT();
 
-	g_StudioRenderer.RemoveAllDecals( entityIndex );
+	if( g_fRenderInitialized )
+		g_StudioRenderer.RemoveAllDecals( entityIndex );
 
 	cl_entity_t *ent = gEngfuncs.GetEntityByIndex( entityIndex );
 
-	if( ent->model && ent->model->type == mod_brush )
+	if( g_fRenderInitialized && ent->model && ent->model->type == mod_brush )
 	{
 		REMOVE_BSP_DECALS( ent->model );
 	}
@@ -352,11 +346,133 @@ int CHud :: MsgFunc_KillDecals( const char *pszName, int iSize, void *pbuf )
 	return 1;
 }
 
+int CHud :: MsgFunc_StudioDecal( const char *pszName, int iSize, void *pbuf )
+{
+	Vector vecEnd, vecSrc;
+
+	if( !g_fRenderInitialized )
+		return 1;
+
+	BEGIN_READ( pszName, pbuf, iSize );
+
+	vecEnd.x = READ_COORD();
+	vecEnd.y = READ_COORD();
+	vecEnd.z = READ_COORD();
+	vecSrc.x = READ_COORD();
+	vecSrc.y = READ_COORD();
+	vecSrc.z = READ_COORD();
+	int decalIndex = READ_SHORT();
+	int entityIndex = READ_SHORT();
+	int modelIndex = READ_SHORT();
+	int flags = READ_BYTE();
+
+	modelstate_t state;
+	state.sequence = READ_SHORT();
+	state.frame = READ_SHORT();
+	state.blending[0] = READ_BYTE();
+	state.blending[1] = READ_BYTE();
+	state.controller[0] = READ_BYTE();
+	state.controller[1] = READ_BYTE();
+	state.controller[2] = READ_BYTE();
+	state.controller[3] = READ_BYTE();
+	state.body = READ_BYTE();
+	state.skin = READ_BYTE();
+	int cacheID = READ_SHORT();
+
+	cl_entity_t *ent = GET_ENTITY( entityIndex );
+
+	if( !ent )
+	{
+		// something very bad happens...
+		ALERT( at_error, "StudioDecal: ent == NULL\n" );
+		END_READ();
+
+		return 1;
+	}
+
+	entity_state_t savestate = ent->curstate;
+	Vector origin = ent->origin;
+	Vector angles = ent->angles;
+
+	int decalTexture = gEngfuncs.pEfxAPI->Draw_DecalIndex( decalIndex );
+	if( !ent->model && modelIndex != 0 )
+		ent->model = IEngineStudio.GetModelByIndex( modelIndex );
+
+	// setup model pose for decal shooting
+	ent->curstate.sequence = state.sequence;
+	ent->curstate.frame = (float)state.frame * (1.0f / 8.0f);
+	ent->curstate.blending[0] = state.blending[0];
+	ent->curstate.blending[1] = state.blending[1];
+	ent->curstate.controller[0] = state.controller[0];
+	ent->curstate.controller[1] = state.controller[1];
+	ent->curstate.controller[2] = state.controller[2];
+	ent->curstate.controller[3] = state.controller[3];
+	ent->curstate.body = state.body;
+	ent->curstate.skin = state.skin;
+
+	if( cacheID )
+	{
+		// tell the code about vertex lighting
+		SetBits( ent->curstate.iuser1, CF_STATIC_ENTITY );
+		ent->curstate.colormap = cacheID;
+	}
+
+//	double start = Sys_DoubleTime();
+
+	R_StudioDecalShoot( decalTexture, ent, vecSrc, vecEnd, flags, &state );
+
+//	ALERT( at_console, "ShootDecal: buildtime %g\n", Sys_DoubleTime() - start );
+
+	// restore original state
+	ent->curstate = savestate;
+	ent->origin = origin;
+	ent->angles = angles;
+
+	END_READ();
+
+	return 1;
+}
+
+int CHud :: MsgFunc_SetupBones( const char *pszName, int iSize, void *pbuf )
+{
+	static Vector pos[MAXSTUDIOBONES];
+	static Radian ang[MAXSTUDIOBONES];
+
+	BEGIN_READ( pszName, pbuf, iSize );
+		int entityIndex = READ_SHORT();
+		int boneCount = READ_BYTE();
+		for( int i = 0; i < boneCount; i++ )
+		{
+			pos[i].x = (float)READ_SHORT() * (1.0f/128.0f);
+			pos[i].y = (float)READ_SHORT() * (1.0f/128.0f);
+			pos[i].z = (float)READ_SHORT() * (1.0f/128.0f);
+			ang[i].x = (float)READ_SHORT() * (1.0f/512.0f);
+			ang[i].y = (float)READ_SHORT() * (1.0f/512.0f);
+			ang[i].z = (float)READ_SHORT() * (1.0f/512.0f);
+		}
+	END_READ();	
+
+	cl_entity_t *ent = GET_ENTITY( entityIndex );
+
+	if( !ent )
+	{
+		// something very bad happens...
+		ALERT( at_error, "SetupBones: ent == NULL\n" );
+
+		return 1;
+	}
+
+	R_StudioSetBonesExternal( ent, pos, ang );
+
+	return 1;
+}
+
 int CHud :: MsgFunc_RainData( const char *pszName, int iSize, void *pbuf )
 {
 	BEGIN_READ( pszName, pbuf, iSize );
 
-	R_ParseRainMessage();
+	if( g_fRenderInitialized )
+		R_ParseRainMessage();
 
 	END_READ();	
 
@@ -367,7 +483,8 @@ int CHud :: MsgFunc_MusicFade( const char *pszName, int iSize, void *pbuf )
 {
 	BEGIN_READ( pszName, pbuf, iSize );
 
-	MUSIC_FADE_VOLUME( (float)READ_SHORT() / 100.0f );
+	if( g_fRenderInitialized )
+		MUSIC_FADE_VOLUME( (float)READ_SHORT() / 100.0f );
 
 	END_READ();
 

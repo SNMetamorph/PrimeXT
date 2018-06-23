@@ -26,19 +26,25 @@ SPRITE MODELS
 */
 
 #define IDSPRITEHEADER	(('P'<<24)+('S'<<16)+('D'<<8)+'I')	// little-endian "IDSP"
-#define SPRITE_VERSION	2				// Half-Life sprites
 
+#define SPRITE_VERSION_Q1	1				// Quake sprites
+#define SPRITE_VERSION_HL	2				// Half-Life sprites
+
+// must match definition in alias.h
+#ifndef SYNCTYPE_T
+#define SYNCTYPE_T
 typedef enum
 {
 	ST_SYNC = 0,
 	ST_RAND
 } synctype_t;
+#endif
 
 typedef enum
 {
 	FRAME_SINGLE = 0,
 	FRAME_GROUP,
-	FRAME_ANGLED		// Xash3D ext
+	FRAME_ANGLED			// Xash3D ext
 } frametype_t;
 
 typedef enum
@@ -64,6 +70,25 @@ typedef enum
 	SPR_CULL_NONE,			// oriented sprite will be draw back face too
 } facetype_t;
 
+// generic helper
+typedef struct
+{
+	int		ident;		// LittleLong 'ISPR'
+	int		version;		// current version 2
+} dsprite_t;
+
+typedef struct
+{
+	int		ident;		// LittleLong 'ISPR'
+	int		version;		// current version 2
+	int		type;		// camera align
+	float		boundingradius;	// quick face culling
+	int		bounds[2];	// mins\maxs
+	int		numframes;	// including groups
+	float		beamlength;	// ???
+	synctype_t	synctype;		// animation synctype
+} dsprite_q1_t;
+
 typedef struct
 {
 	int		ident;		// LittleLong 'ISPR'
@@ -75,7 +100,7 @@ typedef struct
 	int		numframes;	// including groups
 	facetype_t	facetype;		// cullface (Xash3D ext)
 	synctype_t	synctype;		// animation synctype
-} dsprite_t;
+} dsprite_hl_t;
 
 typedef struct
 {

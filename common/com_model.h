@@ -34,6 +34,16 @@ GNU General Public License for more details.
 #define MAXLIGHTMAPS	4
 #define NUM_AMBIENTS	4		// automatic ambient sounds
 
+// model flags (stored in model_t->flags)
+#define MODEL_CONVEYOR		BIT( 0 )
+#define MODEL_HAS_ORIGIN		BIT( 1 )
+#define MODEL_LIQUID		BIT( 2 )	// model has only point hull
+#define MODEL_TRANSPARENT		BIT( 3 )	// have transparent surfaces
+#define MODEL_COLORED_LIGHTING	BIT( 4 )	// lightmaps stored as RGB
+
+#define MODEL_WORLD			BIT( 29 )	// it's a worldmodel
+#define MODEL_CLIENT		BIT( 30 )	// client sprite
+
 // model types
 typedef enum
 {
@@ -87,7 +97,10 @@ typedef struct
 	unsigned short	max_extent;	// default is 16, subdivision step ((texture_step * max_extent) - texture_step)
 	short		groupid;		// to determine equal landscapes from various groups, -1 - no group
 
-	int		reserved[32];	// just for future expansions or mod-makers
+	vec3_t		mins, maxs;	// terrain bounds (fill by user)
+	struct terrain_s	*terrain;		// valid only for client-side or local game
+
+	int		reserved[31];	// just for future expansions or mod-makers
 } mfaceinfo_t;
 
 typedef struct
@@ -99,20 +112,6 @@ typedef struct
 	texture_t		*texture;
 	int		flags;		// sky or slime, no lightmap or 256 subdivision
 } mtexinfo_t;
-
-// 73 bytes per VBO vertex
-// FIXME: align to 32 bytes
-typedef struct glvert_s
-{
-	vec3_t		vertex;		// position
-	vec3_t		normal;		// normal
-	float		stcoord[2];	// ST texture coords
-	float		lmcoord[2];	// ST lightmap coords
-	float		sccoord[2];	// ST scissor coords (decals only) - for normalmap coords migration
-	vec3_t		tangent;		// tangent
-	vec3_t		binormal;		// binormal
-	byte		color[4];		// colors per vertex
-} glvert_t;
 
 typedef struct glpoly_s
 {
@@ -152,13 +151,15 @@ struct decal_s
 	float		dy;		// 
 	float		scale;		// Pixel scale
 	short		texture;		// Decal texture
-	byte		flags;		// Decal flags  FDECAL_*
+	short		flags;		// Decal flags  FDECAL_*
 	short		entityIndex;	// Entity this is attached to
-// Xash3D added
+// Xash3D specific
 	vec3_t		position;		// location of the decal center in world space.
-	vec3_t		saxis;		// direction of the s axis in world space
-	struct msurfmesh_s	*mesh;		// decal mesh in local space
-	int		reserved[4];	// for future expansions
+	glpoly_t		*polys;		// precomputed decal vertices
+	int		glsl_sequence;	// shader cache
+	word		shaderNum;
+	word		unused;
+	int		reserved[2];	// just for future expansions or mod-makers
 };
 
 typedef struct mleaf_s
@@ -180,6 +181,63 @@ typedef struct mleaf_s
 	byte		ambient_sound_level[NUM_AMBIENTS];
 
 } mleaf_t;
+
+// surface extradata
+typedef struct mextrasurf_s
+{
+	vec3_t		mins, maxs;
+	vec3_t		origin;		// surface origin
+	struct msurface_s	*surf;		// upcast to surface
+
+	// extended light info
+	int		dlight_s, dlight_t;	// gl lightmap coordinates for dynamic lightmaps
+
+	short		lightmapmins[2];	// lightmatrix
+	short		lightextents[2];
+	float		lmvecs[2][4];
+
+	color24		*deluxemap;	// note: this is the actual deluxemap data for this surface
+	byte		*shadowmap;	// note: occlusion map for this surface
+// begin userdata
+	int		cintexturenum;	// cinematic handle
+	struct mextrasurf_s	*detailchain;	// for detail textures drawing
+	struct mextrasurf_s	*mirrorchain;	// for gl_texsort drawing
+	struct mextrasurf_s	*lumachain;	// draw fullbrights
+	struct cl_entity_s	*parent;		// upcast to owner entity
+// after this point engine touches nothing
+	int		unused;
+
+	struct grasshdr_s	*grass;		// grass that linked by this surface
+	unsigned short	grasscount;	// number of bushes per polygon (used to determine total VBO size)
+	unsigned short	numverts;		// world->vertexes[]
+	int		firstvertex;	// fisrt look up in tr.tbn_vectors[], then acess to world->vertexes[]
+
+	struct mextrasurf_s	*lightchain;	// for spotlight drawing
+	struct mextrasurf_s	*chromechain;	// for chrome-effect drawing
+	int		checkcount;	// used for cin textures
+	int		tracecount;	// used for trace checking
+
+	unsigned short	light_s[MAXLIGHTMAPS];
+	unsigned short	light_t[MAXLIGHTMAPS];
+	word		lightmaptexturenum;	// custom lightmap number
+
+	word		shaderNum[2];		// constantly assigned shader to this surface
+	word		omniLightShaderNum;		// cached omni light shader for this face
+	word		projLightShaderNum[2];	// cached proj light shader for this face
+	word		glsl_sequence[2];		// if( tr.glsl_valid_sequence != es->glsl_sequence ) it's time to recompile shader
+	word		glsl_sequence_omni;		// same as above but for omnilights
+	word		glsl_sequence_proj[2];	// same as above but for projlights
+	float		texofs[2];		// conveyor offsets
+	int		cached_frame;
+
+	unsigned short	*indexes;		// for subdivided polys
+	unsigned short	numindexes;
+
+	short		subtexture[8];	// MAX_REF_STACK
+	word		gl_texturenum;	// current diffuse texture
+	word		dt_texturenum;	// current detail texture
+	int		reserved[25];	// just for future expansions or mod-makers
+} mextrasurf_t;
 
 typedef struct msurface_s
 {
@@ -209,50 +267,11 @@ typedef struct msurface_s
 	int		lightmaptexturenum;
 	byte		styles[MAXLIGHTMAPS];
 	int		cached_light[MAXLIGHTMAPS];	// values currently used in lightmap
-	struct msurface_s	*lightmapchain;		// for new dlights rendering (was cached_dlight)
+	mextrasurf_t	*info;		// pointer to surface extradata (was cached_dlight)
 
 	color24		*samples;		// note: this is the actual lightmap data for this surface
 	decal_t		*pdecals;
 } msurface_t;
-
-typedef struct msurfmesh_s
-{
-	unsigned short	numVerts;
-	unsigned short	numElems;		// ~ 20 000 vertex per one surface. Should be enough
-	unsigned int	startVert;	// user-variable. may be used for construct world single-VBO
-	unsigned int	startElem;	// user-variable. may be used for construct world single-VBO
-
-	glvert_t		*verts;		// vertexes array
-	unsigned short	*elems;		// indices		
-
-	struct msurface_s	*surf;		// pointer to parent surface. Just for consistency
-	struct msurfmesh_s	*next;		// temporary chain of subdivided surfaces
-} msurfmesh_t;
-
-// surface extradata stored in cache.data for all brushmodels
-typedef struct mextrasurf_s
-{
-	vec3_t		mins, maxs;
-	vec3_t		origin;		// surface origin
-	msurfmesh_t	*mesh;		// VBO\VA ready surface mesh. Not used by engine but can be used by mod-makers
-
-	int		dlight_s, dlight_t;	// gl lightmap coordinates for dynamic lightmaps
-
-	int		mirrortexturenum;	// gl texnum
-	matrix4x4		mirrormatrix;
-	struct mextrasurf_s	*mirrorchain;	// for gl_texsort drawing
-	struct mextrasurf_s *detailchain;	// for detail textures drawing
-	color24		*deluxemap;	// note: this is the actual deluxemap data for this surface
-
-	struct mextrasurf_s	*lightchain;	// for spotlight drawing
-	int		checkcount;	// used for cin textures
-	int		tracecount;	// used for trace checking
-
-	struct mextrasurf_s	*chromechain;	// for chrome-effect drawing
-	struct grasshdr_s	*grass;
-	int		grasscount;	// number of bushes for this poly
-	int		reserved[26];	// just for future expansions or mod-makers
-} mextrasurf_t;
 
 typedef struct hull_s
 {
@@ -290,7 +309,11 @@ typedef struct model_s
 	float		radius;
     
 	// brush model
+	union
+	{
 	int		firstmodelsurface;
+	int		modelCRC;
+	};
 	int		nummodelsurfaces;
 
 	int		numsubmodels;
@@ -331,18 +354,28 @@ typedef struct model_s
 	int		numtextures;
 	texture_t		**textures;
 
+	union
+	{
 	byte		*visdata;
+	struct mposebone_s	*poseToBone;
+	};
 
+	union
+	{
 	color24		*lightdata;
+	struct mbodypart_s	*bodyparts;	// pointer to VBO-prepared model (only for mod_studio)
+	};
+
+	union
+	{
 	char		*entities;
+	struct mstudiomat_s	*materials;	// studio materials (only for mod_studio)
+	};
 //
 // additional model data
 //
 	cache_user_t	cache;		// only access through Mod_Extradata
 } model_t;
-
-typedef float		vec2_t[2];
-typedef float		vec4_t[4];
 
 typedef struct alight_s
 {
@@ -382,7 +415,7 @@ typedef struct player_info_s
 	int		bottomcolor;
 
 	// last frame rendered
-	int		renderframe;	
+	unsigned int	renderframe;	
 
 	// Gait frame estimation
 	int		gaitsequence;
