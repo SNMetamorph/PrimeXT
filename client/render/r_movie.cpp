@@ -21,8 +21,17 @@ GNU General Public License for more details.
 
 int R_PrecacheCinematic( const char *cinname )
 {
+	int load_sound = 0;
+
 	if( !cinname || !*cinname )
 		return -1;
+
+	if( *cinname == '*' )
+	{
+		if( g_iXashEngineBuildNumber >= 4256 )
+			load_sound = 1;
+		cinname++;
+	}
 
 	// not AVI file
 	if( Q_stricmp( UTIL_FileExtension( cinname ), "avi" ))
@@ -59,8 +68,8 @@ int R_PrecacheCinematic( const char *cinname )
 		FREE_CINEMATIC( tr.cinematics[i].state );
 	}
 
-	ALERT( at_aiconsole, "Loading cinematic %s\n", cinname );
-	tr.cinematics[i].state = OPEN_CINEMATIC( tr.cinematics[i].name );
+	ALERT( at_console, "Loading cinematic %s [%s]\n", cinname, load_sound ? "sound" : "muted" );
+	tr.cinematics[i].state = OPEN_CINEMATIC( tr.cinematics[i].name, load_sound );
 
 	// grab info about movie
 	if( tr.cinematics[i].state != NULL )
@@ -151,7 +160,7 @@ void R_UpdateCinematic( const msurface_t *surf )
 	int cinhandle = R_PrecacheCinematic( cinname );
 
 	if( cinhandle >= 0 && es->cintexturenum <= 0 )
-		es->cintexturenum = R_AllocateCinematicTexture( TF_SCREEN );
+		es->cintexturenum = R_AllocateCinematicTexture( TF_NOMIPMAP );
 
 	if( cinhandle == -1 || es->cintexturenum <= 0 || CIN_IS_ACTIVE( tr.cinematics[cinhandle].state ) == false )
 	{
@@ -185,3 +194,36 @@ void R_UpdateCinematic( const msurface_t *surf )
 		es->checkcount = cin_frame;
 	}
 }
+
+void R_UpdateCinSound( cl_entity_t *e )
+{
+	if( g_iXashEngineBuildNumber < 4256 )
+		return; // too old for this feature
+
+	if( !e->curstate.body || !FBitSet( e->curstate.iuser1, CF_MOVIE_SOUND ))
+		return; // just disabled
+
+	// found the corresponding cinstate
+	const char *cinname = gRenderfuncs.GetFileByIndex( e->curstate.sequence );
+	int cinhandle = R_PrecacheCinematic( cinname );
+
+	if( cinhandle == -1 || CIN_IS_ACTIVE( tr.cinematics[cinhandle].state ) == false )
+		return;
+
+	gl_movie_t *cin = &tr.cinematics[cinhandle];
+	float cin_time;
+
+	if( FBitSet( e->curstate.iuser1, CF_LOOPED_MOVIE ))
+	{
+		// advances cinematic time
+		cin_time = fmod( e->curstate.fuser2, cin->length );
+	}
+	else
+	{
+		cin_time = e->curstate.fuser2;
+	}
+
+	// stream avi sound
+	CIN_UPDATE_SOUND( cin->state, e->index, VOL_NORM, ATTN_IDLE, cin_time );
+}
+

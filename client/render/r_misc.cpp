@@ -22,7 +22,7 @@ GNU General Public License for more details.
 #include "r_weather.h"
 #include "r_efx.h"
 #include "pm_defs.h"
-#include <mathlib.h>
+#include "r_shader.h"
 #include "r_view.h"
 #include "r_world.h"
 
@@ -189,6 +189,7 @@ int HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname )
 			if( ent->curstate.renderfx )
 			{
 				factor = tr.lightstylevalue[ent->curstate.renderfx] * (1.0f/255.0f);
+				factor = bound( 0.0f, factor, 1.0f );
 			}
 
 			if( ent->curstate.rendercolor.r == 0 && ent->curstate.rendercolor.g == 0 && ent->curstate.rendercolor.b == 0 )
@@ -222,23 +223,28 @@ int HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname )
 		if( ent->curstate.effects & EF_DYNAMIC_LIGHT )
 		{
 			plight_t	*pl = CL_AllocPlight( ent->curstate.number );
-			unsigned int lightcolor[3];
-			int factor = 256;
+			float factor = 1.0f;
 
 			if( ent->curstate.renderfx )
-				factor = tr.lightstylevalue[ent->curstate.renderfx];
-
-			if( ent->curstate.rendercolor.r || ent->curstate.rendercolor.g || ent->curstate.rendercolor.b )
 			{
-				lightcolor[0] = ent->curstate.rendercolor.r * factor;
-				lightcolor[1] = ent->curstate.rendercolor.g * factor;
-				lightcolor[2] = ent->curstate.rendercolor.b * factor;
-
-				pl->color.r = Q_min((lightcolor[0] >> 7), 255 );
-				pl->color.g = Q_min((lightcolor[1] >> 7), 255 );
-				pl->color.b = Q_min((lightcolor[2] >> 7), 255 );
+				factor = tr.lightstylevalue[ent->curstate.renderfx] * (1.0f/255.0f);
+				factor = bound( 0.0f, factor, 1.0f );
 			}
-			else pl->color.r = pl->color.g = pl->color.b = 255;
+
+			if( ent->curstate.rendercolor.r == 0 && ent->curstate.rendercolor.g == 0 && ent->curstate.rendercolor.b == 0 )
+			{
+				pl->color.r = pl->color.g = pl->color.b = 255;
+			}
+			else
+			{
+				pl->color.r = ent->curstate.rendercolor.r;
+				pl->color.g = ent->curstate.rendercolor.g;
+				pl->color.b = ent->curstate.rendercolor.b;
+			}
+
+			pl->color.r *= factor;
+			pl->color.g *= factor;
+			pl->color.b *= factor;
 
 			float radius = ent->curstate.scale ? (ent->curstate.scale * 8.0f) : 300; // default light radius
 			pl->die = gEngfuncs.GetClientTime() + 0.05f; // die at next frame
@@ -271,6 +277,12 @@ int HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname )
 				// light in solid
 				pl->radius = 0.0f;
 			}
+		}
+
+		if( ent->curstate.effects & EF_SCREENMOVIE )
+		{
+			// update cin sound properly
+			R_UpdateCinSound( ent );
 		}
 
 		if( ent->model->type == mod_studio )
@@ -973,6 +985,89 @@ terrain_t *R_FindTerrain( const char *texname )
 }
 
 /*
+====================
+ED_ParseEdict
+
+Parses an edict out of the given string, returning the new position
+ed should be a properly initialized empty edict.
+====================
+*/
+void ED_ParseEdict( char **pfile )
+{
+	int	vertex_light_cache = -1;
+	char	modelname[64];
+	char	token[2048];
+
+	// go through all the dictionary pairs
+	while( 1 )
+	{	
+		char	keyname[256];
+
+		// parse key
+		if(( *pfile = COM_ParseFile( *pfile, token )) == NULL )
+			HOST_ERROR( "ED_ParseEdict: EOF without closing brace\n" );
+
+		if( token[0] == '}' ) break; // end of desc
+
+		Q_strncpy( keyname, token, sizeof( keyname ));
+
+		// parse value	
+		if(( *pfile = COM_ParseFile( *pfile, token )) == NULL ) 
+			HOST_ERROR( "ED_ParseEdict: EOF without closing brace\n" );
+
+		if( token[0] == '}' )
+			HOST_ERROR( "ED_ParseEdict: closing brace without data\n" );
+
+		// ignore attempts to set key ""
+		if( !keyname[0] ) continue;
+
+		// ignore attempts to set value ""
+		if( !token[0] ) continue;
+
+		// only two fields that we needed
+		if( !Q_strcmp( keyname, "model" ))
+			Q_strncpy( modelname, token, sizeof( modelname ));
+
+		if( !Q_strcmp( keyname, "vlight_cache" ))
+			vertex_light_cache = atoi( token );
+	}
+
+	if( vertex_light_cache <= 0 || vertex_light_cache >= MAX_LIGHTCACHE )
+		return;
+
+	// deal with light cache
+	g_StudioRenderer.CreateMeshCacheVL( modelname, vertex_light_cache - 1 );
+}
+
+/*
+==================
+GL_InitVertexLightCache
+
+create VBO cache for vertex-lit studio models
+==================
+*/
+void GL_InitVertexLightCache( void )
+{
+	char		*entities = worldmodel->entities;
+	static char	worldname[64];
+	char		token[2048];
+
+	if( !Q_stricmp( world->name, worldname ))
+		return; // just a restart
+
+	Q_strncpy( worldname, world->name, sizeof( worldname ));
+
+	// parse ents to find vertex light cache
+	while(( entities = COM_ParseFile( entities, token )) != NULL )
+	{
+		if( token[0] != '{' )
+			HOST_ERROR( "ED_LoadFromFile: found %s when expecting {\n", token );
+
+		ED_ParseEdict( &entities );
+	}
+}
+
+/*
 ==================
 R_NewMap
 
@@ -986,6 +1081,66 @@ void R_NewMap( void )
 
 	if( g_pParticleSystems )
 		g_pParticleSystems->ClearSystems();
+
+	if( !g_fRenderInitialized )
+		return;
+
+	// reset some world variables
+	for( i = 1; i < MAX_MODELS; i++ )
+	{
+		if(( m = IEngineStudio.GetModelByIndex( i )) == NULL )
+			continue;
+
+		if( m->name[0] == '*' || m->type != mod_brush )
+			continue;
+
+		RI->currentmodel = m;
+
+		for( j = 0; j < m->numsurfaces; j++ )
+		{
+			msurface_t *fa = m->surfaces + j;
+			texture_t *tex = fa->texinfo->texture;
+			mextrasurf_t *info = fa->info;
+
+			memset( info->subtexture, 0, sizeof( info->subtexture ));
+			info->checkcount = -1;
+		}
+	}
+
+	// clear weather system
+	R_ResetWeather();
+
+	CL_ClearPlights();
+
+	// don't flush shaders for each map - save time to recompile
+	if( num_glsl_programs >= ( MAX_GLSL_PROGRAMS * 0.75f ))
+		GL_FreeUberShaders();
+
+	tr.realframecount = 0;
+	RI->viewleaf = NULL; // it's may be data from previous map
+
+	// setup the skybox sides
+	for( i = 0; i < 6; i++ )
+		tr.skyboxTextures[i] = RENDER_GET_PARM( PARM_TEX_SKYBOX, i );
+
+	v_intermission_spot = NULL;
+//	tr.glsl_valid_sequence++; // refresh shader cache
+	tr.num_cin_used = 0;
+
+	g_StudioRenderer.VidInit();
+
+	GL_InitVertexLightCache();
+
+	if( tr.buildtime > 0.0 )
+	{
+		ALERT( at_aiconsole, "total build time %g\n", tr.buildtime );
+		tr.buildtime = 0.0;
+	}
+}
+
+void R_VidInit( void )
+{
+	int	i;
 
 	if( !g_fRenderInitialized )
 		return;
@@ -1013,53 +1168,15 @@ void R_NewMap( void )
 		R_FreeFrameBuffer( i );
 	}
 
-	// clear weather system
-	R_ResetWeather();
-
-	CL_ClearPlights();
-
 	memset( tr.subviewTextures, 0, sizeof( tr.subviewTextures ));
 	memset( tr.shadowTextures, 0, sizeof( tr.shadowTextures ));
 	memset( tr.frame_buffers, 0, sizeof( tr.frame_buffers ));
 
-	tr.num_framebuffers = tr.realframecount = 0;
+	tr.num_framebuffers = 0;
 	tr.num_subview_used = 0;
-	RI->viewleaf = NULL; // it's may be data from previous map
-
-	// setup the skybox sides
-	for( i = 0; i < 6; i++ )
-		tr.skyboxTextures[i] = RENDER_GET_PARM( PARM_TEX_SKYBOX, i );
-
-	v_intermission_spot = NULL;
-	tr.num_cin_used = 0;
+	tr.glsl_valid_sequence++; // refresh shader cache
 
 	InitPostTextures();
 
-	// reset some world variables
-	for( i = 1; i < MAX_MODELS; i++ )
-	{
-		if(( m = IEngineStudio.GetModelByIndex( i )) == NULL )
-			continue;
-
-		if( m->name[0] == '*' || m->type != mod_brush )
-			continue;
-
-		RI->currentmodel = m;
-
-		for( j = 0; j < m->numsurfaces; j++ )
-		{
-			msurface_t *fa = m->surfaces + j;
-			texture_t *tex = fa->texinfo->texture;
-			mextrasurf_t *info = fa->info;
-
-			memset( info->subtexture, 0, sizeof( info->subtexture ));
-			info->checkcount = -1;
-		}
-	}
-
-	if( tr.buildtime > 0.0 )
-	{
-		ALERT( at_aiconsole, "total build time %g\n", tr.buildtime );
-		tr.buildtime = 0.0;
-	}
+	g_StudioRenderer.VidInit();
 }

@@ -55,6 +55,7 @@ cvar_t	*g_debugdraw = NULL;
 cvar_t	*g_physdebug = NULL;
 cvar_t	*p_speeds = NULL;
 cvar_t	*g_allow_physx = NULL;
+cvar_t	g_sync_physic = { "sv_sync_physic", "0", FCVAR_ARCHIVE };
 
 //CVARS FOR SKILL LEVEL SETTINGS
 // Agrunt
@@ -497,6 +498,7 @@ void GameDLLInit( void )
 	g_psv_aim = CVAR_GET_POINTER( "sv_aim" );
 	g_footsteps = CVAR_GET_POINTER( "mp_footsteps" );
 	g_psv_stepsize = CVAR_GET_POINTER( "sv_stepsize" );
+	CVAR_REGISTER( &g_sync_physic );
 
 	g_engfuncs.pfnAddServerCommand( "showtriggers_toggle", Cmd_ShowTriggers_f );
 

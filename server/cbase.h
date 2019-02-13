@@ -336,6 +336,12 @@ public:
 			case 1: pev->effects |= EF_NOREFLECT; break;
 			case 2: pev->effects |= EF_REFLECTONLY; break;
 			}
+			pkvd->fHandled = TRUE;
+		}
+		else if( FStrEq(pkvd->szKeyName, "vlight_cache"))
+		{
+			pev->iuser3 = atoi( pkvd->szValue );
+			pkvd->fHandled = TRUE;
 		}
 		else pkvd->fHandled = FALSE;
 	}

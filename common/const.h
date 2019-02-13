@@ -120,6 +120,7 @@
 #define EF_NUKE_ROCKET		(1<<12)	// marker for controllable rocket
 #define EF_PROJECTED_LIGHT		(1<<13)	// marker for env_projector
 #define EF_DYNAMIC_LIGHT		(1<<14)	// marker for env_dynlight
+#define EF_CONVEYOR			(1<<15)	// new conveyor-style scrolling
 
 #define EF_NOREFLECT		(1<<24)	// Entity won't reflecting in mirrors
 #define EF_REFLECTONLY		(1<<25)	// Entity will be drawing only in mirrors
@@ -136,6 +137,7 @@
 // custom flags for func_screenmovie
 #define CF_LOOPED_MOVIE		(1<<0)	// loop movie at end point
 #define CF_MONOCHROME		(1<<1)	// use monocrhome image
+#define CF_MOVIE_SOUND		(1<<2)	// allow sound
 
 // custom flags for env_projector
 #define CF_NOATTEN			(1<<0)	// don't use attenuation for this light

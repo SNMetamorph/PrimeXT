@@ -206,7 +206,16 @@ void CTrainSetSpeed :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_T
 
 	if( !m_pTrain ) return; // couldn't find train
 
-	if( !m_pTrain->pev->speed )
+	if( m_pTrain->m_pSpeedControl )
+	{
+		// cancelling previous controller...
+		CTrainSetSpeed *pSpeedControl = (CTrainSetSpeed *)m_pTrain->m_pSpeedControl;
+		pSpeedControl->m_iState = STATE_OFF;
+		m_pTrain->m_pSpeedControl = NULL;
+		pSpeedControl->DontThink();
+	}
+
+	if( !m_pTrain->GetSpeed( ))
 	{
 		if( !FBitSet( pev->spawnflags, SF_ACTIVATE_TRAIN ))
 			return;
@@ -214,8 +223,6 @@ void CTrainSetSpeed :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_T
 		// activate train before set speed
 		if( FBitSet( pev->spawnflags, SF_TRAINSPEED_DEBUG ))
 			ALERT( at_console, "train is activated\n" );
-		m_pTrain->m_maxSpeed = (pev->speed < 0) ? -10 : 10;
-		m_pTrain->Use( this, this, USE_ON, 0.0f );
 	}
 
 	float m_flDelta;
@@ -223,14 +230,16 @@ void CTrainSetSpeed :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_T
 	switch( m_iMode )
 	{
 	case 1:
-		m_flDelta = pev->speed - m_pTrain->pev->speed;
+		m_flDelta = ( pev->speed - m_pTrain->GetSpeed( ));
 		m_flInterval = m_flDelta / (m_flTime / 0.1 ); // nextthink 0.1
 		SetThink( &CTrainSetSpeed :: UpdateSpeed );
+		m_pTrain->m_pSpeedControl = this; // now i'm control the train
 		m_iState = STATE_ON; // i'm changing the train speed
 		SetNextThink( 0.1 );
 		break;
 	case 0:
-		m_pTrain->pev->speed = pev->speed;
+		m_pTrain->SetSpeedExternal( pev->speed );
+		m_pTrain->m_pSpeedControl = NULL;
 		break;
 	}
 }
@@ -244,43 +253,163 @@ void CTrainSetSpeed :: UpdateSpeed( void )
           }
 
 	if( FBitSet( pev->spawnflags, SF_TRAINSPEED_DEBUG ))
-		ALERT( at_console, "train_setspeed: %s target speed %g, curspeed %g\n", GetTargetname(), pev->speed, m_pTrain->pev->speed );
+		ALERT( at_console, "train_setspeed: %s target speed %g, curspeed %g, step %g\n", GetTargetname(), pev->speed, m_pTrain->GetSpeed( ), m_flInterval );
 
-	if( fabs( m_pTrain->pev->speed - pev->speed ) <= 1.0f )
+	if( fabs( m_pTrain->GetSpeed() - pev->speed ) <= 1.0f )
 	{
 		if( pev->speed == 0.0f && FBitSet( pev->spawnflags, SF_ACTIVATE_TRAIN ))
 		{
 			if( FBitSet( pev->spawnflags, SF_TRAINSPEED_DEBUG ))
 				ALERT( at_console, "train is stopped\n" );
-			m_pTrain->pev->speed = 0.0f;
-			m_pTrain->SetLocalVelocity( g_vecZero );
-			m_pTrain->SetLocalAvelocity( g_vecZero );
-			m_pTrain->SetThink( NULL );
-			m_pTrain->StopSound();
+			m_pTrain->SetSpeedExternal( 0 );
 		}
 
 		m_iState = STATE_OFF;
+		m_pTrain->m_pSpeedControl = NULL;
 		SUB_UseTargets( m_hActivator, USE_TOGGLE, 0 );
-		return;	// reached
+		return; // reached
 	}
 
-	m_pTrain->pev->speed += m_flInterval;
+	m_pTrain->SetSpeedExternal( m_pTrain->GetSpeed() + m_flInterval );
 
-	if( m_pTrain->pev->speed >= 2000 )
+	if( m_pTrain->GetSpeed() >= 2000 )
 	{
 		m_iState = STATE_OFF;
+		m_pTrain->m_pSpeedControl = NULL;
 		SUB_UseTargets( m_hActivator, USE_TOGGLE, 0 );
-		m_pTrain->pev->speed = 2000;
+		m_pTrain->SetSpeedExternal( 2000 );
 		return;
 	}
 
-	if( m_pTrain->pev->speed < -2000 )
+	if( m_pTrain->GetSpeed() <= -2000 )
 	{
 		m_iState = STATE_OFF;
+		m_pTrain->m_pSpeedControl = NULL;
 		SUB_UseTargets( m_hActivator, USE_TOGGLE, 0 );
-		m_pTrain->pev->speed = -2000;
+		m_pTrain->SetSpeedExternal( -2000 );
 		return;
 	}
+
+	SetNextThink( 0.1 );	
+}
+
+#define SF_CONVSPEED_DEBUG		BIT( 0 )
+
+class CConveyorSetSpeed : public CBaseDelay
+{
+	DECLARE_CLASS( CConveyorSetSpeed, CBaseDelay );
+public:
+	void		Spawn( void );
+	void		KeyValue( KeyValueData *pkvd );
+	BOOL		EvaluateSpeed( BOOL bStartup );
+	void 		UpdateSpeed( void );
+	virtual int	ObjectCaps( void ) { return CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+	virtual void	Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+	virtual STATE	GetState( void ) { return m_iState; }
+
+	DECLARE_DATADESC();
+
+	float		m_flTime;
+};
+
+LINK_ENTITY_TO_CLASS( conveyor_setspeed, CConveyorSetSpeed );
+
+// Global Savedata for train speed modifier
+BEGIN_DATADESC( CConveyorSetSpeed )
+	DEFINE_KEYFIELD( m_flTime, FIELD_FLOAT, "time" ),
+	DEFINE_FUNCTION( UpdateSpeed ),
+END_DATADESC()
+
+// Sets toucher's friction to m_frictionFraction (1.0 = normal friction)
+void CConveyorSetSpeed :: KeyValue( KeyValueData *pkvd )
+{
+	if( FStrEq( pkvd->szKeyName, "time" ))
+	{
+		m_flTime = Q_atof( pkvd->szValue );
+		pkvd->fHandled = TRUE;
+	}
+	else
+		CBaseEntity::KeyValue( pkvd );
+}
+
+void CConveyorSetSpeed :: Spawn( void )
+{
+	m_iState = STATE_OFF;
+	m_hActivator = NULL;
+	pev->speed = bound( -10000.0f, pev->speed, 10000.0f );
+}
+
+BOOL CConveyorSetSpeed :: EvaluateSpeed( BOOL bStartup )
+{
+	CBaseEntity *pEntity = NULL;
+	int affected_conveyors = 0;
+	int finished_conveyors = 0;
+
+	while(( pEntity = UTIL_FindEntityByTargetname( pEntity, STRING( pev->target ), m_hActivator )) != NULL )
+	{
+		if( !FClassnameIs( pEntity->pev, "func_transporter" ) )
+			continue;
+
+		if( bStartup )
+		{
+			pEntity->pev->frags = pev->speed - pEntity->pev->speed;
+			pEntity->pev->dmg_inflictor = edict();
+			continue;
+		}
+
+		if( m_flTime > 0 && pEntity->pev->dmg_inflictor != edict( ))
+			continue;	// owned by another set speed
+
+		if( fabs( pev->speed - pEntity->pev->speed ) <= 1.0f || m_flTime <= 0 )
+		{
+			if( FBitSet( pev->spawnflags, SF_CONVSPEED_DEBUG ) && pev->speed != pEntity->pev->speed )
+				ALERT( at_console, "conveyor_setspeed: %s target speed %g, curspeed %g\n", GetTargetname(), pev->speed, pEntity->pev->speed );
+			pEntity->Use( this, this, USE_SET, pev->speed );
+			pEntity->pev->dmg_inflictor = NULL; // done
+			finished_conveyors++;
+		}
+		else
+		{
+			float flInterval = pEntity->pev->frags / ( m_flTime / 0.1 ); // nextthink 0.1
+			pEntity->Use( this, this, USE_SET, pEntity->pev->speed + flInterval );
+			if( FBitSet( pev->spawnflags, SF_CONVSPEED_DEBUG ))
+				ALERT( at_console, "conveyor_setspeed: %s target speed %g, curspeed %g\n", GetTargetname(), pev->speed, pEntity->pev->speed );
+		}
+		affected_conveyors++;
+	}
+
+	return (affected_conveyors != finished_conveyors);
+}
+
+void CConveyorSetSpeed :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+{
+	if( m_iState == STATE_ON )
+		return;	// entity in work
+
+	m_hActivator = pActivator;
+
+	if( m_flTime > 0 )
+	{
+		EvaluateSpeed( TRUE );
+		SetThink( &CConveyorSetSpeed :: UpdateSpeed );
+		m_iState = STATE_ON;
+		SetNextThink( 0.1 );
+	}
+	else
+	{
+		EvaluateSpeed( FALSE );
+	}
+}
+
+void CConveyorSetSpeed :: UpdateSpeed( void )
+{
+	if( !EvaluateSpeed( FALSE ))
+	{
+		if( FBitSet( pev->spawnflags, SF_CONVSPEED_DEBUG ))
+			ALERT( at_console, "conveyor_setspeed: %s is done\n", GetTargetname( ));
+		m_iState = STATE_OFF;
+		return; // finished
+          }
 
 	SetNextThink( 0.1 );	
 }
@@ -352,7 +481,11 @@ void CAutoTrigger::Spawn( void )
 	// HACKHACK: run circles on a final map
 	if( FStrEq( STRING( gpGlobals->mapname ), "c5a1" ) && FStrEq( GetTarget(), "hoop_1" ))
 		triggerType = USE_ON;
-
+#if 0
+	// don't confuse level-designers with firing after loading savedgame
+	if( m_globalstate == NULL_STRING )
+		SetBits( pev->spawnflags, SF_AUTO_FIREONCE );
+#endif
 	Precache();
 }
 
@@ -2088,7 +2221,7 @@ void PlayCDTrack( int iTrack )
 	edict_t *pClient;
 	
 	// manually find the single player. 
-	pClient = g_engfuncs.pfnPEntityOfEntIndex( 1 );
+	pClient = INDEXENT( 1 );
 	
 	// Can't play if the client is not connected!
 	if ( !pClient )
@@ -2610,6 +2743,7 @@ public:
 	void Spawn( void );
 	void Touch( CBaseEntity *pOther );
 	void Think( void );
+	int Restore( CRestore &restore );
 	virtual void FireOnEntry( CBaseEntity *pOther );
 	virtual void FireOnLeaving( CBaseEntity *pOther );
 	virtual void OnRemove( void );
@@ -2732,6 +2866,30 @@ void CTriggerInOut::KeyValue( KeyValueData *pkvd )
 		BaseClass::KeyValue( pkvd );
 }
 
+int CTriggerInOut :: Restore( CRestore &restore )
+{
+	CInOutRegister *pRegister;
+
+	if( restore.IsGlobalMode() )
+	{
+		// we already have the valid chain.
+		// Don't break it with bad pointers from previous level
+		pRegister = m_pRegister;
+	}
+
+	int status = BaseClass::Restore(restore);
+	if ( !status )
+		return 0;
+
+	if( restore.IsGlobalMode() )
+	{
+		// restore our chian here
+		m_pRegister = pRegister;
+	}
+
+	return status;
+}
+
 void CTriggerInOut :: Spawn( void )
 {
 	InitTrigger();
@@ -2769,6 +2927,7 @@ void CTriggerInOut :: FireOnEntry( CBaseEntity *pOther )
 {
 	if( !IsLockedByMaster( pOther ))
 	{
+//Msg( "FireOnEntry( %s )\n", STRING( pev->target ));
 		UTIL_FireTargets( m_iszBothTarget, pOther, this, USE_ON, 0 );
 		UTIL_FireTargets( pev->target, pOther, this, USE_TOGGLE, 0 );
 	}
@@ -2778,6 +2937,7 @@ void CTriggerInOut :: FireOnLeaving( CBaseEntity *pOther )
 {
 	if( !IsLockedByMaster( pOther ))
 	{
+//Msg( "FireOnLeaving( %s )\n", STRING( m_iszAltTarget ));
 		UTIL_FireTargets( m_iszBothTarget, pOther, this, USE_OFF, 0 );
 		UTIL_FireTargets( m_iszAltTarget, pOther, this, USE_TOGGLE, 0 );
 	}
@@ -2785,6 +2945,8 @@ void CTriggerInOut :: FireOnLeaving( CBaseEntity *pOther )
 
 void CTriggerInOut :: OnRemove( void )
 {
+	if( !m_pRegister ) return; // e.g. moved from another level
+
 	// Prune handles all Intersects tests and fires targets as appropriate
 	m_pRegister = m_pRegister->Prune();
 }
@@ -3119,7 +3281,9 @@ void CChangeLevel :: ChangeLevelNow( CBaseEntity *pActivator )
 	pev->dmgtime = gpGlobals->time;
 
 
-	CBaseEntity *pPlayer = CBaseEntity::Instance( g_engfuncs.pfnPEntityOfEntIndex( 1 ) );
+	CBaseEntity *pPlayer = CBaseEntity::Instance( INDEXENT( 1 ) );
+	if( !pPlayer ) return;
+
 	if ( !InTransitionVolume( pPlayer, m_szLandmarkName ) )
 	{
 		ALERT( at_aiconsole, "Player isn't in the transition volume %s, aborting\n", m_szLandmarkName );
@@ -3998,9 +4162,9 @@ LINK_ENTITY_TO_CLASS( trigger_playerfreeze, CTriggerPlayerFreeze );
 void CTriggerPlayerFreeze::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	if ( !pActivator || !pActivator->IsPlayer() )
-		pActivator = CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex( 1 ));
+		pActivator = CBaseEntity::Instance(INDEXENT( 1 ));
 
-	if( !ShouldToggle( useType, FBitSet( pActivator->pev->flags, FL_FROZEN )))
+	if( !pActivator || !ShouldToggle( useType, FBitSet( pActivator->pev->flags, FL_FROZEN )))
 		return;
 
 	if (pActivator->pev->flags & FL_FROZEN)
@@ -4022,11 +4186,11 @@ LINK_ENTITY_TO_CLASS( trigger_hideweapon, CTriggerHideWeapon );
 void CTriggerHideWeapon::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	if ( !pActivator || !pActivator->IsPlayer() )
-		pActivator = CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex( 1 ));
+		pActivator = CBaseEntity::Instance(INDEXENT( 1 ));
 
 	CBasePlayer *pPlayer = (CBasePlayer *)pActivator;
 
-	if( !ShouldToggle( useType, FBitSet( pPlayer->m_iHideHUD, HIDEHUD_WEAPONS )))
+	if( !pActivator || !ShouldToggle( useType, FBitSet( pPlayer->m_iHideHUD, HIDEHUD_WEAPONS )))
 		return;
 
 	if (pPlayer->m_iHideHUD & HIDEHUD_WEAPONS)

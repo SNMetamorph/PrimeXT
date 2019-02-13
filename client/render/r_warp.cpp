@@ -393,7 +393,7 @@ void R_CheckSkyPortal( cl_entity_t *skyPortal )
 	if( tr.sky_camera == NULL )
 		return;
 
-	if( !CVAR_TO_BOOL( r_drawentities ))
+	if( !CVAR_TO_BOOL( r_allow_3dsky ))
 		return;
 
 	if( FBitSet( RI->params, RP_OVERVIEW ))

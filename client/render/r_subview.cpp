@@ -78,6 +78,8 @@ int R_SetupMirrorView( msurface_t *surf, cl_entity_t *camera, matrix4x4 &viewmat
 	matAngles.SetUp( up );
 	Vector angles = matAngles.GetAngles();
 
+	plane.dist += ON_EPSILON; // to prevent z-fighting with reflective water
+
 	RI->params = RP_MIRRORVIEW|RP_CLIPPLANE|RP_OLDVIEWLEAF;
 	RI->frustum.SetPlane( FRUSTUM_NEAR, plane.normal, plane.dist );
 	RI->clipPlane = plane;
@@ -169,6 +171,8 @@ int R_SetupPortalView( msurface_t *surf, cl_entity_t *camera, matrix4x4 &viewmat
 	RI->viewangles[2] = -RI->viewangles[2];
 	RI->pvsorigin = camera->origin;
 	RI->vieworg = origin;
+
+	plane.dist += ON_EPSILON; // to prevent z-fighting with reflective water
 
 	// set clipping plane
 	SetPlane( &plane, cameraMat.GetForward(), DotProduct( cameraMat.GetForward(), camera->origin ));
@@ -537,7 +541,11 @@ void R_DrawSubviewPases( void )
 
 		// handle camera
 		if( !FBitSet( surf->flags, SURF_REFLECT ))
+		{
+			if( surf->info->parent->curstate.sequence <= 0 )
+				continue;	// target is missed
 			camera = GET_ENTITY( surf->info->parent->curstate.sequence );
+		}
 		else camera = surf->info->parent; // mirror camera is himself
 
 		// NOTE: we can do additionaly culling here by PVS

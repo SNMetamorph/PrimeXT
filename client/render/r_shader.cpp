@@ -672,6 +672,7 @@ static void GL_InitSolidBmodelUniforms( glsl_program_t *shader )
 	shader->u_DetailMap = pglGetUniformLocationARB( shader->handle, "u_DetailMap" );
 	shader->u_LightMap = pglGetUniformLocationARB( shader->handle, "u_LightMap" );
 	shader->u_ScreenMap = pglGetUniformLocationARB( shader->handle, "u_ScreenMap" );
+	shader->u_GlowMap = pglGetUniformLocationARB( shader->handle, "u_GlowMap" );
 
 	if( GL_FindShaderDirective( shader, "BMODEL_MULTI_LAYERS" ))
 		shader->u_DepthMap = pglGetUniformLocationARB( shader->handle, "u_HeightMap" );
@@ -693,6 +694,7 @@ static void GL_InitSolidBmodelUniforms( glsl_program_t *shader )
 
 	if( GL_FindShaderDirective( shader, "BMODEL_MULTI_LAYERS" ))
 		pglUniform1iARB( shader->u_DepthMap, GL_TEXTURE4 );
+	pglUniform1iARB( shader->u_GlowMap, GL_TEXTURE5 );
 	GL_BindShader( GL_NONE );
 
 	GL_ValidateProgram( shader );
@@ -804,7 +806,6 @@ static void GL_InitSolidStudioUniforms( glsl_program_t *shader )
 	shader->u_RenderColor = pglGetUniformLocationARB( shader->handle, "u_RenderColor" );
 	shader->u_FogParams = pglGetUniformLocationARB( shader->handle, "u_FogParams" );
 
-
 	GL_BindShader( shader );
 	pglUniform1iARB( shader->u_ColorMap, GL_TEXTURE0 );
 	GL_BindShader( GL_NONE );
@@ -853,6 +854,61 @@ static void GL_InitStudioDepthFillUniforms( glsl_program_t *shader )
 
 	GL_BindShader( shader );
 	pglUniform1iARB( shader->u_ColorMap, GL_TEXTURE0 );
+	GL_BindShader( GL_NONE );
+
+	GL_ValidateProgram( shader );
+	GL_ShowProgramUniforms( shader );
+}
+
+static void GL_InitGrassSolidUniforms( glsl_program_t *shader )
+{
+	ASSERT( shader != NULL );
+
+	shader->u_ColorMap = pglGetUniformLocationARB( shader->handle, "u_ColorMap" );
+
+	shader->u_ModelMatrix = pglGetUniformLocationARB( shader->handle, "u_ModelMatrix" );
+	shader->u_LightStyleValues = pglGetUniformLocationARB( shader->handle, "u_LightStyleValues" );
+	shader->u_GammaTable = pglGetUniformLocationARB( shader->handle, "u_GammaTable" );
+	shader->u_GrassFadeStart = pglGetUniformLocationARB( shader->handle, "u_GrassFadeStart" );
+	shader->u_GrassFadeDist = pglGetUniformLocationARB( shader->handle, "u_GrassFadeDist" );
+	shader->u_GrassFadeEnd = pglGetUniformLocationARB( shader->handle, "u_GrassFadeEnd" );
+	shader->u_ViewOrigin = pglGetUniformLocationARB( shader->handle, "u_ViewOrigin" );
+	shader->u_RealTime = pglGetUniformLocationARB( shader->handle, "u_RealTime" );
+	shader->u_FogParams = pglGetUniformLocationARB( shader->handle, "u_FogParams" );
+
+	GL_BindShader( shader );
+	pglUniform1iARB( shader->u_ColorMap, GL_TEXTURE0 );
+	GL_BindShader( GL_NONE );
+
+	GL_ValidateProgram( shader );
+	GL_ShowProgramUniforms( shader );
+}
+
+static void GL_InitGrassDlightUniforms( glsl_program_t *shader )
+{
+	ASSERT( shader != NULL );
+
+	shader->u_ColorMap = pglGetUniformLocationARB( shader->handle, "u_ColorMap" );
+	shader->u_ProjectMap = pglGetUniformLocationARB( shader->handle, "u_ProjectMap" );
+	shader->u_ShadowMap = pglGetUniformLocationARB( shader->handle, "u_ShadowMap" );
+
+	shader->u_LightViewProjectionMatrix = pglGetUniformLocationARB( shader->handle, "u_LightViewProjectionMatrix" );
+	shader->u_ShadowParams = pglGetUniformLocationARB( shader->handle, "u_ShadowParams" );
+	shader->u_LightDiffuse = pglGetUniformLocationARB( shader->handle, "u_LightDiffuse" );
+	shader->u_LightOrigin = pglGetUniformLocationARB( shader->handle, "u_LightOrigin" );
+	shader->u_LightDir = pglGetUniformLocationARB( shader->handle, "u_LightDir" );
+	shader->u_ViewOrigin = pglGetUniformLocationARB( shader->handle, "u_ViewOrigin" );
+	shader->u_ModelMatrix = pglGetUniformLocationARB( shader->handle, "u_ModelMatrix" );
+	shader->u_GrassFadeStart = pglGetUniformLocationARB( shader->handle, "u_GrassFadeStart" );
+	shader->u_GrassFadeDist = pglGetUniformLocationARB( shader->handle, "u_GrassFadeDist" );
+	shader->u_GrassFadeEnd = pglGetUniformLocationARB( shader->handle, "u_GrassFadeEnd" );
+	shader->u_RealTime = pglGetUniformLocationARB( shader->handle, "u_RealTime" );
+	shader->u_FogParams = pglGetUniformLocationARB( shader->handle, "u_FogParams" );
+
+	GL_BindShader( shader );
+	pglUniform1iARB( shader->u_ColorMap, GL_TEXTURE0 );
+	pglUniform1iARB( shader->u_ProjectMap, GL_TEXTURE1 );// projection texture or XY attenuation
+	pglUniform1iARB( shader->u_ShadowMap, GL_TEXTURE2 ); // shadowmap or cubemap
 	GL_BindShader( GL_NONE );
 
 	GL_ValidateProgram( shader );
@@ -1076,6 +1132,9 @@ word GL_UberShaderForSolidBmodel( msurface_t *s, bool translucent )
 		// process lightstyles
 		for( int i = 0; i < MAXLIGHTMAPS && s->styles[i] != LS_NONE; i++ )
 			GL_AddShaderDirective( options, va( "BMODEL_APPLY_STYLE%i", i ));
+
+		if( tx->fb_texturenum != 0 )
+			GL_AddShaderDirective( options, "BMODEL_HAS_LUMA" );
 	}
 
 	if( FBitSet( s->flags, SURF_DRAWTURB ))
@@ -1202,7 +1261,7 @@ word GL_UberShaderForBmodelDlight( const plight_t *pl, msurface_t *s, bool trans
 			GL_AddShaderDirective( options, "BMODEL_WAVEHEIGHT" );
 	}
 
-	if( r_shadows->value > 0.0f && !tr.shadows_notsupport )
+	if( CVAR_TO_BOOL( r_shadows ) && !tr.shadows_notsupport )
 	{
 		if( !pl->pointlight && !FBitSet( pl->flags, CF_NOSHADOWS ))
 			GL_AddShaderDirective( options, "BMODEL_HAS_SHADOWS" );
@@ -1238,6 +1297,75 @@ word GL_UberShaderForBmodelDlight( const plight_t *pl, msurface_t *s, bool trans
 	}
 
 	return shaderNum;
+}
+
+word GL_UberShaderForGrassSolid( msurface_t *s, grass_t *g )
+{
+	if( g->vbo.shaderNum && g->vbo.glsl_sequence == tr.glsl_valid_sequence )
+		return g->vbo.shaderNum; // valid
+
+	char glname[64];
+	char options[MAX_OPTIONS_LENGTH];
+
+	Q_strncpy( glname, "GrassSolid", sizeof( glname ));
+	memset( options, 0, sizeof( options ));
+
+	if( R_FullBright( ))
+	{
+		GL_AddShaderDirective( options, "GRASS_FULLBRIGHT" );
+	}
+	else
+	{
+		// process lightstyles
+		for( int i = 0; i < MAXLIGHTMAPS && s->styles[i] != LS_NONE; i++ )
+			GL_AddShaderDirective( options, va( "GRASS_APPLY_STYLE%i", i ));
+	}
+
+	if( tr.fogEnabled )
+		GL_AddShaderDirective( options, "GRASS_FOG_EXP" );
+
+	glsl_program_t *shader = GL_FindUberShader( glname, options, &GL_InitGrassSolidUniforms );
+	if( !shader )
+	{
+		SetBits( g->vbo.flags, FGRASS_NODRAW );
+		return 0; // something bad happens
+	}
+
+	g->vbo.glsl_sequence = tr.glsl_valid_sequence;
+	ClearBits( g->vbo.flags, FGRASS_NODRAW );
+
+	return (shader - glsl_programs);
+}
+
+word GL_UberShaderForGrassDlight( plight_t *pl, struct grass_s *g )
+{
+	bool shadows = (!pl->pointlight && !FBitSet( pl->flags, CF_NOSHADOWS )) ? true : false;
+	char glname[64];
+	char options[MAX_OPTIONS_LENGTH];
+
+	Q_strncpy( glname, "GrassDlight", sizeof( glname ));
+	memset( options, 0, sizeof( options ));
+
+	if( pl->pointlight )
+		GL_AddShaderDirective( options, "GRASS_LIGHT_OMNIDIRECTIONAL" );
+	else GL_AddShaderDirective( options, "GRASS_LIGHT_PROJECTION" );
+
+	if( CVAR_TO_BOOL( r_shadows ) && shadows && !tr.shadows_notsupport )
+		GL_AddShaderDirective( options, "GRASS_HAS_SHADOWS" );
+
+	if( tr.fogEnabled )
+		GL_AddShaderDirective( options, "GRASS_FOG_EXP" );
+
+	glsl_program_t *shader = GL_FindUberShader( glname, options, &GL_InitGrassDlightUniforms );
+	if( !shader )
+	{
+		SetBits( g->vbo.flags, FGRASS_NODLIGHT );
+		return 0; // something bad happens
+	}
+
+	ClearBits( g->vbo.flags, FGRASS_NODLIGHT );
+
+	return (shader - glsl_programs);
 }
 
 word GL_UberShaderForBmodelDecal( decal_t *decal )
@@ -1382,7 +1510,7 @@ word GL_UberShaderForDlightStudio( const plight_t *pl, struct mstudiomat_s *mat,
 	if( tr.fogEnabled )
 		GL_AddShaderDirective( options, "STUDIO_FOG_EXP" );
 
-	if( r_shadows->value > 0.0f && !tr.shadows_notsupport )
+	if( CVAR_TO_BOOL( r_shadows ) && !tr.shadows_notsupport )
 	{
 		if( !pl->pointlight && !FBitSet( pl->flags, CF_NOSHADOWS ))
 			GL_AddShaderDirective( options, "STUDIO_HAS_SHADOWS" );
@@ -1469,7 +1597,7 @@ word GL_UberShaderForDlightGeneric( const plight_t *pl )
 	if( tr.fogEnabled )
 		GL_AddShaderDirective( options, "GENERIC_FOG_EXP" );
 
-	if( r_shadows->value > 0.0f && shadows && !tr.shadows_notsupport )
+	if( CVAR_TO_BOOL( r_shadows ) && shadows && !tr.shadows_notsupport )
 		GL_AddShaderDirective( options, "GENERIC_HAS_SHADOWS" );
 
 	glsl_program_t *shader = GL_FindUberShader( glname, options, &GL_InitGenericDlightUniforms );
@@ -1565,6 +1693,10 @@ void GL_InitGPUShaders( void )
 	// bmodel shadowing
 	glsl.bmodelDepthFill = shader = GL_InitGPUShader( "BrushDepth", "BmodelDepth", "generic" );
 	GL_InitBmodelDepthFillUniforms( shader );
+
+	// grass shadowing
+	glsl.grassDepthFill = shader = GL_InitGPUShader( "GrassDepth", "GrassDepth", "generic" );
+	GL_InitGrassSolidUniforms( shader );
 
 	// fog processing
 	glsl.genericFog = shader = GL_InitGPUShader( "GenericFog", "generic", "generic", "#define GENERIC_FOG_EXP\n" );

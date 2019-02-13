@@ -308,6 +308,7 @@ extern const char* GetStringForGlobalState( GLOBALESTATE state );
 extern const char* GetContentsString( int contents );
 extern void PrintStringForDamage( int dmgbits );
 extern STATE GetStateForString( const char *string );
+extern void CheckForMultipleParents( CBaseEntity *pEntity, CBaseEntity *pParent );
 
 // Misc. Prototypes
 extern void			UTIL_SetSize			(entvars_t* pev, const Vector &vecMin, const Vector &vecMax);
@@ -412,8 +413,8 @@ extern void		UTIL_BubbleTrail( Vector from, Vector to, int count );
 extern void		UTIL_PrecacheOther( const char *szClassname );
 extern int		UTIL_PrecacheSound( const char* s );
 extern int		UTIL_PrecacheSound( string_t s );
-extern unsigned short	UTIL_PrecacheMovie( const char *s );
-extern unsigned short	UTIL_PrecacheMovie( string_t iString );
+extern unsigned short	UTIL_PrecacheMovie( const char *s, int allow_sound = 0 );
+extern unsigned short	UTIL_PrecacheMovie( string_t iString, int allow_sound = 0 );
 
 // prints a message to each client
 extern void		UTIL_ClientPrintAll( int msg_dest, const char *msg_name, const char *param1 = NULL, const char *param2 = NULL, const char *param3 = NULL, const char *param4 = NULL );
@@ -573,7 +574,7 @@ extern DLL_GLOBAL int		g_iXashEngineBuildNumber;	// may be 0 for old versions or
 // Sound Utilities
 
 // sentence groups
-#define CBSENTENCENAME_MAX		16
+#define CBSENTENCENAME_MAX		32
 #define CVOXFILESENTENCEMAX		4096		// max number of sentences in game. NOTE: this must match
 						// MAX_SENTENCES in engine\vox.h!!!
 

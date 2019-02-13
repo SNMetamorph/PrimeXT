@@ -488,32 +488,59 @@ void R_UpdateSurfaceParams( msurface_t *surf )
 	{
 		float	flRate, flAngle;
 		float	flWidth, flConveyorSpeed;
+		float	flConveyorPos;
 		float	sOffset, sy;
 		float	tOffset, cy;
 
-		flConveyorSpeed = (e->curstate.rendercolor.g<<8|e->curstate.rendercolor.b) / 16.0f;
-		if( e->curstate.rendercolor.r ) flConveyorSpeed = -flConveyorSpeed;
+		if( !FBitSet( e->curstate.effects, EF_CONVEYOR ))
+		{
+			flConveyorSpeed = (e->curstate.rendercolor.g<<8|e->curstate.rendercolor.b) / 16.0f;
+			if( e->curstate.rendercolor.r ) flConveyorSpeed = -flConveyorSpeed;
+		}
+		else flConveyorPos = e->curstate.fuser1;
 		flWidth = (float)RENDER_GET_PARM( PARM_TEX_SRC_WIDTH, surf->texinfo->texture->gl_texturenum );
 
 		if( flWidth != 0.0f )
 		{
-			flRate = abs( flConveyorSpeed ) / flWidth;
-			flAngle = ( flConveyorSpeed >= 0.0f ) ? 180.0f : 0.0f;
+			if( !FBitSet( e->curstate.effects, EF_CONVEYOR ))
+                              {
+				// additive speed not position-based
+				flRate = abs( flConveyorSpeed ) / flWidth;
+				flAngle = ( flConveyorSpeed >= 0.0f ) ? 180.0f : 0.0f;
 
-			SinCos( DEG2RAD( flAngle ), &sy, &cy );
-			sOffset = tr.time * cy * flRate;
-			tOffset = tr.time * sy * flRate;
+				SinCos( DEG2RAD( flAngle ), &sy, &cy );
+				sOffset = tr.time * cy * flRate;
+				tOffset = tr.time * sy * flRate;
 	
-			// make sure that we are positive
-			if( sOffset < 0.0f ) sOffset += 1.0f + -(int)sOffset;
-			if( tOffset < 0.0f ) tOffset += 1.0f + -(int)tOffset;
+				// make sure that we are positive
+				if( sOffset < 0.0f ) sOffset += 1.0f + -(int)sOffset;
+				if( tOffset < 0.0f ) tOffset += 1.0f + -(int)tOffset;
 
-			// make sure that we are in a [0,1] range
-			sOffset = sOffset - (int)sOffset;
-			tOffset = tOffset - (int)tOffset;
+				// make sure that we are in a [0,1] range
+				sOffset = sOffset - (int)sOffset;
+				tOffset = tOffset - (int)tOffset;
 
-			esrf->texofs[0] = sOffset;
-			esrf->texofs[1] = tOffset;
+				esrf->texofs[0] = sOffset;
+				esrf->texofs[1] = tOffset;
+			}
+			else
+			{
+				// receive absolute position, not a speed
+				flRate = fabs( flConveyorPos );
+				flAngle = ( flConveyorPos >= 0.0f ) ? 180.0f : 0.0f;
+
+				SinCos( DEG2RAD( flAngle ), &sy, &cy );
+				esrf->texofs[0] = cy * flRate;
+				esrf->texofs[1] = sy * flRate;
+
+				// make sure that we are positive
+				if( esrf->texofs[0] < 0.0f ) esrf->texofs[0] += 1.0f + -(int)esrf->texofs[0];
+				if( esrf->texofs[1] < 0.0f ) esrf->texofs[1] += 1.0f + -(int)esrf->texofs[1];
+
+				// make sure that we are in a [0,1] range
+				esrf->texofs[0] = esrf->texofs[0] - (int)esrf->texofs[0];
+				esrf->texofs[1] = esrf->texofs[1] - (int)esrf->texofs[1];
+			}
 		}
 		else
 		{

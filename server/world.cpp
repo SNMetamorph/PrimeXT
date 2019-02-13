@@ -54,6 +54,7 @@ public:
 	virtual bool	Initialized( void ) { return false; }
 	virtual void	*GetUtilLibrary( void ) { return NULL; } 
 	virtual void	Update( float flTime ) {}
+	virtual void	EndFrame( void ) {}
 	virtual void	RemoveBody( struct edict_s *pEdict ) {}
 	virtual void	RemoveBody( const void *pBody ) {}
 	virtual void	*CreateBodyFromEntity( CBaseEntity *pEntity ) { return NULL; }

@@ -33,7 +33,7 @@ GNU General Public License for more details.
 #define MODEL_HAS_ORIGIN	BIT( 1 )
 
 #define R_SurfCmp( a, b )	(( a.shaderNum > b.shaderNum ) ? true : ( a.shaderNum < b.shaderNum ))
-#define R_ModelOpaque( rm )	(( rm == kRenderNormal ) || ( rm == kRenderTransAlpha ))
+#define R_ModelOpaque( rm )	( rm == kRenderNormal )
 
 // refparams
 #define RP_NONE		0
@@ -339,6 +339,7 @@ typedef struct
 	float		fogDensity;
 
 	float		blend;
+	float		lodScale;
          
 	// OpenGL matrix states
 	bool		modelviewIdentity;
@@ -372,6 +373,8 @@ typedef struct
 
 	Vector		sky_normal;		// sky vector
 	Vector		sky_ambient;		// sky ambient color
+
+	struct mvbocache_s	*vertex_light_cache[MAX_LIGHTCACHE];	// FIXME: make growable
 
 	// cull info
 	Vector		modelorg;			// relative to viewpoint
@@ -555,6 +558,7 @@ bool R_CullNodeTopView( const struct mworldnode_s *node );
 // r_debug.c
 //
 void R_DrawScissorRectangle( float x, float y, float w, float h );
+void DBG_DrawBBox( const Vector &mins, const Vector &maxs );
 void R_DrawRenderPasses( int passnum );
 void R_DrawLightScissors( void );
 void DrawLightProbes( void );
@@ -641,6 +645,7 @@ void R_InitCinematics( void );
 void R_FreeCinematics( void );
 int R_AllocateCinematicTexture( unsigned int txFlags );
 void R_UpdateCinematic( const msurface_t *surf );
+void R_UpdateCinSound( cl_entity_t *e );
 
 //
 // r_postprocess.cpp
@@ -678,6 +683,8 @@ void GL_FreeGPUShaders( void );
 word GL_UberShaderForSolidBmodel( msurface_t *s, bool translucent = false );
 word GL_UberShaderForBmodelDlight( const plight_t *pl, msurface_t *s, bool translucent = false );
 word GL_UberShaderForBmodelDecal( decal_t *decal );
+word GL_UberShaderForGrassSolid( msurface_t *s, struct grass_s *g );
+word GL_UberShaderForGrassDlight( plight_t *pl, struct grass_s *g );
 word GL_UberShaderForDlightGeneric( const plight_t *pl );
 word GL_UberShaderForSolidStudio( struct mstudiomat_s *mat, bool vertex_lighting, bool bone_weighting, bool fullbright, int numbones = 0 );
 word GL_UberShaderForDlightStudio( const plight_t *dl, struct mstudiomat_s *mat, bool bone_weighting, int numbones = 0 );

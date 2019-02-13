@@ -363,7 +363,7 @@ typedef struct model_s
 	union
 	{
 	color24		*lightdata;
-	struct mbodypart_s	*bodyparts;	// pointer to VBO-prepared model (only for mod_studio)
+	struct mvbocache_s	*studiocache;	// pointer to VBO-prepared model (only for mod_studio)
 	};
 
 	union

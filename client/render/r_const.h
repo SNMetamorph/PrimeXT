@@ -34,7 +34,7 @@ GNU General Public License for more details.
 #define MAX_CLIP_VERTS	64	// skybox clipping vertexes
 #define SUBDIVIDE_SIZE	64
 #define MAX_LANDSCAPE_LAYERS	16	// fundamental limit, don't modify
-#define MAX_SUBVIEWS	32	// per one frame!
+#define MAX_SUBVIEWS	256	// per one frame!
 #define MAX_SUBVIEW_TEXTURES	64	// total depth
 #define MAX_DLIGHTS		32	// engine limit
 #define MAX_ELIGHTS		64	// engine limit (entity only point lights)
@@ -44,6 +44,7 @@ GNU General Public License for more details.
 #define MAX_USER_PLIGHTS	64	// after 64 comes dlights
 #define MAX_SHADOWS		64	// BUGBUG: not included pointlights only directional lights
 #define MAX_CACHED_STATES	512	// 32 kb cache (this needs only for bmodels)
+#define MAX_LIGHTCACHE	2048	// unique models with instanced vertex lighting
 #define MAX_DECAL_SURFS	4096
 #define MAX_FRAMEBUFFERS	MAX_SUBVIEW_TEXTURES
 #define TURBSCALE		( 256.0f / M_PI2 )

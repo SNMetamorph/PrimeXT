@@ -169,6 +169,8 @@ public:
 	int		m_iLightingModel;
 	matrix3x3		entityMatrix;
 	float		m_fLifeTime;	// for auto-removed particles
+	Vector		m_vecAbsMin;
+	Vector		m_vecAbsMax;
 	bool		enable;
 private:
 	static float	c_fCosTable[360 + 90];

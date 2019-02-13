@@ -135,13 +135,14 @@ public:
 
 	BOOL	m_fActive;	// only TRUE when the entity is playing a looping sound
 	BOOL	m_fLooping;	// TRUE when the sound played will loop
+	BOOL	m_fSpawning;
 };
 
 LINK_ENTITY_TO_CLASS( ambient_generic, CAmbientGeneric );
 
 BEGIN_DATADESC( CAmbientGeneric )
 	DEFINE_FIELD( m_flAttenuation, FIELD_FLOAT ),
-//	DEFINE_FIELD( m_fActive, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_fActive, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_fLooping, FIELD_BOOLEAN ),
 
 	// HACKHACK - This is not really in the spirit of the save/restore design, but save this
@@ -221,7 +222,8 @@ void CAmbientGeneric :: Spawn( void )
 
 	// allow on/off switching via 'use' function.
 	SetUse( ToggleUse );
-	
+
+	m_fSpawning = TRUE;	
 	m_fActive = FALSE;
 
 	if ( FBitSet ( pev->spawnflags, AMBIENT_SOUND_NOT_LOOPING ) )
@@ -269,7 +271,8 @@ void CAmbientGeneric :: StartDynamicSound( void )
 {
 	char* szSoundFile = (char*) STRING(pev->message);
 
-	EMIT_SOUND_DYN( edict(), CHAN_ITEM, szSoundFile,	(m_dpv.vol * 0.01), m_flAttenuation, SND_SPAWNING, m_dpv.pitch);
+	if( m_fSpawning )
+		EMIT_SOUND_DYN( edict(), CHAN_ITEM, szSoundFile,	(m_dpv.vol * 0.01), m_flAttenuation, SND_SPAWNING, m_dpv.pitch);
 
 	SetThink( RampThink );
 	SetNextThink( 0.1 );
@@ -1130,7 +1133,7 @@ typedef struct sentenceg
 
 } SENTENCEG;
 
-#define CSENTENCEG_MAX	1024		// max number of sentence groups
+#define CSENTENCEG_MAX	4096		// max number of sentence groups
 // globals
 
 SENTENCEG rgsentenceg[CSENTENCEG_MAX];

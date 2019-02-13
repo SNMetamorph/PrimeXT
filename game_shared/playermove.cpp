@@ -2066,7 +2066,7 @@ void PM_Duck( void )
 					// HACKHACK - Fudge for collision bug - no time to fix this properly
 					if ( pmove->onground != -1 )
 					{
-						for ( i = 0; i < 3; i++ )
+						for( i = 0; i < 3; i++ )
 						{
 							pmove->origin[i] -= ( pmove->player_mins[1][i] - pmove->player_mins[0][i] );
 						}

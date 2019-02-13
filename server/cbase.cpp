@@ -931,6 +931,8 @@ void CBaseEntity :: SetParent( int m_iNewParent, int m_iAttachment )
 
 	pParent = UTIL_FindEntityByTargetname( NULL, STRING( m_iNewParent ));	
 	SetParent( pParent, m_iAttachment );
+
+	CheckForMultipleParents( this, pParent );
 }
 
 //=======================================================================
@@ -1270,7 +1272,7 @@ static void BuildTeleportList_r( CBaseEntity *pTeleport, CUtlArray<TeleportListE
 
 static void BuildTeleportListTouch( CBaseEntity *pTeleport, CUtlArray<TeleportListEntry_t> &teleportList )
 {
-	edict_t *pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
+	edict_t *pEdict = INDEXENT( 1 );
 	TeleportListEntry_t entry;
 	TraceResult trace;
 

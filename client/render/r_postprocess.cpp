@@ -77,7 +77,7 @@ void RenderFSQ( int wide, int tall )
 
 void RenderSunShafts( void )
 {
-	if( !CVAR_TO_BOOL( v_sunshafts ) || tr.fogEnabled || !tr.screen_depth || !tr.screen_color || !tr.target_rgb[0] )
+	if( !CVAR_TO_BOOL( v_sunshafts ) || !tr.screen_depth || !tr.screen_color || !tr.target_rgb[0] )
 		return;
 
 	if( !CheckShader( glsl.genSunShafts ) || !CheckShader( glsl.drawSunShafts ))

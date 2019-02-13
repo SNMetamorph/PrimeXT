@@ -112,9 +112,21 @@ void CStudioModelRenderer :: Init( void )
 	m_pCvarHand		= CVAR_REGISTER( "cl_righthand", "0", FCVAR_ARCHIVE );
 	m_pCvarViewmodelFov		= CVAR_REGISTER( "cl_viewmodel_fov", "90", FCVAR_ARCHIVE );
 	m_pCvarCompatible		= CVAR_REGISTER( "r_studio_compatible", "1", FCVAR_ARCHIVE );
+	m_pCvarLodScale		= CVAR_REGISTER( "cl_lod_scale", "5.0", FCVAR_ARCHIVE );
+	m_pCvarLodBias		= CVAR_REGISTER( "cl_lod_bias", "0", FCVAR_ARCHIVE );
 
 	m_pChromeSprite		= IEngineStudio.GetChromeSprite();
 	m_chromeCount		= 0;
+}
+
+/*
+====================
+VidInit
+
+====================
+*/
+void CStudioModelRenderer :: VidInit( void )
+{
 }
 
 /*
@@ -148,66 +160,132 @@ CStudioModelRenderer :: ~CStudioModelRenderer( void )
 {
 }
 
-word CStudioModelRenderer :: CreateInstance( cl_entity_t *pEnt )
+/*
+====================
+Prepare all the pointers for
+working with current entity
+
+====================
+*/
+bool CStudioModelRenderer :: StudioSetEntity( cl_entity_t *pEnt )
 {
-	studiohdr_t *phdr = (studiohdr_t *)IEngineStudio.Mod_Extradata( m_pRenderModel );
-	if( !phdr ) return INVALID_HANDLE;
+	if( !pEnt || !pEnt->model || pEnt->model->type != mod_studio )
+		return false;
 
-	pEnt->modelhandle = m_ModelInstances.AddToTail();
-	m_pModelInstance = &m_ModelInstances[pEnt->modelhandle];
+	m_pCurrentEntity = RI->currententity = pEnt;
+	SET_CURRENT_ENTITY( m_pCurrentEntity );
+	m_pPlayerInfo = NULL;
 
-	m_pModelInstance->m_pEntity = pEnt;
-	m_pModelInstance->m_pModel = m_pRenderModel;
-	m_pModelInstance->m_DecalHandle = INVALID_HANDLE;
-	m_pModelInstance->m_DecalCount = 0;
-	m_pModelInstance->cached_frame = -1;
-	m_pModelInstance->visframe = -1;
-	m_pModelInstance->radius = 0.0f;
-	m_pModelInstance->info_flags = 0;
-	ClearBounds( m_pModelInstance->absmin, m_pModelInstance->absmax );
-	memset( &m_pModelInstance->bonecache, 0, sizeof( BoneCache_t ));
-	memset( m_pModelInstance->m_protationmatrix, 0, sizeof( matrix3x4 ));
-	memset( m_pModelInstance->m_pbones, 0, sizeof( matrix3x4 ) * MAXSTUDIOBONES );
-	memset( m_pModelInstance->m_pwpnbones, 0, sizeof( matrix3x4 ) * MAXSTUDIOBONES );
-	memset( m_pModelInstance->attachment, 0, sizeof( StudioAttachment_t ) * MAXSTUDIOATTACHMENTS );
-	memset( m_pModelInstance->m_studioquat, 0, sizeof( Vector4D ) * MAXSTUDIOBONES );
-	memset( m_pModelInstance->m_studiopos, 0, sizeof( Vector ) * MAXSTUDIOBONES );
-	memset( m_pModelInstance->m_weaponquat, 0, sizeof( Vector4D ) * MAXSTUDIOBONES );
-	memset( m_pModelInstance->m_weaponpos, 0, sizeof( Vector ) * MAXSTUDIOBONES );
-	memset( &m_pModelInstance->lighting, 0, sizeof( mstudiolight_t ));
-	m_pModelInstance->m_pJiggleBones = NULL;
-	memset( &m_pModelInstance->lerp, 0, sizeof( mstudiolerp_t ));
-	memset( &m_pModelInstance->m_controller, 0, sizeof( m_pModelInstance->m_controller ));
-	memset( &m_pModelInstance->m_seqblend, 0, sizeof( m_pModelInstance->m_seqblend ));
-	m_pModelInstance->m_bProceduralBones = false;
-	m_pModelInstance->m_flLastBoneUpdate = 0.0f;
-	m_pModelInstance->m_current_seqblend = 0;
-	m_pModelInstance->lerp.stairoldz = pEnt->origin[2];
-	m_pModelInstance->lerp.stairtime = tr.time;
-	m_pModelInstance->materials = NULL;
-	m_pModelInstance->m_StaticParts = NULL;
+	if( !m_fDrawViewModel && ( m_pCurrentEntity->player || m_pCurrentEntity->curstate.renderfx == kRenderFxDeadPlayer ))
+	{
+		int	iPlayerIndex;
 
-	m_boneSetup.SetStudioPointers( phdr, m_pModelInstance->m_poseparameter );
+		if( m_pCurrentEntity->curstate.renderfx == kRenderFxDeadPlayer )
+			iPlayerIndex = m_pCurrentEntity->curstate.renderamt - 1;
+		else iPlayerIndex = m_pCurrentEntity->curstate.number - 1;
+          
+		if( iPlayerIndex < 0 || iPlayerIndex >= GET_MAX_CLIENTS( ))
+			return false;
 
-	// set poseparam sliders to their default values
-	m_boneSetup.CalcDefaultPoseParameters( m_pModelInstance->m_poseparameter );
+		if( RP_NORMALPASS() && RP_LOCALCLIENT( m_pCurrentEntity ) && !FBitSet( RI->params, RP_THIRDPERSON ))
+		{
+			// hide playermodel in firstperson
+			return false;
+		}
+		else
+		{
+			RI->currentmodel = m_pRenderModel = IEngineStudio.SetupPlayerModel( iPlayerIndex );
 
-	// create a local copy of all the model material for cache uber-shaders
-	UpdateInstanceMaterials();
+			// show highest resolution multiplayer model
+			if( CVAR_TO_BOOL( m_pCvarHiModels ) && m_pRenderModel != m_pCurrentEntity->model )
+				m_pCurrentEntity->curstate.body = 255;
 
-	// copy attachments names
-	mstudioattachment_t *pattachment = (mstudioattachment_t *)((byte *)m_pStudioHeader + m_pStudioHeader->attachmentindex);
-	StudioAttachment_t *att = m_pModelInstance->attachment;
+			if( !( !developer_level && GET_MAX_CLIENTS() == 1 ) && ( m_pRenderModel == m_pCurrentEntity->model ))
+				m_pCurrentEntity->curstate.body = 1; // force helmet
+		}
 
-	// setup attachment names
-	for( int i = 0; i < Q_min( MAXSTUDIOATTACHMENTS, m_pStudioHeader->numattachments ); i++ )
-		Q_strncpy( att[i].name, pattachment[i].name, sizeof( att[0].name ));
-	m_pModelInstance->numattachments = m_pStudioHeader->numattachments;
+		// setup the playerinfo
+		if( m_pCurrentEntity->player )
+			m_pPlayerInfo = IEngineStudio.PlayerInfo( iPlayerIndex );
+	}
+	else
+	{
+		RI->currentmodel = m_pRenderModel = RI->currententity->model;
+	}
 
-	for( int map = 0; map < MAXLIGHTMAPS; map++ )
-		m_pModelInstance->styles[map] = 255;
+	if( m_pRenderModel == NULL )
+		return false;
 
-	return pEnt->modelhandle;
+	m_pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata( m_pRenderModel );
+
+ 	// downloading in-progress ?
+	if( m_pStudioHeader == NULL )
+		return false;
+
+	// tell the engine about model
+	IEngineStudio.StudioSetHeader( m_pStudioHeader );
+	IEngineStudio.SetRenderModel( m_pRenderModel );
+
+	if( !StudioSetupInstance( ))
+	{
+		ALERT( at_error, "Couldn't create instance for entity %d\n", pEnt->index );
+		return false; // out of memory ?
+	}
+
+	// all done
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Fast version without data reconstruction or changing
+//-----------------------------------------------------------------------------
+bool CStudioModelRenderer :: StudioSetEntity( gl_studiomesh_t *entry )
+{
+	studiohdr_t *phdr;
+
+	if( !entry || !entry->parent || !entry->model )
+		return false; // bad entry?
+
+	if( entry->parent->modelhandle == INVALID_HANDLE )
+		return false; // not initialized?
+
+	if(( phdr = (studiohdr_t *)IEngineStudio.Mod_Extradata( m_pRenderModel )) == NULL )
+		return false; // no model?
+
+	RI->currentmodel = m_pRenderModel = entry->model;
+	RI->currententity = m_pCurrentEntity = entry->parent;
+	m_pModelInstance = &m_ModelInstances[entry->parent->modelhandle];
+	m_pStudioHeader = phdr;
+	m_pPlayerInfo = NULL;
+
+	return true;
+}
+
+bool CStudioModelRenderer :: StudioSetupInstance( void )
+{
+	// first call ?
+	if( m_pCurrentEntity->modelhandle == INVALID_HANDLE )
+	{
+		m_pCurrentEntity->modelhandle = m_ModelInstances.AddToTail();
+
+		if( m_pCurrentEntity->modelhandle == INVALID_HANDLE )
+			return false; // out of memory ?
+
+		m_pModelInstance = &m_ModelInstances[m_pCurrentEntity->modelhandle];
+		ClearInstanceData( true );
+	}
+	else
+	{
+		m_pModelInstance = &m_ModelInstances[m_pCurrentEntity->modelhandle];
+
+		// model has been changed or something like
+		if( !IsModelInstanceValid( m_pModelInstance ))
+			ClearInstanceData( false );
+	}
+
+	m_boneSetup.SetStudioPointers( m_pStudioHeader, m_pModelInstance->m_poseparameter );
+
+	return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -237,7 +315,6 @@ void CStudioModelRenderer :: DestroyInstance( word handle )
 
 	DestroyDecalList( inst->m_DecalHandle );
 	inst->m_DecalHandle = INVALID_HANDLE;
-	DestroyMeshCacheVL( inst );
 
 	if( inst->materials != NULL )
 		Mem_Free( inst->materials );
@@ -273,12 +350,30 @@ void CStudioModelRenderer :: UpdateInstanceMaterials( void )
 	}
 }
 
-void CStudioModelRenderer :: ClearInstanceData( void )
+void CStudioModelRenderer :: ClearInstanceData( bool create )
 {
-	if( m_pModelInstance->m_pJiggleBones != NULL )
-		delete m_pModelInstance->m_pJiggleBones;
-	DestroyDecalList( m_pModelInstance->m_DecalHandle );
-	ReleaseBodyParts( &m_pModelInstance->m_StaticParts );
+	if( create )
+	{
+		m_pModelInstance->m_pJiggleBones = NULL;
+		m_pModelInstance->materials = NULL;
+	}
+	else
+	{
+		DestroyDecalList( m_pModelInstance->m_DecalHandle );
+		if( m_pModelInstance->m_pJiggleBones != NULL )
+			delete m_pModelInstance->m_pJiggleBones;
+		m_pModelInstance->m_pJiggleBones = NULL;
+	}
+
+	m_pModelInstance->m_pEntity = m_pCurrentEntity;
+	m_pModelInstance->m_pModel = m_pRenderModel;
+	m_pModelInstance->m_DecalHandle = INVALID_HANDLE;
+	m_pModelInstance->m_VlCache = NULL;
+	m_pModelInstance->m_DecalCount = 0;
+	m_pModelInstance->cached_frame = -1;
+	m_pModelInstance->visframe = -1;
+	m_pModelInstance->radius = 0.0f;
+	m_pModelInstance->info_flags = 0;
 
 	ClearBounds( m_pModelInstance->absmin, m_pModelInstance->absmax );
 	memset( &m_pModelInstance->bonecache, 0, sizeof( BoneCache_t ));
@@ -314,6 +409,7 @@ void CStudioModelRenderer :: ClearInstanceData( void )
 	// set poseparam sliders to their default values
 	m_boneSetup.CalcDefaultPoseParameters( m_pModelInstance->m_poseparameter );
 
+	// refresh the materials list
 	UpdateInstanceMaterials();
 
 	// copy attachments names
@@ -346,7 +442,7 @@ void CStudioModelRenderer :: ProcessUserData( model_t *mod, qboolean create, con
 		studiohdr_t *src = (studiohdr_t *)buffer;
 		m_pRenderModel->modelCRC = FILE_CRC32( buffer, src->length );
 		double start = Sys_DoubleTime();
-		m_pRenderModel->bodyparts = CreateMeshCache();
+		m_pRenderModel->studiocache = CreateMeshCache();
 		double end = Sys_DoubleTime();
 		tr.buildtime += (end - start);
 	}
@@ -856,7 +952,7 @@ void CStudioModelRenderer :: MeshCreateBuffer( vbomesh_t *pOut, const mstudiomes
 	pglBindBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
 }
 
-mbodypart_t *CStudioModelRenderer :: CreateMeshCache( dmodellight_t *dml )
+mvbocache_t *CStudioModelRenderer :: CreateMeshCache( dmodellight_t *dml )
 {
 	bool		unique_model = (dml == NULL);	// just for more readable code
 	TmpModel_t	submodel[MAXSTUDIOMODELS];	// list of unique models
@@ -866,7 +962,7 @@ mbodypart_t *CStudioModelRenderer :: CreateMeshCache( dmodellight_t *dml )
 	int		i, j, k, bufSize = 0;
 	int		num_submodels = 0;
 	byte		*buffer, *bufend;		// simple bounds check
-	mbodypart_t	*bodyparts;
+	mvbocache_t	*studiocache;
 	mstudiobodyparts_t	*pbodypart;
 	mstudiomodel_t	*psubmodel;
 	msubmodel_t	*pModel;
@@ -939,7 +1035,7 @@ mbodypart_t *CStudioModelRenderer :: CreateMeshCache( dmodellight_t *dml )
 	}
 
 	// compute cache size (include individual meshes)
-	bufSize = sizeof( mbodypart_t ) * m_pStudioHeader->numbodyparts;
+	bufSize = sizeof( mvbocache_t ) + sizeof( mbodypart_t ) * m_pStudioHeader->numbodyparts;
 
 	for( i = 0; i < num_submodels; i++ )
 		bufSize += sizeof( msubmodel_t ) + sizeof( vbomesh_t ) * submodel[i].pmodel->nummesh;
@@ -948,8 +1044,11 @@ mbodypart_t *CStudioModelRenderer :: CreateMeshCache( dmodellight_t *dml )
 	bufend = buffer + bufSize;
 
 	// setup pointers
-	bodyparts = (mbodypart_t *)buffer;
+	studiocache = (mvbocache_t *)buffer;
+	buffer += sizeof( mvbocache_t );
+	studiocache->bodyparts = (mbodypart_t *)buffer;
 	buffer += sizeof( mbodypart_t ) * m_pStudioHeader->numbodyparts;
+	studiocache->numbodyparts = m_pStudioHeader->numbodyparts;
 
 	// begin to building submodels
 	for( i = 0; i < num_submodels; i++ )
@@ -993,7 +1092,7 @@ mbodypart_t *CStudioModelRenderer :: CreateMeshCache( dmodellight_t *dml )
 	for( i = 0; i < m_pStudioHeader->numbodyparts; i++ )
 	{
 		pbodypart = (mstudiobodyparts_t *)((byte *)m_pStudioHeader + m_pStudioHeader->bodypartindex) + i;
-		mbodypart_t *pBodyPart = &bodyparts[i];
+		mbodypart_t *pBodyPart = &studiocache->bodyparts[i];
 
 		pBodyPart->base = pbodypart->base;
 		pBodyPart->nummodels = pbodypart->nummodels;
@@ -1027,20 +1126,71 @@ mbodypart_t *CStudioModelRenderer :: CreateMeshCache( dmodellight_t *dml )
 		else ALERT( at_error, "CreateMeshCache: memory buffer underrun\n" );
 	}
 
-	return bodyparts;
+	return studiocache;
 }
 
-void CStudioModelRenderer :: CreateMeshCacheVL( dmodellight_t *dml )
+//-----------------------------------------------------------------------------
+// all the caches should be build before starting the new map
+//-----------------------------------------------------------------------------
+void CStudioModelRenderer :: CreateMeshCacheVL( const char *modelname, int cacheID )
 {
-	m_nNumLightVerts = 0;
+	dvlightlump_t	*vl = world->vertex_lighting;
 
+	// first we need throw previous mesh
+	ReleaseVBOCache( &tr.vertex_light_cache[cacheID] );
+
+	if( world->vertex_lighting == NULL )
+		return; // for some reasons we missed this lump
+
+	m_pRenderModel = IEngineStudio.Mod_ForName( modelname, false );
+	m_pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata( m_pRenderModel );
+
+	if( !m_pRenderModel || !m_pStudioHeader )
+		return; // download in progress?
+
+	// first initialization
+	if( cacheID < vl->nummodels && vl->dataofs[cacheID] != -1 )
+	{
+		dmodellight_t	*dml = (dmodellight_t *)((byte *)vl + vl->dataofs[cacheID]);
+
+		m_nNumLightVerts = 0;
+
+		if( m_pRenderModel->modelCRC == dml->modelCRC )
+		{
+			double start = Sys_DoubleTime();
+			// now create mesh per entity with instanced vertex lighting
+			tr.vertex_light_cache[cacheID] = CreateMeshCache( dml );
+			double end = Sys_DoubleTime();
+			tr.buildtime += (end - start);
+		}
+
+		if( dml->numverts == m_nNumLightVerts )
+			ALERT( at_aiconsole, "vertexlit instance created, model verts %i, total verts %i\n", dml->numverts, m_nNumLightVerts );
+		else if( m_pRenderModel->modelCRC != dml->modelCRC )
+			ALERT( at_error, "failed to create vertex lighting: model CRC %p != %p\n", m_pRenderModel->modelCRC, dml->modelCRC );
+		else ALERT( at_error, "failed to create vertex lighting: model verts %i != total verts %i\n", dml->numverts, m_nNumLightVerts );
+		m_nNumLightVerts = 0;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// all the caches should be build before starting the new map
+//-----------------------------------------------------------------------------
+void CStudioModelRenderer :: FreeMeshCacheVL( void )
+{
+	for( int i = 0; i < MAX_LIGHTCACHE; i++ )
+		ReleaseVBOCache( &tr.vertex_light_cache[i] );
+}
+
+void CStudioModelRenderer :: CreateMeshCacheVL( dmodellight_t *dml, int cacheID )
+{
 	if( m_pRenderModel->modelCRC == dml->modelCRC )
 	{
-		// now create mesh per entity with instanced vertex lighting
-		m_pModelInstance->m_StaticParts = CreateMeshCache( dml );
+		// get lighting cache
+		m_pModelInstance->m_VlCache = tr.vertex_light_cache[cacheID];
 	}
 
-	if( dml->numverts == m_nNumLightVerts )
+	if( m_pModelInstance->m_VlCache != NULL )
 	{
 		SetBits( m_pModelInstance->info_flags, MF_VERTEX_LIGHTING );
 
@@ -1049,30 +1199,27 @@ void CStudioModelRenderer :: CreateMeshCacheVL( dmodellight_t *dml )
 
 		for( int i = 0; i < m_pStudioHeader->numtextures; i++ )
 		{
-			mstudiomaterial_t	*mat = &m_pModelInstance->materials[i];
+			mstudiomaterial_t *mat = &m_pModelInstance->materials[i];
 			mat->glsl_sequence = 0; // refresh shaders
 		}
 	}
-	else 
+	else
 	{
-		if( m_pRenderModel->modelCRC != dml->modelCRC )
-			ALERT( at_error, "failed to create vertex lighting: model CRC %p != %p\n", m_pRenderModel->modelCRC, dml->modelCRC );
-		else ALERT( at_error, "failed to create vertex lighting: model verts %i != total verts %i\n", dml->numverts, m_nNumLightVerts );
+		ALERT( at_warning, "failed to create vertex lighting for %s\n", m_pRenderModel->name );
 		SetBits( m_pModelInstance->info_flags, MF_VL_BAD_CACHE );
 	}
-	m_nNumLightVerts = 0;
 }
 
-void CStudioModelRenderer :: ReleaseBodyParts( mbodypart_t **ppbodyparts )
+void CStudioModelRenderer :: ReleaseVBOCache( mvbocache_t **ppvbocache )
 {
-	ASSERT( ppbodyparts != NULL );
+	ASSERT( ppvbocache != NULL );
 
-	mbodypart_t *pbodyparts = *ppbodyparts;
-	if( !pbodyparts ) return;
+	mvbocache_t *pvbocache = *ppvbocache;
+	if( !pvbocache ) return;
 
-	for( int i = 0; i < m_pStudioHeader->numbodyparts; i++ )
+	for( int i = 0; i < pvbocache->numbodyparts; i++ )
 	{
-		mbodypart_t *pBodyPart = &pbodyparts[i];
+		mbodypart_t *pBodyPart = &pvbocache->bodyparts[i];
 
 		for( int j = 0; j < pBodyPart->nummodels; j++ )
 		{
@@ -1093,33 +1240,20 @@ void CStudioModelRenderer :: ReleaseBodyParts( mbodypart_t **ppbodyparts )
 		}
 	}
 
-	if( pbodyparts != NULL )
-		Mem_Free( pbodyparts );
-	*ppbodyparts = NULL;
+	if( pvbocache != NULL )
+		Mem_Free( pvbocache );
+	*ppvbocache = NULL;
 }
 
 void CStudioModelRenderer :: DestroyMeshCache( void )
 {
 	FreeStudioMaterials ();
 
-	ReleaseBodyParts( &m_pRenderModel->bodyparts );
+	ReleaseVBOCache( &m_pRenderModel->studiocache );
 
 	if( m_pRenderModel->poseToBone != NULL )
 		Mem_Free( m_pRenderModel->poseToBone );
 	m_pRenderModel->poseToBone = NULL;
-}
-
-void CStudioModelRenderer :: DestroyMeshCacheVL( ModelInstance_t *inst )
-{
-	if( !FBitSet( inst->info_flags, MF_VERTEX_LIGHTING ))
-		return;
-
-	m_pRenderModel = inst->m_pModel;
-	m_pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata( m_pRenderModel );
-	if( !m_pStudioHeader ) return;
-
-	ReleaseBodyParts( &inst->m_StaticParts );
-	ClearBits( inst->info_flags, MF_VERTEX_LIGHTING );
 }
 
 void CStudioModelRenderer :: LoadStudioMaterials( void )
@@ -1319,6 +1453,7 @@ check for texture flags
 int CStudioModelRenderer :: GetEntityRenderMode( cl_entity_t *ent )
 {
 	cl_entity_t	*oldent = IEngineStudio.GetCurrentEntity();
+	int		i, opaque, trans;
 	mstudiotexture_t	*ptexture;
 	model_t		*model;
 	studiohdr_t	*phdr;
@@ -1335,22 +1470,27 @@ int CStudioModelRenderer :: GetEntityRenderMode( cl_entity_t *ent )
 
 	if(( phdr = (studiohdr_t *)IEngineStudio.Mod_Extradata( model )) == NULL )
 	{
-		// forcing to choose right sorting type
-		if(( model && model->type == mod_brush ) && FBitSet( model->flags, MODEL_TRANSPARENT ))
-			return kRenderTransAlpha;
+		if( R_ModelOpaque( ent->curstate.rendermode ))
+		{
+			// forcing to choose right sorting type
+			if(( model && model->type == mod_brush ) && FBitSet( model->flags, MODEL_TRANSPARENT ))
+				return kRenderTransAlpha;
+		}
 		return ent->curstate.rendermode;
 	}
 	ptexture = (mstudiotexture_t *)((byte *)phdr + phdr->textureindex);
 
-	for( int i = 0; i < phdr->numtextures; i++, ptexture++ )
+	for( opaque = trans = i = 0; i < phdr->numtextures; i++, ptexture++ )
 	{
-		// g-cont. this is not fully proper but better than was
-		if( FBitSet( ptexture->flags, STUDIO_NF_ADDITIVE ))
-			return kRenderTransAdd;
-//		if( FBitSet( ptexture->flags, STUDIO_NF_MASKED ))
-//			return kRenderTransAlpha;
+		// ignore chrome & additive it's just a specular-like effect
+		if( FBitSet( ptexture->flags, STUDIO_NF_ADDITIVE ) && !FBitSet( ptexture->flags, STUDIO_NF_CHROME ))
+			trans++;
+		else opaque++;
 	}
 
+	// if model is more additive than opaque
+	if( trans > opaque )
+		return kRenderTransAdd;
 	return ent->curstate.rendermode;
 }
 
@@ -1495,6 +1635,21 @@ float CStudioModelRenderer :: CalcStairSmoothValue( float oldz, float newz, floa
 	return 0.0f;
 }
 
+int CStudioModelRenderer :: StudioCheckLOD( void )
+{
+	mstudiobodyparts_t    *m_pBodyPart;
+    
+	for( int i = 0; i < m_pStudioHeader->numbodyparts; i++ )
+	{
+		m_pBodyPart = (mstudiobodyparts_t *)((byte *)m_pStudioHeader + m_pStudioHeader->bodypartindex) + i;
+        
+		if( !Q_stricmp( m_pBodyPart->name, "studioLOD" ))
+			return m_pBodyPart->nummodels;
+	}
+
+	return 0; // no lod-levels for this model
+}
+
 /*
 ====================
 StudioSetUpTransform
@@ -1540,8 +1695,22 @@ void CStudioModelRenderer :: StudioSetUpTransform( void )
 	Vector angles = m_pCurrentEntity->angles;
 	Vector scale = Vector( 1.0f, 1.0f, 1.0f );
 
-	// tell the bonesetup about current model
-	m_boneSetup.SetStudioPointers( m_pStudioHeader, m_pModelInstance->m_poseparameter );
+	float lodDist = (origin - RI->vieworg).Length() * tr.lodScale;
+	float  radius = Q_max( m_pModelInstance->radius, 1.0f ); // to avoid division by zero
+	int lodnum = (int)( lodDist / radius );
+	int numLods;
+
+	if( CVAR_TO_BOOL( m_pCvarLodScale ))
+		lodnum /= (int)fabs( m_pCvarLodScale->value );
+	if( CVAR_TO_BOOL( m_pCvarLodBias ))
+		lodnum += (int)fabs( m_pCvarLodBias->value );
+
+	// apply lodnum to model
+	if(( numLods = StudioCheckLOD( )) != 0 )
+	{
+		// set derived LOD
+		e->curstate.body = Q_min( lodnum, numLods - 1 );
+	}
 
 	if( m_pPlayerInfo )
 	{
@@ -1577,7 +1746,7 @@ void CStudioModelRenderer :: StudioSetUpTransform( void )
 		m_pModelInstance->lerp.gaitframe = m_pPlayerInfo->gaitframe;
 	}
 
-	if( FBitSet( m_pCurrentEntity->curstate.effects, EF_NOINTERP ) || tr.realframecount < 3 )
+	if( FBitSet( m_pCurrentEntity->curstate.effects, EF_NOINTERP ) || ( tr.realframecount - m_pModelInstance->cached_frame ) > 1 )
 	{
 		m_pModelInstance->lerp.sequence = m_pCurrentEntity->curstate.sequence;
 	}
@@ -2250,9 +2419,6 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 		e->curstate.sequence = 0;
           }
 
-	// tell the bonesetup about current model
-	m_boneSetup.SetStudioPointers( m_pStudioHeader, m_pModelInstance->m_poseparameter );
-
 	pseqdesc = (mstudioseqdesc_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqindex) + e->curstate.sequence;
 	float f = StudioEstimateFrame( pseqdesc );
 	if( CheckBoneCache( f )) return; // using a cached bones no need transformations
@@ -2795,9 +2961,9 @@ StudioStaticLight
 void CStudioModelRenderer :: StudioStaticLight( cl_entity_t *ent )
 {
 	// setup advanced vertexlighting for env_static entities
-	if( FBitSet( ent->curstate.iuser1, CF_STATIC_ENTITY ) && ( ent->curstate.colormap > 0 ) && world->vertex_lighting != NULL )
+	if(( ent->curstate.iuser3 > 0 ) && world->vertex_lighting != NULL )
 	{
-		int		cacheID = ent->curstate.colormap - 1;
+		int		cacheID = ent->curstate.iuser3 - 1;
 		dvlightlump_t	*vl = world->vertex_lighting;
 
 		if( FBitSet( m_pModelInstance->info_flags, MF_VERTEX_LIGHTING ))
@@ -2810,7 +2976,7 @@ void CStudioModelRenderer :: StudioStaticLight( cl_entity_t *ent )
 			if( cacheID < vl->nummodels && vl->dataofs[cacheID] != -1 )
 			{
 				// we have ID of vertex light cache and cache is present
-				CreateMeshCacheVL( (dmodellight_t *)((byte *)world->vertex_lighting + vl->dataofs[cacheID]));
+				CreateMeshCacheVL( (dmodellight_t *)((byte *)world->vertex_lighting + vl->dataofs[cacheID]), cacheID );
 			}
 		}
 	}
@@ -2952,7 +3118,7 @@ void CStudioModelRenderer :: StudioDrawPoints( void )
 	mstudiotexture_t *ptexture = (mstudiotexture_t *)((byte *)m_pStudioHeader + m_pStudioHeader->textureindex);
 	Vector *pstudioverts = (Vector *)((byte *)m_pStudioHeader + m_pSubModel->vertindex);
 	mstudiomesh_t *pmesh = (mstudiomesh_t *)((byte *)m_pStudioHeader + m_pSubModel->meshindex);
-	int m_skinnum = bound( 0, m_pCurrentEntity->curstate.skin, MAXSTUDIOSKINS );
+	int m_skinnum = bound( 0, m_pCurrentEntity->curstate.skin, MAXSTUDIOSKINS - 1 );
 	short *pskinref = (short *)((byte *)m_pStudioHeader + m_pStudioHeader->skinindex);
 	if( m_skinnum != 0 && m_skinnum < m_pStudioHeader->numskinfamilies )
 		pskinref += (m_skinnum * m_pStudioHeader->numskinref);
@@ -3355,58 +3521,9 @@ int CStudioModelRenderer :: StudioDrawModel( int flags )
 {
 	alight_t lighting;
 	Vector dir;
-	
-	m_pCurrentEntity = IEngineStudio.GetCurrentEntity();
-	m_pPlayerInfo = NULL; // always reset the playerinfo
 
-	if( !m_fDrawViewModel && ( m_pCurrentEntity->player || m_pCurrentEntity->curstate.renderfx == kRenderFxDeadPlayer ))
-	{
-		if( m_pCurrentEntity->curstate.renderfx == kRenderFxDeadPlayer )
-			m_nPlayerIndex = m_pCurrentEntity->curstate.renderamt - 1;
-		else m_nPlayerIndex = m_pCurrentEntity->curstate.number - 1;
-          
-		if( m_nPlayerIndex < 0 || m_nPlayerIndex >= GET_MAX_CLIENTS( ))
-			return 0;
-
-		RI->currentmodel = m_pRenderModel = IEngineStudio.SetupPlayerModel( m_nPlayerIndex );
-
-		// show highest resolution multiplayer model
-		if( m_pCvarHiModels->value && m_pRenderModel != m_pCurrentEntity->model )
-			m_pCurrentEntity->curstate.body = 255;
-
-		if( !( !developer_level && GET_MAX_CLIENTS() == 1 ) && ( m_pRenderModel == m_pCurrentEntity->model ))
-			m_pCurrentEntity->curstate.body = 1; // force helmet
-	}
-	else
-	{
-		RI->currentmodel = m_pRenderModel = RI->currententity->model;
-	}
-
-	if( m_pRenderModel == NULL )
+	if( !StudioSetEntity( IEngineStudio.GetCurrentEntity( )))
 		return 0;
-
-	// setup global pointers
-	m_pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata( m_pRenderModel );
-
-	// aliasmodel instead of studio?
-	if( m_pStudioHeader == NULL )
-		return 0;
-
-	IEngineStudio.StudioSetHeader( m_pStudioHeader );
-	IEngineStudio.SetRenderModel( m_pRenderModel );
-
-	// NOTE: any call of StudioDrawModel should the create of instance
-	if( m_pCurrentEntity->modelhandle == INVALID_HANDLE )
-		CreateInstance( m_pCurrentEntity );
-
-	if( m_pCurrentEntity->modelhandle == INVALID_HANDLE )
-		return 0; // out of memory ?
-
-	m_pModelInstance = &m_ModelInstances[m_pCurrentEntity->modelhandle];
-
-	// check instance for valid
-	if( !IsModelInstanceValid( m_pModelInstance ))
-		ClearInstanceData();
 
 	if( FBitSet( flags, STUDIO_RENDER ))
 	{
@@ -3557,8 +3674,8 @@ int CStudioModelRenderer :: StudioDrawModel( int flags )
 		m_nNumDrawMeshes = 0;
 
 		// change shared model with instanced model for this entity (it has personal vertex light cache)
-		if( FBitSet( m_pModelInstance->info_flags, MF_VERTEX_LIGHTING ))
-			pbodyparts = m_pModelInstance->m_StaticParts;
+		if( m_pModelInstance->m_VlCache != NULL )
+			pbodyparts = m_pModelInstance->m_VlCache->bodyparts;
 
 		for( int i = 0 ; i < m_pStudioHeader->numbodyparts; i++ )
 			AddBodyPartToDrawList( m_pStudioHeader, pbodyparts, i, ( RI->currentlight != NULL ), true );
@@ -3740,6 +3857,7 @@ void CStudioModelRenderer :: AddMeshToDrawList( studiohdr_t *phdr, const vbomesh
 
 	entry->mesh = (vbomesh_t *)mesh;
 	entry->hProgram = hProgram;
+	entry->parent = m_pCurrentEntity;
 	entry->model = m_pRenderModel;
 	entry->additive = FBitSet( mat->flags, STUDIO_NF_ADDITIVE ) ? true : false;
 }
@@ -3752,7 +3870,7 @@ AddBodyPartToDrawList
 */
 void CStudioModelRenderer :: AddBodyPartToDrawList( studiohdr_t *phdr, mbodypart_s *bodyparts, int bodypart, bool lightpass, bool cached_materials )
 {
-	if( !bodyparts ) bodyparts = m_pRenderModel->bodyparts;
+	if( !bodyparts ) bodyparts = m_pRenderModel->studiocache->bodyparts;
 	if( !bodyparts ) HOST_ERROR( "%s missed cache\n", m_pCurrentEntity->model->name );
 
 	bodypart = bound( 0, bodypart, phdr->numbodyparts );
@@ -3806,8 +3924,8 @@ void CStudioModelRenderer :: AddStudioToLightList( plight_t *pl )
 		return;
 
 	// change shared model with instanced model for this entity (it has personal vertex light cache)
-	if( FBitSet( m_pModelInstance->info_flags, MF_VERTEX_LIGHTING ))
-		pbodyparts = m_pModelInstance->m_StaticParts;
+	if( m_pModelInstance->m_VlCache != NULL )
+		pbodyparts = m_pModelInstance->m_VlCache->bodyparts;
 
 	// all checks are passed, now all the model meshes will lighted
 	for( int i = 0 ; i < m_pStudioHeader->numbodyparts; i++ )
@@ -4126,10 +4244,12 @@ void CStudioModelRenderer :: DrawStudioMeshes( void )
 			else
 			{
 				if( R_ModelOpaque( RI->currententity->curstate.rendermode ))
+				{
 					GL_DepthMask( GL_TRUE );
+					GL_Blend( GL_FALSE );
+				}
 				StudioSetRenderMode( m_pCurrentEntity->curstate.rendermode );
 			}
-
 			cached_material = mat;
 		}
 

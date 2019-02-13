@@ -82,6 +82,23 @@ void CPathTrack :: KeyValue( KeyValueData *pkvd )
 	else BaseClass::KeyValue( pkvd );
 }
 
+STATE CPathTrack :: GetState ( void )
+{
+	// Use toggles between two paths
+	if( m_paltpath )
+	{
+		if( FBitSet( pev->spawnflags, SF_PATH_ALTERNATE ))
+			return STATE_ON;
+	}
+	else	
+	{
+		if( FBitSet( pev->spawnflags, SF_PATH_DISABLED ))
+			return STATE_ON; // yes, there is no error, disabled path is STATE_ON
+	}
+
+	return STATE_OFF;
+}
+
 void CPathTrack :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	int on;

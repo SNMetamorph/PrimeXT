@@ -223,6 +223,11 @@ const char *SV_GetString( string_t iString )
 	return g_GameStringPool.FindString( iString );
 }
 
+void PrepWorldFrame( void )
+{
+	WorldPhysic->EndFrame();
+}
+
 //
 // Xash3D physics interface
 //
@@ -237,7 +242,7 @@ static physics_interface_t gPhysicsInterface =
 	NULL,	// not needs
 	EngineSetFeatures,
 	DrawDebugTriangles,
-	NULL,
+	PrepWorldFrame,
 	DrawOrthoTriangles,
 	SV_ClipMoveToEntity,
 	SV_ClipPMoveToEntity,
@@ -577,6 +582,9 @@ bool CPhysicsPushedEntities::SpeculativelyCheckPush( PhysicsPushedInfo_t &info, 
 	// FIXME: If the trace fraction == 0 can we early out also?
 	info.m_bBlocked = !IsPushedPositionValid( pBlocker );
 
+	if( !info.m_bBlocked /* && !bIsBlocked*/ )
+		return true;
+
 	// if the player is blocking the train try nudging him around to fix accumulated error
 	if( bIsUnblockable )
 	{
@@ -600,9 +608,7 @@ bool CPhysicsPushedEntities::SpeculativelyCheckPush( PhysicsPushedInfo_t &info, 
 		return true;
 	}
 
-	if( info.m_bBlocked /* && bIsBlocked*/ )
-		return false;
-	return true;
+	return false;
 }
 
 //-----------------------------------------------------------------------------

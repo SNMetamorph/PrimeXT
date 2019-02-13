@@ -151,6 +151,12 @@ void CCineMonster :: Spawn( void )
 		m_interruptable = TRUE;
 }
 
+void CCineMonster :: OnRemove( void )
+{
+	// entity will be removed, cancel script playing
+	CancelScript();
+}
+
 //=========================================================
 // FCanOverrideState - returns FALSE, scripted sequences 
 // cannot possess entities regardless of state.
@@ -913,7 +919,8 @@ public:
 
 	DECLARE_DATADESC();
 
-	CBaseMonster *FindEntity( void );
+	CBaseMonster *FindMonster( void );
+	CBaseEntity *FindEntity( void );
 	BOOL AcceptableSpeaker( CBaseMonster *pMonster );
 	BOOL StartSentence( CBaseMonster *pTarget );
 private:
@@ -998,11 +1005,21 @@ void CScriptedSentence :: KeyValue( KeyValueData *pkvd )
 
 void CScriptedSentence :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	if ( !m_active )
-		return;
-//	ALERT( at_console, "Firing sentence: %s\n", STRING(m_iszSentence) );
-	SetThink( FindThink );
-	pev->nextthink = gpGlobals->time;
+	if( useType == USE_OFF )
+	{
+//		ALERT( at_console, "disable sentence: %s\n", STRING(m_iszSentence) );
+		SetThink( NULL );
+		SetNextThink( -1 );
+	}
+	else
+	{
+		if ( !m_active )
+			return;
+
+//		ALERT( at_console, "Firing sentence: %s\n", STRING(m_iszSentence) );
+		SetThink( FindThink );
+		pev->nextthink = gpGlobals->time;
+	}
 }
 
 
@@ -1047,7 +1064,7 @@ void CScriptedSentence :: Spawn( void )
 
 void CScriptedSentence :: FindThink( void )
 {
-	CBaseMonster *pMonster = FindEntity();
+	CBaseMonster *pMonster = FindMonster();
 	if ( pMonster )
 	{
 		StartSentence( pMonster );
@@ -1060,8 +1077,26 @@ void CScriptedSentence :: FindThink( void )
 	}
 	else
 	{
-//		ALERT( at_console, "%s: can't find monster %s\n", STRING(m_iszSentence), STRING(m_iszEntity) );
-		pev->nextthink = gpGlobals->time + m_flRepeat + 0.5;
+		CBaseEntity *pEntity = FindEntity();
+
+		if( pEntity )
+		{
+			const char *pszSentence = STRING(m_iszSentence);
+
+			if ( pszSentence[0] == '!' )
+				EMIT_SOUND_DYN( pEntity->edict(), CHAN_VOICE, pszSentence, m_flVolume, m_flAttenuation, 0, PITCH_NORM );
+			else SENTENCEG_PlayRndSz( pEntity->edict(), pszSentence, m_flVolume, m_flAttenuation, 0, PITCH_NORM );
+			if ( pev->spawnflags & SF_SENTENCE_ONCE )
+				UTIL_Remove( this );
+			SetThink( DelayThink );
+			pev->nextthink = gpGlobals->time + m_flDuration + m_flRepeat;
+			m_active = FALSE;
+		}
+		else
+		{
+	//		ALERT( at_console, "%s: can't find monster %s\n", STRING(m_iszSentence), STRING(m_iszEntity) );
+			pev->nextthink = gpGlobals->time + m_flRepeat + 0.5;
+		}
 	}
 }
 
@@ -1096,7 +1131,7 @@ BOOL CScriptedSentence :: AcceptableSpeaker( CBaseMonster *pMonster )
 }
 
 
-CBaseMonster *CScriptedSentence :: FindEntity( void )
+CBaseMonster *CScriptedSentence :: FindMonster( void )
 {
 	edict_t *pentTarget;
 	CBaseMonster *pMonster;
@@ -1128,6 +1163,38 @@ CBaseMonster *CScriptedSentence :: FindEntity( void )
 				if ( AcceptableSpeaker( pMonster ) )
 					return pMonster;
 			}
+		}
+	}
+	
+	return NULL;
+}
+
+CBaseEntity *CScriptedSentence :: FindEntity( void )
+{
+	edict_t *pentTarget;
+	CBaseEntity *pEntity;
+
+
+	pentTarget = FIND_ENTITY_BY_TARGETNAME(NULL, STRING(m_iszEntity));
+	pEntity = NULL;
+
+	while (!FNullEnt(pentTarget))
+	{
+		pEntity = Instance( pentTarget );
+		if ( pEntity != NULL && pEntity->pev->modelindex )
+		{
+			return pEntity;
+		}
+		pentTarget = FIND_ENTITY_BY_TARGETNAME(pentTarget, STRING(m_iszEntity));
+	}
+	
+	pEntity = NULL;
+	while ((pEntity = UTIL_FindEntityInSphere( pEntity, GetAbsOrigin(), m_flRadius )) != NULL)
+	{
+		if (FClassnameIs( pEntity->pev, STRING(m_iszEntity)))
+		{
+			if( pEntity->pev->modelindex )
+				return pEntity;
 		}
 	}
 	

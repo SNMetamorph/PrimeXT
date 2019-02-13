@@ -491,6 +491,7 @@ void CInfoPortalDest :: Spawn( void )
 #define SF_SCREENMOVIE_PASSABLE	BIT( 1 )
 #define SF_SCREENMOVIE_LOOPED		BIT( 2 )
 #define SF_SCREENMOVIE_MONOCRHOME	BIT( 3 )	// black & white
+#define SF_SCREENMOVIE_SOUND		BIT( 4 )	// allow sound
 
 class CFuncScreenMovie : public CBaseDelay
 {
@@ -525,7 +526,7 @@ void CFuncScreenMovie::KeyValue( KeyValueData *pkvd )
 void CFuncScreenMovie :: Precache( void )
 {
 	// store movie name as event index
-	pev->sequence = UTIL_PrecacheMovie( pev->message );
+	pev->sequence = UTIL_PrecacheMovie( pev->message, FBitSet( pev->spawnflags, SF_SCREENMOVIE_SOUND ));
 }
 
 void CFuncScreenMovie :: Spawn( void )
@@ -547,6 +548,9 @@ void CFuncScreenMovie :: Spawn( void )
 
 	if( FBitSet( pev->spawnflags, SF_SCREENMOVIE_MONOCRHOME ))
 		pev->iuser1 |= CF_MONOCHROME;
+
+	if( FBitSet( pev->spawnflags, SF_SCREENMOVIE_SOUND ))
+		pev->iuser1 |= CF_MOVIE_SOUND;
 
 	// enable monitor
 	if( FBitSet( pev->spawnflags, SF_SCREENMOVIE_START_ON ))

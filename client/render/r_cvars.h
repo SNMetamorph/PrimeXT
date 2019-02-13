@@ -35,6 +35,7 @@ extern cvar_t	*r_adjust_fov;
 extern cvar_t	*r_wireframe;
 extern cvar_t	*r_fullbright;
 extern cvar_t	*r_drawentities;
+extern cvar_t	*r_allow_3dsky;
 extern cvar_t	*r_allow_mirrors;
 extern cvar_t	*r_allow_portals;
 extern cvar_t	*r_allow_screens;

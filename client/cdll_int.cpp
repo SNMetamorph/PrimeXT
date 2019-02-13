@@ -125,6 +125,8 @@ int Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion )
 		return 0;	// Not a Xash3D engine
 
 	g_iXashEngineBuildNumber = (int)CVAR_GET_FLOAT( "build" ); // 0 for old builds or GoldSrc
+	if( g_iXashEngineBuildNumber <= 0 )
+		g_iXashEngineBuildNumber = (int)CVAR_GET_FLOAT( "buildnum" );
 
 	return 1;
 }
@@ -141,6 +143,8 @@ so the HUD can reinitialize itself.
 int HUD_VidInit( void )
 {
 	gHUD.VidInit();
+
+	R_VidInit();
 
 	return 1;
 }

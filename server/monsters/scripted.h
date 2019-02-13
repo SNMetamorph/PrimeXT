@@ -73,6 +73,7 @@ public:
 	BOOL CanInterrupt( void );
 	void AllowInterrupt( BOOL fAllow );
 	int IgnoreConditions( void );
+	void OnRemove( void );
 
 	int	m_iszIdle;		// string index for idle animation
 	int	m_iszPlay;		// string index for scripted animation

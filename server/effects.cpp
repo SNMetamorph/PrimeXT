@@ -212,13 +212,13 @@ void CBeam::Precache( void )
 void CBeam::SetStartEntity( int entityIndex ) 
 { 
 	pev->sequence = (entityIndex & 0x0FFF) | ((pev->sequence&0xF000)<<12); 
-	pev->owner = g_engfuncs.pfnPEntityOfEntIndex( entityIndex );
+	pev->owner = INDEXENT( entityIndex );
 }
 
 void CBeam::SetEndEntity( int entityIndex ) 
 { 
 	pev->skin = (entityIndex & 0x0FFF) | ((pev->skin&0xF000)<<12); 
-	pev->aiment = g_engfuncs.pfnPEntityOfEntIndex( entityIndex );
+	pev->aiment = INDEXENT( entityIndex );
 }
 
 // These don't take attachments into account
@@ -2813,7 +2813,7 @@ void CMessage::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useT
 			pPlayer = pActivator;
 		else
 		{
-			pPlayer = CBaseEntity::Instance( g_engfuncs.pfnPEntityOfEntIndex( 1 ) );
+			pPlayer = CBaseEntity::Instance( INDEXENT( 1 ) );
 		}
 		if ( pPlayer )
 			UTIL_ShowMessage( STRING(pev->message), pPlayer );
@@ -3124,6 +3124,7 @@ void CEnvProjector :: KeyValue( KeyValueData *pkvd )
 	if( FStrEq( pkvd->szKeyName, "fov" ))
 	{
 		pev->iuser2 = Q_atoi( pkvd->szValue );
+		pev->iuser2 = bound( 1, pev->iuser2, 120 );
 		pkvd->fHandled = TRUE;
 	}
 	else if( FStrEq( pkvd->szKeyName, "radius" ))
@@ -3863,7 +3864,6 @@ public:
 	virtual int ObjectCaps( void ) { return FCAP_IGNORE_PARENT; }
 	void SetObjectCollisionBox( void );
 	void KeyValue( KeyValueData *pkvd );
-	int vertex_light_cache;
 };
 
 LINK_ENTITY_TO_CLASS( env_static, CEnvStatic );
@@ -3880,11 +3880,6 @@ void CEnvStatic :: KeyValue( KeyValueData *pkvd )
 		UTIL_StringToVector( (float*)pev->vuser2, pkvd->szValue );
 		pkvd->fHandled = TRUE;
 	}
-	else if( FStrEq(pkvd->szKeyName, "vlight_cache"))
-	{
-		vertex_light_cache = atoi( pkvd->szValue );
-		pkvd->fHandled = TRUE;
-	}
 	else BaseClass::KeyValue( pkvd );
 }
 
@@ -3892,9 +3887,6 @@ void CEnvStatic :: Spawn( void )
 {
 	if( pev->vuser2 == g_vecZero )
 		pev->vuser2 = Vector( pev->scale, pev->scale, pev->scale );
-
-	// HACKHACK: store vertex light cache number
-	pev->colormap = vertex_light_cache;
 
 	// check xform values
 	if( pev->vuser2.x < 0.01f ) pev->vuser2.x = 1.0f;

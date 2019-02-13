@@ -588,7 +588,7 @@ void CSpriteModelRenderer :: SpriteDrawModel( void )
 		break;
 	}
 
-	if( tr.fogEnabled )
+	if( tr.fogEnabled && m_pSpriteHeader->texFormat != SPR_ALPHTEST )
 	{
 		// do software fog here
 		float depth = DotProduct( sprite_origin, RI->vforward ) - RI->viewplanedist;

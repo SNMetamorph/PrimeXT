@@ -47,6 +47,7 @@ private:
 	BOOL		m_fLoaded;	// collision tree is loaded and actual
 	BOOL		m_fDisableWarning;	// some warnings will be swallowed
 	BOOL		m_fWorldChanged;	// world is changed refresh the statics in case their scale was changed too
+	BOOL		m_fNeedFetchResults;
 
 	NxTriangleMesh	*m_pSceneMesh;
 	NxActor		*m_pSceneActor;	// scene with installed shape
@@ -64,6 +65,7 @@ public:
 	void		FreePhysic( void );
 	void		*GetUtilLibrary( void );
 	void		Update( float flTime );
+	void		EndFrame( void );
 	void		RemoveBody( edict_t *pEdict );
 	void		*CreateBodyFromEntity( CBaseEntity *pEntity );
 	void		*CreateBoxFromEntity( CBaseEntity *pObject );

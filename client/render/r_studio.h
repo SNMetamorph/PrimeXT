@@ -46,14 +46,14 @@ GNU General Public License for more details.
 	( \
 	( out ).mesh = ( in ).mesh, \
 	( out ).hProgram = ( in ).hProgram, \
+	( out ).parent = ( in ).parent, \
 	( out ).model = ( in ).model, \
 	( out ).additive = ( in ).additive \
 	)
 
 #define R_MeshCmp( mb1, mb2 ) \
 	( \
-	( mb1 ).hProgram > ( mb2 ).hProgram ? true : \
-	( mb1 ).additive > ( mb2 ).additive \
+	( mb1 ).additive > ( mb2 ).additive ? true : false \
 	)
 
 // new blending sequence system
@@ -143,6 +143,7 @@ typedef struct
 {
 	struct vbomesh_s	*mesh;
 	unsigned short	hProgram;		// handle to glsl program
+	cl_entity_t	*parent;		// pointer to parent entity
 	model_t		*model;
 	bool		additive;		// additive mesh
 } gl_studiomesh_t;
@@ -169,13 +170,21 @@ public:
 	virtual ~CStudioModelRenderer( void );
 
 	// Initialization
-	virtual void Init( void );
+	void Init( void );
+
+	void VidInit( void );
 
 	// public Interfaces
 	virtual int StudioDrawModel( int flags );
 
 	// Look up animation data for sequence
 	mstudioanim_t *StudioGetAnim ( model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc );
+
+	// precache vertexlit mesh
+	void CreateMeshCacheVL( const char *modelname, int cacheID );
+
+	// throw all the meshes when the engine is shutting down
+	void FreeMeshCacheVL( void );
 private:
 	// Local interfaces
 
@@ -319,7 +328,7 @@ private:
 		int		m_DecalCount;	// just used as timestamp for calculate decal depth
 		int		info_flags;
 
-		mbodypart_t	*m_StaticParts;	// valid only for env_statics that have vertexlight data
+		mvbocache_t	*m_VlCache;	// valid only for env_statics that have vertexlight data
 		byte		styles[4];	// actual only if MF_VERTEX_LIGHTING bit is set
 
 		mstudiolight_t	lighting;
@@ -470,8 +479,10 @@ private:
 	void RetireDecal( DecalHistoryList_t& historyList );
 	void DestroyDecalList( word handle );
 	word CreateDecalList( void );
+	bool StudioSetEntity( cl_entity_t *pEnt );
+	bool StudioSetEntity( gl_studiomesh_t *entry );
 	virtual bool IsModelInstanceValid( ModelInstance_t *inst );
-	virtual word CreateInstance( cl_entity_t *pEnt );
+	bool StudioSetupInstance( void );
 	virtual void DestroyInstance( word handle );
 	void DrawDecal( cl_entity_t *e );
 	void ComputeDecalTransform( DecalMaterial_t& decalMaterial, const matrix3x4 bones[] );
@@ -480,6 +491,7 @@ private:
 	virtual void DrawStudioMeshes( void );
 	virtual void DrawStudioMeshesShadow( void );
 	virtual void StudioDrawShell( void );
+	virtual int StudioCheckLOD( void );
 
 	// glow shell stuff
 	virtual void StudioBuildNormalTable( void );
@@ -491,18 +503,17 @@ private:
 	virtual void BuildMeshListForLight( struct plight_s *pl );
 	virtual void DrawLightForMeshList( struct plight_s *pl );
 
-	virtual mbodypart_t	*CreateMeshCache( dmodellight_t *dml = NULL );
-	virtual void ReleaseBodyParts( mbodypart_t **ppbodyparts );
+	virtual mvbocache_t	*CreateMeshCache( dmodellight_t *dml = NULL );
+	virtual void ReleaseVBOCache( mvbocache_t **ppcache );
 	virtual void DestroyMeshCache( void );
 
-	virtual void CreateMeshCacheVL( dmodellight_t *dml );
-	virtual void DestroyMeshCacheVL( ModelInstance_t *inst );
+	virtual void CreateMeshCacheVL( dmodellight_t *dml, int cacheID );
 
 	virtual void LoadStudioMaterials( void );
 	virtual void FreeStudioMaterials( void );
 
 	virtual void UpdateInstanceMaterials( void );
-	virtual void ClearInstanceData( void );
+	virtual void ClearInstanceData( bool create );
 
 	void MeshCreateBuffer( vbomesh_t *pDst, const mstudiomesh_t *pSrc, const mstudiomodel_t *pSubModel, const matrix3x4 bones[], dmodellight_t *dml = NULL );
 	void UploadBufferBase( vbomesh_t *pOut, svert_t *arrayxvert );
@@ -523,6 +534,8 @@ private:
 	cvar_t			*m_pCvarViewmodelFov;
 	cvar_t			*m_pCvarGlowShellFreq;
 	cvar_t			*m_pCvarCompatible;
+	cvar_t			*m_pCvarLodScale;
+	cvar_t			*m_pCvarLodBias;
 
 	CBaseBoneSetup		m_boneSetup;
 

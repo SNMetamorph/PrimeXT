@@ -708,6 +708,12 @@ typedef struct mbodypart_s
 	int		nummodels;		// mstudiobodyparts_t->nummodels
 } mbodypart_t;
 
+typedef struct mvbocache_s
+{
+	mbodypart_t	*bodyparts;
+	int		numbodyparts;
+} mvbocache_t;
+
 typedef struct mposebone_s
 {
 	matrix3x4		posetobone[MAXSTUDIOBONES];

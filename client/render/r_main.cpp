@@ -407,6 +407,9 @@ int CL_FxBlend( cl_entity_t *e )
 	float	offset, dist;
 	Vector	tmp;
 
+	if( RENDER_GET_PARM( PARAM_GAMEPAUSED, 0 ))
+		return e->curstate.renderamt;
+
 	offset = ((int)e->index ) * 363.0f; // Use ent index to de-sync these fx
 
 	switch( e->curstate.renderfx ) 
@@ -644,7 +647,10 @@ qboolean R_AddEntity( struct cl_entity_s *clent, int entityType )
 		clent->hCachedMatrix = GL_CacheState( clent->origin, clent->angles );
 
 	if( entityType == ET_FRAGMENTED )
+	{
+		clent->curstate.messagenum = r_currentMessageNum;
 		clent->visframe = tr.realframecount;
+	}
 
 	return true;
 }
@@ -748,6 +754,8 @@ void R_SetupFrustum( void )
 	if( FBitSet( RI->params, RP_OVERVIEW ))
 		RI->frustum.InitOrthogonal( cullMatrix, ov->xLeft, ov->xRight, ov->yTop, ov->yBottom, ov->zNear, ov->zFar );
 	else RI->frustum.InitProjection( cullMatrix, 0.0f, RI->farClip, RI->fov_x, RI->fov_y ); // NOTE: we ignore nearplane here (mirrors only)
+
+	tr.lodScale = tan( DEG2RAD( RI->fov_x ) * 0.5f );
 }
 
 /*
@@ -1080,8 +1088,8 @@ static void R_CheckFog( void )
 			tr.fogColor[1] = ((tr.movevars->fog_settings & 0xFF0000) >> 16) / 255.0f;
 			tr.fogColor[2] = ((tr.movevars->fog_settings & 0xFF00) >> 8) / 255.0f;
 			if( FBitSet( RI->params, RP_SKYPORTALVIEW ))
-				tr.fogDensity = (tr.movevars->fog_settings & 0xFF) * 0.00025f;
-			else tr.fogDensity = (tr.movevars->fog_settings & 0xFF) * 0.00005f; // was 0.000025f (increase up 2x)
+				tr.fogDensity = (tr.movevars->fog_settings & 0xFF) * 0.00005f;
+			else tr.fogDensity = (tr.movevars->fog_settings & 0xFF) * 0.000005f;
 			tr.fogEnabled = true;
 		}
 		return;
@@ -1104,7 +1112,10 @@ static void R_CheckFog( void )
 			}
 		}
 	}
-	else texture = R_RecursiveFindWaterTexture( RI->viewleaf->parent, NULL, false );
+	else if( RI->viewleaf )
+	{
+		texture = R_RecursiveFindWaterTexture( RI->viewleaf->parent, NULL, false );
+	}
 	if( texture == -1 ) return; // no valid fogs
 
 	// extract fog settings from texture palette
@@ -1114,7 +1125,7 @@ static void R_CheckFog( void )
 	tr.fogColor[0] = fogColor.r / 255.0f;
 	tr.fogColor[1] = fogColor.g / 255.0f;
 	tr.fogColor[2] = fogColor.b / 255.0f;
-	tr.fogDensity = fogDensity * 0.000025f;
+	tr.fogDensity = fogDensity * 0.000005f;
 	tr.fogEnabled = true;
 }
 
@@ -1694,7 +1705,7 @@ static render_interface_t gRenderInterface =
 	HUD_ProcessModelData,
 	HUD_ProcessEntData,
 	Mod_GetCurrentVis,
-	R_VidInit,
+	R_NewMap,
 	R_ClearScene,
 };
 

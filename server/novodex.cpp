@@ -227,8 +227,8 @@ void CPhysicNovodex :: InitPhysic( void )
 	sceneDesc.maxIter = SOLVER_ITERATION_COUNT;
 	sceneDesc.dynamicStructure = NX_PRUNING_DYNAMIC_AABB_TREE;
 
-	worldBounds.min = NxVec3( -16384, -16384, -16384 );
-	worldBounds.max = NxVec3(  16384,  16384,  16384 );
+	worldBounds.min = NxVec3( -32768, -32768, -32768 );
+	worldBounds.max = NxVec3(  32768,  32768,  32768 );
 	sceneDesc.maxBounds = &worldBounds;
 	sceneDesc.nbGridCellsX = 8;
 	sceneDesc.nbGridCellsY = 8;
@@ -251,6 +251,8 @@ void CPhysicNovodex :: InitPhysic( void )
 	conveyorMaterial->setRestitution( 0.0f );
 	conveyorMaterial->setDirOfAnisotropy( NxVec3( 0, 0, 1 ));
 	conveyorMaterial->setFlags( NX_MF_ANISOTROPIC );
+
+	m_fNeedFetchResults = FALSE;
 }
 
 void CPhysicNovodex :: FreePhysic( void )
@@ -297,9 +299,33 @@ void CPhysicNovodex :: Update( float flTime )
 		}
 	}
 
-	m_pScene->simulate( flTime );
-	m_pScene->flushStream();
-	m_pScene->fetchResults( NX_RIGID_BODY_FINISHED, true );
+	if( g_sync_physic.value )
+	{
+		m_pScene->simulate( flTime );
+		m_pScene->flushStream();
+		m_pScene->fetchResults( NX_RIGID_BODY_FINISHED, true );
+	}
+	else
+	{
+		if( m_fNeedFetchResults )
+			return; // waiting
+
+		m_pScene->simulate( flTime );
+		m_fNeedFetchResults = TRUE;
+	}
+}
+
+void CPhysicNovodex :: EndFrame( void )
+{
+	if( !m_pScene || GET_SERVER_STATE() != SERVER_ACTIVE )
+		return;
+
+	if( m_fNeedFetchResults )
+	{
+		m_pScene->flushStream();
+		m_pScene->fetchResults( NX_RIGID_BODY_FINISHED, true );
+		m_fNeedFetchResults = FALSE;
+	}
 
 	// fill physics stats
 	if( !p_speeds || p_speeds->value <= 0.0f )
@@ -420,7 +446,7 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromBmodel( entvars_t *pev, int mo
 	// get a world struct
 	if(( bmodel = (model_t *)MODEL_HANDLE( modelindex )) == NULL )
 	{
-		ALERT( at_error, "TriangleMeshFromBmodel: unbale to fetch model pointer %i\n", modelindex );
+		ALERT( at_error, "TriangleMeshFromBmodel: unable to fetch model pointer %i\n", modelindex );
 		return NULL;
 	}
 
@@ -951,7 +977,7 @@ NxConvexMesh *CPhysicNovodex :: ConvexMeshFromEntity( CBaseEntity *pObject )
 
 	if( !model || model->type == mod_bad )
 	{
-		ALERT( at_console, "ConvexMeshFromEntity: entity %s has NULL model\n", pObject->GetClassname( )); 
+		ALERT( at_aiconsole, "ConvexMeshFromEntity: entity %s has NULL model\n", pObject->GetClassname( )); 
 		return NULL;
 	}
 
@@ -985,7 +1011,7 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromEntity( CBaseEntity *pObject )
 
 	if( !model || model->type == mod_bad )
 	{
-		ALERT( at_console, "TriangleMeshFromEntity: entity %s has NULL model\n", pObject->GetClassname( )); 
+		ALERT( at_aiconsole, "TriangleMeshFromEntity: entity %s has NULL model\n", pObject->GetClassname( )); 
 		return NULL;
 	}
 
@@ -1911,6 +1937,9 @@ void CPhysicNovodex :: TeleportCharacter( CBaseEntity *pEntity )
 	if( !pActor || pActor->getNbShapes() <= 0 )
 		return;
 
+	if( m_fNeedFetchResults )
+		return;
+
 	NxBoxShape *pShape = (NxBoxShape *)pActor->getShapes()[0];
 	Vector vecOffset = (pEntity->IsMonster()) ? Vector( 0, 0, pEntity->pev->maxs.z / 2.0f ) : g_vecZero;
 
@@ -1942,6 +1971,9 @@ void CPhysicNovodex :: MoveCharacter( CBaseEntity *pEntity )
 
 	NxActor *pActor = ActorFromEntity( pEntity );
 	if( !pActor || pActor->getNbShapes() <= 0 )
+		return;
+
+	if( m_fNeedFetchResults )
 		return;
 
 	NxBoxShape *pShape = (NxBoxShape *)pActor->getShapes()[0];

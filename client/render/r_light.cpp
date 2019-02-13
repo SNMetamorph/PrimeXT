@@ -317,7 +317,7 @@ void R_SetupLightProjectionTexture( plight_t *pl, cl_entity_t *pEnt )
 		pl->projectionTexture = tr.spotlightTexture;
 
 	// set cubemap flag for easy check
-	if( RENDER_GET_PARM( PARM_TEX_FLAGS, pl->projectionTexture ) & TF_CUBEMAP )
+	if( RENDER_GET_PARM( PARM_TEX_TARGET, pl->projectionTexture ) == GL_TEXTURE_CUBE_MAP_ARB )
 	{
 		pl->flags |= CF_CUBEMAP;
 		pl->pointlight = true; // in case of

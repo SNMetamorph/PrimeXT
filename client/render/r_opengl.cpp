@@ -788,11 +788,6 @@ bool R_Init( void )
 	return true;
 }
 
-void R_VidInit( void )
-{
-	R_NewMap ();
-}
-
 /*
 ===============
 R_Shutdown
@@ -801,6 +796,7 @@ R_Shutdown
 void R_Shutdown( void )
 {
 	g_StudioRenderer.DestroyAllModelInstances();
+	g_StudioRenderer.FreeMeshCacheVL();
 
 	R_FreeCinematics();
 	R_ResetWeather();

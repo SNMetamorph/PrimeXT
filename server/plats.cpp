@@ -1425,6 +1425,7 @@ void CTrainSequence :: ArrivalNotify( void )
 BEGIN_DATADESC( CFuncTrackTrain )
 	DEFINE_FIELD( m_ppath, FIELD_CLASSPTR ),
 	DEFINE_FIELD( m_pDoor, FIELD_CLASSPTR ),
+	DEFINE_FIELD( m_pSpeedControl, FIELD_CLASSPTR ),
 	DEFINE_KEYFIELD( m_length, FIELD_FLOAT, "wheels" ),
 	DEFINE_KEYFIELD( m_height, FIELD_FLOAT, "height" ),
 	DEFINE_KEYFIELD( m_startSpeed, FIELD_FLOAT, "startspeed" ),
@@ -1442,6 +1443,7 @@ BEGIN_DATADESC( CFuncTrackTrain )
 	DEFINE_FIELD( m_flAccelSpeed, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flReachedDist, FIELD_FLOAT ),
 	DEFINE_FIELD( m_oldSpeed, FIELD_FLOAT ),
+	DEFINE_FIELD( m_maxSpeed, FIELD_FLOAT ),
 	DEFINE_FIELD( m_dir, FIELD_FLOAT ),
 	DEFINE_FUNCTION( Next ),
 	DEFINE_FUNCTION( Find ),
@@ -1588,6 +1590,35 @@ void CFuncTrackTrain :: SetSpeed( float flSpeed, float flAccel )
 	ALERT( at_aiconsole, "TRAIN(%s), speed to %.2f\n", GetDebugName(), pev->speed );
 }
 
+void CFuncTrackTrain :: SetSpeedExternal( float flSpeed )
+{
+	float flOldSpeed = pev->speed;
+
+	if( flSpeed > 0.0f )
+		SetDirForward( true );
+	else if( flSpeed < 0.0 )
+		SetDirForward( false );
+
+	pev->speed = m_flDesiredSpeed = fabs( flSpeed ) * m_dir;
+	m_oldSpeed = flOldSpeed;
+
+	if( pev->speed != flOldSpeed )
+	{
+		// Changing speed.
+		if( pev->speed != 0 )
+		{
+			// Starting to move.
+			Next();
+		}
+		else
+		{
+			// Stopping.
+			Stop();
+		}
+	}
+
+	ALERT( at_aiconsole, "TRAIN(%s), speed to %.2f\n", GetDebugName(), pev->speed );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Stops the train.
@@ -1688,9 +1719,14 @@ void CFuncTrackTrain :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 			return;
 
 		float delta = value;
+		float accel = 0.0f;
 
 		if( pCaller && pCaller->IsPlayer( ))
+		{
 			delta = ((int)(m_flDesiredSpeed * 4) / (int)m_maxSpeed) * 0.25 + 0.25 * delta;
+			accel = 100.0f;
+		}
+		else delta *= m_dir; // momentary button can't sending negative values
 
 		if( FBitSet( pev->spawnflags, SF_TRACKTRAIN_FORWARDONLY ))
 			delta = bound( 0.0f, delta, 1.0f );
@@ -1707,7 +1743,7 @@ void CFuncTrackTrain :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 		else if( delta < 0.0 )
 			SetDirForward( false );
 		delta = fabs( delta );
-		SetSpeed( m_maxSpeed * delta, 100.0f );
+		SetSpeed( m_maxSpeed * delta, accel );
 
 		ALERT( at_aiconsole, "TRAIN( %s ), speed to %.2f\n", GetTargetname(), pev->speed );
 	}
@@ -2041,6 +2077,7 @@ void CFuncTrackTrain :: UpdateOrientationBlend( int eOrientationType, CPathTrack
 		angNew[PITCH] = angPrev[PITCH];
 	}
 
+	angNew.x = -angNew.x;
 	DoUpdateOrientation( GetLocalAngles(), angNew, flInterval );
 }
 
@@ -2171,7 +2208,7 @@ void CFuncTrackTrain :: Next( void )
 		else m_flReachedDist = 0.0f;
 
 		UpdateTrainVelocity( pNext, pNextNext, nextPos, gpGlobals->frametime );
-		UpdateTrainOrientation( pNext, pNextNext, nextPos, 0.1f );
+		UpdateTrainOrientation( pNext, pNextNext, nextPos, 0.1 );
 
 		if( pNext != m_ppath )
 		{

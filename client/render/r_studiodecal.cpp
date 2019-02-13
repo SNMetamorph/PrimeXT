@@ -1033,63 +1033,14 @@ void CStudioModelRenderer :: StudioDecalShoot( const Vector &vecSrc, const Vecto
 	if( !ent || ent == gEngfuncs.GetViewModel( ))
 		return; // no decals for viewmodel
 
-	// downloading in-progress ?
-	if( !IEngineStudio.Mod_Extradata( ent->model ))
+	if( !StudioSetEntity( ent ))
 		return;
-
-	// setup global pointers
-	RI->currententity = m_pCurrentEntity = ent;
-	SET_CURRENT_ENTITY( ent );
-
-	if( m_pCurrentEntity->player || m_pCurrentEntity->curstate.renderfx == kRenderFxDeadPlayer )
-	{
-		if( m_pCurrentEntity->curstate.renderfx == kRenderFxDeadPlayer )
-			m_nPlayerIndex = m_pCurrentEntity->curstate.renderamt - 1;
-		else m_nPlayerIndex = m_pCurrentEntity->curstate.number - 1;
-          
-		if( m_nPlayerIndex < 0 || m_nPlayerIndex >= GET_MAX_CLIENTS( ))
-			return;
-
-		RI->currentmodel = m_pRenderModel = IEngineStudio.SetupPlayerModel( m_nPlayerIndex );
-
-		// show highest resolution multiplayer model
-		if( m_pCvarHiModels->value && m_pRenderModel != m_pCurrentEntity->model )
-			m_pCurrentEntity->curstate.body = 255;
-
-		if( !( !developer_level && GET_MAX_CLIENTS() == 1 ) && ( m_pRenderModel == m_pCurrentEntity->model ))
-			m_pCurrentEntity->curstate.body = 1; // force helmet
-	}
-	else
-	{
-		RI->currentmodel = m_pRenderModel = RI->currententity->model;
-	}
-
-	if( !m_pRenderModel )
-		return;
-
-	m_pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata( m_pRenderModel );
 
 	if( m_pStudioHeader->numbodyparts == 0 )
 		return;
 
 	tr.time = GET_CLIENT_TIME();
 	tr.oldtime = GET_CLIENT_OLDTIME();
-
-	IEngineStudio.StudioSetHeader( m_pStudioHeader );
-	IEngineStudio.SetRenderModel( m_pRenderModel );
-
-	// instance was not created? do it now
-	if( ent->modelhandle == INVALID_HANDLE )
-		ent->modelhandle = CreateInstance( ent );
-
-	if( ent->modelhandle == INVALID_HANDLE )
-		return; // out of memory?
-
-	m_pModelInstance = &m_ModelInstances[ent->modelhandle];
-
-	// check instance for valid
-	if( !IsModelInstanceValid( m_pModelInstance ))
-		ClearInstanceData();
 
 	// allocate new decallist
 	if( m_pModelInstance->m_DecalHandle == INVALID_HANDLE )
@@ -1098,18 +1049,12 @@ void CStudioModelRenderer :: StudioDecalShoot( const Vector &vecSrc, const Vecto
 	m_fShootDecal = true;
 	m_fDoInterp = false;
 
-	// show highest resolution multiplayer model
-	if( CVAR_TO_BOOL( m_pCvarHiModels ) && m_pRenderModel != m_pCurrentEntity->model )
-		m_pCurrentEntity->curstate.body = 255;
-
 	if( FBitSet( flags, FDECAL_LOCAL_SPACE ))
 	{
 		// make sure what model is in local space
 		m_pCurrentEntity->origin = g_vecZero;
 		m_pCurrentEntity->angles = g_vecZero;
 	}
-
-	m_boneSetup.SetStudioPointers( m_pStudioHeader, m_pModelInstance->m_poseparameter );
 
 	// setup bones
 	StudioSetUpTransform ( );
@@ -1168,9 +1113,9 @@ void CStudioModelRenderer :: StudioDecalShoot( const Vector &vecSrc, const Vecto
 	buildInfo.m_Radius = radius;
 
 	// special check for per-vertex lighting
-	if( FBitSet( ent->curstate.iuser1, CF_STATIC_ENTITY ) && ( ent->curstate.colormap > 0 ) && world->vertex_lighting != NULL )
+	if(( ent->curstate.iuser3 > 0 ) && world->vertex_lighting != NULL )
 	{
-		int		cacheID = m_pCurrentEntity->curstate.colormap - 1;
+		int		cacheID = m_pCurrentEntity->curstate.iuser3 - 1;
 		dvlightlump_t	*dvl = world->vertex_lighting;
 
 		if( cacheID < dvl->nummodels && dvl->dataofs[cacheID] != -1 )

@@ -1465,7 +1465,7 @@ void CBaseTrainDoor :: ActivateTrain( void )
 	case 1:	// activate train
 		if( m_pTrain )
 		{
-			m_pTrain->pev->speed = m_pTrain->m_maxSpeed;
+			m_pTrain->pev->speed = m_pTrain->GetMaxSpeed();
 			m_pTrain->Next();
 		}
 		break;

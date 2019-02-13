@@ -52,6 +52,7 @@ cvar_t	*vid_brightness;
 cvar_t	*r_adjust_fov;
 cvar_t	*r_wireframe;
 cvar_t	*r_fullbright;
+cvar_t	*r_allow_3dsky;
 cvar_t	*r_allow_mirrors;
 cvar_t	*r_allow_portals;
 cvar_t	*r_allow_screens;
@@ -154,6 +155,7 @@ void V_Init( void )
 	r_allow_screens	= CVAR_REGISTER( "gl_allow_screens", "1", FCVAR_ARCHIVE|FCVAR_CLIENTDLL );
 	gl_renderer	= CVAR_REGISTER( "gl_renderer", "1", FCVAR_CLIENTDLL|FCVAR_ARCHIVE ); 
 	r_shadows		= CVAR_REGISTER( "r_shadows", "2", FCVAR_CLIENTDLL|FCVAR_ARCHIVE ); 
+	r_allow_3dsky	= CVAR_REGISTER( "gl_allow_3dsky", "1", FCVAR_ARCHIVE );
 	r_allow_mirrors	= CVAR_REGISTER( "gl_allow_mirrors", "1", FCVAR_ARCHIVE );
 	r_recursion_depth	= CVAR_REGISTER( "gl_recursion_depth", "1", FCVAR_ARCHIVE );
 	r_recursive_world_node = CVAR_REGISTER( "gl_recursive_world_node", "0", FCVAR_ARCHIVE );
@@ -547,7 +549,7 @@ void V_CalcCameraRefdef( struct ref_params_s *pparams )
 		}
 
 		// this is smooth stair climbing in thirdperson mode but not affected for client model :(
-		if( !pparams->smoothing && pparams->onground && view->origin[2] - oldz > 0.0f )
+		if( !pparams->smoothing && pparams->onground && view->origin[2] - oldz > 0.0f && viewmonster != NULL )
 		{
 			float steptime;
 		

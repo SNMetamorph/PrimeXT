@@ -26,6 +26,7 @@ public:
 	virtual void	InitPhysic( void ) = 0;
 	virtual void	FreePhysic( void ) = 0;
 	virtual void	Update( float flTime ) = 0;
+	virtual void	EndFrame( void ) = 0;
 	virtual void	*GetUtilLibrary( void ) = 0;
 	virtual bool	Initialized( void ) = 0;
 	virtual void	RemoveBody( struct edict_s *pEdict ) = 0;

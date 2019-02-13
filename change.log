@@ -1,3 +1,28 @@
+version 0.8 rev. 1
+
+Client: get both support from cvars "build" and "buildnum"
+Client: fixed bugs with change display resolution
+Client: now in-game movies can be played with sound
+Client: fix bugs with 3d sky entities
+Client: vertex lighting is now allowed for any entity and cached to prevent in-game freezes
+Client: grass code was rewritten and allow two render pathes for old and modern GPU's
+Client: allow fake lods for studio models that based on bodygroup that called "studioLOD"
+Client: tune fog parameters
+Client: particle lifetime is now based on zero alpha or zero size not global time
+Client: sunshafts is now allowed in fog
+Client: render is get support for self-illuminated parts on texture again (luma)
+Client: fixup studio interpolation issues
+Server: new entity that called func_transporter (advanced version of func_conveyor)
+Server: get both support from cvars "build" and "buildnum"
+Server: sync physic thread to increase common perfomance (variable "sv_sync_physic")
+Server: increase PhysX scene up to +\- 32768
+Server: get state from patch_track
+Server: fix bugs with train_setspeed and func_traindoor
+Server: fix save\restore bug with ambient_generic
+Server: new entity that called conveyor_setspeed
+Server: trigger_inout can be moved through levels now
+Server: scripted_sentence can be affected to env_model
+
 version 0.8
 
 version 0.65 rev. 3

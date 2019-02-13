@@ -86,12 +86,13 @@ enum
 
 typedef enum
 {
+	TF_COLORMAP	= 0,		// just for tabulate source
 	TF_NEAREST	= (1<<0),		// disable texfilter
 	TF_KEEP_SOURCE	= (1<<1),		// some images keep source
 	TF_NOFLIP_TGA	= (1<<2),		// Steam background completely ignore tga attribute 0x20
 	TF_EXPAND_SOURCE	= (1<<3),		// Don't keep source as 8-bit expand to RGBA
-	TF_TEXTURE_2D_ARRAY	= (1<<4),		// this is 2D texture array (multi-layers)
-	TF_TEXTURE_RECTANGLE= (1<<5),		// this is GL_TEXTURE_RECTANGLE
+// reserved
+	TF_RECTANGLE	= (1<<5),		// this is GL_TEXTURE_RECTANGLE
 	TF_CUBEMAP	= (1<<6),		// it's cubemap texture
 	TF_DEPTHMAP	= (1<<7),		// custom texture filter used
 	TF_QUAKEPAL	= (1<<8),		// image has an quake1 palette
@@ -104,7 +105,7 @@ typedef enum
 	TF_NORMALMAP	= (1<<15),	// is a normalmap
 	TF_HAS_ALPHA	= (1<<16),	// image has alpha (used only for GL_CreateTexture)
 	TF_FORCE_COLOR	= (1<<17),	// force upload monochrome textures as RGB (detail textures)
-	TF_TEXTURE_1D	= (1<<18),	// this is GL_TEXTURE_1D
+// reserved
 	TF_BORDER		= (1<<19),	// zero clamp for projected textures
 	TF_TEXTURE_3D	= (1<<20),	// this is GL_TEXTURE_3D
 	TF_ATLAS_PAGE	= (1<<21),	// bit who indicate lightmap page or deluxemap page
@@ -194,16 +195,16 @@ typedef struct render_api_s
 	void		(*R_EntityRemoveDecals)( struct model_s *mod ); // remove all the decals from specified entity (BSP only)
 
 	// AVIkit support
-	void		*(*AVI_LoadVideo)( const char *filename );
+	void		*(*AVI_LoadVideo)( const char *filename, qboolean load_audio );
 	int		(*AVI_GetVideoInfo)( void *Avi, long *xres, long *yres, float *duration );
 	long		(*AVI_GetVideoFrameNumber)( void *Avi, float time );
 	byte		*(*AVI_GetVideoFrame)( void *Avi, long frame );
 	void		(*AVI_UploadRawFrame)( int texture, int cols, int rows, int width, int height, const byte *data );
 	void		(*AVI_FreeVideo)( void *Avi );
 	int		(*AVI_IsActive)( void *Avi );
+	void		(*AVI_StreamSound)( void *Avi, int entnum, float fvol, float attn, float synctime );
 	void		(*AVI_Reserved0)( void );	// for potential interface expansion without broken compatibility
 	void		(*AVI_Reserved1)( void );
-	void		(*AVI_Reserved2)( void );
 
 	// glState related calls (must use this instead of normal gl-calls to prevent de-synchornize local states between engine and the client)
 	void		(*GL_Bind)( int tmu, unsigned int texnum );
@@ -215,9 +216,9 @@ typedef struct render_api_s
 	void		(*GL_TextureTarget)( unsigned int target ); // change texture unit mode without bind texture
 	void		(*GL_TexCoordArrayMode)( unsigned int texmode );
 	void*		(*GL_GetProcAddress)( const char *name );
+	void		(*GL_UpdateTexSize)( int texnum, int width, int height, int depth ); // recalc statistics
 	void		(*GL_Reserved0)( void );	// for potential interface expansion without broken compatibility
 	void		(*GL_Reserved1)( void );
-	void		(*GL_Reserved2)( void );
 
 	// Misc renderer functions
 	void		(*GL_DrawParticles)( const struct ref_viewpass_s *rvp, qboolean trans_pass, float frametime );

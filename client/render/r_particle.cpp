@@ -800,6 +800,9 @@ AURSTATE CParticleSystem :: UpdateSystem( float frametime )
 	CParticle	*pParticle = m_pActiveParticle;
 	CParticle	*pLast = NULL;
 
+	if( tr.frametime != 0.0 )
+		ClearBounds( m_vecAbsMin, m_vecAbsMax );
+
 	while( pParticle )
 	{
 		if( UpdateParticle( pParticle, frametime ))
@@ -827,6 +830,9 @@ AURSTATE CParticleSystem :: UpdateSystem( float frametime )
 			}
 		}
 	}
+
+	if( !Mod_CheckBoxVisible( m_vecAbsMin, m_vecAbsMax ))
+		return AURORA_INVISIBLE;
 
 	return AURORA_DRAW;
 }
@@ -983,12 +989,18 @@ bool CParticleSystem :: UpdateParticle( CParticle *part, float frametime )
 	part->m_fBlue += part->m_fBlueStep * frametime;
 	part->frame += part->m_fFrameStep * frametime;
 
+	if( !part->m_pEntity && ( part->m_fSize <= 0.0f || part->m_fAlpha <= 0.0f ))
+		return false;
+
 	if( part->m_fAngleStep )
 	{
 		part->m_fAngle += part->m_fAngleStep * frametime;
 		while( part->m_fAngle < 0 ) part->m_fAngle += 360;
 		while( part->m_fAngle > 360 ) part->m_fAngle -= 360;
 	}
+
+//	Vector point = (part->origin + part->velocity.Normalize() * part->m_fSize);
+	if( tr.frametime != 0.0 ) AddPointToBounds( part->origin, m_vecAbsMin, m_vecAbsMax );
 
 	return true;
 }

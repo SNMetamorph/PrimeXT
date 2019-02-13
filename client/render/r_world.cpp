@@ -69,10 +69,14 @@ void Mod_LoadWorldMaterials( void )
 	for( int i = 0; i < worldmodel->numtextures; i++ )
 	{
 		texture_t *tx = worldmodel->textures[i];
-		char	diffuse[128];
+		char	diffuse[128], luma[128];
 
 		// bad texture? 
-		if( !tx || !tx->name[0] ) continue;
+		if( !tx || !tx->name[0] )
+			continue;
+
+		if( tx->gl_texturenum == tr.defaultTexture )
+			continue;	// don't replace default
 
 		// build material names
 		Q_snprintf( diffuse, sizeof( diffuse ), "textures/%s", tx->name );
@@ -88,6 +92,27 @@ void Mod_LoadWorldMaterials( void )
 			{
 				FREE_TEXTURE( tx->gl_texturenum ); // release wad-texture
 				tx->gl_texturenum = texture_ext;
+			}
+			else
+			{
+				// can't use encoded textures
+				FREE_TEXTURE( texture_ext );
+			}
+		}
+
+		// build material names
+		Q_snprintf( luma, sizeof( luma ), "textures/%s_luma", tx->name );
+
+		if( IMAGE_EXISTS( luma ))
+		{
+			int	texture_ext = LOAD_TEXTURE( luma, NULL, 0, 0 );
+			int	encodeType = RENDER_GET_PARM( PARM_TEX_ENCODE, texture_ext );
+
+			// NOTE: default renderer can't unpack encoded textures
+			// so keep lowres copies for this case
+			if( encodeType == DXT_ENCODE_DEFAULT )
+			{
+				tx->fb_texturenum = texture_ext;
 			}
 			else
 			{
@@ -340,7 +365,10 @@ static void Mod_LoadLeafAmbientLighting( const byte *base, const dlump_t *l )
 
 	in = (dleafsample_t *)(base + l->fileofs);
 	if( l->filelen % sizeof( *in ))
-		HOST_ERROR( "Mod_LoadLeafAmbientLighting: funny lump size in %s\n", world->name );
+	{
+		ALERT( at_warning, "Mod_LoadLeafAmbientLighting: funny lump size in %s\n", world->name );
+		return;
+	}
 	count = l->filelen / sizeof( *in );
 
 	world->leaflights = out = (mlightprobe_t *)Mem_Alloc( count * sizeof( *out ));
@@ -1334,6 +1362,16 @@ void Mod_FreeWorld( model_t *mod )
 {
 //	Msg( "Mod_FreeWorld: %s\n", world->name );
 
+	for( int i = 0; i < worldmodel->numtextures; i++ )
+	{
+		texture_t *tx = worldmodel->textures[i];
+
+		// bad texture? 
+		if( !tx || !tx->name[0] ) continue;
+
+		FREE_TEXTURE( tx->fb_texturenum );
+	}
+
 	if( world->leafs )
 		Mem_Free( world->leafs );
 	world->leafs = NULL;
@@ -1354,6 +1392,13 @@ void Mod_FreeWorld( model_t *mod )
 
 	// free landscapes
 	R_FreeLandscapes();
+
+	if( FBitSet( world->features, WORLD_HAS_GRASS ))
+	{
+		// throw grass vbo's
+		for( int i = 0; i < worldmodel->numsurfaces; i++ )
+			R_RemoveGrassForSurface( worldmodel->surfaces[i].info );
+	}
 
 	memset( world, 0, sizeof( gl_world_t ));
 	tr.grass_total_size = 0;
@@ -1530,6 +1575,8 @@ R_RenderDynLightList
 void R_BuildFaceListForLight( plight_t *pl )
 {
 	cl_entity_t *e = RI->currententity;
+
+	R_GrassPrepareLight();
 
 	tr.num_light_surfaces = 0;
 	tr.modelorg = pl->origin;
@@ -1723,7 +1770,9 @@ void R_DrawLightForSurfList( plight_t *pl )
 		endv = 0;
 	}
 
-	R_DrawGrassLight( pl );
+	if( R_GrassUseBufferObject( ))
+		R_DrawLightForGrass( pl );
+	else R_DrawGrassLight( pl );
 }
 
 /*
@@ -1900,7 +1949,9 @@ void R_DrawShadowBrushList( void )
 	tr.num_draw_surfaces = 0;
 	GL_Cull( GL_FRONT );
 
-	R_DrawGrass();
+	if( R_GrassUseBufferObject( ))
+		R_RenderShadowGrassOnList();
+	else R_DrawGrass();
 }
 
 /*
@@ -1915,6 +1966,7 @@ void R_DrawBrushList( void )
 	int		cached_texture = -1;
 	qboolean		flush_buffer = false;
 	cl_entity_t	*e = RI->currententity;
+	float		cached_texofs[2] = { -1.0f, -1.0f };
 	int		startv, endv;
 
 	if( !tr.num_draw_surfaces )
@@ -1949,6 +2001,9 @@ void R_DrawBrushList( void )
 		if( cached_texture != es->gl_texturenum )
 			flush_buffer = true;
 
+		if( cached_texofs[0] != es->texofs[0] || cached_texofs[1] != es->texofs[1] )
+			flush_buffer = true;
+
 		if( flush_buffer )
 		{
 			if( numTempElems )
@@ -1981,6 +2036,8 @@ void R_DrawBrushList( void )
 			R_SetRenderColor( RI->currententity );
 
 			// reset cache
+			cached_texofs[0] = -1.0f;
+			cached_texofs[1] = -1.0f;
 			cached_texture = NULL;
 			cached_lightmap = -1;
 			cached_mirror = -1;
@@ -2030,17 +2087,21 @@ void R_DrawBrushList( void )
 			GL_Bind( GL_TEXTURE1, es->dt_texturenum );
 			GET_DETAIL_SCALE( es->gl_texturenum, &xScale, &yScale );
 			pglUniform3fARB( RI->currentshader->u_DetailScale, xScale, yScale, waveHeight );
-			pglUniform3fARB( RI->currentshader->u_TexOffset, es->texofs[0], es->texofs[1], tr.time );
 
 			if( ScreenCopyRequired( RI->currentshader ))
 				GL_Bind( GL_TEXTURE3, tr.screen_color );
+			else if( FBitSet( s->flags, SURF_REFLECT ) && FBitSet( s->flags, SURF_DRAWTURB ))
+				GL_Bind( GL_TEXTURE3, es->gl_texturenum ); // mix turbulency texture and reflection
 			else GL_Bind( GL_TEXTURE3, tr.whiteTexture );
 
 			if( FBitSet( s->flags, SURF_LANDSCAPE ) && land && land->terrain )
 				GL_Bind( GL_TEXTURE4, land->terrain->indexmap.gl_heightmap_id );
 
+			GL_Bind( GL_TEXTURE5, tx->texture->fb_texturenum );
 			cached_mirror = es->subtexture[glState.stack_position];
 			cached_texture = es->gl_texturenum;
+			cached_texofs[0] = -1.0f;
+			cached_texofs[1] = -1.0f;
 		}
 
 		if( cached_lightmap != es->lightmaptexturenum )
@@ -2058,9 +2119,16 @@ void R_DrawBrushList( void )
 			cached_lightmap = es->lightmaptexturenum;
 		}
 
-		if( FBitSet( s->flags, SURF_DRAWTURB ))
-			GL_Cull( GL_NONE );
+		if( tr.viewparams.waterlevel >= 3 && RP_NORMALPASS() && FBitSet( s->flags, SURF_DRAWTURB ))
+			GL_Cull( GL_BACK );
 		else GL_Cull( GL_FRONT );
+
+		if( cached_texofs[0] != es->texofs[0] || cached_texofs[1] != es->texofs[1] )
+		{
+			pglUniform3fARB( RI->currentshader->u_TexOffset, es->texofs[0], es->texofs[1], tr.time );
+			cached_texofs[0] = es->texofs[0];
+			cached_texofs[1] = es->texofs[1];
+		}
 
 		if( es->firstvertex < startv )
 			startv = es->firstvertex;
@@ -2093,7 +2161,9 @@ void R_DrawBrushList( void )
 	GL_Cull( GL_FRONT );
 
 	// draw grass on visible surfaces
-	R_DrawGrass();
+	if( R_GrassUseBufferObject( ))
+		R_RenderGrassOnList();
+	else R_DrawGrass();
 
 	// draw dynamic lighting for world and bmodels
 	R_RenderDynLightList ();
@@ -2127,6 +2197,7 @@ void R_DrawWorldList( void )
 	texture_t		*cached_texture = NULL;
 	qboolean		flush_buffer = false;
 	cl_entity_t	*e = RI->currententity;
+	float		cached_texofs[2] = { 0.0f, 0.0f };
 	int		startv, endv;
 
 	if( !tr.num_draw_surfaces )
@@ -2175,6 +2246,9 @@ void R_DrawWorldList( void )
 			flush_buffer = true;
 
 		if( cached_texture != tex )
+			flush_buffer = true;
+
+		if( cached_texofs[0] != es->texofs[0] || cached_texofs[1] != es->texofs[1] )
 			flush_buffer = true;
 
 		if( flush_buffer )
@@ -2311,6 +2385,9 @@ void R_DrawWorldList( void )
 			GL_Cull( GL_NONE );
 		else GL_Cull( GL_FRONT );
 
+		cached_texofs[0] = es->texofs[0];
+		cached_texofs[1] = es->texofs[1];
+
 		if( es->firstvertex < startv )
 			startv = es->firstvertex;
 
@@ -2395,13 +2472,13 @@ static int R_SurfaceCompare( const gl_bmodelface_t *a, const gl_bmodelface_t *b 
 
 void R_SetRenderMode( cl_entity_t *e )
 {
+	pglDisable( GL_ALPHA_TEST );
 	pglDepthMask( GL_TRUE );
 
 	switch( e->curstate.rendermode )
 	{
 	case kRenderNormal:
 		pglColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-		pglDisable( GL_ALPHA_TEST );
 		pglDisable( GL_BLEND );
 		break;
 	case kRenderTransColor:
@@ -2471,6 +2548,7 @@ void R_DrawBrushModel( cl_entity_t *e )
 	if( e->angles != g_vecZero )
 		tr.modelorg = glm->transform.VectorITransform( RI->vieworg );
 	else tr.modelorg = RI->vieworg - e->origin;
+	R_GrassPrepareFrame();
 
 	// accumulate surfaces, build the lightmaps
 	psurf = &clmodel->surfaces[clmodel->firstmodelsurface];
@@ -2502,7 +2580,7 @@ void R_DrawBrushModel( cl_entity_t *e )
 		R_AddSurfaceToDrawList( psurf, false );
 	}
 
-	if( e->curstate.rendermode == kRenderTransTexture )
+	if( e->curstate.rendermode == kRenderTransTexture && !FBitSet( clmodel->flags, MODEL_LIQUID ))
 		qsort( tr.draw_surfaces, tr.num_draw_surfaces, sizeof( gl_bmodelface_t ), (cmpfunc)R_SurfaceCompare );
 
 	R_SetRenderMode( e );
@@ -2547,6 +2625,7 @@ void R_DrawBrushModelShadow( cl_entity_t *e )
 	if( e->angles != g_vecZero )
 		tr.modelorg = glm->transform.VectorITransform( RI->vieworg );
 	else tr.modelorg = RI->vieworg - e->origin;
+	R_GrassPrepareFrame();
 
 	// accumulate surfaces, build the lightmaps
 	psurf = &clmodel->surfaces[clmodel->firstmodelsurface];
@@ -2888,6 +2967,7 @@ void R_DrawWorld( void )
 	tr.modelorg = RI->vieworg;
 
 	R_SetRenderMode( RI->currententity );
+	R_GrassPrepareFrame();
 	R_LoadIdentity();
 	R_ClearSkyBox ();
 
@@ -2919,7 +2999,7 @@ void R_DrawWorldShadowPass( void )
 	RI->currententity = GET_ENTITY( 0 );
 	RI->currentmodel = RI->currententity->model;
 	tr.modelorg = RI->vieworg;
-
+	R_GrassPrepareFrame();
 	R_LoadIdentity();
 
 	R_MarkLeaves();

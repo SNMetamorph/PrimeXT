@@ -3839,7 +3839,7 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 		{
 			TraceResult tr;
 
-			edict_t		*pWorld = g_engfuncs.pfnPEntityOfEntIndex( 0 );
+			edict_t *pWorld = INDEXENT( 0 );
 
 			Vector start = EyePosition();
 			Vector end = start + gpGlobals->v_forward * 1024;
@@ -4711,7 +4711,7 @@ Vector CBasePlayer :: GetAutoaimVector( float flDelta )
 
 Vector CBasePlayer :: AutoaimDeflection( Vector &vecSrc, float flDist, float flDelta  )
 {
-	edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
+	edict_t		*pEdict = INDEXENT( 1 );
 	CBaseEntity	*pEntity;
 	float		bestdot;
 	Vector		bestdir;

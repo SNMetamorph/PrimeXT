@@ -49,6 +49,10 @@ void GL_AlphaTest( GLint enable )
 
 	if( enable ) pglEnable( GL_ALPHA_TEST );
 	else pglDisable( GL_ALPHA_TEST );
+#if 0
+	if( enable ) pglEnable( GL_SAMPLE_ALPHA_TO_COVERAGE_ARB );
+	else pglDisable( GL_SAMPLE_ALPHA_TO_COVERAGE_ARB );
+#endif
 }
 
 /*

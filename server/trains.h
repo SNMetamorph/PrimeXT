@@ -69,6 +69,7 @@ public:
 	void		Spawn( void );
 	void		Activate( void );
 	void		KeyValue( KeyValueData* pkvd);
+	STATE		GetState ( void );
 	
 	void		SetPrevious( CPathTrack *pprevious );
 	void		Link( void );
@@ -131,6 +132,7 @@ public:
 	bool IsDirForward() { return ( m_dir == 1 ); }
 	void SetDirForward( bool bForward );
 	void SetSpeed( float flSpeed, float flAccel = 0.0f );
+	void SetSpeedExternal( float flSpeed );
 
 	void SetTrainDoor( CBaseTrainDoor *pDoor ) { m_pDoor = pDoor; }
 	void SetTrack( CPathTrack *track ) { m_ppath = track->Nearest( GetLocalOrigin( )); }
@@ -149,6 +151,7 @@ public:
 	void DoUpdateOrientation( const Vector &curAngles, const Vector &angles, float flInterval );
 	float GetSpeed( void ) { return m_flDesiredSpeed; }
 	float GetMaxSpeed( void ) { return m_maxSpeed; }
+	void SetMaxSpeed( float fNewSpeed ) { m_maxSpeed = fNewSpeed; }
 
 	DECLARE_DATADESC();
 
@@ -164,6 +167,7 @@ public:
 
 	CBaseTrainDoor	*m_pDoor;
 	CPathTrack	*m_ppath;
+	CBaseEntity	*m_pSpeedControl;
 	float		m_length;
 	float		m_height;
 	float		m_maxSpeed;

@@ -274,7 +274,7 @@ is potentially visible
 */
 bool Mod_BoxVisible( const Vector mins, const Vector maxs, const byte *visbits )
 {
-	short	leafList[256];
+	short	leafList[2048];
 	mnode_t	*headnode;
 	int	i, count;
 
@@ -282,6 +282,9 @@ bool Mod_BoxVisible( const Vector mins, const Vector maxs, const byte *visbits )
 		return true;
 
 	count = Mod_BoxLeafnums( mins, maxs, leafList, ARRAYSIZE( leafList ), &headnode );
+
+	if( count < ARRAYSIZE( leafList ))
+		headnode = NULL; // ignore headnode if we not overflowed
 
 	for( i = 0; i < count; i++ )
 	{
@@ -381,11 +384,10 @@ bool Mod_CheckBoxVisible( const Vector &absmin, const Vector &absmax )
 
 bool Mod_CheckEntityPVS( cl_entity_t *ent )
 {
-	if( !ent || !ent->index )
-		return false;	// not exist on the client
+	if( !ent ) return false; // bad entity?
 
 	if( ent->curstate.messagenum != r_currentMessageNum )
-		return false;	// already culled by server
+		return false; // already culled by server
 
 	Vector mins = ent->curstate.origin + ent->curstate.mins;
 	Vector maxs = ent->curstate.origin + ent->curstate.maxs;

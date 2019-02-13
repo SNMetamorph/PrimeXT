@@ -140,6 +140,7 @@ TYPEDESCRIPTION gEntvarsDescription[] =
 	DEFINE_ENTITY_FIELD( vuser2, FIELD_VECTOR ),		// entity scale by three axis
 	DEFINE_ENTITY_FIELD( iuser1, FIELD_INTEGER ),		// custom shared flags
 	DEFINE_ENTITY_FIELD( iuser2, FIELD_INTEGER ),		// custom variable
+	DEFINE_ENTITY_FIELD( iuser3, FIELD_INTEGER ),		// vertex light cachenum
 	DEFINE_ENTITY_FIELD( fuser1, FIELD_FLOAT ),
 	DEFINE_ENTITY_FIELD( fuser2, FIELD_FLOAT ),
 	DEFINE_ENTITY_FIELD( fuser3, FIELD_FLOAT ),

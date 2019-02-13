@@ -1146,7 +1146,7 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 
 	// This non-player entity is being moved by the game .dll and not the physics simulation system
 	//  make sure that we interpolate it's position on the client if it moves
-	if( !player && ent->v.animtime && ent->v.velocity == g_vecZero )
+	if( !player && ent->v.animtime && ent->v.velocity == g_vecZero && pEntity->m_hParent == NULL )
 	{
 		state->eflags |= EFLAG_SLERP;
 	}
@@ -1181,9 +1181,11 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 	state->rendercolor.r = ent->v.rendercolor.x;
 	state->rendercolor.g = ent->v.rendercolor.y;
 	state->rendercolor.b = ent->v.rendercolor.z;
+	state->fuser1	= ent->v.fuser1;	// gaitframe
 	state->fuser2	 = ent->v.fuser2; // FOV
 	state->iuser1	 = ent->v.iuser1; // flags
 	state->iuser2	 = ent->v.iuser2; // flags
+	state->iuser3	 = ent->v.iuser3; // vertexlight cachenum
 	state->vuser2	 = ent->v.vuser2;
 
 	state->aiment = 0;
@@ -1226,7 +1228,6 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 		state->gaitsequence = ent->v.gaitsequence;
 		state->spectator = ent->v.flags & FL_SPECTATOR;
 		state->friction     = ent->v.friction;
-		state->fuser1	= ent->v.fuser1;	// gaitframe
 		state->gravity      = ent->v.gravity;
 //		state->team			= ent->v.team;
 //		
@@ -1298,6 +1299,8 @@ void CreateBaseline( int player, int eindex, struct entity_state_s *baseline, st
 		baseline->gravity		= entity->v.gravity;
 		baseline->vuser2		= entity->v.vuser2;	// xform
 		baseline->iuser1		= entity->v.iuser1;	// flags
+		baseline->iuser2		= entity->v.iuser2;	// flags
+		baseline->iuser3		= entity->v.iuser3;	// vertexlight cachenum
 	}
 }
 

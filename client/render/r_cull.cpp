@@ -91,48 +91,45 @@ int R_CullSurfaceExt( msurface_t *surf, CFrustum *frustum )
 	// only static ents can be culled by frustum
 	if( !R_StaticEntity( e )) frustum = NULL;
 
-	if( !FBitSet( surf->flags, SURF_DRAWTURB ))
+	if( surf->plane->normal != g_vecZero )
 	{
-		if( surf->plane->normal != g_vecZero )
+		float	dist;
+
+		if( FBitSet( RI->params, RP_OVERVIEW ))
 		{
-			float	dist;
+			Vector	orthonormal;
 
-			if( FBitSet( RI->params, RP_OVERVIEW ))
+			if( e == GET_ENTITY( 0 )) orthonormal[2] = surf->plane->normal[2];
+			else orthonormal = RI->objectMatrix.VectorRotate( surf->plane->normal );
+
+			dist = orthonormal.z;
+		}
+		else dist = PlaneDiff( tr.modelorg, surf->plane );
+
+		if( glState.faceCull == GL_FRONT )
+		{
+			if( surf->flags & SURF_PLANEBACK )
 			{
-				Vector	orthonormal;
-
-				if( e == GET_ENTITY( 0 )) orthonormal[2] = surf->plane->normal[2];
-				else orthonormal = RI->objectMatrix.VectorRotate( surf->plane->normal );
-
-				dist = orthonormal.z;
+				if( dist >= -BACKFACE_EPSILON )
+					return CULL_BACKSIDE; // wrong side
 			}
-			else dist = PlaneDiff( tr.modelorg, surf->plane );
-
-			if( glState.faceCull == GL_FRONT )
+			else
 			{
-				if( surf->flags & SURF_PLANEBACK )
-				{
-					if( dist >= -BACKFACE_EPSILON )
-						return CULL_BACKSIDE; // wrong side
-				}
-				else
-				{
-					if( dist <= BACKFACE_EPSILON )
-						return CULL_BACKSIDE; // wrong side
-				}
+				if( dist <= BACKFACE_EPSILON )
+					return CULL_BACKSIDE; // wrong side
 			}
-			else if( glState.faceCull == GL_BACK )
+		}
+		else if( glState.faceCull == GL_BACK )
+		{
+			if( surf->flags & SURF_PLANEBACK )
 			{
-				if( surf->flags & SURF_PLANEBACK )
-				{
-					if( dist <= BACKFACE_EPSILON )
-						return CULL_BACKSIDE; // wrong side
-				}
-				else
-				{
-					if( dist >= -BACKFACE_EPSILON )
-						return CULL_BACKSIDE; // wrong side
-				}
+				if( dist <= BACKFACE_EPSILON )
+					return CULL_BACKSIDE; // wrong side
+			}
+			else
+			{
+				if( dist >= -BACKFACE_EPSILON )
+					return CULL_BACKSIDE; // wrong side
 			}
 		}
 	}

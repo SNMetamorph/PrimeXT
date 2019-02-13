@@ -638,11 +638,9 @@ void UTIL_Teleport( CBaseEntity *pSource, TeleportListEntry_t &entry, const Vect
 
 int UTIL_EntitiesInBox( CBaseEntity **pList, int listMax, const Vector &mins, const Vector &maxs, int flagMask )
 {
-	edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
+	edict_t *pEdict = INDEXENT( 1 );
 	CBaseEntity *pEntity;
-	int			count;
-
-	count = 0;
+	int count = 0;
 
 	if ( !pEdict )
 		return count;
@@ -680,12 +678,10 @@ int UTIL_EntitiesInBox( CBaseEntity **pList, int listMax, const Vector &mins, co
 
 int UTIL_MonstersInSphere( CBaseEntity **pList, int listMax, const Vector &center, float radius )
 {
-	edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
+	edict_t *pEdict = INDEXENT( 1 );
 	CBaseEntity *pEntity;
-	int			count;
-	float		distance, delta;
-
-	count = 0;
+	int count = 0;
+	float distance, delta;
 	float radiusSquared = radius * radius;
 
 	if ( !pEdict )
@@ -2359,26 +2355,27 @@ int UTIL_PrecacheSound( const char* s )
 	return MAKE_STRING( "common/null.wav" ); // set null sound
 }
 
-unsigned short UTIL_PrecacheMovie( string_t iString )
+unsigned short UTIL_PrecacheMovie( string_t iString, int allow_sound )
 {
-	return UTIL_PrecacheMovie( STRING( iString ));
+	return UTIL_PrecacheMovie( STRING( iString ), allow_sound );
 }
 
-unsigned short UTIL_PrecacheMovie( const char *s )
+unsigned short UTIL_PrecacheMovie( const char *s, int allow_sound )
 {
 	int iCompare;
-	char path[64];
+	char path[64], temp[64];
 
 	Q_snprintf( path, sizeof( path ), "media/%s", s );
+	Q_snprintf( temp, sizeof( temp ), "%s%s", allow_sound ? "*" : "", s );
 
 	// verify file exists
 	// g-cont. idea! use COMPARE_FILE_TIME instead of LOAD_FILE_FOR_ME
 	if( COMPARE_FILE_TIME( path, path, &iCompare ))
 	{
-		return g_engfuncs.pfnPrecacheGeneric( s );
+		return g_engfuncs.pfnPrecacheGeneric( temp );
 	}
 
-	ALERT( at_console, "Warning: video (%s) not found!\n", s );
+	ALERT( at_console, "Warning: video (%s) not found!\n", path );
 
 	return 0;
 }

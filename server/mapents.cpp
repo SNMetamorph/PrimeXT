@@ -22,6 +22,29 @@ CBaseEntity *CreateEntityByName( const char *className, entvars_t *pev )
 	return EntityFactoryDictionary()->Create( className, pev );
 }
 
+void CheckForMultipleParents( CBaseEntity *pEntity, CBaseEntity *pParent )
+{
+	BOOL fShownMessage = FALSE;
+	CBaseEntity *pSrcParent = pParent;
+
+	while(( pParent = UTIL_FindEntityByTargetname( pParent, STRING( pEntity->m_iParent ))) != NULL )
+	{
+		if( fShownMessage )
+			ALERT( at_console, "," );
+
+		if( !fShownMessage )
+		{
+			ALERT( at_warning, "Entity %s[%d] has multiple parent [%s]:", pEntity->GetClassname( ), pEntity->entindex(), pSrcParent->GetDebugName()); 
+			ALERT( at_console, " %s[%d],", pSrcParent->GetClassname(), pSrcParent->entindex());
+			fShownMessage = TRUE;
+		}
+		ALERT( at_console, " %s[%d]", pParent->GetClassname(), pParent->entindex());
+	}
+
+	if( fShownMessage )
+		ALERT( at_console, "\n" );
+}
+
 static int ED_CompareByHierarchyDepth( CSpawnEntry *pEnt1, CSpawnEntry *pEnt2 )
 {
 	if( pEnt1->m_nDepth == pEnt2->m_nDepth )
@@ -279,6 +302,7 @@ int DispatchSpawnEntities( const char *mapname, char *entities )
 			{
 				ALERT( at_aiconsole, "%s linked with %s\n", pEntity->GetClassname(), pParent->GetClassname());
 				pEntity->SetParent( pParent ); 
+				CheckForMultipleParents( pEntity, pParent );
 			}
 		}
 	}

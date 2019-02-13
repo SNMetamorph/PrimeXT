@@ -127,6 +127,7 @@ typedef struct
 
 	// misc info
 	int		grasscount;	// number of bushes per world (used to determine total VBO size)
+	int		grassmem;		// total video memory that used by grass 
 	Vector2D		orthocenter;	// overview stuff
 	Vector2D		orthohalf;
 } gl_world_t;
