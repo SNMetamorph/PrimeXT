@@ -104,8 +104,8 @@ protected:
 	void	SetupAllInHierarchy( CBaseEntity *pParent );
 
 	// Unlink + relink the pusher list so we can actually do the push
-	void	UnlinkPusherList( CBaseEntity **pPusherHandles );
-	void	RelinkPusherList( CBaseEntity **pPusherHandles );
+	void	UnlinkPusherList( void );
+	void	RelinkPusherList( void );
 
 	// Causes all entities in the list to touch triggers from their prev position
 	void	FinishPushers();

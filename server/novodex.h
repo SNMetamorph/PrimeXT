@@ -35,6 +35,11 @@ GNU General Public License for more details.
 #include "NxCooking.h"
 #include "NxTriangle.h"
 #include "PhysXLoader.h"
+
+#define DENSITY_FACTOR		0.0013f
+#define PADDING_FACTOR		0.49f
+#define SOLVER_ITERATION_COUNT	16
+#define CONVEYOR_SCALE_FACTOR		((1.0f / gpGlobals->frametime) * 0.5f)
 	
 class CPhysicNovodex : public IPhysicLayer
 {
@@ -71,6 +76,7 @@ public:
 	void		*CreateBoxFromEntity( CBaseEntity *pObject );
 	void		*CreateKinematicBodyFromEntity( CBaseEntity *pEntity );
 	void		*CreateStaticBodyFromEntity( CBaseEntity *pObject );
+	void		*CreateVehicle( CBaseEntity *pObject, string_t scriptName = 0 );
 	void		*RestoreBody( CBaseEntity *pEntity );
 	void		SaveBody( CBaseEntity *pObject );
 	bool		Initialized( void ) { return (m_pPhysics != NULL); }
@@ -85,6 +91,7 @@ public:
 	void		AddForce( CBaseEntity *pEntity, const Vector &force );
 	void		EnableCollision( CBaseEntity *pEntity, int fEnable );
 	void		MakeKinematic( CBaseEntity *pEntity, int fEnable );
+	void		UpdateVehicle( CBaseEntity *pObject );
 	int		FLoadTree( char *szMapName );
 	int		CheckBINFile( char *szMapName );
 	int		BuildCollisionTree( char *szMapName );
@@ -103,6 +110,8 @@ public:
 	void		SweepTest( CBaseEntity *pTouch, const Vector &start, const Vector &mins, const Vector &maxs, const Vector &end, struct trace_s *tr );
 	void		SweepEntity( CBaseEntity *pEntity, const Vector &start, const Vector &end, struct gametrace_s *tr );
 	bool		IsBodySleeping( CBaseEntity *pEntity );
+	void		*GetCookingInterface( void ) { return m_pCooking; }
+	void		*GetPhysicInterface( void ) { return m_pPhysics; }
 private:
 	// misc routines
 	int		ConvertEdgeToIndex( model_t *model, int edge );

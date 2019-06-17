@@ -182,10 +182,12 @@ public:
 	EHANDLE		m_pTank;				// the tank which the player is currently controlling,  NULL if no tank
 	EHANDLE		m_pMonitor;
 	EHANDLE		m_pHoldableItem;
+	EHANDLE		m_pVehicle;
 	float		m_fDeadTime;			// the time at which the player died  (used in PlayerDeathThink())
 
 	BOOL		m_fNoPlayerSound;	// a debugging feature. Player makes no sound if this is true. 
 	BOOL		m_fLongJump; // does this player have the longjump module?
+	int		m_iInCarState;		// player in car
 
 	float		m_tSneaking;
 	int		m_iUpdateTime;		// stores the number of frame ticks before sending HUD update messages
@@ -360,6 +362,9 @@ public:
 	}
 
 	void CheckCompatibility( void );
+	bool CanEnterVehicle( CBaseEntity *pVehicle );
+	bool EnterVehicle( CBaseEntity *pVehicle );
+	void LeaveVehicle( const Vector &vecExitPoint, const Vector &vecExitAngles );
 
 	void UpdateHoldableItem( void );
 	void PickHoldableItem( CBaseEntity *pObject );

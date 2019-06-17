@@ -32,6 +32,7 @@
 #include "enginecallback.h"
 #include "randomrange.h"
 #include "screenfade.h"
+#include "r_view.h"
 #include "ammo.h"
 
 typedef struct cvar_s	cvar_t;
@@ -52,6 +53,13 @@ typedef struct cvar_s	cvar_t;
 #define MAX_PLAYER_NAME_LENGTH	32
 #define MAX_MOTD_LENGTH		1536
 
+#define ROLL_CURVE_ZERO		20	// roll less than this is clamped to zero
+#define ROLL_CURVE_LINEAR		90	// roll greater than this is copied out
+
+#define PITCH_CURVE_ZERO		10	// pitch less than this is clamped to zero
+#define PITCH_CURVE_LINEAR		45	// pitch greater than this is copied out
+					// spline in between
+									
 //
 //-----------------------------------------------------
 //
@@ -557,6 +565,8 @@ public:
 	CHudTextMessage	m_TextMessage;
 	CHudStatusIcons	m_StatusIcons;
 	CHudMOTD		m_MOTD;
+
+	ViewSmoothingData_t	m_ViewSmoothingData;
 	
 	void Init( void );
 	void VidInit( void );

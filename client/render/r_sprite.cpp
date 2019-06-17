@@ -244,7 +244,7 @@ void CSpriteModelRenderer :: SpriteComputeOrigin( cl_entity_t *e )
 			if( parent->model->type == mod_studio && e->curstate.body > 0 )
 			{
 				int num = bound( 1, e->curstate.body, MAXSTUDIOATTACHMENTS );
-				sprite_origin = R_StudioAttachmentPos( parent, num - 1 );
+				sprite_origin = R_StudioAttachmentOrigin( parent, num - 1 );
 			}
 			else
 			{
@@ -602,10 +602,19 @@ void CSpriteModelRenderer :: SpriteDrawModel( void )
 	// all sprites can have color
 	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
-	// add basecolor (any rendermode can have colored sprite)
-	color[0] = (float)m_pCurrentEntity->curstate.rendercolor.r * ( 1.0f / 255.0f );
-	color[1] = (float)m_pCurrentEntity->curstate.rendercolor.g * ( 1.0f / 255.0f );
-	color[2] = (float)m_pCurrentEntity->curstate.rendercolor.b * ( 1.0f / 255.0f );
+	// NOTE: never pass sprites with rendercolor '0 0 0' it's a stupid Valve Hammer Editor bug
+	if( m_pCurrentEntity->curstate.rendercolor.r || m_pCurrentEntity->curstate.rendercolor.g || m_pCurrentEntity->curstate.rendercolor.b )
+	{
+		color[0] = (float)m_pCurrentEntity->curstate.rendercolor.r * ( 1.0f / 255.0f );
+		color[1] = (float)m_pCurrentEntity->curstate.rendercolor.g * ( 1.0f / 255.0f );
+		color[2] = (float)m_pCurrentEntity->curstate.rendercolor.b * ( 1.0f / 255.0f );
+	}
+	else
+	{
+		color[0] = 1.0f;
+		color[1] = 1.0f;
+		color[2] = 1.0f;
+	}
           
 	if( SpriteHasLightmap( m_pSpriteHeader->texFormat ))
 	{

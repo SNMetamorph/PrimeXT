@@ -1,5 +1,5 @@
 /*
-trace.cpp - trace triangle meshes
+tracemesh.cpp - trace triangle meshes
 Copyright (C) 2012 Uncle Mike
 
 This program is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@ GNU General Public License for more details.
 #include	"gamerules.h"
 #include	"game.h"
 #include	"com_model.h"
-#include  "trace.h"
+#include  "tracemesh.h"
 
 void TraceMesh :: SetupTrace( const Vector &start, const Vector &mins, const Vector &maxs, const Vector &end, trace_t *tr )
 {

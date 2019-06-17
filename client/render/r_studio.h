@@ -42,6 +42,9 @@ GNU General Public License for more details.
 
 #define QSORT_MAX_STACKDEPTH		(MAX_MODEL_MESHES)
 
+#define AF_FORCE_RECALC	BIT( 0 )
+#define AF_LOCAL_SPACE	BIT( 1 )
+
 #define R_MeshCopy( in, out ) \
 	( \
 	( out ).mesh = ( in ).mesh, \
@@ -206,7 +209,7 @@ private:
 	virtual void StudioCalcBonesProcedural( Vector pos[], Vector4D q[] );
 
 	// Find final attachment points
-	virtual void StudioCalcAttachments ( matrix3x4 bones[] );
+	virtual void StudioCalcAttachments ( matrix3x4 bones[], int local_space );
 
 	virtual void AddBlendSequence( int oldseq, int newseq, float prevframe, bool gaitseq = false );
 
@@ -229,6 +232,8 @@ private:
 	virtual float StudioEstimateFrame ( mstudioseqdesc_t *pseqdesc );
 
 	virtual void StudioInterpolateBlends( cl_entity_t *e, float dadt );
+
+	virtual void StudioInterpolatePoseParams( cl_entity_t *e, float dadt );
 
 	// Apply special effects to transform matrix
 	virtual void StudioFxTransform( cl_entity_t *ent, matrix3x4 &transform );
@@ -304,6 +309,7 @@ private:
 		byte		controller[4];		
 		byte		mouthopen;
 		matrix3x4		transform;	// cached transform because ent->angles\ent->origin doesn't contains interpolation info
+		float		poseparam[MAXSTUDIOPOSEPARAM];
 
 		// special fields for player
 		short		gaitsequence;
@@ -313,9 +319,9 @@ private:
 	struct StudioAttachment_t
 	{
 		char		name[MAXSTUDIONAME];
-		Vector		dir;		// attachment dir
-		Vector		pos;		// attachment pos
-		Vector		angles;		// direction converted to euler
+		matrix3x4		local;		// local position
+		Vector		origin;		// attachment pos
+		Vector		angles;		// attachment angle
 	};
 
 	struct ModelInstance_t
@@ -619,7 +625,11 @@ public:
 	// Draw generic studiomodel (player too)
 	void	DrawStudioModelInternal( cl_entity_t *e );
 
-	void	StudioGetAttachment( const cl_entity_t *ent, int iAttachment, Vector *pos, Vector *dir );
+	void	StudioGetAttachment( const cl_entity_t *ent, int iAttachment, Vector *pos, Vector *dir, int flags = 0 );
+
+	int	StudioGetAttachmentNumber( const cl_entity_t *ent, const char *attachment );
+
+	float	StudioSequenceDuration( const cl_entity_t *ent, int sequence );
 
 	// Process viewmodel events (at start the frame so muzzleflashes will be correct added)
 	void	RunViewModelEvents( void );
@@ -664,27 +674,32 @@ inline int R_GetEntityRenderMode( cl_entity_t *ent )
 	return g_StudioRenderer.GetEntityRenderMode( ent );
 }
 
-inline void R_StudioAttachmentPosDir( const cl_entity_t *ent, int num, Vector *pos, Vector *dir )
+inline void R_StudioAttachmentTransform( const cl_entity_t *ent, int num, Vector *origin, Vector *angles, int flags = 0 )
 {
-	g_StudioRenderer.StudioGetAttachment( ent, num, pos, dir );
+	g_StudioRenderer.StudioGetAttachment( ent, num, origin, angles, flags );
 }
 
-inline Vector R_StudioAttachmentPos( const cl_entity_t *ent, int num )
+inline Vector R_StudioAttachmentOrigin( const cl_entity_t *ent, int num, int flags = 0 )
 {
-	Vector pos = g_vecZero;
+	Vector origin = g_vecZero;
 
-	g_StudioRenderer.StudioGetAttachment( ent, num, &pos, NULL );
+	g_StudioRenderer.StudioGetAttachment( ent, num, &origin, NULL, flags );
 
-	return pos;
+	return origin;
 }
 
-inline Vector R_StudioAttachmentDir( const cl_entity_t *ent, int num )
+inline Vector R_StudioAttachmentAngles( const cl_entity_t *ent, int num, int flags = 0 )
 {
-	Vector dir = g_vecZero;
+	Vector angles = g_vecZero;
 
-	g_StudioRenderer.StudioGetAttachment( ent, num, NULL, &dir );
+	g_StudioRenderer.StudioGetAttachment( ent, num, NULL, &angles, flags );
 
-	return dir;
+	return angles;
+}
+
+inline int R_StudioLookupAttachment( const cl_entity_t *ent, const char *name )
+{
+	return g_StudioRenderer.StudioGetAttachmentNumber( ent, name );
 }
 
 inline void R_StudioClearLightCache( void )
@@ -695,6 +710,11 @@ inline void R_StudioClearLightCache( void )
 inline void R_StudioSetBonesExternal( const cl_entity_t *ent, const Vector pos[], const Radian ang[] )
 {
 	g_StudioRenderer.StudioSetBonesExternal( ent, pos, ang );
+}
+
+inline float R_StudioSequenceDuration( const cl_entity_t *ent, int sequence )
+{
+	return g_StudioRenderer.StudioSequenceDuration( ent, sequence );
 }
 
 #endif// R_STUDIO_H

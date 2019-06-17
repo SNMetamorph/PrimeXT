@@ -25,8 +25,6 @@ GNU General Public License for more details.
 
 extern DLL_GLOBAL Vector		g_vecAttackDir;
 
-#define UNSTICK_VELOCITY	100.0f	// FIXME: temporary solution
-
 #define SF_PHYS_BREAKABLE	128
 #define SF_PHYS_CROWBAR	256	// instant break if hit with crowbar
 #define SF_PHYS_HOLDABLE	512	// item can be picked up by player

@@ -1131,8 +1131,8 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 	memcpy( state->mins, ent->v.mins, 3 * sizeof( float ) );
 	memcpy( state->maxs, ent->v.maxs, 3 * sizeof( float ) );
 
-	memcpy( state->startpos, ent->v.startpos, 3 * sizeof( float ) );
-	memcpy( state->endpos, ent->v.endpos, 3 * sizeof( float ) );
+	state->startpos = ent->v.startpos;
+	state->endpos = ent->v.endpos;
 
 	state->impacttime = ent->v.impacttime;
 	state->starttime = ent->v.starttime;
@@ -1186,7 +1186,21 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 	state->iuser1	 = ent->v.iuser1; // flags
 	state->iuser2	 = ent->v.iuser2; // flags
 	state->iuser3	 = ent->v.iuser3; // vertexlight cachenum
-	state->vuser2	 = ent->v.vuser2;
+	state->iuser4	 = ent->v.iuser4; 
+
+	// copy poseparams across network
+	state->vuser1.x	= pEntity->m_flPoseParameter[0];
+	state->vuser1.y	= pEntity->m_flPoseParameter[1];
+	state->vuser1.z	= pEntity->m_flPoseParameter[2];
+	state->vuser2.x	= pEntity->m_flPoseParameter[3];
+	state->vuser2.y	= pEntity->m_flPoseParameter[4];
+	state->vuser2.z	= pEntity->m_flPoseParameter[5];
+	state->vuser3.x	= pEntity->m_flPoseParameter[6];
+	state->vuser3.y	= pEntity->m_flPoseParameter[7];
+	state->vuser3.z	= pEntity->m_flPoseParameter[8];
+	state->vuser4.x	= pEntity->m_flPoseParameter[9];
+	state->vuser4.y	= pEntity->m_flPoseParameter[10];
+	state->vuser4.z	= pEntity->m_flPoseParameter[11];
 
 	state->aiment = 0;
 	if ( ent->v.aiment )
@@ -1253,6 +1267,8 @@ Creates baselines used for network encoding, especially for player data since pl
 */
 void CreateBaseline( int player, int eindex, struct entity_state_s *baseline, struct edict_s *entity, int playermodelindex, vec3_t player_mins, vec3_t player_maxs )
 {
+	CBaseEntity *pEntity = CBaseEntity::Instance( entity );
+
 	baseline->origin		= entity->v.origin;
 	baseline->angles		= entity->v.angles;
 	baseline->frame		= entity->v.frame;
@@ -1297,10 +1313,27 @@ void CreateBaseline( int player, int eindex, struct entity_state_s *baseline, st
 		baseline->solid		= entity->v.solid;
 		baseline->framerate		= entity->v.framerate;
 		baseline->gravity		= entity->v.gravity;
-		baseline->vuser2		= entity->v.vuser2;	// xform
+		baseline->startpos		= entity->v.startpos; // xform
+		baseline->endpos		= entity->v.endpos; // misc
 		baseline->iuser1		= entity->v.iuser1;	// flags
 		baseline->iuser2		= entity->v.iuser2;	// flags
 		baseline->iuser3		= entity->v.iuser3;	// vertexlight cachenum
+
+		if( pEntity )
+		{
+			baseline->vuser1.x	= pEntity->m_flPoseParameter[0];
+			baseline->vuser1.y	= pEntity->m_flPoseParameter[1];
+			baseline->vuser1.z	= pEntity->m_flPoseParameter[2];
+			baseline->vuser2.x	= pEntity->m_flPoseParameter[3];
+			baseline->vuser2.y	= pEntity->m_flPoseParameter[4];
+			baseline->vuser2.z	= pEntity->m_flPoseParameter[5];
+			baseline->vuser3.x	= pEntity->m_flPoseParameter[6];
+			baseline->vuser3.y	= pEntity->m_flPoseParameter[7];
+			baseline->vuser3.z	= pEntity->m_flPoseParameter[8];
+			baseline->vuser4.x	= pEntity->m_flPoseParameter[9];
+			baseline->vuser4.y	= pEntity->m_flPoseParameter[10];
+			baseline->vuser4.z	= pEntity->m_flPoseParameter[11];
+		}
 	}
 }
 

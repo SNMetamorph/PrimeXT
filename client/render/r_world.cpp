@@ -1264,6 +1264,9 @@ void Mod_LoadWorld( model_t *mod, const byte *buf )
 	Mod_SetupWorldLeafs();
 	Mod_SetupWorldNodes();
 
+	int visclusters = mod->submodels[0].visleafs;
+	tr.pvssize = (visclusters + 7) >> 3;
+
 	// all the old lightmaps are freed
 	GL_BeginBuildingLightmaps();
 
@@ -2522,6 +2525,7 @@ void R_DrawBrushModel( cl_entity_t *e )
 	Vector		absmin, absmax;
 	msurface_t	*psurf;
 	model_t		*clmodel;
+	mplane_t		plane;
 
 	clmodel = e->model;
 
@@ -2556,9 +2560,17 @@ void R_DrawBrushModel( cl_entity_t *e )
 	{
 		if( FBitSet( psurf->flags, SURF_DRAWTURB ))
 		{
+			if( FBitSet( psurf->flags, SURF_PLANEBACK ))
+				SetPlane( &plane, -psurf->plane->normal, -psurf->plane->dist );
+			else SetPlane( &plane, psurf->plane->normal, psurf->plane->dist );
+
+			if( e->hCachedMatrix != WORLD_MATRIX )
+				glm->transform.TransformPositivePlane( plane, plane );
+
 			if( psurf->plane->type != PLANE_Z && !FBitSet( e->curstate.effects, EF_WATERSIDES ))
 				continue;
-			if( absmin[2] + 1.0 >= psurf->plane->dist )
+
+			if( absmin[2] + 1.0 >= plane.dist )
 				continue;
 		}
 
@@ -2656,6 +2668,13 @@ void R_DrawBrushModelShadow( cl_entity_t *e )
 
 =============================================================
 */
+void R_UpdateEngineVisibility( void )
+{
+	// just update shared PVS because it's reset each frame
+	for( int j = 0; j < tr.pvssize; j++ )
+		SetBits( tr.visbytes[j], RI->visbytes[j] );
+}
+
 /*
 ===============
 R_MarkLeaves
@@ -2677,11 +2696,18 @@ void R_MarkLeaves( void )
 	}
 
 	if( RI->viewleaf == RI->oldviewleaf && RI->viewleaf != NULL )
+	{
+		R_UpdateEngineVisibility();
 		return;
+	}
 
 	// development aid to let you run around
 	// and see exactly where the pvs ends
-	if( r_lockpvs->value ) return;
+	if( r_lockpvs->value )
+	{
+		R_UpdateEngineVisibility();
+		return;
+	}
 
 	// cache current values
 	RI->oldviewleaf = RI->viewleaf;
@@ -2690,6 +2716,7 @@ void R_MarkLeaves( void )
 		novis = true;
 
 	ENGINE_SET_PVS( RI->pvsorigin, REFPVS_RADIUS, RI->visbytes, FBitSet( RI->params, RP_MERGEVISIBILITY ), novis );
+	R_UpdateEngineVisibility();
 	RI->visframecount++;
 
 	int stack = glState.stack_position;

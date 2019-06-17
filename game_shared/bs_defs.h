@@ -144,6 +144,68 @@ public:
 		return NULL; // poseparams is missed
 	}
 
+	// look up hitbox set by index
+	mstudiohitboxset_t *pHitboxSet( int i ) const 
+	{ 
+		studiohdr2_t *phdr2 = NULL;
+
+		if( m_pStudioHeader->studiohdr2index > 0 && m_pStudioHeader->studiohdr2index < m_pStudioHeader->length )
+			phdr2 = (studiohdr2_t *)((byte *)m_pStudioHeader + m_pStudioHeader->studiohdr2index);
+
+		if( phdr2 && phdr2->numhitboxsets > i )
+			return (mstudiohitboxset_t *)((byte *)m_pStudioHeader + phdr2->hitboxsetindex) + i;
+
+		return NULL; // hitbox set is missed 
+	}
+
+	// calls through to hitbox to determine size of specified set
+	inline mstudiobbox_t *pHitbox( int set, int i ) const 
+	{ 
+		mstudiohitboxset_t const *s = pHitboxSet( set );
+		if( !s ) return NULL;
+
+		if( s->numhitboxes > i )
+			return (mstudiobbox_t *)((byte *)m_pStudioHeader + s->hitboxindex) + i;
+		return NULL;
+	}
+
+	inline mstudiobbox_t *pHitbox( int i ) const 
+	{ 
+		if( m_pStudioHeader->numhitboxes > i )
+			return (mstudiobbox_t *)((byte *)m_pStudioHeader + m_pStudioHeader->hitboxindex) + i;
+		return NULL;
+	}
+
+	const char *pKeyValuesBuffer( size_t *size = NULL ) const 
+	{ 
+		studiohdr2_t *phdr2 = NULL;
+
+		if( m_pStudioHeader->studiohdr2index > 0 && m_pStudioHeader->studiohdr2index < m_pStudioHeader->length )
+			phdr2 = (studiohdr2_t *)((byte *)m_pStudioHeader + m_pStudioHeader->studiohdr2index);
+		if( size ) *size = 0;
+
+		if( phdr2 && phdr2->keyvaluesize > 0 )
+		{
+			if( size ) *size = phdr2->keyvaluesize;
+			return (const char *)((byte *)m_pStudioHeader + phdr2->keyvalueindex);
+		}
+
+		return NULL;
+	}
+
+	int FindAttachment( const char *pAttachmentName )
+	{
+		mstudioattachment_t	*pattachment = (mstudioattachment_t *)((byte *)m_pStudioHeader + m_pStudioHeader->attachmentindex);
+
+		for( int i = 0; i < m_pStudioHeader->numattachments; i++, pattachment++ )
+		{
+			if( !Q_stricmp( pAttachmentName, pattachment->name )) 
+				return i + 1;
+		}
+
+		return 0;
+	}
+
 	int CountPoseParameters( void )
 	{
 		studiohdr2_t *phdr2 = NULL;
@@ -178,6 +240,18 @@ public:
 		if( phdr2 && phdr2->numikautoplaylocks > 0 )
 			return phdr2->numikautoplaylocks;
 		return 0; // no IK autoplay locks
+	}
+
+	int GetNumHitboxSets( void )
+	{
+		studiohdr2_t *phdr2 = NULL;
+
+		if( m_pStudioHeader->studiohdr2index > 0 && m_pStudioHeader->studiohdr2index < m_pStudioHeader->length )
+			phdr2 = (studiohdr2_t *)((byte *)m_pStudioHeader + m_pStudioHeader->studiohdr2index);
+
+		if( phdr2 && phdr2->numhitboxsets > 0 )
+			return phdr2->numhitboxsets;
+		return 0; // no hitbox sets
 	}
 
 	const float flPoseKey( const mstudioseqdesc_t *pseqdesc, int iParam, int iAnim )

@@ -81,6 +81,7 @@
 #define MOVETYPE_PUSHSTEP		13	// BSP model that needs physics/world collisions (uses nearest hull for world collision)
 #define MOVETYPE_COMPOUND		14	// glue two entities together (simple movewith)
 #define MOVETYPE_PHYSIC		15	// implemenation of physic engine
+#define MOVETYPE_VEHICLE		16	// combined vehicle physics
 
 // edict->solid values
 // NOTE: Some movetypes will cause collisions independent of SOLID_NOT/SOLID_TRIGGER when the entity moves
@@ -156,6 +157,9 @@
 // entity flags
 #define EFLAG_SLERP			1	// do studio interpolation of this entity
 #define EFLAG_INTERMISSION		2	// it's a intermission spot
+
+// should be defined at all
+#define MAXSTUDIOPOSEPARAM		24
 		
 //
 // temp entity events
@@ -761,6 +765,7 @@ typedef int		string_t;
 
 typedef unsigned char	byte;
 typedef unsigned short	word;
+typedef unsigned int	uint;
 
 #undef true
 #undef false

@@ -152,7 +152,7 @@ int SV_RestoreDecal( decallist_t *entry, edict_t *pEdict, qboolean adjacent )
 	if( flags & FDECAL_STUDIO )
 	{
 		if( FBitSet( pEdict->v.iuser1, CF_STATIC_ENTITY ))
-			cacheID = pEdict->v.colormap;
+			cacheID = pEdict->v.iuser3;
 		UTIL_RestoreStudioDecal( entry->position, entry->impactPlaneNormal, entityIndex,
 		pEdict->v.modelindex, entry->name, flags, &entry->studio_state, cacheID );
 		return TRUE;
@@ -430,17 +430,16 @@ void CPhysicsPushedEntities::AddEntity( CBaseEntity *ent )
 //-----------------------------------------------------------------------------
 // Unlink + relink the pusher list so we can actually do the push
 //-----------------------------------------------------------------------------
-void CPhysicsPushedEntities::UnlinkPusherList( CBaseEntity **pPusherHandles )
+void CPhysicsPushedEntities::UnlinkPusherList( void )
 {
 	for( int i = m_rgPusher.Count(); --i >= 0; )
 	{
 		CBaseEntity *pEnt = m_rgPusher[i].m_pEntity;
-		pPusherHandles[i] = pEnt;
 		pEnt->MakeNonSolid();
 	}
 }
 
-void CPhysicsPushedEntities::RelinkPusherList( CBaseEntity **pPusherHandles )
+void CPhysicsPushedEntities::RelinkPusherList( void )
 {
 	for( int i = m_rgPusher.Count(); --i >= 0; )
 	{
@@ -494,9 +493,7 @@ bool CPhysicsPushedEntities::SpeculativelyCheckPush( PhysicsPushedInfo_t &info, 
 	Vector vecAbsPush = srcAbsPush;
 
 	// See if it's possible to move the entity, but disable all pushers in the hierarchy first
-	CBaseEntity **pPusherHandles = (CBaseEntity **)stackalloc( m_rgPusher.Count() * sizeof( CBaseEntity* ));
-
-	UnlinkPusherList( pPusherHandles );
+	UnlinkPusherList();
 
 	// i can't clear FL_ONGROUND in all cases because many bad things may be happen
 	if( pBlocker->pev->movetype != MOVETYPE_WALK && bRotationalPush )
@@ -509,7 +506,7 @@ bool CPhysicsPushedEntities::SpeculativelyCheckPush( PhysicsPushedInfo_t &info, 
 
 	UTIL_TraceEntity( pBlocker, pBlocker->GetAbsOrigin(), pushDestPosition, &info.m_trace );
 
-	RelinkPusherList( pPusherHandles );
+	RelinkPusherList();
 
 	info.m_bPusherIsGround = false;
 
@@ -933,9 +930,12 @@ void CPhysicsPushedEntities::RotateRootEntity( CBaseEntity *pRoot, float movetim
 	// which corner we're pushing 
 	rotation.startLocalToWorld = pRoot->EntityToWorldTransform();
 
-	// rotate the pusher to it's final position
-	SV_AngularMove( pRoot, movetime, pRoot->pev->friction );
-	
+	if( pRoot->pev->movetype != MOVETYPE_VEHICLE )
+	{
+		// rotate the pusher to it's final position
+		SV_AngularMove( pRoot, movetime, pRoot->pev->friction );
+	}	
+
 	// compute the change in absangles
 	rotation.endLocalToWorld = pRoot->EntityToWorldTransform();
 }
@@ -970,7 +970,8 @@ CBaseEntity *CPhysicsPushedEntities::PerformRotatePush( CBaseEntity *pRoot, floa
 	if( !SpeculativelyCheckRotPush( rotPushMove, pRoot ))
 	{
 		CBaseEntity *pBlocker = RegisterBlockage();
-		pRoot->SetLocalAngles( angPrevAngles );
+		if( pRoot->pev->movetype != MOVETYPE_VEHICLE )
+			pRoot->SetLocalAngles( angPrevAngles );
 		RestoreEntities( );
 		return pBlocker;
 	}
@@ -985,8 +986,11 @@ CBaseEntity *CPhysicsPushedEntities::PerformRotatePush( CBaseEntity *pRoot, floa
 //-----------------------------------------------------------------------------
 void CPhysicsPushedEntities::LinearlyMoveRootEntity( CBaseEntity *pRoot, float movetime, Vector &pAbsPushVector )
 {
-	// move the pusher to it's final position
-	SV_LinearMove( pRoot, movetime, pRoot->pev->friction );
+	if( pRoot->pev->movetype != MOVETYPE_VEHICLE )
+	{
+		// move the pusher to it's final position
+		SV_LinearMove( pRoot, movetime, pRoot->pev->friction );
+	}
 
 	// Store off the abs push vector
 	pAbsPushVector = pRoot->GetAbsVelocity() * movetime;
@@ -1023,7 +1027,8 @@ CBaseEntity *CPhysicsPushedEntities::PerformLinearPush( CBaseEntity *pRoot, floa
 	if( !SpeculativelyCheckLinearPush( vecAbsPush ))
 	{
 		CBaseEntity *pBlocker = RegisterBlockage();
-		pRoot->SetAbsOrigin( vecPrevOrigin );
+		if( pRoot->pev->movetype != MOVETYPE_VEHICLE )
+			pRoot->SetAbsOrigin( vecPrevOrigin );
 		RestoreEntities();
 		return pBlocker;
 	}
@@ -1748,7 +1753,7 @@ void SV_Physics_None( CBaseEntity *pEntity )
 =============
 SV_PhysicsRigid
 
-Non moving objects can only think
+rigid bodies check ground and conveyors
 =============
 */
 void SV_Physics_Rigid( CBaseEntity *pEntity )
@@ -2449,6 +2454,90 @@ void SV_Physics_Pusher( CBaseEntity *pEntity )
 	}
 }
 
+/*
+=============
+SV_PhysicsVehicle
+
+Vehicles can push other entities
+=============
+*/
+void SV_Physics_Vehicle( CBaseEntity *pEntity )
+{
+	// regular thinking
+	if( !SV_RunThink( pEntity ))
+		return;
+
+	WorldPhysic->UpdateVehicle( pEntity );
+
+	SV_CheckWater( pEntity );
+
+	// sync physic states
+	WorldPhysic->UpdateEntityPos( pEntity );
+
+	float movetime = gpGlobals->frametime;
+
+	if( movetime > 0 )
+	{
+		CBaseEntity *pBlocker = NULL;
+		g_pPushedEntities->BeginPush( pEntity );
+
+		if( pEntity->GetLocalAvelocity() != g_vecZero )
+		{
+			if( pEntity->GetLocalVelocity() != g_vecZero )
+			{
+				pBlocker = SV_PushRotate( pEntity, movetime );
+				if( !pBlocker ) pBlocker = SV_PushMove( pEntity, movetime );
+			}
+			else
+			{
+				pBlocker = SV_PushRotate( pEntity, movetime );
+			}
+		}
+		else if( pEntity->GetLocalVelocity() != g_vecZero ) 
+		{
+			pBlocker = SV_PushMove( pEntity, movetime );
+		}
+
+		// if the pusher has a "blocked" function, call it
+		// otherwise, just stay in place until the obstacle is gone
+		if( pBlocker ) DispatchBlocked( pEntity->edict(), pBlocker->edict() );
+	}
+
+	// detect the ground
+	CBaseEntity *pGround = pEntity->GetGroundEntity();
+
+	if( pEntity->GetAbsVelocity().z > 0.0f || pGround == NULL || (pGround->pev->flags & ( FL_MONSTER|FL_CLIENT )))
+	{
+		pEntity->pev->flags &= ~FL_ONGROUND;
+	}
+
+	if( pEntity->m_iFlags & MF_GROUNDMOVE )
+	{
+		pEntity->ClearGroundEntity();
+		pEntity->m_iFlags &= ~MF_GROUNDMOVE;
+	}
+
+	// if on ground or not moving, return.
+	if( pEntity->pev->flags & FL_ONGROUND || WorldPhysic->IsBodySleeping( pEntity ))
+	{
+		if( pGround && FBitSet( pGround->pev->flags, FL_CONVEYOR ) && pGround->pev->speed && WorldPhysic->IsBodySleeping( pEntity ))
+		{
+			// wake up body if conveyor was enabled (add light kick)
+			WorldPhysic->AddForce( pEntity, pGround->pev->movedir );
+		}
+		return;	// at rest
+	}
+
+	TraceResult trace;
+	Vector vecPos = pEntity->GetAbsOrigin();
+	Vector vecEnd = vecPos + pEntity->pev->mins.z - 1.0f;
+
+	UTIL_TraceLine( vecPos, vecEnd, ignore_monsters, pEntity->edict() ,&trace );
+
+	if( trace.vecPlaneNormal[2] > 0.7f )
+		pEntity->SetGroundEntity( trace.pHit ? trace.pHit : ENT( 0 ));
+}
+
 //
 // assume pEntity is valid
 //
@@ -2535,6 +2624,9 @@ int RunPhysicsFrame( CBaseEntity *pEntity )
 		return 1;
 	case MOVETYPE_PHYSIC:
 		SV_Physics_Rigid( pEntity );
+		return 1;
+	case MOVETYPE_VEHICLE:
+		SV_Physics_Vehicle( pEntity );
 		return 1;
 	}
 

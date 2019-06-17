@@ -34,6 +34,7 @@ public:
 	virtual void	*CreateBoxFromEntity( CBaseEntity *pObject ) = 0;
 	virtual void	*CreateKinematicBodyFromEntity( CBaseEntity *pEntity ) = 0;
 	virtual void	*CreateStaticBodyFromEntity( CBaseEntity *pObject ) = 0;
+	virtual void	*CreateVehicle( CBaseEntity *pObject, int scriptName = 0 ) = 0;
 	virtual void	*RestoreBody( CBaseEntity *pEntity ) = 0;
 	virtual void	SaveBody( CBaseEntity *pObject ) = 0;
 	virtual void	SetOrigin( CBaseEntity *pEntity, const Vector &origin ) = 0;
@@ -47,6 +48,7 @@ public:
 	virtual void	AddForce( CBaseEntity *pEntity, const Vector &force ) = 0;
 	virtual void	EnableCollision( CBaseEntity *pEntity, int fEnable ) = 0;
 	virtual void	MakeKinematic( CBaseEntity *pEntity, int fEnable ) = 0;
+	virtual void	UpdateVehicle( CBaseEntity *pObject ) = 0;
 	virtual int	FLoadTree( char *szMapName ) = 0;
 	virtual int	CheckBINFile( char *szMapName ) = 0;
 	virtual int	BuildCollisionTree( char *szMapName ) = 0;
@@ -64,6 +66,8 @@ public:
 	virtual void	SweepTest( CBaseEntity *pTouch, const Vector &start, const Vector &mins, const Vector &maxs, const Vector &end, struct trace_s *tr ) = 0;
 	virtual void	SweepEntity( CBaseEntity *pEntity, const Vector &start, const Vector &end, struct gametrace_s *tr ) = 0;
 	virtual bool	IsBodySleeping( CBaseEntity *pEntity ) = 0;
+	virtual void	*GetCookingInterface( void ) = 0;
+	virtual void	*GetPhysicInterface( void ) = 0;
 };
 
 extern void GameInitNullPhysics( void ); // shutdown simulation for some reasons

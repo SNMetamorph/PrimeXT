@@ -31,7 +31,7 @@
 #include "weapons.h"
 #include "gamerules.h"
 #include "studio.h"
-#include "trace.h"
+#include "tracemesh.h"
 #include "utldict.h"
 #include "render_api.h"
 
@@ -634,6 +634,36 @@ void UTIL_Teleport( CBaseEntity *pSource, TeleportListEntry_t &entry, const Vect
 	pTeleport->ClearGroundEntity();
 	pTeleport->OnTeleport();		// call event
 	pTeleport->m_iTeleportFilter = FALSE;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Convert a vector an angle from worldspace to the entity's parent's local space
+// Input  : *pEntity - Entity whose parent we're concerned with
+//-----------------------------------------------------------------------------
+void UTIL_ParentToWorldSpace( CBaseEntity *pEntity, Vector &vecPosition, Vector &vecAngles )
+{
+	if ( pEntity == NULL )
+		return;
+
+	// Construct the entity-to-world matrix
+	// Start with making an entity-to-parent matrix
+	matrix4x4 matEntityToParent = matrix3x4( vecPosition, vecAngles );
+
+	// concatenate with our parent's transform
+	matrix4x4 matResult, matParentToWorld;
+	
+	if( pEntity->m_hParent != NULL )
+	{
+		matParentToWorld = pEntity->GetParentToWorldTransform();
+	}
+	else
+	{
+		matParentToWorld = pEntity->EntityToWorldTransform();
+	}
+
+	matResult = matParentToWorld.ConcatTransforms( matEntityToParent );
+	vecPosition = matResult.GetOrigin();
+	vecAngles = matResult.GetAngles();
 }
 
 int UTIL_EntitiesInBox( CBaseEntity **pList, int listMax, const Vector &mins, const Vector &maxs, int flagMask )
@@ -1251,7 +1281,7 @@ void UTIL_TraceEntity( CBaseEntity *pEntity, const Vector &vecStart, const Vecto
 	pEntity->m_pRootParent = pEntity->GetRootParent();
 	pEntity->m_iParentFilter = TRUE;
 
-	if( pEntity->m_iActorType == ACTOR_DYNAMIC )
+	if( pEntity->m_iActorType == ACTOR_DYNAMIC || pEntity->m_iActorType == ACTOR_VEHICLE )
 		WorldPhysic->SweepEntity( pEntity, vecStart, vecEnd, ptr );
 	else if( pEntity->pev->movetype == MOVETYPE_FLYMISSILE )
 		TRACE_MONSTER_HULL( pEntity->edict(), vecStart, vecEnd, missile, pEntity->edict(), ptr ); 
@@ -1905,7 +1935,7 @@ void UTIL_StudioDecalTrace( TraceResult *pTrace, int decalNumber, int flags )
 		WRITE_BYTE( pEntity->pev->skin );
 
 		if( FBitSet( pEntity->pev->iuser1, CF_STATIC_ENTITY ))
-			WRITE_SHORT( pEntity->pev->colormap );
+			WRITE_SHORT( pEntity->pev->iuser3 );
 		else WRITE_SHORT( 0 );
 	MESSAGE_END();
 }
@@ -2513,6 +2543,45 @@ BOOL UITL_ExternalBmodel( int modelindex )
 		return TRUE;
 
 	return FALSE;	
+}
+
+/*
+===================
+UTIL_GetModelBounds
+===================
+*/
+void UTIL_GetModelBounds( int modelIndex, Vector &mins, Vector &maxs )
+{
+	if( modelIndex <= 0 ) return;
+
+	model_t *mod = (model_t *)MODEL_HANDLE( modelIndex );
+
+	if( mod )
+	{
+		mins = mod->mins;
+		maxs = mod->maxs;
+	}
+	else
+	{
+		ALERT( at_error, "UTIL_GetModelBounds: NULL model %i\n", modelIndex );
+		mins = maxs = g_vecZero;
+	}
+}
+
+void UTIL_SetSize( CBaseEntity *pEntity, const Vector &min, const Vector &max )
+{
+	// check bounds
+	if( min.x > max.x || min.y > max.y || min.z > max.z )
+	{
+		ALERT( at_error, "UTIL_SetSize: %s backwards mins/maxs\n", pEntity->GetClassname( ));
+		return;
+	}
+
+	pEntity->pev->size = (max - min);
+	pEntity->pev->mins = min;
+	pEntity->pev->maxs = max;
+
+	pEntity->RelinkEntity( FALSE, NULL );
 }
 
 /*

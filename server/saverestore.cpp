@@ -32,7 +32,7 @@ TYPEDESCRIPTION gEntvarsDescription[] =
 	DEFINE_ENTITY_GLOBAL_FIELD( globalname, FIELD_STRING ),
 	
 	DEFINE_ENTITY_FIELD( origin, FIELD_POSITION_VECTOR ),
-	DEFINE_ENTITY_FIELD( oldorigin, FIELD_POSITION_VECTOR ),
+	DEFINE_ENTITY_GLOBAL_FIELD( oldorigin, FIELD_VECTOR ),	// same as origin but not subtracted from landmark pos !!!
 	DEFINE_ENTITY_FIELD( velocity, FIELD_VECTOR ),
 	DEFINE_ENTITY_FIELD( basevelocity, FIELD_VECTOR ),
 	DEFINE_ENTITY_FIELD( movedir, FIELD_VECTOR ),
@@ -136,11 +136,15 @@ TYPEDESCRIPTION gEntvarsDescription[] =
 	DEFINE_ENTITY_FIELD( pain_finished, FIELD_TIME ),
 	DEFINE_ENTITY_FIELD( radsuit_finished, FIELD_TIME ),
 
-	DEFINE_ENTITY_GLOBAL_FIELD( vuser1, FIELD_VECTOR ),	// same as origin but not subtracted from landmark pos !!!
-	DEFINE_ENTITY_FIELD( vuser2, FIELD_VECTOR ),		// entity scale by three axis
+	// pose params
+	DEFINE_ENTITY_FIELD( vuser1, FIELD_VECTOR ),
+	DEFINE_ENTITY_FIELD( vuser2, FIELD_VECTOR ),
+	DEFINE_ENTITY_FIELD( vuser3, FIELD_VECTOR ),
+	DEFINE_ENTITY_FIELD( vuser4, FIELD_VECTOR ),
 	DEFINE_ENTITY_FIELD( iuser1, FIELD_INTEGER ),		// custom shared flags
 	DEFINE_ENTITY_FIELD( iuser2, FIELD_INTEGER ),		// custom variable
 	DEFINE_ENTITY_FIELD( iuser3, FIELD_INTEGER ),		// vertex light cachenum
+	DEFINE_ENTITY_FIELD( iuser4, FIELD_INTEGER ),		// attachment number
 	DEFINE_ENTITY_FIELD( fuser1, FIELD_FLOAT ),
 	DEFINE_ENTITY_FIELD( fuser2, FIELD_FLOAT ),
 	DEFINE_ENTITY_FIELD( fuser3, FIELD_FLOAT ),

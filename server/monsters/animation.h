@@ -21,6 +21,8 @@
 #include "monsterevent.h"
 #endif
 
+class CBaseBoneSetup;
+
 extern int IsSoundEvent( int eventNumber );
 
 int LookupActivity( void *pmodel, int activity );
@@ -39,6 +41,13 @@ void SetBodygroup( void *pmodel, int &iBody, int iGroup, int iValue );
 int GetBodygroup( void *pmodel, int iBody, int iGroup );
 int GetAnimationEvent( void *pmodel, int sequence, MonsterEvent_t *pMonsterEvent, float flStart, float flEnd, int index );
 int ExtractBbox( void *pmodel, int sequence, Vector &mins, Vector &maxs );
+int FindAttachmentByName( void *pmodel, const char *pName );
+void CalcDefaultPoseParameters( void *pmodel, float *poseparams );
+int LookupPoseParameter( void *pmodel, const char *szName, float *poseparams );
+void SetPoseParameter( void *pmodel, int iParameter, float flValue, float *poseparams );
+float GetPoseParameter( void *pmodel, int iParameter, float *poseparams );
+int FindHitboxSetByName( void *pmodel, const char *name );
+CStudioBoneSetup *GetBaseBoneSetup( int modelindex, float *poseparams );
 
 // From /engine/studio.h
 #define STUDIO_LOOPING		0x0001

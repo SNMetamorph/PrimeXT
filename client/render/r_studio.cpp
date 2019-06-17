@@ -187,7 +187,10 @@ bool CStudioModelRenderer :: StudioSetEntity( cl_entity_t *pEnt )
 		if( iPlayerIndex < 0 || iPlayerIndex >= GET_MAX_CLIENTS( ))
 			return false;
 
-		if( RP_NORMALPASS() && RP_LOCALCLIENT( m_pCurrentEntity ) && !FBitSet( RI->params, RP_THIRDPERSON ))
+		if( RP_LOCALCLIENT( m_pCurrentEntity ) && atoi( gEngfuncs.PhysInfo_ValueForKey( "incar" )))
+			return false;
+
+		if( RP_NORMALPASS() && RP_LOCALCLIENT( m_pCurrentEntity ) && !FBitSet( RI->params, RP_THIRDPERSON ) && UTIL_IsLocal( RI->viewentity ))
 		{
 			// hide playermodel in firstperson
 			return false;
@@ -418,7 +421,11 @@ void CStudioModelRenderer :: ClearInstanceData( bool create )
 
 	// setup attachment names
 	for( int i = 0; i < Q_min( MAXSTUDIOATTACHMENTS, m_pStudioHeader->numattachments ); i++ )
+	{
 		Q_strncpy( att[i].name, pattachment[i].name, sizeof( att[0].name ));
+		att[i].local.Identity();
+		att[i].local.SetOrigin( pattachment[i].org );
+	}
 	m_pModelInstance->numattachments = m_pStudioHeader->numattachments;
 
 	for( int map = 0; map < MAXLIGHTMAPS; map++ )
@@ -464,10 +471,11 @@ bool CStudioModelRenderer :: CheckBoneCache( float f )
 	cl_entity_t *e = m_pCurrentEntity;
 
 	bool pos_valid = (cache->transform == m_pModelInstance->m_protationmatrix) ? true : false;
+	bool param_valid = !memcmp( cache->poseparam, m_pModelInstance->m_poseparameter, sizeof( float ) * MAXSTUDIOPOSEPARAM );
 
 	// make sure what all cached values are unchanged
 	if( cache->frame == f && cache->sequence == e->curstate.sequence && pos_valid && !memcmp( cache->blending, e->curstate.blending, 2 )
-	&& !memcmp( cache->controller, e->curstate.controller, 4 ) && cache->mouthopen == e->mouth.mouthopen )
+	&& !memcmp( cache->controller, e->curstate.controller, 4 ) && cache->mouthopen == e->mouth.mouthopen && param_valid )
 	{
 		if( m_pPlayerInfo )
 		{
@@ -488,6 +496,7 @@ bool CStudioModelRenderer :: CheckBoneCache( float f )
 	cache->transform = m_pModelInstance->m_protationmatrix;
 	memcpy( cache->blending, e->curstate.blending, 2 );
 	memcpy( cache->controller, e->curstate.controller, 4 );
+	memcpy( cache->poseparam, m_pModelInstance->m_poseparameter, sizeof( float ) * MAXSTUDIOPOSEPARAM );
 
 	if( m_pPlayerInfo )
 	{
@@ -1543,8 +1552,8 @@ int CStudioModelRenderer :: StudioComputeBBox( cl_entity_t *e )
 
 	if( FBitSet( e->curstate.iuser1, CF_STATIC_ENTITY ))
 	{
-		if( e->curstate.vuser2 != g_vecZero )
-			scale = e->curstate.vuser2;
+		if( e->curstate.startpos != g_vecZero )
+			scale = e->curstate.startpos;
 	}
 	else if( e->curstate.scale > 0.0f && e->curstate.scale <= 16.0f )
 	{
@@ -1760,9 +1769,9 @@ void CStudioModelRenderer :: StudioSetUpTransform( void )
 	if( m_fDrawViewModel || m_pCurrentEntity->curstate.renderfx == kRenderFxDeadPlayer )
 		memset( &m_pModelInstance->m_seqblend, 0, sizeof( m_pModelInstance->m_seqblend ));
 
-	if( m_pCurrentEntity->curstate.vuser2 != g_vecZero )
+	if( m_pCurrentEntity->curstate.startpos != g_vecZero )
 	{
-		scale = m_pCurrentEntity->curstate.vuser2;
+		scale = m_pCurrentEntity->curstate.startpos;
 	}
 	else if( m_pCurrentEntity->curstate.scale > 0.0f && m_pCurrentEntity->curstate.scale <= 16.0f )
 	{
@@ -1901,14 +1910,12 @@ float CStudioModelRenderer :: StudioEstimateInterpolant( void )
 
 /*
 ====================
-StudioInterpolateBlends
+StudioInterpolatePoseParams
 
 ====================
 */
-void CStudioModelRenderer :: StudioInterpolateBlends( cl_entity_t *e, float dadt )
+void CStudioModelRenderer :: StudioInterpolatePoseParams( cl_entity_t *e, float dadt )
 {
-	mstudiobonecontroller_t *pbonecontroller = (mstudiobonecontroller_t *)((byte *)m_pStudioHeader + m_pStudioHeader->bonecontrollerindex);
-
 	if( !m_boneSetup.CountPoseParameters( ))
 	{
 		// interpolate blends
@@ -1917,8 +1924,33 @@ void CStudioModelRenderer :: StudioInterpolateBlends( cl_entity_t *e, float dadt
 	}
 	else
 	{
-		// interpolate pose parameters here...
+		m_pModelInstance->m_poseparameter[0] = (e->curstate.vuser1[0] * dadt + e->prevstate.vuser1[0] * (1.0f - dadt));
+		m_pModelInstance->m_poseparameter[1] = (e->curstate.vuser1[1] * dadt + e->prevstate.vuser1[1] * (1.0f - dadt));
+		m_pModelInstance->m_poseparameter[2] = (e->curstate.vuser1[2] * dadt + e->prevstate.vuser1[2] * (1.0f - dadt));
+
+		m_pModelInstance->m_poseparameter[3] = (e->curstate.vuser2[0] * dadt + e->prevstate.vuser2[0] * (1.0f - dadt));
+		m_pModelInstance->m_poseparameter[4] = (e->curstate.vuser2[1] * dadt + e->prevstate.vuser2[1] * (1.0f - dadt));
+		m_pModelInstance->m_poseparameter[5] = (e->curstate.vuser2[2] * dadt + e->prevstate.vuser2[2] * (1.0f - dadt));
+
+		m_pModelInstance->m_poseparameter[6] = (e->curstate.vuser3[0] * dadt + e->prevstate.vuser3[0] * (1.0f - dadt));
+		m_pModelInstance->m_poseparameter[7] = (e->curstate.vuser3[1] * dadt + e->prevstate.vuser3[1] * (1.0f - dadt));
+		m_pModelInstance->m_poseparameter[8] = (e->curstate.vuser3[2] * dadt + e->prevstate.vuser3[2] * (1.0f - dadt));
+
+		m_pModelInstance->m_poseparameter[ 9] = (e->curstate.vuser4[0] * dadt + e->prevstate.vuser4[0] * (1.0f - dadt));
+		m_pModelInstance->m_poseparameter[10] = (e->curstate.vuser4[1] * dadt + e->prevstate.vuser4[1] * (1.0f - dadt));
+		m_pModelInstance->m_poseparameter[11] = (e->curstate.vuser4[2] * dadt + e->prevstate.vuser4[2] * (1.0f - dadt));
 	}
+}
+
+/*
+====================
+StudioInterpolateBlends
+
+====================
+*/
+void CStudioModelRenderer :: StudioInterpolateBlends( cl_entity_t *e, float dadt )
+{
+	mstudiobonecontroller_t *pbonecontroller = (mstudiobonecontroller_t *)((byte *)m_pStudioHeader + m_pStudioHeader->bonecontrollerindex);
 
 	// interpolate controllers
 	for( int j = 0; j < m_pStudioHeader->numbonecontrollers; j++ )
@@ -2325,7 +2357,7 @@ void CStudioModelRenderer :: CalculateIKLocks( CIKContext *pIK )
 					continue;
 
 				// FIXME: how to validate a index?
-				Vector origin = inst->attachment[pTarget->offset.attachmentIndex].pos;
+				Vector origin = inst->attachment[pTarget->offset.attachmentIndex].origin;
 				Vector angles = inst->attachment[pTarget->offset.attachmentIndex].angles;
 				float d = (pTarget->est.pos - origin).Length();
 
@@ -2421,6 +2453,10 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 
 	pseqdesc = (mstudioseqdesc_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqindex) + e->curstate.sequence;
 	float f = StudioEstimateFrame( pseqdesc );
+	float dadt = StudioEstimateInterpolant();
+	
+	StudioInterpolatePoseParams( e, dadt );
+
 	if( CheckBoneCache( f )) return; // using a cached bones no need transformations
 
 	if( m_boneSetup.GetNumIKChains( ))
@@ -2431,9 +2467,7 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 		pIK = &m_pModelInstance->m_ik;
 	}
 
-	float dadt = StudioEstimateInterpolant();
 	float cycle = f / m_boneSetup.LocalMaxFrame( e->curstate.sequence );
-
 	StudioInterpolateBlends( e, dadt );
 
 	m_boneSetup.InitPose( pos, q );
@@ -2796,7 +2830,7 @@ StudioCalcAttachments
 
 ====================
 */
-void CStudioModelRenderer :: StudioCalcAttachments( matrix3x4 bones[] )
+void CStudioModelRenderer :: StudioCalcAttachments( matrix3x4 bones[], int local_space )
 {
 	if( m_pCurrentEntity->modelhandle == INVALID_HANDLE || !m_pModelInstance )
 		return; // too early ?
@@ -2817,8 +2851,9 @@ void CStudioModelRenderer :: StudioCalcAttachments( matrix3x4 bones[] )
 		// clear attachments
 		for( int i = 0; i < MAXSTUDIOATTACHMENTS; i++ )
 		{
-			if( i < 4 ) e->attachment[i] = e->origin;
-			att[i].pos = e->origin;
+			att[i].angles = e->angles;
+			att[i].origin = e->origin;
+			if( i < 4 ) e->attachment[i] = att[i].origin;
 		}
 		return;
 	}
@@ -2833,24 +2868,17 @@ void CStudioModelRenderer :: StudioCalcAttachments( matrix3x4 bones[] )
 
 	for( int i = 0; i < m_pStudioHeader->numattachments; i++ )
 	{
-		Vector p0 = bones[pattachment[i].bone].VectorTransform( pattachment[i].org );
-		Vector p1 = bones[pattachment[i].bone].GetOrigin();
+		matrix3x4 world = bones[pattachment[i].bone].ConcatTransforms( att[i].local );
 
-		// turn back to worldspace
-		p0 = m_pModelInstance->m_protationmatrix.VectorTransform( p0 );
-		p1 = m_pModelInstance->m_protationmatrix.VectorTransform( p1 );
-
-		// merge attachments position for viewmodel
-		if( m_fDrawViewModel )
+		if( !local_space )
 		{
-			StudioFormatAttachment( p0 );
-			StudioFormatAttachment( p1 );
+			// turn back to worldspace
+			world = m_pModelInstance->m_protationmatrix.ConcatTransforms( world );
 		}
 
-		att[i].pos = p0;
-		att[i].dir = (p0 - p1).Normalize(); // forward vec
-//		VectorAngles( att[i].dir, att[i].angles );
-		if( i < 4 ) e->attachment[i] = p0;
+		att[i].origin = world.GetOrigin();
+		att[i].angles = world.GetAngles();
+		if( i < 4 ) e->attachment[i] = att[i].origin;
 	}
 }
 
@@ -2860,13 +2888,30 @@ StudioGetAttachment
 
 ====================
 */
-void CStudioModelRenderer :: StudioGetAttachment( const cl_entity_t *ent, int iAttachment, Vector *pos, Vector *dir )
+void CStudioModelRenderer :: StudioGetAttachment( const cl_entity_t *ent, int iAttachment, Vector *origin, Vector *angles, int flags )
 {
-	if( !ent || !ent->model || ( !pos && !dir  ))
+	int	studio_flags = STUDIO_EVENTS;
+
+	if( FBitSet( flags, AF_FORCE_RECALC ))
+		SetBits( studio_flags, STUDIO_FORCE );
+
+	if( FBitSet( flags, AF_LOCAL_SPACE ))
+		SetBits( studio_flags, STUDIO_LOCAL_SPACE );
+
+	if( !ent || !ent->model || ( !origin && !angles  ))
 		return;
 
-	studiohdr_t *phdr = (studiohdr_t *)IEngineStudio.Mod_Extradata( ent->model );
-	if( !phdr ) return;
+	RI->currententity = (cl_entity_t *)ent;
+	RI->currentmodel = ent->model;
+	if( !RI->currentmodel ) return;
+
+	// force to compute attachments
+	SET_CURRENT_ENTITY( RI->currententity );
+	StudioDrawModel( studio_flags );
+
+	SET_CURRENT_ENTITY( NULL );
+	RI->currententity = NULL;
+	RI->currentmodel = NULL;
 
 	if( ent->modelhandle == INVALID_HANDLE )
 		return; // too early ?
@@ -2874,10 +2919,40 @@ void CStudioModelRenderer :: StudioGetAttachment( const cl_entity_t *ent, int iA
 	ModelInstance_t *inst = &m_ModelInstances[ent->modelhandle];
 
 	// make sure we not overflow
-	iAttachment = bound( 0, iAttachment, phdr->numattachments - 1 );
+	iAttachment = bound( 0, iAttachment, inst->numattachments - 1 );
 
-	if( pos ) *pos = inst->attachment[iAttachment].pos;
-	if( dir ) *dir = inst->attachment[iAttachment].dir;
+	if( origin ) *origin = inst->attachment[iAttachment].origin;
+	if( angles ) *angles = inst->attachment[iAttachment].angles;
+}
+
+/*
+====================
+StudioGetAttachment
+
+====================
+*/
+int CStudioModelRenderer :: StudioGetAttachmentNumber( const cl_entity_t *ent, const char *attachment )
+{
+	if( !ent || ent->modelhandle == INVALID_HANDLE )
+		return -1;
+
+	ModelInstance_t *inst = &m_ModelInstances[ent->modelhandle];
+
+	for( int i = 0; i < inst->numattachments; i++ )
+	{
+		StudioAttachment_t *att = &inst->attachment[i];
+		if( !Q_stricmp( att->name, attachment ))
+			return i;
+	}
+
+	return -1;
+}
+
+float CStudioModelRenderer :: StudioSequenceDuration( const cl_entity_t *ent, int sequence )
+{
+	if( !StudioSetEntity( (cl_entity_t *)ent ))
+		return 0.0f;
+	return m_boneSetup.LocalDuration( sequence );
 }
 
 /*
@@ -3545,7 +3620,7 @@ int CStudioModelRenderer :: StudioDrawModel( int flags )
 			return 1;
 	}
 
-	if( m_pModelInstance->cached_frame != tr.realframecount )
+	if( FBitSet( flags, STUDIO_FORCE ) || ( m_pModelInstance->cached_frame != tr.realframecount ))
 	{
 		if( m_pCurrentEntity->player || m_pCurrentEntity->curstate.renderfx == kRenderFxDeadPlayer )
 			m_pPlayerInfo = IEngineStudio.PlayerInfo( m_nPlayerIndex );
@@ -3634,7 +3709,7 @@ int CStudioModelRenderer :: StudioDrawModel( int flags )
 	if( FBitSet( flags, STUDIO_EVENTS ))
 	{
 		// calc attachments only once per frame
-		StudioCalcAttachments( m_pModelInstance->m_pbones );
+		StudioCalcAttachments( m_pModelInstance->m_pbones, FBitSet( flags, STUDIO_LOCAL_SPACE ));
 		StudioClientEvents( );
 
 		// copy attachments into global entity array

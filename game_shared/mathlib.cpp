@@ -113,8 +113,10 @@ VectorAngles
 
 =================
 */
-void VectorAngles( const Vector &forward, Vector &angles )
+void VectorAngles( const Vector &srcforward, Vector &angles )
 {
+	Vector	forward = srcforward;
+
 	angles[ROLL] = 0.0f;
 
 	if( forward.x || forward.y )
@@ -367,6 +369,21 @@ bool BoundsAndSphereIntersect( const Vector2D &mins, const Vector2D &maxs, const
 	if( mins.x > origin.x + radius || mins.y > origin.y + radius )
 		return false;
 	if( maxs.x < origin.x - radius || maxs.y < origin.y - radius )
+		return false;
+	return true;
+}
+/*
+=================
+PointInBounds
+=================
+*/
+bool PointInBounds( const Vector& pt, const Vector& boxMin, const Vector& boxMax )
+{
+	if(( pt[0] > boxMax[0] ) || ( pt[0] < boxMin[0] ))
+		return false;
+	if(( pt[1] > boxMax[1] ) || ( pt[1] < boxMin[1] ))
+		return false;
+	if(( pt[2] > boxMax[2] ) || ( pt[2] < boxMin[2] ))
 		return false;
 	return true;
 }
@@ -882,6 +899,55 @@ void NormalizeAngles( Vector &angles )
 			angles[i] += 360.0f;
 		}
 	}
+}
+
+/*
+===================
+AngleDiff
+
+===================
+*/
+float AngleDiff( float destAngle, float srcAngle )
+{
+	float delta;
+
+	delta = fmodf( destAngle - srcAngle, 360.0f );
+
+	if( destAngle > srcAngle )
+	{
+		if( delta >= 180 )
+			delta -= 360;
+	}
+	else
+	{
+		if( delta <= -180 )
+			delta += 360;
+	}
+
+	return delta;
+}
+
+/*
+===================
+AngleNormalize
+
+===================
+*/
+float AngleNormalize( float angle )
+{
+	angle = fmodf( angle, 360.0f );
+
+	if( angle > 180 ) 
+	{
+		angle -= 360;
+	}
+
+	if( angle < -180 )
+	{
+		angle += 360;
+	}
+
+	return angle;
 }
 
 /*

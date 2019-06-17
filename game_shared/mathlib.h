@@ -21,10 +21,6 @@ typedef unsigned char byte;
 typedef float vec_t;
 #endif
 
-#include <math.h>
-#include <vector.h>
-#include "matrix.h"
-
 // NOTE: PhysX mathlib is conflicted with standard min\max
 #define Q_min( a, b )		(((a) < (b)) ? (a) : (b))
 #define Q_max( a, b )		(((a) > (b)) ? (a) : (b))
@@ -33,6 +29,10 @@ typedef float vec_t;
 #define Q_ceil( a )			((float)(long)((a) + 1))
 #define Q_round( x, y )		(floor( x / y + 0.5 ) * y )
 #define Q_square( a )		((a) * (a))
+
+#include <math.h>
+#include <vector.h>
+#include "matrix.h"
 
 #define bound( min, num, max )	((num) >= (min) ? ((num) < (max) ? (num) : (max)) : (min))
 #define saturate( val )		((val) >= 0 ? ((val) < 1 ? (val) : 1) : 0)
@@ -128,6 +128,7 @@ bool BoundsIntersect( const Vector &mins1, const Vector &maxs1, const Vector &mi
 bool BoundsIntersect( const Vector2D &mins1, const Vector2D &maxs1, const Vector2D &mins2, const Vector2D &maxs2 );
 bool BoundsAndSphereIntersect( const Vector &mins, const Vector &maxs, const Vector &origin, float radius );
 bool BoundsAndSphereIntersect( const Vector2D &mins, const Vector2D &maxs, const Vector2D &origin, float radius );
+bool PointInBounds( const Vector& pt, const Vector& boxMin, const Vector& boxMax );
 float RadiusFromBounds( const Vector &mins, const Vector &maxs );
 
 //
@@ -178,7 +179,8 @@ bool RadianCompareEpsilon( const Radian &vec1, const Radian &vec2, float epsilon
 void CategorizePlane( struct mplane_s *plane );
 void SnapPlaneToGrid( struct mplane_s *plane );
 void SnapVectorToGrid( Vector &normal );
-
+float AngleDiff( float destAngle, float srcAngle );
+float AngleNormalize( float angle );
 
 int BoxOnPlaneSide( const Vector &emins, const Vector &emaxs, const struct mplane_s *plane );
 #define BOX_ON_PLANE_SIDE(emins, emaxs, p) (((p)->type < 3)?(((p)->dist <= (emins)[(p)->type])? 1 : (((p)->dist >= (emaxs)[(p)->type])? 2 : 3)):BoxOnPlaneSide( (emins), (emaxs), (p)))

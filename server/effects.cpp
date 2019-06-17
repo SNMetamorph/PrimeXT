@@ -3528,6 +3528,8 @@ void CDecLED :: Spawn( void )
 
 	SetLocalAngles( angles );	
 	RelinkEntity( FALSE );
+
+	// allow to switch frames for studio models
 	pev->framerate = -1.0f;
 	pev->button = 1;
 }
@@ -3877,7 +3879,7 @@ void CEnvStatic :: KeyValue( KeyValueData *pkvd )
 {
 	if( FStrEq(pkvd->szKeyName, "xform"))
 	{
-		UTIL_StringToVector( (float*)pev->vuser2, pkvd->szValue );
+		UTIL_StringToVector( (float*)pev->startpos, pkvd->szValue );
 		pkvd->fHandled = TRUE;
 	}
 	else BaseClass::KeyValue( pkvd );
@@ -3885,16 +3887,16 @@ void CEnvStatic :: KeyValue( KeyValueData *pkvd )
 
 void CEnvStatic :: Spawn( void )
 {
-	if( pev->vuser2 == g_vecZero )
-		pev->vuser2 = Vector( pev->scale, pev->scale, pev->scale );
+	if( pev->startpos == g_vecZero )
+		pev->startpos = Vector( pev->scale, pev->scale, pev->scale );
 
 	// check xform values
-	if( pev->vuser2.x < 0.01f ) pev->vuser2.x = 1.0f;
-	if( pev->vuser2.y < 0.01f ) pev->vuser2.y = 1.0f;
-	if( pev->vuser2.z < 0.01f ) pev->vuser2.z = 1.0f;
-	if( pev->vuser2.x > 16.0f ) pev->vuser2.x = 16.0f;
-	if( pev->vuser2.y > 16.0f ) pev->vuser2.y = 16.0f;
-	if( pev->vuser2.z > 16.0f ) pev->vuser2.z = 16.0f;
+	if( pev->startpos.x < 0.01f ) pev->startpos.x = 1.0f;
+	if( pev->startpos.y < 0.01f ) pev->startpos.y = 1.0f;
+	if( pev->startpos.z < 0.01f ) pev->startpos.z = 1.0f;
+	if( pev->startpos.x > 16.0f ) pev->startpos.x = 16.0f;
+	if( pev->startpos.y > 16.0f ) pev->startpos.y = 16.0f;
+	if( pev->startpos.z > 16.0f ) pev->startpos.z = 16.0f;
 
 	Precache();
 	SET_MODEL( edict(), GetModel() );
@@ -3961,7 +3963,7 @@ void CEnvStatic :: AutoSetSize( void )
 	}
 
 	mstudioseqdesc_t *pseqdesc = (mstudioseqdesc_t *)((byte *)pstudiohdr + pstudiohdr->seqindex);
-	UTIL_SetSize( pev, pseqdesc[pev->sequence].bbmin * pev->vuser2, pseqdesc[pev->sequence].bbmax * pev->vuser2 );
+	UTIL_SetSize( pev, pseqdesc[pev->sequence].bbmin * pev->startpos, pseqdesc[pev->sequence].bbmax * pev->startpos );
 }
 
 #define SF_REMOVE_ON_FIRE		0x0001

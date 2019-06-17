@@ -104,6 +104,15 @@ int CHud :: MsgFunc_ResetHUD( const char *pszName, int iSize, void *pbuf )
 		pList = pList->pNext;
 	}
 
+	memset( &m_ViewSmoothingData, 0, sizeof( m_ViewSmoothingData ) );
+
+	m_ViewSmoothingData.bClampEyeAngles = true;
+
+	m_ViewSmoothingData.flPitchCurveZero = PITCH_CURVE_ZERO;
+	m_ViewSmoothingData.flPitchCurveLinear = PITCH_CURVE_LINEAR;
+	m_ViewSmoothingData.flRollCurveZero = ROLL_CURVE_ZERO;
+	m_ViewSmoothingData.flRollCurveLinear = ROLL_CURVE_LINEAR;
+
 	// reset sensitivity
 	m_flMouseSensitivity = 0;
 
@@ -414,7 +423,7 @@ int CHud :: MsgFunc_StudioDecal( const char *pszName, int iSize, void *pbuf )
 	{
 		// tell the code about vertex lighting
 		SetBits( ent->curstate.iuser1, CF_STATIC_ENTITY );
-		ent->curstate.colormap = cacheID;
+		ent->curstate.iuser3 = cacheID;
 	}
 
 //	double start = Sys_DoubleTime();

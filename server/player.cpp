@@ -113,12 +113,14 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_iExtraSoundTypes, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iWeaponFlash, FIELD_INTEGER ),
 	DEFINE_FIELD( m_fLongJump, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_iInCarState, FIELD_INTEGER ),
 	DEFINE_FIELD( m_fInitHUD, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_tbdPrev, FIELD_TIME ),
 
 	DEFINE_FIELD( m_pTank, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_pMonitor, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_pHoldableItem, FIELD_EHANDLE ),
+	DEFINE_FIELD( m_pVehicle, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_iHideHUD, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iFOV, FIELD_INTEGER ),
 
@@ -1458,6 +1460,12 @@ void CBasePlayer::PlayerUse ( void )
 			m_pTank = NULL;
 			return;
 		}
+		else if ( m_pVehicle != NULL )
+		{
+			// Trying to leave vehicle
+			m_pVehicle->Use( this, this, USE_OFF, 0 );
+			return;
+		}
 		else if (m_pMonitor != NULL )
 		{
 			m_pMonitor->Use( this, this, USE_RESET, 0 );
@@ -1842,7 +1850,6 @@ void CBasePlayer::PreThink(void)
 	m_afButtonReleased = buttonsChanged & (~pev->button);	// The ones not down are "released"
 
 	g_pGameRules->PlayerThink( this );
-	pev->oldorigin = GetAbsOrigin();			// update old position
 
 	if ( g_fGameOver )
 		return;         // intermission or finale
@@ -2943,6 +2950,7 @@ void CBasePlayer::Spawn( void )
 	m_bitsDamageType		= 0;
 	m_afPhysicsFlags		= 0;
 	m_fLongJump		= FALSE;// no longjump module. 
+	m_iInCarState		= VEHICLE_INACTIVE;
 
 	pev->targetname		= MAKE_STRING( "*player" );
 
@@ -2961,6 +2969,7 @@ void CBasePlayer::Spawn( void )
 
 	g_engfuncs.pfnSetPhysicsKeyValue( edict(), "slj", "0" );
 	g_engfuncs.pfnSetPhysicsKeyValue( edict(), "hl", "1" );
+	g_engfuncs.pfnSetPhysicsKeyValue( edict(), "incar", "0" );
 
 	pev->fov = m_iFOV				= 0;// init field of view.
 	m_iClientFOV		= -1; // make sure fov reset is sent
@@ -3121,6 +3130,78 @@ void CBasePlayer::RenewItems(void)
 
 }
 
+bool CBasePlayer::CanEnterVehicle( CBaseEntity *pVehicle )
+{
+	// Must be alive
+	if ( IsAlive() == false )
+		return false;
+
+	// Can't be pulled by a barnacle
+	if ( FBitSet( m_afPhysicsFlags, PFLAG_ONBARNACLE|PFLAG_ONROPE ))
+		return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Entering this player into a vehicle
+//-----------------------------------------------------------------------------
+bool CBasePlayer::EnterVehicle( CBaseEntity *pVehicle )
+{
+	if( !CanEnterVehicle( pVehicle ))
+		return false;
+
+	SET_VIEW( edict(), pVehicle->edict() );
+	MakeNonSolid();
+	RelinkEntity();
+	g_engfuncs.pfnSetPhysicsKeyValue( edict(), "incar", "1" );
+	m_iInCarState = VEHICLE_ENTERING;
+	pev->movetype = MOVETYPE_NONE;
+	SetLocalAngles( pVehicle->GetAbsAngles() );
+	SetLocalOrigin( pVehicle->GetAbsOrigin() );
+	SetParent( pVehicle );
+
+	if( m_pActiveItem )
+	{
+		m_pActiveItem->Holster();
+		pev->weaponmodel = 0;
+	}
+
+	m_iHideHUD |= HIDEHUD_WEAPONS;
+	m_pVehicle = pVehicle;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Remove this player from a vehicle
+//-----------------------------------------------------------------------------
+void CBasePlayer::LeaveVehicle( const Vector &vecExitPoint, const Vector &vecExitAngles )
+{
+	SetParent( NULL );
+
+	g_engfuncs.pfnSetPhysicsKeyValue( edict(), "incar", "0" );
+	m_iInCarState = VEHICLE_INACTIVE;
+
+	SetAbsOrigin( vecExitPoint );
+	SetAbsAngles( vecExitAngles );
+	// Clear out any leftover velocity
+	SetAbsVelocity( g_vecZero );
+
+	Vector qAngles = vecExitAngles;
+	qAngles[ROLL] = 0;
+	SnapEyeAngles( qAngles );
+
+	m_iHideHUD &= ~HIDEHUD_WEAPONS;
+	m_pVehicle = NULL;
+
+	RestoreSolid();
+	RelinkEntity();
+	pev->movetype = MOVETYPE_WALK;
+
+	SET_VIEW( edict(), edict() );
+}
+
 void CBasePlayer::UpdateHoldableItem( void )
 {
 	if (m_pHoldableItem == NULL )
@@ -3266,6 +3347,8 @@ int CBasePlayer::Restore( CRestore &restore )
 	{
 		g_engfuncs.pfnSetPhysicsKeyValue( edict(), "slj", "0" );
 	}
+
+	g_engfuncs.pfnSetPhysicsKeyValue( edict(), "incar", va( "%d", m_iInCarState ));
 
 	RenewItems();
 

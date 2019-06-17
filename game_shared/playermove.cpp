@@ -3040,8 +3040,7 @@ void PM_PlayerMove ( qboolean server )
 		{
 			PM_LadderMove( pLadder );
 		}
-		else if ( pmove->movetype != MOVETYPE_WALK &&
-			      pmove->movetype != MOVETYPE_NOCLIP )
+		else if ( pmove->movetype != MOVETYPE_WALK && pmove->movetype != MOVETYPE_NOCLIP && pmove->movetype != MOVETYPE_NONE )
 		{
 			// Clear ladder stuff unless player is noclipping
 			//  it will be set immediately again next frame if necessary

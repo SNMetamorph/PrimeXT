@@ -132,7 +132,7 @@ void CBaseEntity::SetAbsOrigin( const Vector& absOrigin )
 	InvalidatePhysicsState( FL_ABSTRANSFORM );
 	ClearBits( pev->flags, FL_ABSTRANSFORM );
 
-	pev->origin = pev->vuser1 = absOrigin;
+	pev->origin = pev->oldorigin = absOrigin;
 	m_local.SetOrigin( absOrigin );
 
 	CBaseEntity *pParent = m_hParent;
@@ -349,7 +349,7 @@ void CBaseEntity::CalcAbsolutePosition( void )
 	if( !pParent )
 	{
 		// no move parent, so just copy existing values
-		pev->origin = pev->vuser1 = m_vecOrigin;
+		pev->origin = pev->oldorigin = m_vecOrigin;
 		pev->angles = m_vecAngles;
 
 		CheckAngles();
@@ -792,6 +792,38 @@ void CBaseEntity::RelinkEntity( BOOL touch_triggers, const Vector *pPrevOrigin, 
 #endif
 }
 
+void CBaseEntity :: SetModel( const char *model )
+{
+	int modelIndex = MODEL_INDEX( model );
+	if( modelIndex == 0 ) return;
+
+	pev->model = MAKE_STRING( model );
+	pev->modelindex = modelIndex;
+
+	modtype_t mod_type = UTIL_GetModelType( modelIndex );
+
+	Vector mins = g_vecZero;
+	Vector maxs = g_vecZero;
+
+	// studio models set to zero sizes as default
+	switch( mod_type )
+	{
+	case mod_brush:
+		UTIL_GetModelBounds( modelIndex, mins, maxs );
+		break;
+	case mod_studio:
+		ResetPoseParameters();
+		break;
+	case mod_sprite:
+		UTIL_GetModelBounds( modelIndex, mins, maxs );
+		break;
+	default:
+		break;
+	}
+
+	UTIL_SetSize( this, mins, maxs );
+}
+
 void CBaseEntity::UnlinkFromParent( void )
 {
 	if( m_hParent == NULL )
@@ -915,8 +947,13 @@ void CBaseEntity :: SetParent( int m_iNewParent, int m_iAttachment )
 
 	if( !m_iAttachment )
 	{
+		char	name[256];
+
+		// don't modify string from table, make a local copy!
+		Q_strncpy( name, STRING( m_iNewParent ), sizeof( name ));
+
 		// try to extract aiment from name
-		char *pname = (char *)STRING( m_iNewParent );
+		char *pname = (char *)name;
 		char *pstart  = Q_strchr( pname, '.' );
 
 		if( pstart )
@@ -1353,6 +1390,10 @@ BEGIN_DATADESC_NO_BASE( CBaseEntity )
 	DEFINE_FIELD( m_pfnMoveDone, FIELD_FUNCTION ),
 
 	DEFINE_FIELD( m_flShowHostile, FIELD_TIME ),
+	DEFINE_FIELD( m_isChaining, FIELD_BOOLEAN ),		// door stuff but need to set everywhere
+
+	// studio pose parameters
+	DEFINE_AUTO_ARRAY( m_flPoseParameter, FIELD_FLOAT ),
 
 	// function pointers
 	DEFINE_FUNCTION( SUB_Remove ),
@@ -1437,7 +1478,7 @@ int CBaseEntity::Restore( CRestore &restore )
 
 
 		PRECACHE_MODEL( GetModel() );
-		SET_MODEL( edict(), GetModel() );
+		SetModel( GetModel() );
 		UTIL_SetSize( pev, mins, maxs ); // Reset them
 	}
 

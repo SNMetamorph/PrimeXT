@@ -381,7 +381,7 @@ int DispatchRestore( edict_t *pent, SAVERESTOREDATA *pSaveData, int globalEntity
 				{
 					// calculate model offsets to update the childrens
 					restoreHelper.modelSpaceOffset = tmpVars.mins - pNewEntity->pev->mins;
-					restoreHelper.modelOriginOffset = tmpVars.vuser1 - pNewEntity->pev->vuser1;
+					restoreHelper.modelOriginOffset = tmpVars.oldorigin - pNewEntity->pev->oldorigin;
 				}
 
 				pSaveData->vecLandmarkOffset = (pSaveData->vecLandmarkOffset - pNewEntity->pev->mins) + tmpVars.mins;

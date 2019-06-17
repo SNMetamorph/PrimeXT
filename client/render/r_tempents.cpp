@@ -368,21 +368,17 @@ void HUD_TempEntUpdate(
 			// cull to PVS (not frustum cull, just PVS)
 			if(!( pTemp->flags & FTENT_NOMODEL ))
 			{
-				if( g_fRenderInitialized )
+				if( !Callback_AddVisibleEntity( &pTemp->entity ))
 				{
-					Callback_AddVisibleEntity( &pTemp->entity );
-					r_stats.c_active_tents_count++;
+					if(!( pTemp->flags & FTENT_PERSIST )) 
+					{
+						pTemp->die = client_time;		// If we can't draw it this frame, just dump it.
+						pTemp->flags &= ~FTENT_FADEOUT;	// Don't fade out, just die
+					}
 				}
 				else
 				{
-					if( !Callback_AddVisibleEntity( &pTemp->entity ))
-					{
-						if(!( pTemp->flags & FTENT_PERSIST )) 
-						{
-							pTemp->die = client_time;		// If we can't draw it this frame, just dump it.
-							pTemp->flags &= ~FTENT_FADEOUT;	// Don't fade out, just die
-						}
-					}
+					r_stats.c_active_tents_count++;
 				}
 			}
 		}

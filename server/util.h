@@ -649,6 +649,8 @@ private:
 void UTIL_SetGroupTrace( int groupmask, int op );
 void UTIL_UnsetGroupTrace( void );
 
+#define UNSTICK_VELOCITY	100.0f	// FIXME: temporary solution
+
 // physic engine utils
 extern BOOL UTIL_CanRotate( CBaseEntity *pEntity );
 extern BOOL UTIL_CanRotateBModel( CBaseEntity *pEntity );
@@ -660,6 +662,9 @@ extern BOOL UITL_ExternalBmodel( int modelindex );
 extern angletype_t UTIL_GetSpriteType( int modelindex );
 extern BOOL UTIL_AllowHitboxTrace( CBaseEntity *pEntity );
 extern void UTIL_Teleport( CBaseEntity *pSource, TeleportListEntry_t &entry, const Vector *newPosition, const Vector *newAngles, const Vector *newVelocity );
+extern void UTIL_ParentToWorldSpace( CBaseEntity *pEntity, Vector &vecPosition, Vector &vecAngles );
+extern void UTIL_GetModelBounds( int modelIndex, Vector &mins, Vector &maxs );
+extern void UTIL_SetSize( CBaseEntity *pEntity, const Vector &min, const Vector &max );
 
 typedef void (CBaseEntity::*BASEPTR)(void);
 typedef void (CBaseEntity::*ENTITYFUNCPTR)(CBaseEntity *pOther );

@@ -36,7 +36,7 @@ char *Q_pretifymem( float value, int digitsafterdecimal );
 char *va( const char *format, ... );
 
 #define Q_strupr( in, out ) Q_strnupr( in, out, 99999 )
-#define Q_strlwr( int, out ) Q_strnlwr( in, out, 99999 )
+#define Q_strlwr( in, out ) Q_strnlwr( in, out, 99999 )
 #define Q_strcat( dst, src ) Q_strncat( dst, src, 99999 )
 #define Q_strcpy( dst, src ) Q_strncpy( dst, src, 99999 )
 #define Q_stricmp( s1, s2 ) Q_strnicmp( s1, s2, 99999 )

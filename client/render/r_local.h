@@ -356,6 +356,9 @@ typedef struct
 	int		num_light_grass;		// number of bushes per dynamic light
 	int		grassunloadframe;		// unload too far grass to save video memory
 
+	byte		visbytes[MAX_MAP_LEAFS/8];	// shared visbytes for engine checking
+	int		pvssize;
+
 	// cached shadernums for dynamic lighting
 	bool		nodlights;
 	unsigned short	omniLightShaderNum;		// cached omni light shader for this face
@@ -696,6 +699,7 @@ word GL_UberShaderForStudioDecal( struct mstudiomat_s *mat );
 int WorldToScreen( const Vector &world, Vector &screen );
 byte *Mod_LeafPVS( mleaf_t *leaf, model_t *model );
 byte *Mod_GetCurrentVis( void );
+byte *Mod_GetEngineVis( void );
 float V_CalcFov( float &fov_x, float width, float height );
 void V_AdjustFov( float &fov_x, float &fov_y, float width, float height, bool lock_x );
 

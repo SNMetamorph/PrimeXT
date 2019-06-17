@@ -118,6 +118,17 @@ public:
 
 	void Identity();
 
+	inline bool IsIdentity( void ) const
+	{
+		if( mat[0][0] != 1.0f || mat[0][1] != 0.0f || mat[0][2] != 0.0f )
+			return false;
+		if( mat[1][0] != 0.0f || mat[1][1] != 1.0f || mat[1][2] != 0.0f )
+			return false;
+		if( mat[2][0] != 0.0f || mat[2][1] != 0.0f || mat[2][2] != 1.0f )
+			return false;
+		return true;
+	}
+
 	// array access
 	float* operator[]( int i ) { return mat[i]; }
 	float const* operator[]( int i ) const { return mat[i]; }

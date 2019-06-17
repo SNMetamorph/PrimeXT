@@ -28,13 +28,14 @@ GNU General Public License for more details.
 #include "novodex.h"
 #include "pm_defs.h"
 #include "pm_movevars.h"
-#include "trace.h"
+#include "animation.h"
+#include "tracemesh.h"
 #include "game.h"
 
-#define DENSITY_FACTOR		0.0013f
-#define PADDING_FACTOR		0.49f
-#define SOLVER_ITERATION_COUNT	16
-#define CONVEYOR_SCALE_FACTOR		((1.0f / gpGlobals->frametime) * 0.5f)
+#if defined (HAS_PHYSIC_VEHICLE)
+#include "NxVehicle.h"
+#include "vehicles/NxParser.h"
+#endif
 
 CPhysicNovodex	NovodexPhysic;
 IPhysicLayer	*WorldPhysic = &NovodexPhysic;
@@ -124,6 +125,8 @@ public:
 
 		edict_t *e1 = (edict_t *)pair.actors[0]->userData;
 		edict_t *e2 = (edict_t *)pair.actors[1]->userData;
+
+		if( !e1 || !e2 ) return;
 
 		if( e1->v.flags & FL_CONVEYOR )
 		{
@@ -216,6 +219,7 @@ void CPhysicNovodex :: InitPhysic( void )
 	m_pPhysics->setParameter( NX_DEFAULT_SLEEP_LIN_VEL_SQUARED, 5.0f );
 	m_pPhysics->setParameter( NX_DEFAULT_SLEEP_ANG_VEL_SQUARED, 5.0f );
 	m_pPhysics->setParameter( NX_VISUALIZE_FORCE_FIELDS, 1.0f );
+	m_pPhysics->setParameter( NX_ADAPTIVE_FORCE, 0.0f );
 
 	// create a scene
 	NxSceneDesc sceneDesc;
@@ -527,7 +531,7 @@ void CPhysicNovodex :: StudioCalcBoneQuaterion( mstudiobone_t *pbone, mstudioani
 
 	for( int j = 0; j < 3; j++ )
 	{
-		if( panim->offset[j+3] == 0 )
+		if( !panim || panim->offset[j+3] == 0 )
 		{
 			angle[j] = pbone->value[j+3]; // default;
 		}
@@ -550,7 +554,7 @@ void CPhysicNovodex :: StudioCalcBonePosition( mstudiobone_t *pbone, mstudioanim
 	{
 		pos[j] = pbone->value[j]; // default;
 
-		if( panim->offset[j] != 0 )
+		if( panim && panim->offset[j] != 0 )
 		{
 			panimvalue = (mstudioanimvalue_t *)((byte *)panim + panim->offset[j]);
 			pos[j] += panimvalue[1].value * pbone->scale[j];
@@ -844,8 +848,8 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromStudio( entvars_t *pev, int mo
 	pbone = (mstudiobone_t *)((byte *)phdr + phdr->boneindex);
 	matrix4x4	transform, bonematrix, bonetransform[MAXSTUDIOBONES];
 
-	if( pev->vuser2 != g_vecZero )
-		transform = matrix3x4( g_vecZero, g_vecZero, pev->vuser2 );
+	if( pev->startpos != g_vecZero )
+		transform = matrix3x4( g_vecZero, g_vecZero, pev->startpos );
 	else transform.Identity();
 
 	// compute bones for default anim
@@ -1039,7 +1043,13 @@ NxActor *CPhysicNovodex :: ActorFromEntity( CBaseEntity *pObject )
 {
 	if( FNullEnt( pObject ) || !pObject->m_pUserData )
 		return NULL;
-
+#if defined (HAS_PHYSIC_VEHICLE)
+	if( pObject->m_iActorType == ACTOR_VEHICLE )
+	{
+		NxVehicle	*pVehicle = (NxVehicle *)pObject->m_pUserData;
+		return pVehicle->getActor();
+	}
+#endif
 	return (NxActor *)pObject->m_pUserData;
 }
 
@@ -1212,6 +1222,235 @@ void *CPhysicNovodex :: CreateStaticBodyFromEntity( CBaseEntity *pObject )
 	return pActor;
 }
 
+void *CPhysicNovodex :: CreateVehicle( CBaseEntity *pObject, string_t scriptName )
+{
+#if defined (HAS_PHYSIC_VEHICLE)
+	NxBoxShapeDesc	boxShapes[MAXSTUDIOBONES];
+	vehicleparams_t	vehicleParams;
+	NxVehicleDesc	vehicleDesc;
+	int		i, j, index;
+	int		wheel_count;
+	Vector		wheel_pos;
+
+	if( UTIL_GetModelType( pObject->pev->modelindex ) != mod_studio )
+	{
+		ALERT( at_error, "CreateVehicle: not a studio model\n" );
+		return NULL;
+          }
+
+	if( !ParseVehicleScript( STRING( scriptName ), vehicleParams ))
+	{
+		ALERT( at_error, "CreateVehicle: couldn't load %s\n", STRING( scriptName ));
+		return NULL;
+          }
+
+	model_t *smodel = (model_t *)MODEL_HANDLE( pObject->pev->modelindex );
+	studiohdr_t *phdr = (studiohdr_t *)smodel->cache.data;
+
+	if( !phdr || phdr->numbones < 1 )
+	{
+		ALERT( at_error, "CreateVehicle: bad model header\n" );
+		return NULL;
+	}
+
+	// compute default pose for building mesh from
+	mstudioseqdesc_t *pseqdesc = (mstudioseqdesc_t *)((byte *)phdr + phdr->seqindex);
+	mstudioseqgroup_t *pseqgroup = (mstudioseqgroup_t *)((byte *)phdr + phdr->seqgroupindex) + pseqdesc->seqgroup;
+	mstudioattachment_t	*pattachment = (mstudioattachment_t *) ((byte *)phdr + phdr->attachmentindex);
+	mstudioanim_t *panim = (mstudioanim_t *)((byte *)phdr + pseqgroup->data + pseqdesc->animindex);
+	mstudiobone_t *pbone = (mstudiobone_t *)((byte *)phdr + phdr->boneindex);
+	static Vector pos[MAXSTUDIOBONES];
+	static Vector4D q[MAXSTUDIOBONES];
+
+	for( i = 0; i < phdr->numbones; i++, pbone++, panim++ )
+	{
+		StudioCalcBoneQuaterion( pbone, panim, q[i] );
+		StudioCalcBonePosition( pbone, panim, pos[i] );
+	}
+
+	pbone = (mstudiobone_t *)((byte *)phdr + phdr->boneindex);
+	matrix4x4	transform, bonematrix, bonetransform[MAXSTUDIOBONES];
+	transform.Identity();
+
+	// compute bones for default anim
+	for( i = 0; i < phdr->numbones; i++ ) 
+	{
+		// initialize bonematrix
+		bonematrix = matrix3x4( pos[i], q[i] );
+
+		if( pbone[i].parent == -1 ) 
+			bonetransform[i] = transform.ConcatTransforms( bonematrix );
+		else bonetransform[i] = bonetransform[pbone[i].parent].ConcatTransforms( bonematrix );
+	}
+
+	// create body vehicle from hitboxes
+	for( i = 0; i < phdr->numhitboxes; i++ )
+	{
+		mstudiobbox_t	*pbbox = (mstudiobbox_t *)((byte *)phdr + phdr->hitboxindex);
+		vec3_t		tmp, p[8], mins, maxs, size, pos;
+
+		ClearBounds( mins , maxs );
+
+		for( j = 0; j < 8; j++ )
+		{
+			tmp[0] = (j & 1) ? pbbox[i].bbmin[0] : pbbox[i].bbmax[0];
+			tmp[1] = (j & 2) ? pbbox[i].bbmin[1] : pbbox[i].bbmax[1];
+			tmp[2] = (j & 4) ? pbbox[i].bbmin[2] : pbbox[i].bbmax[2];
+			p[j] = bonetransform[pbbox[i].bone].VectorTransform( tmp );
+			AddPointToBounds( p[j], mins, maxs );
+		}
+
+		boxShapes[i].dimensions.set( NxVec3( maxs - mins ) * 0.5 );		// half-size
+		boxShapes[i].localPose.t.set( NxVec3(( mins + maxs ) * 0.5f ));	// origin
+		vehicleDesc.carShapes.pushBack( &boxShapes[i] );
+	}
+
+	vehicleDesc.mass = 1200.0f;
+	vehicleDesc.digitalSteeringDelta = 0.04f;
+	vehicleDesc.steeringMaxAngle = 30.0f;
+	vehicleDesc.motorForce = 3500.0f;
+	vehicleDesc.centerOfMass.set( -24, 0, -16 );
+	vehicleDesc.maxVelocity = 60.0f;
+	float scale = 32.0f;
+
+	NxVehicleMotorDesc motorDesc;
+	NxVehicleGearDesc gearDesc;
+	NxWheelDesc wheelDesc[VEHICLE_MAX_WHEEL_COUNT];
+	NxReal wheelRadius = 20.0f;
+
+	gearDesc.setToCorvette();
+	motorDesc.setToCorvette();
+
+	vehicleDesc.motorDesc = &motorDesc;
+	vehicleDesc.gearDesc = &gearDesc;
+
+	// setup wheels
+	for( i = wheel_count = 0; i < vehicleParams.axleCount; i++ )
+	{
+		axleparams_t *axle = &vehicleParams.axles[i];
+
+		for( j = 0; j < axle->wheelsPerAxle; j++ )
+		{
+			wheelparams_t *wheel = &axle->wheels[j];
+			NxU32 flags = NX_WF_USE_WHEELSHAPE;
+
+			wheelDesc[wheel_count].wheelApproximation = 10;
+			wheelDesc[wheel_count].wheelRadius = wheel->radius;
+			wheelDesc[wheel_count].wheelWidth = 0.1f * scale;	// FIXME
+			wheelDesc[wheel_count].wheelSuspension = axle->suspension.springHeight;
+			wheelDesc[wheel_count].springRestitution = axle->suspension.springConstant;
+			wheelDesc[wheel_count].springDamping = axle->suspension.springDamping;
+			wheelDesc[wheel_count].springBias = axle->suspension.springDampingCompression;
+			wheelDesc[wheel_count].maxBrakeForce = axle->suspension.brakeForce;
+			wheelDesc[wheel_count].frictionToFront = wheel->frontFriction;
+			wheelDesc[wheel_count].frictionToSide = wheel->sideFriction;
+			wheelDesc[wheel_count].wheelPoseParamIndex = pObject->LookupPoseParameter( wheel->wheelName );
+			wheelDesc[wheel_count].suspensionPoseParamIndex = pObject->LookupPoseParameter( wheel->suspensionName );
+
+			// set wheel flags
+			if( axle->steerable )
+				SetBits( flags, NX_WF_STEERABLE_INPUT );
+
+			if( axle->driven )
+				SetBits( flags, NX_WF_ACCELERATED );
+
+			if( axle->affectBrake )
+				SetBits( flags, NX_WF_AFFECTED_BY_HANDBRAKE );
+
+			wheelDesc[wheel_count].wheelFlags = flags;
+
+			// set wheel position
+			if(( index = FindAttachmentByName( phdr, wheel->attachmentName )) != -1 )
+			{
+				wheel_pos = bonetransform[pattachment[index].bone].VectorTransform( pattachment[i].org );
+				wheelDesc[wheel_count].position.set( NxVec3( wheel_pos ));
+			}
+			vehicleDesc.carWheels.pushBack( &wheelDesc[wheel_count] );
+			wheel_count++;
+		}
+	}
+
+	vehicleDesc.steeringSteerPoint.set( 1.8 * scale, 0, 0 );
+	vehicleDesc.steeringTurnPoint.set( -1.5 * scale, 0, 0 );
+
+	NxVehicle *pVehicle = NxVehicle :: createVehicle( m_pScene, pObject, &vehicleDesc );
+
+	if( !pVehicle )
+	{
+		ALERT( at_error, "failed to create vehicle from entity %s\n", pObject->GetClassname( ));
+		return NULL;
+	}
+
+	// get steer controller index
+	pVehicle->steerPoseParamIndex = pObject->LookupPoseParameter( vehicleParams.steering.steeringName );
+
+	NxActor *pActor = pVehicle->getActor();
+
+	if( !pActor )
+	{
+		ALERT( at_error, "failed to create vehicle from entity %s\n", pObject->GetClassname( ));
+		delete pVehicle;
+		return NULL;
+	}
+
+	pActor->setName( pObject->GetClassname( ));
+
+	NxMat34 pose;
+	float mat[16];
+	matrix4x4( pObject->GetAbsOrigin(), pObject->GetAbsAngles(), 1.0f ).CopyToArray( mat );
+
+	pose.setColumnMajor44( mat );
+	pActor->setGlobalPose( pose );
+	pActor->setLinearVelocity( pObject->GetLocalVelocity() );
+	pActor->setAngularVelocity( pObject->GetLocalAvelocity() );
+
+	return pVehicle;
+#else
+	return NULL;
+#endif
+}
+
+void CPhysicNovodex :: UpdateVehicle( CBaseEntity *pObject )
+{
+#if defined (HAS_PHYSIC_VEHICLE)
+	if( !pObject || pObject->m_iActorType != ACTOR_VEHICLE )
+		return;
+
+	NxVehicle *pVehicle = (NxVehicle *)pObject->m_pUserData;
+
+	for( NxU32 i = 0; i < pVehicle->getNbWheels(); i++ )
+	{
+		NxWheel *pWheel = (NxWheel *)pVehicle->getWheel( i );	
+
+		pObject->SetPoseParameter( pWheel->wheelPoseParamIndex, -pWheel->getRollAngle( ));
+		pObject->SetPoseParameter( pWheel->suspensionPoseParamIndex, pWheel->getSuspensionHeight( ));
+	}
+
+	CBaseEntity *pDriver = pObject->GetVehicleDriver();
+
+	if( pDriver != NULL )
+	{
+		bool left = !!FBitSet( pDriver->pev->button, IN_MOVELEFT );
+		bool right = !!FBitSet( pDriver->pev->button, IN_MOVERIGHT );
+		bool forward = !!FBitSet( pDriver->pev->button, IN_FORWARD );
+		bool backward = !!FBitSet( pDriver->pev->button, IN_BACK );
+		bool handBrake = !!FBitSet( pDriver->pev->button, IN_JUMP );
+
+		NxReal steering = 0;
+		if( left && !right) steering = -1;
+		else if (right && !left) steering = 1;
+		NxReal acceleration = 0;
+		if (forward && !backward) acceleration = -1;
+		else if (backward && !forward) acceleration = 1;
+
+		pVehicle->control( steering, false, acceleration, false, handBrake );
+		pObject->SetPoseParameter( pVehicle->steerPoseParamIndex, pVehicle->getSteeringAngle() );
+	}
+
+	pVehicle->updateVehicle( gpGlobals->frametime );
+#endif
+}
+
 bool CPhysicNovodex :: UpdateEntityPos( CBaseEntity *pEntity )
 {
 	NxActor *pActor = ActorFromEntity( pEntity );
@@ -1277,14 +1516,19 @@ void CPhysicNovodex :: UpdateEntityAABB( CBaseEntity *pEntity )
 	if( !pActor || pActor->getNbShapes() <= 0 )
 		return;
 
-	NxShape *pShape = pActor->getShapes()[0];
-	NxBounds3 bbox;
+	ClearBounds( pEntity->pev->absmin, pEntity->pev->absmax );
 
-	// already transformed as OBB
-	pShape->getWorldBounds( bbox );
+	for( uint i = 0; i < pActor->getNbShapes(); i++ )
+	{
+		NxShape *pShape = pActor->getShapes()[i];
+		NxBounds3 bbox;
 
-	pEntity->pev->absmin = bbox.min;
-	pEntity->pev->absmax = bbox.max;
+		// already transformed as OBB
+		pShape->getWorldBounds( bbox );
+
+		AddPointToBounds( bbox.min, pEntity->pev->absmin, pEntity->pev->absmax );
+		AddPointToBounds( bbox.max, pEntity->pev->absmin, pEntity->pev->absmax );
+	}
 
 	// shrink AABB by 1 units in each axis
 	// or pushers can't be moving them
@@ -1966,7 +2210,7 @@ void CPhysicNovodex :: TeleportActor( CBaseEntity *pEntity )
 
 void CPhysicNovodex :: MoveCharacter( CBaseEntity *pEntity )
 {
-	if( !pEntity || pEntity->pev->oldorigin == pEntity->pev->origin )
+	if( !pEntity || pEntity->m_vecOldPosition == pEntity->pev->origin )
 		return;
 
 	NxActor *pActor = ActorFromEntity( pEntity );
@@ -1987,6 +2231,7 @@ void CPhysicNovodex :: MoveCharacter( CBaseEntity *pEntity )
 
 	pShape->setDimensions( pEntity->pev->size * PADDING_FACTOR );
 	pActor->moveGlobalPosition( pEntity->GetAbsOrigin() + vecOffset );
+	pEntity->m_vecOldPosition = pEntity->GetAbsOrigin(); // update old position
 }
 
 void CPhysicNovodex :: MoveKinematic( CBaseEntity *pEntity )
@@ -1996,6 +2241,9 @@ void CPhysicNovodex :: MoveKinematic( CBaseEntity *pEntity )
 
 	NxActor *pActor = ActorFromEntity( pEntity );
 	if( !pActor || pActor->getNbShapes() <= 0 )
+		return;
+
+	if( m_fNeedFetchResults )
 		return;
 
 	if( pEntity->pev->solid == SOLID_NOT || pEntity->pev->solid == SOLID_TRIGGER )
@@ -2074,6 +2322,7 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 		int shapeType = pShape->getType();
 		const NxU32 *indices;
 		const NxVec3 *verts;
+		Vector triangle[3];
 		NxU32 NbTris;
 
 		if( shapeType == NX_SHAPE_CONVEX )
@@ -2094,39 +2343,80 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 			indices = (const NxU32 *)trm.getBase( 0, NX_ARRAY_TRIANGLES );
 			verts = (const NxVec3 *)trm.getBase( 0, NX_ARRAY_VERTICES );
 		}
-		else
+		else if( shapeType != NX_SHAPE_BOX )
 		{
 			// unsupported mesh type, so skip them
 			tr->allsolid = false;
 			return;
 		}
 
-		NxMat33 absRot = pShape->getGlobalOrientation();
-		NxVec3 absPos = pShape->getGlobalPosition();
-
-		Vector triangle[3];
-		pTouch->m_BodyMesh.InitMeshBuild( pTouch->GetModel(), NbTris );
-
-		// NOTE: we compute triangles in abs coords because player AABB
-		// can't be transformed as done for not axial cases
-		// FIXME: store all meshes as local and use capsule instead of bbox
-		while( NbTris-- )
+		if( shapeType == NX_SHAPE_BOX )
 		{
-			NxU32 i0 = *indices++;
-			NxU32 i1 = *indices++;
-			NxU32 i2 = *indices++;
-			NxVec3 v0 = verts[i0];
-			NxVec3 v1 = verts[i1];
-			NxVec3 v2 = verts[i2];
+			NxVec3	points[8];
+			NxVec3	ext, cnt;
+			NxBounds3	bounds;
+			NxBox	obb;
 
-			absRot.multiply( v0, v0 );
-			absRot.multiply( v1, v1 );
-			absRot.multiply( v2, v2 );
-			triangle[0] = v0 + absPos;
-			triangle[1] = v1 + absPos;
-			triangle[2] = v2 + absPos;
+			// each box shape contain 12 triangles
+			pTouch->m_BodyMesh.InitMeshBuild( pTouch->GetModel(), pActor->getNbShapes() * 12 );
 
-			pTouch->m_BodyMesh.AddMeshTrinagle( triangle );
+			for( uint i = 0; i < pActor->getNbShapes(); i++ )
+			{
+				NxBoxShape *pBoxShape = (NxBoxShape *)pActor->getShapes()[i];
+				NxMat33 absRot = pBoxShape->getGlobalOrientation();
+				NxVec3 absPos = pBoxShape->getGlobalPosition();
+
+				// don't use pBoxShape->getWorldAABB it's caused to broke suspension and deadlocks !!!
+				pBoxShape->getWorldBounds( bounds );
+				bounds.getExtents( ext );
+				bounds.getCenter( cnt );
+				obb = NxBox( cnt, ext, absRot );
+
+				indices = (const NxU32 *)m_pUtils->NxGetBoxTriangles();
+				m_pUtils->NxComputeBoxPoints( obb, points );
+				verts = (const NxVec3 *)points;
+
+				for( int j = 0; j < 12; j++ )
+				{
+					NxU32 i0 = *indices++;
+					NxU32 i1 = *indices++;
+					NxU32 i2 = *indices++;
+					triangle[0] = verts[i0];
+					triangle[1] = verts[i1];
+					triangle[2] = verts[i2];
+
+					pTouch->m_BodyMesh.AddMeshTrinagle( triangle );
+				}
+			}
+		}
+		else
+		{
+			NxMat33 absRot = pShape->getGlobalOrientation();
+			NxVec3 absPos = pShape->getGlobalPosition();
+
+			pTouch->m_BodyMesh.InitMeshBuild( pTouch->GetModel(), NbTris );
+
+			// NOTE: we compute triangles in abs coords because player AABB
+			// can't be transformed as done for not axial cases
+			// FIXME: store all meshes as local and use capsule instead of bbox
+			while( NbTris-- )
+			{
+				NxU32 i0 = *indices++;
+				NxU32 i1 = *indices++;
+				NxU32 i2 = *indices++;
+				NxVec3 v0 = verts[i0];
+				NxVec3 v1 = verts[i1];
+				NxVec3 v2 = verts[i2];
+
+				absRot.multiply( v0, v0 );
+				absRot.multiply( v1, v1 );
+				absRot.multiply( v2, v2 );
+				triangle[0] = v0 + absPos;
+				triangle[1] = v1 + absPos;
+				triangle[2] = v2 + absPos;
+
+				pTouch->m_BodyMesh.AddMeshTrinagle( triangle );
+			}
 		}
 
 		if( !pTouch->m_BodyMesh.FinishMeshBuild( ))
@@ -2178,6 +2468,7 @@ void CPhysicNovodex :: SweepEntity( CBaseEntity *pEntity, const Vector &start, c
 		// update cache or build from scratch
 		NxShape *pShape = pActor->getShapes()[0];
 		int shapeType = pShape->getType();
+		Vector triangle[3], dirs[3];
 		const NxU32 *indices;
 		const NxVec3 *verts;
 		NxU32 NbTris;
@@ -2200,42 +2491,87 @@ void CPhysicNovodex :: SweepEntity( CBaseEntity *pEntity, const Vector &start, c
 			indices = (const NxU32 *)trm.getBase( 0, NX_ARRAY_TRIANGLES );
 			verts = (const NxVec3 *)trm.getBase( 0, NX_ARRAY_VERTICES );
 		}
-		else
+		else if( shapeType != NX_SHAPE_BOX )
 		{
 			// unsupported mesh type, so skip them
 			return;
 		}
 
-		NxMat33 absRot = pShape->getGlobalOrientation();
-		NxVec3 absPos = pShape->getGlobalPosition();
-		Vector triangle[3], dirs[3];
-
-		// NOTE: we compute triangles in abs coords because player AABB
-		// can't be transformed as done for not axial cases
-		// FIXME: store all meshes as local and use capsule instead of bbox
-		while( NbTris-- )
+		if( shapeType == NX_SHAPE_BOX )
 		{
-			NxU32 i0 = *indices++;
-			NxU32 i1 = *indices++;
-			NxU32 i2 = *indices++;
-			NxVec3 v0 = verts[i0];
-			NxVec3 v1 = verts[i1];
-			NxVec3 v2 = verts[i2];
+			NxVec3	points[8];
+			NxVec3	ext, cnt;
+			NxBounds3	bounds;
+			NxBox	obb;
 
-			absRot.multiply( v0, v0 );
-			absRot.multiply( v1, v1 );
-			absRot.multiply( v2, v2 );
-			triangle[0] = v0 + absPos;
-			triangle[1] = v1 + absPos;
-			triangle[2] = v2 + absPos;
-
-			for( int i = 0; i < 3; i++ )
+			for( uint i = 0; i < pActor->getNbShapes(); i++ )
 			{
-				dirs[i] = absPos - triangle[i];
-				triangle[i] += dirs[i] * -2.0f;
+				NxBoxShape *pBoxShape = (NxBoxShape *)pActor->getShapes()[i];
+				NxMat33 absRot = pBoxShape->getGlobalOrientation();
+				NxVec3 absPos = pBoxShape->getGlobalPosition();
 
-				UTIL_TraceLine( triangle[i], triangle[i], ignore_monsters, pEntity->edict(), tr );
-				if( tr->fStartSolid ) return;	// one of points in solid
+				// don't use pBoxShape->getWorldAABB it's caused to broke suspension and deadlocks !!!
+				pBoxShape->getWorldBounds( bounds );
+				bounds.getExtents( ext );
+				bounds.getCenter( cnt );
+				obb = NxBox( cnt, ext, absRot );
+
+				indices = (const NxU32 *)m_pUtils->NxGetBoxTriangles();
+				m_pUtils->NxComputeBoxPoints( obb, points );
+				verts = (const NxVec3 *)points;
+
+				for( int j = 0; j < 12; j++ )
+				{
+					NxU32 i0 = *indices++;
+					NxU32 i1 = *indices++;
+					NxU32 i2 = *indices++;
+					triangle[0] = verts[i0];
+					triangle[1] = verts[i1];
+					triangle[2] = verts[i2];
+
+					for( int k = 0; k < 3; k++ )
+					{
+						dirs[k] = absPos - triangle[k];
+						triangle[k] += dirs[k] * -2.0f;
+
+						UTIL_TraceLine( triangle[k], triangle[k], ignore_monsters, pEntity->edict(), tr );
+						if( tr->fStartSolid ) return;	// one of points in solid
+					}
+				}
+			}
+		}
+		else
+		{
+			NxMat33 absRot = pShape->getGlobalOrientation();
+			NxVec3 absPos = pShape->getGlobalPosition();
+
+			// NOTE: we compute triangles in abs coords because player AABB
+			// can't be transformed as done for not axial cases
+			// FIXME: store all meshes as local and use capsule instead of bbox
+			while( NbTris-- )
+			{
+				NxU32 i0 = *indices++;
+				NxU32 i1 = *indices++;
+				NxU32 i2 = *indices++;
+				NxVec3 v0 = verts[i0];
+				NxVec3 v1 = verts[i1];
+				NxVec3 v2 = verts[i2];
+
+				absRot.multiply( v0, v0 );
+				absRot.multiply( v1, v1 );
+				absRot.multiply( v2, v2 );
+				triangle[0] = v0 + absPos;
+				triangle[1] = v1 + absPos;
+				triangle[2] = v2 + absPos;
+
+				for( int i = 0; i < 3; i++ )
+				{
+					dirs[i] = absPos - triangle[i];
+					triangle[i] += dirs[i] * -2.0f;
+
+					UTIL_TraceLine( triangle[i], triangle[i], ignore_monsters, pEntity->edict(), tr );
+					if( tr->fStartSolid ) return;	// one of points in solid
+				}
 			}
 		}
 		return;

@@ -670,6 +670,7 @@ void R_FindBmodelSubview( cl_entity_t *e )
 	Vector		absmin, absmax;
 	model_t		*clmodel;
 	msurface_t	*psurf;
+	mplane_t		plane;
 
 	clmodel = e->model;
 
@@ -725,6 +726,22 @@ void R_FindBmodelSubview( cl_entity_t *e )
 
 		if( FBitSet( psurf->flags, SURF_PORTAL ) && !CVAR_TO_BOOL( r_allow_portals ))
 			continue;
+
+		if( FBitSet( psurf->flags, SURF_DRAWTURB ))
+		{
+			if( FBitSet( psurf->flags, SURF_PLANEBACK ))
+				SetPlane( &plane, -psurf->plane->normal, -psurf->plane->dist );
+			else SetPlane( &plane, psurf->plane->normal, psurf->plane->dist );
+
+			if( e->hCachedMatrix != WORLD_MATRIX )
+				glm->transform.TransformPositivePlane( plane, plane );
+
+			if( psurf->plane->type != PLANE_Z && !FBitSet( e->curstate.effects, EF_WATERSIDES ))
+				continue;
+
+			if( absmin[2] + 1.0 >= plane.dist )
+				continue;
+		}
 
 		if( R_CullSurface( psurf ))
 			continue;

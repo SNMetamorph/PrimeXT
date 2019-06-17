@@ -112,9 +112,8 @@ void R_GetLightVectors( cl_entity_t *pEnt, Vector &origin, Vector &angles )
 			if( pEnt->curstate.body > 0 && ( pStudioHeader && pStudioHeader->numattachments > 0 ))
 			{
 				int num = bound( 1, pEnt->curstate.body, MAXSTUDIOATTACHMENTS );
-				origin = R_StudioAttachmentPos( pParent, num - 1 );
-				VectorAngles( R_StudioAttachmentDir( pParent, num - 1 ), angles );
-				angles[PITCH] = -angles[PITCH]; // stupid quake bug
+				R_StudioAttachmentTransform( pParent, num - 1, &origin, &angles );
+//				angles[PITCH] = -angles[PITCH]; // stupid quake bug
 			}
 			else if( pParent->curstate.movetype == MOVETYPE_STEP )
 			{

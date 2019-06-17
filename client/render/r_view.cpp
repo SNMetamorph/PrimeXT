@@ -517,6 +517,291 @@ void V_GetChaseOrigin( const Vector &angles, const Vector &origin, float distanc
 	returnvec = trace->endpos + trace->plane.normal * 8;
 }
 
+// remaps an angular variable to a 3 band function:
+// 0 <= t < start :		f(t) = 0
+// start <= t <= end :	f(t) = end * spline(( t-start) / (end-start) )  // s curve between clamped and linear
+// end < t :			f(t) = t
+float RemapAngleRange( float startInterval, float endInterval, float value, RemapAngleRange_CurvePart_t *peCurvePart )
+{
+	// Fixup the roll
+	value = AngleNormalize( value );
+	float absAngle = fabs(value);
+
+	// beneath cutoff?
+	if( absAngle < startInterval )
+	{
+		if( peCurvePart )
+		{
+			*peCurvePart = RemapAngleRange_CurvePart_Zero;
+		}
+		value = 0;
+	}
+	// in spline range?
+	else if( absAngle <= endInterval )
+	{
+		float newAngle = SimpleSpline(( absAngle - startInterval ) / ( endInterval-startInterval )) * endInterval;
+
+		// grab the sign from the initial value
+		if( value < 0 )
+		{
+			newAngle *= -1;
+		}
+
+		if( peCurvePart )
+		{
+			*peCurvePart = RemapAngleRange_CurvePart_Spline;
+		}
+		value = newAngle;
+	}
+	// else leave it alone, in linear range
+	else if( peCurvePart )
+	{
+		*peCurvePart = RemapAngleRange_CurvePart_Linear;
+	}
+
+	return value;
+}
+
+float ApplyViewLocking( ref_params_t *params, float flAngleRaw, float flAngleClamped, ViewLockData_t &lockData, RemapAngleRange_CurvePart_t eCurvePart )
+{
+	// If we're set up to never lock this degree of freedom, return the clamped value.
+	if( lockData.flLockInterval == 0 )
+		return flAngleClamped;
+
+	float flAngleOut = flAngleClamped;
+
+	// Lock the view if we're in the linear part of the curve, and keep it locked
+	// until some duration after we return to the flat (zero) part of the curve.
+	if(( eCurvePart == RemapAngleRange_CurvePart_Linear ) || ( lockData.bLocked && ( eCurvePart == RemapAngleRange_CurvePart_Spline )))
+	{
+		lockData.bLocked = true;
+		lockData.flUnlockTime = params->time + lockData.flLockInterval;
+		flAngleOut = flAngleRaw;
+	}
+	else
+	{
+		if(( lockData.bLocked ) && ( params->time > lockData.flUnlockTime ))
+		{
+			lockData.bLocked = false;
+			if ( lockData.flUnlockBlendInterval > 0 )
+			{
+				lockData.flUnlockTime = params->time;
+			}
+			else
+			{
+				lockData.flUnlockTime = 0;
+			}
+		}
+
+		if ( !lockData.bLocked )
+		{
+			if( lockData.flUnlockTime != 0 )
+			{
+				// Blend out from the locked raw view (no remapping) to a remapped view.
+				float flBlend = RemapValClamped( params->time-lockData.flUnlockTime, 0, lockData.flUnlockBlendInterval, 0, 1 );
+				Msg( "BLEND %f\n", flBlend );
+
+				flAngleOut = Lerp( flBlend, flAngleRaw, flAngleClamped );
+
+				if( flBlend >= 1.0f )
+				{
+					lockData.flUnlockTime = 0;
+				}
+			}
+			else
+			{
+				// Not blending out from a locked view to a remapped view.
+				Msg( "CLAMPED\n" );
+				flAngleOut = flAngleClamped;
+			}
+		}
+		else
+		{
+			Msg( "STILL LOCKED\n" );
+			flAngleOut = flAngleRaw;
+		}
+	}
+
+	return flAngleOut;
+}
+
+void RemapViewAngles( struct ref_params_s *pparams, ViewSmoothingData_t *pData, Vector &vehicleEyeAngles )
+{
+	Vector vecEyeAnglesRemapped;
+
+	// Clamp pitch.
+	RemapAngleRange_CurvePart_t ePitchCurvePart;
+	vecEyeAnglesRemapped.x = RemapAngleRange( pData->flPitchCurveZero, pData->flPitchCurveLinear, vehicleEyeAngles.x, &ePitchCurvePart );
+
+	vehicleEyeAngles.z = vecEyeAnglesRemapped.z = AngleNormalize( vehicleEyeAngles.z );
+
+	// Blend out the roll dampening as our pitch approaches 90 degrees, to avoid gimbal lock problems.
+	float flBlendRoll = 1.0;
+
+	if( fabs( vehicleEyeAngles.x ) > 60 )
+	{
+		flBlendRoll = RemapValClamped( fabs( vecEyeAnglesRemapped.x ), 60, 80, 1, 0);
+	}
+
+	RemapAngleRange_CurvePart_t eRollCurvePart;
+	float flRollDamped = RemapAngleRange( pData->flRollCurveZero, pData->flRollCurveLinear, vecEyeAnglesRemapped.z, &eRollCurvePart );
+	vecEyeAnglesRemapped.z = Lerp( flBlendRoll, vecEyeAnglesRemapped.z, flRollDamped );
+
+	//Msg("PITCH ");
+	vehicleEyeAngles.x = ApplyViewLocking( pparams, vehicleEyeAngles.x, vecEyeAnglesRemapped.x, pData->pitchLockData, ePitchCurvePart );
+
+	//Msg("ROLL ");
+	vehicleEyeAngles.z = ApplyViewLocking( pparams, vehicleEyeAngles.z, vecEyeAnglesRemapped.z, pData->rollLockData, eRollCurvePart );
+}
+
+void CalcVehicleRefdef( struct ref_params_s *pparams, int vstate )
+{
+	ViewSmoothingData_t	*pData = &gHUD.m_ViewSmoothingData;
+	cl_entity_t *vehicle = GET_ENTITY( pparams->viewentity );
+	int eyeAttachmentIndex = R_StudioLookupAttachment( vehicle, "vehicle_driver_eyes" );
+	Vector vecEyeExitEndpoint = vehicle->curstate.endpos;
+
+	Vector vehicleEyeOrigin;
+	Vector vehicleEyeAngles;
+	R_StudioAttachmentTransform( vehicle, eyeAttachmentIndex, &vehicleEyeOrigin, &vehicleEyeAngles, AF_FORCE_RECALC );
+	matrix3x4 vehicleEyePosToWorld = matrix3x4( g_vecZero, vehicleEyeAngles );
+	matrix3x4 vehicleTransform = matrix3x4( vehicle->origin, vehicle->angles );
+	matrix3x4 v_angleTransform = matrix3x4( g_vecZero, pparams->cl_viewangles );
+	v_angleTransform = vehicleTransform.ConcatTransforms( v_angleTransform );
+
+	// Dampen the eye positional change as we drive around.
+	pparams->viewangles = v_angleTransform.GetAngles();
+
+	// Started running an entry or exit anim?
+	bool bRunningAnim = ( vstate == VEHICLE_ENTERING || vstate == VEHICLE_LEAVING );
+
+	if( bRunningAnim && !pData->bWasRunningAnim )
+	{
+		pData->bRunningEnterExit = true;
+		pData->flEnterExitStartTime = pparams->time;
+		pData->flEnterExitDuration = R_StudioSequenceDuration( vehicle, vehicle->curstate.sequence );
+
+		pData->vecOriginSaved = tr.cached_vieworigin;
+		pData->vecAnglesSaved = tr.cached_viewangles;
+
+		// Save our initial angular error, which we will blend out over the length of the animation.
+		pData->vecAngleDiffSaved.x = AngleDiff( vehicleEyeAngles.x, pData->vecAnglesSaved.x );
+		pData->vecAngleDiffSaved.y = AngleDiff( vehicleEyeAngles.y, pData->vecAnglesSaved.y );
+		pData->vecAngleDiffSaved.z = AngleDiff( vehicleEyeAngles.z, pData->vecAnglesSaved.z );
+
+		pData->vecAngleDiffMin = pData->vecAngleDiffSaved;
+	}
+
+	pData->bWasRunningAnim = bRunningAnim;
+
+	float frac = 0;
+
+	// If we're in an enter/exit animation, blend the player's eye angles to the attachment's
+	if( bRunningAnim || pData->bRunningEnterExit )
+	{
+		pparams->viewangles = vehicleEyeAngles;
+
+		// forward integrate to determine the elapsed time in this entry/exit anim.
+		frac = ( pparams->time - pData->flEnterExitStartTime ) / pData->flEnterExitDuration;
+		frac = bound( 0.0f, frac, 1.0f );
+
+		if( frac >= 1.0 )
+		{
+			pData->bRunningEnterExit = false;
+
+			// Enter animation has finished, align view with the eye attachment point
+			// so they can start mouselooking around.
+			if( vstate != VEHICLE_LEAVING )
+			{
+				pparams->cl_viewangles = R_StudioAttachmentAngles( vehicle, eyeAttachmentIndex, AF_FORCE_RECALC|AF_LOCAL_SPACE );
+			}
+		}
+	}
+
+	// Compute the relative rotation between the unperturbed eye attachment + the eye angles
+	matrix3x4 cameraToWorld = matrix3x4( g_vecZero, pparams->viewangles );
+	matrix3x4 worldToEyePos = vehicleEyePosToWorld.Transpose();
+	matrix3x4 vehicleCameraToEyePos = worldToEyePos.ConcatTransforms( cameraToWorld );
+
+	// Damp out some of the vehicle motion (neck/head would do this)
+	if( pData->bClampEyeAngles )
+	{
+		RemapViewAngles( pparams, pData, vehicleEyeAngles );
+	}
+
+	vehicleEyePosToWorld = matrix3x4( vehicleEyeOrigin, vehicleEyeAngles );
+
+	// Now treat the relative eye angles as being relative to this new, perturbed view position...
+	matrix3x4 newCameraToWorld = vehicleEyePosToWorld.ConcatTransforms( vehicleCameraToEyePos );
+
+	// output new view abs angles
+	newCameraToWorld.GetOrigin( pparams->vieworg ); 
+	newCameraToWorld.GetAngles( pparams->viewangles ); 
+
+	// If we're playing an entry or exit animation...
+	if( bRunningAnim || pData->bRunningEnterExit )
+	{
+		float flSplineFrac = bound( 0, SimpleSpline( frac ), 1 );
+
+		// Blend out the error between the player's initial eye angles and the animation's initial
+		// eye angles over the duration of the animation. 
+		Vector vecAngleDiffBlend = (( 1 - flSplineFrac ) * pData->vecAngleDiffSaved );
+
+		// If our current error is less than the error amount that we're blending 
+		// out, use that. This lets the angles converge as quickly as possible.
+		Vector vecAngleDiffCur;
+		vecAngleDiffCur.x = AngleDiff( vehicleEyeAngles.x, pData->vecAnglesSaved.x );
+		vecAngleDiffCur.y = AngleDiff( vehicleEyeAngles.y, pData->vecAnglesSaved.y );
+		vecAngleDiffCur.z = AngleDiff( vehicleEyeAngles.z, pData->vecAnglesSaved.z );
+
+		// In either case, never increase the error, so track the minimum error and clamp to that.
+		for( int i = 0; i < 3; i++ )
+		{
+			if( fabs( vecAngleDiffCur[i] ) < fabs( pData->vecAngleDiffMin[i] ))
+			{
+				pData->vecAngleDiffMin[i] = vecAngleDiffCur[i];
+			}
+
+			if( fabs(vecAngleDiffBlend[i] ) < fabs( pData->vecAngleDiffMin[i] ))
+			{
+				pData->vecAngleDiffMin[i] = vecAngleDiffBlend[i];
+			}
+		}
+
+		// Add the error to the animation's eye angles.
+		pparams->viewangles -= pData->vecAngleDiffMin;
+
+		// Use this as the basis for the next error calculation.
+		pData->vecAnglesSaved = v_angleTransform.GetAngles();
+
+		Vector vecAbsOrigin = pparams->vieworg;
+
+		// If we're exiting, our desired position is the server-sent exit position
+		if( vstate == VEHICLE_LEAVING )
+		{
+			// Blend to the exit position
+			pparams->vieworg = Lerp( flSplineFrac, vecAbsOrigin, vecEyeExitEndpoint );
+		}
+		else
+		{
+			// Blend from our starting position to the desired origin
+			pparams->vieworg = Lerp( flSplineFrac, pData->vecOriginSaved, vecAbsOrigin );
+		}
+	}
+}
+
+void V_ResetCarSmoothData( void )
+{
+	ViewSmoothingData_t	*pData = &gHUD.m_ViewSmoothingData;
+
+	// reset car smoothing data
+	if( pData->bRunningEnterExit || pData->bWasRunningAnim )
+	{
+		pData->bRunningEnterExit = false;
+		pData->bWasRunningAnim = false;
+	}
+}
+
 //==========================
 // V_CalcCameraRefdef
 //==========================
@@ -529,48 +814,58 @@ void V_CalcCameraRefdef( struct ref_params_s *pparams )
 
  	if( view )
 	{		 
-		pparams->vieworg = view->origin;
-		pparams->viewangles = view->angles;
+		int vstate = atoi( gEngfuncs.PhysInfo_ValueForKey( "incar" ));
 
-		studiohdr_t *viewmonster = (studiohdr_t *)IEngineStudio.Mod_Extradata( view->model );
-
-		if( viewmonster && view->curstate.eflags & EFLAG_SLERP )
+		if( vstate != VEHICLE_INACTIVE )
 		{
-			Vector forward;
-			AngleVectors( pparams->viewangles, forward, NULL, NULL );
-
-			Vector viewpos = viewmonster->eyeposition;
-
-			if( viewpos == g_vecZero )
-				viewpos = Vector( 0, 0, 8 );	// monster_cockroach
-
-			pparams->vieworg += viewpos + forward * 8;	// best value for humans
-			// NOTE: fov computation moved into r_main.cpp
-		}
-
-		// this is smooth stair climbing in thirdperson mode but not affected for client model :(
-		if( !pparams->smoothing && pparams->onground && view->origin[2] - oldz > 0.0f && viewmonster != NULL )
-		{
-			float steptime;
-		
-			steptime = pparams->time - lasttime;
-			if( steptime < 0 ) steptime = 0;
-
-			oldz += steptime * 150.0f;
-
-			if( oldz > view->origin[2] )
-				oldz = view->origin[2];
-			if( view->origin[2] - oldz > pparams->movevars->stepsize )
-				oldz = view->origin[2] - pparams->movevars->stepsize;
-
-			pparams->vieworg[2] += oldz - view->origin[2];
+			CalcVehicleRefdef( pparams, vstate );
 		}
 		else
 		{
-			oldz = view->origin[2];
-		}
+			pparams->vieworg = view->origin;
+			pparams->viewangles = view->angles;
 
-		lasttime = pparams->time;
+			studiohdr_t *viewmonster = (studiohdr_t *)IEngineStudio.Mod_Extradata( view->model );
+
+			if( viewmonster && view->curstate.eflags & EFLAG_SLERP )
+			{
+				Vector forward;
+				AngleVectors( pparams->viewangles, forward, NULL, NULL );
+
+				Vector viewpos = viewmonster->eyeposition;
+
+				if( viewpos == g_vecZero )
+					viewpos = Vector( 0, 0, 8 );	// monster_cockroach
+
+				pparams->vieworg += viewpos + forward * 8;	// best value for humans
+				// NOTE: fov computation moved into r_main.cpp
+			}
+
+			// this is smooth stair climbing in thirdperson mode but not affected for client model :(
+			if( !pparams->smoothing && pparams->onground && view->origin[2] - oldz > 0.0f && viewmonster != NULL )
+			{
+				float steptime;
+		
+				steptime = pparams->time - lasttime;
+				if( steptime < 0 ) steptime = 0;
+
+				oldz += steptime * 150.0f;
+
+				if( oldz > view->origin[2] )
+					oldz = view->origin[2];
+				if( view->origin[2] - oldz > pparams->movevars->stepsize )
+					oldz = view->origin[2] - pparams->movevars->stepsize;
+
+				pparams->vieworg[2] += oldz - view->origin[2];
+			}
+			else
+			{
+				oldz = view->origin[2];
+			}
+
+			lasttime = pparams->time;
+			V_ResetCarSmoothData();
+		}                    	
 
 		if( view->curstate.effects & EF_NUKE_ROCKET )
 			pparams->viewangles.x = -pparams->viewangles.x; // stupid quake bug!
@@ -953,6 +1248,7 @@ void V_CalcRefdef( struct ref_params_s *pparams )
 	if( pparams->intermission )
 	{
 		V_CalcIntermisionRefdef( pparams );
+		V_ResetCarSmoothData();
 	}
 	else if( pparams->viewentity > pparams->maxclients )
 	{
@@ -961,9 +1257,11 @@ void V_CalcRefdef( struct ref_params_s *pparams )
 	else if( gHUD.m_iCameraMode )
 	{
 		V_CalcThirdPersonRefdef( pparams );
+		V_ResetCarSmoothData();
 	}
 	else
 	{
 		V_CalcFirstPersonRefdef( pparams );
+		V_ResetCarSmoothData();
 	}
 }

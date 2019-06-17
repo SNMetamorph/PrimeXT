@@ -22,7 +22,6 @@ GNU General Public License for more details.
 #include "r_weather.h"
 #include "mathlib.h"
 
-#define MIN_SHADER_UNIFOMS		512	// GLSL spec says that at least 512 uniform is allowed on sm 2.0
 #define MAX_RESERVED_UNIFORMS		22	// dynamic lighting estimates 42 uniforms... 
 
 glState_t		glState;

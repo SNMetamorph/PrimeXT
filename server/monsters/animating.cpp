@@ -25,6 +25,8 @@
 #include "cbase.h"
 #include "animation.h"
 #include "saverestore.h"
+#include "studio.h"
+#include "bs_defs.h"
 
 BEGIN_DATADESC( CBaseAnimating )
 	DEFINE_FIELD( m_flFrameRate, FIELD_FLOAT ),
@@ -221,7 +223,51 @@ void CBaseAnimating :: ResetSequenceInfo ( )
 	m_flLastEventCheck = gpGlobals->time;
 }
 
+//=========================================================
+//=========================================================
+void CBaseEntity :: ResetPoseParameters ( )
+{
+	void *pmodel = GET_MODEL_PTR( ENT(pev) );
 
+	CalcDefaultPoseParameters( pmodel, m_flPoseParameter );
+
+	pev->vuser1[0] = m_flPoseParameter[0];
+	pev->vuser1[1] = m_flPoseParameter[1];
+	pev->vuser1[2] = m_flPoseParameter[2];
+
+	pev->vuser2[0] = m_flPoseParameter[3];
+	pev->vuser2[1] = m_flPoseParameter[4];
+	pev->vuser2[2] = m_flPoseParameter[5];
+
+	pev->vuser3[0] = m_flPoseParameter[6];
+	pev->vuser3[1] = m_flPoseParameter[7];
+	pev->vuser3[2] = m_flPoseParameter[8];
+
+	pev->vuser4[0] = m_flPoseParameter[9];
+	pev->vuser4[1] = m_flPoseParameter[10];
+	pev->vuser4[2] = m_flPoseParameter[11];
+}
+
+int CBaseEntity :: LookupPoseParameter( const char *szName )
+{
+	void *pmodel = GET_MODEL_PTR( ENT(pev) );
+
+	return ::LookupPoseParameter( pmodel, szName, m_flPoseParameter );
+}
+
+void CBaseEntity :: SetPoseParameter( int iParameter, float flValue )
+{
+	void *pmodel = GET_MODEL_PTR( ENT(pev) );
+
+	::SetPoseParameter( pmodel, iParameter, flValue, m_flPoseParameter );
+}
+
+float CBaseEntity :: GetPoseParameter( int iParameter )
+{
+	void *pmodel = GET_MODEL_PTR( ENT(pev) );
+
+	return ::GetPoseParameter( pmodel, iParameter, m_flPoseParameter );
+}
 
 //=========================================================
 //=========================================================
@@ -287,6 +333,8 @@ void CBaseAnimating :: InitBoneControllers ( void )
 	SetController( pmodel, pev->controller, 1, 0.0 );
 	SetController( pmodel, pev->controller, 2, 0.0 );
 	SetController( pmodel, pev->controller, 3, 0.0 );
+
+	ResetPoseParameters();
 }
 
 //=========================================================
@@ -318,6 +366,25 @@ void CBaseAnimating :: GetAttachment ( int iAttachment, Vector &origin, Vector &
 	}
 }
 
+int CBaseAnimating :: GetAttachment ( const char *pszAttachment, Vector &origin, Vector &angles )
+{
+	CStudioBoneSetup *pStudioHdr = GetBoneSetup();
+	if( !pStudioHdr ) return -1;
+
+	int nAttachment = pStudioHdr->FindAttachment( pszAttachment );
+	if( nAttachment == -1 ) return -1;
+
+	GET_ATTACHMENT( edict(), nAttachment, origin, angles );
+
+	if( m_hParent != NULL )
+	{
+		matrix4x4 parentSpace = GetParentToWorldTransform();
+		origin = parentSpace.VectorITransform( origin );
+	}
+
+	return nAttachment;
+}
+
 //=========================================================
 //=========================================================
 int CBaseAnimating :: FindTransition( int iEndingSequence, int iGoalSequence, int *piDir )
@@ -344,6 +411,11 @@ void CBaseAnimating :: GetAutomovement( Vector &origin, Vector &angles, float fl
 
 }
 
+int CBaseAnimating :: GetHitboxSetByName( const char *szName )
+{
+	return ::FindHitboxSetByName(  GET_MODEL_PTR( ENT(pev) ), szName );
+}
+
 void CBaseAnimating :: SetBodygroup( int iGroup, int iValue )
 {
 	::SetBodygroup( GET_MODEL_PTR( ENT(pev) ), pev->body, iGroup, iValue );
@@ -358,6 +430,11 @@ int CBaseAnimating :: GetBodygroup( int iGroup )
 int CBaseAnimating :: ExtractBbox( int sequence, Vector &mins, Vector &maxs )
 {
 	return ::ExtractBbox( GET_MODEL_PTR( ENT(pev) ), sequence, mins, maxs );
+}
+
+CStudioBoneSetup *CBaseAnimating :: GetBoneSetup( void )
+{
+	return ::GetBaseBoneSetup( pev->modelindex, m_flPoseParameter );
 }
 
 //=========================================================

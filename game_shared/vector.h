@@ -18,6 +18,9 @@
 #define STOP_EPSILON	0.1f
 #define ON_EPSILON		0.1f
 
+#define M_EPSILON		1.192092896e-07f
+#define M_INFINITY		1e30f
+
 #define BIT( n )		(1<<( n ))
 #define RAD2DEG( x )	((float)(x) * (float)(180.f / M_PI))
 #define DEG2RAD( x )	((float)(x) * (float)(M_PI / 180.f))
@@ -260,6 +263,14 @@ public:
 	{
 		return Vector(y*vOther.z - z*vOther.y, z*vOther.x - x*vOther.z, x*vOther.y - y*vOther.x);
 	}
+
+	inline void Cross( const Vector &vec1, const Vector &vec2 )
+	{
+		x = vec1.y * vec2.z - vec1.z * vec2.y;
+		y = vec1.z * vec2.x - vec1.x * vec2.z;
+		z = vec1.x * vec2.y - vec1.y * vec2.x;
+	}
+
 	inline Vector2D Make2D ( void ) const
 	{
 		Vector2D	Vec2;

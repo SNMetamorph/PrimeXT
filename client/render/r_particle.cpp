@@ -761,8 +761,8 @@ AURSTATE CParticleSystem :: UpdateSystem( float frametime )
 
 		// get the system entity matrix
 		if( m_iEntAttachment && m_pEntity->model->type == mod_studio )
-			entityMatrix.FromVector( R_StudioAttachmentDir( m_pEntity, m_iEntAttachment - 1 ));
-		else entityMatrix = matrix3x3( angles );
+			angles = R_StudioAttachmentAngles( m_pEntity, m_iEntAttachment - 1 );
+		entityMatrix = matrix3x3( angles );
 	}
 
 	if( m_pMainParticle == NULL )
@@ -779,7 +779,7 @@ AURSTATE CParticleSystem :: UpdateSystem( float frametime )
 				{
 					// first origin initialize
 					if( m_iEntAttachment && m_pEntity->model->type == mod_studio )
-						m_pMainParticle->origin = R_StudioAttachmentPos( m_pEntity, m_iEntAttachment - 1 );
+						m_pMainParticle->origin = R_StudioAttachmentOrigin( m_pEntity, m_iEntAttachment - 1 );
 					else m_pMainParticle->origin = m_pEntity->origin;
 
 					m_pMainParticle->m_pEntity = m_pEntity;
@@ -904,9 +904,9 @@ bool CParticleSystem :: UpdateParticle( CParticle *part, float frametime )
 		{
 			if( m_iEntAttachment && m_pEntity->model->type == mod_studio )
 			{
-				float flSpeed = (R_StudioAttachmentPos( m_pEntity, m_iEntAttachment - 1 ) - part->origin).Length() * frametime;
+				float flSpeed = (R_StudioAttachmentOrigin( m_pEntity, m_iEntAttachment-1 ) - part->origin).Length() * frametime;
 				part->velocity = entityMatrix.GetForward() * flSpeed;
-				part->origin = R_StudioAttachmentPos( m_pEntity, m_iEntAttachment - 1 );
+				part->origin = R_StudioAttachmentOrigin( m_pEntity, m_iEntAttachment - 1 );
 			}
 			else
 			{

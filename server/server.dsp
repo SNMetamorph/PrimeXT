@@ -433,7 +433,7 @@ SOURCE=.\physic.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\plane.cpp
+SOURCE=..\game_shared\plane.cpp
 # End Source File
 # Begin Source File
 
@@ -557,7 +557,7 @@ SOURCE=.\monsters\tentacle.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\physics\trace.cpp
+SOURCE=.\physics\tracemesh.cpp
 # End Source File
 # Begin Source File
 
@@ -638,6 +638,10 @@ SOURCE=.\ropes\CElectrifiedWire.h
 # Begin Source File
 
 SOURCE=.\client.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\physics\collision.h
 # End Source File
 # Begin Source File
 
@@ -785,11 +789,11 @@ SOURCE=..\game_shared\plane.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\plane.h
+SOURCE=.\player.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\player.h
+SOURCE=..\game_shared\plucker.h
 # End Source File
 # Begin Source File
 
@@ -861,7 +865,7 @@ SOURCE=.\teamplay_gamerules.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\physics\trace.h
+SOURCE=.\physics\tracemesh.h
 # End Source File
 # Begin Source File
 

@@ -377,6 +377,11 @@ byte *Mod_GetCurrentVis( void )
 //	return Mod_LeafPVS( r_viewleaf, worldmodel );
 }
 
+byte *Mod_GetEngineVis( void )
+{
+	return tr.visbytes;
+}
+
 bool Mod_CheckBoxVisible( const Vector &absmin, const Vector &absmax )
 {
 	return Mod_BoxVisible( absmin, absmax, Mod_GetCurrentVis( ));

@@ -41,6 +41,12 @@
 #define HUD_PRINTTALK		3
 #define HUD_PRINTCENTER		4
 
+// vehicle state
+#define VEHICLE_INACTIVE		0
+#define VEHICLE_ENTERING		1
+#define VEHICLE_DRIVEN		2
+#define VEHICLE_LEAVING		3
+
 // decal flags
 #define FDECAL_PERMANENT		0x01	// This decal should not be removed in favor of any new decals
 #define FDECAL_USE_LANDMARK		0x02	// This is a decal applied on a bmodel without origin-brush so we done in absoulute pos

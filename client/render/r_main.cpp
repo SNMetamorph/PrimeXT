@@ -1365,7 +1365,8 @@ void R_RenderScene( void )
 
 	R_EndGL();
 
-	RenderSunShafts();
+	if( !FBitSet( RI->params, RP_MIRRORVIEW|RP_ENVVIEW|RP_SHADOWVIEW ))
+		RenderSunShafts();
 }
 
 /*
@@ -1628,6 +1629,7 @@ int HUD_RenderFrame( const ref_viewpass_t *rvp )
 		return 0;
 	}
 
+	memset( tr.visbytes, 0, tr.pvssize );
 	tr.fCustomRendering = true;
 	R_RunViewmodelEvents();
 	tr.realframecount++;
@@ -1704,7 +1706,7 @@ static render_interface_t gRenderInterface =
 	HUD_SpeedsMessage,
 	HUD_ProcessModelData,
 	HUD_ProcessEntData,
-	Mod_GetCurrentVis,
+	Mod_GetEngineVis,
 	R_NewMap,
 	R_ClearScene,
 };

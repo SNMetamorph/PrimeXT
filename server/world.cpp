@@ -61,6 +61,7 @@ public:
 	virtual void	*CreateBoxFromEntity( CBaseEntity *pObject ) { return NULL; }
 	virtual void	*CreateKinematicBodyFromEntity( CBaseEntity *pEntity ) { return NULL; }
 	virtual void	*CreateStaticBodyFromEntity( CBaseEntity *pObject ) { return NULL; }
+	virtual void	*CreateVehicle( CBaseEntity *pObject, string_t scriptName = 0 ) { return NULL; }
 	virtual void	*RestoreBody( CBaseEntity *pEntity ) { return NULL; }
 	virtual void	SaveBody( CBaseEntity *pObject ) {}
 	virtual void	SetOrigin( CBaseEntity *pEntity, const Vector &origin ) {}
@@ -74,6 +75,7 @@ public:
 	virtual void	AddForce( CBaseEntity *pEntity, const Vector &force ) {}
 	virtual void	EnableCollision( CBaseEntity *pEntity, int fEnable ) {}
 	virtual void	MakeKinematic( CBaseEntity *pEntity, int fEnable ) {}
+	virtual void	UpdateVehicle( CBaseEntity *pObject ) {}
 	virtual int	FLoadTree( char *szMapName ) { return 0; }
 	virtual int	CheckBINFile( char *szMapName ) { return 0; }
 	virtual int	BuildCollisionTree( char *szMapName ) { return 0; }
@@ -91,6 +93,8 @@ public:
 	virtual void	SweepTest( CBaseEntity*, const Vector&, const Vector&, const Vector&, const Vector&, trace_t *tr ) { tr->allsolid = 0; }
 	virtual void	SweepEntity( CBaseEntity*, const Vector &, const Vector &, TraceResult *tr ) { tr->fAllSolid = 0, tr->flFraction = 1.0f; }
 	virtual bool	IsBodySleeping( CBaseEntity *pEntity ) { return true; } // entity is always sleeping while physics is not installed
+	virtual void	*GetCookingInterface( void ) { return NULL; }
+	virtual void	*GetPhysicInterface( void ) { return NULL; }
 };
 
 CPhysicNull NullPhysic;
@@ -631,6 +635,8 @@ void CWorld :: Spawn( void )
 {
 	g_fGameOver = FALSE;
 	Precache( );
+
+	SetModel( GetModel() );
 }
 
 void CWorld :: Precache( void )

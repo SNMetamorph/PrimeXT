@@ -39,10 +39,10 @@
 // Global engine <-> studio model rendering code interface
 float m_poseparameter[MAXSTUDIOPOSEPARAM]; // stub
 server_studio_api_t IEngineStudio;
-model_t *m_pSubModel = NULL;
 
 class CBaseBoneSetup : public CStudioBoneSetup
 {
+	model_t *m_pSubModel;
 public:
 	virtual void debugMsg( char *szFmt, ... )
 	{
@@ -64,10 +64,9 @@ public:
 		pseqgroup = (mstudioseqgroup_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqgroupindex) + pseqdesc->seqgroup;
 
 		if( pseqdesc->seqgroup == 0 )
-			return (mstudioanim_t *)((byte *)m_pStudioHeader + pseqgroup->data + pseqdesc->animindex);
+			return (mstudioanim_t *)((byte *)m_pStudioHeader + pseqdesc->animindex);
 
-		if( !m_pSubModel )
-			return NULL; // model was not set!
+		assert( m_pSubModel ); // assume model is set
 
 		paSequences = (cache_user_t *)m_pSubModel->submodels;
 
@@ -94,6 +93,8 @@ public:
 
 		return (mstudioanim_t *)((byte *)paSequences[pseqdesc->seqgroup].data + pseqdesc->animindex);
 	}
+
+	void SetBaseModel( model_t *mod ) { m_pSubModel = mod; }
 };
 
 static CBaseBoneSetup g_boneSetup;
@@ -119,6 +120,99 @@ int Server_GetBlendingInterface( int version, sv_blending_interface_t **ppinterf
 void SetupModelBones( studiohdr_t *header )
 {
 	g_boneSetup.SetStudioPointers( header, m_poseparameter );
+}
+
+void CalcDefaultPoseParameters( void *pmodel, float *poseparams )
+{
+	studiohdr_t *pstudiohdr;
+
+	if( !( pstudiohdr = (studiohdr_t *)pmodel ))
+		return;
+
+	g_boneSetup.SetStudioPointers( pstudiohdr, poseparams );
+	g_boneSetup.CalcDefaultPoseParameters( poseparams );
+}
+
+CStudioBoneSetup *GetBaseBoneSetup( int modelindex, float *poseparams )
+{
+	studiohdr_t *pstudiohdr;
+
+	model_t *mod = (model_t *)MODEL_HANDLE( modelindex );
+
+	if( !mod || mod->type != mod_studio )
+		return NULL;
+
+	if( !( pstudiohdr = (studiohdr_t *)mod->cache.data ))
+		return NULL;
+
+	g_boneSetup.SetBaseModel( mod );
+	g_boneSetup.SetStudioPointers( pstudiohdr, poseparams );
+
+	return &g_boneSetup;
+}
+
+//=========================================================
+//=========================================================
+int LookupPoseParameter( void *pmodel, const char *szName, float *poseparams )
+{
+	studiohdr_t *pstudiohdr;
+
+	if( !( pstudiohdr = (studiohdr_t *)pmodel ))
+		return -1;
+
+	g_boneSetup.SetStudioPointers( pstudiohdr, poseparams );
+
+	for( int i = 0; i < g_boneSetup.CountPoseParameters(); i++ )
+	{
+		if( !Q_stricmp( g_boneSetup.pPoseParameter( i )->name, szName ))
+			return i;
+	}
+
+	return -1; // Error
+}
+
+void SetPoseParameter( void *pmodel, int iParameter, float flValue, float *poseparams )
+{
+	studiohdr_t *pstudiohdr;
+
+	if( !( pstudiohdr = (studiohdr_t *)pmodel ))
+		return;
+
+	g_boneSetup.SetStudioPointers( pstudiohdr, poseparams );
+	g_boneSetup.SetPoseParameter( iParameter, flValue, poseparams[iParameter] );
+}
+
+float GetPoseParameter( void *pmodel, int iParameter, float *poseparams )
+{
+	studiohdr_t *pstudiohdr;
+
+	if( !( pstudiohdr = (studiohdr_t *)pmodel ))
+		return 0.0f;
+
+	g_boneSetup.SetStudioPointers( pstudiohdr, poseparams );
+	return g_boneSetup.GetPoseParameter( iParameter, poseparams[iParameter] );
+}
+
+int FindHitboxSetByName( void *pmodel, const char *name )
+{
+	studiohdr_t *pstudiohdr;
+
+	if( !( pstudiohdr = (studiohdr_t *)pmodel ))
+		return -1;
+
+	SetupModelBones( pstudiohdr );
+
+	for( int i = 0; i < g_boneSetup.GetNumHitboxSets(); i++ )
+	{
+		mstudiohitboxset_t *set = g_boneSetup.pHitboxSet( i );
+
+		if( !set ) continue;
+
+		if( !Q_stricmp( set->name, name ))
+			return i;
+	}
+
+	return -1;
 }
 
 int ExtractBbox( void *pmodel, int sequence, Vector &mins, Vector &maxs )
@@ -292,12 +386,9 @@ void CalcGaitFrame( void *pmodel, int &gaitsequence, float &flGaitFrame, float f
 		flGaitFrame += (flGaitMovement / pseqdesc->linearmovement[0]) * pseqdesc->numframes;
 	else flGaitFrame += pseqdesc->fps * gpGlobals->frametime;
 
-	// g-cont. don't to modulo here to avoid confuse lerping
-#if 0
 	// do modulo
-	flGaitFrame -= (int)(flGaitFrame / pseqdesc->numframes) * pseqdesc->numframes;
-	if( flGaitFrame < 0.0f ) flGaitFrame += pseqdesc->numframes;
-#endif
+	flGaitFrame = fmod( flGaitFrame, (float)pseqdesc->numframes ); 
+	while( flGaitFrame < 0.0 ) flGaitFrame += pseqdesc->numframes;
 }
 
 void GetSequenceInfo( void *pmodel, int sequence, float *pflFrameRate, float *pflGroundSpeed )
@@ -589,4 +680,23 @@ int GetBodygroup( void *pmodel, int iBody, int iGroup )
 	int iCurrent = (iBody / pbodypart->base) % pbodypart->nummodels;
 
 	return iCurrent;
+}
+
+int FindAttachmentByName( void *pmodel, const char *pName )
+{
+	studiohdr_t *pstudiohdr;
+	
+	if( !( pstudiohdr = (studiohdr_t *)pmodel ))
+		return 0;
+
+	for( int i = 0; i < pstudiohdr->numattachments; i++ )
+	{
+		mstudioattachment_t	*pattachment = (mstudioattachment_t *) ((byte *)pstudiohdr + pstudiohdr->attachmentindex);
+
+		if( !Q_stricmp( pattachment[i].name, pName ))
+			return i;
+
+	}
+
+	return -1;
 }

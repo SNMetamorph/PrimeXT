@@ -170,7 +170,7 @@ void CTrainSetSpeed :: Spawn( void )
 
 	m_iState = STATE_OFF;
 	m_hActivator = NULL;
-
+//pev->spawnflags |= SF_TRAINSPEED_DEBUG;
 	if( !FStrEq( STRING( pev->netname ), "*locus" ))
 	{
 		SetThink( &CTrainSetSpeed :: Find );
@@ -255,13 +255,19 @@ void CTrainSetSpeed :: UpdateSpeed( void )
 	if( FBitSet( pev->spawnflags, SF_TRAINSPEED_DEBUG ))
 		ALERT( at_console, "train_setspeed: %s target speed %g, curspeed %g, step %g\n", GetTargetname(), pev->speed, m_pTrain->GetSpeed( ), m_flInterval );
 
-	if( fabs( m_pTrain->GetSpeed() - pev->speed ) <= 1.0f )
+	if( fabs( m_pTrain->GetSpeed() - pev->speed ) <= fabs( m_flInterval ))
 	{
 		if( pev->speed == 0.0f && FBitSet( pev->spawnflags, SF_ACTIVATE_TRAIN ))
 		{
 			if( FBitSet( pev->spawnflags, SF_TRAINSPEED_DEBUG ))
 				ALERT( at_console, "train is stopped\n" );
 			m_pTrain->SetSpeedExternal( 0 );
+		}
+		else if( pev->speed != 0.0f )
+		{
+			if( FBitSet( pev->spawnflags, SF_TRAINSPEED_DEBUG ))
+				ALERT( at_console, "train is reached target speed: %g\n", pev->speed );
+			m_pTrain->SetSpeedExternal( pev->speed );
 		}
 
 		m_iState = STATE_OFF;

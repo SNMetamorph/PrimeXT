@@ -2249,6 +2249,7 @@ void CFuncTrackTrain :: Next( void )
 		float distance = GetLocalVelocity().Length();
 		SetLocalAvelocity( g_vecZero );
 		m_oldSpeed = pev->speed;
+		m_flDesiredSpeed = 0;
 		pev->speed = 0;
 
 		// Move to the dead end
@@ -2303,6 +2304,9 @@ void CFuncTrackTrain :: DeadEnd( void )
 		}
 	}
 
+	m_oldSpeed = pev->speed;
+	m_flDesiredSpeed = 0;
+	pev->speed = 0;
 	SetAbsVelocity( g_vecZero );
 	SetLocalAvelocity( g_vecZero );
 
@@ -2802,7 +2806,7 @@ TRAIN_CODE CFuncTrackChange :: EvaluateTrain( CPathTrack *pcurrent )
 	if( m_train->m_ppath == pcurrent || ( pcurrent->m_pprevious && m_train->m_ppath == pcurrent->m_pprevious ) ||
 		 ( pcurrent->m_pnext && m_train->m_ppath == pcurrent->m_pnext ))
 	{
-		if( m_train->pev->speed != 0 )
+		if( m_train->GetSpeed() != 0 )
 			return TRAIN_BLOCKING;
 
 		Vector dist = GetLocalOrigin() - m_train->GetLocalOrigin();
@@ -3116,7 +3120,7 @@ void CFuncTrackAuto :: UpdateAutoTargets( int toggleState )
 	{
 		ClearBits( pTarget->pev->spawnflags, SF_PATH_DISABLED );
 
-		if( m_code == TRAIN_FOLLOWING && m_train && !m_train->pev->speed )
+		if( m_code == TRAIN_FOLLOWING && m_train && !m_train->GetSpeed() )
 			m_train->Use( this, this, USE_ON, 0 );
 	}
 

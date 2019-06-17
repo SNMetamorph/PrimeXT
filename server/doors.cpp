@@ -57,7 +57,6 @@ public:
 	void DoorHitBottom( void );
 	void DoorTouch( CBaseEntity *pOther );
 	void ChainTouch( CBaseEntity *pOther );
-	void SetChaining( bool chaining ) { m_isChaining = chaining; }
 	void ChainUse( USE_TYPE useType, float value );
 
 	byte	m_bHealthValue;		// some doors are medi-kit doors, they give players health
@@ -73,7 +72,6 @@ public:
 
 	string_t	m_iChainTarget;		// feature come from hl2
 	bool	m_bDoorGroup;
-	bool	m_isChaining;
 	bool	m_bDoorTouched;		// don't save\restore this
 };
 
@@ -87,7 +85,6 @@ BEGIN_DATADESC( CBaseDoor )
 	DEFINE_KEYFIELD( m_bUnlockedSentence, FIELD_CHARACTER, "unlocked_sentence" ),	
 	DEFINE_KEYFIELD( m_iChainTarget, FIELD_STRING, "chaintarget" ),
 	DEFINE_FIELD( m_bDoorGroup, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_isChaining, FIELD_BOOLEAN ),
 	DEFINE_FUNCTION( DoorTouch ),
 	DEFINE_FUNCTION( DoorGoUp ),
 	DEFINE_FUNCTION( DoorGoDown ),

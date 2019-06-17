@@ -122,6 +122,7 @@ extern void DispatchUpdatePlayerBaseVelocity( edict_t *pEdict );
 #define ACTOR_KINEMATIC		2	// kinematic actor (mover with SOLID_BSP)
 #define ACTOR_CHARACTER		3	// player or monster physics shadow
 #define ACTOR_STATIC		4	// static actor (env_static)
+#define ACTOR_VEHICLE		5	// complex body (vehicle)
 
 #define PARENT_FROZEN_POS_X		BIT( 1 )	// compatible with PhysX flags NX_BF_FROZEN_
 #define PARENT_FROZEN_POS_Y		BIT( 2 )
@@ -135,6 +136,7 @@ class CBaseEntity;
 class CBaseMonster;
 class CBasePlayerItem;
 class CSquadMonster;
+class CStudioBoneSetup;
 
 #include "ehandle.h"
 
@@ -248,8 +250,12 @@ public:
 	short		m_usActorGroup;	// NxActor->group
 	float		m_flBodyMass;	// NxActor->mass
 	BOOL		m_fFreezed;	// is body sleeps?
+	bool		m_isChaining;
+	Vector		m_vecOldPosition;	// don't save this
 
 	float		m_flShowHostile;	// for sprite monsters wake-up
+
+	float		m_flPoseParameter[MAXSTUDIOPOSEPARAM];
 
 	matrix4x4		GetParentToWorldTransform( void );
 
@@ -270,6 +276,7 @@ public:
 	// Invalidates the abs state of the entity and all children
 	// Specify the second flag if you want additional flags applied to all children
 	void		InvalidatePhysicsState( int flags, int childflags = 0 );
+	void		SetChaining( bool chaining ) { m_isChaining = chaining; }
 	BOOL		ShouldToggle( USE_TYPE useType );
 
 	const char*	GetClassname() { return STRING( pev->classname ); }
@@ -279,6 +286,7 @@ public:
 	const char*	GetMessage() { return STRING( pev->message ); }
 	const char*	GetNetname() { return STRING( pev->netname ); }
 	const char*	GetModel() { return STRING( pev->model ); }
+	void		SetModel( const char *model );
 	void		ReportInfo( void );
 
 	const char*	GetDebugName()
@@ -307,6 +315,11 @@ public:
 	void		SetParent ( int m_iNewParent, int m_iAttachment = 0 );
 	void		SetParent ( CBaseEntity* pParent, int m_iAttachment = 0 );
 	BOOL		HasAttachment( void );
+
+	void		ResetPoseParameters( void );
+	int		LookupPoseParameter( const char *szName );
+	void		SetPoseParameter( int iParameter, float flValue );
+	float		GetPoseParameter( int iParameter );
 
 	// initialization functions
 	virtual void	Spawn( void ) { }
@@ -397,6 +410,7 @@ public:
 	virtual BOOL	IsTriggered( CBaseEntity *pActivator ) {return TRUE;}
 	virtual CBaseMonster *MyMonsterPointer( void ) { return NULL;}
 	virtual CSquadMonster *MySquadMonsterPointer( void ) { return NULL;}
+	virtual CBaseEntity *GetVehicleDriver( void ) { return NULL; }
 	virtual int	GetToggleState( void ) { return TS_AT_TOP; }
 	virtual void	AddPoints( int score, BOOL bAllowNegativeScore ) {}
 	virtual void	AddPointsToTeam( int score, BOOL bAllowNegativeScore ) {}
@@ -454,7 +468,7 @@ public:
 			(this->*m_pfnTouch)( pOther );
 
 		// forward the blocked event to our parent, if any.
-		if( m_hParent != NULL )
+		if( m_hParent != NULL && !m_isChaining )
 			m_hParent->Touch( pOther );
 	}
 
@@ -900,10 +914,13 @@ public:
 	void GetAutomovement( Vector &origin, Vector &angles, float flInterval = 0.1 );
 	int  FindTransition( int iEndingSequence, int iGoalSequence, int *piDir );
 	void GetAttachment ( int iAttachment, Vector &origin, Vector &angles );
+	int GetAttachment ( const char *pszAttachment, Vector &origin, Vector &angles );
 	void SetBodygroup( int iGroup, int iValue );
 	int GetBodygroup( int iGroup );
 	int ExtractBbox( int sequence, Vector &mins, Vector &maxs );
+	int GetHitboxSetByName( const char *szName );
 	void SetSequenceBox( void );
+	CStudioBoneSetup *GetBoneSetup();
 
 	// animation needs
 	float	m_flFrameRate;	// computed FPS for current sequence

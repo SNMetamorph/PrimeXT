@@ -18,7 +18,7 @@ GNU General Public License for more details.
 #include	"cbase.h"
 #include	"com_model.h"
 #include  "meshdesc.h"
-#include  "trace.h"
+#include  "tracemesh.h"
 
 CMeshDesc :: CMeshDesc( void )
 {

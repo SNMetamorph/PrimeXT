@@ -152,10 +152,12 @@ static void R_ShadowPassDrawWorld( plight_t *pl )
 
 void R_ShadowPassDrawSolidEntities( plight_t *pl )
 {
+	int	i;
+
 	glState.drawTrans = false;
 
 	// draw solid entities only.
-	for( int i = 0; i < tr.num_solid_entities; i++ )
+	for( i = 0; i < tr.num_solid_entities; i++ )
 	{
 		RI->currententity = tr.solid_entities[i];
 		RI->currentmodel = RI->currententity->model;
@@ -173,6 +175,28 @@ void R_ShadowPassDrawSolidEntities( plight_t *pl )
 			break;
 		case mod_sprite:
 //			R_DrawSpriteModel( RI->currententity );
+			break;
+		default:
+			break;
+		}
+	}
+
+	// draw solid entities only.
+	for( i = 0; i < tr.num_trans_entities; i++ )
+	{
+		RI->currententity = tr.trans_entities[i];
+		RI->currentmodel = RI->currententity->model;
+
+		if( RI->currententity->curstate.rendermode != kRenderTransAlpha )
+			continue;
+
+		// tell engine about current entity
+		SET_CURRENT_ENTITY( RI->currententity );
+
+		switch( RI->currentmodel->type )
+		{
+		case mod_brush:
+			R_DrawBrushModelShadow( RI->currententity );
 			break;
 		default:
 			break;

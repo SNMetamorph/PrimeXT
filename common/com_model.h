@@ -24,8 +24,10 @@ GNU General Public License for more details.
 	ENGINE MODEL FORMAT
 ==============================================================================
 */
-#define STUDIO_RENDER	1
-#define STUDIO_EVENTS	2
+#define STUDIO_RENDER	BIT( 0 )
+#define STUDIO_EVENTS	BIT( 1 )
+#define STUDIO_FORCE	BIT( 2 )
+#define STUDIO_LOCAL_SPACE	BIT( 3 )
 
 #define ZISCALE		((float)0x8000)
 

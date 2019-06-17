@@ -24,6 +24,7 @@
 #include "r_view.h"
 #include "keydefs.h"
 #include <mathlib.h>
+#include "r_local.h"
 
 #define BUTTON_DOWN		1
 #define IMPULSE_DOWN	2
@@ -535,6 +536,36 @@ int CL_IsDead( void )
 	return ( gHUD.m_Health.m_iHealth <= 0 ) ? 1 : 0;
 }
 
+bool CreateVehicleView( Vector &vecViewAngles )
+{
+	if( atoi( gEngfuncs.PhysInfo_ValueForKey( "incar" )) != VEHICLE_DRIVEN )
+		return false;
+
+	cl_entity_t *view = GET_ENTITY( tr.viewparams.viewentity );
+	int eyeAttachmentIndex = R_StudioLookupAttachment( view, "vehicle_driver_eyes" );
+	float flAngleDiff;
+
+	if( eyeAttachmentIndex == -1 )
+		return false;
+
+	Vector vehicleEyeAngles;
+	vehicleEyeAngles = R_StudioAttachmentAngles( view, eyeAttachmentIndex, AF_FORCE_RECALC|AF_LOCAL_SPACE );
+	NormalizeAngles( vehicleEyeAngles );
+	NormalizeAngles( vecViewAngles );
+
+	// Limit the yaw.
+	flAngleDiff = AngleDiff( vecViewAngles.y, vehicleEyeAngles.y );
+	flAngleDiff = bound( -85.0f, flAngleDiff, 85.0f );
+	vecViewAngles.y = vehicleEyeAngles.y + flAngleDiff;
+
+	// Limit the pitch.
+	flAngleDiff = AngleDiff( vecViewAngles.x, vehicleEyeAngles.x );
+	flAngleDiff = bound( -25.0f, flAngleDiff, 35.0f );
+	vecViewAngles.x = vehicleEyeAngles.x + flAngleDiff;
+
+	return true;
+}
+
 /*
 ================
 CL_CreateMove
@@ -547,7 +578,7 @@ if active == 1 then we are 1) not playing back demos ( where our commands are ig
 void CL_CreateMove( float frametime, usercmd_t *cmd, int active )
 {	
 	float spd;
-	Vector viewangles;
+	Vector viewangles, forward;
 	static Vector oldangles;
 
 	if( active )
@@ -558,9 +589,7 @@ void CL_CreateMove( float frametime, usercmd_t *cmd, int active )
 
 		memset( cmd, 0, sizeof( *cmd ));
 
-		float rgfl[3];
-		viewangles.CopyToArray( rgfl );		
-		gEngfuncs.SetViewAngles( rgfl );
+		gEngfuncs.SetViewAngles( viewangles );
 
 		if( in_strafe.state & BUTTON_DOWN )
 		{
@@ -619,6 +648,12 @@ void CL_CreateMove( float frametime, usercmd_t *cmd, int active )
 
 	gEngfuncs.GetViewAngles( viewangles );
 
+	if( CreateVehicleView( viewangles ))
+	{
+		// clamp viewangles by car
+		gEngfuncs.SetViewAngles( viewangles );
+	}
+
 	// Set current view angles.
 	if( CL_IsDead( ))
 	{
@@ -629,7 +664,6 @@ void CL_CreateMove( float frametime, usercmd_t *cmd, int active )
 		cmd->viewangles = viewangles;
 		oldangles = viewangles;
 	}
-
 }
 
 /*
