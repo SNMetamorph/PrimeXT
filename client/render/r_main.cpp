@@ -25,7 +25,7 @@ GNU General Public License for more details.
 #include "entity_types.h"
 #include "event_api.h"
 #include "r_weather.h"
-#include "features.h"
+#include "xash3d_features.h"
 #include "r_shader.h"
 #include "r_world.h"
 #include "pm_defs.h"

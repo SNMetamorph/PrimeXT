@@ -9,6 +9,7 @@
 #include <float.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "port.h"
 
 #define PITCH		0
 #define YAW		1
@@ -34,7 +35,7 @@ class Radian;
 
 inline void SinCos( float angle, float *sine, float *cosine ) 
 {
-	__asm
+	/*__asm
 	{
 		push	ecx
 		fld	dword ptr angle
@@ -44,7 +45,9 @@ inline void SinCos( float angle, float *sine, float *cosine )
 		mov 	ecx, dword ptr[sine]
 		fstp	dword ptr [ecx]
 		pop	ecx
-	}
+	}*/
+	*sine = sin(angle);
+	*cosine = cos(angle);
 }
 
 //=========================================================

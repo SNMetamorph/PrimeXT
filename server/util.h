@@ -15,7 +15,7 @@
 //
 // Misc utility code
 //
-#include <stringlib.h>
+#include "stringlib.h"
 
 #ifndef ACTIVITY_H
 #include "activity.h"
@@ -30,7 +30,7 @@
 #endif
 
 #include "datamap.h"
-#include "strings.h"
+#include "xashxt_strings.h"
 
 #include "com_model.h"
 #include "sprite.h"

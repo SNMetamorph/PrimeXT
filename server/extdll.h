@@ -15,7 +15,7 @@
 #ifndef EXTDLL_H
 #define EXTDLL_H
 
-
+#include "port.h"
 //
 // Global header file for extension DLLs
 //
@@ -47,27 +47,28 @@ typedef unsigned long ULONG;
 typedef unsigned char BYTE;
 typedef int BOOL;
 #define MAX_PATH PATH_MAX
-#include <limits.h>
-#include <stdarg.h>
-#ifndef min
-#define min(a,b)  (((a) < (b)) ? (a) : (b))
+//#include <limits.h>
+//#include <stdarg.h>
+#ifndef Q_min
+#define Q_min(a,b)  (((a) < (b)) ? (a) : (b))
 #endif
-#ifndef max
-#define max(a,b)  (((a) > (b)) ? (a) : (b))
+#ifndef Q_max
+#define Q_max(a,b)  (((a) > (b)) ? (a) : (b))
 #define _vsnprintf(a,b,c,d) vsnprintf(a,b,c,d)
 #endif
 #endif //_WIN32
 
 // Misc C-runtime library headers
-#include "stdio.h"
-#include "stdlib.h"
-#include "math.h"
-#include "mathlib.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <mathlib.h>
 
 // Header file containing definition of globalvars_t and entvars_t
 typedef int	string_t;		// from engine's pr_comp.h;
 
-typedef HMODULE	dllhandle_t;
+//typedef HMODULE	dllhandle_t;
+typedef void* dllhandle_t;
 
 typedef struct dllfunc_s
 {

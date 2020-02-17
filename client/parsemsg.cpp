@@ -17,7 +17,7 @@
 #include "utils.h"
 #include "r_local.h"
 #include "pm_movevars.h"
-#include "features.h"
+#include "xash3d_features.h"
 
 static byte	*gpBuf;
 static const char	*gpszName;
