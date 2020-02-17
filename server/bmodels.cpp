@@ -1424,7 +1424,7 @@ void CFuncClock :: Activate( void )
 	{
 		// try to find minutes and seconds entity
 		CBaseEntity *pEntity = NULL;
-		while( pEntity = UTIL_FindEntityInSphere( pEntity, GetLocalOrigin(), pev->size.z ))
+		while( ( pEntity = UTIL_FindEntityInSphere( pEntity, GetLocalOrigin(), pev->size.z )))
 		{
 			if( FClassnameIs( pEntity, "func_clock" ))
 			{

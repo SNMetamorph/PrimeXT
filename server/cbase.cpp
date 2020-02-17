@@ -977,7 +977,7 @@ void CBaseEntity :: SetParent( int m_iNewParent, int m_iAttachment )
 //=======================================================================
 void CBaseEntity :: SetParent( CBaseEntity *pParent, int m_iAttachment )
 {
-	if( pParent != NULL && ( pParent == m_hParent ) || m_fPicked )
+	if( ( ( pParent != NULL ) && ( pParent == m_hParent ) ) || m_fPicked )
 		return; // new parent is already set or object is picked
 
 	if( pParent == g_pWorld )

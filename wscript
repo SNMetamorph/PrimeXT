@@ -143,7 +143,7 @@ def configure(conf):
 			# disable thread-safe local static initialization for C++11 code, as it cause crashes on Windows XP
 			'msvc':    ['/D_USING_V110_SDK71_', '/Zi', '/FS', '/Zc:threadSafeInit-', '/MT'],
 			'clang':   ['-g', '-gdwarf-2', '-fvisibility=hidden'],
-			'gcc':     ['-g', '-w']
+			'gcc':     ['-g',]
 		},
 		'fast': {
 			'msvc':    ['/O2', '/Oy'],
@@ -184,13 +184,15 @@ def configure(conf):
 	compiler_optional_flags = [
 		'-fdiagnostics-color=always',
 		'-Werror=return-type',
-#		'-Werror=parentheses',
+		'-Werror=parentheses',
 		'-Werror=vla',
 		'-Werror=tautological-compare',
 		'-Werror=duplicated-cond',
 		'-Werror=bool-compare',
 		'-Werror=bool-operation',
 		'-Wstrict-aliasing',
+		'-Wno-conversion-null',
+		'-Wno-write-strings'
 	]
 
 	c_compiler_optional_flags = [

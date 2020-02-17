@@ -1291,7 +1291,7 @@ void CFuncTankControls :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, US
 			CBaseEntity *tryTank = NULL;
 	
 			// find all tanks with current name
-			while( tryTank = UTIL_FindEntityByTargetname( tryTank, STRING( m_iTankName[i] )))
+			while( (tryTank = UTIL_FindEntityByTargetname( tryTank, STRING( m_iTankName[i] ))))
 			{
 				HandleTank( pActivator, tryTank, TRUE );
 			}			
@@ -1329,7 +1329,7 @@ void CFuncTankControls :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, US
 			CBaseEntity *tryTank = NULL;
 
 			// find all tanks with current name
-			while( tryTank = UTIL_FindEntityByTargetname( tryTank, STRING( m_iTankName[i] )))
+			while(( tryTank = UTIL_FindEntityByTargetname( tryTank, STRING( m_iTankName[i] ))))
 			{
 				HandleTank( pActivator, tryTank, FALSE );
 			}			

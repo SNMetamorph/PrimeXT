@@ -505,7 +505,7 @@ public:
 			flags |= FCAP_IMPULSE_USE;
 		if( FBitSet( pev->spawnflags, SF_BUTTON_ONLYDIRECT ))
 			flags |= FCAP_ONLYDIRECT_USE;
-		return (BaseClass :: ObjectCaps() & (~FCAP_ACROSS_TRANSITION) | flags);
+		return ((BaseClass :: ObjectCaps() & (~FCAP_ACROSS_TRANSITION)) | flags);
 	}
 
 	BOOL	m_fStayPushed;	// button stays pushed in until touched again?

@@ -226,7 +226,7 @@ void CSqueakGrenade::HuntThink( void )
 		vecVelocity.z += 8.0f;
 		SetAbsVelocity( vecVelocity );
 	}
-	else if (pev->movetype = MOVETYPE_FLY)
+	else if (pev->movetype == MOVETYPE_FLY)
 	{
 		pev->movetype = MOVETYPE_BOUNCE;
 	}

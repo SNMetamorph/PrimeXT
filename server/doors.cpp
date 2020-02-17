@@ -539,7 +539,7 @@ void CBaseDoor::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 	}
 
 	// if not ready to be used, ignore "use" command.
-	if( m_iState == STATE_OFF || FBitSet( pev->spawnflags, SF_DOOR_NO_AUTO_RETURN ) && m_iState == STATE_ON )
+	if( m_iState == STATE_OFF || ( FBitSet( pev->spawnflags, SF_DOOR_NO_AUTO_RETURN ) && m_iState == STATE_ON ) )
 		DoorActivate();
 }
 
