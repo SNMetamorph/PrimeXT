@@ -535,7 +535,7 @@ int CGlobalState::Save( CSave &save )
 	if ( !save.WriteFields( "GLOBAL", this, NULL, m_DataMap.dataDesc, m_DataMap.dataNumFields ) )
 		return 0;
 
-	DATAMAP *pMap = &globalentity_t.m_DataMap;
+	DATAMAP *pMap = &globalentity_t::m_DataMap;
 	
 	pEntity = m_pList;
 	for ( i = 0; i < m_listCount && pEntity; i++ )
@@ -559,7 +559,7 @@ int CGlobalState::Restore( CRestore &restore )
 	if ( !restore.ReadFields( "GLOBAL", this, NULL, m_DataMap.dataDesc, m_DataMap.dataNumFields ) )
 		return 0;
 
-	DATAMAP *pMap = &globalentity_t.m_DataMap;
+	DATAMAP *pMap = &globalentity_t::m_DataMap;
 	
 	listCount = m_listCount;	// Get new list count
 	m_listCount = 0;				// Clear loaded data
