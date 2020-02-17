@@ -448,7 +448,7 @@ void CTripmine::Holster( void )
 	{
 		// out of mines
 		m_pPlayer->RemoveWeapon( WEAPON_TRIPMINE );
-		SetThink( &DestroyItem );
+		SetThink( &CBasePlayerItem::DestroyItem );
 		pev->nextthink = gpGlobals->time + 0.1;
 	}
 

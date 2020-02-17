@@ -2261,7 +2261,7 @@ void CFuncTrackTrain :: Next( void )
 			float flTime = distance / fabs( m_oldSpeed );
 			SetLocalVelocity( GetLocalVelocity() * (m_oldSpeed / distance) );
 			SetMoveDoneTime( flTime );
-			SetMoveDone( &DeadEnd );
+			SetMoveDone( &CFuncTrackTrain::DeadEnd );
 			DontThink();
 		}
 		else
@@ -2381,7 +2381,7 @@ void CFuncTrackTrain :: Find( void )
 	pev->speed = m_startSpeed;
 
 	SetNextThink( 0.1f );
-	SetThink( &Next );
+	SetThink( &CFuncTrackTrain::Next );
 }
 
 void CFuncTrackTrain :: NearestPath( void )

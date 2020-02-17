@@ -217,11 +217,11 @@ void CAmbientGeneric :: Spawn( void )
 	// of ambient sound's pitch or volume. Don't
 	// start thinking yet.
 
-	SetThink( &RampThink );
+	SetThink( &CAmbientGeneric::RampThink );
 	pev->nextthink = 0;
 
 	// allow on/off switching via 'use' function.
-	SetUse( &ToggleUse );
+	SetUse( &CAmbientGeneric::ToggleUse );
 
 	m_fSpawning = TRUE;	
 	m_fActive = FALSE;

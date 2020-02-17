@@ -532,7 +532,7 @@ void CSpriteMonster :: InitThink( void )
 	MonsterIdle();
 
 	// run AI for monster
-	SetThink( &MonsterThink );
+	SetThink( &CSpriteMonster::MonsterThink );
 	MonsterThink();
 }
 

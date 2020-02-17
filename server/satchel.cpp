@@ -347,7 +347,7 @@ void CSatchel::Holster( void )
 	if ( !m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] && !m_chargeReady )
 	{
 		m_pPlayer->RemoveWeapon( WEAPON_SATCHEL );
-		SetThink( &DestroyItem );
+		SetThink( &CSatchel::DestroyItem );
 		pev->nextthink = gpGlobals->time + 0.1;
 	}
 }

@@ -217,8 +217,8 @@ public:
 			mat[0][2], mat[1][2], mat[2][2] );
 	}
 
-	Vector matrix3x3::VectorRotate( const Vector &v ) const;
-	Vector matrix3x3::VectorIRotate( const Vector &v ) const;
+	Vector VectorRotate( const Vector &v ) const;
+	Vector VectorIRotate( const Vector &v ) const;
 
 	// copy as OpenGl matrix
 	inline void CopyToArray( float *rgfl ) const

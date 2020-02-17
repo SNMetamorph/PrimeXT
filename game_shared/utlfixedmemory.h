@@ -162,9 +162,9 @@ CUtlFixedMemory<T>::~CUtlFixedMemory()
 template< class T >
 void CUtlFixedMemory<T>::Swap( CUtlFixedMemory< T > &mem )
 {
-	swap( m_pBlocks, mem.m_pBlocks );
-	swap( m_nAllocationCount, mem.m_nAllocationCount );
-	swap( m_nGrowSize, mem.m_nGrowSize );
+	SWAP( m_pBlocks, mem.m_pBlocks );
+	SWAP( m_nAllocationCount, mem.m_nAllocationCount );
+	SWAP( m_nGrowSize, mem.m_nGrowSize );
 }
 
 

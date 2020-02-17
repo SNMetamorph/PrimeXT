@@ -1694,7 +1694,7 @@ void CEnvSpark :: SparkUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_T
 	}
 	else
 	{
-		SetThink( &SparkThink );
+		SetThink( &CEnvSpark::SparkThink );
 		SetNextThink( 0.1f + RANDOM_FLOAT( 0.0f, m_flDelay ));
 	}
 }

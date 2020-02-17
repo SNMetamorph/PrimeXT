@@ -1017,7 +1017,7 @@ void CScriptedSentence :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, US
 			return;
 
 //		ALERT( at_console, "Firing sentence: %s\n", STRING(m_iszSentence) );
-		SetThink( &FindThink );
+		SetThink( &CScriptedSentence::FindThink );
 		pev->nextthink = gpGlobals->time;
 	}
 }
@@ -1088,7 +1088,7 @@ void CScriptedSentence :: FindThink( void )
 			else SENTENCEG_PlayRndSz( pEntity->edict(), pszSentence, m_flVolume, m_flAttenuation, 0, PITCH_NORM );
 			if ( pev->spawnflags & SF_SENTENCE_ONCE )
 				UTIL_Remove( this );
-			SetThink( &DelayThink );
+			SetThink( &CScriptedSentence::DelayThink );
 			pev->nextthink = gpGlobals->time + m_flDuration + m_flRepeat;
 			m_active = FALSE;
 		}

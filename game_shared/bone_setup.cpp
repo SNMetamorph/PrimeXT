@@ -1103,13 +1103,15 @@ float CStudioBoneSetup :: LocalCPS( int sequence )
 //-----------------------------------------------------------------------------
 float CStudioBoneSetup :: SetController( int iController, float flValue, float &ctlValue )
 {
+	int i;
+
 	if( !m_pStudioHeader )
 		return flValue;
 
 	mstudiobonecontroller_t *pbonecontroller = (mstudiobonecontroller_t *)((byte *)m_pStudioHeader + m_pStudioHeader->bonecontrollerindex);
 
 	// find first controller that matches the index
-	for( int i = 0; i < m_pStudioHeader->numbonecontrollers; i++, pbonecontroller++ )
+	for( i = 0; i < m_pStudioHeader->numbonecontrollers; i++, pbonecontroller++ )
 	{
 		if( pbonecontroller->index == iController )
 			break;
@@ -1165,13 +1167,15 @@ float CStudioBoneSetup :: SetController( int iController, float flValue, float &
 //-----------------------------------------------------------------------------
 float CStudioBoneSetup :: GetController( int iController, float ctlValue )
 {
+	int i;
+
 	if( !m_pStudioHeader )
 		return 0.0f;
 
 	mstudiobonecontroller_t *pbonecontroller = (mstudiobonecontroller_t *)((byte *)m_pStudioHeader + m_pStudioHeader->bonecontrollerindex);
 
 	// find first controller that matches the index
-	for( int i = 0; i < m_pStudioHeader->numbonecontrollers; i++, pbonecontroller++ )
+	for( i = 0; i < m_pStudioHeader->numbonecontrollers; i++, pbonecontroller++ )
 	{
 		if( pbonecontroller->index == iController )
 			break;

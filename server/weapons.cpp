@@ -501,7 +501,7 @@ void CBasePlayerItem::Materialize( void )
 	pev->solid = SOLID_TRIGGER;
 
 	RelinkEntity( TRUE ); // link into world.
-	SetTouch( &DefaultTouch);
+	SetTouch( &CBasePlayerItem::DefaultTouch);
 	SetThink( NULL);
 
 }

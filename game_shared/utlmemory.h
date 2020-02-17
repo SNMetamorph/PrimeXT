@@ -338,15 +338,24 @@ void CUtlMemory<T,I>::Init( int nGrowSize /*= 0*/, int nInitSize /*= 0*/ )
 	}
 }
 
+template< class T >
+void SWAP( T &a, T &b )
+{
+	T tmp( a );
+	a = b;
+	b = tmp;
+}
+
+
 //-----------------------------------------------------------------------------
 // Fast swap
 //-----------------------------------------------------------------------------
 template< class T, class I >
 void CUtlMemory<T,I>::Swap( CUtlMemory<T,I> &mem )
 {
-	swap( m_nGrowSize, mem.m_nGrowSize );
-	swap( m_pMemory, mem.m_pMemory );
-	swap( m_nAllocationCount, mem.m_nAllocationCount );
+	SWAP( m_nGrowSize, mem.m_nGrowSize );
+	SWAP( m_pMemory, mem.m_pMemory );
+	SWAP( m_nAllocationCount, mem.m_nAllocationCount );
 }
 
 

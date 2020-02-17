@@ -1471,12 +1471,12 @@ void CTestHull :: Spawn( entvars_t *pevMasterNode )
 	if ( WorldGraph.m_fGraphPresent )
 	{
 		// graph loaded from disk, so we don't need the test hull
-		SetThink( &SUB_Remove );
+		SetThink( &CTestHull::SUB_Remove );
 		pev->nextthink = gpGlobals->time;
 	}
 	else
 	{
-		SetThink( &DropDelay );
+		SetThink( &CTestHull::DropDelay );
 		pev->nextthink = gpGlobals->time + 1;
 	}
 

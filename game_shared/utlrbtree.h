@@ -328,7 +328,7 @@ protected:
 	void ResetDbgInfo() {}
 
 private:
-	// this doesn't make sense for fixed rbtrees, since there's no useful max pointer, and the index space isn't contiguous anyways
+	// this doesn't make sense for fixed rbtrees, since there's no useful Q_max pointer, and the index space isn't contiguous anyways
 	I  MaxElement() const;
 };
 
@@ -1322,7 +1322,7 @@ int CUtlRBTree<T, I, L, M>::Depth( I node ) const
 
 	int depthright = Depth( RightChild(node) );
 	int depthleft = Depth( LeftChild(node) );
-	return max(depthright, depthleft) + 1;
+	return Q_max(depthright, depthleft) + 1;
 }
 
 
