@@ -15,7 +15,7 @@ GNU General Public License for more details.
 #ifndef PHYSIC_H
 #define PHYSIC_H
 
-#define USE_PHYSICS_ENGINE
+//#define USE_PHYSICS_ENGINE
 
 class Vector;
 class CBaseEntity;

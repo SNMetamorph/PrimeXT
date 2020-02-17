@@ -59,7 +59,7 @@ def configure(conf):
 	conf.env.GAMEDIR     = 'valve'
 	conf.env.CLIENT_DIR  = 'bin'
 	conf.env.SERVER_DIR  = 'bin'
-	conf.env.SERVER_NAME = 'bin'
+	conf.env.SERVER_NAME = 'server'
 	conf.env.PREFIX = ''
 
 	conf.load('fwgslib reconfigure')
@@ -143,7 +143,7 @@ def configure(conf):
 			# disable thread-safe local static initialization for C++11 code, as it cause crashes on Windows XP
 			'msvc':    ['/D_USING_V110_SDK71_', '/Zi', '/FS', '/Zc:threadSafeInit-', '/MT'],
 			'clang':   ['-g', '-gdwarf-2', '-fvisibility=hidden'],
-			'gcc':     ['-g', '-fpermissive']
+			'gcc':     ['-g', '-fpermissive', '-w']
 		},
 		'fast': {
 			'msvc':    ['/O2', '/Oy'],

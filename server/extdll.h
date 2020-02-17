@@ -47,8 +47,9 @@ typedef unsigned long ULONG;
 typedef unsigned char BYTE;
 typedef int BOOL;
 #define MAX_PATH PATH_MAX
-//#include <limits.h>
-//#include <stdarg.h>
+#include <limits.h>
+#include <stdarg.h>
+#include <ctype.h>
 #ifndef Q_min
 #define Q_min(a,b)  (((a) < (b)) ? (a) : (b))
 #endif

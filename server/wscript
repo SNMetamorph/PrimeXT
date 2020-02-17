@@ -13,12 +13,13 @@ def configure(conf):
 	if conf.env.COMPILER_CC == 'msvc':
 		# hl.def removes MSVC function name decoration from GiveFnptrsToDll on Windows.
 		# Without this, the lookup for this function fails.
-		hlDefNode = conf.path.find_resource("./hl.def")
+		hlDefNode = conf.path.find_resource("./server.def")
 
 		if hlDefNode is not None:
 			conf.env.append_unique('LINKFLAGS', '/def:%s' % hlDefNode.abspath())
 		else:
 			conf.fatal("Could not find hl.def")
+	conf.check_cc(lib='dl', mandatory=False)
 
 def build(bld):
 	defines = []
@@ -101,7 +102,7 @@ def build(bld):
 		'./monsters/nihilanth.cpp',
 		'./monsters/nodes.cpp',
 		'./novodex.cpp',
-		'./physics/NxUserStream.cpp',
+#		'./physics/NxUserStream.cpp',
 		'./monsters/osprey.cpp',
 		'./pathcorner.cpp',
 		'./physents.cpp',
@@ -157,7 +158,7 @@ def build(bld):
 
 	includes = Utils.to_list('. monsters physics wpn_shared ../common ../engine ../pm_shared ../game_shared ../public')
 
-	libs = []
+	libs = ['DL']
 
 	if bld.env.DEST_OS not in ['android', 'dos']:
 		install_path = os.path.join(bld.env.GAMEDIR, bld.env.SERVER_DIR)

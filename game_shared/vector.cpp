@@ -12,9 +12,9 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-
+#ifdef USE_PHYSICS_ENGINE
+#include "vector.h"
 #include "NxVec3.h"
-#include "Vector.h"
 
 Vector :: Vector( const NxVec3& v )
 {
@@ -26,3 +26,4 @@ const Vector& Vector :: operator = ( const NxVec3& v )
 	x = v.x; y = v.y; z = v.z;
 	return *this;
 }
+#endif

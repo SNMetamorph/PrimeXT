@@ -32,12 +32,13 @@
 enginefuncs_t g_engfuncs;
 globalvars_t  *gpGlobals;
 server_physics_api_t g_physfuncs;
-
+#ifdef _WIN32
 // Main DLL entry point
 BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
 	return TRUE;
 }
+#endif
 
 void DLLEXPORT GiveFnptrsToDll( enginefuncs_t* pengfuncsFromEngine, globalvars_t *pGlobals )
 {
