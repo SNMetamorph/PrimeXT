@@ -65,9 +65,9 @@ void CSatchelCharge :: Spawn( void )
 	SET_MODEL(ENT(pev), "models/w_satchel.mdl");
 	UTIL_SetSize(pev, Vector( -4, -4, -4), Vector(4, 4, 4));	// Uses point-sized, and can be stepped over
 
-	SetTouch( &SatchelSlide );
-	SetUse( &DetonateUse );
-	SetThink( &SatchelThink );
+	SetTouch( &CSatchelCharge::SatchelSlide );
+	SetUse( &CGrenade::DetonateUse );
+	SetThink( &CSatchelCharge::SatchelThink );
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	pev->gravity = 0.5;

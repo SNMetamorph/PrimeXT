@@ -161,7 +161,7 @@ void CBreakable::Spawn( void )
 		pev->playerclass = 1;
 	}
 
-	SetTouch( &BreakTouch );
+	SetTouch( &CBreakable::BreakTouch );
 	if ( FBitSet( pev->spawnflags, SF_BREAK_TRIGGER_ONLY ) )		// Only break on trigger
 		SetTouch( NULL );
 
@@ -459,7 +459,7 @@ void CBreakable::BreakTouch( CBaseEntity *pOther )
 		// play creaking sound here.
 		DamageSound();
 
-		SetThink( &Die );
+		SetThink( &CBreakable::Die );
 		SetTouch( NULL );
 		
 		if ( m_flDelay == 0 )
@@ -752,7 +752,7 @@ void CBreakable::Die( void )
 	// Fire targets on break
 	SUB_UseTargets( NULL, USE_TOGGLE, 0 );
 
-	SetThink( &SUB_Remove );
+	SetThink( &CBaseEntity::SUB_Remove );
 	SetNextThink( 0.1 );
 
 	if ( m_iszSpawnObject )
@@ -1106,24 +1106,24 @@ void CPushableMaker :: Spawn( void )
 	{
 		if( pev->spawnflags & SF_PUSHABLEMAKER_CYCLIC )
 		{
-			SetUse( &CyclicUse );	// drop one monster each time we fire
+			SetUse( &CPushableMaker::CyclicUse );	// drop one monster each time we fire
 		}
 		else
 		{
-			SetUse( &ToggleUse );	// so can be turned on/off
+			SetUse( &CPushableMaker::ToggleUse );	// so can be turned on/off
 		}
 
 		if( FBitSet ( pev->spawnflags, SF_PUSHABLEMAKER_START_ON ) )
 		{
 			// start making monsters as soon as monstermaker spawns
 			m_iState = STATE_ON;
-			SetThink( &MakerThink );
+			SetThink( &CPushableMaker::MakerThink );
 		}
 		else
 		{
 			// wait to be activated.
 			m_iState = STATE_OFF;
-			SetThink( &SUB_DoNothing );
+			SetThink( &CBaseEntity::SUB_DoNothing );
 		}
 	}
 	else
@@ -1131,7 +1131,7 @@ void CPushableMaker :: Spawn( void )
 			// no targetname, just start.
 			SetNextThink( m_flDelay );
 			m_iState = STATE_ON;
-			SetThink( &MakerThink );
+			SetThink( &CPushableMaker::MakerThink );
 	}
 
 	m_flGround = 0;
@@ -1267,7 +1267,7 @@ void CPushableMaker :: ToggleUse ( CBaseEntity *pActivator, CBaseEntity *pCaller
 	else
 	{
 		m_iState = STATE_ON;
-		SetThink( &MakerThink );
+		SetThink( &CPushableMaker::MakerThink );
 	}
 
 	SetNextThink( 0 );

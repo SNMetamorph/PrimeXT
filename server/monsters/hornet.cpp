@@ -96,8 +96,8 @@ void CHornet :: Spawn( void )
 	SET_MODEL(ENT( pev ), "models/hornet.mdl");
 	UTIL_SetSize( pev, Vector( -4, -4, -4 ), Vector( 4, 4, 4 ) );
 
-	SetTouch( &DieTouch );
-	SetThink( &StartTrack );
+	SetTouch( &CHornet::DieTouch );
+	SetThink( &CHornet::StartTrack );
 
 	edict_t *pSoundEnt = pev->owner;
 	if ( !pSoundEnt )
@@ -179,8 +179,8 @@ void CHornet :: StartTrack ( void )
 {
 	IgniteTrail();
 
-	SetTouch( &TrackTouch );
-	SetThink( &TrackTarget );
+	SetTouch( &CHornet::TrackTouch );
+	SetThink( &CHornet::TrackTarget );
 
 	SetNextThink( 0.1 );
 }
@@ -192,9 +192,9 @@ void CHornet :: StartDart ( void )
 {
 	IgniteTrail();
 
-	SetTouch( &DartTouch );
+	SetTouch( &CHornet::DartTouch );
 
-	SetThink( &SUB_Remove );
+	SetThink( &CBaseEntity::SUB_Remove );
 	SetNextThink( 4 );
 }
 
@@ -277,7 +277,7 @@ void CHornet :: TrackTarget ( void )
 	if (gpGlobals->time > m_flStopAttack)
 	{
 		SetTouch( NULL );
-		SetThink( &SUB_Remove );
+		SetThink( &CBaseEntity::SUB_Remove );
 		pev->nextthink = gpGlobals->time + 0.1;
 		return;
 	}
@@ -441,7 +441,7 @@ void CHornet::DieTouch ( CBaseEntity *pOther )
 	pev->modelindex = 0;// so will disappear for the 0.1 secs we wait until NEXTTHINK gets rid
 	pev->solid = SOLID_NOT;
 
-	SetThink( &SUB_Remove );
+	SetThink( &CBaseEntity::SUB_Remove );
 	pev->nextthink = gpGlobals->time + 1;// stick around long enough for the sound to finish!
 }
 

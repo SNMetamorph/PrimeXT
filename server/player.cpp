@@ -1,4 +1,4 @@
-	/***
+/***
 *
 *	Copyright (c) 1996-2002, Valve LLC. All rights reserved.
 *	
@@ -983,7 +983,7 @@ void CBasePlayer::Killed( entvars_t *pevAttacker, int iGib )
 	vecAngles.z = 0;
 	SetAbsAngles( vecAngles );
 
-	SetThink( &PlayerDeathThink);
+	SetThink( &CBasePlayer::PlayerDeathThink);
 	pev->nextthink = gpGlobals->time + 0.1;
 }
 
@@ -3590,7 +3590,7 @@ void CBloodSplat :: Spawn( CBaseEntity *pOwner )
 	SetAbsAngles( pOwner->pev->v_angle );
 	pev->owner = pOwner->edict();
 
-	SetThink( &Spray );
+	SetThink( &CBloodSplat::Spray );
 	SetNextThink( 0.1 );
 }
 
@@ -3610,7 +3610,7 @@ void CBloodSplat::Spray ( void )
 		else UTIL_BloodDecalTrace( &tr, BLOOD_COLOR_RED );
 	}
 
-	SetThink( &SUB_Remove );
+	SetThink( &CBaseEntity::SUB_Remove );
 	SetNextThink( 0.1 );
 }
 
@@ -5244,7 +5244,8 @@ void CPlayerKeyCatcher :: KeyValue( KeyValueData *pkvd )
 	}
 	else if( FStrEq( pkvd->szKeyName, "m_iszKeyToCatch" ))
 	{
-		for( int i = 0; i < ARRAYSIZE( gPlayerButtonTable ); i++ )
+		int i;
+		for( i = 0; i < ARRAYSIZE( gPlayerButtonTable ); i++ )
 		{
 			if( !Q_stricmp( pkvd->szValue, gPlayerButtonTable[i].buttonName ))
 			{
@@ -5382,7 +5383,7 @@ void CRevertSaved :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 {
 	UTIL_ScreenFadeAll( pev->rendercolor, Duration(), HoldTime(), pev->renderamt, FFADE_OUT );
 	pev->nextthink = gpGlobals->time + MessageTime();
-	SetThink( &MessageThink );
+	SetThink( &CRevertSaved::MessageThink );
 }
 
 
@@ -5393,7 +5394,7 @@ void CRevertSaved :: MessageThink( void )
 	if ( nextThink > 0 ) 
 	{
 		pev->nextthink = gpGlobals->time + nextThink;
-		SetThink( &LoadThink );
+		SetThink( &CRevertSaved::LoadThink );
 	}
 	else
 		LoadThink();

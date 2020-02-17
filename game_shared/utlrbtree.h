@@ -310,7 +310,7 @@ public:
 
 	bool IsValidIndex( I i ) const
 	{
-		if ( !Elements().IsIdxValid( i ) )
+		if ( !this->Elements().IsIdxValid( i ) )
 			return false;
 
 #ifdef _DEBUG // it's safe to skip this here, since the only way to get indices after m_LastAlloc is to use MaxElement()

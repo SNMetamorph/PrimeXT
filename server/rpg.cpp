@@ -134,8 +134,8 @@ void CRpgRocket :: Spawn( void )
 
 	pev->classname = MAKE_STRING("rpg_rocket");
 
-	SetThink( &IgniteThink );
-	SetTouch( &ExplodeTouch );
+	SetThink( &CRpgRocket::IgniteThink );
+	SetTouch( &CGrenade::ExplodeTouch );
 
 	Vector angles = GetLocalAngles();
 
@@ -206,7 +206,7 @@ void CRpgRocket :: IgniteThink( void  )
 	m_flIgniteTime = gpGlobals->time;
 
 	// set to follow laser spot
-	SetThink( &FollowThink );
+	SetThink( &CRpgRocket::FollowThink );
 	SetNextThink( 0.1 );
 }
 

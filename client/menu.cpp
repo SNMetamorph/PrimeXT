@@ -59,6 +59,7 @@ int CHudMenu :: VidInit( void )
 
 int CHudMenu :: Draw( float flTime )
 {
+	int i;
 	// check for if menu is set to disappear
 	if( m_flShutoffTime > 0 )
 	{
@@ -79,7 +80,7 @@ int CHudMenu :: Draw( float flTime )
 
 	// count the number of newlines
 	int nlc = 0;
-	for( int i = 0; i < MAX_MENU_STRING && g_szMenuString[i] != '\0'; i++ )
+	for( i = 0; i < MAX_MENU_STRING && g_szMenuString[i] != '\0'; i++ )
 	{
 		if( g_szMenuString[i] == '\n' )
 			nlc++;

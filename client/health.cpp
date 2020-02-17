@@ -367,7 +367,7 @@ int CHudHealth::DrawPain( float flTime )
 
 int CHudHealth::DrawDamage( float flTime )
 {
-	int r, g, b, a;
+	int r, g, b, a, i;
 	DAMAGE_IMAGE *pdmg;
 
 	if( !m_bitsDamage )
@@ -380,7 +380,7 @@ int CHudHealth::DrawDamage( float flTime )
 	ScaleColors( r, g, b, a );
 
 	// Draw all the items
-	for( int i = 0; i < NUM_DMG_TYPES; i++ )
+	for( i = 0; i < NUM_DMG_TYPES; i++ )
 	{
 		if( m_bitsDamage & giDmgFlags[i] )
 		{

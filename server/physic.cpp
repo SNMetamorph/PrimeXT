@@ -1486,6 +1486,7 @@ Returns the clipflags if the velocity was modified (hit something solid)
 */
 int SV_FlyMove( CBaseEntity *pEntity, float time, TraceResult *steptrace )
 {
+	int i, j;
 	Vector planes[MAX_CLIP_PLANES];
 	Vector new_velocity;
 	TraceResult trace;
@@ -1574,13 +1575,13 @@ int SV_FlyMove( CBaseEntity *pEntity, float time, TraceResult *steptrace )
 		numplanes++;
 
 		// modify original_velocity so it parallels all of the clip planes
-		for( int i = 0; i < numplanes; i++ )
+		for( i = 0; i < numplanes; i++ )
 		{
 			float overbounce = SV_CalcOverBounce( pEntity, &trace );
 
 			SV_ClipVelocity( original_velocity, planes[i], new_velocity, overbounce );
 
-			for( int j = 0; j < numplanes; j++ )
+			for( j = 0; j < numplanes; j++ )
 			{
 				if( j != i )
 				{

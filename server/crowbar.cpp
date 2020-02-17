@@ -164,7 +164,7 @@ void CCrowbar::PrimaryAttack( void )
 {
 	if (! Swing( 1 ))
 	{
-		SetThink( &SwingAgain );
+		SetThink( &CCrowbar::SwingAgain );
 		pev->nextthink = gpGlobals->time + 0.1;
 	}
 }

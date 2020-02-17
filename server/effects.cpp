@@ -115,7 +115,7 @@ void CBubbling::Spawn( void )
 
 	if ( !(pev->spawnflags & SF_BUBBLES_STARTOFF) )
 	{
-		SetThink( &FizzThink );
+		SetThink( &CBubbling::FizzThink );
 		pev->nextthink = gpGlobals->time + 2.0;
 		m_state = 1;
 	}
@@ -136,7 +136,7 @@ void CBubbling::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 
 	if ( m_state )
 	{
-		SetThink( &FizzThink );
+		SetThink( &CBubbling::FizzThink );
 		pev->nextthink = gpGlobals->time + 0.1;
 	}
 	else
@@ -530,7 +530,7 @@ void CLightning::Spawn( void )
 {
 	if( FStringNull( m_iszSpriteName ))
 	{
-		SetThink( &SUB_Remove );
+		SetThink( &CBaseEntity::SUB_Remove );
 		return;
 	}
 
@@ -548,7 +548,7 @@ void CLightning::Spawn( void )
 		SetThink( NULL );
 		if ( pev->dmg > 0 )
 		{
-			SetThink( &DamageThink );
+			SetThink( &CLightning::DamageThink );
 			pev->nextthink = gpGlobals->time + 0.1;
 		}
 		if ( pev->targetname )
@@ -562,7 +562,7 @@ void CLightning::Spawn( void )
 			else
 				m_active = 1;
 		
-			SetUse( &ToggleUse );
+			SetUse( &CLightning::ToggleUse );
 		}
 	}
 	else
@@ -570,11 +570,11 @@ void CLightning::Spawn( void )
 		m_active = 0;
 		if ( !FStringNull(pev->targetname) )
 		{
-			SetUse( &StrikeUse );
+			SetUse( &CLightning::StrikeUse );
 		}
 		if ( FStringNull(pev->targetname) || FBitSet(pev->spawnflags, SF_BEAM_STARTON) )
 		{
-			SetThink( &StrikeThink );
+			SetThink( &CLightning::StrikeThink );
 			pev->nextthink = gpGlobals->time + 1.0;
 		}
 	}
@@ -694,7 +694,7 @@ void CLightning::StrikeUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_T
 	}
 	else
 	{
-		SetThink( &StrikeThink );
+		SetThink( &CLightning::StrikeThink );
 		pev->nextthink = gpGlobals->time + 0.1;
 	}
 
@@ -1093,14 +1093,14 @@ void CLaser::Spawn( void )
 {
 	if ( FStringNull( pev->model ) )
 	{
-		SetThink( &SUB_Remove );
+		SetThink( &CBaseEntity::SUB_Remove );
 		return;
 	}
 
 	pev->solid = SOLID_NOT; // Remove model & collisions
 	Precache( );
 
-	SetThink( &StrikeThink );
+	SetThink( &CLaser::StrikeThink );
 	pev->flags |= FL_CUSTOMENTITY;
 
 	SetBits( pev->spawnflags, SF_BEAM_INITIALIZE );
@@ -1646,7 +1646,7 @@ void CSprite::Expand( float scaleSpeed, float fadeSpeed )
 {
 	pev->speed = scaleSpeed;
 	pev->health = fadeSpeed;
-	SetThink( &ExpandThink );
+	SetThink( &CSprite::ExpandThink );
 
 	pev->nextthink	= gpGlobals->time;
 	m_lastTime	= gpGlobals->time;
@@ -1741,7 +1741,7 @@ teleport_sprite:
 			m_pGoalEnt = m_pGoalEnt->GetNextTarget();
 			UpdateTrainPath();
 
-			SetThink( &AnimateThink );
+			SetThink( &CSprite::AnimateThink );
 			m_lastTime = gpGlobals->time;
 			SetLocalVelocity( g_vecZero );
 			SetNextThink( 0 );
@@ -1808,12 +1808,12 @@ void CSprite::TurnOn( void )
 
 	if( FClassnameIs( pev, "env_spritetrain" ))
 	{
-		SetThink( &SpriteMove );
+		SetThink( &CSprite::SpriteMove );
 		SetNextThink( 0 );
 	}
 	else if ( (pev->framerate && m_maxFrame > 1.0) || (pev->spawnflags & SF_SPRITE_ONCE) )
 	{
-		SetThink( &AnimateThink );
+		SetThink( &CSprite::AnimateThink );
 		pev->nextthink = gpGlobals->time;
 		m_lastTime = gpGlobals->time;
 	}
@@ -1971,7 +1971,7 @@ void CGibShooter::KeyValue( KeyValueData *pkvd )
 void CGibShooter::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	m_hActivator = pActivator;
-	SetThink( &ShootThink );
+	SetThink( &CGibShooter::ShootThink );
 	SetNextThink( 0 );
 }
 
@@ -2092,7 +2092,7 @@ void CGibShooter :: ShootThink ( void )
 		}
 		else
 		{
-			SetThink( &SUB_Remove );
+			SetThink( &CBaseEntity::SUB_Remove );
 			SetNextThink( 0 );
 		}
 	}
@@ -2361,7 +2361,7 @@ CBaseEntity *CEnvShooter :: CreateGib( void )
 	// if it's not animating
 	if( m_flGibLife )
 	{
-		pShot->SetThink( &SUB_Remove );
+		pShot->SetThink( &CBaseEntity::SUB_Remove );
 		pShot->SetNextThink( m_flGibLife );
 	}
 
@@ -2456,7 +2456,7 @@ void CTestEffect::TestThink( void )
 
 void CTestEffect::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	SetThink( &TestThink );
+	SetThink( &CTestEffect::TestThink );
 	pev->nextthink = gpGlobals->time + 0.1;
 	m_flStartTime = gpGlobals->time;
 }
@@ -2877,7 +2877,7 @@ void CEnvFunnel::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE us
 
 	MESSAGE_END();
 
-	SetThink( &SUB_Remove );
+	SetThink( &CBaseEntity::SUB_Remove );
 	pev->nextthink = gpGlobals->time;
 }
 
@@ -2989,7 +2989,7 @@ void CItemSoda::Spawn( void )
 	SET_MODEL ( ENT(pev), "models/can.mdl" );
 	UTIL_SetSize ( pev, Vector ( 0, 0, 0 ), Vector ( 0, 0, 0 ) );
 	
-	SetThink( &CanThink);
+	SetThink( &CItemSoda::CanThink);
 	pev->nextthink = gpGlobals->time + 0.5;
 
 	m_pUserData = WorldPhysic->CreateBodyFromEntity( this );
@@ -3002,7 +3002,7 @@ void CItemSoda::CanThink ( void )
 	pev->solid = SOLID_TRIGGER;
 	UTIL_SetSize ( pev, Vector ( -8, -8, 0 ), Vector ( 8, 8, 8 ) );
 	SetThink( NULL );
-	SetTouch( &CanTouch );
+	SetTouch( &CItemSoda::CanTouch );
 }
 
 void CItemSoda::CanTouch ( CBaseEntity *pOther )
@@ -3026,7 +3026,7 @@ void CItemSoda::CanTouch ( CBaseEntity *pOther )
 	pev->movetype = MOVETYPE_NONE;
 	pev->effects |= EF_NODRAW;
 	SetTouch( NULL );
-	SetThink( &SUB_Remove );
+	SetThink( &CBaseEntity::SUB_Remove );
 	pev->nextthink = gpGlobals->time;
 }
 
@@ -3226,7 +3226,7 @@ void CEnvProjector::Spawn( void )
 	// enable monitor
 	if( FStringNull( pev->targetname ) || FBitSet( pev->spawnflags, SF_PROJECTOR_START_ON ))
 	{
-		SetThink( &SUB_CallUseToggle );
+		SetThink( &CBaseEntity::SUB_CallUseToggle );
 		SetNextThink( 0.1 );
 	}
 }
@@ -3259,10 +3259,10 @@ void CEnvProjector :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TY
 
 		// run properly method
 		if( FBitSet( pev->iuser1, CF_MOVIE ))
-			SetThink( &CineThink );
+			SetThink( &CEnvProjector::CineThink );
 		else if( FBitSet( pev->iuser1, CF_SPRITE ) && Frames() > 1 )
-			SetThink( &SpriteThink );
-		else SetThink( &PVSThink );
+			SetThink( &CEnvProjector::SpriteThink );
+		else SetThink( &CEnvProjector::PVSThink );
 
 		SetNextThink( 0.1f );
 	}
@@ -3374,7 +3374,7 @@ void CEnvDynamicLight::Spawn( void )
 	// enable dynlight
 	if( FStringNull( pev->targetname ) || FBitSet( pev->spawnflags, SF_DYNLIGHT_START_ON ))
 	{
-		SetThink( &SUB_CallUseToggle );
+		SetThink( &CBaseEntity::SUB_CallUseToggle );
 		SetNextThink( 0.1 );
 	}
 }

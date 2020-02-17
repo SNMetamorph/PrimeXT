@@ -75,9 +75,10 @@ int CHudMOTD :: Draw( float fTime )
 
 	while( *ch )
 	{
+		byte *next_line;
 		int line_length = 0;  // count the length of the current line
 
-		for( byte *next_line = (byte *)ch; *next_line != '\n' && *next_line != 0; next_line++ )
+		for( next_line = (byte *)ch; *next_line != '\n' && *next_line != 0; next_line++ )
 			line_length += gHUD.m_scrinfo.charWidths[*next_line];
 
 		char *top = (char *)next_line;

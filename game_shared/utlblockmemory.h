@@ -137,7 +137,7 @@ void CUtlBlockMemory<T,I>::Init( int nGrowSize /* = 0 */, int nInitSize /* = 0 *
 		// default grow size is smallest size s.t. c++ allocation overhead is ~6% of block size
 		nGrowSize = ( 127 + sizeof( T ) ) / sizeof( T );
 	}
-	nGrowSize = SmallestPowerOfTwoGreaterOrEqual( nGrowSize );
+	nGrowSize = this->SmallestPowerOfTwoGreaterOrEqual( nGrowSize );
 	m_nIndexMask = nGrowSize - 1;
 
 	m_nIndexShift = 0;
@@ -244,7 +244,7 @@ void CUtlBlockMemory<T,I>::ChangeSize( int nBlocks )
 
 	if ( !m_pMemory )
 	{
-		Error( "CUtlBlockMemory overflow!\n" );
+		this->Error( "CUtlBlockMemory overflow!\n" );
 	}
 
 	// allocate new blocks if growing

@@ -491,6 +491,7 @@ int GetAnimationEvent( void *pmodel, int sequence, MonsterEvent_t *pMonsterEvent
 
 float SetController( void *pmodel, byte *controller, int iController, float flValue )
 {
+	int i;
 	studiohdr_t *pstudiohdr;
 	
 	if( !( pstudiohdr = (studiohdr_t *)pmodel ))
@@ -499,7 +500,7 @@ float SetController( void *pmodel, byte *controller, int iController, float flVa
 	mstudiobonecontroller_t *pbonecontroller = (mstudiobonecontroller_t *)((byte *)pstudiohdr + pstudiohdr->bonecontrollerindex);
 
 	// find first controller that matches the index
-	for( int i = 0; i < pstudiohdr->numbonecontrollers; i++, pbonecontroller++ )
+	for( i = 0; i < pstudiohdr->numbonecontrollers; i++, pbonecontroller++ )
 	{
 		if( pbonecontroller->index == iController )
 			break;

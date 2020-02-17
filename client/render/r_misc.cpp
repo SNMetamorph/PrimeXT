@@ -497,6 +497,7 @@ void HUD_DrawBeam( void )
 //======================
 void HUD_EjectShell( const struct mstudioevent_s *event, const struct cl_entity_s *entity )
 {
+	int i;
 	if( entity != GET_VIEWMODEL( ))
 		return; // can eject shells only from viewmodel
 
@@ -514,11 +515,11 @@ void HUD_EjectShell( const struct mstudioevent_s *event, const struct cl_entity_
 		return;
 	}
 
-	for( int i = 0; i < 3; i++ )
+	for( i = 0; i < 3; i++ )
 	{
 		if( angles[i] < -180 ) angles[i] += 360; 
 		else if( angles[i] > 180 ) angles[i] -= 360;
-          }
+	}
 
 	angles.x = -angles.x;
 	AngleVectors( angles, forward, right, up );

@@ -127,7 +127,7 @@ void CBarnacle :: Spawn()
 
 	SetActivity ( ACT_IDLE );
 
-	SetThink( &BarnacleThink );
+	SetThink( &CBarnacle::BarnacleThink );
 	SetNextThink( 0.5 );
 
 	UTIL_SetOrigin ( this, GetLocalOrigin() );
@@ -356,7 +356,7 @@ void CBarnacle :: Killed( entvars_t *pevAttacker, int iGib )
 	StudioFrameAdvance( 0.1 );
 
 	pev->nextthink = gpGlobals->time + 0.1;
-	SetThink( &WaitTillDead );
+	SetThink( &CBarnacle::WaitTillDead );
 }
 
 //=========================================================

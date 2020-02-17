@@ -127,8 +127,9 @@ int CHud :: DrawHudNumberString( int xpos, int ypos, int iMinX, int iNumber, int
 
 int CHud :: DrawHudStringReverse( int xpos, int ypos, int iMinX, char *szString, int r, int g, int b )
 {
+	byte *szIt;
 	// find the end of the string
-	for( byte *szIt = (byte *)szString; *szIt != 0; szIt++ )
+	for( szIt = (byte *)szString; *szIt != 0; szIt++ )
 	{
 		// we should count the length?		
 	}

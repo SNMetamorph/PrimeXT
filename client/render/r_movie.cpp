@@ -38,7 +38,7 @@ int R_PrecacheCinematic( const char *cinname )
 		return -1;
 
 	// first check for co-existing
-	for( int i = 0; i < MAX_MOVIES; i++ )
+	for( i = 0; i < MAX_MOVIES; i++ )
 	{
 		if( !Q_stricmp( tr.cinematics[i].name, cinname ))
 		{
@@ -102,7 +102,8 @@ void R_InitCinematics( void )
 
 void R_FreeCinematics( void )
 {
-	for( int i = 0; i < MAX_MOVIES; i++ )
+	int i;
+	for( i = 0; i < MAX_MOVIES; i++ )
 	{
 		if( tr.cinematics[i].state )
 		{

@@ -52,9 +52,10 @@ int CHudStatusBar :: VidInit( void )
 
 void CHudStatusBar :: Reset( void )
 {
+	int i;
 	m_iFlags &= ~HUD_ACTIVE;  // start out inactive
 
-	for( int i = 0; i < MAX_STATUSBAR_LINES; i++ )
+	for( i = 0; i < MAX_STATUSBAR_LINES; i++ )
 		m_szStatusText[i][0] = 0;
 
 	memset( m_iStatusValues, 0, sizeof m_iStatusValues );

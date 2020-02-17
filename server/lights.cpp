@@ -396,7 +396,7 @@ void CLightFader::WaitThink( void )
 	if( m_iszPattern )
 		m_pLight->SetStyle( m_iszPattern );
 	else m_pLight->SetCorrectStyle();
-	SetThink( &SUB_Remove );
+	SetThink( &CBaseEntity::SUB_Remove );
 	SetNextThink( 0.1 );
 }
 

@@ -43,7 +43,7 @@
 //=========================================================
 class CSound
 {
-	DECLARE_CLASS_NO_BASE( CSound );
+	//DECLARE_CLASS_NO_BASE( CSound );
 public:
 
 	void	Clear ( void );

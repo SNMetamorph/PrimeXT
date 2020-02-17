@@ -197,7 +197,7 @@ void CAmbientGeneric :: Spawn( void )
 	{
 		Vector vecOrigin = GetAbsOrigin();
 		ALERT( at_error, "EMPTY AMBIENT AT: %f, %f, %f\n", vecOrigin.x, vecOrigin.y, vecOrigin.z );
-		SetThink( &SUB_Remove );
+		SetThink( &CBaseEntity::SUB_Remove );
 		SetNextThink( 0.1 );
 		return;
 	}
@@ -257,7 +257,7 @@ void CAmbientGeneric :: Precache( void )
 	{
 		if( m_hParent != NULL )
 		{
-			SetThink( &StartDynamicSound ); 
+			SetThink( &CAmbientGeneric::StartDynamicSound ); 
 		}
 		else
 		{
@@ -274,7 +274,7 @@ void CAmbientGeneric :: StartDynamicSound( void )
 	if( m_fSpawning )
 		EMIT_SOUND_DYN( edict(), CHAN_ITEM, szSoundFile,	(m_dpv.vol * 0.01), m_flAttenuation, SND_SPAWNING, m_dpv.pitch);
 
-	SetThink( &RampThink );
+	SetThink( &CAmbientGeneric::RampThink );
 	SetNextThink( 0.1 );
 }
 
@@ -2050,19 +2050,19 @@ void CSpeaker :: Spawn( void )
 		Vector vecOrigin = GetAbsOrigin();
 		ALERT( at_error, "SPEAKER with no Level/Sentence! at: %f, %f, %f\n", vecOrigin.x, vecOrigin.y, vecOrigin.z );
 		SetNextThink( 0.1 );
-		SetThink( &SUB_Remove );
+		SetThink( &CBaseEntity::SUB_Remove );
 		return;
 	}
 
 	pev->solid = SOLID_NOT;
 	pev->movetype = MOVETYPE_NONE;
 
-	SetThink( &SpeakerThink );
+	SetThink( &CSpeaker::SpeakerThink );
 	pev->nextthink = 0.0;
 
 	// allow on/off switching via 'use' function.
 
-	SetUse( &ToggleUse );
+	SetUse( &CSpeaker::ToggleUse );
 
 	Precache( );
 }

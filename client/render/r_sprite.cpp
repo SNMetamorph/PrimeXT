@@ -85,6 +85,7 @@ mspriteframe_t *CSpriteModelRenderer :: GetSpriteFrame( int frame, float yaw )
 	}
 	else if( m_pSpriteHeader->frames[frame].type == SPR_GROUP ) 
 	{
+		int i;
 		pspritegroup = (mspritegroup_t *)m_pSpriteHeader->frames[frame].frameptr;
 
 		float *pintervals = pspritegroup->intervals;
@@ -95,7 +96,7 @@ mspriteframe_t *CSpriteModelRenderer :: GetSpriteFrame( int frame, float yaw )
 		// are positive, so we don't have to worry about division by zero
 		float targettime = tr.time - ((int)( tr.time / fullinterval )) * fullinterval;
 
-		for( int i = 0; i < (numframes - 1); i++ )
+		for( i = 0; i < (numframes - 1); i++ )
 		{
 			if( pintervals[i] > targettime )
 				break;

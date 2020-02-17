@@ -349,7 +349,7 @@ void CMultiSource :: Spawn()
 { 
 	// set up think for later registration
 	SetBits( pev->spawnflags, SF_MULTI_INIT ); // until it's initialized
-	SetThink( &Register );
+	SetThink( &CMultiSource::Register );
 	SetNextThink( 0.1 );
 }
 
@@ -671,7 +671,7 @@ void CBaseButton :: Spawn( void )
 	// this button should spark in OFF state
 	if( FBitSet( pev->spawnflags, SF_BUTTON_SPARK_IF_OFF ))
 	{
-		SetThink( &ButtonSpark );
+		SetThink( &CBaseButton::ButtonSpark );
 		SetNextThink( 0.5f );
 	}
 
@@ -708,13 +708,13 @@ void CBaseButton :: Spawn( void )
 	// if the button is flagged for USE button activation only, take away it's touch function and add a use function
 	if( FBitSet( pev->spawnflags, SF_BUTTON_TOUCH_ONLY ))
 	{
-		SetTouch( &ButtonTouch );
+		SetTouch( &CBaseButton::ButtonTouch );
 		SetUse( NULL );
 	}
 	else 
 	{
 		SetTouch( NULL );
-		SetUse( &ButtonUse );
+		SetUse( &CBaseButton::ButtonUse );
 	}
 
 	UTIL_SetOrigin( this, m_vecPosition1 );
@@ -828,7 +828,7 @@ void CBaseButton :: ButtonActivate( void )
 	}
 	else
 	{
-		SetMoveDone( &TriggerAndWait );
+		SetMoveDone( &CBaseButton::TriggerAndWait );
 
 		if( !m_fRotating )
 			LinearMove( m_vecPosition2, pev->speed );
@@ -856,12 +856,12 @@ void CBaseButton::TriggerAndWait( void )
 		}
 		else
 		{
-			SetTouch( &ButtonTouch );
+			SetTouch( &CBaseButton::ButtonTouch );
 		}
 	}
 	else
 	{
-		SetThink( &ButtonReturn );
+		SetThink( &CBaseButton::ButtonReturn );
 		if( m_flWait )
 		{
 			SetNextThink( m_flWait );
@@ -889,7 +889,7 @@ void CBaseButton::ButtonReturn( void )
 	}
 	else
 	{
-		SetMoveDone( &ButtonBackHome );
+		SetMoveDone( &CBaseButton::ButtonBackHome );
 
 		if( !m_fRotating )
 			LinearMove( m_vecPosition1, pev->speed );
@@ -937,13 +937,13 @@ void CBaseButton::ButtonBackHome( void )
 	}
 	else
 	{
-		SetTouch( &ButtonTouch );
+		SetTouch( &CBaseButton::ButtonTouch );
 	}
 
 	// reset think for a sparking button
 	if( FBitSet( pev->spawnflags, SF_BUTTON_SPARK_IF_OFF ))
 	{
-		SetThink( &ButtonSpark );
+		SetThink( &CBaseButton::ButtonSpark );
 		SetNextThink( 0.5 );
 	}
 	else
@@ -1023,12 +1023,12 @@ void CRotButton::Spawn( void )
 	if( !FBitSet( pev->spawnflags, SF_BUTTON_TOUCH_ONLY ))
 	{
 		SetTouch( NULL );
-		SetUse( &ButtonUse );
+		SetUse( &CBaseButton::ButtonUse );
 	}
 	else
 	{	
 		// touchable button
-		SetTouch( &ButtonTouch );
+		SetTouch( &CBaseButton::ButtonTouch );
 	}
 
 	UTIL_SetOrigin( this, GetLocalOrigin( ));
@@ -1160,7 +1160,7 @@ void CMomentaryRotButton :: Spawn( void )
 	m_lastUsed = 0;
 
 	m_pUserData = WorldPhysic->CreateKinematicBodyFromEntity( this );
-	SetUse( &ButtonUse );
+	SetUse( &CMomentaryRotButton::ButtonUse );
 }
 
 void CMomentaryRotButton :: KeyValue( KeyValueData *pkvd )
@@ -1233,8 +1233,8 @@ void CMomentaryRotButton :: SetPosition( float value )
 	// play sound on set new pos
 	PlaySound();
 
-	SetMoveDone( &SetPositionMoveDone );
-	SetThink( &UpdateThink );
+	SetMoveDone( &CMomentaryRotButton::SetPositionMoveDone );
+	SetThink( &CMomentaryRotButton::UpdateThink );
 	SetNextThink( 0 );
 
 	// Think again in 0.1 seconds or the time that it will take us to reach our movement goal,
@@ -1336,7 +1336,7 @@ void CMomentaryRotButton :: UpdateButton( void )
 	// clock runs ahead of the server.
 	if( !m_pfnThink )
 	{
-		SetThink( &UpdateThink );
+		SetThink( &CMomentaryRotButton::UpdateThink );
 		SetNextThink( 0 );
 	}
 }
@@ -1394,7 +1394,7 @@ void CMomentaryRotButton :: UpdateSelf( float value, bool bPlaySound )
 	if( bPlaySound ) PlaySound();
 
 	SetLocalAvelocity(( m_direction * pev->speed ) * pev->movedir );
-	SetMoveDone( &UseMoveDone );
+	SetMoveDone( &CMomentaryRotButton::UseMoveDone );
 }
 
 void CMomentaryRotButton :: UseMoveDone( void )
@@ -1409,7 +1409,7 @@ void CMomentaryRotButton :: UseMoveDone( void )
 
 	if( FBitSet( pev->spawnflags, SF_MOMENTARY_ROT_BUTTON_AUTO_RETURN ) && m_returnSpeed > 0 )
 	{
-		SetMoveDone( &ReturnMoveDone );
+		SetMoveDone( &CMomentaryRotButton::ReturnMoveDone );
 		m_direction = -1;
 
 		if( flPos >= 1.0f )
@@ -1433,7 +1433,7 @@ void CMomentaryRotButton :: ReturnMoveDone( void )
 {
 	float value = GetPos( GetLocalAngles() );
 
-	SetUse( &ButtonUse );
+	SetUse( &CMomentaryRotButton::ButtonUse );
 
 	if( value <= 0 )
 	{
@@ -1458,7 +1458,7 @@ void CMomentaryRotButton :: ReturnMoveDone( void )
 		SetLocalAvelocity( -m_returnSpeed * pev->movedir );
 		SetMoveDoneTime( 0.1f );
 
-		SetThink( &UpdateThink );
+		SetThink( &CMomentaryRotButton::UpdateThink );
 		SetNextThink( 0.01f );
 	}
 }
@@ -1472,7 +1472,7 @@ void CMomentaryRotButton :: SetPositionMoveDone( void )
 		// g-cont. we need auto return after direct set position?
 		if( FBitSet( pev->spawnflags, SF_MOMENTARY_ROT_BUTTON_AUTO_RETURN ) && m_returnSpeed > 0 )
 		{
-			SetMoveDone( &ReturnMoveDone );
+			SetMoveDone( &CMomentaryRotButton::ReturnMoveDone );
 			m_direction = -1;
 
 			if( flCurPos >= 1.0f )
@@ -1657,13 +1657,13 @@ void CEnvSpark :: Spawn(void)
 	if( FBitSet( pev->spawnflags, SF_SPARK_TOGGLE ))
 	{
 		if( FBitSet( pev->spawnflags, SF_SPARK_START_ON ))
-			SetThink( &SparkThink );	// start sparking
+			SetThink( &CEnvSpark::SparkThink );	// start sparking
 
-		SetUse( &SparkUse );
+		SetUse( &CEnvSpark::SparkUse );
 	}
 	else
 	{
-		SetThink( &SparkThink );
+		SetThink( &CEnvSpark::SparkThink );
 	}		
 
 	SetNextThink( 0.1f + RANDOM_FLOAT( 0.0f, 1.5f ));

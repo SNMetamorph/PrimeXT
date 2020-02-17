@@ -163,7 +163,7 @@ void CStomp::Think( void )
 				pSprite->SetAbsVelocity( Vector(RANDOM_FLOAT(-200,200),RANDOM_FLOAT(-200,200),175));
 				// pSprite->AnimateAndDie( RANDOM_FLOAT( 8.0, 12.0 ) );
 				pSprite->pev->nextthink = gpGlobals->time + 0.3;
-				pSprite->SetThink( &SUB_Remove );
+				pSprite->SetThink( &CBaseEntity::SUB_Remove );
 				pSprite->SetTransparency( kRenderTransAdd, 255, 255, 255, 255, kRenderFxFadeFast );
 			}
 		}
@@ -1123,7 +1123,7 @@ void CGargantua::RunTask( Task_t *pTask )
 			pev->rendercolor.z = 0;
 			StopAnimation();
 			pev->nextthink = gpGlobals->time + 0.15;
-			SetThink( &SUB_Remove );
+			SetThink( &CBaseEntity::SUB_Remove );
 			int i;
 			int parts = MODEL_FRAMES( gGargGibModel );
 			for ( i = 0; i < 10; i++ )
@@ -1142,7 +1142,7 @@ void CGargantua::RunTask( Task_t *pTask )
 				pGib->SetAbsOrigin( GetAbsOrigin() );
 				pGib->SetAbsVelocity( UTIL_RandomBloodVector() * RANDOM_FLOAT( 300, 500 ));
 				pGib->SetNextThink( 1.25 );
-				pGib->SetThink( &SUB_FadeOut );
+				pGib->SetThink( &CBaseEntity::SUB_FadeOut );
 			}
 
 			Vector vecOrigin = GetAbsOrigin();
