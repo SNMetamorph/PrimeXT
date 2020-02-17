@@ -139,7 +139,7 @@ void CCineMonster :: Spawn( void )
 	// if no targetname, start now
 	if ( FStringNull(pev->targetname) || !FStringNull( m_iszIdle ) )
 	{
-		SetThink( CineThink );
+		SetThink( &CineThink );
 		pev->nextthink = gpGlobals->time + 1.0;
 		// Wait to be used?
 		if ( pev->targetname )
@@ -204,7 +204,7 @@ void CCineMonster :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 	else
 	{
 		// if not, try finding them
-		SetThink( CineThink );
+		SetThink( &CineThink );
 		pev->nextthink = gpGlobals->time;
 	}
 }
@@ -225,7 +225,7 @@ void CCineMonster :: Touch( CBaseEntity *pOther )
 //
 void CCineMonster :: Die( void )
 {
-	SetThink( SUB_Remove );
+	SetThink( &SUB_Remove );
 }
 
 //
@@ -547,7 +547,7 @@ void CCineMonster :: SequenceDone ( CBaseMonster *pMonster )
 
 	if ( !( pev->spawnflags & SF_SCRIPT_REPEATABLE ) )
 	{
-		SetThink( SUB_Remove );
+		SetThink( &SUB_Remove );
 		pev->nextthink = gpGlobals->time + 0.1;
 	}
 	
@@ -821,7 +821,7 @@ BOOL CBaseMonster :: CineCleanup( void )
 			SetTouch( NULL );
 		}
 		else
-			SUB_StartFadeOut(); // SetThink( SUB_DoNothing );
+			SUB_StartFadeOut(); // SetThink( &SUB_DoNothing );
 		// This turns off animation & physics in case their origin ends up stuck in the world or something
 		StopAnimation();
 		pev->movetype = MOVETYPE_NONE;
@@ -1017,7 +1017,7 @@ void CScriptedSentence :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, US
 			return;
 
 //		ALERT( at_console, "Firing sentence: %s\n", STRING(m_iszSentence) );
-		SetThink( FindThink );
+		SetThink( &FindThink );
 		pev->nextthink = gpGlobals->time;
 	}
 }
@@ -1031,7 +1031,7 @@ void CScriptedSentence :: Spawn( void )
 	// if no targetname, start now
 	if ( !pev->targetname )
 	{
-		SetThink( FindThink );
+		SetThink( &FindThink );
 		pev->nextthink = gpGlobals->time + 1.0;
 	}
 
@@ -1070,7 +1070,7 @@ void CScriptedSentence :: FindThink( void )
 		StartSentence( pMonster );
 		if ( pev->spawnflags & SF_SENTENCE_ONCE )
 			UTIL_Remove( this );
-		SetThink( DelayThink );
+		SetThink( &DelayThink );
 		pev->nextthink = gpGlobals->time + m_flDuration + m_flRepeat;
 		m_active = FALSE;
 //		ALERT( at_console, "%s: found monster %s\n", STRING(m_iszSentence), STRING(m_iszEntity) );
@@ -1088,7 +1088,7 @@ void CScriptedSentence :: FindThink( void )
 			else SENTENCEG_PlayRndSz( pEntity->edict(), pszSentence, m_flVolume, m_flAttenuation, 0, PITCH_NORM );
 			if ( pev->spawnflags & SF_SENTENCE_ONCE )
 				UTIL_Remove( this );
-			SetThink( DelayThink );
+			SetThink( &DelayThink );
 			pev->nextthink = gpGlobals->time + m_flDuration + m_flRepeat;
 			m_active = FALSE;
 		}
@@ -1106,7 +1106,7 @@ void CScriptedSentence :: DelayThink( void )
 	m_active = TRUE;
 	if ( !pev->targetname )
 		pev->nextthink = gpGlobals->time + 0.1;
-	SetThink( FindThink );
+	SetThink( &FindThink );
 }
 
 
@@ -1261,7 +1261,7 @@ LINK_ENTITY_TO_CLASS( monster_furniture, CFurniture );
 //=========================================================
 void CFurniture :: Die ( void )
 {
-	SetThink ( SUB_Remove );
+	SetThink( &SUB_Remove );
 	pev->nextthink = gpGlobals->time;
 }
 

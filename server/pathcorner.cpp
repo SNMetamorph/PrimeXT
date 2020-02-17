@@ -178,7 +178,7 @@ void CPathTrack :: Spawn( void )
 
 // DEBUGGING CODE
 #ifdef PATH_SPARKLE_DEBUG
-	SetThink( Sparkle );
+	SetThink( &Sparkle );
 	pev->nextthink = gpGlobals->time + 0.5;
 #endif
 }

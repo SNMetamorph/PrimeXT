@@ -1470,12 +1470,12 @@ void CTestHull :: Spawn( entvars_t *pevMasterNode )
 	if ( WorldGraph.m_fGraphPresent )
 	{
 		// graph loaded from disk, so we don't need the test hull
-		SetThink ( SUB_Remove );
+		SetThink( &SUB_Remove );
 		pev->nextthink = gpGlobals->time;
 	}
 	else
 	{
-		SetThink ( DropDelay );
+		SetThink( &DropDelay );
 		pev->nextthink = gpGlobals->time + 1;
 	}
 
@@ -1495,7 +1495,7 @@ void CTestHull::DropDelay ( void )
 
 	UTIL_SetOrigin ( this, WorldGraph.m_pNodes[ 0 ].m_vecOrigin );
 
-	SetThink ( CallBuildNodeGraph );
+	SetThink( &CallBuildNodeGraph );
 
 	pev->nextthink = gpGlobals->time + 1;
 }
@@ -1649,7 +1649,7 @@ void CTestHull :: BuildNodeGraph( void )
 	float	flDist;
 	int		step;
 
-	SetThink ( SUB_Remove );// no matter what happens, the hull gets rid of itself.
+	SetThink( &SUB_Remove );// no matter what happens, the hull gets rid of itself.
 	pev->nextthink = gpGlobals->time;
 
 	// malloc a swollen temporary connection pool that we trim down after we know exactly how many connections there are.
@@ -1738,7 +1738,7 @@ void CTestHull :: BuildNodeGraph( void )
 	{
 		ALERT ( at_aiconsole, "**ConnectVisibleNodes FAILED!\n" );
 		
-		SetThink ( ShowBadNode );// send the hull off to show the offending node.
+		SetThink( &ShowBadNode );// send the hull off to show the offending node.
 		SetAbsOrigin( WorldGraph.m_pNodes[ iBadNode ].m_vecOrigin );
 		
 		if ( pTempPool )
@@ -3549,7 +3549,7 @@ void CNodeViewer::Spawn( )
 	ALERT( at_aiconsole, "%d nodes\n", m_nVisited );
 
 	m_iDraw = 0;
-	SetThink( DrawThink );
+	SetThink( &DrawThink );
 	pev->nextthink = gpGlobals->time;
 }
 

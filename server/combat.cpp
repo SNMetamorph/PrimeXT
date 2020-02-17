@@ -127,7 +127,7 @@ void CGib :: SpawnStickyGibs( entvars_t *pevVictim, Vector vecOrigin, int cGibs 
 			pGib->pev->movetype = MOVETYPE_TOSS;
 			pGib->pev->solid = SOLID_BBOX;
 			UTIL_SetSize( pGib->pev, g_vecZero, g_vecZero );
-			pGib->SetTouch( StickyGibTouch );
+			pGib->SetTouch( &StickyGibTouch );
 			pGib->SetThink( NULL );
 		}
 
@@ -333,7 +333,7 @@ void CBaseMonster :: GibMonster( void )
 		if ( gibbed )
 		{
 			// don't remove players!
-			SetThink ( SUB_Remove );
+			SetThink( &SUB_Remove );
 			pev->nextthink = gpGlobals->time;
 		}
 		else
@@ -665,7 +665,7 @@ void CBaseEntity :: SUB_StartFadeOut ( void )
 	SetLocalAvelocity( g_vecZero );
 
 	pev->nextthink = gpGlobals->time + 0.1;
-	SetThink ( SUB_FadeOut );
+	SetThink( &SUB_FadeOut );
 }
 
 void CBaseEntity :: SUB_FadeOut ( void  )
@@ -679,7 +679,7 @@ void CBaseEntity :: SUB_FadeOut ( void  )
 	{
 		pev->renderamt = 0;
 		pev->nextthink = gpGlobals->time + 0.2;
-		SetThink ( SUB_Remove );
+		SetThink( &SUB_Remove );
 	}
 }
 
@@ -699,7 +699,7 @@ void CGib :: WaitTillLand ( void )
 
 	if( GetAbsVelocity() == g_vecZero )
 	{
-		SetThink( SUB_StartFadeOut );
+		SetThink( &SUB_StartFadeOut );
 		SetNextThink( m_lifeTime );
 
 		// If you bleed, you stink!
@@ -769,7 +769,7 @@ void CGib :: StickyGibTouch( CBaseEntity *pOther )
 {
 	TraceResult tr;
 	
-	SetThink( SUB_Remove );
+	SetThink( &SUB_Remove );
 	SetNextThink( 60 );
 
 	if( pOther == g_pWorld || pOther->pev->movetype == MOVETYPE_PUSH || pOther->IsPushable() || pOther->IsRigidBody() )
@@ -814,8 +814,8 @@ void CGib :: Spawn( const char *szGibModel )
 
 	SetNextThink( 4 );
 	m_lifeTime = 25;
-	SetThink( WaitTillLand );
-	SetTouch( BounceGibTouch );
+	SetThink( &WaitTillLand );
+	SetTouch( &BounceGibTouch );
 
 	m_material = matNone;
 	m_cBloodDecals = 5; // how many blood decals this gib can place (1 per bounce until none remain). 

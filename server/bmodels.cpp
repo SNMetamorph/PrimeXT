@@ -610,14 +610,14 @@ void CFuncRotating :: Spawn( void )
 	// instant-use brush?
 	if( FBitSet( pev->spawnflags, SF_ROTATING_INSTANT ))
 	{		
-		SetThink( SUB_CallUseToggle );
+		SetThink( &SUB_CallUseToggle );
 		SetNextThink( 0.2 ); // leave a magic delay for client to start up
 	}	
 
 	// can this brush inflict pain?
 	if( FBitSet( pev->spawnflags, SF_ROTATING_HURT ))
 	{
-		SetTouch( HurtTouch );
+		SetTouch( &HurtTouch );
 	}
 	
 	Precache( );
@@ -675,7 +675,7 @@ void CFuncRotating :: Precache( void )
 	{
 		// if fan was spinning, and we went through transition or save/restore,
 		// make sure we restart the sound. 1.5 sec delay is magic number. KDB
-		SetMoveDone( SpinUp );
+		SetMoveDone( &SpinUp );
 		SetMoveDoneTime( 0.2 );
 	}
 }
@@ -826,7 +826,7 @@ void CFuncRotating :: SpinUp( void )
 	// If we've met or exceeded target speed, stop spinning up.
 	if( bSpinUpDone )
 	{
-		SetMoveDone( Rotate );
+		SetMoveDone( &Rotate );
 		Rotate();
 	} 
 
@@ -880,7 +880,7 @@ void CFuncRotating :: SpinDown( void )
 	{
 		if( m_iState != STATE_OFF )
 		{
-			SetMoveDone( Rotate );
+			SetMoveDone( &Rotate );
 			Rotate();
 		}
 	}
@@ -983,7 +983,7 @@ void CFuncRotating::SetTargetSpeed( float flSpeed )
 	if( !FBitSet( pev->spawnflags, SF_ROTATING_ACCDCC ))
 	{
 		UpdateSpeed( m_flTargetSpeed );
-		SetMoveDone( Rotate );
+		SetMoveDone( &Rotate );
 	}
 	else
 	{
@@ -991,22 +991,22 @@ void CFuncRotating::SetTargetSpeed( float flSpeed )
 		if((( pev->speed > 0 ) && ( m_flTargetSpeed < 0 )) || (( pev->speed < 0 ) && ( m_flTargetSpeed > 0 )))
 		{
 			// check for reversing directions.
-			SetMoveDone( ReverseMove );
+			SetMoveDone( &ReverseMove );
 		}
 		else if( fabs( pev->speed ) < fabs( m_flTargetSpeed ))
 		{
 			// If we are below the new target speed, spin up to the target speed.
-			SetMoveDone( SpinUp );
+			SetMoveDone( &SpinUp );
 		}
 		else if( fabs( pev->speed ) > fabs( m_flTargetSpeed ))
 		{
 			// If we are above the new target speed, spin down to the target speed.
-			SetMoveDone( SpinDown );
+			SetMoveDone( &SpinDown );
 		}
 		else
 		{
 			// we are already at the new target speed. Just keep rotating.
-			SetMoveDone( Rotate );
+			SetMoveDone( &Rotate );
 		}
 	}
 
@@ -1054,7 +1054,7 @@ void CFuncRotating :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TY
 		{
 			// apply angular impulse (XashXT feature)
 			SetLocalAvelocity( pev->movedir * (bound( -1, value, 1 ) * m_flMaxSpeed ));
-			SetMoveDone( RotateFriction );
+			SetMoveDone( &RotateFriction );
 			pev->friction = 1.0f;
 			RotateFriction();
 		}
@@ -1176,14 +1176,14 @@ void CPendulum :: Spawn( void )
 
 	if( FBitSet( pev->spawnflags, SF_PENDULUM_START_ON ))
 	{		
-		SetThink( SUB_CallUseToggle );
+		SetThink( &SUB_CallUseToggle );
 		SetNextThink( 0.1 );
 	}
 	pev->speed = 0;
 
 	if( FBitSet( pev->spawnflags, SF_PENDULUM_SWING ))
 	{
-		SetTouch ( RopeTouch );
+		SetTouch( &RopeTouch );
 	}
 }
 
@@ -1201,7 +1201,7 @@ void CPendulum :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 
 			SetLocalAvelocity( m_maxSpeed * pev->movedir );
 			SetNextThink( delta / m_maxSpeed );
-			SetThink( Stop );
+			SetThink( &Stop );
 		}
 		else
 		{
@@ -1214,7 +1214,7 @@ void CPendulum :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 	else
 	{
 		SetNextThink( 0.1f );		// start the pendulum moving
-		SetThink( Swing );
+		SetThink( &Swing );
 		m_time = gpGlobals->time;		// save time to calculate dt
 		m_dampSpeed = m_maxSpeed;
 	}
@@ -1564,7 +1564,7 @@ void CFuncLight :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE 
 			m_iState = STATE_TURN_ON;
 			LIGHT_STYLE( m_iStyle, "mmamammmmammamamaaamammma" );
 			pev->frame = 0; // light texture is on
-			SetThink( Flicker );
+			SetThink( &Flicker );
 			SetNextThink( m_flDelay );
 		}
 		else
@@ -1653,7 +1653,7 @@ void CFuncLight :: Die( void )
 	else
 	{         // simple randomization
 		m_iFlickerMode = RANDOM_LONG( 1, 2 );
-		SetThink( Flicker );
+		SetThink( &Flicker );
 		SetNextThink( 0.1f + RANDOM_LONG( 0.1f, 0.2f ));
 	}
 

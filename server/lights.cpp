@@ -378,13 +378,13 @@ void CLightFader::FadeThink( void )
 		if (m_iWait > -1)
 		{
 			// wait until it's time to switch off
-			SetThink(&CLightFader:: WaitThink );
+			SetThink( &CLightFader:: WaitThink );
 			SetNextThink( m_iWait );
 		}
 		else
 		{
 			// we've finished, kill the fader
-			SetThink(&CLightFader:: SUB_Remove );
+			SetThink( &CLightFader:: SUB_Remove );
 			SetNextThink( 0.1 );
 		}
 	}
@@ -396,7 +396,7 @@ void CLightFader::WaitThink( void )
 	if( m_iszPattern )
 		m_pLight->SetStyle( m_iszPattern );
 	else m_pLight->SetCorrectStyle();
-	SetThink( SUB_Remove );
+	SetThink( &SUB_Remove );
 	SetNextThink( 0.1 );
 }
 

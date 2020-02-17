@@ -347,7 +347,7 @@ void CFuncPlat :: Spawn( void )
 	{
 		UTIL_SetOrigin( this, m_vecPosition1 );
 		m_toggle_state = TS_AT_TOP;
-		SetUse( PlatUse );
+		SetUse( &PlatUse );
 	}
 	else
 	{
@@ -458,7 +458,7 @@ void CFuncPlat :: GoDown( void )
 	ASSERT( m_toggle_state == TS_AT_TOP || m_toggle_state == TS_GOING_UP );
 
 	m_toggle_state = TS_GOING_DOWN;
-	SetMoveDone( CallHitBottom );
+	SetMoveDone( &CallHitBottom );
 	LinearMove( m_vecPosition2, pev->speed );
 }
 
@@ -488,7 +488,7 @@ void CFuncPlat :: GoUp( void )
 	
 	ASSERT( m_toggle_state == TS_AT_BOTTOM || m_toggle_state == TS_GOING_DOWN );
 	m_toggle_state = TS_GOING_UP;
-	SetMoveDone( CallHitTop );
+	SetMoveDone( &CallHitTop );
 	LinearMove( m_vecPosition1, pev->speed );
 }
 
@@ -510,7 +510,7 @@ void CFuncPlat :: HitTop( void )
 	if( !IsTogglePlat( ))
 	{
 		// After a delay, the platform will automatically start going down again.
-		SetMoveDone( CallGoDown );
+		SetMoveDone( &CallGoDown );
 		SetMoveDoneTime( 3 );
 	}
 }
@@ -536,7 +536,7 @@ void CFuncPlat :: HitFloor( void )
 	UTIL_FireTargets( pev->target, m_hActivator, this, USE_TOGGLE, m_flFloor );
 	UTIL_FireTargets( pev->netname, m_hActivator, this, USE_SET, m_flFloor );
 
-	SetUse( PlatUse );
+	SetUse( &PlatUse );
 	SetThink( NULL );
 	DontThink(); // stop the floor counter
 }
@@ -566,12 +566,12 @@ void CFuncPlat :: GoToFloor( float floor )
 	if( fabs( floor - curfloor ) > 1.0f )
 	{
 		// run a floor informator for env_counter
-		SetThink( FloorCalc );
+		SetThink( &FloorCalc );
 		SetNextThink( 0.1 );
 	}
 
 	SetUse( NULL );
-	SetMoveDone( CallHitFloor );
+	SetMoveDone( &CallHitFloor );
 	LinearMove( m_vecFloor, pev->speed );
 }
 
@@ -950,7 +950,7 @@ void CFuncTrain :: Wait( void )
 		if( pev->noise1 )
 			EMIT_SOUND( edict(), CHAN_VOICE, STRING( pev->noise1 ), m_volume, ATTN_NORM );
 
-		SetMoveDone( Next );
+		SetMoveDone( &Next );
 		m_iState = STATE_OFF;
 	}
 	else
@@ -1038,7 +1038,7 @@ void CFuncTrain :: Next( void )
 		ClearBits( pev->effects, EF_NOINTERP );
 		m_iState = STATE_ON;
 
-		SetMoveDone( Wait );
+		SetMoveDone( &Wait );
 		LinearMove( CalcPosition( pTarg ), pev->speed );
 	}
 }
@@ -1065,7 +1065,7 @@ void CFuncTrain :: Activate( void )
 		{
 			// not triggered, so start immediately
 			SetMoveDoneTime( 0.1 );
-			SetMoveDone( Next );
+			SetMoveDone( &Next );
 		}
 		else
 		{
@@ -1349,7 +1349,7 @@ void CTrainSequence :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_T
 					}
 					else if( iDir == DIRECTION_STOP )
 					{
-						SetThink( EndThink );
+						SetThink( &EndThink );
 						SetNextThink( 0.1f );
 						return;
 					}
@@ -2237,7 +2237,7 @@ void CFuncTrackTrain :: Next( void )
 		SetMoveDoneTime( 0.5f );
 		SetNextThink( 0.0f );
 		SetMoveDone( NULL );
-		SetThink( Next );
+		SetThink( &Next );
 	}
 	else
 	{
@@ -2261,7 +2261,7 @@ void CFuncTrackTrain :: Next( void )
 			float flTime = distance / fabs( m_oldSpeed );
 			SetLocalVelocity( GetLocalVelocity() * (m_oldSpeed / distance) );
 			SetMoveDoneTime( flTime );
-			SetMoveDone( DeadEnd );
+			SetMoveDone( &DeadEnd );
 			DontThink();
 		}
 		else
@@ -2381,7 +2381,7 @@ void CFuncTrackTrain :: Find( void )
 	pev->speed = m_startSpeed;
 
 	SetNextThink( 0.1f );
-	SetThink( Next );
+	SetThink( &Next );
 }
 
 void CFuncTrackTrain :: NearestPath( void )
@@ -2409,7 +2409,7 @@ void CFuncTrackTrain :: NearestPath( void )
 	if ( !pNearest )
 	{
 		ALERT( at_console, "Can't find a nearby track !!!\n" );
-		SetThink(NULL);
+		SetThink( NULL);
 		return;
 	}
 
@@ -2594,7 +2594,7 @@ void CFuncTrainControls :: Spawn( void )
 	UTIL_SetSize( pev, pev->mins, pev->maxs );
 	RelinkEntity( TRUE );
 	
-	SetThink( Find );
+	SetThink( &Find );
 	SetNextThink( 0.0f );
 }
 
@@ -2708,7 +2708,7 @@ void CFuncTrackChange :: Spawn( void )
 
 	EnableUse();
 	SetNextThink( 2.0f ); // let's train spawn
-	SetThink( Find );
+	SetThink( &Find );
 	Precache();
 }
 
@@ -2751,7 +2751,7 @@ void CFuncTrackChange :: KeyValue( KeyValueData *pkvd )
 void CFuncTrackChange::OverrideReset( void )
 {
 	SetMoveDoneTime( 1.0 );
-	SetMoveDone( Find );
+	SetMoveDone( &Find );
 }
 
 void CFuncTrackChange :: Find( void )
@@ -2860,14 +2860,14 @@ void CFuncTrackChange :: GoDown( void )
 	// If ROTMOVE, move & rotate
 	if( FBitSet( pev->spawnflags, SF_TRACK_DONT_MOVE ) )
 	{
-		SetMoveDone( CallHitBottom );
+		SetMoveDone( &CallHitBottom );
 		m_toggle_state = TS_GOING_DOWN;
 		AngularMove( m_start, pev->speed );
 	}
 	else
 	{
 		CFuncPlat :: GoDown();
-		SetMoveDone( CallHitBottom );
+		SetMoveDone( &CallHitBottom );
 		RotMove( m_start, GetMoveDoneTime() );
 	}
 
@@ -2897,14 +2897,14 @@ void CFuncTrackChange :: GoUp( void )
 	if( FBitSet( pev->spawnflags, SF_TRACK_DONT_MOVE ))
 	{
 		m_toggle_state = TS_GOING_UP;
-		SetMoveDone( CallHitTop );
+		SetMoveDone( &CallHitTop );
 		AngularMove( m_end, pev->speed );
 	}
 	else
 	{
 		// If ROTMOVE, move & rotate
 		CFuncPlat :: GoUp();
-		SetMoveDone( CallHitTop );
+		SetMoveDone( &CallHitTop );
 		RotMove( m_end, GetMoveDoneTime( ));
 	}
 	
@@ -3246,7 +3246,7 @@ void CGunTarget::Spawn( void )
 
 	if( pev->spawnflags & FGUNTARGET_START_ON )
 	{
-		SetMoveDone( Start );
+		SetMoveDone( &Start );
 		SetMoveDoneTime( 0.3 );
 	}
 }
@@ -3283,7 +3283,7 @@ void CGunTarget::Next( void )
 		return;
 	}
 
-	SetMoveDone( Wait );
+	SetMoveDone( &Wait );
 	LinearMove( pTarget->GetLocalOrigin() - (pev->mins + pev->maxs) * 0.5, pev->speed );
 }
 
@@ -3309,7 +3309,7 @@ void CGunTarget::Wait( void )
 	m_flWait = pTarget->GetDelay();
 
 	pev->target = pTarget->pev->target;
-	SetMoveDone( Next );
+	SetMoveDone( &Next );
 
 	if( m_flWait != 0 )
 	{

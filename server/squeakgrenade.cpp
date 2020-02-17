@@ -118,8 +118,8 @@ void CSqueakGrenade :: Spawn( void )
 	SET_MODEL(ENT(pev), "models/w_squeak.mdl");
 	UTIL_SetSize(pev, Vector( -4, -4, 0), Vector(4, 4, 8));
 
-	SetTouch( SuperBounceTouch );
-	SetThink( HuntThink );
+	SetTouch( &SuperBounceTouch );
+	SetThink( &HuntThink );
 	pev->nextthink = gpGlobals->time + 0.1;
 	m_flNextHunt = gpGlobals->time + 1E6;
 
@@ -159,7 +159,7 @@ void CSqueakGrenade::Precache( void )
 void CSqueakGrenade :: Killed( entvars_t *pevAttacker, int iGib )
 {
 	pev->model = iStringNull;// make invisible
-	SetThink( SUB_Remove );
+	SetThink( &SUB_Remove );
 	SetTouch( NULL );
 	pev->nextthink = gpGlobals->time + 0.1;
 
@@ -496,7 +496,7 @@ void CSqueak::Holster( void )
 	if (!m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
 	{
 		m_pPlayer->RemoveWeapon( WEAPON_SNARK );
-		SetThink( DestroyItem );
+		SetThink( &DestroyItem );
 		pev->nextthink = gpGlobals->time + 0.1;
 		return;
 	}

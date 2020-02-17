@@ -98,7 +98,7 @@ void CFuncMonitor :: Spawn( void )
 	// enable monitor
 	if( FBitSet( pev->spawnflags, SF_MONITOR_START_ON ))
 	{
-		SetThink( SUB_CallUseToggle );
+		SetThink( &SUB_CallUseToggle );
 		SetNextThink( 0.1 );
 	}
 }
@@ -233,7 +233,7 @@ void CFuncMonitor :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 		pev->body = !pev->body;
 		m_iState = (pev->body) ? STATE_ON : STATE_OFF;
 
-		SetThink( VisThink );
+		SetThink( &VisThink );
 
 		if( pev->body )
 		{
@@ -310,7 +310,7 @@ void CFuncPortal :: Spawn( void )
 		return;
 	}
 
-	SetThink( VisThink );
+	SetThink( &VisThink );
 
 	if( FBitSet( pev->spawnflags, SF_PORTAL_START_OFF ))
 	{
@@ -555,7 +555,7 @@ void CFuncScreenMovie :: Spawn( void )
 	// enable monitor
 	if( FBitSet( pev->spawnflags, SF_SCREENMOVIE_START_ON ))
 	{
-		SetThink( SUB_CallUseToggle );
+		SetThink( &SUB_CallUseToggle );
 		SetNextThink( 0.1 );
 	}
 }
@@ -571,7 +571,7 @@ void CFuncScreenMovie :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE
 		return;
 	}
 
-	SetThink( CineThink );
+	SetThink( &CineThink );
 
 	if( ShouldToggle( useType ))
 	{

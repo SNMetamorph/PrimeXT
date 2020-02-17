@@ -99,8 +99,8 @@ void CItem::Spawn( void )
 	UTIL_SetOrigin( this, GetLocalOrigin( ));
 	UTIL_SetSize( pev, Vector( -16, -16, 0 ), Vector( 16, 16, 16 ));
 
-	SetTouch( ItemTouch );
-	SetThink( StartItem );
+	SetTouch( &ItemTouch );
+	SetThink( &StartItem );
 	SetNextThink( 0.1f );
 }
 
@@ -156,7 +156,7 @@ CBaseEntity* CItem::Respawn( void )
 
 	UTIL_SetOrigin( this, g_pGameRules->VecItemRespawnSpot( this ) );// blip to whereever you should respawn.
 
-	SetThink ( Materialize );
+	SetThink( &Materialize );
 	pev->nextthink = g_pGameRules->FlItemRespawnTime( this ); 
 	return this;
 }
@@ -172,7 +172,7 @@ void CItem :: StartItem( void )
 	}
 
 	SetThink( NULL );
-	SetTouch( ItemTouch );
+	SetTouch( &ItemTouch );
 }
 
 void CItem::Materialize( void )
@@ -185,7 +185,7 @@ void CItem::Materialize( void )
 		pev->effects |= EF_MUZZLEFLASH;
 	}
 
-	SetTouch( ItemTouch );
+	SetTouch( &ItemTouch );
 }
 
 #define SF_SUIT_SHORTLOGON		0x0001

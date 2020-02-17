@@ -137,7 +137,7 @@ void CSpriteMonster::Spawn( void )
 	SET_MODEL( edict(), GetModel() );
 
 	pev->rendercolor = Vector( 255, 255, 255 );
-	SetThink( InitThink );
+	SetThink( &InitThink );
 	SetNextThink( 0.1f );
 	pev->scale = 1.5;
 }
@@ -377,7 +377,7 @@ void CSpriteMonster :: HuntTarget ( void )
 
 	pev->ideal_yaw = UTIL_VecToYaw (pev->enemy->v.origin - GetAbsOrigin());
 
-	SetThink( MonsterThink );
+	SetThink( &MonsterThink );
 	SetNextThink( 0.1 );
 
 	MonsterRun();	// change activity
@@ -532,7 +532,7 @@ void CSpriteMonster :: InitThink( void )
 	MonsterIdle();
 
 	// run AI for monster
-	SetThink( MonsterThink );
+	SetThink( &MonsterThink );
 	MonsterThink();
 }
 

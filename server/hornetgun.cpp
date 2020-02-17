@@ -227,7 +227,7 @@ void CHgun::SecondaryAttack( void )
 	pHornet->SetAbsVelocity( gpGlobals->v_forward * 1200 );
 	pHornet->SetAbsAngles( UTIL_VecToAngles( pHornet->GetAbsVelocity() ));
 
-	pHornet->SetThink( CHornet::StartDart );
+	pHornet->SetThink( &CHornet::StartDart );
 
 	m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;
 	m_pPlayer->m_iWeaponVolume = NORMAL_GUN_VOLUME;

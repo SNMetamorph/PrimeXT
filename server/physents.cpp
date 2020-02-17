@@ -578,7 +578,7 @@ void CPhysEntity :: Killed( entvars_t *pevAttacker, int iGib )
 	// Fire targets on break
 	SUB_UseTargets( NULL, USE_TOGGLE, 0 );
 
-	SetThink( SUB_Remove );
+	SetThink( &SUB_Remove );
 	SetNextThink( 0.1 );
 }
 
@@ -657,24 +657,24 @@ void CPhysBoxMaker :: Spawn( void )
 	{
 		if( pev->spawnflags & SF_PHYSBOXMAKER_CYCLIC )
 		{
-			SetUse( CyclicUse );	// drop one monster each time we fire
+			SetUse( &CyclicUse );	// drop one monster each time we fire
 		}
 		else
 		{
-			SetUse( ToggleUse );	// so can be turned on/off
+			SetUse( &ToggleUse );	// so can be turned on/off
 		}
 
 		if( FBitSet ( pev->spawnflags, SF_PHYSBOXMAKER_START_ON ) )
 		{
 			// start making monsters as soon as monstermaker spawns
 			m_iState = STATE_ON;
-			SetThink( MakerThink );
+			SetThink( &MakerThink );
 		}
 		else
 		{
 			// wait to be activated.
 			m_iState = STATE_OFF;
-			SetThink( SUB_DoNothing );
+			SetThink( &SUB_DoNothing );
 		}
 	}
 	else
@@ -682,7 +682,7 @@ void CPhysBoxMaker :: Spawn( void )
 			// no targetname, just start.
 			SetNextThink( m_flDelay );
 			m_iState = STATE_ON;
-			SetThink ( MakerThink );
+			SetThink( &MakerThink );
 	}
 
 	m_flGround = 0;
@@ -800,12 +800,12 @@ void CPhysBoxMaker :: ToggleUse ( CBaseEntity *pActivator, CBaseEntity *pCaller,
 	if ( GetState() == STATE_ON )
 	{
 		m_iState = STATE_OFF;
-		SetThink ( NULL );
+		SetThink( NULL );
 	}
 	else
 	{
 		m_iState = STATE_ON;
-		SetThink( MakerThink );
+		SetThink( &MakerThink );
 	}
 
 	SetNextThink( 0 );

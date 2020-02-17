@@ -763,7 +763,7 @@ void CBasePlayer::PackDeadPlayerItems( void )
 	vecAngles.z = 0;
 
 	pWeaponBox->SetAbsAngles( vecAngles );
-	pWeaponBox->SetThink( CWeaponBox::Kill );
+	pWeaponBox->SetThink( &CWeaponBox::Kill );
 	pWeaponBox->SetNextThink( 120 );
 
 	// back these two lists up to their first elements
@@ -983,7 +983,7 @@ void CBasePlayer::Killed( entvars_t *pevAttacker, int iGib )
 	vecAngles.z = 0;
 	SetAbsAngles( vecAngles );
 
-	SetThink(PlayerDeathThink);
+	SetThink( &PlayerDeathThink);
 	pev->nextthink = gpGlobals->time + 0.1;
 }
 
@@ -3590,7 +3590,7 @@ void CBloodSplat :: Spawn( CBaseEntity *pOwner )
 	SetAbsAngles( pOwner->pev->v_angle );
 	pev->owner = pOwner->edict();
 
-	SetThink( Spray );
+	SetThink( &Spray );
 	SetNextThink( 0.1 );
 }
 
@@ -3610,7 +3610,7 @@ void CBloodSplat::Spray ( void )
 		else UTIL_BloodDecalTrace( &tr, BLOOD_COLOR_RED );
 	}
 
-	SetThink( SUB_Remove );
+	SetThink( &SUB_Remove );
 	SetNextThink( 0.1 );
 }
 
@@ -5382,7 +5382,7 @@ void CRevertSaved :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 {
 	UTIL_ScreenFadeAll( pev->rendercolor, Duration(), HoldTime(), pev->renderamt, FFADE_OUT );
 	pev->nextthink = gpGlobals->time + MessageTime();
-	SetThink( MessageThink );
+	SetThink( &MessageThink );
 }
 
 
@@ -5393,7 +5393,7 @@ void CRevertSaved :: MessageThink( void )
 	if ( nextThink > 0 ) 
 	{
 		pev->nextthink = gpGlobals->time + nextThink;
-		SetThink( LoadThink );
+		SetThink( &LoadThink );
 	}
 	else
 		LoadThink();

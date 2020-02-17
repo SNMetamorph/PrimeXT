@@ -178,7 +178,7 @@ void CBaseDelay :: SUB_UseTargets( CBaseEntity *pActivator, USE_TYPE useType, fl
 		pTemp->pev->classname = MAKE_STRING( "DelayedEvent" );
 
 		pTemp->SetNextThink( m_flDelay );
-		pTemp->SetThink( DelayThink );
+		pTemp->SetThink( &DelayThink );
 
 		// Save the useType
 		pTemp->m_iState = (STATE)useType;
