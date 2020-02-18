@@ -1324,10 +1324,11 @@ void R_RenderScene( void )
 	if( (int)r_speeds->value == 7 )
 	{
 		int	num_faces = 0;
+		unsigned int i;
 
 		if( glState.stack_position > 0 )
 			num_faces = R_GetPrevInstance()->num_subview_faces;
-		for( unsigned int i = 0; i < glState.stack_position; i++ )
+		for( i = 0; i < glState.stack_position; i++ )
 			empty[i] = ' ';
 		empty[i] = '\0';
 

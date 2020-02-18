@@ -226,6 +226,8 @@ void HUD_Reset( void )
 	gHUD.VidInit();
 }
 
+#ifdef _WIN32
+
 static int *VGUI_GetRect( void )
 {
 	static int extent[4];
@@ -252,6 +254,28 @@ static int *VGUI_GetRect( void )
 	}
 	return extent;	
 }
+#else
+
+/*
+=================
+VGUI_GetRect
+
+VGui stub
+=================
+*/
+int *VGUI_GetRect( void )
+{
+	static int extent[4];
+
+	extent[0] = gEngfuncs.GetWindowCenterX() - ScreenWidth / 2;
+	extent[1] = gEngfuncs.GetWindowCenterY() - ScreenHeight / 2;
+	extent[2] = gEngfuncs.GetWindowCenterX() + ScreenWidth / 2;
+	extent[3] = gEngfuncs.GetWindowCenterY() + ScreenHeight / 2;
+
+	return extent;
+}
+
+#endif
 
 /*
 ==========================

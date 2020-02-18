@@ -22,6 +22,7 @@ GNU General Public License for more details.
 int R_PrecacheCinematic( const char *cinname )
 {
 	int load_sound = 0;
+	int i;
 
 	if( !cinname || !*cinname )
 		return -1;

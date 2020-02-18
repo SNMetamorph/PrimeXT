@@ -1043,10 +1043,12 @@ void CParticleSystem :: DrawParticle( CParticle *part, Vector &right, Vector &up
 				// test already paseed
 				if( !RI->currentlight )
 				{
+					int i;
+
 					if( !R_CountPlights( ))
 						continue;	// fast reject
 
-					for( int i = 0; i < MAX_PLIGHTS; i++ )
+					for( i = 0; i < MAX_PLIGHTS; i++ )
 					{
 						plight_t *pl = &cl_plights[i];
 

@@ -395,8 +395,8 @@ static int Mod_SurfaceCompareBuild( const unsigned short **a, const unsigned sho
 {
 	msurface_t	*surf1, *surf2;
 
-	surf1 = &worldmodel->surfaces[(unsigned short)*a];
-	surf2 = &worldmodel->surfaces[(unsigned short)*b];
+	surf1 = &worldmodel->surfaces[*(unsigned short *)a];
+	surf2 = &worldmodel->surfaces[*(unsigned short *)b];
 
 	if( FBitSet( surf1->flags, SURF_DRAWSKY ) && !FBitSet( surf2->flags, SURF_DRAWSKY ))
 		return -1;
@@ -433,8 +433,8 @@ static int Mod_SurfaceCompareInGame( const unsigned short **a, const unsigned sh
 	msurface_t	*surf1, *surf2;
 	mextrasurf_t	*esrf1, *esrf2;
 
-	surf1 = &worldmodel->surfaces[(unsigned short)*a];
-	surf2 = &worldmodel->surfaces[(unsigned short)*b];
+	surf1 = &worldmodel->surfaces[*(unsigned short *)a];
+	surf2 = &worldmodel->surfaces[*(unsigned short *)b];
 	texture_t *tx1 = R_TextureAnimation( surf1 );
 	texture_t *tx2 = R_TextureAnimation( surf2 );
 
@@ -1971,6 +1971,7 @@ void R_DrawBrushList( void )
 	cl_entity_t	*e = RI->currententity;
 	float		cached_texofs[2] = { -1.0f, -1.0f };
 	int		startv, endv;
+	int i;
 
 	if( !tr.num_draw_surfaces )
 		return;
@@ -1984,7 +1985,7 @@ void R_DrawBrushList( void )
 	pglBindVertexArray( world->vertex_array_object );
 	r_stats.c_world_polys += tr.num_draw_surfaces;
 
-	for( int i = 0; i < tr.num_draw_surfaces; i++ )
+	for( i = 0; i < tr.num_draw_surfaces; i++ )
 	{
 		gl_bmodelface_t *entry = &tr.draw_surfaces[i];
 		mextrasurf_t *es = entry->surface->info;

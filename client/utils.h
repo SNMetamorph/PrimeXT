@@ -15,11 +15,9 @@ GNU General Public License for more details.
 
 #ifndef UTILS_H
 #define UTILS_H
-
+#include "port.h"
 #include "cvardef.h"
-
-#define EXPORT	_declspec( dllexport )
-#define DLLEXPORT	__declspec( dllexport )
+#include "exportdef.h"
 
 typedef unsigned char byte;
 typedef unsigned short word;
@@ -42,8 +40,11 @@ enum
 	DEV_EXTENDED
 };
 
+#ifdef _WIN32
 typedef HMODULE dllhandle_t;
-
+#else
+typedef void* dllhandle_t;
+#endif
 typedef struct dllfunc_s
 {
 	const char *name;

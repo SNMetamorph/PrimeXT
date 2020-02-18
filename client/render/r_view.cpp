@@ -1114,7 +1114,7 @@ void V_InterpolatePos( struct ref_params_s *pparams )
 			{
 				frac = ( t - ViewInterp.OriginTime[foundidx & ORIGIN_MASK] ) / dt;
 				delta = ViewInterp.Origins[( foundidx + 1 ) & ORIGIN_MASK] - ViewInterp.Origins[foundidx & ORIGIN_MASK];
-				frac = min( 1.0, frac );
+				frac = Q_min( 1.0, frac );
 
 				neworg = ViewInterp.Origins[foundidx & ORIGIN_MASK] + delta * frac;
 

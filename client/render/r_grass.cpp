@@ -701,11 +701,12 @@ void R_ReLightGrass( msurface_t *surf, bool force )
 {
 	grasshdr_t *hdr = surf->info->grass;
 	bool update_lightcache = false;
+	int maps;
 
 	if( !hdr || m_bGrassUseVBO )
 		return;
 
-	for( int maps = 0; maps < MAXLIGHTMAPS && surf->styles[maps] != 255; maps++ )
+	for( maps = 0; maps < MAXLIGHTMAPS && surf->styles[maps] != 255; maps++ )
 	{
 		if( force || ( tr.lightstylevalue[surf->styles[maps]] != hdr->cached_light[maps] ))
 		{
@@ -1044,7 +1045,9 @@ find or add unique texture for grass
 */
 byte R_GrassTextureForName( const char *name )
 {
-	for( byte i = 0; i < GRASS_TEXTURES && grasstexs[i].name[0]; i++ )
+	byte i;
+
+	for( i = 0; i < GRASS_TEXTURES && grasstexs[i].name[0]; i++ )
 	{
 		if( !Q_stricmp( grasstexs[i].name, name ))
 			return i;	// found
@@ -1140,7 +1143,7 @@ void R_GrassInit( void )
 			{
 				// seed is optional
 				entry.seed = Q_atoi( token );
-				entry.seed = max( 1, entry.seed );
+				entry.seed = Q_max( 1, entry.seed );
 			}
 			else entry.seed = random_seed++;
 

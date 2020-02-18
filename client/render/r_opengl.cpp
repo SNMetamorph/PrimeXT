@@ -334,6 +334,10 @@ static dllfunc_t occlusionfunc[] =
 { NULL, NULL }
 };
 
+#ifndef _WIN32
+#define CALLBACK
+#endif
+
 /*
 ========================
 DebugCallback

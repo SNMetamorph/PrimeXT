@@ -67,10 +67,10 @@ int CHudMOTD :: Draw( float fTime )
 	}
 
 	// cap activetill time to the display time
-	m_flActiveTill = min( gHUD.m_flTime + MOTD_DISPLAY_TIME, m_flActiveTill );
+	m_flActiveTill = Q_min( gHUD.m_flTime + MOTD_DISPLAY_TIME, m_flActiveTill );
 
 	// find the top of where the MOTD should be drawn,  so the whole thing is centered in the screen
-	int ypos = max((( ScreenHeight - ( m_iLines * LINE_HEIGHT )) / 2) - 40, 30 ); // shift it up slightly
+	int ypos = Q_max((( ScreenHeight - ( m_iLines * LINE_HEIGHT )) / 2) - 40, 30 ); // shift it up slightly
 	char *ch = m_szMOTD;
 
 	while( *ch )

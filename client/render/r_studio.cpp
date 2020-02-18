@@ -815,7 +815,7 @@ void CStudioModelRenderer :: MeshCreateBuffer( vbomesh_t *pOut, const mstudiomes
 	m_nNumArrayVerts = m_nNumArrayElems = 0;
 
 	// first create trifan array from studiomodel mesh
-	while( i = *( ptricmds++ ))
+	while( (i = *( ptricmds++ )) )
 	{
 		bool	strip = ( i < 0 ) ? false : true;
 		int	vertexState = 0;
@@ -2618,7 +2618,9 @@ void CStudioModelRenderer :: StudioMergeBones( matrix3x4 bones[], matrix3x4 cach
 
 	for( int i = 0; i < m_pStudioHeader->numbones; i++ ) 
 	{
-		for( int j = 0; j < m_pParentHeader->numbones; j++ )
+		int j;
+
+		for( j = 0; j < m_pParentHeader->numbones; j++ )
 		{
 			if( !Q_stricmp( pchildbones[i].name, pparentbones[j].name ))
 			{
@@ -2672,7 +2674,7 @@ void CStudioModelRenderer :: StudioBuildNormalTable( void )
 		pmesh = (mstudiomesh_t *)((byte *)m_pStudioHeader + m_pSubModel->meshindex) + j;
 		ptricmds = (short *)((byte *)m_pStudioHeader + pmesh->triindex);
 
-		while( i = *( ptricmds++ ))
+		while( (i = *( ptricmds++ )))
 		{
 			if( i < 0 ) i = -i;
 
@@ -2720,7 +2722,7 @@ void CStudioModelRenderer :: StudioGenerateNormals( void )
 		pmesh = (mstudiomesh_t *)((byte *)m_pStudioHeader + m_pSubModel->meshindex) + j;
 		ptricmds = (short *)((byte *)m_pStudioHeader + pmesh->triindex);
 
-		while( i = *( ptricmds++ ))
+		while( (i = *( ptricmds++ )))
 		{
 			if( i < 0 )
 			{
@@ -3154,7 +3156,7 @@ void CStudioModelRenderer :: StudioDrawMeshChrome( short *ptricmds, float s, flo
 {
 	int	i;
 
-	while( i = *( ptricmds++ ))
+	while( (i = *( ptricmds++ )))
 	{
 		if( i < 0 )
 		{
@@ -3252,6 +3254,8 @@ StudioDrawPoints
 */
 void CStudioModelRenderer :: StudioDrawShell( void )
 {
+	int i;
+
 	if( FBitSet( RI->params, RP_SHADOWVIEW ))
 		return;
 
@@ -3273,7 +3277,7 @@ void CStudioModelRenderer :: StudioDrawShell( void )
 
 	gEngfuncs.pTriAPI->SpriteTexture( m_pChromeSprite, 0 );
 
-	for( int i = 0; i < m_pStudioHeader->numbodyparts; i++ )
+	for( i = 0; i < m_pStudioHeader->numbodyparts; i++ )
 	{
 		StudioSetupModel( i, (void **)&m_pBodyPart, (void **)&m_pSubModel );
 		IEngineStudio.GL_SetRenderMode( kRenderTransAdd );

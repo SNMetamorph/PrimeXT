@@ -24,7 +24,13 @@
 #define RGB_GREENISH	0x0000A000 // 0, 160, 0
 
 #include "wrect.h"
-#include "windows.h"
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <stdarg.h>
+#include <ctype.h>
+#endif
+#include "port.h"
 #include "mathlib.h"
 #include "cdll_int.h"
 #include "cdll_dll.h"

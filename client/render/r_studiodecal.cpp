@@ -775,7 +775,7 @@ void CStudioModelRenderer :: AddDecalToModel( DecalBuildInfo_t& buildInfo )
 		float s = 1.0f / (float)pCurMesh->pmaterial->pSource->width;
 		float t = 1.0f / (float)pCurMesh->pmaterial->pSource->height;
 
-		while( numVerts = *( ptricmds++ ))
+		while( ( numVerts = *( ptricmds++ ) ))
 		{
 			int	vertexState = 0;
 			qboolean	tri_strip = true;
@@ -925,6 +925,7 @@ int CStudioModelRenderer :: GetDecalMaterial( DecalModelList_t& decalList, int d
 	// first we need to determine model texture, because we only require textures for alpha and solid modes.
 	// otherwise we can use stub like '*whiteTexture' to prevent produce multiple materials
 	int modelTexture = tr.whiteTexture;
+	word j;
 
 	if( FBitSet( mat->flags, STUDIO_NF_MASKED|STUDIO_NF_HAS_ALPHA ))
 		modelTexture = mat->gl_diffuse_id;
@@ -934,7 +935,7 @@ int CStudioModelRenderer :: GetDecalMaterial( DecalModelList_t& decalList, int d
 	if( !create && !hProgram )
 		return 0xFFFF; // create a new material with invalid shader
 
-	for( word j = decalList.m_FirstMaterial; j != m_DecalMaterial.InvalidIndex(); j = m_DecalMaterial.Next( j ))
+	for( j = decalList.m_FirstMaterial; j != m_DecalMaterial.InvalidIndex(); j = m_DecalMaterial.Next( j ))
 	{
 		DecalMaterial_t *pdecal = &m_DecalMaterial[j];
 

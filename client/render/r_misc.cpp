@@ -308,7 +308,7 @@ int HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname )
 
 				// HACKHACK: get radius from head entity
 				if( ent->curstate.rendermode != kRenderNormal )
-					dl->radius = max( 0, ent->curstate.renderamt - 55 );
+					dl->radius = Q_max( 0, ent->curstate.renderamt - 55 );
 				else dl->radius = 200;
 				dl->die = gEngfuncs.GetClientTime() + 0.01;
 

@@ -82,7 +82,7 @@ void ProcessRain( void )
 
 	if(( !Rain.dripsPerSecond && g_dripsArray.IsClear( )) || rain_timedelta > 0.1f )
 	{
-		rain_timedelta = min( rain_timedelta, 0.1f );
+		rain_timedelta = Q_min( rain_timedelta, 0.1f );
 
 		// keep nextspawntime correct
 		rain_nextspawntime = rain_curtime;

@@ -445,8 +445,9 @@ void R_PushDlights( void )
 	Vector	bbox[8];
 	plight_t	*pl;
 	dlight_t	*dl;
+	int lnum;
 
-	for( int lnum = 0; lnum < MAX_DLIGHTS; lnum++ )
+	for( lnum = 0; lnum < MAX_DLIGHTS; lnum++ )
 	{
 		dl = GET_DYNAMIC_LIGHT( lnum );
 		pl = &cl_plights[MAX_USER_PLIGHTS+lnum];
