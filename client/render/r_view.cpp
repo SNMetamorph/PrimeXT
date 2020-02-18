@@ -21,7 +21,7 @@ int CL_IsThirdPerson( void ){ return (gHUD.m_iCameraMode ? 1 : 0); }
 
 cl_entity_t *v_intermission_spot;
 float v_idlescale;
-int pause = 0;
+static int pause = 0;
 
 cvar_t	*r_test;
 cvar_t	*r_extensions;

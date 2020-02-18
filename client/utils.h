@@ -25,7 +25,7 @@ typedef unsigned short word;
 typedef int (*pfnUserMsgHook)( const char *pszName, int iSize, void *pbuf );
 typedef int (*cmpfunc)( const void *a, const void *b );
 
-extern int pause;
+//extern int pause; conflicts with libc
 extern int developer_level;
 extern int r_currentMessageNum;
 extern float v_idlescale;
