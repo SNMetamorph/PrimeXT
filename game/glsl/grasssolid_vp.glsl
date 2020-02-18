@@ -73,10 +73,10 @@ void main( void )
 
 	// apply screen gamma
 	float gammaIndex = (var_VertexLight.r * 255.0);
-	var_VertexLight.r = u_GammaTable[int(gammaIndex/4)][int(mod(gammaIndex, 4 ))];
+	var_VertexLight.r = u_GammaTable[int(gammaIndex*0.25)][int(mod(gammaIndex, 4 ))];
 	gammaIndex = (var_VertexLight.g * 255.0);
-	var_VertexLight.g = u_GammaTable[int(gammaIndex/4)][int(mod(gammaIndex, 4 ))];
+	var_VertexLight.g = u_GammaTable[int(gammaIndex*0.25)][int(mod(gammaIndex, 4 ))];
 	gammaIndex = (var_VertexLight.b * 255.0);
-	var_VertexLight.b = u_GammaTable[int(gammaIndex/4)][int(mod(gammaIndex, 4 ))];
+	var_VertexLight.b = u_GammaTable[int(gammaIndex*0.25)][int(mod(gammaIndex, 4 ))];
 #endif//GRASS_FULLBRIGHT
 }
