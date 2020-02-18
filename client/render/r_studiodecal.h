@@ -16,7 +16,7 @@ GNU General Public License for more details.
 #ifndef R_STUDIODECAL_H
 #define R_STUDIODECAL_H
 
-typedef enum
+enum
 {
 	DECAL_CLIP_MINUSU	= 0x1,
 	DECAL_CLIP_MINUSV	= 0x2,
