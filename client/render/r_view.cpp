@@ -219,7 +219,7 @@ float V_CalcBob( struct ref_params_s *pparams )
 
 extern cvar_t *cl_forwardspeed;
 
-struct
+static struct
 {
 	float	pitchvel;
 	int  	nodrift;
@@ -1108,7 +1108,7 @@ void V_InterpolatePos( struct ref_params_s *pparams )
 		if( i < ORIGIN_MASK &&  ViewInterp.OriginTime[foundidx & ORIGIN_MASK] != 0.0f )
 		{
 			// Interpolate
-			Vector delta, neworg;
+			Vector neworg;
 			double dt, frac;
 
 			dt = ViewInterp.OriginTime[(foundidx + 1) & ORIGIN_MASK] - ViewInterp.OriginTime[foundidx & ORIGIN_MASK];
