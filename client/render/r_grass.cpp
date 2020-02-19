@@ -1084,7 +1084,10 @@ void R_GrassInit( void )
 	grassInfo.Purge();
 
 	memset( grasstexs, 0, sizeof( grasstexs ));
-	m_bGrassUseVBO = GL_Support( R_TEXTURE_ARRAY_EXT ); // TESTTEST
+
+	if( r_grass_vbo->value == -1.0f )
+		CVAR_SET_FLOAT("r_grass_vbo", GL_Support( R_TEXTURE_ARRAY_EXT ) );
+	m_bGrassUseVBO = r_grass_vbo->value;
 
 	if( afile )
 	{
