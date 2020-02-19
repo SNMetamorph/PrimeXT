@@ -20,6 +20,19 @@ GNU General Public License for more details.
 #include "r_shader.h"
 #include "r_world.h"
 
+// gl_decals.c
+#define MAX_DECALCLIPVERT		32
+static struct decalarray_s
+{
+	Vector4D texcoord0;
+	Vector4D texcoord1;
+	Vector4D texcoord2;
+	byte lightstyles[4];
+	Vector position;
+} decalarray[MAX_DECALCLIPVERT];
+
+static GLuint decalvao;
+
 /*
 ===============
 R_ChooseDecalProgram
@@ -69,6 +82,9 @@ bool DrawSingleDecal( decal_t *decal, word &hLastShader, bool project )
 	cl_entity_t *e = GET_ENTITY( decal->entityIndex );
 	v = DECAL_SETUP_VERTS( decal, decal->psurface, decal->texture, &numVerts );
 
+	if( numVerts > MAX_DECALCLIPVERT ) // engine limit > renderer limit
+		numVerts = MAX_DECALCLIPVERT;
+
 	if( project )
 	{
 		R_DrawProjectDecal( decal, v, numVerts );
@@ -106,7 +122,24 @@ bool DrawSingleDecal( decal_t *decal, word &hLastShader, bool project )
 	pglUniformMatrix4fvARB( RI->currentshader->u_ModelMatrix, 1, GL_FALSE, &glm->modelMatrix[0] );
 	r_stats.c_total_tris += (numVerts - 2);
 
-	pglBegin( GL_POLYGON );
+	// TODO: sort decal by programs to make this batch
+	if( !decalvao )
+	{
+		pglGenVertexArrays( 1, &decalvao );
+		pglBindVertexArray( decalvao );
+		pglVertexAttribPointerARB( ATTR_INDEX_TEXCOORD0, 4, GL_FLOAT, GL_FALSE, sizeof(struct decalarray_s), &decalarray->texcoord0);
+		pglEnableVertexAttribArrayARB( ATTR_INDEX_TEXCOORD0 );
+		pglVertexAttribPointerARB( ATTR_INDEX_TEXCOORD1, 4, GL_FLOAT, GL_FALSE, sizeof(struct decalarray_s),  &decalarray->texcoord1 );
+		pglEnableVertexAttribArrayARB( ATTR_INDEX_TEXCOORD1 );
+		pglVertexAttribPointerARB( ATTR_INDEX_TEXCOORD2, 4, GL_FLOAT, GL_FALSE, sizeof(struct decalarray_s),  &decalarray->texcoord2 );
+		pglEnableVertexAttribArrayARB( ATTR_INDEX_TEXCOORD2 );
+		pglVertexAttribPointerARB( ATTR_INDEX_LIGHT_STYLES, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(struct decalarray_s),  &decalarray->lightstyles );
+		pglEnableVertexAttribArrayARB( ATTR_INDEX_LIGHT_STYLES );
+		pglVertexAttribPointerARB( ATTR_INDEX_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(struct decalarray_s), &decalarray->position );
+		pglEnableVertexAttribArrayARB( ATTR_INDEX_POSITION );
+	}
+	else
+		pglBindVertexArray( decalvao );
 
 	for( int i = 0; i < numVerts; i++, v += VERTEXSIZE )
 	{
@@ -114,20 +147,18 @@ bool DrawSingleDecal( decal_t *decal, word &hLastShader, bool project )
 		t = (DotProductA( v, tex->vecs[1] ) + tex->vecs[1][3] ) / tex->texture->height;
 		R_LightmapCoords( surf, v, lmcoord0, 0 ); // styles 0-1
 		R_LightmapCoords( surf, v, lmcoord1, 2 ); // styles 2-3
-		pglVertexAttrib4fARB( ATTR_INDEX_TEXCOORD0, v[3], v[4], s, t );
-		pglVertexAttrib4fvARB( ATTR_INDEX_TEXCOORD1, lmcoord0 );
-		pglVertexAttrib4fvARB( ATTR_INDEX_TEXCOORD2, lmcoord1 );
-		pglVertexAttrib4ubvARB( ATTR_INDEX_LIGHT_STYLES, surf->styles );
+		decalarray[i].texcoord0.Init(v[3], v[4], s, t);
+		decalarray[i].texcoord1 = lmcoord0;
+		decalarray[i].texcoord2 = lmcoord1;
+		memcpy( decalarray[i].lightstyles, surf->styles, 4 );
 
 		if( !CVAR_TO_BOOL( r_polyoffset ))
-		{
-			Vector av = Vector( v ) + normal * 0.05;
-			pglVertexAttrib3fvARB( ATTR_INDEX_POSITION, av );
-		}
-		else pglVertexAttrib3fvARB( ATTR_INDEX_POSITION, v );
+			decalarray[i].position = Vector( v ) + normal * 0.05;
+		else decalarray[i].position = v;
 	}
 
-	pglEnd();
+	pglDrawArrays(GL_POLYGON, 0, numVerts);
+	pglBindVertexArray(0);
 
 	return true;
 }
