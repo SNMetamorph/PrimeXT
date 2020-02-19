@@ -453,6 +453,8 @@ void GL_CheckExtension( const char *name, const dllfunc_t *funcs, const char *cv
 
 static void GL_InitExtensions( void )
 {
+	char *maxbonesstr;
+
 	if( g_iXashEngineBuildNumber < 4140 )
 	{
 		ALERT( at_error, "too old version of Xash3D engine. XashXT required at least build 4140 or higher\n" );
@@ -638,7 +640,9 @@ static void GL_InitExtensions( void )
 
 	glConfig.max_skinning_bones = bound( 0, ( Q_max( glConfig.max_vertex_uniforms - MAX_RESERVED_UNIFORMS, 0 ) / 7 ), MAXSTUDIOBONES );
 
-	if( glConfig.max_skinning_bones < 32 )
+	if( gEngfuncs.CheckParm("-r_overridemaxskinningbones", &maxbonesstr ) )
+		glConfig.max_skinning_bones = Q_atoi( maxbonesstr );
+	else if( glConfig.max_skinning_bones < 32 )
 	{
 		ALERT( at_error, "Hardware Skinning not support. Custom renderer disabled\n" );
 		g_fRenderInitialized = FALSE;
@@ -651,6 +655,8 @@ static void GL_InitExtensions( void )
 		// g-cont. this produces too many shaders...
 //		glConfig.uniforms_economy = true;
 	}
+
+	glConfig.uniforms_economy = gEngfuncs.CheckParm("-r_uniforms_economy", NULL );
 
 	ALERT( at_aiconsole, "GL_InitExtensions: max vertex uniforms %i\n", glConfig.max_vertex_uniforms );
 	ALERT( at_aiconsole, "GL_InitExtensions: max varying floats %i\n", glConfig.max_varying_floats );
