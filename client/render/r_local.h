@@ -656,6 +656,7 @@ void R_UpdateCinSound( cl_entity_t *e );
 void InitPostTextures( void );
 void InitPostEffects( void );
 void RenderSunShafts( void );
+void R_BindPostFramebuffers( void );
 
 //
 // r_shadows.cpp

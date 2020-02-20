@@ -1354,6 +1354,10 @@ void R_RenderScene( void )
 	// begin a new frame
 	R_SetupFrustum();
 	R_SetupFrame();
+
+	if( !FBitSet( RI->params, RP_MIRRORVIEW|RP_ENVVIEW|RP_SHADOWVIEW ))
+		R_BindPostFramebuffers();
+
 	R_SetupGL();
 	R_Clear( ~0 );
 

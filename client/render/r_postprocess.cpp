@@ -22,7 +22,9 @@ GNU General Public License for more details.
 #define TARGET_SIZE		128
 
 cvar_t *v_sunshafts;
-
+static GLuint framebuffer[3];
+#define GL_READ_FRAMEBUFFER_EXT 0x8CA8
+#define GL_DRAW_FRAMEBUFFER_EXT 0x8CA9
 void InitPostEffects( void )
 {
 	v_sunshafts = CVAR_REGISTER( "gl_sunshafts", "1", FCVAR_ARCHIVE );
@@ -34,7 +36,7 @@ void InitPostTextures( void )
 	{
 		FREE_TEXTURE( tr.screen_depth );
 		tr.screen_depth = 0;
-          }
+	}
 
 	if( !tr.screen_depth ) // in case FBO not support
 		tr.screen_depth = CREATE_TEXTURE( "*screendepth", glState.width, glState.height, NULL, TF_DEPTHBUFFER ); 
@@ -43,7 +45,7 @@ void InitPostTextures( void )
 	{
 		FREE_TEXTURE( tr.screen_color );
 		tr.screen_color = 0;
-          }
+	}
 
 	if( !tr.screen_color )
 		tr.screen_color = CREATE_TEXTURE( "*screencolor", glState.width, glState.height, NULL, TF_COLORBUFFER );
@@ -56,6 +58,69 @@ void InitPostTextures( void )
 
 	if( !tr.target_rgb[0] )
 		tr.target_rgb[0] = CREATE_TEXTURE( "*target0", TARGET_SIZE, TARGET_SIZE, NULL, TF_SCREEN );
+
+	if( GL_Support( R_FRAMEBUFFER_OBJECT ) && GL_Support( R_ARB_TEXTURE_NPOT_EXT ) )
+	{
+		// for fbo, we need second target texture
+		if( tr.target_rgb[1] )
+			FREE_TEXTURE( tr.target_rgb[1] );
+
+		tr.target_rgb[1] = CREATE_TEXTURE( "*target1", TARGET_SIZE, TARGET_SIZE, NULL, TF_SCREEN );
+
+		if( framebuffer[0] )
+			pglDeleteFramebuffers( 3, framebuffer );
+		pglGenFramebuffers( 3, framebuffer );
+
+		// same texture used for main view and subviews
+		// if we need to support NPOT, need allocate depth textures for subviews and use it directly
+		pglBindFramebuffer(GL_FRAMEBUFFER_EXT, framebuffer[0]);
+		pglFramebufferTexture2D( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, RENDER_GET_PARM( PARM_TEX_TEXNUM, tr.screen_color ), 0 );
+		pglFramebufferTexture2D( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, RENDER_GET_PARM( PARM_TEX_TEXNUM, tr.screen_depth ), 0 );
+		pglBindFramebuffer(GL_FRAMEBUFFER_EXT, framebuffer[1]);
+		pglFramebufferTexture2D( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, RENDER_GET_PARM( PARM_TEX_TEXNUM, tr.target_rgb[0] ), 0 );
+		pglBindFramebuffer(GL_FRAMEBUFFER_EXT, framebuffer[2]);
+		pglFramebufferTexture2D( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, RENDER_GET_PARM( PARM_TEX_TEXNUM, tr.target_rgb[1] ), 0 );
+		pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer == -1? 0 : glState.frameBuffer );
+	}
+}
+
+void R_BindPostFramebuffers( void )
+{
+	if( !GL_Support( R_FRAMEBUFFER_OBJECT ) || !GL_Support( R_ARB_TEXTURE_NPOT_EXT) )
+		return;
+
+	if( !CVAR_TO_BOOL( v_sunshafts ) || !tr.screen_depth || !tr.screen_color || !tr.target_rgb[0] )
+		return;
+
+	if( !CheckShader( glsl.genSunShafts ) || !CheckShader( glsl.drawSunShafts ))
+		return;
+
+	if( !CheckShader( glsl.blurShader[0] ) || !CheckShader( glsl.blurShader[1] ))
+		return;
+
+	float blur = 0.2f;
+	float zNear = Z_NEAR;
+	float zFar = Q_max( 256.0f, RI->farClip );
+	Vector skyColor = tr.sky_ambient * (1.0f / 128.0f) * r_lighting_modulate->value;
+	Vector skyVec = tr.sky_normal.Normalize();
+	Vector sunPos = RI->vieworg + skyVec * 1000.0;
+
+	if( skyVec == g_vecZero ) return;
+
+	ColorNormalize( skyColor, skyColor );
+
+	Vector ndc, view;
+
+	// project sunpos to screen
+	R_TransformWorldToDevice( sunPos, ndc );
+	R_TransformDeviceToScreen( ndc, view );
+	view.z = DotProduct( -skyVec, RI->vforward );
+
+	if( view.z < 0.01f ) return;	// fade out
+
+	//GL_BindFBO( framebuffer );
+	pglBindFramebuffer( GL_FRAMEBUFFER_EXT, framebuffer[0] );
+
 }
 
 void RenderFSQ( int wide, int tall )
@@ -77,6 +142,8 @@ void RenderFSQ( int wide, int tall )
 
 void RenderSunShafts( void )
 {
+	qboolean fbo = GL_Support( R_FRAMEBUFFER_OBJECT ) && GL_Support( R_ARB_TEXTURE_NPOT_EXT );
+
 	if( !CVAR_TO_BOOL( v_sunshafts ) || !tr.screen_depth || !tr.screen_color || !tr.target_rgb[0] )
 		return;
 
@@ -108,13 +175,21 @@ void RenderSunShafts( void )
 
 	GL_Setup2D();
 
-	// capture screen
-	GL_Bind( GL_TEXTURE0, tr.screen_color );
-	pglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, glState.width, glState.height );
+	if( !fbo )
+	{
+		// capture screen
+		GL_Bind( GL_TEXTURE0, tr.screen_color );
+		pglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, glState.width, glState.height );
 
-	// capture depth, if not captured previously in SSAO
-	GL_Bind( GL_TEXTURE0, tr.screen_depth );
-	pglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, glState.width, glState.height );
+		// capture depth, if not captured previously in SSAO
+		GL_Bind( GL_TEXTURE0, tr.screen_depth );
+		pglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, glState.width, glState.height );
+	}
+	else
+	{
+		// render to target0
+		pglBindFramebuffer( GL_FRAMEBUFFER_EXT, framebuffer[1]);
+	}
 
 	pglViewport( 0, 0, TARGET_SIZE, TARGET_SIZE );
 
@@ -129,23 +204,47 @@ void RenderSunShafts( void )
 	RenderFSQ( glState.width, glState.height );
 
 	GL_Bind( GL_TEXTURE0, tr.target_rgb[0] );
-	pglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, TARGET_SIZE, TARGET_SIZE );
-#if 1
+
+	if( fbo ) // render from target0 to target1
+		pglBindFramebuffer( GL_FRAMEBUFFER_EXT, framebuffer[2]);
+	else
+		pglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, TARGET_SIZE, TARGET_SIZE );
+
+	pglViewport( 0, 0, TARGET_SIZE, TARGET_SIZE );
+
 	// combine normal and blurred scenes
 	GL_BindShader( glsl.blurShader[0] );
 	ASSERT( RI->currentshader != NULL );
 
 	pglUniform1fARB( RI->currentshader->u_BlurFactor, blur );	// set blur factor
 	RenderFSQ( glState.width, glState.height );
-	pglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, TARGET_SIZE, TARGET_SIZE );
+
+	if( fbo )
+	{
+		// render from target1 to target0
+		pglBindFramebuffer( GL_FRAMEBUFFER_EXT, framebuffer[1]);
+		pglViewport( 0, 0, TARGET_SIZE, TARGET_SIZE );
+		GL_Bind( GL_TEXTURE0, tr.target_rgb[1] );
+	}
+	else
+		pglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, TARGET_SIZE, TARGET_SIZE );
 
 	GL_BindShader( glsl.blurShader[1] );
 	ASSERT( RI->currentshader != NULL );
 
 	pglUniform1fARB( RI->currentshader->u_BlurFactor, blur );	// set blur factor
 	RenderFSQ( glState.width, glState.height );
-	pglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, TARGET_SIZE, TARGET_SIZE );
-#endif
+
+	if( fbo )
+	{
+		// render from target0 to screen
+		GL_Bind( GL_TEXTURE0, tr.target_rgb[0] );
+		// reset framebuffer
+		pglBindFramebuffer( GL_FRAMEBUFFER_EXT, glState.frameBuffer == -1? 0 : glState.frameBuffer );
+	}
+	else
+		pglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, TARGET_SIZE, TARGET_SIZE );
+
 	pglViewport( 0, 0, glState.width, glState.height );
 
 	GL_BindShader( glsl.drawSunShafts );
