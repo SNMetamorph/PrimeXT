@@ -56,7 +56,7 @@ int R_AllocateShadowFramebuffer( void )
 		texture = tr.shadowTextures[i];
 	}
 
-	pglBindFramebuffer( GL_FRAMEBUFFER_EXT, framebuffer[i] );
+	GL_BindFBO( framebuffer[i] );
 	pglFramebufferTexture2D( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, RENDER_GET_PARM( PARM_TEX_TEXNUM, texture ), 0 );
 
 	return texture;
@@ -288,6 +288,7 @@ void R_RenderShadowmaps( void )
 	for( int i = 0; i < MAX_PLIGHTS; i++ )
 	{
 		plight_t *pl = &cl_plights[i];
+		GLuint oldfb = glState.frameBuffer;
 
 		if( pl->die < tr.time || !pl->radius || pl->culled )
 			continue;
@@ -317,7 +318,7 @@ void R_RenderShadowmaps( void )
 		r_stats.c_shadow_passes++;
 
 		if( GL_Support( R_FRAMEBUFFER_OBJECT ) )
-			pglBindFramebuffer( GL_FRAMEBUFFER_EXT, glState.frameBuffer == -1? 0 : glState.frameBuffer );
+			GL_BindFBO( oldfb );
 		else
 			pl->shadowTexture = R_AllocateShadowTexture();
 		R_ResetRefState();

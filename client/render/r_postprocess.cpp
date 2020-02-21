@@ -23,8 +23,7 @@ GNU General Public License for more details.
 
 cvar_t *v_sunshafts;
 static GLuint framebuffer[3];
-#define GL_READ_FRAMEBUFFER_EXT 0x8CA8
-#define GL_DRAW_FRAMEBUFFER_EXT 0x8CA9
+static GLuint fb_bkp;
 void InitPostEffects( void )
 {
 	v_sunshafts = CVAR_REGISTER( "gl_sunshafts", "1", FCVAR_ARCHIVE );
@@ -118,9 +117,8 @@ void R_BindPostFramebuffers( void )
 
 	if( view.z < 0.01f ) return;	// fade out
 
-	//GL_BindFBO( framebuffer );
-	pglBindFramebuffer( GL_FRAMEBUFFER_EXT, framebuffer[0] );
-
+	fb_bkp = glState.frameBuffer;
+	GL_BindFBO( framebuffer[0] );
 }
 
 void RenderFSQ( int wide, int tall )
@@ -188,7 +186,7 @@ void RenderSunShafts( void )
 	else
 	{
 		// render to target0
-		pglBindFramebuffer( GL_FRAMEBUFFER_EXT, framebuffer[1]);
+		GL_BindFBO( framebuffer[1] );
 	}
 
 	pglViewport( 0, 0, TARGET_SIZE, TARGET_SIZE );
@@ -206,7 +204,7 @@ void RenderSunShafts( void )
 	GL_Bind( GL_TEXTURE0, tr.target_rgb[0] );
 
 	if( fbo ) // render from target0 to target1
-		pglBindFramebuffer( GL_FRAMEBUFFER_EXT, framebuffer[2]);
+		GL_BindFBO( framebuffer[2] );
 	else
 		pglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, TARGET_SIZE, TARGET_SIZE );
 
@@ -222,7 +220,7 @@ void RenderSunShafts( void )
 	if( fbo )
 	{
 		// render from target1 to target0
-		pglBindFramebuffer( GL_FRAMEBUFFER_EXT, framebuffer[1]);
+		GL_BindFBO( framebuffer[1] );
 		pglViewport( 0, 0, TARGET_SIZE, TARGET_SIZE );
 		GL_Bind( GL_TEXTURE0, tr.target_rgb[1] );
 	}
@@ -240,7 +238,7 @@ void RenderSunShafts( void )
 		// render from target0 to screen
 		GL_Bind( GL_TEXTURE0, tr.target_rgb[0] );
 		// reset framebuffer
-		pglBindFramebuffer( GL_FRAMEBUFFER_EXT, glState.frameBuffer == -1? 0 : glState.frameBuffer );
+		GL_BindFBO( fb_bkp );
 	}
 	else
 		pglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, TARGET_SIZE, TARGET_SIZE );
