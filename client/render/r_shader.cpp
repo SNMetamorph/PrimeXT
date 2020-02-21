@@ -1264,7 +1264,13 @@ word GL_UberShaderForBmodelDlight( const plight_t *pl, msurface_t *s, bool trans
 	if( CVAR_TO_BOOL( r_shadows ) && !tr.shadows_notsupport )
 	{
 		if( !pl->pointlight && !FBitSet( pl->flags, CF_NOSHADOWS ))
+		{
 			GL_AddShaderDirective( options, "BMODEL_HAS_SHADOWS" );
+			if( r_shadows->value == 3 )
+				GL_AddShaderDirective( options, "SHADOW_HQ" );
+			else if( r_shadows->value == 1 && GL_Support( R_SHADOW_EXT ) )
+				GL_AddShaderDirective( options, "HAVE_ARB_SHADOW" );
+		}
 	}
 
 	glsl_program_t *shader = GL_FindUberShader( glname, options, &GL_InitBmodelDlightUniforms );
@@ -1351,7 +1357,13 @@ word GL_UberShaderForGrassDlight( plight_t *pl, struct grass_s *g )
 	else GL_AddShaderDirective( options, "GRASS_LIGHT_PROJECTION" );
 
 	if( CVAR_TO_BOOL( r_shadows ) && shadows && !tr.shadows_notsupport )
+	{
 		GL_AddShaderDirective( options, "GRASS_HAS_SHADOWS" );
+		if( r_shadows->value == 3 )
+			GL_AddShaderDirective( options, "SHADOW_HQ" );
+		else if( r_shadows->value == 1 && GL_Support( R_SHADOW_EXT ) )
+			GL_AddShaderDirective( options, "HAVE_ARB_SHADOW" );
+	}
 
 	if( tr.fogEnabled )
 		GL_AddShaderDirective( options, "GRASS_FOG_EXP" );
@@ -1513,7 +1525,13 @@ word GL_UberShaderForDlightStudio( const plight_t *pl, struct mstudiomat_s *mat,
 	if( CVAR_TO_BOOL( r_shadows ) && !tr.shadows_notsupport )
 	{
 		if( !pl->pointlight && !FBitSet( pl->flags, CF_NOSHADOWS ))
+		{
 			GL_AddShaderDirective( options, "STUDIO_HAS_SHADOWS" );
+			if( r_shadows->value == 3 )
+				GL_AddShaderDirective( options, "SHADOW_HQ" );
+			else if( r_shadows->value == 1 && GL_Support( R_SHADOW_EXT ) )
+				GL_AddShaderDirective( options, "HAVE_ARB_SHADOW" );
+		}
 	}
 
 	glsl_program_t *shader = GL_FindUberShader( glname, options, &GL_InitStudioDlightUniforms );
@@ -1598,7 +1616,13 @@ word GL_UberShaderForDlightGeneric( const plight_t *pl )
 		GL_AddShaderDirective( options, "GENERIC_FOG_EXP" );
 
 	if( CVAR_TO_BOOL( r_shadows ) && shadows && !tr.shadows_notsupport )
+	{
 		GL_AddShaderDirective( options, "GENERIC_HAS_SHADOWS" );
+		if( r_shadows->value == 3 )
+			GL_AddShaderDirective( options, "SHADOW_HQ" );
+		else if( r_shadows->value == 1 && GL_Support( R_SHADOW_EXT ) )
+			GL_AddShaderDirective( options, "HAVE_ARB_SHADOW" );
+	}
 
 	glsl_program_t *shader = GL_FindUberShader( glname, options, &GL_InitGenericDlightUniforms );
 	if( !shader )

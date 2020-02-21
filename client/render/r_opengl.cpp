@@ -614,9 +614,9 @@ static void GL_InitExtensions( void )
 	GL_CheckExtension( "GL_ARB_depth_texture", NULL, "gl_depthtexture", R_DEPTH_TEXTURE );
 	GL_CheckExtension( "GL_ARB_shadow", NULL, "gl_arb_shadow", R_SHADOW_EXT );
 
-	if( !GL_Support( R_DEPTH_TEXTURE ) || !GL_Support( R_SHADOW_EXT ))
+	if( !GL_Support( R_DEPTH_TEXTURE ) )
 	{
-		ALERT( at_warning, "GL_ARB_depth_texture or GL_ARB_shadow not support. Dynamic shadows disabled\n" );
+		ALERT( at_warning, "GL_ARB_depth_texture not supported. Dynamic shadows disabled\n" );
 		tr.shadows_notsupport = true;
 	}
 

@@ -21,6 +21,8 @@ GNU General Public License for more details.
 #include "r_studio.h"
 #include "r_sprite.h"
 
+static GLuint framebuffer[MAX_SHADOWS];
+
 /*
 =============================================================
 
@@ -28,6 +30,38 @@ GNU General Public License for more details.
 
 =============================================================
 */
+int R_AllocateShadowFramebuffer( void )
+{
+	int i = tr.num_shadows_used;
+
+	if( !framebuffer[0] )
+		pglGenFramebuffers( MAX_SHADOWS, framebuffer );
+
+	if( i >= MAX_SHADOWS )
+	{
+		ALERT( at_error, "R_AllocateShadowTexture: shadow textures limit exceeded!\n" );
+		return 0; // disable
+	}
+
+	int texture = tr.shadowTextures[i];
+	tr.num_shadows_used++;
+
+	if( !tr.shadowTextures[i] )
+	{
+		char txName[16];
+
+		Q_snprintf( txName, sizeof( txName ), "*shadow%i", i );
+
+		tr.shadowTextures[i] = CREATE_TEXTURE( txName, RI->viewport[2], RI->viewport[3], NULL, TF_SHADOW );
+		texture = tr.shadowTextures[i];
+	}
+
+	pglBindFramebuffer( GL_FRAMEBUFFER_EXT, framebuffer[i] );
+	pglFramebufferTexture2D( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, RENDER_GET_PARM( PARM_TEX_TEXNUM, texture ), 0 );
+
+	return texture;
+}
+
 int R_AllocateShadowTexture( void )
 {
 	int i = tr.num_shadows_used;
@@ -263,7 +297,7 @@ void R_RenderShadowmaps( void )
 		{
 			pl->shadowTexture = tr.depthTexture;
 			continue;
-                    }
+		}
 
 		if( !Mod_CheckBoxVisible( pl->absmin, pl->absmax ))
 			continue;
@@ -276,10 +310,16 @@ void R_RenderShadowmaps( void )
 		// allow screen size
 		RI->viewport[2] = RI->viewport[3] = 512;
 
+		if( GL_Support( R_FRAMEBUFFER_OBJECT ) )
+			pl->shadowTexture = R_AllocateShadowFramebuffer();
+
 		R_RenderShadowScene( pl );
 		r_stats.c_shadow_passes++;
 
-		pl->shadowTexture = R_AllocateShadowTexture();
+		if( GL_Support( R_FRAMEBUFFER_OBJECT ) )
+			pglBindFramebuffer( GL_FRAMEBUFFER_EXT, glState.frameBuffer == -1? 0 : glState.frameBuffer );
+		else
+			pl->shadowTexture = R_AllocateShadowTexture();
 		R_ResetRefState();
 	}
 
