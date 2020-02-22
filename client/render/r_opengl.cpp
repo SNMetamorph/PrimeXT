@@ -638,6 +638,18 @@ static void GL_InitExtensions( void )
 	if( glConfig.hardware_type == GLHW_RADEON && glConfig.max_vertex_uniforms > 512 )
 		glConfig.max_vertex_uniforms /= 4; // only radion returns count of floats other returns count of vec4
 
+	if( !glConfig.max_vertex_uniforms )
+	{
+		pglGetIntegerv( GL_MAX_VERTEX_UNIFORM_VECTORS, &glConfig.max_vertex_uniforms );
+		glConfig.max_vertex_uniforms /= 4;
+	}
+
+	if( !glConfig.max_varying_floats )
+	{
+		pglGetIntegerv( GL_MAX_VARYING_VECTORS, &glConfig.max_varying_floats );
+		glConfig.max_varying_floats /= 4;
+	}
+
 	glConfig.max_skinning_bones = bound( 0, ( Q_max( glConfig.max_vertex_uniforms - MAX_RESERVED_UNIFORMS, 0 ) / 7 ), MAXSTUDIOBONES );
 
 	if( gEngfuncs.CheckParm("-r_overridemaxskinningbones", &maxbonesstr ) )
