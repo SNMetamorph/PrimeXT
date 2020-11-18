@@ -152,6 +152,8 @@ class Android:
 	def gen_host_toolchain(self):
 		# With host toolchain we don't care about OS
 		# so just download NDK for Linux x86_64
+		if 'HOST_TOOLCHAIN' in self.ctx.environ:
+			return self.ctx.environ['HOST_TOOLCHAIN']
 		if self.is_host():
 			return 'linux-x86_64'
 
@@ -281,7 +283,7 @@ class Android:
 					cflags += fixup_host_clang_with_old_ndk()
 
 				# ARMv5 support
-				cflags += ['-march=armv5te', '-mtune=xscale', '-msoft-float']
+				cflags += ['-march=armv5te', '-msoft-float']
 		elif self.is_x86():
 			cflags += ['-mtune=atom', '-march=atom', '-mssse3', '-mfpmath=sse', '-DVECTORIZE_SINCOS', '-DHAVE_EFFICIENT_UNALIGNED_ACCESS']
 		return cflags
@@ -300,7 +302,7 @@ class Android:
 		if self.is_clang() or self.is_host():
 			linkflags += ['-fuse-ld=lld']
 
-		linkflags += ['-Wl,--hash-style=both','-Wl,--no-undefined']
+		linkflags += ['-Wl,--hash-style=sysv', '-Wl,--no-undefined', '-no-canonical-prefixes']
 		return linkflags
 
 	def ldflags(self):
