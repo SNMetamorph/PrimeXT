@@ -33,14 +33,16 @@ enginefuncs_t g_engfuncs;
 globalvars_t  *gpGlobals;
 server_physics_api_t g_physfuncs;
 #ifdef _WIN32
-// Main DLL entry point
+#define GIVEFNPTRSTODLL_CALLDECL WINAPI
 BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
 	return TRUE;
 }
+#else
+#define GIVEFNPTRSTODLL_CALLDECL
 #endif
 
-extern "C" void DLLEXPORT GiveFnptrsToDll( enginefuncs_t* pengfuncsFromEngine, globalvars_t *pGlobals )
+extern "C" void DLLEXPORT GIVEFNPTRSTODLL_CALLDECL GiveFnptrsToDll( enginefuncs_t* pengfuncsFromEngine, globalvars_t *pGlobals )
 {
 	memcpy( &g_engfuncs, pengfuncsFromEngine, sizeof( enginefuncs_t ));
 	g_iXashEngineBuildNumber = (int)CVAR_GET_FLOAT( "build" ); // 0 for old builds or GoldSrc
