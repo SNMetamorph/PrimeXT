@@ -68,8 +68,11 @@ typedef int BOOL;
 // Header file containing definition of globalvars_t and entvars_t
 typedef int	string_t;		// from engine's pr_comp.h;
 
-//typedef HMODULE	dllhandle_t;
+#ifdef _WIN32
+typedef HMODULE dllhandle_t;
+#else
 typedef void* dllhandle_t;
+#endif
 
 typedef struct dllfunc_s
 {

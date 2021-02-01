@@ -1,4 +1,4 @@
-#ifndef __MSC_VER
+#ifndef _MSC_VER
 #define _forceinline inline __attribute__((always_inline))
 #define __cdecl
 #define _cdecl
