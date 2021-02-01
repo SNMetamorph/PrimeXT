@@ -8,7 +8,7 @@ import sys
 import os
 
 VERSION = '2.4'
-APPNAME = 'hlsdk-xash3d'
+APPNAME = 'xashxt-fwgs'
 top = '.'
 
 Context.Context.line_just = 55 # should fit for everything on 80x26
@@ -56,12 +56,12 @@ def options(opt):
 
 def configure(conf):
 	# Configuration
-	conf.env.GAMEDIR     = 'valve'
+	conf.env.GAMEDIR     = 'xash'
 	conf.env.CLIENT_DIR  = 'bin'
 	conf.env.SERVER_DIR  = 'bin'
 	conf.env.SERVER_NAME = 'server'
-	conf.env.PREFIX = ''
-
+	conf.env.LIBDIR = conf.env.BINDIR = conf.env.PREFIX
+	
 	conf.load('fwgslib reconfigure')
 
 	enforce_pic = True # modern defaults
@@ -231,8 +231,9 @@ def configure(conf):
 		cflags   += conf.get_flags_by_compiler(polly_cflags, conf.env.COMPILER_CC)
 
 	# And here C++ flags starts to be treated separately
-	cxxflags = list(cflags) + ['-std=gnu++98']
+	cxxflags = list(cflags)
 	if conf.env.COMPILER_CC != 'msvc':
+		cxxflags += ['-std=gnu++98']
 		conf.check_cc(cflags=cflags, msg= 'Checking for required C flags')
 		conf.check_cxx(cxxflags=cflags, msg= 'Checking for required C++ flags')
 
