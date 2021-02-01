@@ -14,7 +14,6 @@ GNU General Public License for more details.
 */
 
 #include "physic.h"		// must be first!
-
 #ifdef USE_PHYSICS_ENGINE
 
 #include "extdll.h"
@@ -41,8 +40,13 @@ CPhysicNovodex	NovodexPhysic;
 IPhysicLayer	*WorldPhysic = &NovodexPhysic;
 
 // exports given from physics SDK
-static NxPhysicsSDK* (__cdecl *pNxCreatePhysicsSDK)( NxU32 sdkVersion, NxUserAllocator* allocator = NULL, NxUserOutputStream* outputStream = NULL,
-const NxPhysicsSDKDesc& desc = NxPhysicsSDKDesc(), NxSDKCreateError *errorCode = NULL );
+static NxPhysicsSDK* (__cdecl *pNxCreatePhysicsSDK)( 
+	NxU32 sdkVersion, 
+	NxUserAllocator* allocator, 
+	NxUserOutputStream* outputStream,
+	const NxPhysicsSDKDesc& desc, 
+	NxSDKCreateError *errorCode
+);
 static NxCookingInterface *(__cdecl *pNxGetCookingLib)( NxU32 sdk_version_number );
 static void *(__cdecl *pNxReleasePhysicsSDK)( NxPhysicsSDK *sdk );
 static NxUtilLib* (__cdecl *pNxGetUtilLib)( void );
@@ -181,7 +185,7 @@ void CPhysicNovodex :: InitPhysic( void )
 		}
 	}
 
-	m_pPhysics = pNxCreatePhysicsSDK( NX_PHYSICS_SDK_VERSION, NULL, &m_ErrorStream );
+	m_pPhysics = pNxCreatePhysicsSDK( NX_PHYSICS_SDK_VERSION, NULL, &m_ErrorStream, NxPhysicsSDKDesc(), NULL );
 
 	if( !m_pPhysics )
 	{
@@ -643,7 +647,7 @@ NxConvexMesh *CPhysicNovodex :: ConvexMeshFromStudio( entvars_t *pev, int modeli
 	transform.Identity();
 
 	// compute bones for default anim
-	for( i = 0; i < phdr->numbones; i++ ) 
+	for( int i = 0; i < phdr->numbones; i++ ) 
 	{
 		// initialize bonematrix
 		bonematrix = matrix3x4( pos[i], q[i] );
@@ -664,11 +668,12 @@ NxConvexMesh *CPhysicNovodex :: ConvexMeshFromStudio( entvars_t *pev, int modeli
 	Vector tmp;
 
 	// setup all the vertices
-	for( i = 0; i < psubmodel->numverts; i++ )
+	for( int i = 0; i < psubmodel->numverts; i++ )
 		m_verts[i] = bonetransform[pvertbone[i]].VectorTransform( pstudioverts[i] );
 
 	for( int j = 0; j < psubmodel->nummesh; j++ ) 
 	{
+		int i;
 		mstudiomesh_t *pmesh = (mstudiomesh_t *)((byte *)phdr + psubmodel->meshindex) + j;
 		short *ptricmds = (short *)((byte *)phdr + pmesh->triindex);
 
@@ -839,7 +844,7 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromStudio( entvars_t *pev, int mo
 	static Vector pos[MAXSTUDIOBONES];
 	static Vector4D q[MAXSTUDIOBONES];
 
-	for( i = 0; i < phdr->numbones; i++, pbone++, panim++ ) 
+	for( int i = 0; i < phdr->numbones; i++, pbone++, panim++ ) 
 	{
 		StudioCalcBoneQuaterion( pbone, panim, q[i] );
 		StudioCalcBonePosition( pbone, panim, pos[i] );
@@ -853,7 +858,7 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromStudio( entvars_t *pev, int mo
 	else transform.Identity();
 
 	// compute bones for default anim
-	for( i = 0; i < phdr->numbones; i++ ) 
+	for( int i = 0; i < phdr->numbones; i++ ) 
 	{
 		// initialize bonematrix
 		bonematrix = matrix3x4( pos[i], q[i] );
@@ -874,7 +879,7 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromStudio( entvars_t *pev, int mo
 	Vector tmp;
 
 	// setup all the vertices
-	for( i = 0; i < psubmodel->numverts; i++ )
+	for( int i = 0; i < psubmodel->numverts; i++ )
 		m_verts[i] = bonetransform[pvertbone[i]].VectorTransform( pstudioverts[i] );
 
 	ptexture = (mstudiotexture_t *)((byte *)phdr + phdr->textureindex);
@@ -882,6 +887,7 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromStudio( entvars_t *pev, int mo
 
 	for( int j = 0; j < psubmodel->nummesh; j++ ) 
 	{
+		int i;
 		mstudiomesh_t *pmesh = (mstudiomesh_t *)((byte *)phdr + psubmodel->meshindex) + j;
 		short *ptricmds = (short *)((byte *)phdr + pmesh->triindex);
 

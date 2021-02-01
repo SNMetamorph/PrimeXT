@@ -6,10 +6,13 @@ from waflib import Utils
 import os
 
 def options(opt):
-	# stub
-	return
+	grp = opt.add_option_group('Common options')
+
+	grp.add_option('--enable-physx', action='store_true', dest='ENABLE_PHYSX', default = False,
+		help = 'enable PhysX support [default: %default]')
 
 def configure(conf):
+	conf.env.ENABLE_PHYSX = conf.options.ENABLE_PHYSX	
 	if conf.env.COMPILER_CC == 'msvc':
 		# hl.def removes MSVC function name decoration from GiveFnptrsToDll on Windows.
 		# Without this, the lookup for this function fails.
@@ -19,7 +22,10 @@ def configure(conf):
 			conf.env.append_unique('LINKFLAGS', '/def:%s' % hlDefNode.abspath())
 		else:
 			conf.fatal("Could not find hl.def")
+	
 	conf.check_cc(lib='dl', mandatory=False)
+	if conf.env.ENABLE_PHYSX:
+		conf.define('USE_PHYSICS_ENGINE', '1')
 
 def build(bld):
 	defines = []
@@ -102,7 +108,7 @@ def build(bld):
 		'./monsters/nihilanth.cpp',
 		'./monsters/nodes.cpp',
 		'./novodex.cpp',
-#		'./physics/NxUserStream.cpp',
+		'./physics/NxUserStream.cpp',
 		'./monsters/osprey.cpp',
 		'./pathcorner.cpp',
 		'./physents.cpp',
@@ -148,7 +154,7 @@ def build(bld):
 		'./world.cpp',
 		'./monsters/xen.cpp',
 		'./monsters/zombie.cpp']
-
+	
 	if bld.env.VOICEMGR:
 		source += bld.path.parent.ant_glob([
 			'game_shared/voice_gamemgr.cpp',
@@ -156,7 +162,7 @@ def build(bld):
 	else:
 		defines += ['NO_VOICEGAMEMGR']
 
-	includes = Utils.to_list('. monsters physics wpn_shared ../common ../engine ../pm_shared ../game_shared ../public')
+	includes = Utils.to_list('. monsters physics wpn_shared ../phys_shared ../common ../engine ../pm_shared ../game_shared ../public')
 
 	libs = ['DL']
 

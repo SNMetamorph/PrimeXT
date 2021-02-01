@@ -260,6 +260,7 @@ def configure(conf):
 	if conf.env.COMPILER_CC == 'msvc':
 		conf.define('_CRT_SECURE_NO_WARNINGS', 1)
 		conf.define('_CRT_NONSTDC_NO_DEPRECATE', 1)
+		conf.define('WIN32', 1) # used by Novodex headers
 	elif conf.env.COMPILER_CC == 'owcc':
 		pass
 	else:
