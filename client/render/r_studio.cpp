@@ -3086,27 +3086,33 @@ StudioClientEvents
 */
 void CStudioModelRenderer :: StudioClientEvents( void )
 {
-	mstudioseqdesc_t	*pseqdesc;
-	mstudioevent_t	*pevent;
+	mstudioseqdesc_t *pSeqList;
+	mstudioseqdesc_t *pSeqCurrent;
+	mstudioevent_t	 *pEvent;
 
-	pseqdesc = (mstudioseqdesc_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqindex) + m_pCurrentEntity->curstate.sequence;
-	pevent = (mstudioevent_t *)((byte *)m_pStudioHeader + pseqdesc->eventindex);
-
-	// no events for this animation or gamepaused
-	if( pseqdesc->numevents == 0 || tr.time == tr.oldtime )
+	// invalid sequence number specified
+	if (m_pCurrentEntity->curstate.sequence >= m_pStudioHeader->numseq)
 		return;
 
-	float f = StudioEstimateFrame( pseqdesc ) + 0.01f; // get start offset
-	float start = f - m_pCurrentEntity->curstate.framerate * (tr.time - tr.oldtime) * pseqdesc->fps;
+	pSeqList = (mstudioseqdesc_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqindex);
+	pSeqCurrent = &pSeqList[m_pCurrentEntity->curstate.sequence];
+	pEvent = (mstudioevent_t *)((byte *)m_pStudioHeader + pSeqCurrent->eventindex);
 
-	for( int i = 0; i < pseqdesc->numevents; i++ )
+	// no events for this animation or game paused
+	if(pSeqCurrent->numevents == 0 || tr.time == tr.oldtime )
+		return;
+
+	float f = StudioEstimateFrame(pSeqCurrent) + 0.01f; // get start offset
+	float start = f - m_pCurrentEntity->curstate.framerate * (tr.time - tr.oldtime) * pSeqCurrent->fps;
+
+	for( int i = 0; i < pSeqCurrent->numevents; i++ )
 	{
 		// ignore all non-client-side events
-		if( pevent[i].event < EVENT_CLIENT )
+		if( pEvent[i].event < EVENT_CLIENT )
 			continue;
 
-		if( (float)pevent[i].frame > start && f >= (float)pevent[i].frame )
-			HUD_StudioEvent( &pevent[i], m_pCurrentEntity );
+		if( (float)pEvent[i].frame > start && f >= (float)pEvent[i].frame )
+			HUD_StudioEvent( &pEvent[i], m_pCurrentEntity );
 	}
 }
 
