@@ -29,9 +29,32 @@ static struct decalarray_s
 	Vector4D texcoord2;
 	byte lightstyles[4];
 	Vector position;
-} decalarray[MAX_DECALCLIPVERT];
+} decal_verts[MAX_DECALCLIPVERT];
 
-static GLuint decalvao;
+static GLuint decal_vao;
+static GLuint decal_vbo;
+
+static void R_CreateDecalsVAO()
+{
+	const int decalSize = sizeof(struct decalarray_s);
+	pglGenVertexArrays(1, &decal_vao);
+	pglGenBuffersARB(1, &decal_vbo);
+	pglBindVertexArray(decal_vao);
+	pglBindBufferARB(GL_ARRAY_BUFFER_ARB, decal_vbo);
+
+	pglVertexAttribPointerARB(ATTR_INDEX_TEXCOORD0, 4, GL_FLOAT, GL_FALSE, decalSize, (void*)offsetof(decalarray_s, texcoord0));
+	pglEnableVertexAttribArrayARB(ATTR_INDEX_TEXCOORD0);
+	pglVertexAttribPointerARB(ATTR_INDEX_TEXCOORD1, 4, GL_FLOAT, GL_FALSE, decalSize, (void *)offsetof(decalarray_s, texcoord1));
+	pglEnableVertexAttribArrayARB(ATTR_INDEX_TEXCOORD1);
+	pglVertexAttribPointerARB(ATTR_INDEX_TEXCOORD2, 4, GL_FLOAT, GL_FALSE, decalSize, (void *)offsetof(decalarray_s, texcoord2));
+	pglEnableVertexAttribArrayARB(ATTR_INDEX_TEXCOORD2);
+	pglVertexAttribPointerARB(ATTR_INDEX_LIGHT_STYLES, 4, GL_UNSIGNED_BYTE, GL_FALSE, decalSize, (void *)offsetof(decalarray_s, lightstyles));
+	pglEnableVertexAttribArrayARB(ATTR_INDEX_LIGHT_STYLES);
+	pglVertexAttribPointerARB(ATTR_INDEX_POSITION, 3, GL_FLOAT, GL_FALSE, decalSize, (void *)offsetof(decalarray_s, position));
+	pglEnableVertexAttribArrayARB(ATTR_INDEX_POSITION);
+	pglBindVertexArray(0);
+}
+
 
 /*
 ===============
@@ -122,44 +145,33 @@ bool DrawSingleDecal( decal_t *decal, word &hLastShader, bool project )
 	pglUniformMatrix4fvARB( RI->currentshader->u_ModelMatrix, 1, GL_FALSE, &glm->modelMatrix[0] );
 	r_stats.c_total_tris += (numVerts - 2);
 
+	// prepare decal_array for rendering
+	for (int i = 0; i < numVerts; i++, v += VERTEXSIZE)
+	{
+		s = (DotProductA(v, tex->vecs[0]) + tex->vecs[0][3]) / tex->texture->width;
+		t = (DotProductA(v, tex->vecs[1]) + tex->vecs[1][3]) / tex->texture->height;
+		R_LightmapCoords(surf, v, lmcoord0, 0); // styles 0-1
+		R_LightmapCoords(surf, v, lmcoord1, 2); // styles 2-3
+		decal_verts[i].texcoord0.Init(v[3], v[4], s, t);
+		decal_verts[i].texcoord1 = lmcoord0;
+		decal_verts[i].texcoord2 = lmcoord1;
+		memcpy(decal_verts[i].lightstyles, surf->styles, 4);
+
+		if (!CVAR_TO_BOOL(r_polyoffset))
+			decal_verts[i].position = Vector(v) + normal * 0.05;
+		else decal_verts[i].position = v;
+	}
+
 	// TODO: sort decal by programs to make this batch
-	if( !decalvao )
-	{
-		pglGenVertexArrays( 1, &decalvao );
-		pglBindVertexArray( decalvao );
-		pglVertexAttribPointerARB( ATTR_INDEX_TEXCOORD0, 4, GL_FLOAT, GL_FALSE, sizeof(struct decalarray_s), &decalarray->texcoord0);
-		pglEnableVertexAttribArrayARB( ATTR_INDEX_TEXCOORD0 );
-		pglVertexAttribPointerARB( ATTR_INDEX_TEXCOORD1, 4, GL_FLOAT, GL_FALSE, sizeof(struct decalarray_s),  &decalarray->texcoord1 );
-		pglEnableVertexAttribArrayARB( ATTR_INDEX_TEXCOORD1 );
-		pglVertexAttribPointerARB( ATTR_INDEX_TEXCOORD2, 4, GL_FLOAT, GL_FALSE, sizeof(struct decalarray_s),  &decalarray->texcoord2 );
-		pglEnableVertexAttribArrayARB( ATTR_INDEX_TEXCOORD2 );
-		pglVertexAttribPointerARB( ATTR_INDEX_LIGHT_STYLES, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(struct decalarray_s),  &decalarray->lightstyles );
-		pglEnableVertexAttribArrayARB( ATTR_INDEX_LIGHT_STYLES );
-		pglVertexAttribPointerARB( ATTR_INDEX_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(struct decalarray_s), &decalarray->position );
-		pglEnableVertexAttribArrayARB( ATTR_INDEX_POSITION );
-	}
-	else
-		pglBindVertexArray( decalvao );
+	if( !decal_vao )
+		R_CreateDecalsVAO();
 
-	for( int i = 0; i < numVerts; i++, v += VERTEXSIZE )
-	{
-		s = (DotProductA( v, tex->vecs[0] ) + tex->vecs[0][3] ) / tex->texture->width;
-		t = (DotProductA( v, tex->vecs[1] ) + tex->vecs[1][3] ) / tex->texture->height;
-		R_LightmapCoords( surf, v, lmcoord0, 0 ); // styles 0-1
-		R_LightmapCoords( surf, v, lmcoord1, 2 ); // styles 2-3
-		decalarray[i].texcoord0.Init(v[3], v[4], s, t);
-		decalarray[i].texcoord1 = lmcoord0;
-		decalarray[i].texcoord2 = lmcoord1;
-		memcpy( decalarray[i].lightstyles, surf->styles, 4 );
-
-		if( !CVAR_TO_BOOL( r_polyoffset ))
-			decalarray[i].position = Vector( v ) + normal * 0.05;
-		else decalarray[i].position = v;
-	}
-
+	pglBindVertexArray( decal_vao );
+	pglBindBufferARB(GL_ARRAY_BUFFER_ARB, decal_vbo);
+	pglBufferDataARB(GL_ARRAY_BUFFER_ARB, sizeof(decal_verts[0]) * numVerts, decal_verts, GL_STATIC_DRAW_ARB);
 	pglDrawArrays(GL_POLYGON, 0, numVerts);
 	pglBindVertexArray(0);
-
+	pglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 	return true;
 }
 
