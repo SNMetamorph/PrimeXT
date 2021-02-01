@@ -525,7 +525,7 @@ void DrawRain( void )
 	if( !Mod_BoxVisible( rain_mins, rain_maxs, Mod_GetCurrentVis( )))
 		return; // rain volume is invisible
 
-	HSPRITE hsprTexture;
+	SpriteHandle hsprTexture;
 
 	if( Rain.weatherMode == MODE_RAIN )
 		hsprTexture = LoadSprite( "sprites/raindrop.spr" ); // load rain sprite
@@ -736,7 +736,7 @@ void DrawFXObjects( void )
 	if( g_fxArray.IsClear( ))
 		return; // no objects to draw
 
-	HSPRITE hsprTexture;
+	SpriteHandle hsprTexture;
 
 	hsprTexture = LoadSprite( "sprites/waterring.spr" ); // load water ring sprite
 	if( !hsprTexture ) return;

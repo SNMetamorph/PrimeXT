@@ -248,7 +248,7 @@ void R_SetupLightProjectionTexture( plight_t *pl, cl_entity_t *pEnt )
 		{
 			// setup the sprite
 			const char *sprname = gRenderfuncs.GetFileByIndex( pEnt->curstate.sequence );
-			HSPRITE handle = SPR_LoadEx( sprname, TF_BORDER );
+			SpriteHandle handle = SPR_LoadEx( sprname, TF_BORDER );
 			pl->pSprite = (model_t *)gEngfuncs.GetSpritePointer( handle );
 
 			if( !pl->pSprite )

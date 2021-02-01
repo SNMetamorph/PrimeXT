@@ -194,7 +194,7 @@ public:
 	int Draw( float flTime );
 	int MsgFunc_Train( const char *pszName, int iSize, void *pbuf );
 private:
-	HSPRITE m_hSprite;
+	SpriteHandle m_hSprite;
 	int m_iPos;
 
 };
@@ -367,8 +367,8 @@ public:
 	int MsgFunc_Battery(const char *pszName,  int iSize, void *pbuf );
 
 private:
-	HSPRITE m_hSprite1;
-	HSPRITE m_hSprite2;
+	SpriteHandle m_hSprite1;
+	SpriteHandle m_hSprite2;
 	wrect_t *m_prc1;
 	wrect_t *m_prc2;
 	int m_iBat;
@@ -390,9 +390,9 @@ public:
 	int MsgFunc_FlashBat( const char *pszName, int iSize, void *pbuf );
 
 private:
-	HSPRITE m_hSprite1;
-	HSPRITE m_hSprite2;
-	HSPRITE m_hBeam;
+	SpriteHandle m_hSprite1;
+	SpriteHandle m_hSprite2;
+	SpriteHandle m_hBeam;
 	wrect_t *m_prc1;
 	wrect_t *m_prc2;
 	wrect_t *m_prcBeam;
@@ -500,7 +500,7 @@ private:
 	typedef struct
 	{
 		char szSpriteName[MAX_ICONSPRITENAME_LENGTH];
-		HSPRITE spr;
+		SpriteHandle spr;
 		wrect_t rc;
 		unsigned char r, g, b;
 	} icon_sprite_t;
@@ -520,7 +520,7 @@ private:
 	int m_iSpriteCountAllRes;
 	float m_flMouseSensitivity;
 	int m_iConcussionEffect;
-	HSPRITE m_hsprLogo;
+	SpriteHandle m_hsprLogo;
 	int m_iLogo;
 public:
 	float m_flTime;	 // the current client time
@@ -546,11 +546,11 @@ public:
 private:
 	// the memory for these arrays are allocated in the first call to CHud::VidInit()
 	// when the hud.txt and associated sprites are loaded. freed in ~CHud()
-	HSPRITE *m_rghSprites; // the sprites loaded from hud.txt
+	SpriteHandle *m_rghSprites; // the sprites loaded from hud.txt
 	wrect_t *m_rgrcRects;
 	char *m_rgszSpriteNames;
 public:
-	HSPRITE GetSprite( int index ) { return (index < 0) ? 0 : m_rghSprites[index]; }
+	SpriteHandle GetSprite( int index ) { return (index < 0) ? 0 : m_rghSprites[index]; }
 	wrect_t& GetSpriteRect( int index ) { return m_rgrcRects[index]; }
           int InitHUDMessages( void ); // init hud messages
 	int GetSpriteIndex( const char *SpriteName ); // gets a sprite index, for use in the m_rghSprites[] array
@@ -617,7 +617,7 @@ public:
 	
 	// error sprite
 	int m_HUD_error;
-	HSPRITE m_hHudError;
+	SpriteHandle m_hHudError;
 	
 	void AddHudElem( CHudBase *p );
 	float GetSensitivity() { return m_flMouseSensitivity; }

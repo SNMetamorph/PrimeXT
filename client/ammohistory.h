@@ -103,7 +103,7 @@ public:
 ///// AMMO /////
 	int	GetAmmo( int iId ) { return iId; }
 	void	SetAmmo( int iId, int iCount ) { riAmmo[ iId ] = iCount;	}
-	HSPRITE	*GetAmmoPicFromWeapon( int iAmmoId, wrect_t& rect );
+	SpriteHandle	*GetAmmoPicFromWeapon( int iAmmoId, wrect_t& rect );
 
 	int CountAmmo( int iId ) 
 	{

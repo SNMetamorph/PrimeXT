@@ -124,7 +124,7 @@ void ScaleColors( int &r, int &g, int &b, int a )
 	b = (int)(b * x);
 }
 
-HSPRITE LoadSprite( const char *pszName )
+SpriteHandle LoadSprite( const char *pszName )
 {
 	char sz[256]; 
 	int i;
@@ -916,7 +916,7 @@ char *ParseHudSprite( char *pfile, char *psz, client_sprite_t *result )
 					gEngfuncs.COM_FreeFile( testSprite );
 
 					// fill structure at default
-					HSPRITE m_hSprite = SPR_Load( tempSprite.szSprite );
+					SpriteHandle m_hSprite = SPR_Load( tempSprite.szSprite );
 
 					width = SPR_Width( m_hSprite, 0 );
 					height = SPR_Height( m_hSprite, 0 );
