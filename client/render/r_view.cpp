@@ -57,6 +57,7 @@ cvar_t	*r_allow_mirrors;
 cvar_t	*r_allow_portals;
 cvar_t	*r_allow_screens;
 cvar_t	*r_drawentities;
+cvar_t	*r_drawworld;
 cvar_t	*r_detailtextures;
 cvar_t	*r_recursion_depth;
 cvar_t	*r_lighting_modulate;
@@ -169,6 +170,7 @@ void V_Init( void )
 	r_grass_fade_dist = CVAR_REGISTER( "r_grass_fade_dist", "2048", FCVAR_ARCHIVE );
 	r_grass_vbo = CVAR_REGISTER( "r_grass_vbo", "-1", FCVAR_ARCHIVE );
 
+	r_drawworld = CVAR_REGISTER( "r_drawworld", "1", FCVAR_CHEAT );
 	r_show_renderpass = CVAR_REGISTER( "r_show_renderpass", "0", 0 );
 	r_show_light_scissors = CVAR_REGISTER( "r_show_light_scissors", "0", 0 );
 	r_show_normals = CVAR_REGISTER( "r_show_normals", "0", 0 );

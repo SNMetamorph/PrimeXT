@@ -1364,7 +1364,8 @@ void R_RenderScene( void )
 	R_PushDlights();
 	R_CheckFog();
 
-	R_DrawWorld();
+	if (CVAR_TO_BOOL(r_drawworld))
+		R_DrawWorld();
 
 	R_DrawEntitiesOnList();
 
