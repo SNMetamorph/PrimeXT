@@ -532,6 +532,10 @@ void Mod_PrecacheShaders( void )
 	int		i;
 
 	// preload shaders for all the world faces (but ignore watery faces)
+	// check for fog because it used next in shader generating
+	// R_CheckFog();
+	// FIXME because we can't check for fog while player not spawned, assume that fog always on
+	tr.fogEnabled = true;
 	for( i = 0; i < world->numsortedfaces; i++ )
 	{
 		if( world->sortedfaces[i] > worldmodel->nummodelsurfaces )
@@ -563,35 +567,69 @@ if shaders was changed we need to resort them
 */
 void Mod_ResortFaces( void )
 {
-	msurface_t	*surf;
-	int		i;
+	int start_face;
+	int end_face;
+	int last_shader;
+	int last_texture;
+	int last_lightmap;
+	msurface_t *first_surf;
 
-	if( !tr.params_changed ) return;
+	if (!tr.params_changed) 
+		return;
 
 	// rebuild shaders
-	for( i = 0; i < world->numsortedfaces; i++ )
+	for(int i = 0; i < world->numsortedfaces; i++ )
 	{
 		if( world->sortedfaces[i] > worldmodel->nummodelsurfaces )
 			continue;	// precache only world shaders
 
-		surf = &worldmodel->surfaces[world->sortedfaces[i]];
-
+		msurface_t *surf = &worldmodel->surfaces[world->sortedfaces[i]];
 		if( !FBitSet( surf->flags, SURF_DRAWSKY ))
 			GL_UberShaderForSolidBmodel( surf );
 	}
 
 	// resort faces
 	qsort( world->sortedfaces, world->numsortedfaces, sizeof( unsigned short ), (cmpfunc)Mod_SurfaceCompareInGame );
-#if 0
-	Msg( "resorted faces:\n" );
-	for( i = 0; i < world->numsortedfaces; i++ )
+
+	start_face = end_face = 0;
+	first_surf = &worldmodel->surfaces[world->sortedfaces[0]];
+	last_shader = first_surf->info->shaderNum[0];
+	last_texture = R_TextureAnimation(first_surf)->gl_texturenum;
+	last_lightmap = first_surf->info->lightmaptexturenum;
+
+	Msg("Mod_ResortFaces: faces count %i, resorted: \n", world->numsortedfaces);
+	for (int i = 0; i < world->numsortedfaces; i++ )
 	{
 		msurface_t *surf = &worldmodel->surfaces[world->sortedfaces[i]];
 		texture_t *tx = R_TextureAnimation( surf );
 		mextrasurf_t *esrf = surf->info;
-		Msg( "face %i, shader %i, texture %i lightmap %i\n", i, esrf->shaderNum[0], tx->gl_texturenum, esrf->lightmaptexturenum );
+
+		int curr_shader = esrf->shaderNum[0];
+		int curr_texture = tx->gl_texturenum;
+		int curr_lightmap = esrf->lightmaptexturenum;
+
+		bool is_shader_same = last_shader == curr_shader;
+		bool is_texture_same = last_texture == curr_texture;
+		bool is_lightmap_same = last_lightmap == curr_lightmap;
+		bool is_last_iteration = (i + 1) == world->numsortedfaces;
+
+		if (is_shader_same && is_texture_same && is_lightmap_same && !is_last_iteration)
+		{
+			end_face = i;
+			continue;
+		}
+
+		Msg("    surfaces %i..%i: shader %i, texture %i, lightmap %i\n", 
+			start_face, end_face, 
+			last_shader, last_texture, 
+			last_lightmap
+		);
+
+		start_face = i;
+		last_shader = curr_shader;
+		last_texture = curr_texture;
+		last_lightmap = curr_lightmap;
 	}
-#endif
 }
 
 /*
@@ -1993,20 +2031,35 @@ void R_DrawBrushList( void )
 
 		if( !entry->hProgram ) continue;
 
-		if(( i == 0 ) || ( RI->currentshader != &glsl_programs[entry->hProgram] ))
+		if ((i == 0) || (RI->currentshader != &glsl_programs[entry->hProgram]))
+		{
 			flush_buffer = true;
+			r_stats.num_flushes_shader++;
+		}
 
-		if( cached_lightmap != es->lightmaptexturenum )
+		if (cached_lightmap != es->lightmaptexturenum)
+		{
 			flush_buffer = true;
+			r_stats.num_flushes_lightmap++;
+		}
 
-		if( cached_mirror != es->subtexture[glState.stack_position] )
+		if (cached_mirror != es->subtexture[glState.stack_position])
+		{
 			flush_buffer = true;
+			r_stats.num_flushes_mirror++;
+		}
 
-		if( cached_texture != es->gl_texturenum )
+		if (cached_texture != es->gl_texturenum)
+		{
 			flush_buffer = true;
+			r_stats.num_flushes_texture++;
+		}
 
-		if( cached_texofs[0] != es->texofs[0] || cached_texofs[1] != es->texofs[1] )
+		if (cached_texofs[0] != es->texofs[0] || cached_texofs[1] != es->texofs[1])
+		{
 			flush_buffer = true;
+			r_stats.num_flushes_texoffset++;
+		}
 
 		if( flush_buffer )
 		{
@@ -2218,15 +2271,15 @@ void R_DrawWorldList( void )
 
 	for( int i = 0; i < world->numsortedfaces; i++ )
 	{
-		int j = world->sortedfaces[i];
+		int surf_index = world->sortedfaces[i];
 
-		if( j >= worldmodel->nummodelsurfaces )
+		if( surf_index >= worldmodel->nummodelsurfaces )
 			continue;	// not a world face
 
-		if( !CHECKVISBIT( RI->visfaces, j ))
+		if( !CHECKVISBIT( RI->visfaces, surf_index ))
 			continue;
 
-		msurface_t *s = worldmodel->surfaces + j;
+		msurface_t *s = worldmodel->surfaces + surf_index;
 		mextrasurf_t *es = s->info;
 		bool mirror = false;
 		word hProgram = 0;
@@ -2235,25 +2288,40 @@ void R_DrawWorldList( void )
 			mirror = true;
 
 		hProgram = es->shaderNum[mirror];
-
-		if( !hProgram ) continue;
+		if( !hProgram ) 
+			continue;
 
 		texture_t *tex = R_TextureAnimation( s );
 
-		if(( RI->currentshader != &glsl_programs[hProgram] ))
+		if ((i == 0) || (RI->currentshader != &glsl_programs[hProgram]))
+		{
 			flush_buffer = true;
+			r_stats.num_flushes_shader++;
+		}
 
-		if( cached_lightmap != es->lightmaptexturenum )
+		if (cached_lightmap != es->lightmaptexturenum)
+		{
 			flush_buffer = true;
+			r_stats.num_flushes_lightmap++;
+		}
 
-		if( cached_mirror != es->subtexture[glState.stack_position] )
+		if (cached_mirror != es->subtexture[glState.stack_position])
+		{
 			flush_buffer = true;
+			r_stats.num_flushes_mirror++;
+		}
 
-		if( cached_texture != tex )
+		if (cached_texture != tex)
+		{
 			flush_buffer = true;
+			r_stats.num_flushes_texture++;
+		}
 
-		if( cached_texofs[0] != es->texofs[0] || cached_texofs[1] != es->texofs[1] )
+		if (cached_texofs[0] != es->texofs[0] || cached_texofs[1] != es->texofs[1])
+		{
 			flush_buffer = true;
+			r_stats.num_flushes_texoffset++;
+		}
 
 		if( flush_buffer )
 		{
@@ -3011,9 +3079,9 @@ void R_DrawWorld( void )
 
 	start = Sys_DoubleTime();
 //	if( CVAR_TO_BOOL( r_test ))
-//		R_DrawWorldList();
+		R_DrawWorldList();
 //	else
-		R_DrawBrushList();
+		//R_DrawBrushList();
 	end = Sys_DoubleTime();
 
 	r_stats.t_world_draw = end - start;

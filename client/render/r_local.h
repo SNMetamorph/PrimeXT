@@ -413,6 +413,11 @@ typedef struct
 
 	unsigned int	num_shader_binds;
 	unsigned int	num_flushes;
+	unsigned int	num_flushes_shader;
+	unsigned int	num_flushes_lightmap;
+	unsigned int	num_flushes_mirror;
+	unsigned int	num_flushes_texture;
+	unsigned int	num_flushes_texoffset;
 
 	msurface_t	*debug_surface;
 	double		t_world_node;
