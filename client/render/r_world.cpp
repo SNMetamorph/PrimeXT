@@ -2022,6 +2022,7 @@ void R_DrawBrushList( void )
 
 	pglBindVertexArray( world->vertex_array_object );
 	r_stats.c_world_polys += tr.num_draw_surfaces;
+	r_stats.num_draw_brush_list_calls++;
 
 	for( i = 0; i < tr.num_draw_surfaces; i++ )
 	{
@@ -2032,34 +2033,19 @@ void R_DrawBrushList( void )
 		if( !entry->hProgram ) continue;
 
 		if ((i == 0) || (RI->currentshader != &glsl_programs[entry->hProgram]))
-		{
 			flush_buffer = true;
-			r_stats.num_flushes_shader++;
-		}
 
 		if (cached_lightmap != es->lightmaptexturenum)
-		{
 			flush_buffer = true;
-			r_stats.num_flushes_lightmap++;
-		}
 
 		if (cached_mirror != es->subtexture[glState.stack_position])
-		{
 			flush_buffer = true;
-			r_stats.num_flushes_mirror++;
-		}
 
 		if (cached_texture != es->gl_texturenum)
-		{
 			flush_buffer = true;
-			r_stats.num_flushes_texture++;
-		}
 
 		if (cached_texofs[0] != es->texofs[0] || cached_texofs[1] != es->texofs[1])
-		{
 			flush_buffer = true;
-			r_stats.num_flushes_texoffset++;
-		}
 
 		if( flush_buffer )
 		{

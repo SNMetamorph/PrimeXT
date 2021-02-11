@@ -1435,6 +1435,7 @@ void HUD_PrintStats( void )
 		R_Speeds_Printf( "DIP count %3i\nShader bind %3i\n", r_stats.num_flushes, r_stats.num_shader_binds );
 		R_Speeds_Printf( "Total GLSL shaders %3i\n", Q_max( num_glsl_programs - 1, 0 ));
 		R_Speeds_Printf( "Total frame tris %3i\n", r_stats.c_total_tris );
+		R_Speeds_Printf("R_DrawBrushList calls %3i\n", r_stats.num_draw_brush_list_calls);
 		R_Speeds_Printf("World surfaces buffer flushes by:\n  shader %3i\n  lightmap %3i\n  mirror %3i \n  texture %3i\n  tex. offset %3i",
 			r_stats.num_flushes_shader, r_stats.num_flushes_lightmap,
 			r_stats.num_flushes_mirror, r_stats.num_flushes_texture,

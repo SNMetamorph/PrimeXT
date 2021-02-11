@@ -418,6 +418,7 @@ typedef struct
 	unsigned int	num_flushes_mirror;
 	unsigned int	num_flushes_texture;
 	unsigned int	num_flushes_texoffset;
+	unsigned int	num_draw_brush_list_calls;
 
 	msurface_t	*debug_surface;
 	double		t_world_node;
