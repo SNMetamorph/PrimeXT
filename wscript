@@ -165,7 +165,7 @@ def configure(conf):
 			'default': ['-O3']
 		},
 		'debug': {
-			'msvc':    ['/O1'],
+			'msvc':    ['/Od'],
 			'gcc':     ['-Og'],
 			'default': ['-O1']
 		},
