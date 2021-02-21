@@ -441,18 +441,22 @@ static int Mod_SurfaceCompareInGame( const unsigned short **a, const unsigned sh
 	esrf1 = surf1->info;
 	esrf2 = surf2->info;
 
+	// sort priority
+	// 1. shaders
 	if( esrf1->shaderNum[0] > esrf2->shaderNum[0] )
 		return 1;
 
 	if( esrf1->shaderNum[0] < esrf2->shaderNum[0] )
 		return -1;
 
+	// 2. texture number
 	if( tx1->gl_texturenum > tx2->gl_texturenum )
 		return 1;
 
 	if( tx1->gl_texturenum < tx2->gl_texturenum )
 		return -1;
 
+	// 3. lightmap texture number
 	if( esrf1->lightmaptexturenum > esrf2->lightmaptexturenum )
 		return 1;
 
@@ -1490,27 +1494,32 @@ static unsigned int tempElems[MAX_MAP_ELEMS];
 static unsigned int numTempElems;
 
 // accumulate the indices
-#define R_DrawSurface( es )					\
-for( int vert = 0; vert < es->numverts - 2; vert++ )		\
+#define R_DrawSurface( esurf )					\
+for( int vert = 0; vert < esurf->numverts - 2; vert++ )		\
 {							\
 	ASSERT( numTempElems < ( MAX_MAP_ELEMS - 3 ));		\
-	tempElems[numTempElems++] = es->firstvertex;		\
-	tempElems[numTempElems++] = es->firstvertex + vert + 1;	\
-	tempElems[numTempElems++] = es->firstvertex + vert + 2;	\
+	tempElems[numTempElems++] = esurf->firstvertex;		\
+	tempElems[numTempElems++] = esurf->firstvertex + vert + 1;	\
+	tempElems[numTempElems++] = esurf->firstvertex + vert + 2;	\
 }
 
 // accumulate the indices
-#define R_DrawIndexedSurface( es )					\
-for( int elem = 0; elem < es->numindexes; elem++ )			\
+#define R_DrawIndexedSurface( esurf )					\
+for( int elem = 0; elem < esurf->numindexes; elem++ )			\
 {								\
 	ASSERT( numTempElems < ( MAX_MAP_ELEMS - 3 ));			\
-	tempElems[numTempElems++] = es->firstvertex + es->indexes[elem];	\
+	tempElems[numTempElems++] = esurf->firstvertex + esurf->indexes[elem];	\
 }
 
 word R_ChooseBmodelProgram( msurface_t *surf, cl_entity_t *e, bool lightpass )
 {
-	bool translucent;
+	// preload shaders for all the world faces (but ignore watery faces)
+	// check for fog because it used next in shader generating
+	// R_CheckFog();
+	// FIXME because we can't check for fog while player not spawned, assume that fog always on
+	tr.fogEnabled = true;
 
+	bool translucent;
 	switch( e->curstate.rendermode )
 	{
 	case kRenderTransTexture:
@@ -2265,19 +2274,19 @@ void R_DrawWorldList( void )
 		if( !CHECKVISBIT( RI->visfaces, surf_index ))
 			continue;
 
-		msurface_t *s = worldmodel->surfaces + surf_index;
-		mextrasurf_t *es = s->info;
+		msurface_t *surf = &worldmodel->surfaces[surf_index];
+		mextrasurf_t *extra_surf = surf->info;
 		bool mirror = false;
 		word hProgram = 0;
 
-		if( !FBitSet( s->flags, SURF_SCREEN ) && es->subtexture[glState.stack_position] )
+		if( !FBitSet( surf->flags, SURF_SCREEN ) && extra_surf->subtexture[glState.stack_position] )
 			mirror = true;
 
-		hProgram = es->shaderNum[mirror];
-		if( !hProgram ) 
+		hProgram = extra_surf->shaderNum[mirror];
+		if( !hProgram )  
 			continue;
 
-		texture_t *tex = R_TextureAnimation( s );
+		texture_t *tex = R_TextureAnimation( surf );
 
 		if ((i == 0) || (RI->currentshader != &glsl_programs[hProgram]))
 		{
@@ -2285,13 +2294,13 @@ void R_DrawWorldList( void )
 			r_stats.num_flushes_shader++;
 		}
 
-		if (cached_lightmap != es->lightmaptexturenum)
+		if (cached_lightmap != extra_surf->lightmaptexturenum)
 		{
 			flush_buffer = true;
 			r_stats.num_flushes_lightmap++;
 		}
 
-		if (cached_mirror != es->subtexture[glState.stack_position])
+		if (cached_mirror != extra_surf->subtexture[glState.stack_position])
 		{
 			flush_buffer = true;
 			r_stats.num_flushes_mirror++;
@@ -2303,7 +2312,7 @@ void R_DrawWorldList( void )
 			r_stats.num_flushes_texture++;
 		}
 
-		if (cached_texofs[0] != es->texofs[0] || cached_texofs[1] != es->texofs[1])
+		if (cached_texofs[0] != extra_surf->texofs[0] || cached_texofs[1] != extra_surf->texofs[1])
 		{
 			flush_buffer = true;
 			r_stats.num_flushes_texoffset++;
@@ -2348,8 +2357,8 @@ void R_DrawWorldList( void )
 
 		if( ScreenCopyRequired( RI->currentshader ))
 		{
-			Vector	absmin = e->origin + es->mins;
-			Vector	absmax = e->origin + es->maxs;
+			Vector	absmin = e->origin + extra_surf->mins;
+			Vector	absmax = e->origin + extra_surf->maxs;
 			float	x, y, w, h;
 
 			if( R_ScissorForAABB( absmin, absmax, &x, &y, &w, &h ))
@@ -2364,26 +2373,26 @@ void R_DrawWorldList( void )
 			}
 		}
 
-		if(( cached_mirror != es->subtexture[glState.stack_position] ) || ( cached_texture != tex ))
+		if(( cached_mirror != extra_surf->subtexture[glState.stack_position] ) || ( cached_texture != tex ))
 		{
-			mtexinfo_t	*tx = s->texinfo;
+			mtexinfo_t	*tx = surf->texinfo;
 			mfaceinfo_t	*land = tx->faceinfo;
 			float		xScale, yScale, waveHeight;
 
 			// set the current waveheight
-			if( s->polys->verts[0][2] >= RI->vieworg[2] )
+			if( surf->polys->verts[0][2] >= RI->vieworg[2] )
 				waveHeight = -RI->currententity->curstate.scale;
 			else waveHeight = RI->currententity->curstate.scale;
 
-			if( FBitSet( s->flags, SURF_REFLECT|SURF_PORTAL|SURF_SCREEN ) && es->subtexture[glState.stack_position] )
+			if( FBitSet( surf->flags, SURF_REFLECT|SURF_PORTAL|SURF_SCREEN ) && extra_surf->subtexture[glState.stack_position] )
 			{
-				int handle = es->subtexture[glState.stack_position];
+				int handle = extra_surf->subtexture[glState.stack_position];
 				GL_Bind( GL_TEXTURE0, tr.subviewTextures[handle-1].texturenum );
 				GL_LoadTexMatrix( tr.subviewTextures[handle-1].matrix );
 			}
-			else if( FBitSet( s->flags, SURF_MOVIE ) && RI->currententity->curstate.body )
+			else if( FBitSet( surf->flags, SURF_MOVIE ) && RI->currententity->curstate.body )
 			{ 
-				GL_Bind( GL_TEXTURE0, tr.cinTextures[es->cintexturenum-1] );
+				GL_Bind( GL_TEXTURE0, tr.cinTextures[extra_surf->cintexturenum-1] );
 				GL_LoadIdentityTexMatrix();
 			}
 			else if( CVAR_TO_BOOL( r_lightmap ) || e->curstate.rendermode == kRenderTransColor )
@@ -2391,7 +2400,7 @@ void R_DrawWorldList( void )
 				GL_Bind( GL_TEXTURE0, tr.whiteTexture );
 				GL_LoadIdentityTexMatrix();
 			}
-			else if( FBitSet( s->flags, SURF_LANDSCAPE ) && land && land->terrain )
+			else if( FBitSet( surf->flags, SURF_LANDSCAPE ) && land && land->terrain )
 			{
 				if( land->terrain->layermap.gl_diffuse_id )
 					GL_Bind( GL_TEXTURE0, land->terrain->layermap.gl_diffuse_id );
@@ -2411,20 +2420,20 @@ void R_DrawWorldList( void )
 			else GL_Bind( GL_TEXTURE1, tex->dt_texturenum );
 			GET_DETAIL_SCALE( tex->gl_texturenum, &xScale, &yScale );
 			pglUniform3fARB( RI->currentshader->u_DetailScale, xScale, yScale, waveHeight );
-			pglUniform3fARB( RI->currentshader->u_TexOffset, es->texofs[0], es->texofs[1], tr.time );
+			pglUniform3fARB( RI->currentshader->u_TexOffset, extra_surf->texofs[0], extra_surf->texofs[1], tr.time );
 
 			if( ScreenCopyRequired( RI->currentshader ))
 				GL_Bind( GL_TEXTURE3, tr.screen_color );
 			else GL_Bind( GL_TEXTURE3, tr.whiteTexture );
 
-			if( FBitSet( s->flags, SURF_LANDSCAPE ) && land && land->terrain )
+			if( FBitSet( surf->flags, SURF_LANDSCAPE ) && land && land->terrain )
 				GL_Bind( GL_TEXTURE4, land->terrain->indexmap.gl_heightmap_id );
 
-			cached_mirror = es->subtexture[glState.stack_position];
+			cached_mirror = extra_surf->subtexture[glState.stack_position];
 			cached_texture = tex;
 		}
 
-		if( cached_lightmap != es->lightmaptexturenum )
+		if( cached_lightmap != extra_surf->lightmaptexturenum )
 		{
 			if( R_FullBright( ))
 			{
@@ -2434,31 +2443,31 @@ void R_DrawWorldList( void )
 			else
 			{
 				// bind real data
-				GL_Bind( GL_TEXTURE2, tr.lightmaps[es->lightmaptexturenum].lightmap );
+				GL_Bind( GL_TEXTURE2, tr.lightmaps[extra_surf->lightmaptexturenum].lightmap );
 			}
-			cached_lightmap = es->lightmaptexturenum;
+			cached_lightmap = extra_surf->lightmaptexturenum;
 		}
 
-		if( FBitSet( s->flags, SURF_DRAWTURB ))
+		if( FBitSet( surf->flags, SURF_DRAWTURB ))
 			GL_Cull( GL_NONE );
 		else GL_Cull( GL_FRONT );
 
-		cached_texofs[0] = es->texofs[0];
-		cached_texofs[1] = es->texofs[1];
+		cached_texofs[0] = extra_surf->texofs[0];
+		cached_texofs[1] = extra_surf->texofs[1];
 
-		if( es->firstvertex < startv )
-			startv = es->firstvertex;
+		if( extra_surf->firstvertex < startv )
+			startv = extra_surf->firstvertex;
 
-		if(( es->firstvertex + es->numverts ) > endv )
-			endv = es->firstvertex + es->numverts;
+		if(( extra_surf->firstvertex + extra_surf->numverts ) > endv )
+			endv = extra_surf->firstvertex + extra_surf->numverts;
 
-		if( FBitSet( s->flags, SURF_DRAWTURB ))
+		if( FBitSet( surf->flags, SURF_DRAWTURB ))
 		{
-			R_DrawIndexedSurface( es );
+			R_DrawIndexedSurface( extra_surf );
 		}
 		else
 		{
-			R_DrawSurface( es );
+			R_DrawSurface( extra_surf );
 		}
 	}
 
@@ -3045,7 +3054,6 @@ void R_DrawWorld( void )
 	RI->currententity = GET_ENTITY( 0 );
 	RI->currentmodel = RI->currententity->model;
 	memset( RI->visfaces, 0x00, ( world->numsortedfaces + 7) >> 3 );
-
 	tr.modelorg = RI->vieworg;
 
 	R_SetRenderMode( RI->currententity );
