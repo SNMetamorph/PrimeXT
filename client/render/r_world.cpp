@@ -1493,22 +1493,24 @@ void R_ProcessWorldData( model_t *mod, qboolean create, const byte *buffer )
 static unsigned int tempElems[MAX_MAP_ELEMS];
 static unsigned int numTempElems;
 
-// accumulate the indices
-#define R_DrawSurface( esurf )					\
-for( int vert = 0; vert < esurf->numverts - 2; vert++ )		\
-{							\
-	ASSERT( numTempElems < ( MAX_MAP_ELEMS - 3 ));		\
-	tempElems[numTempElems++] = esurf->firstvertex;		\
-	tempElems[numTempElems++] = esurf->firstvertex + vert + 1;	\
-	tempElems[numTempElems++] = esurf->firstvertex + vert + 2;	\
+static void R_AppendSurface(mextrasurf_t *esurf)
+{
+	for (int vert = 0; vert < esurf->numverts - 2; vert++)
+	{
+		ASSERT(numTempElems < (MAX_MAP_ELEMS - 3));	
+		tempElems[numTempElems++] = esurf->firstvertex;	
+		tempElems[numTempElems++] = esurf->firstvertex + vert + 1;
+		tempElems[numTempElems++] = esurf->firstvertex + vert + 2;
+	}
 }
 
-// accumulate the indices
-#define R_DrawIndexedSurface( esurf )					\
-for( int elem = 0; elem < esurf->numindexes; elem++ )			\
-{								\
-	ASSERT( numTempElems < ( MAX_MAP_ELEMS - 3 ));			\
-	tempElems[numTempElems++] = esurf->firstvertex + esurf->indexes[elem];	\
+static void R_AppendIndexedSurface(mextrasurf_t *esurf)
+{
+	for (int elem = 0; elem < esurf->numindexes; elem++)
+	{
+		ASSERT(numTempElems < (MAX_MAP_ELEMS - 3));	
+		tempElems[numTempElems++] = esurf->firstvertex + esurf->indexes[elem];
+	}
 }
 
 word R_ChooseBmodelProgram( msurface_t *surf, cl_entity_t *e, bool lightpass )
@@ -1802,11 +1804,11 @@ void R_DrawLightForSurfList( plight_t *pl )
 		// accumulate the indices
 		if( FBitSet( s->flags, SURF_DRAWTURB ))
 		{
-			R_DrawIndexedSurface( es );
+			R_AppendIndexedSurface( es );
 		}
 		else
 		{
-			R_DrawSurface( es );
+			R_AppendSurface( es );
 		}
 	}
 
@@ -2190,11 +2192,11 @@ void R_DrawBrushList( void )
 
 		if( FBitSet( s->flags, SURF_DRAWTURB ))
 		{
-			R_DrawIndexedSurface( es );
+			R_AppendIndexedSurface( es );
 		}
 		else
 		{
-			R_DrawSurface( es );
+			R_AppendSurface( es );
 		}
 	}
 
@@ -2463,11 +2465,11 @@ void R_DrawWorldList( void )
 
 		if( FBitSet( surf->flags, SURF_DRAWTURB ))
 		{
-			R_DrawIndexedSurface( extra_surf );
+			R_AppendIndexedSurface( extra_surf );
 		}
 		else
 		{
-			R_DrawSurface( extra_surf );
+			R_AppendSurface( extra_surf );
 		}
 	}
 
