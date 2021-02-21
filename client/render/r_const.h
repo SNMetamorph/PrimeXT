@@ -21,7 +21,7 @@ GNU General Public License for more details.
 #define Z_NEAR		4.0f
 #define Z_NEAR_LIGHT	0.1f
 
-#define BLOCK_SIZE		512	// lightmap blocksize
+#define BLOCK_SIZE		4096	// lightmap blocksize
 #define NORMAL_FLATSHADE	0.7f	// same as Valve 'flatshade'
 #define BACKFACE_EPSILON	0.01f
 #define SHADE_LAMBERT	1.495f
