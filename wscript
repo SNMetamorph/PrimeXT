@@ -135,18 +135,22 @@ def configure(conf):
 		'sanitize': {
 			'clang': ['-fsanitize=undefined', '-fsanitize=address'],
 			'gcc':   ['-fsanitize=undefined', '-fsanitize=address'],
+		},
+		'debug': {
+			'msvc':    ['/INCREMENTAL', '/SAFESEH:NO'],
+			'default': ['']
 		}
 	}
 
 	compiler_c_cxx_flags = {
 		'common': {
 			# disable thread-safe local static initialization for C++11 code, as it cause crashes on Windows XP
-			'msvc':    ['/D_USING_V110_SDK71_', '/Zi', '/FS', '/Zc:threadSafeInit-', '/MT'],
+			'msvc':    ['/D_USING_V110_SDK71_', '/FS', '/Zc:threadSafeInit-', '/MT'],
 			'clang':   ['-g', '-gdwarf-2', '-fvisibility=hidden'],
 			'gcc':     ['-g',]
 		},
 		'fast': {
-			'msvc':    ['/O2', '/Oy'],
+			'msvc':    ['/O2', '/Oy', '/Zi'],
 			'gcc': {
 				'3':       ['-O3', '-Os', '-funsafe-math-optimizations', '-fomit-frame-pointer'],
 				'default': ['-Ofast', '-funsafe-math-optimizations', '-funsafe-loop-optimizations', '-fomit-frame-pointer']
@@ -155,28 +159,28 @@ def configure(conf):
 			'default': ['-O3']
 		},
 		'fastnative': {
-			'msvc':    ['/O2', '/Oy'],
+			'msvc':    ['/O2', '/Oy', '/Zi'],
 			'gcc':     ['-Ofast', '-march=native', '-funsafe-math-optimizations', '-funsafe-loop-optimizations', '-fomit-frame-pointer'],
 			'clang':   ['-Ofast', '-march=native'],
 			'default': ['-O3']
 		},
 		'release': {
-			'msvc':    ['/O2'],
+			'msvc':    ['/O2', '/Zi'],
 			'default': ['-O3']
 		},
 		'debug': {
-			'msvc':    ['/Od'],
+			'msvc':    ['/Od', '/ZI'],
 			'gcc':     ['-Og'],
 			'default': ['-O1']
 		},
 		'sanitize': {
-			'msvc':    ['/Od', '/RTC1'],
+			'msvc':    ['/Od', '/RTC1', '/Zi'],
 			'gcc':     ['-Og', '-fsanitize=undefined', '-fsanitize=address'],
 			'clang':   ['-O0', '-fsanitize=undefined', '-fsanitize=address'],
 			'default': ['-O0']
 		},
 		'nooptimize': {
-			'msvc':    ['/Od'],
+			'msvc':    ['/Od', '/Zi'],
 			'default': ['-O0']
 		}
 	}
