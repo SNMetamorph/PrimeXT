@@ -1182,6 +1182,90 @@ void R_DrawParticles( qboolean trans )
 	R_RestoreGLState();
 
 	DRAW_PARTICLES( &rvp, trans, tr.frametime );
+	GL_CheckForErrors();
+}
+
+/*
+=============
+R_DrawEntityGeneric
+Renders entity with proper function according to model type
+=============
+*/
+static void R_DrawEntityGeneric(cl_entity_t *ent)
+{
+	switch (ent->model->type)
+	{
+		case mod_brush:
+			R_DrawBrushModel(ent);
+			break;
+		case mod_studio:
+			R_DrawStudioModel(ent);
+			break;
+		case mod_sprite:
+			R_DrawSpriteModel(ent);
+			break;
+		default:
+			break;
+	}
+}
+
+static void R_DrawSolidEntities()
+{
+	// draw brush models
+	for (int i = 0; i < tr.num_solid_entities; i++)
+	{
+		RI->currententity = tr.solid_entities[i];
+		RI->currentmodel = RI->currententity->model;
+
+		// tell engine about current entity
+		SET_CURRENT_ENTITY(RI->currententity);
+
+		if (RI->currentmodel->type == mod_brush)
+			R_DrawBrushModel(RI->currententity);
+	}
+	GL_CheckForErrors();
+
+	// draw studio models & sprites
+	// sprites should renders AFTER studio models because of alpha blending
+	const modtype_t drawing_order[] = { mod_studio, mod_sprite };
+	for (int j = 0; j < ARRAYSIZE(drawing_order); ++j)
+	{
+		const modtype_t curr_modtype = drawing_order[j];
+		for (int i = 0; i < tr.num_solid_entities; ++i)
+		{
+			RI->currententity = tr.solid_entities[i];
+			RI->currentmodel = RI->currententity->model;
+
+			// tell engine about current entity
+			SET_CURRENT_ENTITY(RI->currententity);
+			if (RI->currentmodel->type == curr_modtype)
+				R_DrawEntityGeneric(RI->currententity);
+		}
+		GL_CheckForErrors();
+	}
+}
+
+static void R_DrawTransulentEntities()
+{
+	for (int i = 0; i < tr.num_trans_entities; i++)
+	{
+		RI->currententity = tr.trans_entities[i];
+		RI->currentmodel = RI->currententity->model;
+
+		// tell engine about current entity
+		SET_CURRENT_ENTITY(RI->currententity);
+
+		// handle studiomodels with custom rendermodes on texture
+		if (RI->currententity->curstate.rendermode != kRenderNormal)
+			tr.blend = CL_FxBlend(RI->currententity) / 255.0f;
+		else tr.blend = 1.0f; // draw as solid but sorted by distance
+
+		if (tr.blend <= 0.0f)
+			continue;
+
+		R_DrawEntityGeneric(RI->currententity);
+	}
+	GL_CheckForErrors();
 }
 
 /*
@@ -1191,111 +1275,35 @@ R_DrawEntitiesOnList
 */
 void R_DrawEntitiesOnList( void )
 {
-	int	i;
-
 	glState.drawTrans = false;
 	GL_CheckForErrors();
 	tr.blend = 1.0f;
 
-	// first draw solid entities
-	for( i = 0; i < tr.num_solid_entities; i++ )
-	{
-		RI->currententity = tr.solid_entities[i];
-		RI->currentmodel = RI->currententity->model;
-
-		// tell engine about current entity
-		SET_CURRENT_ENTITY( RI->currententity );
-
-		switch( RI->currentmodel->type )
-		{
-		case mod_brush:
-			R_DrawBrushModel( RI->currententity );
-			break;
-		case mod_studio:
-			R_DrawStudioModel( RI->currententity );
-			break;
-		default:
-			break;
-		}
-	}
-
-	GL_CheckForErrors();
-
-	// draw sprites seperately, because of alpha blending
-	for( i = 0; i < tr.num_solid_entities; i++ )
-	{
-		RI->currententity = tr.solid_entities[i];
-		RI->currentmodel = RI->currententity->model;
-
-		// tell engine about current entity
-		SET_CURRENT_ENTITY( RI->currententity );
-
-		switch( RI->currentmodel->type )
-		{
-		case mod_sprite:
-			R_DrawSpriteModel( RI->currententity );
-			break;
-		default:
-			break;
-		}
-	}
-
-	GL_CheckForErrors();
-
+	/*
+	* entities rendering order:
+	* 1. solid brush models
+	* 2. solid studio models
+	* 3. solid sprites
+	* 4. transparent brush models
+	* 5. transparent studio models
+	* 6. transparent sprites
+	*/
+	
+	R_DrawSolidEntities();
 	R_DrawParticles( false );
-
-	GL_CheckForErrors();
-
 	HUD_DrawNormalTriangles();
-
 	GL_CheckForErrors();
 
 	glState.drawTrans = true;
-
-	// then draw translucent entities
-	for( i = 0; i < tr.num_trans_entities; i++ )
-	{
-		RI->currententity = tr.trans_entities[i];
-		RI->currentmodel = RI->currententity->model;
-
-		// tell engine about current entity
-		SET_CURRENT_ENTITY( RI->currententity );
-
-		// handle studiomodels with custom rendermodes on texture
-		if( RI->currententity->curstate.rendermode != kRenderNormal )
-			tr.blend = CL_FxBlend( RI->currententity ) / 255.0f;
-		else tr.blend = 1.0f; // draw as solid but sorted by distance
-
-		if( tr.blend <= 0.0f ) continue;
-
-		switch( RI->currentmodel->type )
-		{
-		case mod_brush:
-			R_DrawBrushModel( RI->currententity );
-			break;
-		case mod_studio:
-			R_DrawStudioModel( RI->currententity );
-			break;
-		case mod_sprite:
-			R_DrawSpriteModel( RI->currententity );
-			break;
-		default:
-			break;
-		}
-	}
-
-	GL_CheckForErrors();
-
+	R_DrawTransulentEntities();
 	R_RestoreGLState();
 	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 	HUD_DrawTransparentTriangles();
-
 	GL_CheckForErrors();
 
 	R_AllowFog( false );
 	R_DrawParticles( true );
 	R_AllowFog( true );
-
 	GL_CheckForErrors();
 
 	glState.drawTrans = false;

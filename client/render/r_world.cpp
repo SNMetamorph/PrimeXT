@@ -2512,12 +2512,12 @@ void R_DrawWorldList( void )
 
 /*
 =================
-R_SurfaceCompare
+R_BmodelSurfaceCompare
 
 compare translucent surfaces
 =================
 */
-static int R_SurfaceCompare( const gl_bmodelface_t *a, const gl_bmodelface_t *b )
+static int R_BmodelSurfaceCompare( const gl_bmodelface_t *a, const gl_bmodelface_t *b )
 {
 	msurface_t	*surf1, *surf2;
 
@@ -2659,7 +2659,7 @@ void R_DrawBrushModel( cl_entity_t *e )
 	}
 
 	if( e->curstate.rendermode == kRenderTransTexture && !FBitSet( clmodel->flags, MODEL_LIQUID ))
-		qsort( tr.draw_surfaces, tr.num_draw_surfaces, sizeof( gl_bmodelface_t ), (cmpfunc)R_SurfaceCompare );
+		qsort( tr.draw_surfaces, tr.num_draw_surfaces, sizeof( gl_bmodelface_t ), (cmpfunc)R_BmodelSurfaceCompare );
 
 	R_SetRenderMode( e );
 	R_DrawBrushList();
@@ -3067,8 +3067,9 @@ void R_DrawWorld( void )
 
 	start = Sys_DoubleTime();
 	if( CVAR_TO_BOOL( r_recursive_world_node ))
-		R_RecursiveWorldNode( world->nodes, RI->frustum.GetClipFlags( ));
-	else R_WorldMarkVisibleFaces();
+		R_RecursiveWorldNode( world->nodes, RI->frustum.GetClipFlags());
+	else 
+		R_WorldMarkVisibleFaces();
 	end = Sys_DoubleTime();
 
 	r_stats.t_world_node = end - start;
