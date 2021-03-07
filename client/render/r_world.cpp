@@ -2512,29 +2512,66 @@ void R_DrawWorldList( void )
 
 /*
 =================
-R_BmodelSurfaceCompare
-
+R_TransSurfaceCompare
 compare translucent surfaces
+sorts surfaces from far to near
 =================
 */
-static int R_BmodelSurfaceCompare( const gl_bmodelface_t *a, const gl_bmodelface_t *b )
+static int R_TransSurfaceCompare( const gl_bmodelface_t *a, const gl_bmodelface_t *b )
 {
-	msurface_t	*surf1, *surf2;
-
-	surf1 = (msurface_t *)a->surface;
-	surf2 = (msurface_t *)b->surface;
-
+	msurface_t *surf1 = (msurface_t *)a->surface;
+	msurface_t *surf2 = (msurface_t *)b->surface;
 	Vector org1 = RI->currententity->origin + surf1->info->origin;
 	Vector org2 = RI->currententity->origin + surf2->info->origin;
-
-	// compare by plane dists
 	float len1 = DotProduct( org1, RI->vforward ) - RI->viewplanedist;
 	float len2 = DotProduct( org2, RI->vforward ) - RI->viewplanedist;
 
+	// compare by plane dists
 	if( len1 > len2 )
 		return -1;
 	if( len1 < len2 )
 		return 1;
+
+	return 0;
+}
+
+/*
+=================
+R_SolidSurfaceCompare
+compare translucent surfaces
+sorts surfaces to reduce state switches
+=================
+*/
+static int R_SolidSurfaceCompare(const gl_bmodelface_t *a, const gl_bmodelface_t *b)
+{
+	msurface_t *surf1 = (msurface_t *)a->surface;
+	msurface_t *surf2 = (msurface_t *)b->surface;
+	texture_t *tx1 = R_TextureAnimation(surf1);
+	texture_t *tx2 = R_TextureAnimation(surf2);
+	mextrasurf_t *esrf1 = surf1->info;
+	mextrasurf_t *esrf2 = surf2->info;
+
+	// sort priority
+	// 1. shaders
+	if (esrf1->shaderNum[0] > esrf2->shaderNum[0])
+		return 1;
+
+	if (esrf1->shaderNum[0] < esrf2->shaderNum[0])
+		return -1;
+
+	// 2. texture number
+	if (tx1->gl_texturenum > tx2->gl_texturenum)
+		return 1;
+
+	if (tx1->gl_texturenum < tx2->gl_texturenum)
+		return -1;
+
+	// 3. lightmap texture number
+	if (esrf1->lightmaptexturenum > esrf2->lightmaptexturenum)
+		return 1;
+
+	if (esrf1->lightmaptexturenum < esrf2->lightmaptexturenum)
+		return -1;
 
 	return 0;
 }
@@ -2586,41 +2623,38 @@ void R_SetRenderMode( cl_entity_t *e )
 R_DrawBrushModel
 =================
 */
-void R_DrawBrushModel( cl_entity_t *e )
+void R_DrawBrushModel( cl_entity_t *entity, bool translucent )
 {
 	Vector		absmin, absmax;
 	msurface_t	*psurf;
-	model_t		*clmodel;
-	mplane_t		plane;
+	model_t		*clmodel = entity->model;
+	mplane_t	plane;
+	gl_state_t *glm = &tr.cached_state[entity->hCachedMatrix];
 
-	clmodel = e->model;
-
-	gl_state_t *glm = &tr.cached_state[e->hCachedMatrix];
-
-	if( e->angles != g_vecZero )
+	if( entity->angles != g_vecZero )
 	{
 		TransformAABB( glm->transform, clmodel->mins, clmodel->maxs, absmin, absmax );
 	}
 	else
 	{
-		absmin = e->origin + clmodel->mins;
-		absmax = e->origin + clmodel->maxs;
+		absmin = entity->origin + clmodel->mins;
+		absmax = entity->origin + clmodel->maxs;
 	}
 
 	if( !Mod_CheckBoxVisible( absmin, absmax ))
 		return;
 
-	if( R_CullModel( e, absmin, absmax ))
+	if( R_CullModel( entity, absmin, absmax ))
 		return;
 
-	tr.num_draw_surfaces = 0;
-
-	if( e->angles != g_vecZero )
+	if( entity->angles != g_vecZero )
 		tr.modelorg = glm->transform.VectorITransform( RI->vieworg );
-	else tr.modelorg = RI->vieworg - e->origin;
+	else 
+		tr.modelorg = RI->vieworg - entity->origin;
 	R_GrassPrepareFrame();
 
 	// accumulate surfaces, build the lightmaps
+	tr.num_draw_surfaces = 0;
 	psurf = &clmodel->surfaces[clmodel->firstmodelsurface];
 	for( int i = 0; i < clmodel->nummodelsurfaces; i++, psurf++ )
 	{
@@ -2628,12 +2662,13 @@ void R_DrawBrushModel( cl_entity_t *e )
 		{
 			if( FBitSet( psurf->flags, SURF_PLANEBACK ))
 				SetPlane( &plane, -psurf->plane->normal, -psurf->plane->dist );
-			else SetPlane( &plane, psurf->plane->normal, psurf->plane->dist );
+			else 
+				SetPlane( &plane, psurf->plane->normal, psurf->plane->dist );
 
-			if( e->hCachedMatrix != WORLD_MATRIX )
+			if( entity->hCachedMatrix != WORLD_MATRIX )
 				glm->transform.TransformPositivePlane( plane, plane );
 
-			if( psurf->plane->type != PLANE_Z && !FBitSet( e->curstate.effects, EF_WATERSIDES ))
+			if( psurf->plane->type != PLANE_Z && !FBitSet( entity->curstate.effects, EF_WATERSIDES ))
 				continue;
 
 			if( absmin[2] + 1.0 >= plane.dist )
@@ -2650,7 +2685,7 @@ void R_DrawBrushModel( cl_entity_t *e )
 
 		if( cull_type == CULL_BACKSIDE )
 		{
-			if( !FBitSet( psurf->flags, SURF_DRAWTURB ) && !( psurf->pdecals && e->curstate.rendermode == kRenderTransTexture ))
+			if( !FBitSet( psurf->flags, SURF_DRAWTURB ) && !( psurf->pdecals && entity->curstate.rendermode == kRenderTransTexture ))
 				continue;
 		}
 
@@ -2658,12 +2693,18 @@ void R_DrawBrushModel( cl_entity_t *e )
 		R_AddSurfaceToDrawList( psurf, false );
 	}
 
-	if( e->curstate.rendermode == kRenderTransTexture && !FBitSet( clmodel->flags, MODEL_LIQUID ))
-		qsort( tr.draw_surfaces, tr.num_draw_surfaces, sizeof( gl_bmodelface_t ), (cmpfunc)R_BmodelSurfaceCompare );
+	if (translucent) 
+	{
+		if (!FBitSet(clmodel->flags, MODEL_LIQUID))
+			qsort(tr.draw_surfaces, tr.num_draw_surfaces, sizeof(gl_bmodelface_t), (cmpfunc)R_TransSurfaceCompare);
+	}
+	else
+	{
+		qsort(tr.draw_surfaces, tr.num_draw_surfaces, sizeof(gl_bmodelface_t), (cmpfunc)R_SolidSurfaceCompare);
+	}
 
-	R_SetRenderMode( e );
+	R_SetRenderMode( entity );
 	R_DrawBrushList();
-
 	R_LoadIdentity();	// restore worldmatrix
 }
 

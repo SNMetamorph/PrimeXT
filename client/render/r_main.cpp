@@ -1191,12 +1191,12 @@ R_DrawEntityGeneric
 Renders entity with proper function according to model type
 =============
 */
-static void R_DrawEntityGeneric(cl_entity_t *ent)
+static void R_DrawEntityGeneric(cl_entity_t *ent, bool translucent)
 {
 	switch (ent->model->type)
 	{
 		case mod_brush:
-			R_DrawBrushModel(ent);
+			R_DrawBrushModel(ent, translucent);
 			break;
 		case mod_studio:
 			R_DrawStudioModel(ent);
@@ -1221,7 +1221,7 @@ static void R_DrawSolidEntities()
 		SET_CURRENT_ENTITY(RI->currententity);
 
 		if (RI->currentmodel->type == mod_brush)
-			R_DrawBrushModel(RI->currententity);
+			R_DrawBrushModel(RI->currententity, false);
 	}
 	GL_CheckForErrors();
 
@@ -1239,7 +1239,7 @@ static void R_DrawSolidEntities()
 			// tell engine about current entity
 			SET_CURRENT_ENTITY(RI->currententity);
 			if (RI->currentmodel->type == curr_modtype)
-				R_DrawEntityGeneric(RI->currententity);
+				R_DrawEntityGeneric(RI->currententity, false);
 		}
 		GL_CheckForErrors();
 	}
@@ -1263,7 +1263,7 @@ static void R_DrawTransulentEntities()
 		if (tr.blend <= 0.0f)
 			continue;
 
-		R_DrawEntityGeneric(RI->currententity);
+		R_DrawEntityGeneric(RI->currententity, true);
 	}
 	GL_CheckForErrors();
 }

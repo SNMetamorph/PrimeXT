@@ -715,7 +715,7 @@ void V_AdjustFov( float &fov_x, float &fov_y, float width, float height, bool lo
 //
 void R_DrawWorld( void );
 void R_DrawWorldShadowPass( void );
-void R_DrawBrushModel( cl_entity_t *e );
+void R_DrawBrushModel( cl_entity_t *e, bool translucent );
 void R_DrawBrushModelShadow( cl_entity_t *e );
 void R_ProcessWorldData( model_t *mod, qboolean create, const byte *buffer );
 bool Mod_CheckLayerNameForSurf( msurface_t *surf, const char *checkName );
