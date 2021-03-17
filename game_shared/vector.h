@@ -224,6 +224,14 @@ public:
 		return true;
 	}
 	
+	_forceinline bool IsNull(float epsilon = 0.001f) const
+	{
+		if (fabs(x) > epsilon) return false;
+		if (fabs(y) > epsilon) return false;
+		if (fabs(z) > epsilon) return false;
+		return true;
+	}
+
 	// Methods
 	inline void CopyToArray( float *rgfl ) const	{ rgfl[0] = x, rgfl[1] = y, rgfl[2] = z; }
 	inline float Length(void) const		{ return sqrt( x*x + y*y + z*z ); }
