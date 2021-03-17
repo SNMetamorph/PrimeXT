@@ -184,6 +184,40 @@ static qboolean R_OpaqueEntity( cl_entity_t *ent )
 
 /*
 ===============
+R_StaticEntity
+
+Static entity is the brush which has no custom origin and not rotated
+typically is a func_wall, func_breakable, func_ladder etc
+===============
+*/
+bool R_StaticEntity( cl_entity_t *ent )
+{
+	if (!CVAR_TO_BOOL(r_staticentities))
+		return false;
+
+	if( ent->curstate.rendermode != kRenderNormal )
+		return false;
+
+	if( ent->model->type != mod_brush )
+		return false;
+
+	if( ent->curstate.effects & ( EF_NOREFLECT|EF_REFLECTONLY ))
+		return false;
+
+	if( ent->curstate.frame || ent->model->flags & MODEL_CONVEYOR )
+		return false;
+
+	if( ent->curstate.scale ) // waveheight specified
+		return false;
+
+	if( !ent->origin.IsNull(0.01f) || !ent->angles.IsNull(0.01f))
+		return false;
+
+	return true;
+}
+
+/*
+===============
 R_TransEntityCompare
 
 Sorting translucent entities by rendermode then by distance
@@ -579,7 +613,9 @@ void R_ClearScene( void )
 	GET_ENTITY( 0 )->hCachedMatrix = GL_CacheState( g_vecZero, g_vecZero );
 	GET_ENTITY( 0 )->curstate.messagenum = r_currentMessageNum;
 
-	tr.num_solid_entities = tr.num_trans_entities = 0;
+	tr.num_solid_entities = 0;
+	tr.num_trans_entities = 0;
+	tr.num_static_entities = 0;
 	tr.local_client_added = false;
 	tr.num_shadows_used = 0;
 	tr.sky_camera = NULL;
@@ -626,12 +662,24 @@ qboolean R_AddEntity( struct cl_entity_s *clent, int entityType )
 
 	if( R_OpaqueEntity( clent ))
 	{
-		// opaque
-		if( tr.num_solid_entities >= MAX_VISIBLE_PACKET )
-			return false;
+		if (R_StaticEntity(clent))
+		{
+			// opaque static
+			if (tr.num_static_entities >= MAX_VISIBLE_PACKET)
+				return false;
 
-		tr.solid_entities[tr.num_solid_entities] = clent;
-		tr.num_solid_entities++;
+			tr.static_entities[tr.num_static_entities] = clent;
+			tr.num_static_entities++;
+		}
+		else
+		{
+			// opaque non-static
+			if (tr.num_solid_entities >= MAX_VISIBLE_PACKET)
+				return false;
+
+			tr.solid_entities[tr.num_solid_entities] = clent;
+			tr.num_solid_entities++;
+		}
 	}
 	else
 	{
@@ -1211,23 +1259,31 @@ static void R_DrawEntityGeneric(cl_entity_t *ent, bool translucent)
 
 static void R_DrawSolidEntities()
 {
-	// draw brush models
-	for (int i = 0; i < tr.num_solid_entities; i++)
+	// batch static entities
+	R_LoadIdentity(); // set world matrix
+	//R_SetRenderMode(kRenderNormal);
+	tr.num_draw_surfaces = 0;
+	for (int i = 0; i < tr.num_static_entities; i++)
 	{
-		RI->currententity = tr.solid_entities[i];
+		RI->currententity = tr.static_entities[i];
 		RI->currentmodel = RI->currententity->model;
-
-		// tell engine about current entity
-		SET_CURRENT_ENTITY(RI->currententity);
-
 		if (RI->currentmodel->type == mod_brush)
-			R_DrawBrushModel(RI->currententity, false);
+		{
+			// tell engine about current entity
+			SET_CURRENT_ENTITY(RI->currententity);
+			R_AddBrushModelToDrawList(RI->currententity);
+		}
 	}
+
+	// draw static entities
+	RI->currententity = GET_ENTITY(0);
+	RI->currentmodel = RI->currententity->model;
+	R_SortDrawListSolid();
+	R_DrawBrushList();
 	GL_CheckForErrors();
 
-	// draw studio models & sprites
 	// sprites should renders AFTER studio models because of alpha blending
-	const modtype_t drawing_order[] = { mod_studio, mod_sprite };
+	const modtype_t drawing_order[] = { mod_brush, mod_studio, mod_sprite };
 	for (int j = 0; j < ARRAYSIZE(drawing_order); ++j)
 	{
 		const modtype_t curr_modtype = drawing_order[j];
@@ -1423,9 +1479,14 @@ void HUD_PrintStats( void )
 		R_Speeds_Printf( "visible leafs:\n%3i leafs\ncurrent leaf %3i\n", r_stats.c_world_leafs, curleaf - worldmodel->leafs );
 		R_Speeds_Printf( "RecursiveWorldNode: %3lf secs\nDrawTextureChains %lf\n", r_stats.t_world_node, r_stats.t_world_draw );
 		break;
-	case 3:
-		R_Speeds_Printf( "%3i static entities\n%3i normal entities\n", r_numStatics, r_numEntities - r_numStatics );
+	case 3: {
+		R_Speeds_Printf("%3i solid entities\n%3i translucent entities\n%3i static entities", 
+			tr.num_solid_entities,
+			tr.num_trans_entities,
+			tr.num_static_entities
+		 );
 		break;
+	}
 	case 4:
 		R_Speeds_Printf( "%3i studio models drawn\n", r_stats.c_studio_models_drawn );
 		R_Speeds_Printf( "%3i sprite models drawn\n", r_stats.c_sprite_models_drawn );

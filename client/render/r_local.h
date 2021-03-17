@@ -55,7 +55,6 @@ GNU General Public License for more details.
 #define RP_NONVIEWERREF	(RP_MIRRORVIEW|RP_PORTALVIEW|RP_ENVVIEW|RP_SCREENVIEW|RP_SKYPORTALVIEW|RP_SHADOWVIEW)
 #define RP_LOCALCLIENT( e )	(gEngfuncs.GetLocalPlayer() && ((e)->index == gEngfuncs.GetLocalPlayer()->index && e->player ))
 #define RP_NORMALPASS()	( FBitSet( RI->params, RP_NONVIEWERREF ) == 0 )
-#define R_StaticEntity( ent )	( ent->origin == g_vecZero && ent->angles == g_vecZero )
 #define R_FullBright()	( CVAR_TO_BOOL( r_fullbright ) || !worldmodel->lightdata )
 #define RP_OUTSIDE( leaf )	(((( leaf ) - worldmodel->leafs ) - 1 ) == -1 )
 
@@ -316,9 +315,11 @@ typedef struct
 	// entity lists
 	cl_entity_t	*solid_entities[MAX_VISIBLE_PACKET];	// opaque moving or alpha brushes
 	cl_entity_t	*trans_entities[MAX_VISIBLE_PACKET];	// translucent brushes
+	cl_entity_t *static_entities[MAX_VISIBLE_PACKET];
 	gl_movie_t	cinematics[MAX_MOVIES];		// precached cinematics
 	int		num_solid_entities;
 	int		num_trans_entities;
+	int		num_static_entities;
 
 	gl_bmodelface_t	draw_surfaces[MAX_MAP_FACES];		// 390 kB here
 	int		num_draw_surfaces;
@@ -433,8 +434,6 @@ extern ref_globals_t	tr;
 extern ref_stats_t		r_stats;
 extern cl_entity_t		*v_intermission_spot;
 extern plight_t		cl_plights[MAX_PLIGHTS];
-#define r_numEntities	(tr.num_solid_entities + tr.num_trans_entities - r_stats.c_client_ents)
-#define r_numStatics	(r_stats.c_client_ents)
 
 /*
 =======================================================================
@@ -625,6 +624,7 @@ void R_LoadIdentity( void );
 void R_RotateForEntity( cl_entity_t *e );
 void R_TranslateForEntity( cl_entity_t *e );
 void R_TransformForEntity( const matrix4x4 &transform );
+bool R_StaticEntity( cl_entity_t *e );
 const char *R_GetNameForView( void );
 void R_AllowFog( int allowed );
 void R_FindViewLeaf( void );
@@ -715,8 +715,11 @@ void V_AdjustFov( float &fov_x, float &fov_y, float width, float height, bool lo
 //
 void R_DrawWorld( void );
 void R_DrawWorldShadowPass( void );
+void R_SortDrawListSolid();
+void R_DrawBrushList();
 void R_DrawBrushModel( cl_entity_t *e, bool translucent );
 void R_DrawBrushModelShadow( cl_entity_t *e );
+void R_AddBrushModelToDrawList(cl_entity_t *e);
 void R_ProcessWorldData( model_t *mod, qboolean create, const byte *buffer );
 bool Mod_CheckLayerNameForSurf( msurface_t *surf, const char *checkName );
 bool Mod_CheckLayerNameForPixel( mfaceinfo_t *land, const Vector &point, const char *checkName );

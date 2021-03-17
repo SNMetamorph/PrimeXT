@@ -2408,7 +2408,8 @@ void R_DrawWorldList( void )
 					GL_Bind( GL_TEXTURE0, land->terrain->layermap.gl_diffuse_id );
 				else if( land->terrain->indexmap.gl_diffuse_id && CVAR_TO_BOOL( r_detailtextures ))
 					GL_Bind( GL_TEXTURE0, tr.grayTexture );
-				else GL_Bind( GL_TEXTURE0, tex->gl_texturenum );
+				else 
+					GL_Bind( GL_TEXTURE0, tex->gl_texturenum );
 				GL_LoadIdentityTexMatrix();
 			}
 			else
@@ -2419,14 +2420,17 @@ void R_DrawWorldList( void )
 
 			if( land && land->terrain && land->terrain->indexmap.gl_diffuse_id != 0 )
 				GL_Bind( GL_TEXTURE1, land->terrain->indexmap.gl_diffuse_id );
-			else GL_Bind( GL_TEXTURE1, tex->dt_texturenum );
+			else 
+				GL_Bind( GL_TEXTURE1, tex->dt_texturenum );
+
 			GET_DETAIL_SCALE( tex->gl_texturenum, &xScale, &yScale );
 			pglUniform3fARB( RI->currentshader->u_DetailScale, xScale, yScale, waveHeight );
 			pglUniform3fARB( RI->currentshader->u_TexOffset, extra_surf->texofs[0], extra_surf->texofs[1], tr.time );
 
 			if( ScreenCopyRequired( RI->currentshader ))
 				GL_Bind( GL_TEXTURE3, tr.screen_color );
-			else GL_Bind( GL_TEXTURE3, tr.whiteTexture );
+			else 
+				GL_Bind( GL_TEXTURE3, tr.whiteTexture );
 
 			if( FBitSet( surf->flags, SURF_LANDSCAPE ) && land && land->terrain )
 				GL_Bind( GL_TEXTURE4, land->terrain->indexmap.gl_heightmap_id );
@@ -2452,7 +2456,8 @@ void R_DrawWorldList( void )
 
 		if( FBitSet( surf->flags, SURF_DRAWTURB ))
 			GL_Cull( GL_NONE );
-		else GL_Cull( GL_FRONT );
+		else 
+			GL_Cull( GL_FRONT );
 
 		cached_texofs[0] = extra_surf->texofs[0];
 		cached_texofs[1] = extra_surf->texofs[1];
@@ -2574,6 +2579,16 @@ static int R_SolidSurfaceCompare(const gl_bmodelface_t *a, const gl_bmodelface_t
 		return -1;
 
 	return 0;
+}
+
+void R_SortDrawListSolid()
+{
+	qsort(tr.draw_surfaces, tr.num_draw_surfaces, sizeof(gl_bmodelface_t), (cmpfunc)R_SolidSurfaceCompare);
+}
+
+static void R_SortDrawListTrans()
+{
+	qsort(tr.draw_surfaces, tr.num_draw_surfaces, sizeof(gl_bmodelface_t), (cmpfunc)R_TransSurfaceCompare);
 }
 
 void R_SetRenderMode( cl_entity_t *e )
@@ -2706,6 +2721,65 @@ void R_DrawBrushModel( cl_entity_t *entity, bool translucent )
 	R_SetRenderMode( entity );
 	R_DrawBrushList();
 	R_LoadIdentity();	// restore worldmatrix
+}
+
+void R_AddBrushModelToDrawList(cl_entity_t *entity)
+{
+	Vector		absmin, absmax;
+	msurface_t	*psurf;
+	model_t		*clmodel = entity->model;
+	gl_state_t	*glm = &tr.cached_state[entity->hCachedMatrix];
+	mplane_t	plane;
+
+	absmin = entity->origin + clmodel->mins;
+	absmax = entity->origin + clmodel->maxs;
+
+	if (!Mod_CheckBoxVisible(absmin, absmax))
+		return;
+
+	if (R_CullModel(entity, absmin, absmax))
+		return;
+
+	tr.modelorg = RI->vieworg - entity->origin;
+	R_GrassPrepareFrame();
+
+	// accumulate surfaces, build the lightmaps
+	psurf = &clmodel->surfaces[clmodel->firstmodelsurface];
+	for (int i = 0; i < clmodel->nummodelsurfaces; i++, psurf++)
+	{
+		if (FBitSet(psurf->flags, SURF_DRAWTURB))
+		{
+			if (FBitSet(psurf->flags, SURF_PLANEBACK))
+				SetPlane(&plane, -psurf->plane->normal, -psurf->plane->dist);
+			else
+				SetPlane(&plane, psurf->plane->normal, psurf->plane->dist);
+
+			if (entity->hCachedMatrix != WORLD_MATRIX)
+				glm->transform.TransformPositivePlane(plane, plane);
+
+			if (psurf->plane->type != PLANE_Z && !FBitSet(entity->curstate.effects, EF_WATERSIDES))
+				continue;
+
+			if (absmin[2] + 1.0 >= plane.dist)
+				continue;
+		}
+
+		// in some cases surface is invisible but grass is visible
+		bool force = R_AddGrassToChain(psurf, &RI->frustum);
+		int cull_type = R_CullSurface(psurf); // ignore frustum for bmodels
+
+		if (!force && cull_type >= CULL_FRUSTUM)
+			continue;
+
+		if (cull_type == CULL_BACKSIDE)
+		{
+			if (!FBitSet(psurf->flags, SURF_DRAWTURB) && !(psurf->pdecals && entity->curstate.rendermode == kRenderTransTexture))
+				continue;
+		}
+
+		// FIXME: store the cull type
+		R_AddSurfaceToDrawList(psurf, false);
+	}
 }
 
 /*
