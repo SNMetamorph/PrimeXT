@@ -1295,7 +1295,9 @@ static void R_DrawSolidEntities()
 			// tell engine about current entity
 			SET_CURRENT_ENTITY(RI->currententity);
 			if (RI->currentmodel->type == curr_modtype)
-				R_DrawEntityGeneric(RI->currententity, false);
+			{
+				R_DrawEntityGeneric(RI->currententity, false); 
+			}
 		}
 		GL_CheckForErrors();
 	}
@@ -1432,7 +1434,6 @@ void R_RenderScene( void )
 		R_DrawWorld();
 
 	R_DrawEntitiesOnList();
-
 	R_EndGL();
 
 	if( !FBitSet( RI->params, RP_MIRRORVIEW|RP_ENVVIEW|RP_SHADOWVIEW ))

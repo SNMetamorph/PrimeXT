@@ -1127,7 +1127,7 @@ void R_NewMap( void )
 	v_intermission_spot = NULL;
 //	tr.glsl_valid_sequence++; // refresh shader cache
 	tr.num_cin_used = 0;
-
+	tr.num_draw_decals = 0;
 	g_StudioRenderer.VidInit();
 
 	GL_InitVertexLightCache();

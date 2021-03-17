@@ -1624,7 +1624,7 @@ R_RenderDynLightList
 
 ================
 */
-void R_BuildFaceListForLight( plight_t *pl )
+void R_BuildFaceListForLight( plight_t *pl, gl_bmodelface_t *surf_list, int surf_count )
 {
 	cl_entity_t *e = RI->currententity;
 
@@ -1634,9 +1634,9 @@ void R_BuildFaceListForLight( plight_t *pl )
 	tr.modelorg = pl->origin;
 
 	// only visible polys passed through the light list
-	for( int i = 0; i < tr.num_draw_surfaces; i++ )
+	for( int i = 0; i < surf_count; i++ )
 	{
-		gl_bmodelface_t *entry = &tr.draw_surfaces[i];
+		gl_bmodelface_t *entry = &surf_list[i];
 		mextrasurf_t *es = entry->surface->info;
 		gl_state_t *glm = &tr.cached_state[e->hCachedMatrix];
 		tr.modelorg = glm->transform.VectorITransform( pl->origin );
@@ -1834,7 +1834,7 @@ R_RenderDynLightList
 draw dynamic lights for world and bmodels
 ================
 */
-void R_RenderDynLightList( void )
+void R_RenderDynLightList(gl_bmodelface_t *surf_list, int surf_count)
 {
 	if( FBitSet( RI->params, RP_ENVVIEW ))
 		return;
@@ -1866,7 +1866,7 @@ void R_RenderDynLightList( void )
 			continue;
 
 		// draw world from light position
-		R_BuildFaceListForLight( pl );
+		R_BuildFaceListForLight( pl, surf_list, surf_count);
 
 		if( !tr.num_light_surfaces && !tr.num_light_grass )
 			continue;	// no interaction with this light?
@@ -2229,15 +2229,8 @@ void R_DrawBrushList( void )
 	GL_BindShader( NULL );
 	GL_Cull( GL_FRONT );
 
-	// draw grass on visible surfaces
-	if( R_GrassUseBufferObject( ))
-		R_RenderGrassOnList();
-	else 
-		R_DrawGrass();
-
-	// draw dynamic lighting for world and bmodels
-	R_RenderDynLightList ();
-
+	// draw dynamic lighting for bmodels
+	R_RenderDynLightList(tr.draw_surfaces, tr.num_draw_surfaces);
 	pglBindVertexArray( GL_FALSE );
 	GL_BindShader( NULL );
 
@@ -2509,26 +2502,28 @@ void R_DrawWorldList( void )
 	GL_Cull( GL_FRONT );
 
 	// draw grass on visible surfaces
-//	R_DrawGrass();
+	if (R_GrassUseBufferObject())
+		R_RenderGrassOnList();
+	else
+		R_DrawGrass();
 
 	// draw dynamic lighting for world and bmodels
-//	R_RenderDynLightList ();
-
+	R_RenderDynLightList(tr.draw_surfaces, tr.num_draw_surfaces);
 	pglBindVertexArray( GL_FALSE );
 	GL_BindShader( NULL );
 
-//	DrawWireFrame();
+	DrawWireFrame();
 
 	// clear the subview pointers after normalpass
 	if( RP_NORMALPASS( ))
 	{
-//		for( i = 0; i < tr.num_draw_surfaces; i++ )
-//			memset( tr.draw_surfaces[i].surface->info->subtexture, 0, sizeof( short[8] ));
+		for(int i = 0; i < tr.num_draw_surfaces; i++ )
+			memset( tr.draw_surfaces[i].surface->info->subtexture, 0, sizeof( short[8] ));
 	}
 	tr.num_draw_surfaces = 0;
 
 	// render all decals on world and opaque bmodels
-//	DrawDecalsBatch();
+	DrawDecalsBatch();
 }
 
 /*
@@ -3201,7 +3196,6 @@ void R_DrawWorld( void )
 	else 
 		R_WorldMarkVisibleFaces();
 	end = Sys_DoubleTime();
-
 	r_stats.t_world_node = end - start;
 
 	start = Sys_DoubleTime();
@@ -3210,7 +3204,6 @@ void R_DrawWorld( void )
 //	else
 		//R_DrawBrushList();
 	end = Sys_DoubleTime();
-
 	r_stats.t_world_draw = end - start;
 
 	if( FBitSet( RI->params, RP_SKYVISIBLE ))
