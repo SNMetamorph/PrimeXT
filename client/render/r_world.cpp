@@ -2033,30 +2033,45 @@ void R_DrawBrushList( void )
 
 	pglBindVertexArray( world->vertex_array_object );
 	r_stats.c_world_polys += tr.num_draw_surfaces;
-	r_stats.num_draw_brush_list_calls++;
+	r_stats.num_draw_brush_list_calls++; 
 
-	for( i = 0; i < tr.num_draw_surfaces; i++ )
+	for (i = 0; i < tr.num_draw_surfaces; i++)
 	{
 		gl_bmodelface_t *entry = &tr.draw_surfaces[i];
 		mextrasurf_t *es = entry->surface->info;
 		msurface_t *s = entry->surface;
 
-		if( !entry->hProgram ) continue;
+		if (!entry->hProgram) continue;
 
 		if ((i == 0) || (RI->currentshader != &glsl_programs[entry->hProgram]))
+		{
 			flush_buffer = true;
+			r_stats.bmodel_flushes.num_flushes_shader++;
+		}
 
 		if (cached_lightmap != es->lightmaptexturenum)
+		{
 			flush_buffer = true;
+			r_stats.bmodel_flushes.num_flushes_lightmap++;
+		}
 
 		if (cached_mirror != es->subtexture[glState.stack_position])
+		{
 			flush_buffer = true;
+			r_stats.bmodel_flushes.num_flushes_mirror++;
+		}
 
 		if (cached_texture != es->gl_texturenum)
+		{
 			flush_buffer = true;
+			r_stats.bmodel_flushes.num_flushes_texture++;
+		}
 
 		if (cached_texofs[0] != es->texofs[0] || cached_texofs[1] != es->texofs[1])
+		{
 			flush_buffer = true;
+			r_stats.bmodel_flushes.num_flushes_texoffset++;
+		}
 
 		if( flush_buffer )
 		{
@@ -2217,7 +2232,8 @@ void R_DrawBrushList( void )
 	// draw grass on visible surfaces
 	if( R_GrassUseBufferObject( ))
 		R_RenderGrassOnList();
-	else R_DrawGrass();
+	else 
+		R_DrawGrass();
 
 	// draw dynamic lighting for world and bmodels
 	R_RenderDynLightList ();
@@ -2293,31 +2309,31 @@ void R_DrawWorldList( void )
 		if ((i == 0) || (RI->currentshader != &glsl_programs[hProgram]))
 		{
 			flush_buffer = true;
-			r_stats.num_flushes_shader++;
+			r_stats.world_flushes.num_flushes_shader++;
 		}
 
 		if (cached_lightmap != extra_surf->lightmaptexturenum)
 		{
 			flush_buffer = true;
-			r_stats.num_flushes_lightmap++;
+			r_stats.world_flushes.num_flushes_lightmap++;
 		}
 
 		if (cached_mirror != extra_surf->subtexture[glState.stack_position])
 		{
 			flush_buffer = true;
-			r_stats.num_flushes_mirror++;
+			r_stats.world_flushes.num_flushes_mirror++;
 		}
 
 		if (cached_texture != tex)
 		{
 			flush_buffer = true;
-			r_stats.num_flushes_texture++;
+			r_stats.world_flushes.num_flushes_texture++;
 		}
 
 		if (cached_texofs[0] != extra_surf->texofs[0] || cached_texofs[1] != extra_surf->texofs[1])
 		{
 			flush_buffer = true;
-			r_stats.num_flushes_texoffset++;
+			r_stats.world_flushes.num_flushes_texoffset++;
 		}
 
 		if( flush_buffer )
@@ -3176,11 +3192,10 @@ void R_DrawWorld( void )
 	R_SetRenderMode( RI->currententity );
 	R_GrassPrepareFrame();
 	R_LoadIdentity();
-	R_ClearSkyBox ();
-
-	R_MarkLeaves();
+	R_ClearSkyBox();
 
 	start = Sys_DoubleTime();
+	R_MarkLeaves();
 	if( CVAR_TO_BOOL( r_recursive_world_node ))
 		R_RecursiveWorldNode( world->nodes, RI->frustum.GetClipFlags());
 	else 

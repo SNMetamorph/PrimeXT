@@ -1475,16 +1475,30 @@ void HUD_PrintStats( void )
 		R_Speeds_Printf( "%3i spoly %3i grass\n", r_stats.c_sprite_polys, r_stats.c_grass_polys );
 		break;		
 	case 2:
-		if( !curleaf ) curleaf = worldmodel->leafs;
-		R_Speeds_Printf( "visible leafs:\n%3i leafs\ncurrent leaf %3i\n", r_stats.c_world_leafs, curleaf - worldmodel->leafs );
-		R_Speeds_Printf( "RecursiveWorldNode: %3lf secs\nDrawTextureChains %lf\n", r_stats.t_world_node, r_stats.t_world_draw );
+	{
+		if (!curleaf)
+			curleaf = worldmodel->leafs;
+		R_Speeds_Printf("Visible leafs: %4i leafs\nCurrent leaf: %4i\n", r_stats.c_world_leafs, curleaf - worldmodel->leafs);
+		R_Speeds_Printf("WorldMarkVisibleFaces: %.2lf ms\nDrawWorldList: %.2lf ms\n", r_stats.t_world_node * 1000.0, r_stats.t_world_draw * 1000.0);
+		R_Speeds_Printf("World surfaces buffer flushes:\n  shader %3i\n  lightmap %3i\n  mirror %3i \n  texture %3i\n  tex. offset %3i",
+			r_stats.world_flushes.num_flushes_shader, r_stats.world_flushes.num_flushes_lightmap,
+			r_stats.world_flushes.num_flushes_mirror, r_stats.world_flushes.num_flushes_texture, 
+			r_stats.world_flushes.num_flushes_texoffset
+		);
 		break;
+	}
 	case 3: {
-		R_Speeds_Printf("%3i solid entities\n%3i translucent entities\n%3i static entities", 
+		R_Speeds_Printf("Solid entities: %3i\nTranslucent entities: %3i\nStatic entities: %3i\n", 
 			tr.num_solid_entities,
 			tr.num_trans_entities,
 			tr.num_static_entities
 		 );
+		R_Speeds_Printf("R_DrawBrushList calls %3i\n", r_stats.num_draw_brush_list_calls);
+		R_Speeds_Printf("Bmodel surfaces buffer flushes:\n  shader %3i\n  lightmap %3i\n  mirror %3i \n  texture %3i\n  tex. offset %3i",
+			r_stats.bmodel_flushes.num_flushes_shader, r_stats.bmodel_flushes.num_flushes_lightmap,
+			r_stats.bmodel_flushes.num_flushes_mirror, r_stats.bmodel_flushes.num_flushes_texture,
+			r_stats.bmodel_flushes.num_flushes_texoffset
+		);
 		break;
 	}
 	case 4:
@@ -1504,12 +1518,6 @@ void HUD_PrintStats( void )
 		R_Speeds_Printf( "DIP count %3i\nShader bind %3i\n", r_stats.num_flushes, r_stats.num_shader_binds );
 		R_Speeds_Printf( "Total GLSL shaders %3i\n", Q_max( num_glsl_programs - 1, 0 ));
 		R_Speeds_Printf( "Total frame tris %3i\n", r_stats.c_total_tris );
-		R_Speeds_Printf("R_DrawBrushList calls %3i\n", r_stats.num_draw_brush_list_calls);
-		R_Speeds_Printf("World surfaces buffer flushes by:\n  shader %3i\n  lightmap %3i\n  mirror %3i \n  texture %3i\n  tex. offset %3i",
-			r_stats.num_flushes_shader, r_stats.num_flushes_lightmap,
-			r_stats.num_flushes_mirror, r_stats.num_flushes_texture,
-			r_stats.num_flushes_texoffset
-		);
 		break;
 	case 7:
 		// draw hierarchy map of recursion calls

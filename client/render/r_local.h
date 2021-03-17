@@ -388,6 +388,15 @@ typedef struct
 
 typedef struct
 {
+	unsigned int	num_flushes_shader;
+	unsigned int	num_flushes_lightmap;
+	unsigned int	num_flushes_mirror;
+	unsigned int	num_flushes_texture;
+	unsigned int	num_flushes_texoffset;
+} ref_stats_flushes_t;
+
+typedef struct
+{
 	unsigned int	c_world_polys;
 	unsigned int	c_studio_polys;
 	unsigned int	c_sprite_polys;
@@ -414,12 +423,10 @@ typedef struct
 
 	unsigned int	num_shader_binds;
 	unsigned int	num_flushes;
-	unsigned int	num_flushes_shader;
-	unsigned int	num_flushes_lightmap;
-	unsigned int	num_flushes_mirror;
-	unsigned int	num_flushes_texture;
-	unsigned int	num_flushes_texoffset;
 	unsigned int	num_draw_brush_list_calls;
+
+	ref_stats_flushes_t world_flushes;
+	ref_stats_flushes_t bmodel_flushes;
 
 	msurface_t	*debug_surface;
 	double		t_world_node;
