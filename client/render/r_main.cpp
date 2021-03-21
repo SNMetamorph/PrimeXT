@@ -1481,6 +1481,7 @@ void HUD_PrintStats( void )
 			curleaf = worldmodel->leafs;
 		R_Speeds_Printf("Visible leafs: %4i leafs\nCurrent leaf: %4i\n", r_stats.c_world_leafs, curleaf - worldmodel->leafs);
 		R_Speeds_Printf("WorldMarkVisibleFaces: %.2lf ms\nDrawWorldList: %.2lf ms\n", r_stats.t_world_node * 1000.0, r_stats.t_world_draw * 1000.0);
+		R_Speeds_Printf("PVS culling / render time ratio: %2.2lf\n", r_stats.t_world_node / r_stats.t_world_draw);
 		R_Speeds_Printf("World surfaces buffer flushes:\n  shader %3i\n  lightmap %3i\n  mirror %3i \n  texture %3i\n  tex. offset %3i",
 			r_stats.world_flushes.num_flushes_shader, r_stats.world_flushes.num_flushes_lightmap,
 			r_stats.world_flushes.num_flushes_mirror, r_stats.world_flushes.num_flushes_texture, 
