@@ -37,6 +37,7 @@ extern cvar_t	*r_fullbright;
 extern cvar_t	*r_drawentities;
 extern cvar_t   *r_drawworld;
 extern cvar_t   *r_staticentities;
+extern cvar_t   *r_worldpvscull;
 extern cvar_t	*r_allow_3dsky;
 extern cvar_t	*r_allow_mirrors;
 extern cvar_t	*r_allow_portals;

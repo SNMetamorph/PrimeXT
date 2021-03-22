@@ -59,6 +59,7 @@ cvar_t	*r_allow_screens;
 cvar_t	*r_drawentities;
 cvar_t	*r_drawworld;
 cvar_t	*r_staticentities;
+cvar_t	*r_worldpvscull;
 cvar_t	*r_detailtextures;
 cvar_t	*r_recursion_depth;
 cvar_t	*r_lighting_modulate;
@@ -173,6 +174,7 @@ void V_Init( void )
 
 	r_drawworld = CVAR_REGISTER( "r_drawworld", "1", FCVAR_CHEAT );
 	r_staticentities = CVAR_REGISTER("r_staticentities", "1", FCVAR_ARCHIVE);
+	r_worldpvscull = CVAR_REGISTER("r_worldpvscull", "1", FCVAR_ARCHIVE);
 	r_show_renderpass = CVAR_REGISTER( "r_show_renderpass", "0", 0 );
 	r_show_light_scissors = CVAR_REGISTER( "r_show_light_scissors", "0", 0 );
 	r_show_normals = CVAR_REGISTER( "r_show_normals", "0", 0 );
