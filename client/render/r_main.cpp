@@ -319,8 +319,9 @@ R_CheckChanges
 void R_CheckChanges( void )
 {
 	static bool	fog_enabled_old;
-	static float	waveheight_old;
-	bool		settings_changed = false;
+	static float waveheight_old;
+	bool recompile_shaders = false;
+	bool resort_world_faces = false;
 
 	if( FBitSet( r_recursion_depth->flags, FCVAR_CHANGED ))
 	{
@@ -332,75 +333,86 @@ void R_CheckChanges( void )
 	if( FBitSet( r_drawentities->flags, FCVAR_CHANGED ))
 	{
 		ClearBits( r_drawentities->flags, FCVAR_CHANGED );
-		tr.params_changed = true;
+		resort_world_faces = true;
 	}
 
 	if( FBitSet( r_lightmap->flags, FCVAR_CHANGED ))
 	{
 		ClearBits( r_lightmap->flags, FCVAR_CHANGED );
-		settings_changed = true;
+		recompile_shaders = true;
+		resort_world_faces = true;
 	}
 
 	if( FBitSet( r_allow_mirrors->flags, FCVAR_CHANGED ))
 	{
 		ClearBits( r_allow_mirrors->flags, FCVAR_CHANGED );
-		settings_changed = true;
+		recompile_shaders = true;
+		resort_world_faces = true;
 	}
 
 	if( FBitSet( r_allow_portals->flags, FCVAR_CHANGED ))
 	{
 		ClearBits( r_allow_portals->flags, FCVAR_CHANGED );
-		settings_changed = true;
+		recompile_shaders = true;
+		resort_world_faces = true;
 	}
 
 	if( FBitSet( r_allow_screens->flags, FCVAR_CHANGED ))
 	{
 		ClearBits( r_allow_screens->flags, FCVAR_CHANGED );
-		settings_changed = true;
+		recompile_shaders = true;
+		resort_world_faces = true;
 	}
 
 	if( FBitSet( r_detailtextures->flags, FCVAR_CHANGED ))
 	{
 		ClearBits( r_detailtextures->flags, FCVAR_CHANGED );
-		settings_changed = true;
+		recompile_shaders = true;
+		resort_world_faces = true;
 	}
 
 	if( FBitSet( r_fullbright->flags, FCVAR_CHANGED ))
 	{
 		ClearBits( r_fullbright->flags, FCVAR_CHANGED );
 		R_StudioClearLightCache();
-		settings_changed = true;
+		recompile_shaders = true;
+		resort_world_faces = true;
 	}
 
 	if( FBitSet( r_lighting_modulate->flags, FCVAR_CHANGED ))
 	{
 		ClearBits( r_lighting_modulate->flags, FCVAR_CHANGED );
 		R_StudioClearLightCache();
-		settings_changed = true;
+		recompile_shaders = true;
+		resort_world_faces = true;
 	}
 
 	if( FBitSet( r_test->flags, FCVAR_CHANGED ))
 	{
 		ClearBits( r_test->flags, FCVAR_CHANGED );
-		settings_changed = true;
+		recompile_shaders = true;
+		resort_world_faces = true;
 	}
 
 	if( FBitSet( r_recursive_world_node->flags, FCVAR_CHANGED ))
 	{
 		ClearBits( r_recursive_world_node->flags, FCVAR_CHANGED );
-		settings_changed = true;
+		recompile_shaders = true;
+		resort_world_faces = true;
 	}
 
 	if( FBitSet( r_grass->flags, FCVAR_CHANGED ))
 	{
 		ClearBits( r_grass->flags, FCVAR_CHANGED );
-		settings_changed = true;
+		recompile_shaders = true;
+		resort_world_faces = true;
 	}
 
 	if( FBitSet( r_shadows->flags, FCVAR_CHANGED ))
 	{
 		ClearBits( r_shadows->flags, FCVAR_CHANGED );
-		settings_changed = true;
+		recompile_shaders = true;
+		resort_world_faces = true;
 	}
 
 	if( FBitSet( vid_gamma->flags, FCVAR_CHANGED ) || FBitSet( vid_brightness->flags, FCVAR_CHANGED ))
@@ -408,26 +420,28 @@ void R_CheckChanges( void )
 		for( int i = 0; i < worldmodel->numsurfaces; i++ )
 			SetBits( worldmodel->surfaces[i].flags, SURF_LM_UPDATE );
 		R_StudioClearLightCache();
-		settings_changed = true;
+		recompile_shaders = true;
+		resort_world_faces = true;
 	}
 
-	if( tr.fogEnabled != fog_enabled_old )
+	if (tr.fogEnabled != fog_enabled_old )
 	{
 		fog_enabled_old = tr.fogEnabled;
-		settings_changed = true;
+		recompile_shaders = true;
 	}
 
 	if( tr.movevars->waveHeight != waveheight_old )
 	{
 		waveheight_old = tr.movevars->waveHeight;
-		settings_changed = true;
+		recompile_shaders = true;
+		resort_world_faces = true;
 	}
 
-	if( settings_changed )
-	{
-		tr.glsl_valid_sequence++; // now all uber-shaders are invalidate and possible need for recompile
+	if (resort_world_faces)
 		tr.params_changed = true;
-	}
+
+	if (recompile_shaders)
+		tr.glsl_valid_sequence++; // now all uber-shaders are invalidate and possible need for recompile
 }
 
 /*
@@ -604,9 +618,13 @@ void R_ClearScene( void )
 	tr.num_cached_states = 0;
 
 	R_CheckChanges();
+	if (tr.params_changed)
+	{
+		Mod_ResortFaces();
+		tr.params_changed = false;
+	}
 
 	CL_DecayLights();
-
 	R_AnimateLight();
 
 	// world matrix is bound to 0
@@ -1278,7 +1296,7 @@ static void R_DrawSolidEntities()
 	// draw static entities
 	RI->currententity = GET_ENTITY(0);
 	RI->currentmodel = RI->currententity->model;
-	R_SortDrawListSolid();
+	R_SortDrawListSolid(tr.draw_surfaces, tr.num_draw_surfaces);
 	R_DrawBrushList();
 	GL_CheckForErrors();
 
@@ -1403,6 +1421,8 @@ void R_RenderScene( void )
 		Q_strncat( r_depth_msg, string, sizeof( r_depth_msg ));
 	}
 
+	R_CheckFog();
+
 	// recursive draw mirrors, portals, etc
 	R_RenderSubview ();
 
@@ -1428,8 +1448,7 @@ void R_RenderScene( void )
 	R_Clear( ~0 );
 
 	R_PushDlights();
-	R_CheckFog();
-
+	
 	if (CVAR_TO_BOOL(r_drawworld))
 		R_DrawWorld();
 

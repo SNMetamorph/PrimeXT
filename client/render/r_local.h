@@ -722,7 +722,7 @@ void V_AdjustFov( float &fov_x, float &fov_y, float width, float height, bool lo
 //
 void R_DrawWorld( void );
 void R_DrawWorldShadowPass( void );
-void R_SortDrawListSolid();
+void R_SortDrawListSolid(gl_bmodelface_t *draw_list, int elem_count);
 void R_DrawBrushList();
 void R_DrawBrushModel( cl_entity_t *e, bool translucent );
 void R_DrawBrushModelShadow( cl_entity_t *e );
@@ -733,7 +733,7 @@ bool Mod_CheckLayerNameForPixel( mfaceinfo_t *land, const Vector &point, const c
 void Mod_SetOrthoBounds( const float *mins, const float *maxs );
 void R_SetRenderColor( cl_entity_t *e );
 void R_WorldSetupVisibility( void );
-void Mod_ResortFaces( void );
+void Mod_ResortFaces( bool print_stats = false );
 
 //
 // r_warp.cpp
@@ -743,5 +743,7 @@ void R_ClearSkyBox( void );
 void R_CheckSkyPortal( cl_entity_t *skyPortal );
 void R_DrawSkyPortal( cl_entity_t *skyPortal );
 void R_AddSkyBoxSurface( msurface_t *fa );
+void R_FindSkyBoxSurfaces();
+bool R_IsSkyBoxFound();
 
 #endif//R_LOCAL_H
