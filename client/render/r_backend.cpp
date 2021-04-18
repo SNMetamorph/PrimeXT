@@ -76,6 +76,10 @@ GL_Cull
 */
 void GL_Cull( GLenum cull )
 {
+	// to avoid useless OpenGL API calls
+	if (glState.faceCull == cull)
+		return;
+
 	if( !cull )
 	{
 		pglDisable( GL_CULL_FACE );
