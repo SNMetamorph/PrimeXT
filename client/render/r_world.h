@@ -124,7 +124,9 @@ typedef struct
 
 	unsigned short	*sortedfaces;	// surfaces sorted through all models
 	unsigned short	numsortedfaces;
-
+	int				num_visible_surfaces;
+	gl_bmodelface_t	visible_surfaces[MAX_MAP_MARKSURFACES];
+	
 	// misc info
 	int		grasscount;	// number of bushes per world (used to determine total VBO size)
 	int		grassmem;		// total video memory that used by grass 

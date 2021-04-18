@@ -536,10 +536,6 @@ void Mod_PrecacheShaders( void )
 	int		i;
 
 	// preload shaders for all the world faces (but ignore watery faces)
-	// check for fog because it used next in shader generating
-	// R_CheckFog();
-	// FIXME because we can't check for fog while player not spawned, assume that fog always on
-	tr.fogEnabled = true;
 	for( i = 0; i < world->numsortedfaces; i++ )
 	{
 		if( world->sortedfaces[i] > worldmodel->nummodelsurfaces )
@@ -569,7 +565,7 @@ Mod_ResortFaces
 if shaders was changed we need to resort them
 =================
 */
-void Mod_ResortFaces( void )
+void Mod_ResortFaces(bool print_stats)
 {
 	int start_face;
 	int end_face;
@@ -577,9 +573,6 @@ void Mod_ResortFaces( void )
 	int last_texture;
 	int last_lightmap;
 	msurface_t *first_surf;
-
-	if (!tr.params_changed) 
-		return;
 
 	// rebuild shaders
 	for(int i = 0; i < world->numsortedfaces; i++ )
@@ -594,45 +587,46 @@ void Mod_ResortFaces( void )
 
 	// resort faces
 	qsort( world->sortedfaces, world->numsortedfaces, sizeof( unsigned short ), (cmpfunc)Mod_SurfaceCompareInGame );
-
-	start_face = end_face = 0;
-	first_surf = &worldmodel->surfaces[world->sortedfaces[0]];
-	last_shader = first_surf->info->shaderNum[0];
-	last_texture = R_TextureAnimation(first_surf)->gl_texturenum;
-	last_lightmap = first_surf->info->lightmaptexturenum;
-
 	Msg("Mod_ResortFaces: faces count %i, resorted: \n", world->numsortedfaces);
-	for (int i = 0; i < world->numsortedfaces; i++ )
+	if (print_stats)
 	{
-		msurface_t *surf = &worldmodel->surfaces[world->sortedfaces[i]];
-		texture_t *tx = R_TextureAnimation( surf );
-		mextrasurf_t *esrf = surf->info;
-
-		int curr_shader = esrf->shaderNum[0];
-		int curr_texture = tx->gl_texturenum;
-		int curr_lightmap = esrf->lightmaptexturenum;
-
-		bool is_shader_same = last_shader == curr_shader;
-		bool is_texture_same = last_texture == curr_texture;
-		bool is_lightmap_same = last_lightmap == curr_lightmap;
-		bool is_last_iteration = (i + 1) == world->numsortedfaces;
-
-		if (is_shader_same && is_texture_same && is_lightmap_same && !is_last_iteration)
+		start_face = end_face = 0;
+		first_surf = &worldmodel->surfaces[world->sortedfaces[0]];
+		last_shader = first_surf->info->shaderNum[0];
+		last_texture = R_TextureAnimation(first_surf)->gl_texturenum;
+		last_lightmap = first_surf->info->lightmaptexturenum;
+		for (int i = 0; i < world->numsortedfaces; i++)
 		{
-			end_face = i;
-			continue;
+			msurface_t *surf = &worldmodel->surfaces[world->sortedfaces[i]];
+			texture_t *tx = R_TextureAnimation(surf);
+			mextrasurf_t *esrf = surf->info;
+
+			int curr_shader = esrf->shaderNum[0];
+			int curr_texture = tx->gl_texturenum;
+			int curr_lightmap = esrf->lightmaptexturenum;
+
+			bool is_shader_same = last_shader == curr_shader;
+			bool is_texture_same = last_texture == curr_texture;
+			bool is_lightmap_same = last_lightmap == curr_lightmap;
+			bool is_last_iteration = (i + 1) == world->numsortedfaces;
+
+			if (is_shader_same && is_texture_same && is_lightmap_same && !is_last_iteration)
+			{
+				end_face = i;
+				continue;
+			}
+
+			Msg("    surfaces %i..%i: shader %i, texture %i, lightmap %i\n",
+				start_face, end_face,
+				last_shader, last_texture,
+				last_lightmap
+			);
+
+			start_face = i;
+			last_shader = curr_shader;
+			last_texture = curr_texture;
+			last_lightmap = curr_lightmap;
 		}
-
-		Msg("    surfaces %i..%i: shader %i, texture %i, lightmap %i\n", 
-			start_face, end_face, 
-			last_shader, last_texture, 
-			last_lightmap
-		);
-
-		start_face = i;
-		last_shader = curr_shader;
-		last_texture = curr_texture;
-		last_lightmap = curr_lightmap;
 	}
 }
 
@@ -1400,7 +1394,7 @@ void Mod_LoadWorld( model_t *mod, const byte *buf )
 
 	// precache world shaders
 	Mod_PrecacheShaders();
-	Mod_ResortFaces();
+	Mod_ResortFaces(true);
 }
 
 void Mod_FreeWorld( model_t *mod )
@@ -1493,7 +1487,7 @@ void R_ProcessWorldData( model_t *mod, qboolean create, const byte *buffer )
 static unsigned int tempElems[MAX_MAP_ELEMS];
 static unsigned int numTempElems;
 
-static void R_AppendSurface(mextrasurf_t *esurf)
+__forceinline static void R_AppendSurface(mextrasurf_t *esurf)
 {
 	for (int vert = 0; vert < esurf->numverts - 2; vert++)
 	{
@@ -1504,7 +1498,7 @@ static void R_AppendSurface(mextrasurf_t *esurf)
 	}
 }
 
-static void R_AppendIndexedSurface(mextrasurf_t *esurf)
+__forceinline static void R_AppendIndexedSurface(mextrasurf_t *esurf)
 {
 	for (int elem = 0; elem < esurf->numindexes; elem++)
 	{
@@ -1516,11 +1510,6 @@ static void R_AppendIndexedSurface(mextrasurf_t *esurf)
 word R_ChooseBmodelProgram( msurface_t *surf, cl_entity_t *e, bool lightpass )
 {
 	// preload shaders for all the world faces (but ignore watery faces)
-	// check for fog because it used next in shader generating
-	// R_CheckFog();
-	// FIXME because we can't check for fog while player not spawned, assume that fog always on
-	tr.fogEnabled = true;
-
 	bool translucent;
 	switch( e->curstate.rendermode )
 	{
@@ -1540,6 +1529,15 @@ word R_ChooseBmodelProgram( msurface_t *surf, cl_entity_t *e, bool lightpass )
 	if( lightpass )
 		return GL_UberShaderForBmodelDlight( RI->currentlight, surf, translucent );
 	return GL_UberShaderForSolidBmodel( surf, translucent );
+}
+
+void R_CheckSurfaceDecals(msurface_t *surface)
+{
+	if (!FBitSet(RI->params, RP_SHADOWVIEW))
+	{
+		if (surface->pdecals && tr.num_draw_decals < MAX_DECAL_SURFS)
+			tr.draw_decals[tr.num_draw_decals++] = surface;
+	}
 }
 
 /*
@@ -1578,16 +1576,9 @@ bool R_AddSurfaceToDrawList( msurface_t *surf, bool lightpass )
 	// surface has passed all visibility checks
 	// and can be update some data (lightmaps, mirror matrix, etc)
 	R_UpdateSurfaceParams( surf );
-
+	R_CheckSurfaceDecals(surf);
 	entry->hProgram = hProgram;
 	entry->surface = surf;
-
-	if( !FBitSet( RI->params, RP_SHADOWVIEW ))
-	{
-		if( surf->pdecals && tr.num_draw_decals < MAX_DECAL_SURFS )
-			tr.draw_decals[tr.num_draw_decals++] = surf;
-	}
-
 	return true;
 }
 
@@ -2229,6 +2220,12 @@ void R_DrawBrushList( void )
 	GL_BindShader( NULL );
 	GL_Cull( GL_FRONT );
 
+	// draw grass on visible surfaces
+	if (R_GrassUseBufferObject())
+		R_RenderGrassOnList();
+	else
+		R_DrawGrass();
+
 	// draw dynamic lighting for bmodels
 	R_RenderDynLightList(tr.draw_surfaces, tr.num_draw_surfaces);
 	pglBindVertexArray( GL_FALSE );
@@ -2255,18 +2252,17 @@ R_DrawWorldList
 */
 void R_DrawWorldList( void )
 {
-	int		cached_mirror = -1;
-	int		cached_lightmap = -1;
-	texture_t		*cached_texture = NULL;
-	qboolean		flush_buffer = false;
-	cl_entity_t	*e = RI->currententity;
-	float		cached_texofs[2] = { 0.0f, 0.0f };
-	int		startv, endv;
+	int	startv, endv;
+	int	cached_mirror = -1;
+	int	cached_lightmap = -1;
+	float cached_texofs[2] = { 0.0f, 0.0f };
+	texture_t *cached_texture = NULL;
 
-	if( !tr.num_draw_surfaces )
-		return;
+	qboolean flush_buffer = false;
+	cl_entity_t	*entity = RI->currententity;
+	bool world_pvs_cull = CVAR_TO_BOOL(r_worldpvscull);
 
-	RI->currentmodel = e->model;
+	RI->currentmodel = entity->model;
 	R_LoadIdentity();
 	startv = MAX_MAP_ELEMS;
 	numTempElems = 0;
@@ -2275,17 +2271,9 @@ void R_DrawWorldList( void )
 	pglBindVertexArray( world->vertex_array_object );
 	r_stats.c_world_polys += tr.num_draw_surfaces;
 
-	for( int i = 0; i < world->numsortedfaces; i++ )
-	{
-		int surf_index = world->sortedfaces[i];
-
-		if( surf_index >= worldmodel->nummodelsurfaces )
-			continue;	// not a world face
-
-		if( !CHECKVISBIT( RI->visfaces, surf_index ))
-			continue;
-
-		msurface_t *surf = &worldmodel->surfaces[surf_index];
+	for (int i = 0; i < world->num_visible_surfaces; i++)
+	{	
+		msurface_t *surf = world->visible_surfaces[i].surface;
 		mextrasurf_t *extra_surf = surf->info;
 		bool mirror = false;
 		word hProgram = 0;
@@ -2350,7 +2338,7 @@ void R_DrawWorldList( void )
 
 			ASSERT( RI->currentshader != NULL );
 
-			gl_state_t *glm = &tr.cached_state[e->hCachedMatrix];
+			gl_state_t *glm = &tr.cached_state[entity->hCachedMatrix];
 
 			// write constants
 			pglUniform1fvARB( RI->currentshader->u_LightStyleValues, MAX_LIGHTSTYLES, &tr.lightstyles[0] );
@@ -2368,8 +2356,8 @@ void R_DrawWorldList( void )
 
 		if( ScreenCopyRequired( RI->currentshader ))
 		{
-			Vector	absmin = e->origin + extra_surf->mins;
-			Vector	absmax = e->origin + extra_surf->maxs;
+			Vector	absmin = entity->origin + extra_surf->mins;
+			Vector	absmax = entity->origin + extra_surf->maxs;
 			float	x, y, w, h;
 
 			if( R_ScissorForAABB( absmin, absmax, &x, &y, &w, &h ))
@@ -2406,7 +2394,7 @@ void R_DrawWorldList( void )
 				GL_Bind( GL_TEXTURE0, tr.cinTextures[extra_surf->cintexturenum-1] );
 				GL_LoadIdentityTexMatrix();
 			}
-			else if( CVAR_TO_BOOL( r_lightmap ) || e->curstate.rendermode == kRenderTransColor )
+			else if( CVAR_TO_BOOL( r_lightmap ) || entity->curstate.rendermode == kRenderTransColor )
 			{
 				GL_Bind( GL_TEXTURE0, tr.whiteTexture );
 				GL_LoadIdentityTexMatrix();
@@ -2464,9 +2452,9 @@ void R_DrawWorldList( void )
 		}
 
 		if( FBitSet( surf->flags, SURF_DRAWTURB ))
-			GL_Cull( GL_NONE );
+			GL_Cull(GL_NONE);
 		else 
-			GL_Cull( GL_FRONT );
+			GL_Cull(GL_FRONT);
 
 		cached_texofs[0] = extra_surf->texofs[0];
 		cached_texofs[1] = extra_surf->texofs[1];
@@ -2507,8 +2495,8 @@ void R_DrawWorldList( void )
 	else
 		R_DrawGrass();
 
-	// draw dynamic lighting for world and bmodels
-	R_RenderDynLightList(tr.draw_surfaces, tr.num_draw_surfaces);
+	// draw dynamic lighting for world
+	R_RenderDynLightList(world->visible_surfaces, world->num_visible_surfaces);
 	pglBindVertexArray( GL_FALSE );
 	GL_BindShader( NULL );
 
@@ -2592,14 +2580,14 @@ static int R_SolidSurfaceCompare(const gl_bmodelface_t *a, const gl_bmodelface_t
 	return 0;
 }
 
-void R_SortDrawListSolid()
+void R_SortDrawListSolid(gl_bmodelface_t *draw_list, int elem_count)
 {
-	qsort(tr.draw_surfaces, tr.num_draw_surfaces, sizeof(gl_bmodelface_t), (cmpfunc)R_SolidSurfaceCompare);
+	qsort(draw_list, elem_count, sizeof(gl_bmodelface_t), (cmpfunc)R_SolidSurfaceCompare);
 }
 
-static void R_SortDrawListTrans()
+static void R_SortDrawListTrans(gl_bmodelface_t *draw_list, int elem_count)
 {
-	qsort(tr.draw_surfaces, tr.num_draw_surfaces, sizeof(gl_bmodelface_t), (cmpfunc)R_TransSurfaceCompare);
+	qsort(draw_list, elem_count, sizeof(gl_bmodelface_t), (cmpfunc)R_TransSurfaceCompare);
 }
 
 void R_SetRenderMode( cl_entity_t *e )
@@ -2726,7 +2714,8 @@ void R_DrawBrushModel( cl_entity_t *entity, bool translucent )
 	}
 	else
 	{
-		qsort(tr.draw_surfaces, tr.num_draw_surfaces, sizeof(gl_bmodelface_t), (cmpfunc)R_SolidSurfaceCompare);
+		// may be it's too slow to executing it every frame for every entity?
+		//qsort(tr.draw_surfaces, tr.num_draw_surfaces, sizeof(gl_bmodelface_t), (cmpfunc)R_SolidSurfaceCompare);
 	}
 
 	R_SetRenderMode( entity );
@@ -3100,8 +3089,9 @@ void R_WorldMarkVisibleFaces( void )
 					if(( backplane && dist >= -BACKFACE_EPSILON ) || ( !backplane && dist <= BACKFACE_EPSILON ))
 						continue; // wrong side
 
-					if( RI->frustum.CullBox( surf->info->mins, surf->info->maxs ))
-						continue;
+					// don't need this because frustum culling happens in R_DrawWorldList()
+					//if( RI->frustum.CullBox( surf->info->mins, surf->info->maxs ))
+					//	continue;
 				}
 #else
 				if( !force && R_CullSurface( surf ))
@@ -3170,6 +3160,44 @@ void R_WorldMarkVisibleFaces( void )
 #endif
 }
 
+void R_UpdateWorldVisibleSurfList(bool disable_cull = false)
+{
+	world->num_visible_surfaces = 0;
+	for (int i = 0; i < world->numsortedfaces; i++)
+	{
+		int surf_index = world->sortedfaces[i];
+		if (surf_index >= worldmodel->nummodelsurfaces)
+			continue;	// not a world face 
+
+		msurface_t *surf = &worldmodel->surfaces[surf_index];
+		mextrasurf_t *extra_surf = surf->info;
+		gl_bmodelface_t *world_face;
+		bool grass_visible = R_AddGrassToChain(surf, &RI->frustum);
+
+		if (!disable_cull && !grass_visible)
+		{
+			// PVS culling
+			if (!CHECKVISBIT(RI->visfaces, surf_index))
+				continue;
+
+			// frustum culling 
+			if (RI->frustum.CullBox(surf->info->mins, surf->info->maxs))
+				continue;
+		}
+
+		// surface has passed all visibility checks
+		// and can be update some data (lightmaps, mirror matrix, etc)
+		// without this, happens bug with black jitter on world surfaces when player rotates camera
+		R_UpdateSurfaceParams(surf);
+		R_CheckSurfaceDecals(surf);
+
+		world_face = &world->visible_surfaces[world->num_visible_surfaces];
+		world_face->surface = surf;
+		world_face->hProgram = extra_surf->shaderNum[0];
+		world->num_visible_surfaces++;
+	}
+}
+
 /*
 =============
 R_DrawWorld
@@ -3177,32 +3205,54 @@ R_DrawWorld
 */
 void R_DrawWorld( void )
 {
+	byte fillBlank;
 	double	start, end;
+	bool world_pvs_cull = CVAR_TO_BOOL(r_worldpvscull);
 
 	RI->currententity = GET_ENTITY( 0 );
 	RI->currentmodel = RI->currententity->model;
-	memset( RI->visfaces, 0x00, ( world->numsortedfaces + 7) >> 3 );
+
+	if (world_pvs_cull)
+		fillBlank = 0x00;
+	else
+		fillBlank = 0xFF;
+	memset( RI->visfaces, fillBlank, ( world->numsortedfaces + 7) >> 3 );
+
 	tr.modelorg = RI->vieworg;
 
 	R_SetRenderMode( RI->currententity );
 	R_GrassPrepareFrame();
 	R_LoadIdentity();
-	R_ClearSkyBox();
+	
+	if (world_pvs_cull)
+		R_ClearSkyBox();
+	else if (!FBitSet(RI->params, RP_SKYVISIBLE))
+	{
+		if (!R_IsSkyBoxFound())
+			R_FindSkyBoxSurfaces();
+		else
+			SetBits(RI->params, RP_SKYVISIBLE);
+	}
 
 	start = Sys_DoubleTime();
 	R_MarkLeaves();
-	if( CVAR_TO_BOOL( r_recursive_world_node ))
-		R_RecursiveWorldNode( world->nodes, RI->frustum.GetClipFlags());
-	else 
-		R_WorldMarkVisibleFaces();
+	if (world_pvs_cull)
+	{
+		if (CVAR_TO_BOOL(r_recursive_world_node))
+			R_RecursiveWorldNode(world->nodes, RI->frustum.GetClipFlags());
+		else
+			R_WorldMarkVisibleFaces();
+	}
+	else
+		R_UpdateWorldVisibleSurfList();
 	end = Sys_DoubleTime();
 	r_stats.t_world_node = end - start;
 
 	start = Sys_DoubleTime();
-//	if( CVAR_TO_BOOL( r_test ))
+	if (world_pvs_cull)
+		R_DrawBrushList();
+	else
 		R_DrawWorldList();
-//	else
-		//R_DrawBrushList();
 	end = Sys_DoubleTime();
 	r_stats.t_world_draw = end - start;
 

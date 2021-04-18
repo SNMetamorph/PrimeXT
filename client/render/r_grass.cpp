@@ -1309,7 +1309,8 @@ bool R_AddGrassToChain( msurface_t *surf, CFrustum *frustum, bool lightpass, mwo
 	}
 
 	// we are in special mode!
-	if( leaf ) return false;
+	if (leaf || !es->grasscount) 
+		return false;
 
 	if( hdr )
 	{

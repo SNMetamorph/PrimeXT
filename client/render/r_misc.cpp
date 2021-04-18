@@ -1121,6 +1121,7 @@ void R_NewMap( void )
 	RI->viewleaf = NULL; // it's may be data from previous map
 
 	// setup the skybox sides
+	R_ClearSkyBox();
 	for( i = 0; i < 6; i++ )
 		tr.skyboxTextures[i] = RENDER_GET_PARM( PARM_TEX_SKYBOX, i );
 

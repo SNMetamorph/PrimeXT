@@ -21,7 +21,7 @@ GNU General Public License for more details.
 
 #define MAX_CLIP_VERTS	64 // skybox clip vertices
 static const int		r_skyTexOrder[6] = { 0, 2, 1, 3, 4, 5 };
-
+static bool g_isSkyBoxFound = false;
 static const Vector	skyclip[6] = 
 {
 Vector(  1,  1,  0 ),
@@ -249,6 +249,7 @@ void R_ClearSkyBox( void )
 	}
 
 	ClearBits( RI->params, RP_SKYVISIBLE ); // now sky is invisible
+	g_isSkyBoxFound = false;
 }
 
 /*
@@ -277,6 +278,35 @@ void R_AddSkyBoxSurface( msurface_t *fa )
 	}
 
 	SetBits( RI->params, RP_SKYVISIBLE ); // now sky is visible
+	g_isSkyBoxFound = true;
+}
+
+/*
+=================
+R_FindSkyBoxSurfaces
+Finds skybox surfaces and appends it
+=================
+*/
+void R_FindSkyBoxSurfaces()
+{
+	for (int i = 0; i < worldmodel->numsurfaces; ++i)
+	{
+		msurface_t *surf = worldmodel->surfaces + i;
+		if (FBitSet(surf->flags, SURF_DRAWSKY))
+		{
+			if (FBitSet(RI->params, RP_SHADOWVIEW))
+				continue;
+			if (tr.fIgnoreSkybox)
+				continue;
+			R_AddSkyBoxSurface(surf);
+		}
+	}
+}
+
+
+bool R_IsSkyBoxFound()
+{
+	return g_isSkyBoxFound;
 }
 
 /*
