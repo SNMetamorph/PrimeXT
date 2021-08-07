@@ -219,9 +219,11 @@ void UTIL_RemoveAurora( cl_entity_t *ent );
 
 extern int PM_GetPhysEntInfo( int ent );
 
-extern void CAM_Think( void );
-extern void CL_CameraOffset( float *ofs );
-extern int CL_IsThirdPerson( void );
+extern "C" {
+	extern void CAM_Think(void);
+	extern DLLEXPORT void CL_CameraOffset(float *ofs);
+	extern DLLEXPORT int CL_IsThirdPerson(void);
+}
 
 // xxx need client dll function to get and clear impuse
 extern cvar_t *in_joystick;

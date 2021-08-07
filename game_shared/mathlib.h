@@ -93,7 +93,7 @@ bool IsSphereIntersectingCone(const Vector &sphereCenter, float sphereRadius, co
 bool PlanesGetIntersectionPoint( const struct mplane_s *plane1, const struct mplane_s *plane2, const struct mplane_s *plane3, Vector &out );
 Vector PlaneIntersect( struct mplane_s *plane, const Vector& p0, const Vector& p1 );
 void VectorAngles( const Vector &forward, Vector &angles );
-void VectorAngles2(const Vector &forward, Vector &angles);
+void VectorAnglesSQB(const Vector &forward, Vector &angles);
 
 // Remap a value in the range [A,B] to [C,D].
 inline float RemapVal( float val, float A, float B, float C, float D)

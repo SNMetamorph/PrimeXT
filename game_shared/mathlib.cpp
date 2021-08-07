@@ -111,7 +111,7 @@ Vector PlaneIntersect( mplane_t *plane, const Vector& p0, const Vector& p1 )
 /*
 =================
 VectorAngles
-
+This version without stupid quake bug
 =================
 */
 void VectorAngles( const Vector &srcforward, Vector &angles )
@@ -143,12 +143,11 @@ void VectorAngles( const Vector &srcforward, Vector &angles )
 
 /*
 =================
-VectorAngles2
-
-this version without stupid quake bug
+VectorAnglesSQB
+This version with stupid quake bug
 =================
 */
-void VectorAngles2(const Vector &forward, Vector &angles)
+void VectorAnglesSQB(const Vector &forward, Vector &angles)
 {
 	angles[ROLL] = 0.0f;
 
@@ -160,7 +159,7 @@ void VectorAngles2(const Vector &forward, Vector &angles)
 		if (angles[YAW] < 0.0f) angles[YAW] += 360.0f;
 
 		tmp = sqrt(forward.x * forward.x + forward.y * forward.y);
-		angles[PITCH] = RAD2DEG(atan2(-forward.z, tmp));
+		angles[PITCH] = RAD2DEG(atan2(forward.z, tmp));
 		if (angles[PITCH] < 0.0f) angles[PITCH] += 360.0f;
 	}
 	else

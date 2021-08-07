@@ -465,7 +465,7 @@ void R_SetupLightProjection( CDynLight *pl )
 		Vector skyDir, angles, up;
 
 		skyDir = tr.sky_normal.Normalize();
-		VectorAngles2( skyDir, angles );
+		VectorAngles( skyDir, angles );
 		AngleVectors( angles, NULL, NULL, up );
 
 		pl->viewMatrix.LookAt( tr.cached_vieworigin, skyDir, up );
