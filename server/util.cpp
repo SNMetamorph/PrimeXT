@@ -1793,35 +1793,80 @@ void UTIL_BloodDecalTrace( TraceResult *pTrace, int bloodColor )
 	if ( UTIL_ShouldShowBlood( bloodColor ) )
 	{
 		if ( bloodColor == BLOOD_COLOR_RED )
-			UTIL_DecalTrace( pTrace, DECAL_BLOOD1 + RANDOM_LONG(0,5) );
+			UTIL_DecalTrace( pTrace, "{blood1" ); // TODO make it more varying
 		else
-			UTIL_DecalTrace( pTrace, DECAL_YBLOOD1 + RANDOM_LONG(0,5) );
+			UTIL_DecalTrace( pTrace, "{yblood1" );
 	}
 }
 
-void UTIL_BloodStudioDecalTrace( TraceResult *pTrace, int bloodColor )
+void UTIL_BloodStudioDecalTrace(TraceResult *pTrace, int bloodColor)
 {
-	if ( UTIL_ShouldShowBlood( bloodColor ) )
+	if (UTIL_ShouldShowBlood(bloodColor))
 	{
-		if ( bloodColor == BLOOD_COLOR_RED )
-			UTIL_StudioDecalTrace( pTrace, DECAL_BLOOD1 + RANDOM_LONG(0,5), 0 );
+		if (bloodColor == BLOOD_COLOR_RED)
+			UTIL_StudioDecalTrace(pTrace, "{blood1"); // TODO make it more varying
 		else
-			UTIL_StudioDecalTrace( pTrace, DECAL_YBLOOD1 + RANDOM_LONG(0,5), 0 );
+			UTIL_StudioDecalTrace(pTrace, "{yblood1");
 	}
 }
 
-void UTIL_DecalTrace( TraceResult *pTrace, int decalNumber )
+bool UTIL_TraceCustomDecal(TraceResult *pTrace, const char *name, float angle, int persistent) // Wargon: Значение по умолчанию прописано в util.h.
+{
+	short entityIndex;
+	short modelIndex = 0;
+	byte flags = 0;
+
+	if (!name || !*name)
+		return FALSE;
+
+	if (pTrace->flFraction == 1.0)
+		return FALSE;
+
+	// Only decal BSP models
+	if (pTrace->pHit)
+	{
+		CBaseEntity *pEntity = CBaseEntity::Instance(pTrace->pHit);
+		if (pEntity && !pEntity->IsBSPModel())
+			return FALSE;
+		entityIndex = ENTINDEX(pTrace->pHit);
+	}
+	else
+		entityIndex = 0;
+
+	edict_t *pEdict = INDEXENT(entityIndex);
+	if (pEdict) modelIndex = pEdict->v.modelindex;
+
+	if (persistent)
+		flags |= FDECAL_PERMANENT;
+
+	angle = anglemod(angle);
+
+	MESSAGE_BEGIN(persistent ? MSG_INIT : MSG_BROADCAST, gmsgCustomDecal);
+	WRITE_COORD(pTrace->vecEndPos.x);
+	WRITE_COORD(pTrace->vecEndPos.y);
+	WRITE_COORD(pTrace->vecEndPos.z);
+	WRITE_COORD(pTrace->vecPlaneNormal.x * 8192);
+	WRITE_COORD(pTrace->vecPlaneNormal.y * 8192);
+	WRITE_COORD(pTrace->vecPlaneNormal.z * 8192);
+	WRITE_SHORT(entityIndex);
+	WRITE_SHORT(modelIndex);
+	WRITE_STRING(name);
+	WRITE_BYTE(flags);
+	WRITE_ANGLE(angle);
+	MESSAGE_END();
+
+	return TRUE;
+}
+
+void UTIL_DecalTrace(TraceResult *pTrace, const char *decalName)
 {
 	short entityIndex;
 	int index;
 	int message;
 
-	if ( decalNumber < 0 )
-		return;
+	index = DECAL_INDEX(decalName);
 
-	index = gDecals[ decalNumber ].index;
-
-	if ( index < 0 )
+	if (index < 0)
 		return;
 
 	if (pTrace->flFraction == 1.0)
@@ -1868,104 +1913,130 @@ void UTIL_DecalTrace( TraceResult *pTrace, int decalNumber )
 	MESSAGE_END();
 }
 
-void UTIL_StudioDecalTrace( TraceResult *pTrace, int decalNumber, int flags )
+void UTIL_RestoreCustomDecal(const Vector &vecPos, const Vector &vecNormal, int entityIndex, int modelIndex, const char *name, int flags, float angle)
+{
+	MESSAGE_BEGIN(MSG_INIT, gmsgCustomDecal);
+	WRITE_COORD(vecPos.x);
+	WRITE_COORD(vecPos.y);
+	WRITE_COORD(vecPos.z);
+	WRITE_COORD(vecNormal.x * 8192);
+	WRITE_COORD(vecNormal.y * 8192);
+	WRITE_COORD(vecNormal.z * 8192);
+	WRITE_SHORT(entityIndex);
+	WRITE_SHORT(modelIndex);
+	WRITE_STRING(name);
+	WRITE_BYTE(flags);
+	WRITE_ANGLE(angle);
+	MESSAGE_END();
+}
+
+BOOL UTIL_StudioDecalTrace(TraceResult *pTrace, const char *name, int flags)
 {
 	short entityIndex;
-	int decalIndex;
 
-	if ( decalNumber < 0 )
-		return;
+	if (!name || !*name)
+		return FALSE;
 
-	decalIndex = gDecals[ decalNumber ].index;
-
-	if( decalIndex < 0 )
-		return;
-
-	if( pTrace->flFraction == 1.0f )
-		return;
+	if (pTrace->flFraction == 1.0f)
+		return FALSE;
 
 	CBaseEntity *pEntity;
 
 	// Only decal Studio models
-	if( pTrace->pHit )
+	if (pTrace->pHit)
 	{
-		pEntity = CBaseEntity::Instance( pTrace->pHit );
+		pEntity = CBaseEntity::Instance(pTrace->pHit);
 
-		if( !pEntity || UTIL_GetModelType( pEntity->pev->modelindex ) != mod_studio )
-			return;
+		if (!pEntity || !GET_MODEL_PTR(pEntity->edict()))
+			return FALSE; // not a studiomodel?
 
-		entityIndex = ENTINDEX( pTrace->pHit );
+		entityIndex = ENTINDEX(pTrace->pHit);
 	}
 	else
 	{
-		return;
-	} 
+		return FALSE;
+	}
 
-	Vector vecSrc = pTrace->vecEndPos + pTrace->vecPlaneNormal * 5.0f;	// magic Valve constant
+	Vector vecNormal = pTrace->vecPlaneNormal;
 	Vector vecEnd = pTrace->vecEndPos;
-#if 1
-	// write local coords to avoid reduce precision
-	matrix4x4 mat = pEntity->EntityToWorldTransform();
-	vecSrc = mat.VectorITransform( vecSrc );
-	vecEnd = mat.VectorITransform( vecEnd );
-	SetBits( flags, FDECAL_LOCAL_SPACE ); // now it's in local space
-#endif	
-	MESSAGE_BEGIN( MSG_BROADCAST, gmsgStudioDecal );
-		WRITE_COORD( vecEnd.x );		// write pos
-		WRITE_COORD( vecEnd.y );
-		WRITE_COORD( vecEnd.z );
-		WRITE_COORD( vecSrc.x );		// write start
-		WRITE_COORD( vecSrc.y );
-		WRITE_COORD( vecSrc.z );
-		WRITE_SHORT( decalIndex );		// decal texture
-		WRITE_SHORT( entityIndex );
-		WRITE_SHORT( pEntity->pev->modelindex );
-		WRITE_BYTE( flags );
+	Vector scale = Vector(1.0f, 1.0f, 1.0f);
 
-		// write model state for correct restore
-		WRITE_SHORT( pEntity->pev->sequence );
-		WRITE_SHORT( (int)( pEntity->pev->frame * 8.0f ));
-		WRITE_BYTE( pEntity->pev->blending[0] );
-		WRITE_BYTE( pEntity->pev->blending[1] );
-		WRITE_BYTE( pEntity->pev->controller[0] );
-		WRITE_BYTE( pEntity->pev->controller[1] );
-		WRITE_BYTE( pEntity->pev->controller[2] );
-		WRITE_BYTE( pEntity->pev->controller[3] );
-		WRITE_BYTE( pEntity->pev->body );
-		WRITE_BYTE( pEntity->pev->skin );
+	if (FBitSet(pEntity->pev->iuser1, CF_STATIC_ENTITY))
+	{
+		if (pEntity->pev->startpos != g_vecZero)
+			scale = Vector(1.0f / pEntity->pev->startpos.x, 1.0f / pEntity->pev->startpos.y, 1.0f / pEntity->pev->startpos.z);
+	}
 
-		if( FBitSet( pEntity->pev->iuser1, CF_STATIC_ENTITY ))
-			WRITE_SHORT( pEntity->pev->iuser3 );
-		else WRITE_SHORT( 0 );
+	// studio decals is always converted into local space to avoid troubles with precision and modelscale
+	matrix4x4 mat = matrix4x4(pEntity->pev->origin, pEntity->pev->angles, scale);
+	vecNormal = mat.VectorIRotate(vecNormal);
+	vecEnd = mat.VectorITransform(vecEnd);
+	SetBits(flags, FDECAL_LOCAL_SPACE); // now it's in local space
+
+	MESSAGE_BEGIN(MSG_BROADCAST, gmsgStudioDecal);
+	WRITE_COORD(vecEnd.x);		// write pos
+	WRITE_COORD(vecEnd.y);
+	WRITE_COORD(vecEnd.z);
+	WRITE_COORD(vecNormal.x * 1000.0f);	// write normal
+	WRITE_COORD(vecNormal.y * 1000.0f);
+	WRITE_COORD(vecNormal.z * 1000.0f);
+	WRITE_SHORT(entityIndex);
+	WRITE_SHORT(pEntity->pev->modelindex);
+	WRITE_STRING(name);		// decal texture
+	WRITE_BYTE(flags);
+
+	// write model state for correct restore
+	WRITE_SHORT(pEntity->pev->sequence);
+	WRITE_SHORT((int)(pEntity->pev->frame * 8.0f));
+	WRITE_BYTE(pEntity->pev->blending[0]);
+	WRITE_BYTE(pEntity->pev->blending[1]);
+	WRITE_BYTE(pEntity->pev->controller[0]);
+	WRITE_BYTE(pEntity->pev->controller[1]);
+	WRITE_BYTE(pEntity->pev->controller[2]);
+	WRITE_BYTE(pEntity->pev->controller[3]);
+
+	WRITE_BYTE(pEntity->pev->body);
+	WRITE_BYTE(pEntity->pev->skin);
+
+	if (FBitSet(pEntity->pev->iuser1, CF_STATIC_ENTITY))
+		WRITE_SHORT(pEntity->pev->colormap);
+	else WRITE_SHORT(0);
 	MESSAGE_END();
+
+	return TRUE;
 }
 
-void UTIL_RestoreStudioDecal( const Vector &vecEnd, const Vector &vecSrc, int entityIndex, int modelIndex, const char *name, int flags, modelstate_t *state, int lightcache )
+void UTIL_RestoreStudioDecal(const Vector &vecEnd, const Vector &vecNormal, int entityIndex, int modelIndex, const char *name, int flags, modelstate_t *state, int lightcache, const Vector &scale)
 {
-	MESSAGE_BEGIN( MSG_INIT, gmsgStudioDecal );
-		WRITE_COORD( vecEnd.x );	// write pos
-		WRITE_COORD( vecEnd.y );
-		WRITE_COORD( vecEnd.z );
-		WRITE_COORD( vecSrc.x );	// write start
-		WRITE_COORD( vecSrc.y );
-		WRITE_COORD( vecSrc.z );
-		WRITE_SHORT( DECAL_INDEX( name ));	// decal texture
-		WRITE_SHORT( entityIndex );
-		WRITE_SHORT( modelIndex );
-		WRITE_BYTE( flags );
+	MESSAGE_BEGIN(MSG_INIT, gmsgStudioDecal);
+	WRITE_COORD(vecEnd.x);		// write pos
+	WRITE_COORD(vecEnd.y);
+	WRITE_COORD(vecEnd.z);
+	WRITE_COORD(vecNormal.x * 1000.0f);	// write normal
+	WRITE_COORD(vecNormal.y * 1000.0f);
+	WRITE_COORD(vecNormal.z * 1000.0f);
+	WRITE_SHORT(entityIndex);
+	WRITE_SHORT(modelIndex);
+	WRITE_STRING(name);	// decal texture
+	WRITE_BYTE(flags);
 
-		// write model state for correct restore
-		WRITE_SHORT( state->sequence );
-		WRITE_SHORT( state->frame );	// already premultiplied by 8
-		WRITE_BYTE( state->blending[0] );
-		WRITE_BYTE( state->blending[1] );
-		WRITE_BYTE( state->controller[0] );
-		WRITE_BYTE( state->controller[1] );
-		WRITE_BYTE( state->controller[2] );
-		WRITE_BYTE( state->controller[3] );
-		WRITE_BYTE( state->body );
-		WRITE_BYTE( state->skin );
-		WRITE_SHORT( lightcache );
+	// write model state for correct restore
+	WRITE_SHORT(state->sequence);
+	WRITE_SHORT(state->frame);	// already premultiplied by 8
+	WRITE_BYTE(state->blending[0]);
+	WRITE_BYTE(state->blending[1]);
+	WRITE_BYTE(state->controller[0]);
+	WRITE_BYTE(state->controller[1]);
+	WRITE_BYTE(state->controller[2]);
+	WRITE_BYTE(state->controller[3]);
+	WRITE_BYTE(state->body);
+	WRITE_BYTE(state->skin);
+	WRITE_SHORT(lightcache);
+
+	// model scale
+	WRITE_COORD(scale.x * 1000.0f);
+	WRITE_COORD(scale.y * 1000.0f);
+	WRITE_COORD(scale.z * 1000.0f);
 	MESSAGE_END();
 }
 
@@ -1978,21 +2049,9 @@ Tell connected clients to display it, or use the default spray can decal
 if the custom can't be loaded.
 ==============
 */
-void UTIL_PlayerDecalTrace( TraceResult *pTrace, int playernum, int decalNumber, BOOL bIsCustom )
+void UTIL_PlayerDecalTrace( TraceResult *pTrace, int playernum, int decalNumber )
 {
-	int index;
-	
-	if (!bIsCustom)
-	{
-		if ( decalNumber < 0 )
-			return;
-
-		index = gDecals[ decalNumber ].index;
-		if ( index < 0 )
-			return;
-	}
-	else
-		index = decalNumber;
+	int index = decalNumber;
 
 	if (pTrace->flFraction == 1.0)
 		return;
@@ -2008,26 +2067,12 @@ void UTIL_PlayerDecalTrace( TraceResult *pTrace, int playernum, int decalNumber,
 	MESSAGE_END();
 }
 
-void UTIL_GunshotDecalTrace( TraceResult *pTrace, int decalNumber )
+void UTIL_GunshotDecalTrace( TraceResult *pTrace, const char *decalName )
 {
-	if ( decalNumber < 0 )
-		return;
-
-	int index = gDecals[ decalNumber ].index;
-	if ( index < 0 )
-		return;
-
 	if (pTrace->flFraction == 1.0)
 		return;
 
-	MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, pTrace->vecEndPos );
-		WRITE_BYTE( TE_GUNSHOTDECAL );
-		WRITE_COORD( pTrace->vecEndPos.x );
-		WRITE_COORD( pTrace->vecEndPos.y );
-		WRITE_COORD( pTrace->vecEndPos.z );
-		WRITE_SHORT( (short)ENTINDEX(pTrace->pHit) );
-		WRITE_BYTE( index );
-	MESSAGE_END();
+	UTIL_TraceCustomDecal(pTrace, decalName);
 }
 
 

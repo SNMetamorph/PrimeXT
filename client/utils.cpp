@@ -17,7 +17,7 @@ GNU General Public License for more details.
 #include "utils.h"
 #include "event_api.h"
 #include "triangleapi.h"
-#include "r_local.h"
+#include "gl_local.h"
 #include <mathlib.h>
 #include "r_efx.h"
 
@@ -108,10 +108,10 @@ int WorldToScreen( const Vector &world, Vector &screen )
 {
 	int retval = R_WorldToScreen( world, screen );
 
-	screen[0] =  0.5f * screen[0] * (float)RI->viewport[2];
-	screen[1] = -0.5f * screen[1] * (float)RI->viewport[3];
-	screen[0] += 0.5f * (float)RI->viewport[2];
-	screen[1] += 0.5f * (float)RI->viewport[3];
+	screen[0] =  0.5f * screen[0] * (float)RI->view.port[2];
+	screen[1] = -0.5f * screen[1] * (float)RI->view.port[3];
+	screen[0] += 0.5f * (float)RI->view.port[2];
+	screen[1] += 0.5f * (float)RI->view.port[3];
 
 	return retval;
 }
@@ -122,6 +122,65 @@ void ScaleColors( int &r, int &g, int &b, int a )
 	r = (int)(r * x);
 	g = (int)(g * x);
 	b = (int)(b * x);
+}
+
+float PackColor(const color24 &color)
+{
+	return (float)((double)((color.r << 16) | (color.g << 8) | color.b) / (double)(1 << 24));
+}
+
+color24 UnpackColor(float pack)
+{
+	Vector color = Vector(1.0f, 256.0f, 65536.0f) * pack;
+
+	// same as fract( color )
+	color.x = color.x - floor(color.x);
+	color.y = color.y - floor(color.y);
+	color.z = color.z - floor(color.z);
+
+	return color24(color.x * 256, color.y * 256, color.z * 256);
+}
+
+//-----------------------------------------------------------------------------
+// This returns the diameter of the sphere in pixels based on 
+// the current model, view, + projection matrices and viewport.
+//-----------------------------------------------------------------------------
+static float ComputePixelDiameterOfSphere(const Vector &vecAbsOrigin, float flRadius)
+{
+	// This is sort of faked, but it's faster that way
+	// FIXME: Also, there's a much faster way to do this with similar triangles
+	// but I want to make sure it exactly matches the current matrices, so
+	// for now, I do it this conservative way
+	Vector4D testPoint1 = vecAbsOrigin + GetVUp() * flRadius;
+	Vector4D testPoint2 = vecAbsOrigin + GetVUp() * -flRadius;
+	Vector4D clipPos1 = RI->view.worldProjectionMatrix.VectorTransform(testPoint1);
+	Vector4D clipPos2 = RI->view.worldProjectionMatrix.VectorTransform(testPoint2);
+
+	if (clipPos1.w >= 0.001f)
+	{
+		clipPos1.y /= clipPos1.w;
+	}
+	else
+	{
+		clipPos1.y *= 1000.0f;
+	}
+
+	if (clipPos2.w >= 0.001f)
+	{
+		clipPos2.y /= clipPos2.w;
+	}
+	else
+	{
+		clipPos2.y *= 1000.0f;
+	}
+
+	// The divide-by-two here is because y goes from -1 to 1 in projection space
+	return RI->view.port[3] * fabs(clipPos2.y - clipPos1.y) / 2.0f;
+}
+
+float ComputePixelWidthOfSphere(const Vector &vecOrigin, float flRadius)
+{
+	return ComputePixelDiameterOfSphere(vecOrigin, flRadius) * 2.0f;
 }
 
 SpriteHandle LoadSprite( const char *pszName )
@@ -303,6 +362,48 @@ bool Mod_BoxVisible( const Vector mins, const Vector maxs, const byte *visbits )
 Mod_DecompressVis
 ===================
 */
+void Mod_DecompressVis(const byte *in, byte *pvs)
+{
+	int	c;
+	byte *out;
+	int	row;
+
+	row = (worldmodel->numleafs + 7) >> 3;
+	out = pvs;
+
+	if (!in)
+	{	// no vis info, so make all visible
+		while (row)
+		{
+			*out++ = 0xff;
+			row--;
+		}
+		return;
+	}
+
+	do
+	{
+		if (*in)
+		{
+			*out++ = *in++;
+			continue;
+		}
+
+		c = in[1];
+		in += 2;
+		while (c)
+		{
+			*out++ = 0;
+			c--;
+		}
+	} while (out - pvs < row);
+}
+
+/*
+===================
+Mod_DecompressVis
+===================
+*/
 
 byte *Mod_DecompressVis( const byte *in, model_t *model )
 {
@@ -373,14 +474,15 @@ mleaf_t *Mod_PointInLeaf( Vector p, mnode_t *node )
 
 byte *Mod_GetCurrentVis( void )
 {
-	return RI->visbytes;
+	return RI->view.pvsarray;
 //	return Mod_LeafPVS( r_viewleaf, worldmodel );
 }
 
-byte *Mod_GetEngineVis( void )
-{
-	return tr.visbytes;
-}
+// FIXME removed after P2 renderer wrenching
+//byte *Mod_GetEngineVis( void )
+//{
+//	return tr.visbytes;
+//}
 
 bool Mod_CheckBoxVisible( const Vector &absmin, const Vector &absmax )
 {
@@ -445,6 +547,74 @@ void Mod_GetFrames( int modelIndex, int &numFrames )
 
 	numFrames = m_pModel->numframes;
 	if( numFrames < 1 ) numFrames = 1;
+}
+
+/*
+==============
+GetVisCache
+
+decompress visibility string
+==============
+*/
+mleaf_t *GetVisCache(mleaf_t *lastleaf, mleaf_t *leaf, byte *pvs)
+{
+	// get the PVS for the pos to limit the number of checks
+	if (!worldmodel->visdata)
+	{
+		if (leaf != lastleaf)
+		{
+			memset(pvs, 255, (worldmodel->numleafs + 7) / 8);
+			leaf = worldmodel->leafs;
+		}
+	}
+	else if (leaf != lastleaf)
+	{
+		if (leaf == worldmodel->leafs)
+			memset(pvs, 0, (worldmodel->numleafs + 7) / 8);
+		else Mod_DecompressVis(leaf->compressed_vis, pvs);
+		lastleaf = leaf;
+	}
+
+	return lastleaf;
+}
+
+/*
+==============
+SetDLightVis
+
+Init dlight visibility
+==============
+*/
+void SetDLightVis(mworldlight_t *wl, int leafnum)
+{
+	if (!wl->pvs)
+		wl->pvs = (byte *)Mem_Alloc((worldmodel->numleafs + 7) / 8);
+	GetVisCache(NULL, worldmodel->leafs + leafnum, wl->pvs);
+}
+
+/*
+==============
+MergeDLightVis
+
+Merge dlight vis with another leaf
+==============
+*/
+void MergeDLightVis(mworldlight_t *wl, int leafnum)
+{
+	if (!wl->pvs)
+	{
+		SetDLightVis(wl, leafnum);
+	}
+	else
+	{
+		byte	pvs[(MAX_MAP_LEAFS + 7) / 8];
+
+		GetVisCache(NULL, worldmodel->leafs + leafnum, pvs);
+
+		// merge both vis graphs
+		for (int i = 0; i < (worldmodel->numleafs + 7) / 8; i++)
+			wl->pvs[i] |= pvs[i];
+	}
 }
 
 
@@ -648,10 +818,10 @@ void R_TransformWorldToDevice( const Vector &world, Vector &ndc )
 	Vector4D	clip;
 	float	scale;
 
-	clip[0] = world[0] * RI->worldviewProjectionMatrix[0][0] + world[1] * RI->worldviewProjectionMatrix[1][0] + world[2] * RI->worldviewProjectionMatrix[2][0] + RI->worldviewProjectionMatrix[3][0];
-	clip[1] = world[0] * RI->worldviewProjectionMatrix[0][1] + world[1] * RI->worldviewProjectionMatrix[1][1] + world[2] * RI->worldviewProjectionMatrix[2][1] + RI->worldviewProjectionMatrix[3][1];
-	clip[2] = world[0] * RI->worldviewProjectionMatrix[0][2] + world[1] * RI->worldviewProjectionMatrix[1][2] + world[2] * RI->worldviewProjectionMatrix[2][2] + RI->worldviewProjectionMatrix[3][2];
-	clip[3] = world[0] * RI->worldviewProjectionMatrix[0][3] + world[1] * RI->worldviewProjectionMatrix[1][3] + world[2] * RI->worldviewProjectionMatrix[2][3] + RI->worldviewProjectionMatrix[3][3];
+	clip[0] = world[0] * RI->view.worldProjectionMatrix[0][0] + world[1] * RI->view.worldProjectionMatrix[1][0] + world[2] * RI->view.worldProjectionMatrix[2][0] + RI->view.worldProjectionMatrix[3][0];
+	clip[1] = world[0] * RI->view.worldProjectionMatrix[0][1] + world[1] * RI->view.worldProjectionMatrix[1][1] + world[2] * RI->view.worldProjectionMatrix[2][1] + RI->view.worldProjectionMatrix[3][1];
+	clip[2] = world[0] * RI->view.worldProjectionMatrix[0][2] + world[1] * RI->view.worldProjectionMatrix[1][2] + world[2] * RI->view.worldProjectionMatrix[2][2] + RI->view.worldProjectionMatrix[3][2];
+	clip[3] = world[0] * RI->view.worldProjectionMatrix[0][3] + world[1] * RI->view.worldProjectionMatrix[1][3] + world[2] * RI->view.worldProjectionMatrix[2][3] + RI->view.worldProjectionMatrix[3][3];
 
 	if( clip[3] == 0.0f )
 	{
@@ -675,8 +845,8 @@ R_TransformDeviceToScreen
 */
 void R_TransformDeviceToScreen( const Vector &ndc, Vector &screen )
 {
-	screen[0] = (ndc[0] * 0.5f + 0.5f) * (RI->viewport[2] - RI->viewport[0]) + RI->viewport[0];
-	screen[1] = (ndc[1] * 0.5f + 0.5f) * (RI->viewport[3] - RI->viewport[1]) + RI->viewport[1];
+	screen[0] = (ndc[0] * 0.5f + 0.5f) * (RI->view.port[2] - RI->view.port[0]) + RI->view.port[0];
+	screen[1] = (ndc[1] * 0.5f + 0.5f) * (RI->view.port[3] - RI->view.port[1]) + RI->view.port[1];
 	screen[2] = (ndc[2] * 0.5f + 0.5f);
 }
 
@@ -711,10 +881,10 @@ static bool R_ScissorForBounds( const Vector bbox[8], float *x, float *y, float 
 
 		for( j = 0; j < FRUSTUM_PLANES; j++ )
 		{
-			if( !FBitSet( RI->frustum.GetClipFlags(), BIT( j )))
+			if( !FBitSet( RI->view.frustum.GetClipFlags(), BIT( j )))
 				continue;
 
-			if( !R_ClipPolygon( numPoints, points[pingPong], RI->frustum.GetPlane( j ), &numPoints, points[!pingPong] ))
+			if( !R_ClipPolygon( numPoints, points[pingPong], RI->view.frustum.GetPlane( j ), &numPoints, points[!pingPong] ))
 				break;
 
 			pingPong ^= 1;
@@ -747,13 +917,13 @@ static bool R_ScissorForBounds( const Vector bbox[8], float *x, float *y, float 
 	x2 = bounds[1].x + 1.0f;
 	y2 = bounds[1].y + 1.0f;
 
-	ix1 = Q_max( x1, RI->viewport[0] );
-	ix2 = Q_min( x2, RI->viewport[2] );
-	iy1 = Q_max( y1, RI->viewport[1] );
-	iy2 = Q_min( y2, RI->viewport[3] );
+	ix1 = Q_max( x1, RI->view.port[0] );
+	ix2 = Q_min( x2, RI->view.port[2] );
+	iy1 = Q_max( y1, RI->view.port[1] );
+	iy2 = Q_min( y2, RI->view.port[3] );
 
 	*x = ix1 + 1.0f;
-	*y = RI->viewport[3] - iy2; // OpenGL specifics
+	*y = RI->view.port[3] - iy2; // OpenGL specifics
 	*w = ix2 - ix1 - 1.0f;
 	*h = iy2 - iy1 - 1.0f;
 
@@ -776,6 +946,29 @@ void R_BoundsForAABB( const Vector &absmin, const Vector &absmax, Vector bbox[8]
 	}
 }
 
+// debug thing
+void R_DrawScissorRectangle(float x, float y, float w, float h)
+{
+	GL_Bind(GL_TEXTURE0, tr.whiteTexture);
+	pglTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	GL_Setup2D();
+
+	pglColor3f(1, 0.5, 0);
+
+	pglBegin(GL_LINES);
+	pglVertex2f(x, y);
+	pglVertex2f(x + w, y);
+	pglVertex2f(x, y);
+	pglVertex2f(x, y + h);
+	pglVertex2f(x + w, y);
+	pglVertex2f(x + w, y + h);
+	pglVertex2f(x, y + h);
+	pglVertex2f(x + w, y + h);
+	pglEnd();
+
+	GL_Setup3D();
+}
+
 bool R_ScissorForAABB( const Vector &absmin, const Vector &absmax, float *x, float *y, float *w, float *h )
 {
 	Vector bbox[8];
@@ -788,6 +981,20 @@ bool R_ScissorForAABB( const Vector &absmin, const Vector &absmax, float *x, flo
 bool R_ScissorForCorners( const Vector bbox[8], float *x, float *y, float *w, float *h )
 {
 	return R_ScissorForBounds( bbox, x, y, w, h );
+}
+
+bool R_ScissorForFrustum(CFrustum *frustum, float *x, float *y, float *w, float *h)
+{
+	Vector bbox[8];
+
+	frustum->ComputeFrustumCorners(bbox);
+
+	// NOTE: disable farplane because dynamic zFar
+	RI->view.frustum.DisablePlane(FRUSTUM_FAR);
+	bool result = R_ScissorForBounds(bbox, x, y, w, h);
+	RI->view.frustum.EnablePlane(FRUSTUM_FAR);
+
+	return result;
 }
 
 bool R_AABBToScreen( const Vector &absmin, const Vector &absmax, Vector2D &scrmin, Vector2D &scrmax, wrect_t *rect )
@@ -808,7 +1015,7 @@ bool R_AABBToScreen( const Vector &absmin, const Vector &absmax, Vector2D &scrmi
 	if( rect )
 	{
 		rect->left = x;
-		rect->right = RI->viewport[3] - h - y; // left bottom corner
+		rect->right = RI->view.port[3] - h - y; // left bottom corner
 		rect->top = w;
 		rect->bottom = h;
 	}
@@ -822,57 +1029,39 @@ bool R_AABBToScreen( const Vector &absmin, const Vector &absmax, Vector2D &scrmi
 	return true;
 }
 
-/*
-====================
-V_CalcFov
-====================
-*/
-float V_CalcFov( float &fov_x, float width, float height )
-{
-	float x, half_fov_y;
+#define GAMMA		( 2.2f )		// Valve Software gamma
+#define INVGAMMA		( 1.0f / 2.2f )	// back to 1.0
+static float	texturetolinear[256];	// texture (0..255) to linear (0..1)
+static int	lineartotexture[1024];	// linear (0..1) to texture (0..255)
 
-	if( fov_x < 1 || fov_x > 170 )
+void BuildGammaTable(void)
+{
+	int	i;
+	float	g1, g3;
+	float	g = bound(0.5f, GAMMA, 3.0f);
+
+	g = 1.0 / g;
+	g1 = GAMMA * g;
+	g3 = 0.125f;
+
+	for (i = 0; i < 256; i++)
 	{
-		ALERT( at_error, "V_CalcFov: bad fov %g!\n", fov_x );
-		fov_x = 90;
+		// convert from nonlinear texture space (0..255) to linear space (0..1)
+		texturetolinear[i] = pow(i / 255.0f, GAMMA);
 	}
 
-	x = width / tan( DEG2RAD( fov_x ) * 0.5f );
-	half_fov_y = atan( height / x );
-
-	return RAD2DEG( half_fov_y ) * 2;
+	for (i = 0; i < 1024; i++)
+	{
+		// convert from linear space (0..1) to nonlinear texture space (0..255)
+		lineartotexture[i] = pow(i / 1023.0, INVGAMMA) * 255;
+	}
 }
 
-/*
-====================
-V_AdjustFov
-====================
-*/
-void V_AdjustFov( float &fov_x, float &fov_y, float width, float height, bool lock_x )
-{
-	float x, y;
+// convert texture to linear 0..1 value
+float TextureToLinear(int c) { return texturetolinear[bound(0, c, 255)]; }
 
-	if(( width * 3 ) == ( 4 * height ) || ( width * 4 ) == ( height * 5 ))
-	{
-		// 4:3 or 5:4 ratio
-		return;
-	}
-
-	if( lock_x )
-	{
-		fov_y = 2 * atan(( width * 3 ) / ( height * 4 ) * tan( fov_y * M_PI / 360.0 * 0.5 )) * 360 / M_PI;
-		return;
-	}
-
-	y = V_CalcFov( fov_x, 640, 480 );
-	x = fov_x;
-
-	fov_x = V_CalcFov( y, height, width );
-
-	if( fov_x < x )
-		fov_x = x;
-	else fov_y = y;
-}
+// convert texture to linear 0..1 value
+int LinearToTexture(float f) { return lineartotexture[bound(0, (int)(f * 1023), 1023)]; }
 
 /*
 ====================
@@ -1062,4 +1251,19 @@ void Sys_FreeLibrary( dllhandle_t *handle )
 
 	FreeLibrary( *handle );
 	*handle = NULL;
+}
+
+bool Sys_RemoveFile(const char *path)
+{
+	static char	real_path[1024];
+	int	iRet = false;
+
+	if (!path || !*path)
+		return false;
+
+	Q_snprintf(real_path, sizeof(real_path), "%s/%s", gEngfuncs.pfnGetGameDirectory(), path);
+	COM_FixSlashes(real_path);
+	iRet = remove(real_path);
+
+	return (iRet == 0) ? true : false;
 }

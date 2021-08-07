@@ -119,7 +119,7 @@ public:
 	}
 	float x, y;
 };
-
+typedef Vector2D vec2_t;
 #define IS_NAN(x)		(((*(int *)&x) & (255<<23)) == (255<<23))
 
 inline float DotProduct(const Vector2D& a, const Vector2D& b) { return( a.x*b.x + a.y*b.y ); }
@@ -224,6 +224,23 @@ public:
 		return true;
 	}
 	
+	_forceinline Vector Abs(void) const
+	{
+		return Vector(fabs(x), fabs(y), fabs(z));
+	}
+
+	_forceinline float Average(void) const 
+	{ 
+		return (x + y + z) / 3.0f; 
+	}
+
+	_forceinline void Assign(float value)
+	{
+		x = value;
+		y = value;
+		z = value;
+	}
+
 	_forceinline bool IsNull(float epsilon = 0.001f) const
 	{
 		if (fabs(x) > epsilon) return false;
@@ -234,10 +251,11 @@ public:
 
 	// Methods
 	inline void CopyToArray( float *rgfl ) const	{ rgfl[0] = x, rgfl[1] = y, rgfl[2] = z; }
-	inline float Length(void) const		{ return sqrt( x*x + y*y + z*z ); }
-	inline float LengthSqr(void) const		{ return (x*x + y*y + z*z); }
-	operator float *()				{ return &x; } // Vectors will now automatically convert to float * when needed
-	operator const float *() const		{ return &x; } 
+	inline float Length(void) const					{ return sqrt( x*x + y*y + z*z ); }
+	inline float LengthSqr(void) const				{ return (x*x + y*y + z*z); }
+	inline float MaxCoord() const					{ return fmaxf(x, fmaxf(y, z)); }
+	operator float *()								{ return &x; } // Vectors will now automatically convert to float * when needed
+	operator const float *() const					{ return &x; } 
 		
 	inline Vector Normalize( void ) const
 	{
@@ -250,6 +268,12 @@ public:
 		}
 
 		return *this; // can't normalize
+	}
+
+	inline Vector NormalizeFast(void) const
+	{
+		float ilength = ReverseSqrt(x * x + y * y + z * z);
+		return Vector(x * ilength, y * ilength, z * ilength);
 	}
 
 	inline float NormalizeLength( void )
@@ -266,9 +290,9 @@ public:
 	}
 
 	float Dot( Vector const& vOther ) const
-          {
-          	return(x*vOther.x+y*vOther.y+z*vOther.z);
-          }
+    {
+		return x * vOther.x + y * vOther.y + z * vOther.z;
+    }
 
 	Vector Cross(const Vector &vOther) const
 	{
@@ -294,6 +318,20 @@ public:
 
 	// Members
 	float x, y, z;
+private:
+	inline float ReverseSqrt(float number) const 
+	{
+		if (number == 0.0f)
+			return 0.0f;
+
+		int x = number * 0.5f;
+		int i = *(int *)&number;	// evil floating point bit level hacking
+		i = 0x5f3759df - (i >> 1);	// what the fuck?
+		int y = *(float *)&i;
+		y = y * (1.5f - (x * y * y));	// first iteration
+
+		return y;
+	}
 };
 
 inline Vector operator* ( float fl, const Vector& v ) { return v * fl; }
@@ -307,7 +345,14 @@ inline void VectorLerp( const Vector& src1, float t, const Vector& src2, Vector&
 	dest.z = src1.z + (src2.z - src1.z) * t;
 }
 
-#define vec3_t Vector
+inline void VectorMA(const float *veca, float scale, const float *vecb, float *vecc)
+{
+	vecc[0] = veca[0] + scale * vecb[0];
+	vecc[1] = veca[1] + scale * vecb[1];
+	vecc[2] = veca[2] + scale * vecb[2];
+}
+
+typedef Vector vec3_t;
 
 //=========================================================
 // 4D Vector - for matrix operations
@@ -365,7 +410,7 @@ public:
 
 inline float DotProduct( const Vector4D& a, const Vector4D& b ) { return( a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w ); }
 
-#define vec4_t Vector4D
+typedef Vector4D vec4_t;
 
 class Radian
 {

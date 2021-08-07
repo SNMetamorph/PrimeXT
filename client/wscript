@@ -17,83 +17,71 @@ def configure(conf):
 		conf.check_cxx( lib='user32' )
 
 def build(bld):
+	# shared sources
 	source = bld.path.parent.ant_glob([
-		'pm_shared/*.c',
-		'dlls/crossbow.cpp', 'dlls/crowbar.cpp', 'dlls/egon.cpp', 'dlls/gauss.cpp', 'dlls/handgrenade.cpp',
-		'dlls/hornetgun.cpp', 'dlls/mp5.cpp', 'dlls/python.cpp', 'dlls/rpg.cpp', 'dlls/satchel.cpp',
-		'dlls/shotgun.cpp',	'dlls/squeakgrenade.cpp', 'dlls/tripmine.cpp', 'dlls/glock.cpp'
+		'game_shared/bone_setup.cpp',
+		'game_shared/common.cpp',
+		'game_shared/ikcontext.cpp',
+		'game_shared/jigglebones.cpp',
+		'game_shared/material.cpp',
+		'game_shared/mathlib.cpp',
+		'game_shared/matrix.cpp',
+		'game_shared/playermove.cpp',
+		'game_shared/procbones.cpp',
+		'game_shared/stringlib.cpp',
+		'game_shared/virtualfs.cpp',
+		'game_shared/meshdesc.cpp',
+		'game_shared/trace.cpp'
+	])
+	
+	source += bld.path.ant_glob([
+		'ammo.cpp',
+		'ammo_secondary.cpp',
+		'ammohistory.cpp',
+		'battery.cpp',
+		'cdll_int.cpp',
+		'death.cpp',
+		'flashlight.cpp',
+		'geiger.cpp',
+		'health.cpp',
+		'hud.cpp',
+		'hud_msg.cpp',
+		'hud_redraw.cpp',
+		'hud_update.cpp',
+		'input.cpp',
+		'input_xash3d.cpp',
+		'input_mouse.cpp',
+		'input_goldsource.cpp', # original xash3d too
+		'menu.cpp',
+		'message.cpp',
+		'motd.cpp',
+		'parsemsg.cpp',
+		'saytext.cpp',
+		'scoreboard.cpp',
+		'status_icons.cpp',
+		'statusbar.cpp',
+		'text_message.cpp',
+		'train.cpp',
+		'utils.cpp',
+		'r_view.cpp',
+		'render/*.cpp'
 	])
 
-#	source += bld.path.ant_glob(['hl/*.cpp'])
-	source += [
-		'./ammo.cpp',
-		'./ammo_secondary.cpp',
-		'./ammohistory.cpp',
-		'./battery.cpp',
-		'../game_shared/bone_setup.cpp',
-		'./cdll_int.cpp',
-		'../game_shared/common.cpp',
-		'./death.cpp',
-		'./flashlight.cpp',
-		'./geiger.cpp',
-		'./health.cpp',
-		'./hud.cpp',
-		'./hud_msg.cpp',
-		'./hud_redraw.cpp',
-		'./hud_update.cpp',
-		'../game_shared/ikcontext.cpp',
-		'./input.cpp',
-		'./input_xash3d.cpp',
-		'./input_mouse.cpp',
-		'./input_goldsource.cpp', # original xash3d too
-		'../game_shared/jigglebones.cpp',
-		'../game_shared/mathlib.cpp',
-		'../game_shared/matrix.cpp',
-		'./menu.cpp',
-		'./message.cpp',
-		'./motd.cpp',
-		'./parsemsg.cpp',
-		'../game_shared/playermove.cpp',
-		'../game_shared/procbones.cpp',
-		'./render/r_backend.cpp',
-		'./render/r_brushdecals.cpp',
-		'./render/r_cull.cpp',
-		'./render/r_debug.cpp',
-		'./render/r_frustum.cpp',
-		'./render/r_grass.cpp',
-		'./render/r_light.cpp',
-		'./render/r_lightmap.cpp',
-		'./render/r_main.cpp',
-		'./render/r_misc.cpp',
-		'./render/r_movie.cpp',
-		'./render/r_opengl.cpp',
-		'./render/r_particle.cpp',
-		'./render/r_postprocess.cpp',
-		'./render/r_shader.cpp',
-		'./render/r_shadows.cpp',
-		'./render/r_sprite.cpp',
-		'./render/r_studio.cpp',
-		'./render/r_studiodecal.cpp',
-		'./render/r_subview.cpp',
-		'./render/r_surf.cpp',
-		'./render/r_tempents.cpp',
-		'./render/r_view.cpp',
-		'./render/r_warp.cpp',
-		'./render/r_weather.cpp',
-		'./render/r_world.cpp',
-		'./saytext.cpp',
-		'./scoreboard.cpp',
-		'./status_icons.cpp',
-		'./statusbar.cpp',
-		'../game_shared/stringlib.cpp',
-		'./text_message.cpp',
-		'./train.cpp',
-		'./render/tri.cpp',
-		'./utils.cpp'
-		]
-
-	includes = Utils.to_list('. render hl/ ../dlls ../dlls/wpn_shared ../common ../engine ../pm_shared ../game_shared ../public ../utils/false_vgui/include')
-
+	#includes = Utils.to_list('. render hl/ ../dlls ../dlls/wpn_shared ../common ../engine ../pm_shared ../game_shared ../public ../utils/false_vgui/include')
+	includes = [
+		'.',
+		'render/',
+		'hl/',
+		'../dlls',
+		'../dlls/wpn_shared',
+		'../common',
+		'../engine',
+		'../pm_shared',
+		'../game_shared',
+		'../public',
+		'../utils/false_vgui/include'
+	]
+	
 	defines = ['CLIENT_DLL']
 	if bld.env.GOLDSRC:
 		defines += ['GOLDSOURCE_SUPPORT']

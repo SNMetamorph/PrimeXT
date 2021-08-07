@@ -1681,15 +1681,22 @@ BOOL CBaseEntity :: ShouldToggle( USE_TYPE useType )
 	return TRUE;
 }
 
-int CBaseEntity :: DamageDecal( int bitsDamageType )
+const char *CBaseEntity::DamageDecal( int bitsDamageType )
 {
 	if ( pev->rendermode == kRenderTransAlpha )
-		return -1;
+		return nullptr;
 
 	if ( pev->rendermode != kRenderNormal )
-		return DECAL_BPROOF1;
+		return "{bproof1";
 
-	return DECAL_GUNSHOT1 + RANDOM_LONG(0,4);
+	switch (RANDOM_LONG(1, 5))
+	{
+		case 1: return "{shot1";
+		case 2: return "{shot2";
+		case 3: return "{shot3";
+		case 4: return "{shot4";
+		case 5: return "{shot5";
+	}
 }
 
 // NOTE: szName must be a pointer to constant memory, e.g. "monster_class" because the entity

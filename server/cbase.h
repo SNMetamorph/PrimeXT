@@ -417,7 +417,7 @@ public:
 	virtual int	IsMoving( void ) { return GetAbsVelocity() != g_vecZero; }
 	virtual void	OverrideReset( void ) {}
 	virtual void	TransferReset( void ) {}
-	virtual int	DamageDecal( int bitsDamageType );
+	virtual const char *DamageDecal( int bitsDamageType );
 	// This is ONLY used by the node graph to test movement through a door
 	virtual void	SetToggleState( int state ) {}
 	virtual void	StartSneaking( void ) {}

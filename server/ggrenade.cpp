@@ -114,14 +114,16 @@ void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType )
 	if ( RANDOM_FLOAT( 0 , 1 ) < 0.5 )
 	{
 		if( pEntity && UTIL_GetModelType( pEntity->pev->modelindex ) == mod_studio )
-			UTIL_StudioDecalTrace( pTrace, DECAL_SCORCH1 );
-		else UTIL_DecalTrace( pTrace, DECAL_SCORCH1 );
+			UTIL_StudioDecalTrace( pTrace, "{scorch1");
+		else 
+			UTIL_DecalTrace( pTrace, "{scorch1" );
 	}
 	else
 	{
 		if( pEntity && UTIL_GetModelType( pEntity->pev->modelindex ) == mod_studio )
-			UTIL_StudioDecalTrace( pTrace, DECAL_SCORCH2 );
-		else UTIL_DecalTrace( pTrace, DECAL_SCORCH2 );
+			UTIL_StudioDecalTrace( pTrace, "{scorch2" );
+		else 
+			UTIL_DecalTrace( pTrace, "{scorch2" );
 	}
 
 	flRndSound = RANDOM_FLOAT( 0 , 1 );

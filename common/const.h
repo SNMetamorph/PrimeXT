@@ -14,6 +14,8 @@
 ****/
 #ifndef CONST_H
 #define CONST_H
+#include "vector.h"
+
 //
 // Constants shared by the engine and dlls
 // This header file included by engine files and DLL files.
@@ -105,31 +107,38 @@
 #define DAMAGE_AIM			2
 
 // entity effects
-#define EF_BRIGHTFIELD		1	// swirling cloud of particles
-#define EF_MUZZLEFLASH		2	// single frame ELIGHT on entity attachment 0
-#define EF_BRIGHTLIGHT		4	// DLIGHT centered at entity origin
-#define EF_DIMLIGHT			8	// player flashlight
-#define EF_INVLIGHT			16	// get lighting from ceiling
-#define EF_NOINTERP			32	// don't interpolate the next frame
-#define EF_LIGHT			64	// rocket flare glow sprite
-#define EF_NODRAW			128	// don't draw entity
+#define EF_BRIGHTFIELD		(1<<0)	// swirling cloud of particles
+#define EF_MUZZLEFLASH		(1<<1)	// single frame ELIGHT on entity attachment 0
+#define EF_BRIGHTLIGHT		(1<<2)	// DLIGHT centered at entity origin
+#define EF_DIMLIGHT			(1<<3)	// player flashlight
+#define EF_INVLIGHT			(1<<4)	// get lighting from ceiling
+#define EF_NOINTERP			(1<<5)	// don't interpolate the next frame
+#define EF_LIGHT			(1<<6)	// rocket flare glow sprite
+#define EF_NODRAW			(1<<7)	// don't draw entity
+#define EF_NODEPTHTEST		(1<<8)	// hack for weapon muzzleflashes
 
-#define EF_SKYCAMERA		(1<<8)	// marker for env_sky
-#define EF_PORTAL			(1<<9)	// marker for portal entity
-#define EF_SCREEN			(1<<10)	// marker for func_monitor entity
-#define EF_SCREENMOVIE		(1<<11)	// marker for func_screenmovie
-#define EF_NUKE_ROCKET		(1<<12)	// marker for controllable rocket
-#define EF_PROJECTED_LIGHT		(1<<13)	// marker for env_projector
-#define EF_DYNAMIC_LIGHT		(1<<14)	// marker for env_dynlight
-#define EF_CONVEYOR			(1<<15)	// new conveyor-style scrolling
+#define EF_SKYCAMERA		(1<<9)	// marker for env_sky
+#define EF_PORTAL			(1<<10)	// marker for portal entity
+#define EF_SCREEN			(1<<11)	// marker for func_monitor entity
+#define EF_SCREENMOVIE		(1<<12)	// marker for func_screenmovie
+#define EF_NUKE_ROCKET		(1<<13)	// marker for controllable rocket
+#define EF_PROJECTED_LIGHT	(1<<14)	// marker for env_projector
+#define EF_DYNAMIC_LIGHT	(1<<15)	// marker for env_dynlight
+#define EF_CONVEYOR			(1<<16)	// new conveyor-style scrolling
+#define EF_NOBUMP			(1<<17)	// no bump for this entity or light source
+#define EF_LENSFLARE		(1<<18)	// enable lensflare effect for dynamic light
 
 #define EF_NOREFLECT		(1<<24)	// Entity won't reflecting in mirrors
 #define EF_REFLECTONLY		(1<<25)	// Entity will be drawing only in mirrors
 #define EF_WATERSIDES		(1<<26)	// Do not remove sides for func_water entity
 #define EF_FULLBRIGHT		(1<<27)	// Just get fullbright
 #define EF_NOSHADOW			(1<<28)	// ignore shadow for this entity
-#define EF_MERGE_VISIBILITY		(1<<29)	// this entity allowed to merge vis (e.g. env_sky or portal camera)
+#define EF_MERGE_VISIBILITY	(1<<29)	// this entity allowed to merge vis (e.g. env_sky or portal camera)
 #define EF_REQUEST_PHS		(1<<30)	// This entity requested phs bitvector instead of pvsbitvector in AddToFullPack calls
+
+// custom flags for entities
+#define CF_STATIC_ENTITY		(1<<0)	// this entity is completely static (non-moving brush or env_static)
+#define CF_STATIC_LIGHTMAPPED	(1<<1)	// this entity have a baked lightmaps
 
 // custom flags for func_monitor
 #define CF_NOASPECT			(1<<0)	// don't calc fov_y for func_monitor
@@ -160,7 +169,8 @@
 
 // should be defined at all
 #define MAXSTUDIOPOSEPARAM		24
-		
+#define MAX_LANDSCAPE_LAYERS		16	// fundamental limit, don't modify
+
 //
 // temp entity events
 //
@@ -775,11 +785,6 @@ typedef enum { false, true }	qboolean;
 #else 
 typedef int qboolean;
 #endif
-
-typedef struct
-{
-	byte	r, g, b;
-} color24;
 
 typedef struct
 {

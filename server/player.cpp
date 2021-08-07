@@ -196,6 +196,7 @@ int gmsgStatusValue = 0;
 // g-cont. begin custom Xash messages
 int gmsgParticle = 0;
 int gmsgKillPart = 0;
+int gmsgCustomDecal = 0;
 int gmsgStudioDecal = 0;
 int gmsgKillDecals = 0;
 int gmsgMusicFade = 0;
@@ -251,7 +252,8 @@ void LinkUserMessages( void )
 	gmsgParticle = REG_USER_MSG( "Particle", -1 );
 	gmsgKillPart = REG_USER_MSG( "KillPart", 2 );
 	gmsgKillDecals = REG_USER_MSG( "KillDecals", 2 );
-	gmsgStudioDecal = REG_USER_MSG("StudioDecal", 33);
+	gmsgCustomDecal = REG_USER_MSG("CustomDecal", -1);
+	gmsgStudioDecal = REG_USER_MSG("StudioDecal", -1);
 	gmsgRainData = REG_USER_MSG( "RainData", 16 );
 	gmsgMusicFade = REG_USER_MSG( "MusicFade", 2 );
 	gmsgStatusIcon = REG_USER_MSG( "StatusIcon", -1 );
@@ -3560,14 +3562,15 @@ void CSprayCan::Think( void )
 		CBaseEntity *pEntity = CBaseEntity::Instance( tr.pHit );
 
 		if( pEntity && UTIL_GetModelType( pEntity->pev->modelindex ) == mod_studio )
-			UTIL_StudioDecalTrace( &tr, DECAL_LAMBDA6 );
-		else UTIL_DecalTrace( &tr, DECAL_LAMBDA6 );
+			UTIL_StudioDecalTrace( &tr, "{lambda06" );
+		else 
+			UTIL_DecalTrace( &tr, "{lambda06" );
 
 		UTIL_Remove( this );
 	}
 	else
 	{
-		UTIL_PlayerDecalTrace( &tr, playernum, pev->frame, TRUE );
+		UTIL_PlayerDecalTrace( &tr, playernum, pev->frame );
 		// Just painted last custom frame.
 		if( pev->frame++ >= (nFrames - 1))
 			UTIL_Remove( this );

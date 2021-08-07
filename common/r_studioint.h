@@ -16,6 +16,10 @@
 
 #ifndef R_STUDIOINT_H
 #define R_STUDIOINT_H
+#include "const.h"
+#include "vector.h"
+#include "com_model.h"
+#include "cl_entity.h"
 
 #define STUDIO_INTERFACE_VERSION 1
 

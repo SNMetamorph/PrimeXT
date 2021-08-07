@@ -24,7 +24,8 @@ extern char *copystring( const char *s ); // don't forget release memory after u
 #define freestring( a ) (delete [](a))
 int Q_atoi( const char *str );
 float Q_atof( const char *str );
-Vector Q_atov( const char *str );
+vec3_t Q_atov( const char *str );
+vec2_t Q_atov2(const char *str);
 char *Q_strchr( const char *s, char c );
 char *Q_strrchr( const char *s, char c );
 int Q_strnicmp( const char *s1, const char *s2, int n );
@@ -55,6 +56,7 @@ void COM_StripExtension( char *path );
 void COM_StripExtension( const char *in, char *out, int destsize );
 void COM_DefaultExtension( char *path, const char *extension );
 void COM_SkipBracedSection( char **program );
+void COM_FixSlashes(char *pname);
 const char *COM_FileExtension( const char *in );
 char *COM_ParseFileExt( char *data, char *token, long token_size, bool allowNewLines );
 #define COM_ParseFile( data, token ) COM_ParseFileExt( data, token, sizeof( token ), true )

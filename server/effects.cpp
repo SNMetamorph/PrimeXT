@@ -867,7 +867,7 @@ void CBeam::BeamDamage( TraceResult *ptr )
 				if ( pev->spawnflags & SF_BEAM_DECALS )
 				{
 					if ( pHit->IsBSPModel() )
-						UTIL_DecalTrace( ptr, DECAL_BIGSHOT1 + RANDOM_LONG(0,4) );
+						UTIL_DecalTrace( ptr, "{bigshot1" );
 				}
 			}
 			else

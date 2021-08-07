@@ -588,7 +588,7 @@ void CBigMomma :: LayHeadcrab( void )
 
 	TraceResult tr;
 	UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() - Vector( 0, 0, 100 ), ignore_monsters, edict(), &tr);
-	UTIL_DecalTrace( &tr, DECAL_MOMMABIRTH );
+	UTIL_DecalTrace( &tr, "{mommablob" );
 
 	EMIT_SOUND_DYN( edict(), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pBirthSounds), 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 	m_crabCount++;
@@ -1205,7 +1205,7 @@ void CBMortar::Touch( CBaseEntity *pOther )
 
 		// make a splat on the wall
 		UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + GetAbsVelocity() * 10, dont_ignore_monsters, edict(), &tr );
-		UTIL_DecalTrace(&tr, DECAL_MOMMASPLAT);
+		UTIL_DecalTrace(&tr, "{mommablob");
 	}
 	else
 	{

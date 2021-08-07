@@ -16,6 +16,10 @@
 #ifndef STUDIO_H
 #define STUDIO_H
 
+#include "shader.h"
+#include "color24.h"
+#include "lightlimits.h"
+
 /*
 ==============================================================================
 
@@ -37,12 +41,13 @@ Studio models are position independent, so the cache manager can move them.
 #define MAXSTUDIOMODELS		32	// sub-models per model
 #define MAXSTUDIOBODYPARTS		32	// body parts per submodel
 #define MAXSTUDIOGROUPS		16	// sequence groups (e.g. barney01.mdl, barney02.mdl, e.t.c)
-#define MAXSTUDIOCONTROLLERS		8	// max controllers per model
+#define MAXSTUDIOCONTROLLERS		32	// max controllers per model
 #define MAXSTUDIOATTACHMENTS		64	// max attachments per model
 #define MAXSTUDIOBONEWEIGHTS		4	// absolute hardware limit!
 #define MAXSTUDIONAME		32	// a part of specs
 #define MAXSTUDIOPOSEPARAM		24
 #define MAXEVENTSTRING		64
+#define MAX_STUDIO_LIGHTMAP_SIZE	256	// must match with engine const!!!
 
 // client-side model flags
 #define STUDIO_ROCKET		(1<<0)	// leave a trail
@@ -57,6 +62,7 @@ Studio models are position independent, so the cache manager can move them.
 #define STUDIO_TRACE_HITBOX		(1<<9)	// always use hitbox trace instead of bbox
 #define STUDIO_FORCE_SKYLIGHT		(1<<10)	// always grab lightvalues from the sky settings (even if sky is invisible)
 
+#define STUDIO_HAS_BUMP		(1<<16)	// loadtime set
 #define STUDIO_STATIC_PROP		(1<<29)	// hint for engine
 #define STUDIO_HAS_BONEINFO		(1<<30)	// extra info about bones (pose matrix, procedural index etc)
 #define STUDIO_HAS_BONEWEIGHTS	(1<<31)	// yes we got support of bone weighting
@@ -66,18 +72,25 @@ Studio models are position independent, so the cache manager can move them.
 #define STUDIO_NF_CHROME		0x0002
 #define STUDIO_NF_FULLBRIGHT		0x0004
 #define STUDIO_NF_NOMIPS		0x0008	// ignore mip-maps
-#define STUDIO_NF_NOSMOOTH		0x0010	// don't smooth tangent space
+#define STUDIO_NF_SMOOTH		0x0010	// smooth tangent space
 #define STUDIO_NF_ADDITIVE		0x0020	// rendering with additive mode
 #define STUDIO_NF_MASKED		0x0040	// use texture with alpha channel
 #define STUDIO_NF_NORMALMAP		0x0080	// indexed normalmap
-
+#define STUDIO_NF_GLOSSMAP		0x0100	// glossmap
+#define STUDIO_NF_GLOSSPOWER		0x0200
+#define STUDIO_NF_LUMA		0x0400	// self-illuminate parts
+#define STUDIO_NF_ALPHASOLID		0x0800	// use with STUDIO_NF_MASKED to have solid alphatest surfaces for env_static
 #define STUDIO_NF_TWOSIDE		0x1000	// render mesh as twosided
+#define STUDIO_NF_HEIGHTMAP		0x2000
 
 #define STUDIO_NF_NODRAW		(1<<16)	// failed to create shader for this mesh
 #define STUDIO_NF_NODLIGHT		(1<<17)	// failed to create dlight shader for this mesh
-#define STUDIO_NF_HAS_ALPHA		(1<<19)	// external texture has alpha-channel
+#define STUDIO_NF_NOSUNLIGHT		(1<<18)	// failed to create sun light shader for this mesh
 
-#define STUDIO_NF_COLORMAP		(1<<30)	// internal system flag
+#define STUDIO_NF_HAS_ALPHA		(1<<20)	// external texture has alpha-channel
+#define STUDIO_NF_HAS_DETAIL		(1<<21)	// studiomodels has detail textures
+
+#define STUDIO_NF_COLORMAP		(1<<30)	// can changed by colormap command
 #define STUDIO_NF_UV_COORDS		(1<<31)	// using half-float coords instead of ST
 
 // motion flags
@@ -399,7 +412,13 @@ typedef struct
 } mstudioseqgroup_t;
 
 // events
-#include "studio_event.h"
+typedef struct mstudioevent_s
+{
+	int		frame;
+	int		event;
+	int		type;
+	char 		options[MAXEVENTSTRING];
+} mstudioevent_t;
 
 #define STUDIO_ATTACHMENT_LOCAL	(1<<0)	// vectors are filled
 
@@ -597,7 +616,7 @@ typedef struct
 typedef struct mstudiotex_s
 {
 	char		name[64];
-	unsigned int	flags;
+	int		flags;
 	int		width;
 	int		height;
 	int		index;
@@ -659,8 +678,15 @@ typedef struct
 	int		triindex;
 	int		skinref;
 	int		numnorms;		// per mesh normals
-	int		normindex;	// UNUSED
+	int		normindex;	// UNUSED!
 } mstudiomesh_t;
+
+typedef struct 
+{
+	short		vertindex;	// index into vertex array
+	short		normindex;	// index into normal array
+	short		s,t;		// s,t position on skin
+} mstudiotrivert_t;
 
 /*
 ===========================
@@ -673,10 +699,15 @@ USER-DEFINED DATA
 typedef struct vbomesh_s
 {
 	unsigned int	skinref;			// skin reference
-	unsigned short	numVerts;			// trifan vertices count
+	unsigned int	numVerts;			// trifan vertices count
 	unsigned int	numElems;			// trifan elements count
+	int		lightmapnum;		// each mesh should use only once atlas page!
 
 	unsigned int	vbo, vao, ibo;		// buffer objects
+	vec3_t		mins, maxs;		// right transform to get screencopy
+	int		parentbone;		// parent bone to transform AABB
+	unsigned short	uniqueID;			// to reject decal drawing
+	unsigned int	cacheSize;		// debug info: uploaded cache size for this buffer
 } vbomesh_t;
 
 // each mstudiotexture_t has a material
@@ -685,15 +716,52 @@ typedef struct mstudiomat_s
 	mstudiotexture_t	*pSource;			// pointer to original texture
 
 	unsigned short	gl_diffuse_id;		// diffuse texture
+	unsigned short	gl_detailmap_id;		// detail texture
+	unsigned short	gl_normalmap_id;		// normalmap
+	unsigned short	gl_specular_id;		// specular
+	unsigned short	gl_glowmap_id;		// self-illuminate parts
+	unsigned short	gl_heightmap_id;		// parallax stuff
+
+	// this part is shared with matdesc_t
+	float		smoothness;		// smoothness factor
+	float		detailScale[2];		// detail texture scales x, y
+	float		reflectScale;		// reflection scale for translucent water
+	float		refractScale;		// refraction scale for mirrors, windows, water
+	float		aberrationScale;		// chromatic abberation
+	float		reliefScale;		// relief-mapping
+	struct matdef_s	*effects;			// hit, impact, particle effects etc
 	int		flags;			// mstudiotexture_t->flags
-	unsigned short	shaderNum;		// constantly assigned shader to this surface
-	unsigned short	omniLightShaderNum;		// cached omni light shader for this face
-	unsigned short	projLightShaderNum[2];	// cached proj light shader for this face
-	unsigned short	glsl_sequence;		// cache sequence
-	unsigned short	glsl_sequence_omni;		// same as above but for omnilights
-	unsigned short	glsl_sequence_proj[2];	// same as above but for projlights
+
+	// cached shadernums
+	shader_t		forwardScene;
+	shader_t		forwardLightSpot;
+	shader_t		forwardLightOmni;
+	shader_t		forwardLightProj;
+	shader_t		deferredScene;
+	shader_t		deferredLight;
+	shader_t		forwardDepth;
+
+	unsigned short	lastRenderMode;		// for catch change render modes
 } mstudiomaterial_t;
 
+typedef struct mstudiosurface_s
+{
+	int		flags;			// match with msurface_t->flags
+	int		texture_step;
+
+	short		lightextents[2];
+	unsigned short	light_s[MAXLIGHTMAPS];
+	unsigned short	light_t[MAXLIGHTMAPS];
+	byte		lights[MAXDYNLIGHTS];// static lights that affected this face (255 = no lights)
+
+	int		lightmaptexturenum;
+	byte		styles[MAXLIGHTMAPS];
+
+	color24		*samples;		// note: this is the actual lightmap data for this surface
+	color24		*normals;		// note: this is the actual deluxemap data for this surface
+	byte		*shadows;		// note: occlusion map for this surface
+} mstudiosurface_t;
+	
 typedef struct
 {
 	vbomesh_t		*meshes;			// meshes per submodel
@@ -710,9 +778,14 @@ typedef struct mbodypart_s
 
 typedef struct mvbocache_s
 {
+	mstudiosurface_t	*surfaces;
+	int		numsurfaces;
+
 	mbodypart_t	*bodyparts;
 	int		numbodyparts;
-} mvbocache_t;
+
+	bool		update_light;		// gamma or brightness was changed so we need to reload lightmaps
+} mstudiocache_t;
 
 typedef struct mposebone_s
 {

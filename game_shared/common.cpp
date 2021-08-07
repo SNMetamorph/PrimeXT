@@ -141,6 +141,23 @@ void COM_DefaultExtension( char *path, const char *extension )
 }
 
 /*
+============
+COM_FixSlashes
+
+Changes all '/' characters into '\' characters, in place.
+============
+*/
+void COM_FixSlashes(char *pname)
+{
+	while (*pname)
+	{
+		if (*pname == '\\')
+			*pname = '/';
+		pname++;
+	}
+}
+
+/*
 ==============
 COM_ParseFile
 

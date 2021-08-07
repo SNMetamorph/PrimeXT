@@ -940,14 +940,17 @@ public:
 	// creates some non-identity states
 	void CreateModelview( void );
 	void CreateTexture( void );
+	void Crop(const Vector &mins, const Vector &maxs);
+	void LookAt(const Vector &eye, const Vector &dir, const Vector &up); // like gluLookAt
 	void CreateProjection( float fov_x, float fov_y, float zNear, float zFar );
 	void CreateProjection( float xMax, float xMin, float yMax, float yMin, float zNear, float zFar );
 	void CreateOrtho( float xLeft, float xRight, float yBottom, float yTop, float zNear, float zFar );
+	void CreateOrthoRH(float xLeft, float xRight, float yBottom, float yTop, float zNear, float zFar);
 	void CreateTranslate( float x, float y, float z );
 	void CreateRotate( float angle, float x, float y, float z );
 	void CreateScale( float scale );
 	void CreateScale( float x, float y, float z );
-
+	
 	// array access
 	float* operator[]( int i ) { return mat[i]; }
 	float const* operator[]( int i ) const { return mat[i]; }

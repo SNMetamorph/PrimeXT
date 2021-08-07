@@ -309,7 +309,7 @@ public:
 	virtual void GibMonster( void );
 	BOOL		ShouldGibMonster( int iGib );
 	void		CallGibMonster( void );
-	virtual int	DamageDecal( int bitsDamageType );
+	virtual const char *DamageDecal( int bitsDamageType );
 	virtual BOOL	HasHumanGibs( void );
 	virtual BOOL	HasAlienGibs( void );
 	virtual void	FadeMonster( void );	// Called instead of GibMonster() when gibs are disabled

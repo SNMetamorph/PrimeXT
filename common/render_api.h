@@ -23,6 +23,10 @@ GNU General Public License for more details.
 #define MAX_STUDIO_DECALS		4096	// + unused space of BSP decals
 #define MAX_BMODEL_DECALS		4096
 
+// helper macroses
+#define LEAF_INFO( leaf, mod )	((mextraleaf_t *)world->leafs + (leaf - mod->leafs)) 
+#define INFO_LEAF( leaf, mod )	(mod->leafs + (leaf - (mextraleaf_t *)world->leafs)) 
+
 // render info parms
 #define PARM_TEX_WIDTH	1	// all parms with prefix 'TEX_' receive arg as texnum
 #define PARM_TEX_HEIGHT	2	// otherwise it's not used
@@ -61,6 +65,9 @@ GNU General Public License for more details.
 #define PARM_GLES_WRAPPER	35	//
 #define PARM_STENCIL_ACTIVE	36
 #define PARM_WATER_ALPHA	37
+#define PARM_TEX_MEMORY	38	// returns total memory of uploaded texture in bytes
+#define PARM_DELUXEDATA	39	// nasty hack, convert int to pointer
+#define PARM_SHADOWDATA	40	// nasty hack, convert int to pointer
 
 // skybox ordering
 enum
@@ -73,17 +80,6 @@ enum
 	SKYBOX_DOWN,
 };
 
-#define DXT_ENCODE_DEFAULT		0	// don't use custom encoders
-#define DXT_ENCODE_COLOR_YCoCg	0x1A01	// make sure that value dosn't collide with anything
-#define DXT_ENCODE_ALPHA_1BIT		0x1A02	// normal 1-bit alpha
-#define DXT_ENCODE_ALPHA_8BIT		0x1A03	// normal 8-bit alpha
-#define DXT_ENCODE_ALPHA_SDF		0x1A04	// signed distance field
-#define DXT_ENCODE_NORMAL_AG_ORTHO	0x1A05	// orthographic projection
-#define DXT_ENCODE_NORMAL_AG_STEREO	0x1A06	// stereographic projection
-#define DXT_ENCODE_NORMAL_AG_PARABOLOID	0x1A07	// paraboloid projection
-#define DXT_ENCODE_NORMAL_AG_QUARTIC	0x1A08	// newton method
-#define DXT_ENCODE_NORMAL_AG_AZIMUTHAL	0x1A09	// Lambert Azimuthal Equal-Area
-
 typedef enum
 {
 	TF_COLORMAP	= 0,		// just for tabulate source
@@ -91,7 +87,7 @@ typedef enum
 	TF_KEEP_SOURCE	= (1<<1),		// some images keep source
 	TF_NOFLIP_TGA	= (1<<2),		// Steam background completely ignore tga attribute 0x20
 	TF_EXPAND_SOURCE	= (1<<3),		// Don't keep source as 8-bit expand to RGBA
-// reserved
+	TF_ALLOW_EMBOSS	= (1<<4),		// Allow emboss-mapping for this image
 	TF_RECTANGLE	= (1<<5),		// this is GL_TEXTURE_RECTANGLE
 	TF_CUBEMAP	= (1<<6),		// it's cubemap texture
 	TF_DEPTHMAP	= (1<<7),		// custom texture filter used
@@ -105,7 +101,7 @@ typedef enum
 	TF_NORMALMAP	= (1<<15),	// is a normalmap
 	TF_HAS_ALPHA	= (1<<16),	// image has alpha (used only for GL_CreateTexture)
 	TF_FORCE_COLOR	= (1<<17),	// force upload monochrome textures as RGB (detail textures)
-// reserved
+	TF_UPDATE		= (1<<18),	// allow to update already loaded texture
 	TF_BORDER		= (1<<19),	// zero clamp for projected textures
 	TF_TEXTURE_3D	= (1<<20),	// this is GL_TEXTURE_3D
 	TF_ATLAS_PAGE	= (1<<21),	// bit who indicate lightmap page or deluxemap page
@@ -120,15 +116,18 @@ typedef enum
 
 typedef enum
 {
-	CONTEXT_TYPE_GL = 0,
+	CONTEXT_TYPE_GL = 0, // compatibility profile
 	CONTEXT_TYPE_GLES_1_X,
-	CONTEXT_TYPE_GLES_2_X
+	CONTEXT_TYPE_GLES_2_X,
+	CONTEXT_TYPE_GL_CORE
 } gl_context_type_t;
 
 typedef enum
 {
-	GLES_WRAPPER_NONE = 0,		// native GLES
+	GLES_WRAPPER_NONE = 0,		// native GL
 	GLES_WRAPPER_NANOGL,		// used on GLES platforms
+	GLES_WRAPPER_WES,		// used on GLES platforms
+	GLES_WRAPPER_GL4ES,		// used on GLES platforms
 } gles_wrapper_t;
 
 // 30 bytes here
@@ -138,7 +137,7 @@ typedef struct modelstate_s
 	short		frame;		// 10 bits multiple by 4, should be enough
 	byte		blending[2];
 	byte		controller[4];
-	byte		poseparam[16];		
+	byte		poseparam[16];
 	byte		body;
 	byte		skin;
 	short		scale;		// model scale (multiplied by 16)
@@ -161,13 +160,15 @@ typedef struct decallist_s
 	modelstate_t	studio_state;	// studio decals only
 } decallist_t;
 
+struct ref_viewpass_s;
+
 typedef struct render_api_s
 {
 	// Get renderer info (doesn't changes engine state at all)
 	int		(*RenderGetParm)( int parm, int arg );	// generic
 	void		(*GetDetailScaleForTexture)( int texture, float *xScale, float *yScale );
 	void		(*GetExtraParmsForTexture)( int texture, byte *red, byte *green, byte *blue, byte *alpha );
-	lightstyle_t*	(*GetLightStyle)( int number ); 
+	lightstyle_t*	(*GetLightStyle)( int number );
 	dlight_t*		(*GetDynamicLight)( int number );
 	dlight_t*		(*GetEntityLight)( int number );
 	byte		(*LightToTexGamma)( byte color );	// software gamma support
@@ -184,9 +185,9 @@ typedef struct render_api_s
 	const char*	(*GL_TextureName)( unsigned int texnum );
 	const byte*	(*GL_TextureData)( unsigned int texnum ); // may be NULL
 	int		(*GL_LoadTexture)( const char *name, const byte *buf, size_t size, int flags );
-	int		(*GL_CreateTexture)( const char *name, int width, int height, const void *buffer, int flags ); 
+	int		(*GL_CreateTexture)( const char *name, int width, int height, const void *buffer, texFlags_t flags );
 	int		(*GL_LoadTextureArray)( const char **names, int flags );
-	int		(*GL_CreateTextureArray)( const char *name, int width, int height, int depth, const void *buffer, int flags );
+	int		(*GL_CreateTextureArray)( const char *name, int width, int height, int depth, const void *buffer, texFlags_t flags );
 	void		(*GL_FreeTexture)( unsigned int texnum );
 
 	// Decals manipulating (draw & remove)
@@ -196,9 +197,9 @@ typedef struct render_api_s
 
 	// AVIkit support
 	void		*(*AVI_LoadVideo)( const char *filename, qboolean load_audio );
-	int		(*AVI_GetVideoInfo)( void *Avi, long *xres, long *yres, float *duration );
-	long		(*AVI_GetVideoFrameNumber)( void *Avi, float time );
-	byte		*(*AVI_GetVideoFrame)( void *Avi, long frame );
+	int		(*AVI_GetVideoInfo)( void *Avi, int *xres, int *yres, float *duration ); // a1ba: changed longs to int
+	int		(*AVI_GetVideoFrameNumber)( void *Avi, float time );
+	byte		*(*AVI_GetVideoFrame)( void *Avi, int frame );
 	void		(*AVI_UploadRawFrame)( int texture, int cols, int rows, int width, int height, const byte *data );
 	void		(*AVI_FreeVideo)( void *Avi );
 	int		(*AVI_IsActive)( void *Avi );
@@ -224,12 +225,12 @@ typedef struct render_api_s
 	void		(*GL_DrawParticles)( const struct ref_viewpass_s *rvp, qboolean trans_pass, float frametime );
 	void		(*EnvShot)( const float *vieworg, const char *name, qboolean skyshot, int shotsize ); // store skybox into gfx\env folder
 	int		(*SPR_LoadExt)( const char *szPicName, unsigned int texFlags ); // extended version of SPR_Load
-	colorVec		(*LightVec)( const float *start, const float *end, float *lightspot );
+	colorVec		(*LightVec)( const float *start, const float *end, float *lightspot, float *lightvec );
 	struct mstudiotex_s *( *StudioGetTexture )( struct cl_entity_s *e );
 	const struct ref_overview_s *( *GetOverviewParms )( void );
 	const char	*( *GetFileByIndex )( int fileindex );
-	void		(*R_Reserved1)( void );	// for potential interface expansion without broken compatibility
-	void		(*R_Reserved2)( void );
+	int		(*pfnSaveFile)( const char *filename, const void *data, int len );
+	void		(*R_Reserved0)( void );
 
 	// static allocations
 	void		*(*pfnMemAlloc)( size_t cb, const char *filename, const int fileline );
@@ -237,14 +238,15 @@ typedef struct render_api_s
 
  	// engine utils (not related with render API but placed here)
 	char		**(*pfnGetFilesList)( const char *pattern, int *numFiles, int gamedironly );
-	unsigned long	(*pfnFileBufferCRC32)( const void *buffer, const int length );
+	unsigned int	(*pfnFileBufferCRC32)( const void *buffer, const int length );
 	int		(*COM_CompareFileTime)( const char *filename1, const char *filename2, int *iCompare );
 	void		(*Host_Error)( const char *error, ... ); // cause Host Error
 	void*		( *pfnGetModel )( int modelindex );
 	float		(*pfnTime)( void );				// Sys_DoubleTime
-	void		(*Cvar_Set)( char *name, char *value );
+	void		(*Cvar_Set)( const char *name, const char *value );
 	void		(*S_FadeMusicVolume)( float fadePercent );	// fade background track (0-100 percents)
-	void		(*SetRandomSeed)( long lSeed );		// set custom seed for RANDOM_FLOAT\RANDOM_LONG for predictable random
+	// a1ba: changed long to int
+	void		(*SetRandomSeed)( int lSeed );		// set custom seed for RANDOM_FLOAT\RANDOM_LONG for predictable random
 	// ONLY ADD NEW FUNCTIONS TO THE END OF THIS STRUCT.  INTERFACE VERSION IS FROZEN AT 37
 } render_api_t;
 
@@ -263,7 +265,7 @@ typedef struct render_interface_s
 	// clear decals by engine request (e.g. for demo recording or vid_restart)
 	void		(*R_ClearStudioDecals)( void );
 	// grab r_speeds message
-	qboolean		(*R_SpeedsMessage)( char *out, size_t size );
+	qboolean	(*R_SpeedsMessage)( char *out, size_t size );
 	// alloc or destroy model custom data
 	void		(*Mod_ProcessUserData)( struct model_s *mod, qboolean create, const byte *buffer );
 	// alloc or destroy entity custom data
@@ -274,6 +276,8 @@ typedef struct render_interface_s
 	void		(*R_NewMap)( void );
 	// clear the render entities before each frame
 	void		(*R_ClearScene)( void );
+	// shuffle previous & next states for lerping
+	void		(*CL_UpdateLatchedVars)( struct cl_entity_s *e, qboolean reset );
 } render_interface_t;
 
 #endif//RENDER_API_H

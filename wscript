@@ -7,7 +7,7 @@ from waflib import Logs, Context, Configure
 import sys
 import os
 
-VERSION = '2.4'
+VERSION = '1.0'
 APPNAME = 'xashxt-fwgs'
 top = '.'
 

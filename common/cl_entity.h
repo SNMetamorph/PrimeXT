@@ -100,7 +100,11 @@ struct cl_entity_s
 	word		hCachedMatrix;	// modelviewProjectionMatrix handle in matrix cache (was syncbase)
 	word		reserved;
 	int		visframe;		// last frame this entity was found in an active leaf
-	colorVec		cvFloorColor;
+	union
+	{
+		colorVec		cvFloorColor;
+		byte		lights[16];	// only first eight entries is used
+	};
 };
 
 #endif//CL_ENTITY_H

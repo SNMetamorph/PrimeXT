@@ -162,11 +162,11 @@ void CEnvExplosion::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 	{
 		if ( RANDOM_FLOAT( 0 , 1 ) < 0.5 )
 		{
-			UTIL_DecalTrace( &tr, DECAL_SCORCH1 );
+			UTIL_DecalTrace( &tr, "{scorch1" );
 		}
 		else
 		{
-			UTIL_DecalTrace( &tr, DECAL_SCORCH2 );
+			UTIL_DecalTrace( &tr, "{scorch2" );
 		}
 	}
 

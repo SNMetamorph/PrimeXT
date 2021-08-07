@@ -17,6 +17,10 @@ GNU General Public License for more details.
 #define COM_MODEL_H
 
 #include "bspfile.h"	// we need some declarations from it
+#include "shader.h"
+#include "lightlimits.h"
+#include "const.h"
+#include "vector.h"
 
 /*
 ==============================================================================
@@ -33,18 +37,7 @@ GNU General Public License for more details.
 
 #define MIPLEVELS		4
 #define VERTEXSIZE		7
-#define MAXLIGHTMAPS	4
 #define NUM_AMBIENTS	4		// automatic ambient sounds
-
-// model flags (stored in model_t->flags)
-#define MODEL_CONVEYOR		BIT( 0 )
-#define MODEL_HAS_ORIGIN		BIT( 1 )
-#define MODEL_LIQUID		BIT( 2 )	// model has only point hull
-#define MODEL_TRANSPARENT		BIT( 3 )	// have transparent surfaces
-#define MODEL_COLORED_LIGHTING	BIT( 4 )	// lightmaps stored as RGB
-
-#define MODEL_WORLD			BIT( 29 )	// it's a worldmodel
-#define MODEL_CLIENT		BIT( 30 )	// client sprite
 
 // model types
 typedef enum
@@ -55,6 +48,18 @@ typedef enum
 	mod_alias, 
 	mod_studio
 } modtype_t;
+
+//  model flags (stored in model_t->flags)
+#define MODEL_CONVEYOR		BIT( 0 )
+#define MODEL_HAS_ORIGIN		BIT( 1 )
+#define MODEL_LIQUID		BIT( 2 )	// model has only point hull
+#define MODEL_TRANSPARENT		BIT( 3 )	// have transparent surfaces
+#define MODEL_COLORED_LIGHTING	BIT( 4 )	// lightmaps stored as RGB
+
+#define MODEL_WORLD		BIT( 29 )	// it's a worldmodel
+#define MODEL_CLIENT		BIT( 30 )	// client sprite
+
+class CMeshDesc;
 
 typedef struct mplane_s
 {
@@ -76,6 +81,48 @@ typedef struct
 	unsigned int	cachededgeoffset;
 } medge_t;
 
+// brush material flags
+#define BRUSH_TRANSPARENT	0x0001		// alpha-transparent
+#define BRUSH_FULLBRIGHT	0x0002		// ignore lightmap for this surface (probably water)
+#define BRUSH_HAS_DETAIL	0x0004		// has detail texture
+#define BRUSH_HAS_BUMP	0x0008		// has normalmap
+#define BRUSH_HAS_SPECULAR	0x0010		// has specular
+#define BRUSH_TWOSIDE	0x0020		// some types of water
+#define BRUSH_CONVEYOR	0x0040		// scrolled texture
+#define BRUSH_GLOSSPOWER	0x0080		// gloss power stored in alphachannel of gloss map
+#define BRUSH_REFLECT	0x0100		// reflect surface
+#define BRUSH_UNDERWATER	0x0200		// ugly hack to tell GLSL about camera inside water volume
+#define BRUSH_HAS_LUMA	0x0400		// self-illuminate parts
+#define BRUSH_HAS_ALPHA	0x0800		// diffuse texture has alpha-cahhnel
+#define BRUSH_LIQUID	0x1000		// reflective & refractive water
+#define BRUSH_MULTI_LAYERS	0x2000		// this face has multiply layers (random-tiling or landscape)
+#define BRUSH_HAS_HEIGHTMAP	0x4000		// have heightmap
+
+// each texture_t has a material
+typedef struct material_s
+{
+	// this part is shared with matdesc_t
+	float		smoothness;		// smoothness factor
+	float		detailScale[2];		// detail texture scales x, y
+	float		reflectScale;		// reflection scale for translucent water
+	float		refractScale;		// refraction scale for mirrors, windows, water
+	float		aberrationScale;		// chromatic abberation
+	float		reliefScale;		// relief-mapping
+	struct matdef_s	*effects;			// hit, impact, particle effects etc
+
+	// this part is world-specific params
+	struct texture_s	*pSource;			// pointer to original texture
+
+	unsigned short	gl_diffuse_id;		// diffuse texture
+	unsigned short	gl_detailmap_id;		// detail texture
+	unsigned short	gl_normalmap_id;		// normalmap
+	unsigned short	gl_specular_id;		// specular
+	unsigned short	gl_glowmap_id;		// self-illuminate parts
+	unsigned short	gl_heightmap_id;		// parallax bumpmap
+
+	int		flags;			// brush material flags
+} material_t;
+
 typedef struct texture_s
 {
 	char		name[16];
@@ -88,8 +135,9 @@ typedef struct texture_s
 	struct texture_s	*alternate_anims;	// bmodels in frame 1 use these
 	unsigned short	fb_texturenum;	// auto-luma texturenum
 	unsigned short	dt_texturenum;	// detail-texture binding
-	struct mextrasurf_s	*lightchain;	// used for drawing spotlights
-	unsigned int	unused[2];	// reserved 
+	material_t	*material;	// pointer to texture material
+	struct matdef_s	*effects;		// hit, impact, particle effects etc
+	unsigned int	unused;		// reserved 
 } texture_t;
 
 typedef struct
@@ -99,11 +147,28 @@ typedef struct
 	unsigned short	max_extent;	// default is 16, subdivision step ((texture_step * max_extent) - texture_step)
 	short		groupid;		// to determine equal landscapes from various groups, -1 - no group
 
-	vec3_t		mins, maxs;	// terrain bounds (fill by user)
+	vec3_t		mins, maxs;
+
+	// effects per-layers for playing sounds etc
+	struct matdef_s	*effects[MAX_LANDSCAPE_LAYERS];	// hit, impact, particle effects etc
+
+	byte		*heightmap;	// terrain heightmap raw data
+	unsigned short	heightmap_width;
+	unsigned short	heightmap_height;
+
 	struct terrain_s	*terrain;		// valid only for client-side or local game
 
-	int		reserved[31];	// just for future expansions or mod-makers
+	int		reserved[13];	// just for future expansions or mod-makers
 } mfaceinfo_t;
+
+typedef struct
+{
+	mplane_t		*edges;
+	int		numedges;
+	vec3_t		origin;
+	float		radius;		// for culling tests
+	int		contents;		// sky or solid
+} mfacebevel_t;
 
 typedef struct
 {
@@ -153,15 +218,11 @@ struct decal_s
 	float		dy;		// 
 	float		scale;		// Pixel scale
 	short		texture;		// Decal texture
-	short		flags;		// Decal flags  FDECAL_*
+	byte		flags;		// Decal flags  FDECAL_*
 	short		entityIndex;	// Entity this is attached to
-// Xash3D specific
+// Xash3D added
 	vec3_t		position;		// location of the decal center in world space.
 	glpoly_t		*polys;		// precomputed decal vertices
-	int		glsl_sequence;	// shader cache
-	word		shaderNum;
-	word		unused;
-	int		reserved[2];	// just for future expansions or mod-makers
 };
 
 typedef struct mleaf_s
@@ -184,6 +245,47 @@ typedef struct mleaf_s
 
 } mleaf_t;
 
+typedef struct mcubemap_s
+{
+	char		name[64];		// for envshots
+	int		texture;		// gl texturenum
+	vec3_t		mins, maxs;
+	bool		valid;		// don't need to rebuild
+	vec3_t		origin;
+	short		size;		// cubemap size
+	byte		numMips;		// cubemap mipcount
+} mcubemap_t;
+
+// msurface_t flags
+#define SURF_TWOSIDE		BIT( 0 )		// two-sided polygon (e.g. 'water4b')
+#define SURF_PLANEBACK		BIT( 1 )		// plane should be negated
+#define SURF_DRAWSKY		BIT( 2 )		// sky surface
+#define SURF_DRAWTURB_QUADS	BIT( 3 )		// all subidivided polygons are quads 
+#define SURF_DRAWTURB		BIT( 4 )		// warp surface
+#define SURF_DRAWTILED		BIT( 5 )		// face without lighmap
+#define SURF_CONVEYOR		BIT( 6 )		// scrolled texture (was SURF_DRAWBACKGROUND)
+#define SURF_UNDERWATER		BIT( 7 )		// caustics
+#define SURF_TRANSPARENT	BIT( 8 )		// it's a transparent texture (was SURF_DONTWARP)
+
+// user-defined flags
+#define SURF_HAS_DECALS		BIT( 9 )		// this surface has decals
+#define SURF_LANDSCAPE		BIT( 10 )		// this is multi-layered texture surface
+#define SURF_MOVIE			BIT( 11 )		// screen movie
+#define SURF_GRASS_UPDATE	BIT( 12 )		// gamma has changed, need to update grass
+#define SURF_NODRAW			BIT( 13 )		// failed to create shader for this surface
+#define SURF_OCCLUDED		BIT( 14 )		// occlusion query result
+#define SURF_QUEUED			BIT( 15 )		// add to queue for occlusion
+#define SURF_NODLIGHT		BIT( 16 )		// failed to create dlight shader for this surface
+#define SURF_NOSUNLIGHT		BIT( 17 )		// failed to create sun light shader for this surface
+
+#define SURF_FULLBRIGHT		BIT( 25 )		// completely ignore lighting on this brush
+#define SURF_OF_SUBMODEL	BIT( 26 )		// this face is owned by submodel (to differentiate from world faces)
+#define SURF_LOCAL_SPACE	BIT( 27 )		// if bmodel has origin this surf is in local space (used for sorting)
+#define SURF_LM_UPDATE		BIT( 28 )		// lightmap was changed, need to reload
+#define SURF_DM_UPDATE		BIT( 29 )		// deluxmap was changed, need to reload
+#define SURF_REFLECT_PUDDLE	BIT( 30 )		// special reflected surface (puddle reflection)
+#define SURF_REFLECT		BIT( 31 )		// reflect surface (mirror)
+
 // surface extradata
 typedef struct mextrasurf_s
 {
@@ -194,51 +296,48 @@ typedef struct mextrasurf_s
 	// extended light info
 	int		dlight_s, dlight_t;	// gl lightmap coordinates for dynamic lightmaps
 
-	short		lightmapmins[2];	// lightmatrix
+	short		lightmapmins[2];
 	short		lightextents[2];
 	float		lmvecs[2][4];
 
-	color24		*deluxemap;	// note: this is the actual deluxemap data for this surface
-	byte		*shadowmap;	// note: occlusion map for this surface
+	color24		*normals;		// note: this is the actual deluxemap data for this surface
+	byte		*shadows;		// note: occlusion map for this surface
 // begin userdata
-	int		cintexturenum;	// cinematic handle
+	struct msurface_s	*lightmapchain;	// lightmapped polys
 	struct mextrasurf_s	*detailchain;	// for detail textures drawing
-	struct mextrasurf_s	*mirrorchain;	// for gl_texsort drawing
+	mfacebevel_t	*bevel;		// for exact face traceline
 	struct mextrasurf_s	*lumachain;	// draw fullbrights
 	struct cl_entity_s	*parent;		// upcast to owner entity
-// after this point engine touches nothing
-	int		unused;
-
+// was mirrortexturenum, mirrormatrix (17 * sizeof( int ))
+	unsigned short	light_s[MAXLIGHTMAPS];
+	unsigned short	light_t[MAXLIGHTMAPS];
+	byte		lights[MAXDYNLIGHTS];// static lights that affected this face (255 = no lights)
+	float		texofs[2];	// conveyor offsets
+	mcubemap_t	*cubemap[2];	// for environment reflective bump-mapping
+	float		lerpFactor;
+	short		subtexture[8];	// MAX_REF_STACK
+	word		cintexturenum;	// cinematic handle
+	word		lightmaptexturenum;	// custom lightmap number
+	word		lastRenderMode;	// for catch change render modes
+	word		checkcount;	// used for cin textures
+// again matched with engine declaration
 	struct grasshdr_s	*grass;		// grass that linked by this surface
 	unsigned short	grasscount;	// number of bushes per polygon (used to determine total VBO size)
 	unsigned short	numverts;		// world->vertexes[]
 	int		firstvertex;	// fisrt look up in tr.tbn_vectors[], then acess to world->vertexes[]
+// reserved fields (32 * sizeof( int ))
+	unsigned int	query;		// test surface for occluding (active if query != 0)
+// shader cache
+	shader_t		forwardScene[2];	// two for mirrors
+	shader_t		forwardLightSpot;
+	shader_t		forwardLightOmni;
+	shader_t		forwardLightProj;
+	shader_t		deferredScene;
+	shader_t		deferredLight;
+	shader_t		forwardDepth;
 
-	struct mextrasurf_s	*lightchain;	// for spotlight drawing
-	struct mextrasurf_s	*chromechain;	// for chrome-effect drawing
-	int		checkcount;	// used for cin textures
-	int		tracecount;	// used for trace checking
-
-	unsigned short	light_s[MAXLIGHTMAPS];
-	unsigned short	light_t[MAXLIGHTMAPS];
-	word		lightmaptexturenum;	// custom lightmap number
-
-	word		shaderNum[2];		// constantly assigned shader to this surface
-	word		omniLightShaderNum;		// cached omni light shader for this face
-	word		projLightShaderNum[2];	// cached proj light shader for this face
-	word		glsl_sequence[2];		// if( tr.glsl_valid_sequence != es->glsl_sequence ) it's time to recompile shader
-	word		glsl_sequence_omni;		// same as above but for omnilights
-	word		glsl_sequence_proj[2];	// same as above but for projlights
-	float		texofs[2];		// conveyor offsets
-	int		cached_frame;
-
-	unsigned short	*indexes;		// for subdivided polys
-	unsigned short	numindexes;
-
-	short		subtexture[8];	// MAX_REF_STACK
-	word		gl_texturenum;	// current diffuse texture
-	word		dt_texturenum;	// current detail texture
-	int		reserved[25];	// just for future expansions or mod-makers
+	struct brushdecal_s	*pdecals;		// linked decals
+	int		reserved[22];	// just for future expansions or mod-makers
 } mextrasurf_t;
 
 typedef struct msurface_s
@@ -314,7 +413,7 @@ typedef struct model_s
 	union
 	{
 	int		firstmodelsurface;
-	int		modelCRC;
+	unsigned long	modelCRC;
 	};
 	int		nummodelsurfaces;
 
@@ -322,7 +421,7 @@ typedef struct model_s
 	dmodel_t		*submodels;	// or studio animations
 
 	int		numplanes;
-	mplane_t		*planes;
+	mplane_t		*planes;		// bsp or studio collision planes
 
 	int		numleafs;		// number of visible leafs, not counting 0
 	mleaf_t		*leafs;
@@ -343,7 +442,11 @@ typedef struct model_s
 	msurface_t	*surfaces;
 
 	int		numsurfedges;
+	union
+	{
 	int		*surfedges;
+	CMeshDesc		*bodymesh;	// collision mesh for studiomodel
+	};
 
 	int		numclipnodes;
 	dclipnode_t	*clipnodes;
@@ -354,7 +457,7 @@ typedef struct model_s
 	hull_t		hulls[MAX_MAP_HULLS];
 
 	int		numtextures;
-	texture_t		**textures;
+	texture_t		**textures;	// BSP textures or remap textures
 
 	union
 	{
@@ -387,14 +490,10 @@ typedef struct alight_s
 	float		*plightvec;
 } alight_t;
 
-// extended lightinfo
-typedef struct
+typedef struct auxvert_s
 {
-	vec3_t		ambient;
-	vec3_t		diffuse;
-	vec3_t		direction;
-	vec3_t		origin;			// used for debug
-} lightinfo_t;
+	float		fv[3];		// viewspace x, y
+} auxvert_t;
 
 #define MAX_SCOREBOARDNAME	32
 #define MAX_INFO_STRING	256
@@ -417,7 +516,7 @@ typedef struct player_info_s
 	int		bottomcolor;
 
 	// last frame rendered
-	unsigned int	renderframe;	
+	int		renderframe;	
 
 	// Gait frame estimation
 	int		gaitsequence;

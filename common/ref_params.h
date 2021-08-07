@@ -15,6 +15,8 @@
 
 #ifndef REF_PARAMS_H
 #define REF_PARAMS_H
+#include "const.h"
+#include "vector.h"
 
 typedef struct ref_params_s
 {

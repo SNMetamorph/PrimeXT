@@ -15,6 +15,9 @@ GNU General Public License for more details.
 
 #ifndef ENGINECALLBACK_H
 #define ENGINECALLBACK_H
+#include "cdll_int.h"
+#include "render_api.h"
+#include "com_model.h"
 
 extern cl_enginefunc_t gEngfuncs;
 extern render_api_t gRenderfuncs;
@@ -74,37 +77,45 @@ inline void PlaySound( char *szSound, float vol ) { gEngfuncs.pfnPlaySoundByName
 inline void PlaySound( int iSound, float vol ) { gEngfuncs.pfnPlaySoundByIndex( iSound, vol ); }
 
 // render api callbacks
-#define SPR_LoadEx			(*gRenderfuncs.SPR_LoadExt)
+inline int CREATE_TEXTURE(const char *name, int width, int height, const void *buffer, int flags)
+{
+	return (*gRenderfuncs.GL_CreateTexture)(name, width, height, buffer, static_cast<texFlags_t>(flags));
+}
+inline int CREATE_TEXTURE_ARRAY(const char *name, int width, int height, int depth, const void *buffer, int flags)
+{
+	return (*gRenderfuncs.GL_CreateTextureArray)(name, width, height, depth, buffer, static_cast<texFlags_t>(flags));
+}
+
+#define COMPARE_FILE_TIME		(*gRenderfuncs.COM_CompareFileTime)
+#define DECAL_SETUP_VERTS		(*gRenderfuncs.R_DecalSetupVerts)
+#define DRAW_PARTICLES		(*gRenderfuncs.GL_DrawParticles)
+#define DRAW_SINGLE_DECAL		(*gRenderfuncs.DrawSingleDecal)
+#define ENGINE_SET_PVS		(*gRenderfuncs.R_FatPVS)
+#define ENV_SHOT			(*gRenderfuncs.EnvShot)
+#define FIND_TEXTURE		(*gRenderfuncs.GL_FindTexture)
+#define FREE_TEXTURE		(*gRenderfuncs.GL_FreeTexture)
+#define FS_SEARCH			(*gRenderfuncs.pfnGetFilesList)
+#define GET_DETAIL_SCALE		(*gRenderfuncs.GetDetailScaleForTexture)
+#define GET_DYNAMIC_LIGHT		(*gRenderfuncs.GetDynamicLight)
+#define GET_ENTITY_LIGHT		(*gRenderfuncs.GetEntityLight)
+#define GET_EXTRA_PARAMS		(*gRenderfuncs.GetExtraParmsForTexture)
+#define GET_FOG_PARAMS		(*gRenderfuncs.GetExtraParmsForTexture)
+#define GET_FRAMETIME		(*gRenderfuncs.GetFrameTime)
+#define GET_LIGHTSTYLE		(*gRenderfuncs.GetLightStyle)
+#define GET_OVERVIEW_PARMS		(*gRenderfuncs.GetOverviewParms)
+#define GET_TEXTURE_DATA		(*gRenderfuncs.GL_TextureData)
+#define GET_TEXTURE_NAME		(*gRenderfuncs.GL_TextureName)
+#define HOST_ERROR			(*gRenderfuncs.Host_Error)
+#define INIT_BEAMCHAINS		(*gRenderfuncs.GetBeamChains)
+#define REMOVE_BSP_DECALS		(*gRenderfuncs.R_EntityRemoveDecals)
 #define RENDER_GET_PARM		(*gRenderfuncs.RenderGetParm)
 #define SET_CURRENT_ENTITY		(*gRenderfuncs.R_SetCurrentEntity)
 #define SET_CURRENT_MODEL		(*gRenderfuncs.R_SetCurrentModel)
-#define ENGINE_SET_PVS		(*gRenderfuncs.R_FatPVS)
-#define HOST_ERROR			(*gRenderfuncs.Host_Error)
-#define GET_LIGHTSTYLE		(*gRenderfuncs.GetLightStyle)
-#define GET_DYNAMIC_LIGHT		(*gRenderfuncs.GetDynamicLight)
-#define GET_ENTITY_LIGHT		(*gRenderfuncs.GetEntityLight)
-#define TEXTURE_TO_TEXGAMMA		(*gRenderfuncs.LightToTexGamma)
-#define GET_FRAMETIME		(*gRenderfuncs.GetFrameTime)
-#define DRAW_SINGLE_DECAL		(*gRenderfuncs.DrawSingleDecal)
-#define DECAL_SETUP_VERTS		(*gRenderfuncs.R_DecalSetupVerts)
-#define GET_DETAIL_SCALE		(*gRenderfuncs.GetDetailScaleForTexture)
-#define GET_EXTRA_PARAMS		(*gRenderfuncs.GetExtraParmsForTexture)
-#define CREATE_TEXTURE		(*gRenderfuncs.GL_CreateTexture)
-#define FIND_TEXTURE		(*gRenderfuncs.GL_FindTexture)
-#define FREE_TEXTURE		(*gRenderfuncs.GL_FreeTexture)
-#define CREATE_TEXTURE_ARRAY		(*gRenderfuncs.GL_CreateTextureArray)
-#define STORE_EFRAGS		(*gRenderfuncs.R_StoreEfrags)
-#define INIT_BEAMCHAINS		(*gRenderfuncs.GetBeamChains)
-#define DRAW_PARTICLES		(*gRenderfuncs.GL_DrawParticles)
 #define SET_ENGINE_WORLDVIEW_MATRIX	(*gRenderfuncs.GL_SetWorldviewProjectionMatrix)
-#define GET_FOG_PARAMS		(*gRenderfuncs.GetExtraParmsForTexture)
-#define GET_TEXTURE_NAME		(*gRenderfuncs.GL_TextureName)
-#define GET_TEXTURE_DATA		(*gRenderfuncs.GL_TextureData)
-#define COMPARE_FILE_TIME		(*gRenderfuncs.COM_CompareFileTime)
-#define REMOVE_BSP_DECALS		(*gRenderfuncs.R_EntityRemoveDecals)
+#define SPR_LoadEx			(*gRenderfuncs.SPR_LoadExt)
+#define STORE_EFRAGS		(*gRenderfuncs.R_StoreEfrags)
 #define STUDIO_GET_TEXTURE		(*gRenderfuncs.StudioGetTexture)
-#define GET_OVERVIEW_PARMS		(*gRenderfuncs.GetOverviewParms)
-#define FS_SEARCH			(*gRenderfuncs.pfnGetFilesList)
+#define TEXTURE_TO_TEXGAMMA		(*gRenderfuncs.LightToTexGamma)
 
 #define LOAD_TEXTURE		(*gRenderfuncs.GL_LoadTexture)
 #define LOAD_TEXTURE_ARRAY		(*gRenderfuncs.GL_LoadTextureArray)
@@ -128,24 +139,35 @@ inline void PlaySound( int iSound, float vol ) { gEngfuncs.pfnPlaySoundByIndex( 
 #define GL_CleanUpTextureUnits	(*gRenderfuncs.GL_CleanUpTextureUnits)
 #define GL_TexCoordArrayMode		(*gRenderfuncs.GL_TexCoordArrayMode)
 #define GL_TextureTarget		(*gRenderfuncs.GL_TextureTarget)
+#define GL_UpdateTexSize		(*gRenderfuncs.GL_UpdateTexSize)
 
 #define RANDOM_SEED			(*gRenderfuncs.SetRandomSeed)
 #define MUSIC_FADE_VOLUME		(*gRenderfuncs.S_FadeMusicVolume)
 
 #define GL_GetProcAddress		(*gRenderfuncs.GL_GetProcAddress)
 
-#define MOD_HANDLE			(*gRenderfuncs.pfnGetModel)
+//#define MOD_HANDLE			(*gRenderfuncs.pfnGetModel)
+inline model_t *MOD_HANDLE(int modelindex)
+{
+	return reinterpret_cast<model_t*>((*gRenderfuncs.pfnGetModel)(modelindex));
+}
 
-#define R_LightVec( p0, p1 )		(*gRenderfuncs.LightVec)( p0, p1, NULL )
+//#define R_LightVec( p0, p1 )		(*gRenderfuncs.LightVec)( p0, p1, NULL )
 
 // built-in memory manager
 #define Mem_Alloc( x )		(*gRenderfuncs.pfnMemAlloc)( x, __FILE__, __LINE__ )
 #define Mem_Free( x )		(*gRenderfuncs.pfnMemFree)( x, __FILE__, __LINE__ )
+#define _Mem_Alloc			(*gRenderfuncs.pfnMemAlloc)
+#define _Mem_Free			(*gRenderfuncs.pfnMemFree)
 
 #define ASSERT( exp )		if(!( exp )) HOST_ERROR( "assert failed at %s:%i\n", __FILE__, __LINE__ )
 
 #define IMAGE_EXISTS( path )		( FILE_EXISTS( va( "%s.tga", path )) || FILE_EXISTS( va( "%s.dds", path )))
-	
+
+#define LOAD_FILE( x, y )	(*gEngfuncs.COM_LoadFile)( x, 5, y )
+#define FREE_FILE		(*gEngfuncs.COM_FreeFile)
+#define SAVE_FILE		(*gRenderfuncs.pfnSaveFile)
+
 inline bool FILE_EXISTS( const char *filename )
 {
 	int iCompare;

@@ -20,11 +20,11 @@
 
 #include "hud.h"
 #include "utils.h"
-#include "r_local.h"
+#include "gl_local.h"
 #include <mathlib.h>
 #include "usercmd.h"
 #include "entity_state.h"
-#include "r_particle.h"
+//#include "r_particle.h"
 #include "cdll_exp.h"
 
 int developer_level;
@@ -32,6 +32,13 @@ int g_iXashEngineBuildNumber;
 cl_enginefunc_t gEngfuncs;
 render_api_t gRenderfuncs;
 CHud gHUD;
+
+// from tri.cpp
+extern "C"
+{
+	void DLLEXPORT HUD_DrawNormalTriangles(void);
+	void DLLEXPORT HUD_DrawTransparentTriangles(void);
+};
 
 /*
 ==========================
@@ -121,8 +128,10 @@ int Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion )
 	// get developer level
 	developer_level = (int)CVAR_GET_FLOAT( "developer" );
 
-	if( !CVAR_GET_POINTER( "host_clientloaded" ))
+	if (!CVAR_GET_POINTER("host_clientloaded")) {
+		// TODO maybe should warn that only Xash3D supported?
 		return 0;	// Not a Xash3D engine
+	}
 
 	g_iXashEngineBuildNumber = (int)CVAR_GET_FLOAT( "build" ); // 0 for old builds or GoldSrc
 	if( g_iXashEngineBuildNumber <= 0 )
@@ -162,26 +171,11 @@ void HUD_Init( void )
 {
 	InitInput();
 	gHUD.Init();
-
-	if( g_fRenderInitialized )
-		R_Init();
-
-	// particles allowed in anyway
-	g_pParticleSystems = new CParticleSystemManager();
 }
 
 void HUD_Shutdown( void )
 {
 	ShutdownInput();
-
-	if( g_fRenderInitialized )
-		R_Shutdown();
-
-	if( g_pParticleSystems )
-	{
-		delete g_pParticleSystems;
-		g_pParticleSystems = NULL;
-	}
 }
 
 /*
@@ -309,11 +303,6 @@ void HUD_DirectorMessage( int iSize, void *pbuf )
 
 void Demo_ReadBuffer( int size, unsigned char *buffer )
 {
-}
-
-cl_entity_t *HUD_GetUserEntity( int index )
-{
-	return NULL;
 }
 
 cldll_func_t cldll_func = 

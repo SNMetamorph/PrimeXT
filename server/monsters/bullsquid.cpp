@@ -147,7 +147,7 @@ void CSquidSpit :: Touch ( CBaseEntity *pOther )
 
 		// make a splat on the wall
 		UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + GetAbsVelocity() * 10, dont_ignore_monsters, ENT( pev ), &tr );
-		UTIL_DecalTrace(&tr, DECAL_SPIT1 + RANDOM_LONG(0,1));
+		UTIL_DecalTrace(&tr, "{spit1");
 
 		// make some flecks
 		MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, tr.vecEndPos );

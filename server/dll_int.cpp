@@ -42,13 +42,16 @@ BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 #define GIVEFNPTRSTODLL_CALLDECL
 #endif
 
-extern "C" void DLLEXPORT GIVEFNPTRSTODLL_CALLDECL GiveFnptrsToDll( enginefuncs_t* pengfuncsFromEngine, globalvars_t *pGlobals )
+extern "C" 
 {
-	memcpy( &g_engfuncs, pengfuncsFromEngine, sizeof( enginefuncs_t ));
-	g_iXashEngineBuildNumber = (int)CVAR_GET_FLOAT( "build" ); // 0 for old builds or GoldSrc
-	if( g_iXashEngineBuildNumber <= 0 )
-		g_iXashEngineBuildNumber = (int)CVAR_GET_FLOAT( "buildnum" );
-	gpGlobals = pGlobals;
+	void DLLEXPORT GiveFnptrsToDll(enginefuncs_t *pengfuncsFromEngine, globalvars_t *pGlobals)
+	{
+		memcpy(&g_engfuncs, pengfuncsFromEngine, sizeof(enginefuncs_t));
+		g_iXashEngineBuildNumber = (int)CVAR_GET_FLOAT("build"); // 0 for old builds or GoldSrc
+		if (g_iXashEngineBuildNumber <= 0)
+			g_iXashEngineBuildNumber = (int)CVAR_GET_FLOAT("buildnum");
+		gpGlobals = pGlobals;
+	}
 }
 
 static DLL_FUNCTIONS gFunctionTable = 

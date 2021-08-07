@@ -418,6 +418,7 @@ public:
 extern int gmsgHudText;
 extern int gmsgParticle;
 extern int gmsgStudioDecal;
+extern int gmsgCustomDecal;
 extern int gmsgMusicFade;
 extern int gmsgSetupBones;
 extern BOOL gInitHUD;

@@ -15,7 +15,7 @@
 
 #include "hud.h"
 #include "utils.h"
-#include "r_local.h"
+#include "gl_local.h"
 #include "pm_movevars.h"
 #include "xash3d_features.h"
 
@@ -164,4 +164,9 @@ void READ_BYTES( byte *out, int count )
 	{
 		out[i] = READ_BYTE();
 	}
+}
+
+bool REMAIN_BYTES(void)
+{
+	return giRead < giSize;
 }

@@ -51,10 +51,10 @@
 #define FDECAL_PERMANENT		0x01	// This decal should not be removed in favor of any new decals
 #define FDECAL_USE_LANDMARK		0x02	// This is a decal applied on a bmodel without origin-brush so we done in absoulute pos
 #define FDECAL_CUSTOM		0x04	// This is a custom clan logo and should not be saved/restored
-// reserved
-// reserved
+#define FDECAL_PUDDLE		0x08	// Decal is a puddle (use special shader)
+#define FDECAL_NORANDOM		0x10	// Decal came from save\restore, so we don't use random select
 #define FDECAL_DONTSAVE		0x20	// Decal was loaded from adjacent level, don't save it for this level
 #define FDECAL_STUDIO		0x40	// Indicates a studio decal
-#define FDECAL_LOCAL_SPACE		0x80	// decal is in local space (any decal after serialization)
+#define FDECAL_LOCAL_SPACE		0x80	// Decal is in local space (any decal after serialization)
 
 #endif

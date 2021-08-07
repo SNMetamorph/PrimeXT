@@ -295,27 +295,40 @@ float Q_atof( const char *str )
 	return val * sign;
 }
 
-Vector Q_atov( const char *str )
+static void Q_atovn(const char *str, float *result, size_t size)
 {
 	char	buffer[256];
-	char	*pstr, *pfront;
-	Vector	vec = g_vecZero;
+	char *pstr, *pfront;
 
-	Q_strncpy( buffer, str, sizeof( buffer ));
+	Q_strncpy(buffer, str, sizeof(buffer));
+	memset(result, 0, sizeof(float) * size);
 	pstr = pfront = buffer;
 
-	for( int i = 0; i < 3; i++ )
+	for (size_t j = 0; j < size; j++)
 	{
-		vec[i] = Q_atof( pfront );
+		result[j] = Q_atof(pfront);
 
 		// valid separator is space
-		while( *pstr && *pstr != ' ' )
+		while (*pstr && *pstr != ' ')
 			pstr++;
 
-		if( !*pstr ) break;
+		if (!*pstr) break;
 		pstr++;
 		pfront = pstr;
 	}
+}
+
+vec3_t Q_atov(const char *str)
+{
+	vec3_t vec = g_vecZero;
+	Q_atovn(str, &vec.x, 3);
+	return vec;
+}
+
+vec2_t Q_atov2(const char *str)
+{
+	vec2_t vec = g_vecZero;
+	Q_atovn(str, &vec.x, 2);
 	return vec;
 }
 

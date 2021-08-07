@@ -143,22 +143,59 @@ void SV_ClipPMoveToEntity( physent_t *pe, const float *start, float *mins, float
 	else tr->ent = -1;
 }
 
-int SV_RestoreDecal( decallist_t *entry, edict_t *pEdict, qboolean adjacent )
+int SV_RestoreDecal(decallist_t *entry, edict_t *pEdict, qboolean adjacent)
 {
 	int	flags = entry->flags;
-	int	entityIndex = ENTINDEX( pEdict );
+	int	entityIndex = ENTINDEX(pEdict);
 	int	cacheID = 0, modelIndex = 0;
+	Vector	scale = g_vecZero;
 
-	if( flags & FDECAL_STUDIO )
+	if (flags & FDECAL_STUDIO)
 	{
-		if( FBitSet( pEdict->v.iuser1, CF_STATIC_ENTITY ))
-			cacheID = pEdict->v.iuser3;
-		UTIL_RestoreStudioDecal( entry->position, entry->impactPlaneNormal, entityIndex,
-		pEdict->v.modelindex, entry->name, flags, &entry->studio_state, cacheID );
-		return TRUE;
-          }
+		if (FBitSet(pEdict->v.iuser1, CF_STATIC_ENTITY))
+		{
+			cacheID = pEdict->v.colormap;
+			scale = pEdict->v.startpos;
+		}
 
-	return FALSE; // let the engine restore bsp decals
+		UTIL_RestoreStudioDecal(entry->position, entry->impactPlaneNormal, entityIndex,
+			pEdict->v.modelindex, entry->name, flags, &entry->studio_state, cacheID, scale);
+		return TRUE;
+	}
+
+	if (adjacent && entry->entityIndex != 0 && (!pEdict || pEdict->free))
+	{
+		TraceResult tr;
+
+		ALERT(at_error, "couldn't restore entity index %i\n", entry->entityIndex);
+
+		Vector testspot = entry->position + entry->impactPlaneNormal * 5.0f;
+		Vector testend = entry->position + entry->impactPlaneNormal * -5.0f;
+
+		UTIL_TraceLine(testspot, testend, ignore_monsters, NULL, &tr);
+
+		// NOTE: this code may does wrong result on moving brushes e.g. func_tracktrain
+		if (tr.flFraction != 1.0f && !tr.fAllSolid)
+		{
+			// check impact plane normal
+			float	dot = DotProduct(entry->impactPlaneNormal, tr.vecPlaneNormal);
+
+			if (dot >= 0.95f)
+			{
+				entityIndex = ENTINDEX(tr.pHit);
+				if (entityIndex > 0) modelIndex = tr.pHit->v.modelindex;
+				UTIL_RestoreCustomDecal(tr.vecEndPos, entry->impactPlaneNormal, entityIndex, modelIndex, entry->name, flags, entry->scale);
+			}
+		}
+	}
+	else
+	{
+		// global entity is exist on new level so we can apply decal in local space
+		// NOTE: this case also used for transition world decals
+		UTIL_RestoreCustomDecal(entry->position, entry->impactPlaneNormal, entityIndex, pEdict->v.modelindex, entry->name, flags, entry->scale);
+	}
+
+	return TRUE;
 }
 
 // handle player touching ents

@@ -580,18 +580,18 @@ void CBaseMonster::CallGibMonster( void )
 		UTIL_Remove(this);
 }
 
-int CBaseMonster::DamageDecal( int bitsDamageType )
+const char *CBaseMonster::DamageDecal( int bitsDamageType )
 {
 	if( bitsDamageType & ( DMG_BULLET|DMG_CLUB ))
 	{
 		if( BloodColor() == BLOOD_COLOR_RED )
-			return (DECAL_BLOOD1 + RANDOM_LONG( 0, 5 ));
+			return "{blood1";
 		else if( BloodColor() == BLOOD_COLOR_YELLOW )
-			return (DECAL_YBLOOD1 + RANDOM_LONG( 0, 5 ));
+			return "{yblood1";
 	}
 
 	// Assume no blood is vehicles or furniture
-	return DECAL_GUNSHOT1 + RANDOM_LONG( 0, DECAL_GUNSHOT5 );
+	return "{shot1";
 }
 
 /*
@@ -1548,7 +1548,7 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 				// only decal glass
 				if ( !FNullEnt(tr.pHit) && VARS(tr.pHit)->rendermode != 0)
 				{
-					UTIL_DecalTrace( &tr, DECAL_GLASSBREAK1 + RANDOM_LONG(0,2) );
+					UTIL_DecalTrace( &tr, "{break1" );
 				}
 
 				break;

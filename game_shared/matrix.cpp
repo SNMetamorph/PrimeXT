@@ -976,6 +976,21 @@ void matrix4x4 :: CreateOrtho( float xLeft, float xRight, float yBottom, float y
 	mat[3][2] = -(zFar + zNear) / (zFar - zNear);
 }
 
+void matrix4x4::CreateOrthoRH(float xLeft, float xRight, float yBottom, float yTop, float zNear, float zFar)
+{
+	mat[0][0] = 2.0f / (xRight - xLeft);
+	mat[1][1] = 2.0f / (yTop - yBottom);
+	mat[2][2] = 1.0f / (zNear - zFar);
+	mat[3][3] = 1.0f;
+	mat[0][1] = mat[1][0] = mat[2][0] = mat[2][1] = mat[0][3] = mat[1][3] = mat[2][3] = 0.0f;
+
+	mat[0][2] = 0.0f;
+	mat[1][2] = 0.0f;
+	mat[3][0] = (xLeft + xRight) / (xLeft - xRight);
+	mat[3][1] = (yTop + yBottom) / (yBottom - yTop);
+	mat[3][2] = zNear / (zNear - zFar);
+}
+
 void matrix4x4::CreateModelview( void )
 {
 	mat[0][0] = mat[1][1] = mat[2][2] = 0.0f;
@@ -1097,6 +1112,54 @@ void matrix4x4::CreateScale( float x, float y, float z )
 	mat[0][3] = 0.0f;
 	mat[1][3] = 0.0f;
 	mat[2][3] = 0.0f;
+	mat[3][3] = 1.0f;
+}
+
+void matrix4x4::Crop(const Vector &mins, const Vector &maxs)
+{
+	float scaleX = 2.0f / (maxs.x - mins.x);
+	float scaleY = 2.0f / (maxs.y - mins.y);
+
+	float offsetX = -0.5f * (maxs.x + mins.x) * scaleX;
+	float offsetY = -0.5f * (maxs.y + mins.y) * scaleY;
+
+	float scaleZ = 1.0f / (maxs.z - mins.z);
+	float offsetZ = -mins.z * scaleZ;
+
+	mat[0][1] = mat[0][2] = mat[0][3] = 0.0f;
+	mat[1][0] = mat[1][2] = mat[1][3] = 0.0f;
+	mat[2][0] = mat[2][1] = mat[2][3] = 0.0f;
+	mat[3][3] = 1.0f;
+
+	mat[0][0] = scaleX;
+	mat[1][1] = scaleY;
+	mat[2][2] = scaleZ;
+
+	mat[3][0] = offsetX;
+	mat[3][1] = offsetY;
+	mat[3][2] = offsetZ;
+}
+
+void matrix4x4::LookAt(const Vector &eye, const Vector &dir, const Vector &up)
+{
+	Vector sideN = CrossProduct(dir, up).Normalize();
+	Vector upN = CrossProduct(sideN, dir).Normalize();
+	Vector dirN = dir.Normalize();
+
+	mat[0][0] = sideN[0];
+	mat[1][0] = sideN[1];
+	mat[2][0] = sideN[2];
+	mat[3][0] = -DotProduct(sideN, eye);
+	mat[0][1] = upN[0];
+	mat[1][1] = upN[1];
+	mat[2][1] = upN[2];
+	mat[3][1] = -DotProduct(upN, eye);
+	mat[0][2] = -dirN[0];
+	mat[1][2] = -dirN[1];
+	mat[2][2] = -dirN[2];
+	mat[3][2] = DotProduct(dirN, eye);
+
+	mat[0][3] = mat[1][3] = mat[2][3] = 0.0f;
 	mat[3][3] = 1.0f;
 }
 

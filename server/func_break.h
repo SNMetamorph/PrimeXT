@@ -51,7 +51,7 @@ public:
 	BOOL IsBreakable( void );
 	BOOL SparkWhenHit( void );
 
-	int DamageDecal( int bitsDamageType );
+	const char *DamageDecal( int bitsDamageType );
 
 	void Die( void );
 	virtual int ObjectCaps( void ) { return (CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION); }

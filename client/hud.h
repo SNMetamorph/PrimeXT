@@ -538,6 +538,7 @@ public:
 	int m_iRes;
 	cvar_t *m_pCvarDraw;
 	cvar_t *default_fov;
+	int	m_iViewModelIndex;
 	int m_iCameraMode;
 	int m_iFontHeight;
 	int DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, int b );

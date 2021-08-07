@@ -70,7 +70,7 @@ public:
 		WorldPhysic->UpdateEntityAABB( this );
 	}
 
-	int DamageDecal( int bitsDamageType );
+	const char *DamageDecal( int bitsDamageType );
 
 	int	m_idShard;
 	int	m_iszGibModel;
@@ -428,13 +428,13 @@ void CPhysEntity :: DamageSound( void )
 		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, rgpsz[RANDOM_LONG(0,i-1)], fvol, ATTN_NORM, 0, pitch);
 }
 
-int CPhysEntity :: DamageDecal( int bitsDamageType )
+const char* CPhysEntity :: DamageDecal( int bitsDamageType )
 {
-	if ( m_Material == matGlass  )
-		return DECAL_GLASSBREAK1 + RANDOM_LONG(0,2);
+	if (m_Material == matGlass)
+		return "{break1";
 
 	if ( m_Material == matUnbreakableGlass )
-		return DECAL_BPROOF1;
+		return "{bproof1";
 
 	return CBaseEntity::DamageDecal( bitsDamageType );
 }

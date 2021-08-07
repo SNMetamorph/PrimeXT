@@ -143,6 +143,38 @@ void VectorAngles( const Vector &srcforward, Vector &angles )
 
 /*
 =================
+VectorAngles2
+
+this version without stupid quake bug
+=================
+*/
+void VectorAngles2(const Vector &forward, Vector &angles)
+{
+	angles[ROLL] = 0.0f;
+
+	if (forward.x || forward.y)
+	{
+		float tmp;
+
+		angles[YAW] = RAD2DEG(atan2(forward.y, forward.x));
+		if (angles[YAW] < 0.0f) angles[YAW] += 360.0f;
+
+		tmp = sqrt(forward.x * forward.x + forward.y * forward.y);
+		angles[PITCH] = RAD2DEG(atan2(-forward.z, tmp));
+		if (angles[PITCH] < 0.0f) angles[PITCH] += 360.0f;
+	}
+	else
+	{
+		// fast case
+		angles[YAW] = 0.0f;
+		if (forward.z > 0.0f)
+			angles[PITCH] = 270.0f;
+		else angles[PITCH] = 90.0f;
+	}
+}
+
+/*
+=================
 NearestPOW
 =================
 */
@@ -158,6 +190,16 @@ int NearestPOW( int value, bool roundDown )
 		if( n > value ) n >>= 1;
 	}
 	return n;
+}
+
+void SetPlane(mplane_t *plane, const Vector &vecNormal, float flDist, int type)
+{
+	if (type == -1)
+		plane->type = PlaneTypeForNormal(vecNormal);
+	else plane->type = type;
+	plane->signbits = SignbitsForPlane(vecNormal);
+	plane->normal = vecNormal;
+	plane->dist = flDist;
 }
 
 //-----------------------------------------------------------------------------
@@ -222,6 +264,96 @@ void TransformAABBLocal( const matrix4x4& world, const Vector &mins, const Vecto
 	}
 }
 
+float CalcSqrDistanceToAABB(const Vector &mins, const Vector &maxs, const Vector &point)
+{
+	float flDelta;
+	float flDistSqr = 0.0f;
+
+	if (point.x < mins.x)
+	{
+		flDelta = (mins.x - point.x);
+		flDistSqr += flDelta * flDelta;
+	}
+	else if (point.x > maxs.x)
+	{
+		flDelta = (point.x - maxs.x);
+		flDistSqr += flDelta * flDelta;
+	}
+
+	if (point.y < mins.y)
+	{
+		flDelta = (mins.y - point.y);
+		flDistSqr += flDelta * flDelta;
+	}
+	else if (point.y > maxs.y)
+	{
+		flDelta = (point.y - maxs.y);
+		flDistSqr += flDelta * flDelta;
+	}
+
+	if (point.z < mins.z)
+	{
+		flDelta = (mins.z - point.z);
+		flDistSqr += flDelta * flDelta;
+	}
+	else if (point.z > maxs.z)
+	{
+		flDelta = (point.z - maxs.z);
+		flDistSqr += flDelta * flDelta;
+	}
+
+	return flDistSqr;
+}
+
+void RotatePointAroundVector(Vector &dst, const Vector &dir, const Vector &point, float degrees)
+{
+	float	t0, t1;
+	float	angle, c, s;
+	Vector	vr, vu, vf = dir;
+
+	angle = DEG2RAD(degrees);
+	SinCos(angle, &s, &c);
+	VectorMatrix(vf, vr, vu);
+
+	t0 = vr.x * c + vu.x * -s;
+	t1 = vr.x * s + vu.x * c;
+	dst.x = (t0 * vr.x + t1 * vu.x + vf.x * vf.x) * point.x
+		+ (t0 * vr.y + t1 * vu.y + vf.x * vf.y) * point.y
+		+ (t0 * vr.z + t1 * vu.z + vf.x * vf.z) * point.z;
+
+	t0 = vr.y * c + vu.y * -s;
+	t1 = vr.y * s + vu.y * c;
+	dst.y = (t0 * vr.x + t1 * vu.x + vf.y * vf.x) * point.x
+		+ (t0 * vr.y + t1 * vu.y + vf.y * vf.y) * point.y
+		+ (t0 * vr.z + t1 * vu.z + vf.y * vf.z) * point.z;
+
+	t0 = vr.z * c + vu.z * -s;
+	t1 = vr.z * s + vu.z * c;
+	dst.z = (t0 * vr.x + t1 * vu.x + vf.z * vf.x) * point.x
+		+ (t0 * vr.y + t1 * vu.y + vf.z * vf.y) * point.y
+		+ (t0 * vr.z + t1 * vu.z + vf.z * vf.z) * point.z;
+}
+
+// returns true if the sphere and cone intersect
+// NOTE: cone sine/cosine are the half angle of the cone
+bool IsSphereIntersectingCone(const Vector &sphereCenter, float sphereRadius, const Vector &coneOrigin, const Vector &coneNormal, float coneSine, float coneCosine)
+{
+	Vector backCenter = coneOrigin - (sphereRadius / coneSine) * coneNormal;
+	Vector delta = sphereCenter - backCenter;
+	float deltaLen = delta.Length();
+
+	if (DotProduct(coneNormal, delta) >= deltaLen * coneCosine)
+	{
+		delta = sphereCenter - coneOrigin;
+		deltaLen = delta.Length();
+		if (-DotProduct(coneNormal, delta) >= deltaLen * coneSine)
+			return (deltaLen <= sphereRadius) ? true : false;
+		return true;
+	}
+
+	return false;
+}
+
 void CalcClosestPointOnAABB( const Vector &mins, const Vector &maxs, const Vector &point, Vector &closestOut )
 {
 	closestOut.x = bound( mins.x, point.x, maxs.x );
@@ -259,6 +391,13 @@ void ClearBounds( Vector2D &mins, Vector2D &maxs )
 bool BoundsIsCleared( const Vector &mins, const Vector &maxs )
 {
 	if( mins.x <= maxs.x || mins.y <= maxs.y || mins.z <= maxs.z )
+		return false;
+	return true;
+}
+
+bool BoundsIsNull(const Vector &mins, const Vector &maxs)
+{
+	if (mins.x != maxs.x || mins.y != maxs.y || mins.z != maxs.z)
 		return false;
 	return true;
 }
@@ -1220,6 +1359,20 @@ Vector VectorYawRotate( const Vector &in, float flYaw )
 	return out;
 }
 
+bool VectorIsOnAxis(const Vector &v)
+{
+	int	count = 0;
+
+	for (int i = 0; i < 3; i++)
+	{
+		if (fabs(v[i]) < 0.0000001f)
+			count++;
+	}
+
+	// the zero vector will be on axis.
+	return (count > 1) ? true : false;
+}
+
 // solve a x^2 + b x + c = 0
 bool SolveQuadratic( float a, float b, float c, float &root1, float &root2 )
 {
@@ -1273,6 +1426,56 @@ bool SolveInverseQuadratic( float x1, float y1, float x2, float y2, float x3, fl
 	return true;
 }
 
+void CalcTBN(const Vector &p0, const Vector &p1, const Vector &p2, const Vector2D &t0, const Vector2D &t1, const Vector2D &t2, Vector &s, Vector &t, bool areaweight)
+{
+	// Compute the partial derivatives of X, Y, and Z with respect to S and T.
+	s.Init(0.0f, 0.0f, 0.0f);
+	t.Init(0.0f, 0.0f, 0.0f);
+
+	// x, s, t
+	Vector edge01(p1.x - p0.x, t1.x - t0.x, t1.y - t0.y);
+	Vector edge02(p2.x - p0.x, t2.x - t0.x, t2.y - t0.y);
+
+	Vector cross = CrossProduct(edge01, edge02);
+
+	if (fabs(cross.x) > SMALL_FLOAT)
+	{
+		s.x += -cross.y / cross.x;
+		t.x += -cross.z / cross.x;
+	}
+
+	// y, s, t
+	edge01.Init(p1.y - p0.y, t1.x - t0.x, t1.y - t0.y);
+	edge02.Init(p2.y - p0.y, t2.x - t0.x, t2.y - t0.y);
+
+	cross = CrossProduct(edge01, edge02);
+
+	if (fabs(cross.x) > SMALL_FLOAT)
+	{
+		s.y += -cross.y / cross.x;
+		t.y += -cross.z / cross.x;
+	}
+
+	// z, s, t
+	edge01.Init(p1.z - p0.z, t1.x - t0.x, t1.y - t0.y);
+	edge02.Init(p2.z - p0.z, t2.x - t0.x, t2.y - t0.y);
+
+	cross = CrossProduct(edge01, edge02);
+
+	if (fabs(cross.x) > SMALL_FLOAT)
+	{
+		s.z += -cross.y / cross.x;
+		t.z += -cross.z / cross.x;
+	}
+
+	if (!areaweight)
+	{
+		// Normalize s and t
+		s = s.Normalize();
+		t = t.Normalize();
+	}
+}
+
 float ColorNormalize( const Vector &in, Vector &out )
 {
 	float	max, scale;
@@ -1290,6 +1493,26 @@ float ColorNormalize( const Vector &in, Vector &out )
 	out = in * scale;
 
 	return max;
+}
+
+/*
+====================
+ColorToNormal
+
+pack XYZ into single float
+====================
+*/
+float NormalToFloat(const Vector &normal)
+{
+	int	inormal[3];
+	Vector	n = normal.Normalize();
+
+	inormal[0] = n.x * 127 + 128;
+	inormal[1] = n.y * 127 + 128;
+	inormal[2] = n.z * 127 + 128;
+
+	int pack = (inormal[0] << 16) | (inormal[1] << 8) | inormal[2];
+	return (float)((double)pack / (double)(1 << 24));
 }
 
 unsigned short FloatToHalf( float v )
@@ -1337,4 +1560,60 @@ float HalfToFloat( unsigned short h )
 	}
 
 	return *((float *)&f);
+}
+
+signed char FloatToChar(float v)
+{
+	float in = v * 127.0f;
+	float out = bound(-128.0f, in, 127.0f);
+	return (char)out;
+}
+
+/*
+====================
+V_CalcFov
+====================
+*/
+float V_CalcFov(float &fov_x, float width, float height)
+{
+	float x, half_fov_y;
+
+	if (fov_x < 1 || fov_x > 170)
+		fov_x = 90;
+
+	x = width / tan(DEG2RAD(fov_x) * 0.5f);
+	half_fov_y = atan(height / x);
+
+	return RAD2DEG(half_fov_y) * 2;
+}
+
+/*
+====================
+V_AdjustFov
+====================
+*/
+void V_AdjustFov(float &fov_x, float &fov_y, float width, float height, bool lock_x)
+{
+	float x, y;
+
+	if ((width * 3) == (4 * height) || (width * 4) == (height * 5))
+	{
+		// 4:3 or 5:4 ratio
+		return;
+	}
+
+	if (lock_x)
+	{
+		fov_y = 2 * atan((width * 3) / (height * 4) * tan(fov_y * M_PI / 360.0 * 0.5)) * 360 / M_PI;
+		return;
+	}
+
+	y = V_CalcFov(fov_x, 640, 480);
+	x = fov_x;
+
+	fov_x = V_CalcFov(y, height, width);
+
+	if (fov_x < x)
+		fov_x = x;
+	else fov_y = y;
 }

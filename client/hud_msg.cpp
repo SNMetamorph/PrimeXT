@@ -18,9 +18,10 @@
 #include "hud.h"
 #include "utils.h"
 #include "parsemsg.h"
-#include "r_local.h"
+#include "gl_local.h"
 #include "r_weather.h"
 #include "r_efx.h"
+#include "gl_studio.h"
 
 // CHud message handlers
 DECLARE_HUDMESSAGE( Logo );
@@ -357,22 +358,20 @@ int CHud :: MsgFunc_KillDecals( const char *pszName, int iSize, void *pbuf )
 
 int CHud :: MsgFunc_StudioDecal( const char *pszName, int iSize, void *pbuf )
 {
-	Vector vecEnd, vecSrc;
+	Vector vecEnd, vecNormal, vecScale = g_vecZero;
+	char name[80];
 
-	if( !g_fRenderInitialized )
-		return 1;
-
-	BEGIN_READ( pszName, pbuf, iSize );
+	BEGIN_READ(pszName, pbuf, iSize);
 
 	vecEnd.x = READ_COORD();
 	vecEnd.y = READ_COORD();
 	vecEnd.z = READ_COORD();
-	vecSrc.x = READ_COORD();
-	vecSrc.y = READ_COORD();
-	vecSrc.z = READ_COORD();
-	int decalIndex = READ_SHORT();
+	vecNormal.x = READ_COORD() * 0.001f;
+	vecNormal.y = READ_COORD() * 0.001f;
+	vecNormal.z = READ_COORD() * 0.001f;
 	int entityIndex = READ_SHORT();
 	int modelIndex = READ_SHORT();
+	Q_strncpy(name, READ_STRING(), sizeof(name));
 	int flags = READ_BYTE();
 
 	modelstate_t state;
@@ -388,62 +387,52 @@ int CHud :: MsgFunc_StudioDecal( const char *pszName, int iSize, void *pbuf )
 	state.skin = READ_BYTE();
 	int cacheID = READ_SHORT();
 
-	cl_entity_t *ent = GET_ENTITY( entityIndex );
+	if (REMAIN_BYTES())
+	{
+		vecScale.x = READ_COORD() * 0.001f;
+		vecScale.y = READ_COORD() * 0.001f;
+		vecScale.z = READ_COORD() * 0.001f;
+	}
 
-	if( !ent )
+	cl_entity_t *ent = GET_ENTITY(entityIndex);
+
+	if (!ent)
 	{
 		// something very bad happens...
-		ALERT( at_error, "StudioDecal: ent == NULL\n" );
-		END_READ();
-
+		ALERT(at_error, "StudioDecal: ent == NULL\n");
 		return 1;
 	}
 
-	entity_state_t savestate = ent->curstate;
-	Vector origin = ent->origin;
-	Vector angles = ent->angles;
+	g_StudioRenderer.PushEntityState(ent);
+	g_StudioRenderer.ModelStateToEntity(ent, &state);
 
-	int decalTexture = gEngfuncs.pEfxAPI->Draw_DecalIndex( decalIndex );
-	if( !ent->model && modelIndex != 0 )
-		ent->model = IEngineStudio.GetModelByIndex( modelIndex );
+	// restore model in case decalmessage was delivered early than delta-update
+	if (!ent->model && modelIndex != 0)
+		ent->model = IEngineStudio.GetModelByIndex(modelIndex);
 
-	// setup model pose for decal shooting
-	ent->curstate.sequence = state.sequence;
-	ent->curstate.frame = (float)state.frame * (1.0f / 8.0f);
-	ent->curstate.blending[0] = state.blending[0];
-	ent->curstate.blending[1] = state.blending[1];
-	ent->curstate.controller[0] = state.controller[0];
-	ent->curstate.controller[1] = state.controller[1];
-	ent->curstate.controller[2] = state.controller[2];
-	ent->curstate.controller[3] = state.controller[3];
-	ent->curstate.body = state.body;
-	ent->curstate.skin = state.skin;
-
-	if( cacheID )
+	if (cacheID)
 	{
 		// tell the code about vertex lighting
-		SetBits( ent->curstate.iuser1, CF_STATIC_ENTITY );
-		ent->curstate.iuser3 = cacheID;
+		SetBits(ent->curstate.iuser1, CF_STATIC_ENTITY);
+		ent->curstate.colormap = cacheID;
 	}
 
-//	double start = Sys_DoubleTime();
+	if (!RENDER_GET_PARM(PARM_CLIENT_ACTIVE, 0) && FBitSet(ent->curstate.iuser1, CF_STATIC_ENTITY))
+		ent->curstate.startpos = vecScale; // restore scale here
 
-	R_StudioDecalShoot( decalTexture, ent, vecSrc, vecEnd, flags, &state );
+	if (!ent->model || ent->model->type != mod_studio)
+		return 1;
 
-//	ALERT( at_console, "ShootDecal: buildtime %g\n", Sys_DoubleTime() - start );
-
-	// restore original state
-	ent->curstate = savestate;
-	ent->origin = origin;
-	ent->angles = angles;
-
-	END_READ();
+	g_StudioRenderer.StudioDecalShoot(vecNormal, vecEnd, name, ent, flags, &state);
+	g_StudioRenderer.PopEntityState(ent);
 
 	return 1;
 }
 
 int CHud :: MsgFunc_SetupBones( const char *pszName, int iSize, void *pbuf )
 {
+	ALERT(at_error, "MsgFunc_SetupBones: rope feature not implemented at the moment, it'll be fixed in future\n");
+	/*
 	static Vector pos[MAXSTUDIOBONES];
 	static Radian ang[MAXSTUDIOBONES];
 
@@ -473,6 +462,7 @@ int CHud :: MsgFunc_SetupBones( const char *pszName, int iSize, void *pbuf )
 
 	R_StudioSetBonesExternal( ent, pos, ang );
 
+	*/
 	return 1;
 }
 

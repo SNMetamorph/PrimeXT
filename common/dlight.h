@@ -15,6 +15,7 @@
 
 #ifndef DLIGHT_H
 #define DLIGHT_H
+#include "color24.h"
 
 typedef struct dlight_s
 {

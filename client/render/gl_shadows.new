@@ -1,0 +1,1272 @@
+/*
+gl_shadows.cpp - render shadowmaps for directional lights
+Copyright (C) 2012 Uncle Mike
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+*/
+
+#include "hud.h"
+#include "cl_util.h"
+#include "const.h"
+#include "gl_local.h"
+#include <mathlib.h>
+#include <stringlib.h>
+#include "gl_studio.h"
+#include "gl_sprite.h"
+#include "gl_world.h"
+#include "gl_grass.h"
+#include "pm_defs.h"
+
+static Vector light_sides[] =
+{
+Vector(  0.0f,   0.0f,  90.0f ),	// GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB 
+Vector(  0.0f, 180.0f, -90.0f ),	// GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB 
+Vector(  0.0f,  90.0f,   0.0f ),	// GL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB
+Vector(  0.0f, 270.0f, 180.0f ),	// GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB 
+Vector(-90.0f, 180.0f, -90.0f ),	// GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB
+Vector( 90.0f,   0.0f,  90.0f ),	// GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB
+};
+
+/*
+=============================================================
+
+	SHADOW RENDERING
+
+=============================================================
+*/
+int R_AllocateShadowTexture( bool copyToImage = true )
+{
+	int i = tr.num_2D_shadows_used;
+
+	if( i >= MAX_SHADOWS )
+	{
+		ALERT( at_error, "R_AllocateShadowTexture: shadow textures limit exceeded!\n" );
+		return 0; // disable
+	}
+
+	int texture = tr.shadowTextures[i];
+	tr.num_2D_shadows_used++;
+
+	if( !tr.shadowTextures[i] )
+	{
+		char txName[16];
+
+		Q_snprintf( txName, sizeof( txName ), "*shadow2D%i", i );
+
+		tr.shadowTextures[i] = CREATE_TEXTURE( txName, RI->view.port[2], RI->view.port[3], NULL, TF_SHADOW ); 
+		texture = tr.shadowTextures[i];
+	}
+
+	if( copyToImage )
+	{
+		GL_BindTexture( GL_TEXTURE0, texture );
+		pglCopyTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, RI->view.port[0], RI->view.port[1], RI->view.port[2], RI->view.port[3], 0 );
+	}
+
+	return texture;
+}
+
+int R_AllocateShadowCubemap( int side, bool copyToImage = true )
+{
+	int texture = 0;
+
+	if( side != 0 )
+	{
+		int i = (tr.num_CM_shadows_used - 1);
+
+		if( i >= MAX_SHADOWS )
+		{
+			ALERT( at_error, "R_AllocateShadowCubemap: shadow cubemaps limit exceeded!\n" );
+			return 0; // disable
+		}
+
+		texture = tr.shadowCubemaps[i];
+
+		if( !tr.shadowCubemaps[i] )
+		{
+			ALERT( at_error, "R_AllocateShadowCubemap: cubemap not initialized!\n" );
+			return 0; // disable
+		}
+	}
+	else
+	{
+		int i = tr.num_CM_shadows_used;
+
+		if( i >= MAX_SHADOWS )
+		{
+			ALERT( at_error, "R_AllocateShadowCubemap: shadow cubemaps limit exceeded!\n" );
+			return 0; // disable
+		}
+
+		texture = tr.shadowCubemaps[i];
+		tr.num_CM_shadows_used++;
+
+		if( !tr.shadowCubemaps[i] )
+		{
+			char txName[16];
+
+			Q_snprintf( txName, sizeof( txName ), "*shadowCM%i", i );
+
+			tr.shadowCubemaps[i] = CREATE_TEXTURE( txName, RI->view.port[2], RI->view.port[3], NULL, TF_SHADOW_CUBEMAP ); 
+			texture = tr.shadowCubemaps[i];
+		}
+	}
+
+	if( copyToImage )
+	{
+		GL_BindTexture( GL_TEXTURE0, texture );
+		pglCopyTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + side, 0, GL_DEPTH_COMPONENT, RI->view.port[0], RI->view.port[1], RI->view.port[2], RI->view.port[3], 0 );
+	}
+
+	return texture;
+}
+
+static int R_ComputeCropBounds( const matrix4x4 &lightViewProjection, model_t *model, Vector bounds[2] )
+{
+	Vector		worldBounds[2];
+	int		numCasters = 0;
+	msurface_t	*surf, **mark;
+	mextrasurf_t	*esrf;
+	mleaf_t		*leaf;
+	int		i, j;
+
+	if( r_sunshadows->value < 2.0f )
+		model = NULL; // don't add the world
+
+	ClearBounds( bounds[0], bounds[1] );
+
+	if( model != NULL )
+	{
+		RI->currententity = GET_ENTITY( 0 );
+		RI->currentmodel = RI->currententity->model;
+		R_GrassPrepareFrame();
+	}
+
+	// orthogonal frustum for selected slice
+	// NOTE: combined PVS is already set
+	RI->view.frustum.InitProjectionFromMatrix( lightViewProjection );
+	memset( RI->view.visfaces, 0x00, (model->numsurfaces + 7) >> 3 );
+
+	if( model != NULL )
+	{
+		// always skip the leaf 0, because is outside leaf
+		// tehnically it's equal of job R_MarkLeaves
+		for( i = 1, leaf = &model->leafs[1]; i < model->numleafs + 1; i++, leaf++ )
+		{
+			mextraleaf_t *eleaf = LEAF_INFO( leaf, model );	// named like personal vaporisers manufacturer he-he
+
+			if( CHECKVISBIT( RI->view.pvsarray, leaf->cluster ) && ( leaf->efrags || leaf->nummarksurfaces ))
+			{
+				if( RI->view.frustum.CullBox( eleaf->mins, eleaf->maxs ))
+					continue;
+
+				// deal with model fragments in this leaf
+				if( leaf->efrags )
+					STORE_EFRAGS( &leaf->efrags, tr.realframecount );
+				r_stats.c_world_leafs++;
+
+				if( leaf->nummarksurfaces )
+				{
+					for( j = 0, mark = leaf->firstmarksurface; j < leaf->nummarksurfaces; j++, mark++ )
+						SETVISBIT( RI->view.visfaces, *mark - model->surfaces );
+				}
+			}
+		}
+	}
+
+	// brush faces not added here!
+	// only marks as visible in RI->view.visfaces array
+	for( i = 0; i < tr.num_draw_entities; i++ )
+	{
+		RI->currententity = tr.draw_entities[i];
+		RI->currentmodel = RI->currententity->model;
+
+		switch( RI->currentmodel->type )
+		{
+		case mod_brush:
+			R_MarkSubmodelVisibleFaces();
+			break;
+		case mod_studio:
+			R_AddStudioToDrawList( RI->currententity );
+			break;
+		}
+	}
+
+	// create drawlist for faces, do additional culling for world faces
+	for( i = 0; model != NULL && i < world->numsortedfaces; i++ )
+	{
+		ASSERT( world->sortedfaces != NULL );
+
+		j = world->sortedfaces[i];
+
+		ASSERT( j >= 0 && j < model->numsurfaces );
+
+		if( CHECKVISBIT( RI->view.visfaces, j ))
+		{
+			surf = model->surfaces + j;
+			esrf = surf->info;
+
+			// submodel faces already passed through this
+			// operation but world is not
+			if( FBitSet( surf->flags, SURF_OF_SUBMODEL ))
+			{
+				RI->currententity = esrf->parent;
+				RI->currentmodel = RI->currententity->model;
+			}
+			else
+			{
+				RI->currententity = GET_ENTITY( 0 );
+				RI->currentmodel = RI->currententity->model;
+
+				esrf->parent = RI->currententity; // setup dynamic upcast
+
+				bool force = R_AddGrassToChain( NULL, surf, RI->currententity, &RI->view.frustum, 0 );
+
+				if( !force && R_CullSurface( surf, GetVieworg(), &RI->view.frustum ))
+				{
+					CLEARVISBIT( RI->view.visfaces, j ); // not visible
+					continue;
+				}
+			}
+
+			if( R_OpaqueEntity( RI->currententity ))
+				R_AddSurfaceToDrawList( surf, DRAWLIST_SOLID );
+		}
+	}
+
+	for( i = 0; i < RI->frame.num_solid_faces; i++ )
+	{
+		gl_bmodelface_t *entry = &RI->frame.solid_faces[i];
+		mextrasurf_t *es = entry->surface->info;
+		RI->currentmodel = es->parent->model;
+		RI->currententity = es->parent;
+		msurface_t *s = entry->surface;
+
+		bool worldpos = ( RI->currententity->origin == g_vecZero && RI->currententity->angles == g_vecZero ) ? true : false;
+		if( !worldpos ) continue; // world polys only
+
+		if( es->grass && r_grass->value )
+		{
+			// already included surface minmax
+			worldBounds[0] = es->grass->mins;
+			worldBounds[1] = es->grass->maxs;
+		}
+		else
+		{
+			worldBounds[0] = es->mins;
+			worldBounds[1] = es->maxs;
+		}
+
+//		if( RI->view.frustum.CullBox( worldBounds[0], worldBounds[1] ))
+//			continue;
+
+		for( int j = 0; j < 8; j++ )
+		{
+			Vector4D point;
+			point.x = worldBounds[(j >> 0) & 1].x;
+			point.y = worldBounds[(j >> 1) & 1].y;
+			point.z = worldBounds[(j >> 2) & 1].z;
+			point.w = 1.0f;
+
+			Vector4D transf = lightViewProjection.VectorTransform( point );
+
+			transf.x /= transf.w;
+			transf.y /= transf.w;
+			transf.z /= transf.w;
+
+			AddPointToBounds( transf, bounds[0], bounds[1] );
+		}
+		numCasters++;
+	}
+
+	// FIXME: nearplane culled studiomodels incorrectly. disabled for now
+//	RI->view.frustum.DisablePlane( FRUSTUM_NEAR );
+
+	// add studio models too
+	for( i = 0; i < RI->frame.num_solid_meshes; i++ )
+	{
+		if( !R_StudioGetBounds( &RI->frame.solid_meshes[i], worldBounds ))
+			continue;
+
+//		if( RI->view.frustum.CullBox( worldBounds[0], worldBounds[1] ))
+//			continue;
+
+		for( int j = 0; j < 8; j++ )
+		{
+			Vector4D point;
+			point.x = worldBounds[(j >> 0) & 1].x;
+			point.y = worldBounds[(j >> 1) & 1].y;
+			point.z = worldBounds[(j >> 2) & 1].z;
+			point.w = 1.0f;
+
+			Vector4D transf = lightViewProjection.VectorTransform( point );
+			transf.x /= transf.w;
+			transf.y /= transf.w;
+			transf.z /= transf.w;
+
+			AddPointToBounds( transf, bounds[0], bounds[1] );
+		}
+		numCasters++;
+	}
+
+	return numCasters;
+}
+
+/*
+===============
+R_SetupLightDirectional
+===============
+*/
+void R_SetupLightDirectional( DynamicLight *pl, int split )
+{
+	matrix4x4	projectionMatrix, cropMatrix, s1;
+	Vector	splitFrustumCorners[8];
+	Vector	splitFrustumBounds[2];
+	Vector	splitFrustumClipBounds[2];
+	Vector	casterBounds[2];
+	Vector	cropBounds[2];
+	int	i;
+
+	RI->view.splitFrustum[split].ComputeFrustumCorners( splitFrustumCorners );
+
+	ClearBounds( splitFrustumBounds[0], splitFrustumBounds[1] );
+
+	for( i = 0; i < 8; i++ )
+		AddPointToBounds( splitFrustumCorners[i], splitFrustumBounds[0], splitFrustumBounds[1] );
+
+	// find the bounding box of the current split in the light's view space
+	ClearBounds( cropBounds[0], cropBounds[1] );
+
+	for( i = 0; i < 8; i++ )
+	{
+		Vector4D	point( splitFrustumCorners[i] );
+		Vector4D	transf = pl->viewMatrix.VectorTransform( point );
+
+		transf.x /= transf.w;
+		transf.y /= transf.w;
+		transf.z /= transf.w;
+
+		AddPointToBounds( transf, cropBounds[0], cropBounds[1] );
+	}
+
+	projectionMatrix.CreateOrthoRH( cropBounds[0].x, cropBounds[1].x, cropBounds[0].y, cropBounds[1].y, -cropBounds[1].z, -cropBounds[0].z );
+
+	matrix4x4 viewProjectionMatrix = projectionMatrix.Concat( pl->viewMatrix );
+
+	int numCasters = R_ComputeCropBounds( viewProjectionMatrix, NULL, casterBounds );
+
+	// find the bounding box of the current split in the light's clip space
+	ClearBounds( splitFrustumClipBounds[0], splitFrustumClipBounds[1] );
+
+	for( i = 0; i < 8; i++ )
+	{
+		Vector4D	point( splitFrustumCorners[i] );
+		Vector4D	transf = viewProjectionMatrix.VectorTransform( point );
+
+		transf.x /= transf.w;
+		transf.y /= transf.w;
+		transf.z /= transf.w;
+
+		AddPointToBounds( transf, splitFrustumClipBounds[0], splitFrustumClipBounds[1] );
+	}
+
+	// scene-dependent bounding volume
+	cropBounds[0].x = Q_max( casterBounds[0].x, splitFrustumClipBounds[0].x );
+	cropBounds[0].y = Q_max( casterBounds[0].y, splitFrustumClipBounds[0].y );
+	cropBounds[0].z = Q_min( casterBounds[0].z, splitFrustumClipBounds[0].z );
+	cropBounds[1].x = Q_min( casterBounds[1].x, splitFrustumClipBounds[1].x );
+	cropBounds[1].y = Q_min( casterBounds[1].y, splitFrustumClipBounds[1].y );
+	cropBounds[1].z = Q_max( casterBounds[1].z, splitFrustumClipBounds[1].z );
+
+	if( numCasters == 0 )
+	{
+		cropBounds[0] = splitFrustumClipBounds[0];
+		cropBounds[1] = splitFrustumClipBounds[1];
+	}
+
+	cropMatrix.Crop( cropBounds[0], cropBounds[1] );
+	pl->projectionMatrix = cropMatrix.Concat( projectionMatrix );
+
+	s1.CreateTranslate( 0.5f, 0.5f, 0.5f );
+	s1.ConcatScale( 0.5f, 0.5f, 0.5f );
+
+	viewProjectionMatrix = pl->projectionMatrix.Concat( pl->modelviewMatrix );
+
+	// NOTE: texture matrix is not used. Save it for pssm show split debug tool
+	pl->textureMatrix[split] = pl->projectionMatrix; 
+
+	// build shadow matrices for each split
+	pl->shadowMatrix[split] = s1.Concat( viewProjectionMatrix );
+	
+	RI->view.frustum.InitProjectionFromMatrix( viewProjectionMatrix );
+}
+
+/*
+===============
+R_ShadowPassSetupFrame
+===============
+*/
+static void R_ShadowPassSetupFrame( DynamicLight *pl, int split = 0 )
+{
+	matrix3x3	viewRot;
+
+	if( !FBitSet( RI->params, RP_OLDVIEWLEAF ))
+	{
+		r_oldviewleaf = r_viewleaf;
+		r_oldviewleaf2 = r_viewleaf2;
+		r_viewleaf = Mod_PointInLeaf( pl->viewMatrix.GetOrigin(), worldmodel->nodes );		// light pvs
+		r_viewleaf2 = Mod_PointInLeaf( RI->view.origin, worldmodel->nodes );		// client pvs
+	}
+
+	RI->view.farClip = pl->radius;
+	RI->view.origin = pl->origin;
+
+	R_GrassPrepareFrame();
+
+	// setup the screen FOV
+	RI->view.fov_x = pl->fov;
+	RI->view.fov_y = pl->fov;
+
+	tr.framecount++;
+
+	// setup frustum
+	if( pl->type == LIGHT_DIRECTIONAL )
+	{
+		pl->splitFrustum[split] = RI->view.splitFrustum[split];
+		RI->view.matrix = pl->viewMatrix;
+	}
+	else if( pl->type == LIGHT_OMNI )
+	{
+		RI->view.angles = light_sides[split];
+		RI->view.matrix = matrix4x4( RI->view.origin, RI->view.angles );
+		RI->view.frustum.InitProjection( RI->view.matrix, 0.1f, pl->radius, 90.0f, 90.0f );
+	}
+	else
+	{
+		RI->view.matrix = pl->viewMatrix;
+		RI->view.frustum = pl->frustum;
+	}
+
+	if( pl->type == LIGHT_OMNI )
+	{
+		RI->view.worldMatrix.CreateModelview();
+		RI->view.worldMatrix.ConcatRotate( -light_sides[split].z, 1, 0, 0 );
+		RI->view.worldMatrix.ConcatRotate( -light_sides[split].x, 0, 1, 0 );
+		RI->view.worldMatrix.ConcatRotate( -light_sides[split].y, 0, 0, 1 );
+		RI->view.worldMatrix.ConcatTranslate( -pl->origin.x, -pl->origin.y, -pl->origin.z );
+		RI->view.projectionMatrix = pl->projectionMatrix;
+	}
+	else
+	{
+		// matrices already computed
+		RI->view.worldMatrix = pl->modelviewMatrix;
+		RI->view.projectionMatrix = pl->projectionMatrix;
+	}
+
+	RI->currentlight = pl;
+}
+
+/*
+=============
+R_ShadowPassSetupGL
+=============
+*/
+static void R_ShadowPassSetupGL( const DynamicLight *pl )
+{
+	RI->view.worldProjectionMatrix = RI->view.projectionMatrix.Concat( RI->view.worldMatrix );
+	RI->view.worldMatrix.CopyToArray( RI->glstate.modelviewMatrix );
+
+	RI->view.worldProjectionMatrix.CopyToArray( RI->glstate.modelviewProjectionMatrix );
+	pglViewport( RI->view.port[0], RI->view.port[1], RI->view.port[2], RI->view.port[3] );
+
+	pglMatrixMode( GL_PROJECTION );
+	GL_LoadMatrix( RI->view.projectionMatrix );
+
+	pglMatrixMode( GL_MODELVIEW );
+	GL_LoadMatrix( RI->view.worldMatrix );
+
+	GL_Cull( GL_FRONT );
+	
+	GL_DepthRange( 0.0001f, 1.0f ); // ignore paranoia opengl32.dll
+	pglEnable( GL_POLYGON_OFFSET_FILL );
+	GL_DepthMask( GL_TRUE );
+	pglPolygonOffset( 1.0f, 2.0f );
+	pglEnable( GL_DEPTH_TEST );
+	GL_AlphaTest( GL_FALSE );
+	GL_Blend( GL_FALSE );
+
+	pglClear( GL_DEPTH_BUFFER_BIT );
+}
+
+/*
+=============
+R_ShadowPassEndGL
+=============
+*/
+static void R_ShadowPassEndGL( void )
+{
+	pglDisable( GL_POLYGON_OFFSET_FILL );
+	pglPolygonOffset( -1, -2 );
+	GL_DepthRange( gldepthmin, gldepthmax );
+	r_stats.c_shadow_passes++;
+	GL_Cull( GL_FRONT );
+}
+
+/*
+================
+R_RecursiveShadowNode
+================
+*/
+void R_RecursiveShadowNode( mnode_t *node, CFrustum *frustum, unsigned int clipflags )
+{
+	msurface_t	*surf, **mark;
+	mleaf_t		*pleaf;
+	int		c, side;
+	float		dot;
+
+	if( node->contents == CONTENTS_SOLID )
+		return; // hit a solid leaf
+
+	if( node->visframe != tr.visframecount )
+		return;
+
+	if( clipflags )
+	{
+		for( int i = 0; i < 6; i++ )
+		{
+			const mplane_t *p = frustum->GetPlane( i );
+
+			if( !FBitSet( clipflags, BIT( i )))
+				continue;
+
+			int clipped = BoxOnPlaneSide( node->minmaxs, node->minmaxs + 3, p );
+			if( clipped == 2 ) return;
+			if( clipped == 1 ) ClearBits( clipflags, BIT( i ));
+		}
+	}
+
+	// if a leaf node, draw stuff
+	if( node->contents < 0 )
+	{
+		pleaf = (mleaf_t *)node;
+
+		mark = pleaf->firstmarksurface;
+		c = pleaf->nummarksurfaces;
+
+		if( c )
+		{
+			do
+			{
+				(*mark)->visframe = tr.framecount;
+				mark++;
+			} while( --c );
+		}
+
+		// deal with model fragments in this leaf
+		if( pleaf->efrags )
+			STORE_EFRAGS( &pleaf->efrags, tr.realframecount );
+		return;
+	}
+
+	// node is just a decision point, so go down the apropriate sides
+
+	// find which side of the node we are on
+	dot = PlaneDiff( tr.modelorg, node->plane );
+	side = (dot >= 0) ? 0 : 1;
+
+	// recurse down the children, front side first
+	R_RecursiveShadowNode( node->children[side], frustum, clipflags );
+
+	// draw stuff
+	for( c = node->numsurfaces, surf = worldmodel->surfaces + node->firstsurface; c; c--, surf++ )
+	{
+		if( RI->currentlight->type != LIGHT_DIRECTIONAL || r_sunshadows->value > 2.0f )
+			R_AddGrassToChain( NULL, surf, RI->currententity, frustum, clipflags );
+
+		if( R_CullSurface( surf, tr.modelorg, frustum, clipflags ))
+			continue;
+
+		R_AddSurfaceToDrawList( surf, true, true );
+	}
+
+	// recurse down the back side
+	R_RecursiveShadowNode( node->children[!side], frustum, clipflags );
+}
+
+/*
+=============
+R_ShadowPassDrawWorld
+=============
+*/
+static void R_ShadowPassDrawWorld( DynamicLight *pl )
+{
+	int	i;
+
+	// restore worldmodel
+	RI->currententity = GET_ENTITY( 0 );
+	RI->currentmodel = RI->currententity->model;
+	tr.num_light_surfaces = 0;
+	tr.num_light_meshes = 0;
+	tr.modelorg = GetVieworg();
+
+	R_LoadIdentity();
+
+	// register worldviewProjectionMatrix at zero entry (~80% hits)
+	RI->currententity->hCachedMatrix = GL_CacheState( g_vecZero, g_vecZero );
+
+	if( pl->type != LIGHT_DIRECTIONAL || r_sunshadows->value > 1.0f )
+		R_RecursiveShadowNode( worldmodel->nodes, &RI->view.frustum, RI->view.frustum.GetClipFlags( ));
+
+	// add all studio models
+	for( i = 0; i < tr.num_draw_entities; i++ )
+	{
+		RI->currententity = tr.draw_entities[i];
+		RI->currentmodel = RI->currententity->model;
+
+		switch( RI->currentmodel->type )
+		{
+		case mod_studio:
+			R_AddStudioToDrawList( RI->currententity );
+			break;
+		case mod_brush:
+			if( pl->type != LIGHT_DIRECTIONAL || r_sunshadows->value > 1.0f )
+				R_AddBmodelToDrawList( RI->currententity, R_OpaqueEntity( RI->currententity ));
+			break;
+		}
+	}
+}
+
+void R_ShadowPassDrawSolidEntities( void )
+{
+	// draw solid entities only.
+	glState.drawTrans = false;
+
+	R_RenderShadowBrushList();
+
+	R_RenderShadowStudioList();
+
+	// g-cont. probably always empty
+	R_RenderShadowSpriteList();
+
+	// may be solid cables
+	R_DrawParticles( false );
+}
+
+/*
+===============
+R_SetupViewCache
+
+simply version of setup view cache
+especially for parallel shadow pass
+===============
+*/
+static void R_SetupViewCacheForParallelLightShadow( const int viewport[4], DynamicLight *pl, int split = 0 )
+{
+	model_t	*model = worldmodel;
+
+	RI->view.changed = 0; // always clearing changes at start of frame
+
+	if( !model && FBitSet( RI->params, RP_DRAW_WORLD ))
+		HOST_ERROR( "R_SetupViewCacheShadow: NULL worldmodel\n" );
+
+	memcpy( RI->view.port, viewport, sizeof( RI->view.port ));
+	memcpy( RI->glstate.viewport, RI->view.port, sizeof( RI->glstate.viewport ));
+
+	RI->view.pvspoint = pl->viewMatrix.GetOrigin();
+	RI->view.origin = pl->origin;
+	glState.drawTrans = false;
+	RI->currentlight = pl;
+
+	RI->view.leaf = Mod_PointInLeaf( RI->view.pvspoint, model->nodes );
+
+	// merge PVS with previous pass
+	ENGINE_SET_PVS( RI->view.pvspoint, REFPVS_RADIUS, RI->view.pvsarray, true, false );
+
+	RI->view.farClip = pl->radius;
+	RI->view.fov_x = pl->fov;
+	RI->view.fov_y = pl->fov;
+
+	if( RI->view.fov_x <= 0.0f || RI->view.fov_y <= 0.0f )
+		HOST_ERROR( "R_SetupViewCacheForParallelLightShadow: bad fov!\n" );
+
+	if( IS_NAN( RI->view.fov_x ) || IS_NAN( RI->view.fov_y ))
+		HOST_ERROR( "R_SetupViewCacheForParallelLightShadow: NAN fov!\n" );
+
+	RI->view.frustum = RI->view.splitFrustum[split];
+	RI->view.worldMatrix = pl->modelviewMatrix;
+	RI->view.matrix = pl->viewMatrix;
+
+	matrix4x4	projectionMatrix, cropMatrix, s1;
+	Vector	splitFrustumCorners[8];
+	Vector	splitFrustumBounds[2];
+	Vector	splitFrustumClipBounds[2];
+	Vector	casterBounds[2];
+	Vector	cropMins, cropMaxs;
+	int	i;
+
+	s1.CreateTexture();
+
+	RI->view.splitFrustum[split].ComputeFrustumCorners( splitFrustumCorners );
+	ClearBounds( splitFrustumBounds[0], splitFrustumBounds[1] );
+
+	for( i = 0; i < 8; i++ )
+		AddPointToBounds( splitFrustumCorners[i], splitFrustumBounds[0], splitFrustumBounds[1] );
+
+	// find the bounding box of the current split in the light's view space
+	ClearBounds( cropMins, cropMaxs );
+
+	for( i = 0; i < 8; i++ )
+	{
+		Vector4D	point( splitFrustumCorners[i] );
+		Vector4D	transf = pl->viewMatrix.VectorTransform( point );
+
+		transf.x /= transf.w;
+		transf.y /= transf.w;
+		transf.z /= transf.w;
+
+		AddPointToBounds( transf, cropMins, cropMaxs );
+	}
+
+	projectionMatrix.CreateOrthoRH( cropMins.x, cropMaxs.x, cropMins.y, cropMaxs.y, -cropMaxs.z, -cropMins.z );
+
+	matrix4x4 viewProjectionMatrix = projectionMatrix.Concat( pl->viewMatrix );
+
+	int numCasters = R_ComputeCropBounds( viewProjectionMatrix, model, casterBounds );
+
+	// find the bounding box of the current split in the light's clip space
+	ClearBounds( splitFrustumClipBounds[0], splitFrustumClipBounds[1] );
+
+	for( i = 0; i < 8; i++ )
+	{
+		Vector4D	point( splitFrustumCorners[i] );
+		Vector4D	transf = viewProjectionMatrix.VectorTransform( point );
+
+		transf.x /= transf.w;
+		transf.y /= transf.w;
+		transf.z /= transf.w;
+
+		AddPointToBounds( transf, splitFrustumClipBounds[0], splitFrustumClipBounds[1] );
+	}
+
+	// scene-dependent bounding volume
+	cropMins.x = Q_max( casterBounds[0].x, splitFrustumClipBounds[0].x );
+	cropMins.y = Q_max( casterBounds[0].y, splitFrustumClipBounds[0].y );
+	cropMins.z = Q_min( casterBounds[0].z, splitFrustumClipBounds[0].z );
+	cropMaxs.x = Q_min( casterBounds[1].x, splitFrustumClipBounds[1].x );
+	cropMaxs.y = Q_min( casterBounds[1].y, splitFrustumClipBounds[1].y );
+	cropMaxs.z = Q_max( casterBounds[1].z, splitFrustumClipBounds[1].z );
+
+	if( numCasters == 0 )
+	{
+		cropMins = splitFrustumClipBounds[0];
+		cropMaxs = splitFrustumClipBounds[1];
+	}
+
+	cropMatrix.Crop( cropMins, cropMaxs );
+	pl->projectionMatrix = cropMatrix.Concat( projectionMatrix );
+	viewProjectionMatrix = pl->projectionMatrix.Concat( pl->modelviewMatrix );
+
+	// NOTE: texture matrix is not used. Save it for pssm show split debug tool
+	pl->textureMatrix[split] = projectionMatrix; 
+
+	// build shadow matrices for each split
+	pl->shadowMatrix[split] = s1.Concat( viewProjectionMatrix );
+	
+	RI->view.frustum.InitProjectionFromMatrix( viewProjectionMatrix );
+	RI->view.projectionMatrix = pl->projectionMatrix;
+}
+
+/*
+===============
+R_SetupViewCache
+
+simply version of setup view cache
+especially for shadow pass
+===============
+*/
+static void R_SetupViewCacheShadow( const int viewport[4], DynamicLight *pl, int split = 0 )
+{
+	model_t	*model = worldmodel;
+
+	RI->view.changed = 0; // always clearing changes at start of frame
+
+	if( !model && FBitSet( RI->params, RP_DRAW_WORLD ))
+		HOST_ERROR( "R_SetupViewCacheShadow: NULL worldmodel\n" );
+
+	memcpy( RI->view.port, viewport, sizeof( RI->view.port ));
+	memcpy( RI->glstate.viewport, RI->view.port, sizeof( RI->glstate.viewport ));
+
+	RI->view.pvspoint = pl->viewMatrix.GetOrigin();
+	RI->view.origin = pl->origin;
+	glState.drawTrans = false;
+	RI->currentlight = pl;
+
+	RI->view.leaf = Mod_PointInLeaf( RI->view.pvspoint, model->nodes );
+
+	ENGINE_SET_PVS( RI->view.pvspoint, REFPVS_RADIUS, RI->view.pvsarray, true, false );
+
+	RI->view.farClip = pl->radius;
+	RI->view.fov_x = pl->fov ? pl->fov : 90.0f;
+	RI->view.fov_y = pl->fov ? pl->fov : 90.0f;
+
+	if( RI->view.fov_x <= 0.0f || RI->view.fov_y <= 0.0f )
+		HOST_ERROR( "R_SetupViewCacheShadow: bad fov!\n" );
+
+	if( IS_NAN( RI->view.fov_x ) || IS_NAN( RI->view.fov_y ))
+		HOST_ERROR( "R_SetupViewCacheShadow: NAN fov!\n" );
+
+	// setup frustum
+	switch( pl->type )
+	{
+	case LIGHT_DIRECTIONAL:
+		RI->view.frustum = RI->view.splitFrustum[split];
+		RI->view.worldMatrix = pl->modelviewMatrix;
+		RI->view.matrix = pl->viewMatrix;
+		break;
+	case LIGHT_OMNI:
+		RI->view.angles = light_sides[split];
+		RI->view.matrix = matrix4x4( RI->view.origin, RI->view.angles );
+		RI->view.frustum.InitProjection( RI->view.matrix, Z_NEAR_LIGHT, pl->radius, pl->fov, pl->fov );
+		RI->view.worldMatrix.CreateModelview();
+		RI->view.worldMatrix.ConcatRotate( -light_sides[split].z, 1, 0, 0 );
+		RI->view.worldMatrix.ConcatRotate( -light_sides[split].x, 0, 1, 0 );
+		RI->view.worldMatrix.ConcatRotate( -light_sides[split].y, 0, 0, 1 );
+		RI->view.worldMatrix.ConcatTranslate( -pl->origin.x, -pl->origin.y, -pl->origin.z );
+		break;
+	case LIGHT_PROJECTION:
+		RI->view.worldMatrix = pl->modelviewMatrix;
+		RI->view.matrix = pl->viewMatrix;
+		RI->view.frustum = pl->frustum;
+		break;
+	default:
+		HOST_ERROR( "R_SetupViewCacheShadow: invalid light type\n" );
+		break;
+	}
+
+	CFrustum		*frustum = &RI->view.frustum;
+	float		maxdist = 0.0f;
+	msurface_t	*surf, **mark;
+	mextrasurf_t	*esrf;
+	mleaf_t		*leaf;
+	int		i, j;
+
+	if( model != NULL )
+	{
+		memset( RI->view.visfaces, 0x00, (model->numsurfaces + 7) >> 3 );
+		ClearBounds( RI->view.visMins, RI->view.visMaxs );
+
+		// always skip the leaf 0, because is outside leaf
+		for( i = 1, leaf = &model->leafs[1]; i < model->numleafs + 1; i++, leaf++ )
+		{
+			mextraleaf_t *eleaf = LEAF_INFO( leaf, model );	// named like personal vaporisers manufacturer he-he
+
+			if( CHECKVISBIT( RI->view.pvsarray, leaf->cluster ) && ( leaf->efrags || leaf->nummarksurfaces ))
+			{
+				if( RI->view.frustum.CullBox( eleaf->mins, eleaf->maxs ))
+					continue;
+
+				// deal with model fragments in this leaf
+				if( leaf->efrags )
+					STORE_EFRAGS( &leaf->efrags, tr.realframecount );
+
+				if( leaf->contents == CONTENTS_EMPTY )
+				{
+					// unrolled for speedup reasons
+					RI->view.visMins[0] = Q_min( RI->view.visMins[0], eleaf->mins[0] );
+					RI->view.visMaxs[0] = Q_max( RI->view.visMaxs[0], eleaf->maxs[0] );
+					RI->view.visMins[1] = Q_min( RI->view.visMins[1], eleaf->mins[1] );
+					RI->view.visMaxs[1] = Q_max( RI->view.visMaxs[1], eleaf->maxs[1] );
+					RI->view.visMins[2] = Q_min( RI->view.visMins[2], eleaf->mins[2] );
+					RI->view.visMaxs[2] = Q_max( RI->view.visMaxs[2], eleaf->maxs[2] );
+				}
+
+				r_stats.c_world_leafs++;
+
+				if( leaf->nummarksurfaces )
+				{
+					for( j = 0, mark = leaf->firstmarksurface; j < leaf->nummarksurfaces; j++, mark++ )
+						SETVISBIT( RI->view.visfaces, *mark - model->surfaces );
+				}
+			}
+		}
+
+		// now we have actual vismins\vismaxs and can calc farplane distance
+		for( i = 0; i < 8; i++ )
+		{
+			Vector	v, dir;
+			float	dist;
+
+			v[0] = ( i & 1 ) ? RI->view.visMins[0] : RI->view.visMaxs[0];
+			v[1] = ( i & 2 ) ? RI->view.visMins[1] : RI->view.visMaxs[1];
+			v[2] = ( i & 4 ) ? RI->view.visMins[2] : RI->view.visMaxs[2];
+
+			dir = v - RI->view.origin;
+			dist = DotProduct( dir, dir );
+			maxdist = Q_max( dist, maxdist );
+		}
+
+		RI->view.farClip = sqrt( maxdist ) + 64.0f; // add some bias
+
+		if( pl->type == LIGHT_DIRECTIONAL )
+		{
+			matrix4x4	projectionMatrix, cropMatrix, s1;
+			Vector	splitFrustumCorners[8];
+			Vector	splitFrustumBounds[2];
+			Vector	splitFrustumClipBounds[2];
+			Vector	casterBounds[2];
+			Vector	cropMins, cropMaxs;
+
+			s1.CreateTexture();
+
+			RI->view.splitFrustum[split].ComputeFrustumCorners( splitFrustumCorners );
+
+			ClearBounds( splitFrustumBounds[0], splitFrustumBounds[1] );
+
+			for( i = 0; i < 8; i++ )
+				AddPointToBounds( splitFrustumCorners[i], splitFrustumBounds[0], splitFrustumBounds[1] );
+
+			// find the bounding box of the current split in the light's view space
+			ClearBounds( cropMins, cropMaxs );
+
+			for( i = 0; i < 8; i++ )
+			{
+				Vector4D	point( splitFrustumCorners[i] );
+				Vector4D	transf = pl->viewMatrix.VectorTransform( point );
+
+				transf.x /= transf.w;
+				transf.y /= transf.w;
+				transf.z /= transf.w;
+
+				AddPointToBounds( transf, cropMins, cropMaxs );
+			}
+
+			projectionMatrix.CreateOrthoRH( cropMins.x, cropMaxs.x, cropMins.y, cropMaxs.y, -cropMaxs.z, -cropMins.z );
+
+			matrix4x4 viewProjectionMatrix = projectionMatrix.Concat( pl->viewMatrix );
+
+			int numCasters = R_ComputeCropBounds( viewProjectionMatrix, NULL, casterBounds );
+
+			// find the bounding box of the current split in the light's clip space
+			ClearBounds( splitFrustumClipBounds[0], splitFrustumClipBounds[1] );
+
+			for( i = 0; i < 8; i++ )
+			{
+				Vector4D	point( splitFrustumCorners[i] );
+				Vector4D	transf = viewProjectionMatrix.VectorTransform( point );
+
+				transf.x /= transf.w;
+				transf.y /= transf.w;
+				transf.z /= transf.w;
+
+				AddPointToBounds( transf, splitFrustumClipBounds[0], splitFrustumClipBounds[1] );
+			}
+
+			// scene-dependent bounding volume
+			cropMins.x = Q_max( casterBounds[0].x, splitFrustumClipBounds[0].x );
+			cropMins.y = Q_max( casterBounds[0].y, splitFrustumClipBounds[0].y );
+			cropMins.z = Q_min( casterBounds[0].z, splitFrustumClipBounds[0].z );
+			cropMaxs.x = Q_min( casterBounds[1].x, splitFrustumClipBounds[1].x );
+			cropMaxs.y = Q_min( casterBounds[1].y, splitFrustumClipBounds[1].y );
+			cropMaxs.z = Q_max( casterBounds[1].z, splitFrustumClipBounds[1].z );
+
+			if( numCasters == 0 )
+			{
+				cropMins = splitFrustumClipBounds[0];
+				cropMaxs = splitFrustumClipBounds[1];
+			}
+
+			cropMatrix.Crop( cropMins, cropMaxs );
+			pl->projectionMatrix = cropMatrix.Concat( projectionMatrix );
+			viewProjectionMatrix = pl->projectionMatrix.Concat( pl->modelviewMatrix );
+
+			// NOTE: texture matrix is not used. Save it for pssm show split debug tool
+			pl->textureMatrix[split] = projectionMatrix; 
+
+			// build shadow matrices for each split
+			pl->shadowMatrix[split] = s1.Concat( viewProjectionMatrix );
+	
+			RI->view.frustum.InitProjectionFromMatrix( viewProjectionMatrix );
+			RI->view.projectionMatrix = pl->projectionMatrix;
+		}
+		else
+		{
+			// farclip was changed so we need to recompute frustum and projection again
+			RI->view.frustum.InitProjection( RI->view.matrix, 0.0f, RI->view.farClip, RI->view.fov_x, RI->view.fov_y );
+			RI->view.projectionMatrix.CreateProjection( RI->view.fov_x, RI->view.fov_y, Z_NEAR, RI->view.farClip );
+		}
+
+		RI->frame.num_solid_faces = 0;
+		RI->frame.num_trans_faces = 0;
+		RI->frame.num_mpass_faces = 0;
+		RI->frame.num_solid_meshes = 0;
+		RI->frame.num_trans_meshes = 0;
+		RI->frame.num_solid_sprites = 0;
+		RI->frame.num_trans_sprites = 0;
+
+		if( model != NULL )
+		{
+			RI->currententity = GET_ENTITY( 0 );
+			RI->currentmodel = RI->currententity->model;
+			R_GrassPrepareFrame();
+		}
+
+		// brush faces not added here!
+		// only marks as visible in RI->view.visfaces array
+		for( i = 0; i < tr.num_draw_entities; i++ )
+		{
+			RI->currententity = tr.draw_entities[i];
+			RI->currentmodel = RI->currententity->model;
+
+			switch( RI->currentmodel->type )
+			{
+			case mod_brush:
+				R_MarkSubmodelVisibleFaces();
+				break;
+			case mod_studio:
+				R_AddStudioToDrawList( RI->currententity );
+				break;
+			}
+		}
+
+		// create drawlist for faces, do additional culling for world faces
+		for( i = 0; model != NULL && i < world->numsortedfaces; i++ )
+		{
+			ASSERT( world->sortedfaces != NULL );
+
+			j = world->sortedfaces[i];
+
+			ASSERT( j >= 0 && j < model->numsurfaces );
+
+			if( CHECKVISBIT( RI->view.visfaces, j ))
+			{
+				surf = model->surfaces + j;
+				esrf = surf->info;
+
+				// submodel faces already passed through this
+				// operation but world is not
+				if( FBitSet( surf->flags, SURF_OF_SUBMODEL ))
+				{
+					RI->currententity = esrf->parent;
+					RI->currentmodel = RI->currententity->model;
+				}
+				else
+				{
+					RI->currententity = GET_ENTITY( 0 );
+					RI->currentmodel = RI->currententity->model;
+
+					esrf->parent = RI->currententity; // setup dynamic upcast
+
+					bool force = R_AddGrassToChain( NULL, surf, RI->currententity, &RI->view.frustum, 0 );
+
+					if( !force && R_CullSurface( surf, GetVieworg(), frustum ))
+					{
+						CLEARVISBIT( RI->view.visfaces, j ); // not visible
+						continue;
+					}
+
+					// surface has passed all visibility checks
+					// and can be update some data (lightmaps, mirror matrix, etc)
+					R_UpdateSurfaceParams( surf );
+                                        }
+
+				if( R_OpaqueEntity( RI->currententity ))
+					R_AddSurfaceToDrawList( surf, DRAWLIST_SOLID );
+			}
+		}
+	}
+}
+
+/*
+================
+R_RenderShadowScene
+
+fast version of R_RenderScene: no colors, no texcords etc
+================
+*/
+void R_RenderShadowScene( DynamicLight *pl, int split = 0 )
+{
+	int	viewport[4];
+
+	RI->params = RP_SHADOWVIEW|RP_MERGEVISIBILITY|RP_DRAW_WORLD;
+	viewport[0] = viewport[1] = 0;
+	bool using_fbo = false;
+
+	if( pl->type == LIGHT_DIRECTIONAL )
+	{
+		if( tr.sunShadowFBO[split].Active( ))
+		{
+			pl->shadowTexture[split] = tr.sunShadowFBO[split].GetTexture();
+			viewport[2] = viewport[3] = sunShadowSize[split];
+			tr.sunShadowFBO[split].Bind();
+			using_fbo = true;
+                    }
+		else viewport[2] = viewport[3] = 512; // simple size if FBO was missed
+	}
+	else
+	{
+		if( tr.fbo_shadow2D.Active( ))
+		{
+			pl->shadowTexture[0] = R_AllocateShadowTexture( false );
+			tr.fbo_shadow2D.Bind( pl->shadowTexture[0] );
+			viewport[2] = tr.fbo_shadow2D.GetWidth();
+			viewport[3] = tr.fbo_shadow2D.GetHeight();
+			using_fbo = true;
+		}
+		else viewport[2] = viewport[3] = 512; // simple size if FBO was missed
+	}
+
+	// set the worldmodel
+	worldmodel = GET_ENTITY( 0 )->model;
+
+	if( !worldmodel )
+	{
+		ALERT( at_error, "R_RenderShadowView: NULL worldmodel\n" );
+		return;
+	}
+
+	if( pl->type == LIGHT_DIRECTIONAL )
+		R_SetupViewCacheForParallelLightShadow( viewport, pl, split );
+	else R_SetupViewCacheShadow( viewport, pl, split );
+	R_ShadowPassSetupGL( pl );
+	R_ShadowPassDrawSolidEntities();
+
+	R_ShadowPassEndGL();
+
+	if( !using_fbo )
+		pl->shadowTexture[split] = R_AllocateShadowTexture();
+}
+
+/*
+================
+R_RenderShadowCubeSide
+
+fast version of R_RenderScene: no colors, no texcords etc
+================
+*/
+void R_RenderShadowCubeSide( DynamicLight *pl, int side )
+{
+	RI->params = RP_SHADOWVIEW|RP_MERGEVISIBILITY|RP_DRAW_WORLD;
+	bool using_fbo = false;
+
+	if( tr.fbo_shadowCM.Active( ))
+	{
+		RI->view.port[2] = tr.fbo_shadowCM.GetWidth();
+		RI->view.port[3] = tr.fbo_shadowCM.GetHeight();
+
+		pl->shadowTexture[0] = R_AllocateShadowCubemap( side, false );
+		tr.fbo_shadowCM.Bind( pl->shadowTexture[0], side );
+		using_fbo = true;
+	}
+	else
+	{
+		// same size if FBO was missed
+		RI->view.port[2] = RI->view.port[3] = 512;
+		using_fbo = false;
+	}
+
+	// set the worldmodel
+	worldmodel = GET_ENTITY( 0 )->model;
+
+	if( !worldmodel )
+	{
+		ALERT( at_error, "R_RenderShadowCubeSide: NULL worldmodel\n" );
+		return;
+	}
+
+	R_ShadowPassSetupFrame( pl, side );
+	R_ShadowPassSetupGL( pl );
+
+	R_MarkLeaves();
+
+	R_ShadowPassDrawWorld( pl );
+
+	R_ShadowPassDrawSolidEntities();
+
+	R_ShadowPassEndGL();
+
+	if( !using_fbo )
+		pl->shadowTexture[0] = R_AllocateShadowCubemap( side );
+}
+
+void R_RenderShadowmaps( void )
+{
+	unsigned int	oldFBO;
+
+	if( R_FullBright() || !CVAR_TO_BOOL( r_shadows ) || tr.fGamePaused )
+		return;
+
+	if( FBitSet( RI->params, ( RP_NOSHADOWS|RP_ENVVIEW|RP_SKYVIEW )))
+		return;
+
+	// check for dynamic lights
+	if( !HasDynamicLights( )) return;
+
+	R_PushRefState(); // make refinst backup
+	oldFBO = glState.frameBuffer;
+
+	for( int i = 0; i < MAX_DLIGHTS; i++ )
+	{
+		DynamicLight *pl = &cl_dlights[i];
+
+		if( pl->die < GET_CLIENT_TIME() || !pl->radius || FBitSet( pl->flags, DLF_NOSHADOWS ))
+			continue;
+
+		RI->currentlight = pl;
+
+		if( pl->type == LIGHT_OMNI )
+		{
+			// need GL_EXT_gpu_shader4 for cubemap shadows
+			if( !GL_Support( R_TEXTURECUBEMAP_EXT ) || !GL_Support( R_EXT_GPU_SHADER4 ))
+				continue;
+
+			if( !Mod_CheckBoxVisible( pl->absmin, pl->absmax ))
+				continue;
+
+			if( R_CullBox( pl->absmin, pl->absmax ))
+				continue;
+
+			for( int j = 0; j < 6; j++ )
+			{
+				R_RenderShadowCubeSide( pl, j );
+				R_ResetRefState(); // restore ref instance
+			}
+                    }
+		else if( pl->type == LIGHT_PROJECTION )
+		{
+			if( !Mod_CheckBoxVisible( pl->absmin, pl->absmax ))
+				continue;
+
+			if( R_CullBox( pl->absmin, pl->absmax ))
+				continue;
+
+			R_RenderShadowScene( pl );
+			R_ResetRefState(); // restore ref instance
+		}
+		else if( pl->type == LIGHT_DIRECTIONAL )
+		{
+			 if( !CVAR_TO_BOOL( r_sunshadows ) || tr.sky_normal.z >= 0.0f )
+				continue;	// shadows are invisible
+
+			for( int j = 0; j <= NUM_SHADOW_SPLITS; j++ )
+			{
+				// PSSM: draw all the splits
+				R_RenderShadowScene( pl, j );
+				R_ResetRefState(); // restore ref instance
+			}
+		}
+	}
+
+	R_PopRefState(); // restore ref instance
+	// restore FBO state
+	GL_BindFBO( oldFBO );
+	GL_BindShader( NULL );
+	RI->currentlight = NULL;
+}

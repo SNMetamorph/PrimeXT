@@ -22,7 +22,7 @@ GNU General Public License for more details.
 #include "parsemsg.h"
 #include "xash3d_features.h"
 #include "r_weather.h"
-#include "r_local.h"
+#include "gl_local.h"
 #include "matrix.h"
 #include <mathlib.h>
 
@@ -179,8 +179,8 @@ void ProcessRain( void )
 			float deathHeight = 0.0f;
 			Vector vecStart, vecEnd;
 
-			vecStart[0] = RANDOM_FLOAT( RI->vieworg.x - Rain.distFromPlayer, RI->vieworg.x + Rain.distFromPlayer );
-			vecStart[1] = RANDOM_FLOAT( RI->vieworg.y - Rain.distFromPlayer, RI->vieworg.y + Rain.distFromPlayer );
+			vecStart[0] = RANDOM_FLOAT( RI->view.origin.x - Rain.distFromPlayer, RI->view.origin.x + Rain.distFromPlayer );
+			vecStart[1] = RANDOM_FLOAT( RI->view.origin.y - Rain.distFromPlayer, RI->view.origin.y + Rain.distFromPlayer );
 			vecStart[2] = Rain.globalHeight;
 
 			float xDelta = Rain.windX + RANDOM_FLOAT( Rain.randX * -1, Rain.randX );
@@ -583,8 +583,8 @@ void DrawRain( void )
 			}
 
 			Vector2D toPlayer; 
-			toPlayer.x = RI->vieworg[0] - Drip->origin[0];
-			toPlayer.y = RI->vieworg[1] - Drip->origin[1];
+			toPlayer.x = RI->view.origin[0] - Drip->origin[0];
+			toPlayer.y = RI->view.origin[1] - Drip->origin[1];
 			toPlayer = toPlayer.Normalize();
 	
 			toPlayer.x *= DRIP_SPRITE_HALFWIDTH;
@@ -673,7 +673,7 @@ void DrawRain( void )
 			m_colorarray[m_iNumVerts][1] = 255;
 			m_colorarray[m_iNumVerts][2] = 255;
 			m_colorarray[m_iNumVerts][3] = alpha;
-			m_vertexarray[m_iNumVerts] = Drip->origin + RI->vright * -SNOW_SPRITE_HALFSIZE + RI->vup * -SNOW_SPRITE_HALFSIZE;
+			m_vertexarray[m_iNumVerts] = Drip->origin + RI->view.matrix.GetRight() * -SNOW_SPRITE_HALFSIZE + RI->view.matrix.GetUp() * -SNOW_SPRITE_HALFSIZE;
 			m_indexarray[m_iNumIndex++] = m_iNumVerts++;
 
 			// set left top corner
@@ -683,7 +683,7 @@ void DrawRain( void )
 			m_colorarray[m_iNumVerts][1] = 255;
 			m_colorarray[m_iNumVerts][2] = 255;
 			m_colorarray[m_iNumVerts][3] = alpha;
-			m_vertexarray[m_iNumVerts] = Drip->origin + RI->vright * -SNOW_SPRITE_HALFSIZE + RI->vup * SNOW_SPRITE_HALFSIZE;
+			m_vertexarray[m_iNumVerts] = Drip->origin + RI->view.matrix.GetRight() * -SNOW_SPRITE_HALFSIZE + RI->view.matrix.GetUp() * SNOW_SPRITE_HALFSIZE;
 			m_indexarray[m_iNumIndex++] = m_iNumVerts++;
 
 			// set right top corner
@@ -693,7 +693,7 @@ void DrawRain( void )
 			m_colorarray[m_iNumVerts][1] = 255;
 			m_colorarray[m_iNumVerts][2] = 255;
 			m_colorarray[m_iNumVerts][3] = alpha;
-			m_vertexarray[m_iNumVerts] = Drip->origin + RI->vright * SNOW_SPRITE_HALFSIZE + RI->vup * SNOW_SPRITE_HALFSIZE;
+			m_vertexarray[m_iNumVerts] = Drip->origin + RI->view.matrix.GetRight() * SNOW_SPRITE_HALFSIZE + RI->view.matrix.GetUp() * SNOW_SPRITE_HALFSIZE;
 			m_indexarray[m_iNumIndex++] = m_iNumVerts++;
 
 			// set right bottom corner
@@ -703,7 +703,7 @@ void DrawRain( void )
 			m_colorarray[m_iNumVerts][1] = 255;
 			m_colorarray[m_iNumVerts][2] = 255;
 			m_colorarray[m_iNumVerts][3] = alpha;
-			m_vertexarray[m_iNumVerts] = Drip->origin + RI->vright * SNOW_SPRITE_HALFSIZE + RI->vup * -SNOW_SPRITE_HALFSIZE;
+			m_vertexarray[m_iNumVerts] = Drip->origin + RI->view.matrix.GetRight() * SNOW_SPRITE_HALFSIZE + RI->view.matrix.GetUp() * -SNOW_SPRITE_HALFSIZE;
 			m_indexarray[m_iNumIndex++] = m_iNumVerts++;
 
 			g_dripsArray.MoveNext();
@@ -852,7 +852,8 @@ R_DrawWeather
 */
 void R_DrawWeather( void )
 {
-	if( FBitSet( RI->params, RP_SKYPORTALVIEW ))
+	// it was RP_SKYPORTALVIEW, is it correct?
+	if( FBitSet( RI->params, RP_SKYVIEW))
 		return;
 
 	ProcessRain();

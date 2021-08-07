@@ -27,11 +27,14 @@ typedef float vec_t;
 #define Q_recip( a )		((float)(1.0f / (float)(a)))
 #define Q_floor( a )		((float)(long)(a))
 #define Q_ceil( a )			((float)(long)((a) + 1))
+#define Q_abs( a )			(fabsf((a)))
 #define Q_round( x, y )		(floor( x / y + 0.5 ) * y )
 #define Q_square( a )		((a) * (a))
+#define Q_sign( x )			( x >= 0 ? 1.0 : -1.0 )
 
 #include <math.h>
-#include <vector.h>
+#include "com_model.h"
+#include "vector.h"
 #include "matrix.h"
 
 #define bound( min, num, max )	((num) >= (min) ? ((num) < (max) ? (num) : (max)) : (min))
@@ -70,10 +73,12 @@ typedef float vec_t;
 #define PLANE_X			0	// 0 - 2 are axial planes
 #define PLANE_Y			1	// 3 needs alternate calc
 #define PLANE_Z			2
+#define PLANE_LAST_AXIAL		2
 #define PLANE_NONAXIAL		3
 
-#define PLANE_NORMAL_EPSILON		0.0001f
-#define PLANE_DIST_EPSILON		0.04f
+#define PLANE_NORMAL_EPSILON		1e-5
+#define PLANE_DIR_EPSILON		1e-4
+#define PLANE_DIST_EPSILON		4e-2
 
 #define SMALL_FLOAT			1e-12
 
@@ -82,9 +87,13 @@ inline float anglemod( float a ) { return (360.0f / 65536) * ((int)(a * (65536 /
 void TransformAABB( const matrix4x4& world, const Vector &mins, const Vector &maxs, Vector &absmin, Vector &absmax );
 void TransformAABBLocal( const matrix4x4& world, const Vector &mins, const Vector &maxs, Vector &outmins, Vector &outmaxs );
 void CalcClosestPointOnAABB( const Vector &mins, const Vector &maxs, const Vector &point, Vector &closestOut );
+float CalcSqrDistanceToAABB(const Vector &mins, const Vector &maxs, const Vector &point);
+void RotatePointAroundVector(Vector &dst, const Vector &dir, const Vector &point, float degrees);
+bool IsSphereIntersectingCone(const Vector &sphereCenter, float sphereRadius, const Vector &coneOrigin, const Vector &coneNormal, float coneSine, float coneCosine);
 bool PlanesGetIntersectionPoint( const struct mplane_s *plane1, const struct mplane_s *plane2, const struct mplane_s *plane3, Vector &out );
 Vector PlaneIntersect( struct mplane_s *plane, const Vector& p0, const Vector& p1 );
 void VectorAngles( const Vector &forward, Vector &angles );
+void VectorAngles2(const Vector &forward, Vector &angles);
 
 // Remap a value in the range [A,B] to [C,D].
 inline float RemapVal( float val, float A, float B, float C, float D)
@@ -113,7 +122,7 @@ _forceinline T Lerp( float flPercent, T const &A, T const &B )
 int PlaneTypeForNormal( const Vector &normal );
 int SignbitsForPlane( const Vector &normal );
 int NearestPOW( int value, bool roundDown );
-void SetPlane( struct mplane_s *plane, const Vector &vecNormal, float flDist );
+void SetPlane(mplane_t *plane, const Vector &vecNormal, float flDist, int type = -1);
 
 //
 // bounds operations
@@ -121,6 +130,7 @@ void SetPlane( struct mplane_s *plane, const Vector &vecNormal, float flDist );
 void ClearBounds( Vector &mins, Vector &maxs );
 void ClearBounds( Vector2D &mins, Vector2D &maxs );
 bool BoundsIsCleared( const Vector &mins, const Vector &maxs );
+bool BoundsIsNull(const Vector &mins, const Vector &maxs);
 void ExpandBounds( Vector &mins, Vector &maxs, float offset );
 void AddPointToBounds( const Vector &v, Vector &mins, Vector &maxs, float limit = 0.0f );
 void AddPointToBounds( const Vector2D &v, Vector2D &mins, Vector2D &maxs );
@@ -164,10 +174,15 @@ void InterpolateOrigin( const Vector& start, const Vector& end, Vector& output, 
 void InterpolateAngles( const Vector& start, const Vector& end, Vector& output, float frac, bool back = false );
 void NormalizeAngles( Vector &angles );
 
-struct mplane_s;
+//
+// FOV computing
+//
+float V_CalcFov(float &fov_x, float width, float height);
+void V_AdjustFov(float &fov_x, float &fov_y, float width, float height, bool lock_x);
 
 void VectorMatrix( Vector &forward, Vector &right, Vector &up );
 float ColorNormalize( const Vector &in, Vector &out );
+float NormalToFloat(const Vector &normal);
 // solve for "x" where "a x^2 + b x + c = 0", return true if solution exists
 bool SolveQuadratic( float a, float b, float c, float &root1, float &root2 );
 // solves for "a, b, c" where "a x^2 + b x + c = y", return true if solution exists
@@ -182,6 +197,8 @@ void SnapVectorToGrid( Vector &normal );
 float AngleDiff( float destAngle, float srcAngle );
 float AngleNormalize( float angle );
 
+void CalcTBN(const Vector &p0, const Vector &p1, const Vector &p2, const Vector2D &t0, const Vector2D &t1, const Vector2D &t2, Vector &s, Vector &t, bool areaweight = false);
+
 int BoxOnPlaneSide( const Vector &emins, const Vector &emaxs, const struct mplane_s *plane );
 #define BOX_ON_PLANE_SIDE(emins, emaxs, p) (((p)->type < 3)?(((p)->dist <= (emins)[(p)->type])? 1 : (((p)->dist >= (emaxs)[(p)->type])? 2 : 3)):BoxOnPlaneSide( (emins), (emaxs), (p)))
 
@@ -191,6 +208,7 @@ int BoxOnPlaneSide( const Vector &emins, const Vector &emaxs, const struct mplan
 #define VectorDistance(a, b) (sqrt( VectorDistance2( a, b )))
 #define VectorDistance2(a, b) (((a)[0] - (b)[0]) * ((a)[0] - (b)[0]) + ((a)[1] - (b)[1]) * ((a)[1] - (b)[1]) + ((a)[2] - (b)[2]) * ((a)[2] - (b)[2]))
 Vector VectorYawRotate( const Vector &in, float flYaw );
+bool VectorIsOnAxis(const Vector &v);
 
 // FIXME: get rid of this
 #define VectorCopy(a,b)	((b)[0]=(a)[0],(b)[1]=(a)[1],(b)[2]=(a)[2])
@@ -243,5 +261,6 @@ inline float SimpleSplineRemapVal( float val, float A, float B, float C, float D
 
 unsigned short FloatToHalf( float v );
 float HalfToFloat( unsigned short h );
+signed char FloatToChar(float v);
 
 #endif//MATHLIB_H
