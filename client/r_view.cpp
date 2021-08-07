@@ -624,9 +624,6 @@ void V_CalcCameraRefdef( struct ref_params_s *pparams )
 
 		lasttime = pparams->time;              	
 
-		if( view->curstate.effects & EF_NUKE_ROCKET )
-			pparams->viewangles.x = -pparams->viewangles.x; // stupid quake bug!
-
 		// g-cont. apply shake to camera
 		gEngfuncs.V_CalcShake();
 		gEngfuncs.V_ApplyShake( pparams->vieworg, pparams->viewangles, 1.0f );

@@ -836,10 +836,6 @@ AURSTATE CParticleSystem :: UpdateSystem( float frametime )
 	{
 		Vector angles = m_pEntity->angles;
 
-		// stupid quake bug
-		if( m_pEntity == GET_VIEWMODEL( ))
-			angles.x = -angles.x;
-
 		// get the system entity matrix
 		if( m_iEntAttachment && m_pEntity->model->type == mod_studio )
 			angles = R_StudioAttachmentAng( m_pEntity, m_iEntAttachment - 1 );

@@ -234,10 +234,10 @@ int CStudioModelRenderer :: StudioComputeBBox( void )
 	}
 
 	Vector angles = RI->currententity->angles;
-	angles[PITCH] = -angles[PITCH]; // stupid quakebug
 
 	// don't rotate player model, only aim
-	if( RI->currententity->player ) angles[PITCH] = 0;
+	if( RI->currententity->player ) 
+		angles[PITCH] = 0;
 
 	origin = StudioGetOrigin();
 
@@ -413,8 +413,6 @@ void CStudioModelRenderer :: StudioSetUpTransform( void )
 		// set derived LOD
 		e->curstate.body = Q_min( lodnum, numLods - 1 );
 	}
-
-	angles[PITCH] = -angles[PITCH]; // stupid quake bug!
 
 	if( e->curstate.renderfx != kRenderFxDeadPlayer )
 	{

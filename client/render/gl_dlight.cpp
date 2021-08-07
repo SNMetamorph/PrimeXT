@@ -328,7 +328,6 @@ void R_GetLightVectors( cl_entity_t *pEnt, Vector &origin, Vector &angles )
 			{
 				int num = bound( 1, pEnt->curstate.body, MAXSTUDIOATTACHMENTS );
 				R_StudioAttachmentPosAng( pParent, num - 1, &origin, &angles );
-				angles[PITCH] = -angles[PITCH]; // stupid quake bug
 			}
 			else if( pParent->curstate.movetype == MOVETYPE_STEP )
 			{
