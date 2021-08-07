@@ -116,9 +116,7 @@ void TraceMesh :: SetupTrace( const Vector &start, const Vector &mins, const Vec
 
 	CheckAngles( m_vecAngles );
 
-	// inverse pitch because of stupid quake bug
-	m_transform = matrix4x4( m_vecOrigin, Vector( -m_vecAngles.x, m_vecAngles.y, m_vecAngles.z ), m_vecScale ).InvertFull();
-
+	m_transform = matrix4x4( m_vecOrigin, Vector( m_vecAngles.x, m_vecAngles.y, m_vecAngles.z ), m_vecScale ).InvertFull();
 	m_vecStart = m_transform.VectorTransform( m_vecSrcStart );
 	m_vecEnd = m_transform.VectorTransform( m_vecSrcEnd );
 
