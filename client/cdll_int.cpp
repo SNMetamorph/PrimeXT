@@ -171,11 +171,17 @@ void HUD_Init( void )
 {
 	InitInput();
 	gHUD.Init();
+
+	if (g_fRenderInitialized)
+		GL_Init();
 }
 
 void HUD_Shutdown( void )
 {
 	ShutdownInput();
+
+	if (g_fRenderInitialized)
+		GL_Shutdown();
 }
 
 /*
