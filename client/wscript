@@ -26,11 +26,11 @@ def build(bld):
 		'game_shared/material.cpp',
 		'game_shared/mathlib.cpp',
 		'game_shared/matrix.cpp',
+		'game_shared/meshdesc.cpp',
 		'game_shared/playermove.cpp',
 		'game_shared/procbones.cpp',
 		'game_shared/stringlib.cpp',
 		'game_shared/virtualfs.cpp',
-		'game_shared/meshdesc.cpp',
 		'game_shared/trace.cpp'
 	])
 	
@@ -44,6 +44,7 @@ def build(bld):
 		'flashlight.cpp',
 		'geiger.cpp',
 		'health.cpp',
+		'entity.cpp',
 		'hud.cpp',
 		'hud_msg.cpp',
 		'hud_redraw.cpp',
@@ -64,6 +65,7 @@ def build(bld):
 		'train.cpp',
 		'utils.cpp',
 		'r_view.cpp',
+		'r_weather.cpp',
 		'render/*.cpp'
 	])
 
