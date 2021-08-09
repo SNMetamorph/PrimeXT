@@ -41,6 +41,7 @@ DECLARE_HUDMESSAGE( GameMode );
 DECLARE_HUDMESSAGE( MusicFade );
 DECLARE_HUDMESSAGE( WeaponAnim );
 DECLARE_HUDMESSAGE( KillDecals );
+DECLARE_HUDMESSAGE( CustomDecal );
 DECLARE_HUDMESSAGE( StudioDecal );
 DECLARE_HUDMESSAGE( SetupBones );
 
@@ -63,6 +64,7 @@ int CHud :: InitHUDMessages( void )
 	HOOK_MESSAGE( MusicFade );
 	HOOK_MESSAGE( WeaponAnim );
 	HOOK_MESSAGE( KillDecals );
+	HOOK_MESSAGE( CustomDecal );
 	HOOK_MESSAGE( StudioDecal );
 	HOOK_MESSAGE( SetupBones );
 
@@ -353,6 +355,30 @@ int CHud :: MsgFunc_KillDecals( const char *pszName, int iSize, void *pbuf )
 
 	END_READ();
 	
+	return 1;
+}
+
+int CHud::MsgFunc_CustomDecal(const char *pszName, int iSize, void *pbuf)
+{
+	char name[80];
+
+	BEGIN_READ(pszName, pbuf, iSize);
+
+	Vector pos, normal;
+	pos.x = READ_COORD();
+	pos.y = READ_COORD();
+	pos.z = READ_COORD();
+	normal.x = READ_COORD() / 8192.0f;
+	normal.y = READ_COORD() / 8192.0f;
+	normal.z = READ_COORD() / 8192.0f;
+	int entityIndex = READ_SHORT();
+	int modelIndex = READ_SHORT();
+	Q_strncpy(name, READ_STRING(), sizeof(name));
+	int flags = READ_BYTE();
+	float angle = READ_ANGLE();
+
+	CreateDecal(pos, normal, angle, name, flags, entityIndex, modelIndex);
+
 	return 1;
 }
 

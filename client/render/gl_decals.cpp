@@ -1016,7 +1016,7 @@ static void R_DecalNode( mnode_t *node, decalClip_t *clip )
 	if( s & 2 ) R_DecalNode( node->children[1], clip );
 }
 
-void CreateDecal( const Vector &vecEndPos, const Vector &vecPlaneNormal, float angle, const char *name, int flags, int entityIndex, int modelIndex, bool source = true )
+void CreateDecal(const Vector &vecEndPos, const Vector &vecPlaneNormal, float angle, const char *name, int flags, int entityIndex, int modelIndex, bool source)
 {
 	int	srcFlags = flags;
 
