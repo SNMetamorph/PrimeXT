@@ -27,6 +27,7 @@ GNU General Public License for more details.
 #include "gl_grass.h"
 #include "gl_cvars.h"
 #include "r_weather.h"
+#include "tri.h"
 
 ref_globals_t	tr;
 ref_instance_t	*RI = NULL;
@@ -988,6 +989,7 @@ void R_RenderScene( const ref_viewpass_t *rvp, int params )
 	R_DrawSkyBox();
 	R_RenderSolidBrushList();
 	R_RenderSolidStudioList();
+	HUD_DrawNormalTriangles();
 	R_RenderSurfOcclusionList();
 	R_DrawParticles( false );
 	R_RenderDebugStudioList( false );
@@ -1001,6 +1003,7 @@ void R_RenderScene( const ref_viewpass_t *rvp, int params )
 	R_RenderTransList();
 	R_DrawParticles( true );
 	R_DrawWeather();
+	HUD_DrawTransparentTriangles();
 
 	if(( err = pglGetError( )) != GL_NO_ERROR )
 		ALERT( at_error, "OpenGL: error %x while render trans objects\n", err );

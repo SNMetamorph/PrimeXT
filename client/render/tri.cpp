@@ -5,27 +5,17 @@
 // $NoKeywords: $
 //=============================================================================
 
-// Triangle rendering, if any
-
+#include "tri.h"
 #include "hud.h"
 #include "utils.h"
 #include "wrect.h"
-
-// Triangle rendering apis are in gEngfuncs.pTriAPI
-
 #include "const.h"
 #include "entity_state.h"
 #include "cl_entity.h"
 #include "triangleapi.h"
 #include "custom_alloc.h"
 #include "com_model.h"
-#include "gl_local.h"// buz
-
-extern "C"
-{
-	void DLLEXPORT HUD_DrawNormalTriangles( void );
-	void DLLEXPORT HUD_DrawTransparentTriangles( void );
-};
+#include "gl_local.h"
 
 //
 //-----------------------------------------------------
@@ -191,6 +181,9 @@ Non-transparent triangles-- add them here
 */
 void DLLEXPORT HUD_DrawNormalTriangles( void )
 {
+	// dummy code to prevent removing these functions by compiler optimizations
+	gEngfuncs.pTriAPI->Begin(TRI_POLYGON);
+	gEngfuncs.pTriAPI->End();
 }
 
 /*
@@ -202,4 +195,6 @@ Render any triangles with transparent rendermode needs here
 */
 void DLLEXPORT HUD_DrawTransparentTriangles( void )
 {
+	gEngfuncs.pTriAPI->Begin(TRI_POLYGON);
+	gEngfuncs.pTriAPI->End();
 }

@@ -24,21 +24,14 @@
 #include <mathlib.h>
 #include "usercmd.h"
 #include "entity_state.h"
-//#include "r_particle.h"
 #include "cdll_exp.h"
+#include "tri.h"
 
 int developer_level;
 int g_iXashEngineBuildNumber;
 cl_enginefunc_t gEngfuncs;
 render_api_t gRenderfuncs;
 CHud gHUD;
-
-// from tri.cpp
-extern "C"
-{
-	void DLLEXPORT HUD_DrawNormalTriangles(void);
-	void DLLEXPORT HUD_DrawTransparentTriangles(void);
-};
 
 /*
 ==========================
