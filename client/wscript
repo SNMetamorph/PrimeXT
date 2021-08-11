@@ -49,6 +49,7 @@ def build(bld):
 		'hud_msg.cpp',
 		'hud_redraw.cpp',
 		'hud_update.cpp',
+		'hud_flashlight.cpp',
 		'input.cpp',
 		'input_xash3d.cpp',
 		'input_mouse.cpp',

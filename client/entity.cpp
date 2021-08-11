@@ -17,11 +17,10 @@
 #include "event_api.h"
 #include "pm_defs.h"
 #include "pmtrace.h"	
-//#include "pm_shared.h"
-//#include "eventscripts.h" // buz
 #include "gl_local.h"
 #include "gl_studio.h"
 #include "gl_cvars.h"
+#include "flashlight.h"
 
 #define DLLEXPORT __declspec( dllexport )
 
@@ -32,7 +31,6 @@ extern vec3_t v_origin;
 //extern int g_iGunMode;
 
 int g_iAlive = 1;
-int g_flashlight; // buz
 int r_currentMessageNum = 0;
 int GlowFilterEntities ( int type, struct cl_entity_s *ent, const char *modelname ); // buz
 
@@ -191,8 +189,9 @@ void DLLEXPORT HUD_ProcessPlayerState( struct entity_state_s *dst, const struct 
 
 	// buz: get flashlight status
 	if (dst->effects & EF_DIMLIGHT)
-		g_flashlight = 1;
-	else g_flashlight = 0;
+		g_PlayerFlashlight.TurnOn();
+	else 
+		g_PlayerFlashlight.TurnOff();
 }
 
 /*

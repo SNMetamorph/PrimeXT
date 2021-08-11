@@ -18,6 +18,8 @@ GNU General Public License for more details.
 #include "cdll_int.h"
 #include "render_api.h"
 #include "com_model.h"
+#include "event_api.h"
+#include "pm_defs.h"
 
 extern cl_enginefunc_t gEngfuncs;
 extern render_api_t gRenderfuncs;

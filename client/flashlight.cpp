@@ -1,140 +1,78 @@
-/***
-*
-*	Copyright (c) 1996-2002, Valve LLC. All rights reserved.
-*	
-*	This product contains software technology licensed from Id 
-*	Software, Inc. ("Id Technology").  Id Technology (c) 1996 Id Software, Inc. 
-*	All Rights Reserved.
-*
-*   Use, distribution, and modification of this source code and/or resulting
-*   object code is restricted to non-commercial enhancements to products from
-*   Valve LLC.  All other use, distribution, or modification is prohibited
-*   without written permission from Valve LLC.
-*
-****/
-//
-// flashlight.cpp
-//
-// implementation of CHudFlashlight class
-//
+#include "flashlight.h"
+#include "gl_local.h"
+#include "pmtrace.h"
+#include "enginecallback.h"
+#include "stringlib.h"
+#include "gl_cvars.h"
 
-#include "hud.h"
-#include "utils.h"
-#include "parsemsg.h"
+CPlayerFlashlight &g_PlayerFlashlight = CPlayerFlashlight::Instance();
 
-DECLARE_MESSAGE( m_Flash, FlashBat )
-DECLARE_MESSAGE( m_Flash, Flashlight )
-
-int CHudFlashlight::Init( void) 
+CPlayerFlashlight &CPlayerFlashlight::Instance()
 {
-	m_fFade = 0;
-	m_fOn = 0;
-
-	HOOK_MESSAGE( Flashlight );
-	HOOK_MESSAGE( FlashBat );
-
-	m_iFlags |= HUD_ACTIVE;
-
-	gHUD.AddHudElem( this );
-
-	return 1;
+	static CPlayerFlashlight instance;
+	return instance;
 }
 
-void CHudFlashlight::Reset( void )
+void CPlayerFlashlight::TurnOn()
 {
-	m_fFade = 0;
-	m_fOn = 0;
+    m_Active = true;
 }
 
-int CHudFlashlight::VidInit( void )
+void CPlayerFlashlight::TurnOff()
 {
-	int HUD_flash_empty = gHUD.GetSpriteIndex( "flash_empty" );
-	int HUD_flash_full = gHUD.GetSpriteIndex( "flash_full" );
-	int HUD_flash_beam = gHUD.GetSpriteIndex( "flash_beam" );
-
-	m_hSprite1 = gHUD.GetSprite( HUD_flash_empty );
-	m_hSprite2 = gHUD.GetSprite( HUD_flash_full );
-	m_hBeam = gHUD.GetSprite( HUD_flash_beam );
-	m_prc1 = &gHUD.GetSpriteRect( HUD_flash_empty );
-	m_prc2 = &gHUD.GetSpriteRect( HUD_flash_full );
-	m_prcBeam = &gHUD.GetSpriteRect( HUD_flash_beam );
-	m_iWidth = m_prc2->right - m_prc2->left;
-
-	return 1;
+    m_Active = false;
 }
 
-int CHudFlashlight:: MsgFunc_FlashBat( const char *pszName, int iSize, void *pbuf )
+void CPlayerFlashlight::Update(ref_params_t *pparams)
 {
-	BEGIN_READ( pszName, pbuf, iSize );
+	if (!m_Active)
+		return;
 
-	m_iBat = READ_BYTE();
-	m_flBat = ((float)m_iBat ) / 100.0f;
+	static float add = 0.0f;
+	float addideal = 0.0f;
+	pmtrace_t ptr;
 
-	END_READ();
+	Vector origin = pparams->vieworg + Vector(0.0f, 0.0f, 6.0f) + (pparams->right * 5.0f) + (pparams->forward * 2.0f);
+	Vector vecEnd = origin + (pparams->forward * 700.0f);
 
-	return 1;
-}
+	gEngfuncs.pEventAPI->EV_SetTraceHull(2);
+	gEngfuncs.pEventAPI->EV_PlayerTrace(origin, vecEnd, PM_NORMAL, -1, &ptr);
+	const char *texName = gEngfuncs.pEventAPI->EV_TraceTexture(ptr.ent, origin, vecEnd);
 
-int CHudFlashlight:: MsgFunc_Flashlight( const char *pszName, int iSize, void *pbuf )
-{
-	BEGIN_READ( pszName, pbuf, iSize );
+	if (ptr.fraction < 1.0f)
+		addideal = (1.0f - ptr.fraction) * 30.0f;
+	float speed = (add - addideal) * 10.0f;
+	if (speed < 0) speed *= -1.0f;
 
-	m_fOn = READ_BYTE();
-	m_iBat = READ_BYTE();
-	m_flBat = ((float)m_iBat ) / 100.0f;
-
-	END_READ();
-
-	return 1;
-}
-
-int CHudFlashlight::Draw( float flTime )
-{
-	if( gHUD.m_iHideHUDDisplay & ( HIDEHUD_FLASHLIGHT|HIDEHUD_ALL ))
-		return 1;
-
-	if (!gHUD.HasWeapon( WEAPON_SUIT ))
-		return 1;
-
-	int r, g, b, x, y, a;
-	wrect_t rc;
-
-	if( m_fOn ) a = 225;
-	else a = MIN_ALPHA;
-
-	if( m_flBat < 0.2f )
-		UnpackRGB( r, g, b, RGB_REDISH );
-	else UnpackRGB( r, g, b, gHUD.m_iHUDColor );
-
-	ScaleColors( r, g, b, a );
-
-	y = ( m_prc1->bottom - m_prc2->top ) / 2;
-	x = ScreenWidth - m_iWidth - m_iWidth / 2;
-
-	// Draw the flashlight casing
-	SPR_Set( m_hSprite1, r, g, b );
-	SPR_DrawAdditive( 0,  x, y, m_prc1 );
-
-	if( m_fOn )
+	if (add < addideal)
 	{
-		// draw the flashlight beam
-		x = ScreenWidth - m_iWidth / 2;
-
-		SPR_Set( m_hBeam, r, g, b );
-		SPR_DrawAdditive( 0, x, y, m_prcBeam );
+		add += pparams->frametime * speed;
+		if (add > addideal) add = addideal;
+	}
+	else if (add > addideal)
+	{
+		add -= pparams->frametime * speed;
+		if (add < addideal) add = addideal;
 	}
 
-	// draw the flashlight energy level
-	x = ScreenWidth - m_iWidth - m_iWidth / 2;
-	int iOffset = m_iWidth * ( 1.0f - m_flBat );
+	CDynLight *flashlight = CL_AllocDlight(FLASHLIGHT_KEY);
 
-	if( iOffset < m_iWidth )
+	R_SetupLightParams(flashlight, origin, pparams->viewangles, 700.0f, 35.0f + add, LIGHT_SPOT);
+	R_SetupLightTexture(flashlight, tr.flashlightTexture);
+
+	flashlight->color = Vector(1.4f, 1.4f, 1.4f); // make model dymanic lighting happy
+	flashlight->die = pparams->time + 0.05f;
+
+	if (texName && (!Q_strnicmp(texName, "reflect", 7) || !Q_strnicmp(texName, "mirror", 6)) && r_allow_mirrors->value)
 	{
-		rc = *m_prc2;
-		rc.left += iOffset;
+		CDynLight *flashlight2 = CL_AllocDlight(FLASHLIGHT_KEY + 1);
+		float d = 2.0f * DotProduct(pparams->forward, ptr.plane.normal);
+		Vector angles, dir = (pparams->forward - ptr.plane.normal) * d;
+		VectorAngles(dir, angles);
 
-		SPR_Set( m_hSprite2, r, g, b );
-		SPR_DrawAdditive( 0, x + iOffset, y, &rc );
+		R_SetupLightParams(flashlight2, ptr.endpos, angles, 700.0f, 35.0f + add, LIGHT_SPOT);
+		R_SetupLightTexture(flashlight2, tr.flashlightTexture);
+		flashlight2->color = Vector(1.4f, 1.4f, 1.4f); // make model dymanic lighting happy
+		flashlight2->die = pparams->time + 0.01f;
 	}
-	return 1;
 }
