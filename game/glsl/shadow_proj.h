@@ -1,6 +1,6 @@
 /*
-shadow_proj.h - shadow for projection dlights and PCF filtering
-Copyright (C) 2015 Uncle Mike
+shadow_proj.h - shadow from directional source
+Copyright (C) 2014 Uncle Mike
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -16,74 +16,121 @@ GNU General Public License for more details.
 #ifndef SHADOW_PROJ_H
 #define SHADOW_PROJ_H
 
-#define NUM_SAMPLES		4.0
+uniform sampler2DShadow	u_ShadowMap0;
+uniform sampler2DShadow	u_ShadowMap1;
+uniform sampler2DShadow	u_ShadowMap2;
+uniform sampler2DShadow	u_ShadowMap3;
 
-#ifdef HAS_ARB_SHADOW
-uniform sampler2DShadow	u_ShadowMap;
+uniform mat4		u_ShadowMatrix[MAX_SHADOWMAPS];
+uniform vec4		u_ShadowSplitDist;
+uniform vec4		u_TexelSize;	// shadowmap resolution
 
-#define shadowval( center, xoff, yoff ) float( shadow2DOffset( u_ShadowMap, center, ivec2( xoff, yoff )))
+#include "mathlib.h"
 
-float get_shadow_offset( float NdotL )
+#extension GL_EXT_gpu_shader4 : require
+
+vec3 WorldToTexel( vec3 world, int split )
 {
-	float bias = 0.0005 * tan( acos( saturate( NdotL )));
-	return clamp( bias, 0.0, 0.005 );
+	vec4 pos = u_ShadowMatrix[split] * vec4( world, 1.0 );
+	vec3 coord = vec3( pos.xyz / ( pos.w + 0.0005 )); // z-bias
+	coord.x = float( clamp( float( coord.x ), u_TexelSize[split], 1.0 - u_TexelSize[split] ));
+	coord.y = float( clamp( float( coord.y ), u_TexelSize[split], 1.0 - u_TexelSize[split] ));
+	coord.z = float( clamp( float( coord.z ), 0.0, 1.0 ));
+
+	return coord;
 }
 
-float ShadowProj( vec4 projection, vec2 texel, float NdotL )
+float ShadowProj( const in vec3 world )
 {
-	vec3 coord = vec3( projection.xyz / ( projection.w + 0.0005 )); // z-bias
-	coord.s = float( clamp( float( coord.s ), texel.x, 1.0 - texel.x ));
-	coord.t = float( clamp( float( coord.t ), texel.y, 1.0 - texel.y ));
-	coord.r = float( clamp( float( coord.r ), 0.0, 1.0 ));
+	float shadow = 1.0;
+
 #if defined( GLSL_gpu_shader4 )
-	// this required GL_EXT_gpu_shader4
-	vec4 pcf4 = vec4( shadowval( coord, -0.4, 1.0 ), shadowval( coord, -1.0, -0.4 ), shadowval( coord, 0.4, -1.0 ), shadowval( coord, 1.0, 0.4 ));
-	return dot( vec4( 0.25 ), pcf4 ); 
+	// transform to camera space
+	vec4 cam = gl_ModelViewMatrix * vec4( world.xyz, 1.0 );
+	float vertexDistanceToCamera = -cam.z;
+	vec3 shadowVert;
+	
+#if (NUM_SHADOW_SPLITS == 1)
+	if( vertexDistanceToCamera < u_ShadowSplitDist.x )
+	{
+		shadowVert = WorldToTexel( world, 0 );
+		shadow = shadow2D( u_ShadowMap0, shadowVert.xyz ).r * 0.25;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( -1, -1)).r * 0.0625;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( -1, 0 )).r * 0.125;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( -1, 1 )).r * 0.0625;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 0, -1 )).r * 0.125;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 0, 1 )).r * 0.125;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 1, -1 )).r * 0.0625;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 1, 0 )).r * 0.125;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 1, 1 )).r * 0.0625;
+	}
+	else
+	{
+		shadowVert = WorldToTexel( world, 1 );
+		shadow = shadow2D( u_ShadowMap1, shadowVert.xyz ).r;
+	}
+#elif (NUM_SHADOW_SPLITS == 2)
+	if( vertexDistanceToCamera < u_ShadowSplitDist.x )
+	{
+		shadowVert = WorldToTexel( world, 0 );
+		shadow = shadow2D( u_ShadowMap0, shadowVert.xyz ).r * 0.25;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( -1, -1)).r * 0.0625;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( -1, 0 )).r * 0.125;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( -1, 1 )).r * 0.0625;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 0, -1 )).r * 0.125;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 0, 1 )).r * 0.125;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 1, -1 )).r * 0.0625;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 1, 0 )).r * 0.125;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 1, 1 )).r * 0.0625;
+	}
+	else if( vertexDistanceToCamera < u_ShadowSplitDist.y )
+	{
+		shadowVert = WorldToTexel( world, 1 );
+		shadow = shadow2D( u_ShadowMap1, shadowVert.xyz ).r;
+		
+	}
+	else
+	{
+		shadowVert = WorldToTexel( world, 2 );
+		shadow = shadow2D( u_ShadowMap2, shadowVert.xyz ).r;
+	}
+#elif (NUM_SHADOW_SPLITS == 3)
+	if( vertexDistanceToCamera < u_ShadowSplitDist.x )
+	{
+		shadowVert = WorldToTexel( world, 0 );
+		shadow = shadow2D( u_ShadowMap0, shadowVert.xyz ).r * 0.25;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( -1, -1)).r * 0.0625;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( -1, 0 )).r * 0.125;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( -1, 1 )).r * 0.0625;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 0, -1 )).r * 0.125;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 0, 1 )).r * 0.125;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 1, -1 )).r * 0.0625;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 1, 0 )).r * 0.125;
+		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 1, 1 )).r * 0.0625;
+	}
+	else if( vertexDistanceToCamera < u_ShadowSplitDist.y )
+	{
+		shadowVert = WorldToTexel( world, 1 );
+		shadow = shadow2D( u_ShadowMap1, shadowVert.xyz ).r;
+	}
+	else if( vertexDistanceToCamera < u_ShadowSplitDist.z )
+	{
+		shadowVert = WorldToTexel( world, 2 );
+		shadow = shadow2D( u_ShadowMap2, shadowVert.xyz ).r;
+	}
+	else
+	{
+		shadowVert = WorldToTexel( world, 3 );
+		shadow = shadow2D( u_ShadowMap3, shadowVert.xyz ).r;
+	}
 #else
-	return shadow2D( u_ShadowMap, coord ).r; // non-filtered
+	{
+		shadowVert = WorldToTexel( world, 0 );
+		shadow = shadow2D( u_ShadowMap0, shadowVert.xyz ).r;
+	}
 #endif
-}
-
-#else
-uniform sampler2D	u_ShadowMap;
-
-// 1/512.0
-#define invSize 0.001953125
-#define size 512.0
-float myshadow2D( sampler2D u_depthTex, vec3 suv)
-{
-#ifdef SHADOW_HQ
-	vec2 p1 = suv.xy;
-	vec2 p2 = suv.xy+vec2(0.0,invSize);
-	vec2 p3 = suv.xy+vec2(invSize,0.0);
-	vec2 p4 = suv.xy+vec2(invSize);
-	float d = texture2D(u_depthTex,p1).r;
-	float r = float(d>suv.z);
-	d = texture2D(u_depthTex,p2).r;
-	float r2 = float(d>suv.z);
-	d = texture2D(u_depthTex,p3).r;
-	float r3 = float(d>suv.z);
-	d = texture2D(u_depthTex,p4).r;
-	float r4 = float(d>suv.z);
-	p1*=size;
-	float a = p1.y-floor(p1.y);
-	float b = p1.x-floor(p1.x);
-	return mix(mix(r,r2,a),mix(r3,r4,a),b);
-#else
-	float d = texture2D(u_depthTex,suv.xy).r;
-	return float(d>suv.z);
 #endif
+	return shadow;
 }
-
-float ShadowProj( vec4 projection, vec2 texel, float NdotL )
-{
-	vec3 coord = vec3( projection.xyz / ( projection.w + 0.0005 )); // z-bias
-	coord.s = float( clamp( float( coord.s ), texel.x, 1.0 - texel.x ));
-	coord.t = float( clamp( float( coord.t ), texel.y, 1.0 - texel.y ));
-	coord.r = float( clamp( float( coord.r ), 0.0, 1.0 ));
-
-	return myshadow2D( u_ShadowMap, coord );
-}
-#endif
 
 #endif//SHADOW_PROJ_H

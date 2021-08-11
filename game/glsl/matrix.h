@@ -16,7 +16,7 @@ GNU General Public License for more details.
 #ifndef MATRIX_H
 #define MATRIX_H
 
-mat4 Mat4FromOriginQuat( const vec4 quaternion, const vec3 origin )
+mat4 Mat4FromOriginQuat( const in vec4 quaternion, const in vec3 origin )
 {
 	mat4 mat;
 
@@ -40,6 +40,33 @@ mat4 Mat4FromOriginQuat( const vec4 quaternion, const vec3 origin )
 	return mat;
 }
 
+mat4 Mat4FromVec4Array( const vec4 v0, const vec4 v1, const vec4 v2 )
+{
+	mat4 m;
+
+	m[0][0] = v0.x;
+	m[0][1] = v0.y;
+	m[0][2] = v0.z;
+	m[0][3] = 0.0;
+	m[1][0] = v1.x;
+	m[1][1] = v1.y;
+	m[1][2] = v1.z;
+	m[1][3] = 0.0;
+	m[2][0] = v2.x;
+	m[2][1] = v2.y;
+	m[2][2] = v2.z;
+	m[2][3] = 0.0;
+	m[3][0] = v0.w;
+	m[3][1] = v1.w;
+	m[3][2] = v2.w;
+	m[3][3] = 1.0;
+
+	return m;
+}
+
+// glLoadIdentity();
+// glTranslate( 0.5, 0.5, 0.5 );
+// glScale( 0.5, scale_y, 0.5 );
 mat4 Mat4Texture( const float scale_y )
 {
 	mat4 m;
