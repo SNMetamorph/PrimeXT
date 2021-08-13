@@ -1307,12 +1307,13 @@ void GL_ListGPUShaders( void )
 		const char *options = GL_PretifyListOptions( cur->options );
 
 		if( Q_stricmp( options, "" ))
-			Msg( "#%i %s [%s]\n", i, cur->name, options );
-		else Msg( "#%i %s\n", i, cur->name );
+			Msg( "#%i (%i) %s [%s]\n", i, cur->handle, cur->name, options );
+		else 
+			Msg( "#%i (%i) %s\n", i, cur->handle, cur->name );
 		count++;
 	}
 
-	Msg( "total %i shaders\n", count );
+	Msg( "Total %i shaders\n", count );
 }
 
 void GL_InitGPUShaders( void )
