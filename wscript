@@ -8,7 +8,7 @@ import sys
 import os
 
 VERSION = '1.0'
-APPNAME = 'xashxt-fwgs'
+APPNAME = 'primext'
 top = '.'
 
 Context.Context.line_just = 55 # should fit for everything on 80x26
