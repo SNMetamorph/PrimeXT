@@ -1616,7 +1616,8 @@ static void Mod_ComputeFaceTBN( msurface_t *surf, mextrasurf_t *esrf )
 {
 	Vector	texdirections[2];
 	Vector	directionnormals[2];
-	Vector	faceNormal, vertNormal;
+	Vector	faceNormal;
+	Vector	vertNormal = g_vecZero;
 	int	side;
 
 	for( int i = 0; i < esrf->numverts; i++ )
@@ -1638,13 +1639,14 @@ static void Mod_ComputeFaceTBN( msurface_t *surf, mextrasurf_t *esrf )
 		// calc unsmoothed tangent space
 		if( FBitSet( surf->flags, SURF_PLANEBACK ))
 			faceNormal = -surf->plane->normal;
-		else faceNormal = surf->plane->normal;
+		else 
+			faceNormal = surf->plane->normal;
 
 		// fallback
-		if( vertNormal == g_vecZero )
+		if (vertNormal.IsEqual(g_vecZero, 0.0001f))
 			vertNormal = faceNormal;
-		vertNormal = vertNormal.Normalize();
 
+		vertNormal = vertNormal.Normalize();
 		for( side = 0; side < 2; side++ )
 		{
 			texdirections[side] = CrossProduct( faceNormal, surf->info->lmvecs[!side] ).Normalize();
@@ -2303,15 +2305,14 @@ static void Mod_CreateBufferObject( void )
 
 	// calculate number of used faces and vertexes
 	msurface_t *surf = worldmodel->surfaces;
-	int i, j, curVert = 0;
 	byte *vislight = NULL;
 	mvertex_t *dv;
-	bvert_t *mv;
-
+	bvert_t *currVertex;
+	int currVertexIndex = 0;
 	world->numvertexes = 0;
 
 	// compute totalvertex count for VBO but ignore sky polys
-	for( i = 0; i < worldmodel->numsurfaces; i++, surf++ )
+	for (int i = 0; i < worldmodel->numsurfaces; i++, surf++)
 	{
 		if( FBitSet( surf->flags, SURF_DRAWSKY ))
 			continue;
@@ -2324,51 +2325,52 @@ static void Mod_CreateBufferObject( void )
 	surf = worldmodel->surfaces;
 
 	// create VBO-optimized vertex array (single for world and all brush-models)
-	for( i = 0; i < worldmodel->numsurfaces; i++, surf++ )
+	for (int i = 0; i < worldmodel->numsurfaces; i++, surf++ )
 	{
 		Vector t, b, n;
 
 		if( FBitSet( surf->flags, SURF_DRAWSKY ))
 			continue;	// ignore sky polys it was never be drawed
 
-		mv = &world->vertexes[curVert];
+		currVertex = &world->vertexes[currVertexIndex];
 
 		// request vislightdata for this surface
-		if( world->vislightdata ) vislight = world->vislightdata + i * ((world->numworldlights + 7) / 8);
+		if (world->vislightdata) 
+			vislight = world->vislightdata + i * ((world->numworldlights + 7) / 8);
 		Mod_FindStaticLights( vislight, surf->info->lights, surf->info->origin );
 
 		// NOTE: all polygons stored as source (no tesselation anyway)
-		for( j = 0; j < surf->numedges; j++, mv++ )
+		for (int j = 0; j < surf->numedges; j++, currVertex++)
 		{
 			int l = worldmodel->surfedges[surf->firstedge + j];
 			int vert = worldmodel->edges[abs(l)].v[(l > 0) ? 0 : 1];
-			memcpy( mv->styles, surf->styles, sizeof( surf->styles ));
-			memcpy( mv->lights0, surf->info->lights, sizeof( surf->info->lights ));
+			memcpy( currVertex->styles, surf->styles, sizeof( surf->styles ));
+			memcpy( currVertex->lights0, surf->info->lights, sizeof( surf->info->lights ));
 			dv = &worldmodel->vertexes[vert];
-			mv->vertex = dv->position;
+			currVertex->vertex = dv->position;
 
-			R_TextureCoords( surf, mv->vertex, mv->stcoord0 );
-			R_LightmapCoords( surf, mv->vertex, mv->lmcoord0, 0 );	// styles 0-1
-			R_LightmapCoords( surf, mv->vertex, mv->lmcoord1, 2 );	// styles 2-3
+			R_TextureCoords( surf, currVertex->vertex, currVertex->stcoord0 );
+			R_LightmapCoords( surf, currVertex->vertex, currVertex->lmcoord0, 0 );	// styles 0-1
+			R_LightmapCoords( surf, currVertex->vertex, currVertex->lmcoord1, 2 );	// styles 2-3
 		}
 
 		// NOTE: now firstvertex are handled in world->vertexes[] array, not in world->tbn_vectors[] !!!
-		surf->info->firstvertex = curVert;
+		surf->info->firstvertex = currVertexIndex;
 		surf->info->numverts = surf->numedges;
-		curVert += surf->numedges;
+		currVertexIndex += surf->numedges;
 
 		Mod_ComputeFaceTBN( surf, surf->info );
 	}
 
 	// compute water global coords
-	for( i = 1; i < worldmodel->numsubmodels; i++ )
+	for (int i = 1; i < worldmodel->numsubmodels; i++ )
 	{
 		Vector absmin, absmax;
 
 		ClearBounds( absmin, absmax );
 
 		// first iteration - compute water bbox
-		for( j = 0; j < worldmodel->submodels[i].numfaces; j++ )
+		for (int j = 0; j < worldmodel->submodels[i].numfaces; j++ )
 		{
 			surf = &worldmodel->surfaces[worldmodel->submodels[i].firstface + j];
 			if( !FBitSet( surf->flags, SURF_DRAWTURB ))
@@ -2384,7 +2386,7 @@ static void Mod_CreateBufferObject( void )
 		float scale = sqrt( (absmax - absmin).Average()) * 0.3f;	// FIXME: tune this constant?
 
 		// second iteration - mapping global coords
-		for( j = 0; j < worldmodel->submodels[i].numfaces; j++ )
+		for (int j = 0; j < worldmodel->submodels[i].numfaces; j++)
 		{
 			surf = &worldmodel->surfaces[worldmodel->submodels[i].firstface + j];
 			if( !FBitSet( surf->flags, SURF_DRAWTURB ))
@@ -2392,20 +2394,20 @@ static void Mod_CreateBufferObject( void )
 
 			for( int k = 0; k < surf->info->numverts; k++ )
 			{
-				mv = &world->vertexes[surf->info->firstvertex + k];
-				R_GlobalCoords( surf, mv->vertex, absmin, absmax, scale, mv->stcoord0 );
+				currVertex = &world->vertexes[surf->info->firstvertex + k];
+				R_GlobalCoords( surf, currVertex->vertex, absmin, absmax, scale, currVertex->stcoord0 );
 			}
 		}
 	}
 
 	// time to prepare landscapes
-	for( i = 0; i < worldmodel->numsurfaces; i++ )
+	for (int i = 0; i < worldmodel->numsurfaces; i++ )
 	{
 		msurface_t *surf = &worldmodel->surfaces[i];
 		Mod_ProcessLandscapes( surf, surf->info );
 	}
 
-	for( i = 0; i < worldmodel->numsurfaces; i++ )
+	for (int i = 0; i < worldmodel->numsurfaces; i++ )
 	{
 		msurface_t *surf = &worldmodel->surfaces[i];
 		Mod_MappingLandscapes( surf, surf->info );
