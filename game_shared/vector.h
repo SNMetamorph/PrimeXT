@@ -215,7 +215,7 @@ public:
 		return Vector(start.x + scale * direction.x, start.y + scale * direction.y, start.z + scale * direction.z) ;
 	}
 
-	_forceinline bool Compare( const Vector &vec, const float epsilon ) const
+	_forceinline bool IsEqual( const Vector &vec, const float epsilon ) const
 	{
 		if( fabs( x - vec.x ) > epsilon ) return false;
 		if( fabs( y - vec.y ) > epsilon ) return false;

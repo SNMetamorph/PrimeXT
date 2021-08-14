@@ -850,7 +850,7 @@ static void R_AddDecalFragment( decalClip_t *clip, msurface_t *fa, const bvert_t
 
 			for( vertex = clip->verticesHashTable[hashKey]; vertex; vertex = vertex->nextHash )
 			{
-				if( vertex->point.Compare( points[index], 0.01f ))
+				if( vertex->point.IsEqual( points[index], 0.01f ))
 					break;
 			}
 
