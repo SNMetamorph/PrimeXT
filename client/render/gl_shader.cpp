@@ -1295,7 +1295,7 @@ void GL_EncodeNormal( char *options, int texturenum )
 	}
 }
 
-void GL_ListGPUShaders( void )
+void GL_ListGPUShaders()
 {
 	int count = 0;
 
@@ -1316,7 +1316,14 @@ void GL_ListGPUShaders( void )
 	Msg( "Total %i shaders\n", count );
 }
 
-void GL_InitGPUShaders( void )
+void GL_ReloadShaders()
+{
+	GL_FreeUberShaders();
+	gEngfuncs.Con_Printf("GL_ReloadShaders: ubershaders reloading requested\n");
+	tr.params_changed = true;
+}
+
+void GL_InitGPUShaders()
 {
 	char options[MAX_OPTIONS_LENGTH];
 
@@ -1326,7 +1333,8 @@ void GL_InitGPUShaders( void )
 	if( !GL_Support( R_SHADER_GLSL100_EXT ))
 		return;
 
-	ADD_COMMAND( "shaderlist", GL_ListGPUShaders );
+	ADD_COMMAND("shaderlist", GL_ListGPUShaders);
+	ADD_COMMAND("r_reloadshaders", GL_ReloadShaders);
 
 	// init sky shaders
 	GL_SetShaderDirective( options, "SKYBOX_DAYTIME" );

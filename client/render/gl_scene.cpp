@@ -34,183 +34,183 @@ GNU General Public License for more details.
 R_CheckChanges
 ===============
 */
-void R_CheckChanges( void )
+void R_CheckChanges(void)
 {
 	static bool	fog_enabled_old;
 	bool		settings_changed = false;
 
-	if( FBitSet( r_showlightmaps->flags, FCVAR_CHANGED ))
+	if (FBitSet(r_showlightmaps->flags, FCVAR_CHANGED))
 	{
-		float lightmap = bound( 0.0f, r_showlightmaps->value, MAX_LIGHTMAPS );
-		CVAR_SET_FLOAT( "r_showlightmaps", lightmap );
-		ClearBits( r_showlightmaps->flags, FCVAR_CHANGED );
+		float lightmap = bound(0.0f, r_showlightmaps->value, MAX_LIGHTMAPS);
+		CVAR_SET_FLOAT("r_showlightmaps", lightmap);
+		ClearBits(r_showlightmaps->flags, FCVAR_CHANGED);
 	}
 
-	if( FBitSet( r_studio_decals->flags, FCVAR_CHANGED ))
+	if (FBitSet(r_studio_decals->flags, FCVAR_CHANGED))
 	{
-		float maxStudioDecals = bound( 10.0f, r_studio_decals->value, 256.0f );
-		CVAR_SET_FLOAT( "r_studio_decals", maxStudioDecals );
-		ClearBits( r_studio_decals->flags, FCVAR_CHANGED );
+		float maxStudioDecals = bound(10.0f, r_studio_decals->value, 256.0f);
+		CVAR_SET_FLOAT("r_studio_decals", maxStudioDecals);
+		ClearBits(r_studio_decals->flags, FCVAR_CHANGED);
 	}
 
-	if( FBitSet( cv_deferred_maxlights->flags, FCVAR_CHANGED ))
+	if (FBitSet(cv_deferred_maxlights->flags, FCVAR_CHANGED))
 	{
-		float maxDeferredLights = bound( 1, cv_deferred_maxlights->value, MAXDYNLIGHTS );
-		if( maxDeferredLights != cv_deferred_maxlights->value )
-			CVAR_SET_FLOAT( "gl_deferred_maxlights", maxDeferredLights );
-		ClearBits( cv_deferred_maxlights->flags, FCVAR_CHANGED );
+		float maxDeferredLights = bound(1, cv_deferred_maxlights->value, MAXDYNLIGHTS);
+		if (maxDeferredLights != cv_deferred_maxlights->value)
+			CVAR_SET_FLOAT("gl_deferred_maxlights", maxDeferredLights);
+		ClearBits(cv_deferred_maxlights->flags, FCVAR_CHANGED);
 	}
 
-	if( FBitSet( cv_deferred_tracebmodels->flags, FCVAR_CHANGED ))
+	if (FBitSet(cv_deferred_tracebmodels->flags, FCVAR_CHANGED))
 	{
-		ClearBits( cv_deferred_tracebmodels->flags, FCVAR_CHANGED );
+		ClearBits(cv_deferred_tracebmodels->flags, FCVAR_CHANGED);
 		tr.params_changed = true;
 	}
 
-	if( FBitSet( r_recursion_depth->flags, FCVAR_CHANGED ))
+	if (FBitSet(r_recursion_depth->flags, FCVAR_CHANGED))
 	{
-		float depth = bound( 0.0f, r_recursion_depth->value, MAX_REF_STACK - 2 );
-		CVAR_SET_FLOAT( "gl_recursion_depth", depth );
-		ClearBits( r_recursion_depth->flags, FCVAR_CHANGED );
+		float depth = bound(0.0f, r_recursion_depth->value, MAX_REF_STACK - 2);
+		CVAR_SET_FLOAT("gl_recursion_depth", depth);
+		ClearBits(r_recursion_depth->flags, FCVAR_CHANGED);
 	}
 
-	if( FBitSet( r_drawentities->flags, FCVAR_CHANGED ))
+	if (FBitSet(r_drawentities->flags, FCVAR_CHANGED))
 	{
-		ClearBits( r_drawentities->flags, FCVAR_CHANGED );
+		ClearBits(r_drawentities->flags, FCVAR_CHANGED);
 		tr.params_changed = true;
 	}
 
-	if( FBitSet( r_lightstyles->flags, FCVAR_CHANGED ))
+	if (FBitSet(r_lightstyles->flags, FCVAR_CHANGED))
 	{
-		ClearBits( r_lightstyles->flags, FCVAR_CHANGED );
+		ClearBits(r_lightstyles->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 
-	if( FBitSet( cv_cubemaps->flags, FCVAR_CHANGED ))
+	if (FBitSet(cv_cubemaps->flags, FCVAR_CHANGED))
 	{
-		ClearBits( cv_cubemaps->flags, FCVAR_CHANGED );
+		ClearBits(cv_cubemaps->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 
-	if( FBitSet( cv_deferred->flags, FCVAR_CHANGED ))
+	if (FBitSet(cv_deferred->flags, FCVAR_CHANGED))
 	{
-		ClearBits( cv_deferred->flags, FCVAR_CHANGED );
+		ClearBits(cv_deferred->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 
-	if( FBitSet( r_lightmap->flags, FCVAR_CHANGED ))
+	if (FBitSet(r_lightmap->flags, FCVAR_CHANGED))
 	{
-		ClearBits( r_lightmap->flags, FCVAR_CHANGED );
+		ClearBits(r_lightmap->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 
-	if( FBitSet( r_allow_mirrors->flags, FCVAR_CHANGED ))
+	if (FBitSet(r_allow_mirrors->flags, FCVAR_CHANGED))
 	{
-		ClearBits( r_allow_mirrors->flags, FCVAR_CHANGED );
+		ClearBits(r_allow_mirrors->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 
-	if( FBitSet( cv_realtime_puddles->flags, FCVAR_CHANGED ))
+	if (FBitSet(cv_realtime_puddles->flags, FCVAR_CHANGED))
 	{
-		ClearBits( cv_realtime_puddles->flags, FCVAR_CHANGED );
+		ClearBits(cv_realtime_puddles->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 
-	if( FBitSet( r_detailtextures->flags, FCVAR_CHANGED ))
+	if (FBitSet(r_detailtextures->flags, FCVAR_CHANGED))
 	{
-		ClearBits( r_detailtextures->flags, FCVAR_CHANGED );
+		ClearBits(r_detailtextures->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 
-	if( FBitSet( r_fullbright->flags, FCVAR_CHANGED ))
+	if (FBitSet(r_fullbright->flags, FCVAR_CHANGED))
 	{
-		ClearBits( r_fullbright->flags, FCVAR_CHANGED );
+		ClearBits(r_fullbright->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 
-	if( FBitSet( r_sunshadows->flags, FCVAR_CHANGED ))
+	if (FBitSet(r_sunshadows->flags, FCVAR_CHANGED))
 	{
-		ClearBits( r_sunshadows->flags, FCVAR_CHANGED );
+		ClearBits(r_sunshadows->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 
-	if( FBitSet( r_sun_allowed->flags, FCVAR_CHANGED ))
+	if (FBitSet(r_sun_allowed->flags, FCVAR_CHANGED))
 	{
-		ClearBits( r_sun_allowed->flags, FCVAR_CHANGED );
+		ClearBits(r_sun_allowed->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 
-	if( FBitSet( cv_parallax->flags, FCVAR_CHANGED ))
+	if (FBitSet(cv_parallax->flags, FCVAR_CHANGED))
 	{
-		ClearBits( cv_parallax->flags, FCVAR_CHANGED );
+		ClearBits(cv_parallax->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 
-	if( FBitSet( cv_specular->flags, FCVAR_CHANGED ))
+	if (FBitSet(cv_specular->flags, FCVAR_CHANGED))
 	{
-		ClearBits( cv_specular->flags, FCVAR_CHANGED );
+		ClearBits(cv_specular->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 
-	if( FBitSet( r_grass_shadows->flags, FCVAR_CHANGED ))
+	if (FBitSet(r_grass_shadows->flags, FCVAR_CHANGED))
 	{
-		ClearBits( r_grass_shadows->flags, FCVAR_CHANGED );
+		ClearBits(r_grass_shadows->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 
-	if( FBitSet( r_shadows->flags, FCVAR_CHANGED ))
+	if (FBitSet(r_shadows->flags, FCVAR_CHANGED))
 	{
-		ClearBits( r_shadows->flags, FCVAR_CHANGED );
+		ClearBits(r_shadows->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 
-	if( FBitSet( cv_bump->flags, FCVAR_CHANGED ))
+	if (FBitSet(cv_bump->flags, FCVAR_CHANGED))
 	{
-		ClearBits( cv_bump->flags, FCVAR_CHANGED );
+		ClearBits(cv_bump->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 
-	if( FBitSet( cv_brdf->flags, FCVAR_CHANGED ))
+	if (FBitSet(cv_brdf->flags, FCVAR_CHANGED))
 	{
-		ClearBits( cv_brdf->flags, FCVAR_CHANGED );
+		ClearBits(cv_brdf->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 
-	if( FBitSet( r_test->flags, FCVAR_CHANGED ))
+	if (FBitSet(r_test->flags, FCVAR_CHANGED))
 	{
-		ClearBits( r_test->flags, FCVAR_CHANGED );
+		ClearBits(r_test->flags, FCVAR_CHANGED);
 		R_StudioClearLightCache();
 		settings_changed = true;
 	}
 
-	if( FBitSet( r_grass->flags, FCVAR_CHANGED ))
+	if (FBitSet(r_grass->flags, FCVAR_CHANGED))
 	{
-		if( worldmodel != NULL )
+		if (worldmodel != NULL)
 		{
-			for( int i = 0; i < worldmodel->numsurfaces; i++ )
-				SetBits( worldmodel->surfaces[i].flags, SURF_GRASS_UPDATE );
+			for (int i = 0; i < worldmodel->numsurfaces; i++)
+				SetBits(worldmodel->surfaces[i].flags, SURF_GRASS_UPDATE);
 		}
-		ClearBits( r_grass->flags, FCVAR_CHANGED );
+		ClearBits(r_grass->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 
-	if( FBitSet( cv_gamma->flags, FCVAR_CHANGED ) || FBitSet( cv_brightness->flags, FCVAR_CHANGED ))
+	if (FBitSet(cv_gamma->flags, FCVAR_CHANGED) || FBitSet(cv_brightness->flags, FCVAR_CHANGED))
 	{
-		if( worldmodel != NULL )
+		if (worldmodel != NULL)
 		{
-			for( int i = 0; i < worldmodel->numsurfaces; i++ )
-				SetBits( worldmodel->surfaces[i].flags, SURF_LM_UPDATE|SURF_GRASS_UPDATE );
+			for (int i = 0; i < worldmodel->numsurfaces; i++)
+				SetBits(worldmodel->surfaces[i].flags, SURF_LM_UPDATE | SURF_GRASS_UPDATE);
 		}
 		R_StudioClearLightCache();
 	}
 
-	if( tr.fogEnabled != fog_enabled_old )
+	if (tr.fogEnabled != fog_enabled_old)
 	{
 		fog_enabled_old = tr.fogEnabled;
 		settings_changed = true;
 	}
 
-	if( settings_changed )
+	if (settings_changed || tr.params_changed)
 	{
 		tr.glsl_valid_sequence++; // now all uber-shaders are invalidate and possible need for recompile
 		tr.params_changed = true;
