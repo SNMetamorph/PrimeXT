@@ -1236,28 +1236,13 @@
 @PointClass color(255 255 128) base(Targetname, Parent) iconsprite("sprites/fgd/env_dynlight.spr") = env_dynlight : "Dynamic light"
 [
 	rendercolor(color255) : "Light Color (R G B)" : "255 255 255"
-	radius(integer) : "Radius" : 256
-	lightstyle(choices) : "Appearance" : 0 =
-	[
-		0 : "Normal"
-		10: "Fluorescent flicker"
-		2 : "Slow, strong pulse"
-		11: "Slow pulse, noblack"
-		5 : "Gentle pulse"
-		1 : "Flicker A"
-		6 : "Flicker B"
-		3 : "Candle A"
-		7 : "Candle B"
-		8 : "Candle C"
-		4 : "Fast strobe"
-		9 : "Slow strobe"
-		12: "Underwater"
-	]
+	renderamt(integer) : "Radius" : 256
+	scale(integer) : "Cone (spotlights)" : 0
+	rendermode(integer) : "texture (spotlights)" : 0
+    message(string) : "Media file"
 	spawnflags(flags) =
 	[
-		1 : "Start On" : 0
-		2 : "No falloff":0
-		4 : "No light in solid": 0
+		1 : "Start off" : 0
 	]
 ]
 
@@ -1461,49 +1446,6 @@
 		128 : "Breakable" 	: 0
 		256 : "Crowbar" : 0
 		512 : "Holdable" : 1
-	]
-]
-
-@PointClass base(Targetname, Parent, RenderFields, Angles) size(-16 -16 -16, 16 16 16) iconsprite("sprites/fgd/env_projector.spr") = env_projector  : "Texture Projector/SpotLight" 
-[
-	texture(string) : "Texture File" : "materials/misc/flashlight2.tga"
-	framerate(integer) : "Sprite Framerate" : 10
-	fov(integer) : "Field of View"
-	radius(integer) : "Radius"
-	rendercolor(color255) : "Light Color (R G B)" : "255 255 255"
-	falloff(choices) : "Falloff" : 0 =
-	[
-		0: "Auto"
-		1: "Fast"
-		2: "Standart"
-		3: "Slow"	
-	]	
-    lightstyle(choices) : "Appearance" : 0 =
-	[
-		0 : "Normal"
-		10: "Fluorescent flicker"
-		2 : "Slow, strong pulse"
-		11: "Slow pulse, noblack"
-		5 : "Gentle pulse"
-		1 : "Flicker A"
-		6 : "Flicker B"
-		3 : "Candle A"
-		7 : "Candle B"
-		8 : "Candle C"
-		4 : "Fast strobe"
-		9 : "Slow strobe"
-		12: "Underwater"
-	]
-	spawnflags(flags) =
-	[
-		1: "Start On" : 0
-		2: "No Attenuation" : 0
-		4: "Landscape mode" : 0
-		8: "Portrait mode" : 0
-		//16: "Light Models" : 0
-		32: "No World" : 0
-		64: "No Shadows":0
-		128: "Horiz. Flip":0
 	]
 ]
 

@@ -3081,321 +3081,158 @@ void CEnvSky::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useTy
 	}
 }
 
-// =================== ENV_PROJECTOR ==============================================
+// buz: dynamic light entity
+#define SF_DYNLIGHT_STARTOFF		1
+#define SF_DYNLIGHT_NOSHADOW		2
+#define SF_DYNLIGHT_NOBUMP		4
+#define SF_DYNLIGHT_FLARE		8
 
-#define SF_PROJECTOR_START_ON		BIT( 0 )
-#define SF_PROJECTOR_NO_ATTEN		BIT( 1 )
-#define SF_PROJECTOR_ASPECT4X3	BIT( 2 )	// use 4x3 aspect instead of quad
-#define SF_PROJECTOR_ASPECT3X4	BIT( 3 )	// use 3x4 aspect instead of quad
-// g-cont. one bit reserved for me
-#define SF_PROJECTOR_NOWORLDLIGHT	BIT( 5 )	// don't apply projection to the world brushes
-#define SF_PROJECTOR_NOSHADOWS	BIT( 6 )	// ignore shadows for this light (perf)
-#define SF_PROJECTOR_FLIPTEXTURE	BIT( 7 )	// mirror image from right to left side
-
-class CEnvProjector : public CBaseDelay
+class CDynamicLight : public CPointEntity
 {
-	DECLARE_CLASS( CEnvProjector, CBaseDelay );
-public: 
-	void Spawn( void );
-	void Precache( void );
-	void KeyValue( KeyValueData *pkvd );
-	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	virtual STATE GetState( void ) { return FBitSet( pev->effects, EF_NODRAW ) ? STATE_OFF : STATE_ON; };
-	virtual int ObjectCaps( void ) { return BaseClass :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
-	void CineThink( void );
-	void SpriteThink( void );
-	void PVSThink( void );
-	void UpdatePVSPoint( void );
-	float Frames( void ) { return pev->frags; }
+public:
+	void Spawn()
+	{
+		pev->solid = SOLID_NOT;
+		pev->movetype = MOVETYPE_NONE;
 
-	DECLARE_DATADESC();
-};
+		Precache();
 
-LINK_ENTITY_TO_CLASS( env_projector, CEnvProjector );
+		if (pev->sequence)
+			pev->renderfx = 72;	// dynamic light with avi-texture
+		else pev->renderfx = 71;	// dynamic light
 
-BEGIN_DATADESC( CEnvProjector )
-	DEFINE_FUNCTION( CineThink ),
-	DEFINE_FUNCTION( SpriteThink ),
-	DEFINE_FUNCTION( PVSThink ),
-END_DATADESC()
+		SET_MODEL(ENT(pev), "sprites/null.spr"); // should be visible to send to client
 
-void CEnvProjector :: KeyValue( KeyValueData *pkvd )
-{
-	if( FStrEq( pkvd->szKeyName, "fov" ))
-	{
-		pev->iuser2 = Q_atoi( pkvd->szValue );
-		pev->iuser2 = bound( 1, pev->iuser2, 120 );
-		pkvd->fHandled = TRUE;
-	}
-	else if( FStrEq( pkvd->szKeyName, "radius" ))
-	{
-		pev->scale = Q_atof( pkvd->szValue ) * (1.0f/8.0f);
-		pkvd->fHandled = TRUE;
-	}
-	else if( FStrEq( pkvd->szKeyName, "texture" ))
-	{
-		pev->message = ALLOC_STRING( pkvd->szValue );
-		pkvd->fHandled = TRUE;
-	}
-	else if( FStrEq( pkvd->szKeyName, "falloff" ))
-	{
-		pev->renderamt = Q_atoi( pkvd->szValue );
-		pkvd->fHandled = TRUE;
-	}
-	else if( FStrEq( pkvd->szKeyName, "lightstyle" ))
-	{
-		pev->renderfx = Q_atoi( pkvd->szValue );
-		pkvd->fHandled = TRUE;
-	}
-	else BaseClass::KeyValue( pkvd );
-}
+		pev->renderamt = pev->renderamt / 8;
 
-void CEnvProjector::Precache( void )
-{
-	if( !FStringNull( pev->message ))
-	{
-		if( FBitSet( pev->iuser1, ( CF_TEXTURE|CF_SPRITE )))
+		// spotlight
+		if (pev->scale)
 		{
-			pev->sequence = g_engfuncs.pfnPrecacheGeneric( STRING( pev->message ));
+			// create second PVS point
+			pev->enemy = Create("info_target", pev->origin, g_vecZero, edict())->edict();
+			SET_MODEL(pev->enemy, "sprites/null.spr"); // allow to collect visibility info
+			UTIL_SetSize(VARS(pev->enemy), Vector(-8, -8, -8), Vector(8, 8, 8));
 
-			if( FBitSet( pev->iuser1, CF_SPRITE ))
-				pev->frags = MODEL_FRAMES( PRECACHE_MODEL( (char *)STRING( pev->message )) );	// BUGBUG: this loaded sprites twice
+			// to prevent disapperaing from PVS (renderamt is premultiplied by 0.125)
+			UTIL_SetSize(pev, Vector(-pev->renderamt, -pev->renderamt, -pev->renderamt), Vector(pev->renderamt, pev->renderamt, pev->renderamt));
 		}
-		else if( FBitSet( pev->iuser1, CF_MOVIE ))
-			pev->sequence = UTIL_PrecacheMovie( pev->message );
+		else
+		{
+			// to prevent disapperaing from PVS (renderamt is premultiplied by 0.125)
+			UTIL_SetSize(pev, Vector(-pev->renderamt * 4, -pev->renderamt * 4, -pev->renderamt * 4), Vector(pev->renderamt * 4, pev->renderamt * 4, pev->renderamt * 4));
+		}
+
+		if (pev->spawnflags & SF_DYNLIGHT_NOSHADOW)
+			pev->effects |= EF_NOSHADOW;
+		if (pev->spawnflags & SF_DYNLIGHT_NOBUMP)
+			pev->effects |= EF_NOBUMP;
+		if (pev->spawnflags & SF_DYNLIGHT_FLARE)
+			pev->effects |= EF_LENSFLARE;
+
+		if (pev->spawnflags & SF_DYNLIGHT_STARTOFF)
+		{
+			pev->effects |= EF_NODRAW;
+		}
+		else if (pev->sequence)
+		{
+			SetThink(&CDynamicLight::CineThink);
+			SetNextThink(0.1f);
+		}
+		else if (pev->scale)
+		{
+			SetThink(&CDynamicLight::PVSThink);
+			SetNextThink(0.1f);
+		}
 	}
-}
 
-void CEnvProjector::Spawn( void )
-{
-	pev->effects |= (EF_PROJECTED_LIGHT|EF_NODRAW);
-	pev->rendermode = kRenderTransTexture;
-	pev->movetype = MOVETYPE_NOCLIP;
-
-	if( !pev->framerate )
-		pev->framerate = 10; // for sprites
-
-	if( !pev->scale )
-		pev->scale = 300 * (1.0f/8.0f);
-
-	pev->frags = pev->scale; // member radius
-
-	SET_MODEL( edict(), "sprites/null.spr" );
-	SetBits( m_iFlags, MF_POINTENTITY );
-//	SetLocalAvelocity( Vector( 30, 30, 30 ));
-	RelinkEntity( FALSE );
-
-	if( FBitSet( pev->spawnflags, SF_PROJECTOR_NO_ATTEN ))
-		pev->iuser1 |= CF_NOATTEN;
-
-	if( FBitSet( pev->spawnflags, SF_PROJECTOR_ASPECT4X3 ))
-		pev->iuser1 |= CF_ASPECT4X3;
-
-	if( FBitSet( pev->spawnflags, SF_PROJECTOR_ASPECT3X4 ))
-		pev->iuser1 |= CF_ASPECT3X4;
-
-	if( FBitSet( pev->spawnflags, SF_PROJECTOR_NOWORLDLIGHT ))
-		pev->iuser1 |= CF_NOWORLD_PROJECTION;
-
-	if( FBitSet( pev->spawnflags, SF_PROJECTOR_NOSHADOWS ))
-		pev->iuser1 |= CF_NOSHADOWS;
-
-	if( FBitSet( pev->spawnflags, SF_PROJECTOR_FLIPTEXTURE ))
-		pev->iuser1 |= CF_FLIPTEXTURE;
-
-	// determine texture type by extension
-	if( !FStringNull( pev->message ))
+	void Precache()
 	{
-		const char *ext = UTIL_FileExtension( STRING( pev->message ));
+		PRECACHE_MODEL("sprites/null.spr");
 
-		if( !Q_stricmp( ext, "tga" ) || !Q_stricmp( ext, "mip" ))
-			pev->iuser1 |= CF_TEXTURE;
-		else if( !Q_stricmp( ext, "spr" ))
-			pev->iuser1 |= CF_SPRITE;
-		else if( !Q_stricmp( ext, "avi" ))
-			pev->iuser1 |= CF_MOVIE;
+		if (!FStringNull(pev->message))
+		{
+			const char *ext = UTIL_FileExtension(STRING(pev->message));
+
+			if (!Q_stricmp(ext, "avi"))
+			{
+				// 0 if movie not found
+				pev->sequence = UTIL_PrecacheMovie(pev->message);
+			}
+		}
 	}
 
-	Precache();
-
-	// create second PVS point
-	pev->enemy = Create( "info_target", GetAbsOrigin(), g_vecZero, edict() )->edict();
-	SET_MODEL( pev->enemy, "sprites/null.spr" ); // allow to collect visibility info
-	UTIL_SetSize ( VARS( pev->enemy ), Vector ( -8, -8, -8 ), Vector ( 8, 8, 8 ) );
-
-	// enable monitor
-	if( FStringNull( pev->targetname ) || FBitSet( pev->spawnflags, SF_PROJECTOR_START_ON ))
+	STATE GetState(void)
 	{
-		SetThink( &CBaseEntity::SUB_CallUseToggle );
-		SetNextThink( 0.1 );
-	}
-}
-
-void CEnvProjector :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
-{
-	if( IsLockedByMaster( pActivator ))
-		return;
-
- 	if( useType == USE_SET )
- 	{
- 		// set radius
- 		value = bound( 0.0f, value, 1.0f );
-		pev->scale = pev->frags * value;
-		return;
+		if (pev->effects & EF_NODRAW)
+			return STATE_OFF;
+		else
+			return STATE_ON;
 	}
 
-	if( FBitSet( pev->effects, EF_NODRAW ))
-		pev->effects &= ~EF_NODRAW;
-	else pev->effects |= EF_NODRAW;
-          
-	if( pev->effects & EF_NODRAW )
+	void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
 	{
-		DontThink();
-		return;
+		if (useType == USE_ON)
+			pev->effects &= ~EF_NODRAW;
+		else if (useType == USE_OFF)
+			pev->effects |= EF_NODRAW;
+		else if (useType == USE_TOGGLE)
+		{
+			if (pev->effects & EF_NODRAW)
+				pev->effects &= ~EF_NODRAW;
+			else pev->effects |= EF_NODRAW;
+		}
+
+		if (pev->effects & EF_NODRAW)
+		{
+			DontThink();
+		}
+		else if (pev->sequence)
+		{
+			SetThink(&CDynamicLight::CineThink);
+			SetNextThink(0.1f);
+		}
+		else if (pev->scale)
+		{
+			SetThink(&CDynamicLight::PVSThink);
+			SetNextThink(0.1f);
+		}
 	}
-	else
+
+	void UpdatePVSPoint(void)
 	{
-		pev->dmgtime = gpGlobals->time + 0.1f;
+		TraceResult tr;
+		Vector forward;
 
-		// run properly method
-		if( FBitSet( pev->iuser1, CF_MOVIE ))
-			SetThink( &CEnvProjector::CineThink );
-		else if( FBitSet( pev->iuser1, CF_SPRITE ) && Frames() > 1 )
-			SetThink( &CEnvProjector::SpriteThink );
-		else SetThink( &CEnvProjector::PVSThink );
+		UTIL_MakeVectorsPrivate(pev->angles, forward, NULL, NULL);
+		Vector vecSrc = pev->origin + forward * 8.0f;
+		Vector vecEnd = vecSrc + forward * (pev->renderamt * 8.0f);
+		UTIL_TraceLine(vecSrc, vecEnd, ignore_monsters, edict(), &tr);
 
-		SetNextThink( 0.1f );
+		// this is our second PVS point
+		CBaseEntity *pVisHelper = CBaseEntity::Instance(pev->enemy);
+		if (pVisHelper) UTIL_SetOrigin(pVisHelper, tr.vecEndPos + tr.vecPlaneNormal * 8.0f);
 	}
-}
 
-void CEnvProjector :: CineThink( void )
-{
-	UpdatePVSPoint();
+	void EXPORT CineThink(void)
+	{
+		UpdatePVSPoint();
 
-	// update as 30 frames per second
-	pev->fuser2 += CIN_FRAMETIME;
-	SetNextThink( CIN_FRAMETIME );
-}
+		// update as 30 frames per second
+		pev->fuser2 += CIN_FRAMETIME;
+		SetNextThink(CIN_FRAMETIME);
+	}
 
-void CEnvProjector :: SpriteThink( void )
-{
-	// animate the sprite
-	pev->frame += pev->framerate * ( gpGlobals->time - pev->dmgtime );
-	if( pev->frame > Frames( ))
-		pev->frame = fmod( pev->frame, Frames( ));
-	pev->dmgtime = gpGlobals->time;
+	void EXPORT PVSThink(void)
+	{
+		UpdatePVSPoint();
 
-	UpdatePVSPoint();
-
-	// keep think at 0.1 so interpolation will working properly
-	SetNextThink( 0.1f );
-}
-
-void CEnvProjector :: PVSThink( void )
-{
-	UpdatePVSPoint();
-
-	SetNextThink( 0.1f );
-}
-
-void CEnvProjector :: UpdatePVSPoint( void )
-{
-	TraceResult tr;
-
-	UTIL_MakeVectors( GetAbsAngles() );
-	Vector vecSrc = GetAbsOrigin() + gpGlobals->v_forward * 8.0f;
-	Vector vecEnd = vecSrc + gpGlobals->v_forward * (pev->scale * 8.0f);
-	UTIL_TraceLine( vecSrc, vecEnd, ignore_monsters, edict(), &tr );
-
-	// this is our second PVS point
-	CBaseEntity *pVisHelper = CBaseEntity::Instance( pev->enemy );
-	if( pVisHelper ) UTIL_SetOrigin( pVisHelper, tr.vecEndPos + tr.vecPlaneNormal * 8.0f ); 
-}
-
-// =================== ENV_DYNLIGHT ==============================================
-
-#define SF_DYNLIGHT_START_ON		BIT( 0 )
-#define SF_DYNLIGHT_NOLIGHT_IN_SOLID	BIT( 2 )
-
-class CEnvDynamicLight : public CBaseDelay
-{
-	DECLARE_CLASS( CEnvDynamicLight, CBaseDelay );
-public: 
-	void Spawn( void );
-	void KeyValue( KeyValueData *pkvd );
-	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	virtual STATE GetState( void ) { return FBitSet( pev->effects, EF_NODRAW ) ? STATE_OFF : STATE_ON; };
-	virtual int ObjectCaps( void ) { return BaseClass :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+		// static light should be updated in case
+		// moving platform under them
+		SetNextThink(0.01f); // TODO if movewith then 0.01f else 0.1f
+	}
 };
 
-LINK_ENTITY_TO_CLASS( env_dynlight, CEnvDynamicLight );
-
-void CEnvDynamicLight :: KeyValue( KeyValueData *pkvd )
-{
-	if( FStrEq( pkvd->szKeyName, "radius" ))
-	{
-		pev->scale = Q_atof( pkvd->szValue ) * (1.0f/8.0f);
-		pkvd->fHandled = TRUE;
-	}
-	else if( FStrEq( pkvd->szKeyName, "lightstyle" ))
-	{
-		pev->renderfx = Q_atoi( pkvd->szValue );
-		pkvd->fHandled = TRUE;
-	}
-	else BaseClass::KeyValue( pkvd );
-}
-
-void CEnvDynamicLight::Spawn( void )
-{
-	pev->effects |= (EF_DYNAMIC_LIGHT|EF_NODRAW);
-	pev->rendermode = kRenderTransTexture;
-	pev->movetype = MOVETYPE_NOCLIP;
-	pev->renderamt = 0;
-
-	if( !pev->scale )
-		pev->scale = 300 * (1.0f/8.0f);
-
-	pev->frags = pev->scale; // member radius
-
-	SET_MODEL( edict(), "sprites/null.spr" );
-	SetBits( m_iFlags, MF_POINTENTITY );
-//	SetLocalAvelocity( Vector( 30, 30, 30 ));
-	RelinkEntity( FALSE );
-
-	if( FBitSet( pev->spawnflags, SF_PROJECTOR_NO_ATTEN ))
-		pev->iuser1 |= CF_NOATTEN;
-
-	if( FBitSet( pev->spawnflags, SF_DYNLIGHT_NOLIGHT_IN_SOLID ))
-		pev->iuser1 |= CF_NOLIGHT_IN_SOLID;
-
-	// to prevent disapperaing from PVS (scale is premultiplied by 0.125)
-	UTIL_SetSize( pev, Vector( -pev->scale, -pev->scale, -pev->scale ), Vector( pev->scale, pev->scale, pev->scale ));
-
-	// enable dynlight
-	if( FStringNull( pev->targetname ) || FBitSet( pev->spawnflags, SF_DYNLIGHT_START_ON ))
-	{
-		SetThink( &CBaseEntity::SUB_CallUseToggle );
-		SetNextThink( 0.1 );
-	}
-}
-
-void CEnvDynamicLight::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
-{
-	if( IsLockedByMaster( pActivator ))
-		return;
-
- 	if( useType == USE_SET )
- 	{
- 		// set radius
- 		value = bound( 0.0f, value, 1.0f );
-		pev->scale = pev->frags * value;
-		return;
-	}
-
-	if( FBitSet( pev->effects, EF_NODRAW ))
-		pev->effects &= ~EF_NODRAW;
-	else pev->effects |= EF_NODRAW;
-}
+LINK_ENTITY_TO_CLASS(env_dynlight, CDynamicLight);
 
 // =================== ENV_PARTICLE ==============================================
 
