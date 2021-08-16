@@ -1386,10 +1386,11 @@
 
 @PointClass base(Targetname, Angles, Reflection, Parent, RenderFields,Sequence) studio() color(100 137 60) = env_model : "New alternative to cyclers"
 [
-	model(studio) : "Model"
+	model(studio) : "Model name"
 	skin(integer) : "Skin" : 0
 	body(integer) : "Body" : 0
-	scale(string) : "Scale (1.0 = normal size)" : "1.0"
+	scale(string) : "Scale (1.0 = normal size)"
+
 	m_iszSequence_On(string) : "Sequence when on"
 	m_iAction_On(choices) : "Behaviour when on" : 0 =
 	[
@@ -1397,6 +1398,7 @@
 		1: "Loop"
 		2: "Change state when sequence ends"
 	]
+
 	m_iszSequence_Off(string) : "Sequence when off"
 	m_iAction_Off(choices) : "Behaviour when off" : 0 =
 	[
@@ -1404,6 +1406,7 @@
 		1: "Loop"
 		2: "Change state when sequence ends"
 	]
+
 	spawnflags(flags) =
 	[
 		1: "Initially Off" : 0
@@ -1666,14 +1669,17 @@
 	skin(integer) : "Skin" : 0
 	body(integer) : "Body" : 0
 	scale(string) : "Scale (1.0 = normal size)" : "1.0"
+	xform(string) : "Scale (X Y Z)" : "1 1 1"
 	sequence(integer) : "Sequence" : 0
 	frame(integer) : "Frame"
 	colormap(string): "Colormap"
+	zhlt_shadowmode(string) : "Shadow (1 = medium quality)" : "1"
 	
 	spawnflags(flags) =
 	[
 		1: "Solid" : 0
 		2: "Drop to Floor" : 0
+		4: "Disable shadow" : 0
 	]
 ]
 
