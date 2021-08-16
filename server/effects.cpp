@@ -3703,6 +3703,9 @@ public:
 	virtual int ObjectCaps( void ) { return FCAP_IGNORE_PARENT; }
 	void SetObjectCollisionBox( void );
 	void KeyValue( KeyValueData *pkvd );
+
+	int m_iVertexLightCache;
+	int m_iSurfaceLightCache;
 };
 
 LINK_ENTITY_TO_CLASS( env_static, CEnvStatic );
@@ -3719,6 +3722,16 @@ void CEnvStatic :: KeyValue( KeyValueData *pkvd )
 		UTIL_StringToVector( (float*)pev->startpos, pkvd->szValue );
 		pkvd->fHandled = TRUE;
 	}
+	else if (FStrEq(pkvd->szKeyName, "vlight_cache"))
+	{
+		m_iVertexLightCache = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "flight_cache"))
+	{
+		m_iSurfaceLightCache = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
 	else BaseClass::KeyValue( pkvd );
 }
 
@@ -3726,6 +3739,16 @@ void CEnvStatic :: Spawn( void )
 {
 	if( pev->startpos == g_vecZero )
 		pev->startpos = Vector( pev->scale, pev->scale, pev->scale );
+
+	if (m_iSurfaceLightCache)
+	{
+		SetBits(pev->iuser1, CF_STATIC_LIGHTMAPPED);
+		pev->colormap = m_iSurfaceLightCache;
+	}
+	else
+	{
+		pev->colormap = m_iVertexLightCache;
+	}
 
 	// check xform values
 	if( pev->startpos.x < 0.01f ) pev->startpos.x = 1.0f;
