@@ -3228,7 +3228,7 @@ public:
 
 		// static light should be updated in case
 		// moving platform under them
-		SetNextThink(0.01f); // TODO if movewith then 0.01f else 0.1f
+		SetNextThink(m_hParent.Get() ? 0.01f : 0.1f);
 	}
 };
 
@@ -3487,25 +3487,26 @@ void CDecLED :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 	CheckState();
 }
 
-// =================== ENV_MODEL ==============================================
-
-#define SF_ENVMODEL_OFF		BIT( 0 )
-#define SF_ENVMODEL_DROPTOFLOOR	BIT( 1 )
-#define SF_ENVMODEL_SOLID		BIT( 2 )
+//=================================================================
+// env_model: like env_sprite, except you can specify a sequence.
+//=================================================================
+#define SF_ENVMODEL_OFF		1
+#define SF_ENVMODEL_DROPTOFLOOR	2
+#define SF_ENVMODEL_SOLID		4
+#define SF_ENVMODEL_NEWLIGHTING	8
 
 class CEnvModel : public CBaseAnimating
 {
-	DECLARE_CLASS( CEnvModel, CBaseAnimating );
+	DECLARE_CLASS(CEnvModel, CBaseAnimating);
 public:
-	void Spawn( void );
-	void Precache( void );
-	void Think( void );
-	void KeyValue( KeyValueData *pkvd );
-	STATE GetState( void ) { return FBitSet( pev->spawnflags, SF_ENVMODEL_OFF ) ? STATE_OFF : STATE_ON; }
-	virtual int ObjectCaps( void ) { return BaseClass :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
-	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	void SetSequence( void );
-	void AutoSetSize( void );
+	void Spawn(void);
+	void Precache(void);
+	void EXPORT Think(void);
+	void KeyValue(KeyValueData *pkvd);
+	STATE GetState(void);
+	void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
+	virtual int	ObjectCaps(void) { return CBaseEntity::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+	void SetSequence(void);
 
 	DECLARE_DATADESC();
 
@@ -3515,172 +3516,183 @@ public:
 	int m_iAction_Off;
 };
 
-LINK_ENTITY_TO_CLASS( env_model, CEnvModel );
+LINK_ENTITY_TO_CLASS(env_model, CEnvModel);
 
-BEGIN_DATADESC( CEnvModel )
-	DEFINE_KEYFIELD( m_iszSequence_On, FIELD_STRING, "m_iszSequence_On" ),
-	DEFINE_KEYFIELD( m_iszSequence_Off, FIELD_STRING, "m_iszSequence_Off" ),
-	DEFINE_KEYFIELD( m_iAction_On, FIELD_INTEGER, "m_iAction_On" ),
-	DEFINE_KEYFIELD( m_iAction_Off, FIELD_INTEGER, "m_iAction_Off" ),
+BEGIN_DATADESC(CEnvModel)
+	DEFINE_KEYFIELD(m_iszSequence_On, FIELD_STRING, "m_iszSequence_On"),
+	DEFINE_KEYFIELD(m_iszSequence_Off, FIELD_STRING, "m_iszSequence_Off"),
+	DEFINE_KEYFIELD(m_iAction_On, FIELD_INTEGER, "m_iAction_On"),
+	DEFINE_KEYFIELD(m_iAction_Off, FIELD_INTEGER, "m_iAction_Off"),
 END_DATADESC()
 
-void CEnvModel :: KeyValue( KeyValueData *pkvd )
+void CEnvModel::KeyValue(KeyValueData *pkvd)
 {
-	if( FStrEq( pkvd->szKeyName, "m_iszSequence_On" ))
+	if (FStrEq(pkvd->szKeyName, "m_iszSequence_On"))
 	{
-		m_iszSequence_On = ALLOC_STRING( pkvd->szValue );
+		m_iszSequence_On = ALLOC_STRING(pkvd->szValue);
 		pkvd->fHandled = TRUE;
 	}
-	else if( FStrEq( pkvd->szKeyName, "m_iszSequence_Off" ))
+	else if (FStrEq(pkvd->szKeyName, "m_iszSequence_Off"))
 	{
-		m_iszSequence_Off = ALLOC_STRING( pkvd->szValue );
+		m_iszSequence_Off = ALLOC_STRING(pkvd->szValue);
 		pkvd->fHandled = TRUE;
 	}
-	else if( FStrEq(pkvd->szKeyName, "m_iAction_On" ))
+	else if (FStrEq(pkvd->szKeyName, "m_iAction_On"))
 	{
-		m_iAction_On = Q_atoi( pkvd->szValue );
+		m_iAction_On = atoi(pkvd->szValue);
 		pkvd->fHandled = TRUE;
 	}
-	else if( FStrEq( pkvd->szKeyName, "m_iAction_Off" ))
+	else if (FStrEq(pkvd->szKeyName, "m_iAction_Off"))
 	{
-		m_iAction_Off = Q_atoi( pkvd->szValue );
+		m_iAction_Off = atoi(pkvd->szValue);
 		pkvd->fHandled = TRUE;
 	}
 	else
 	{
-		BaseClass::KeyValue( pkvd );
+		CBaseAnimating::KeyValue(pkvd);
 	}
 }
 
-void CEnvModel :: Spawn( void )
+void CEnvModel::Spawn(void)
 {
 	Precache();
+	SET_MODEL(ENT(pev), STRING(pev->model));
+	UTIL_SetOrigin(this, pev->origin);
 
-	SET_MODEL( edict(), STRING(pev->model) );
-	RelinkEntity( TRUE );
+#if 0	// g-cont. just for testing gloss-effect
+	pev->movetype = MOVETYPE_NOCLIP;
+	pev->avelocity = Vector(5, 5, 5);
+#endif
+	if (pev->spawnflags & SF_ENVMODEL_SOLID)
+	{
+		pev->solid = SOLID_SLIDEBOX;
+		UTIL_SetSize(pev, Vector(-10, -10, -10), Vector(10, 10, 10));	//LRCT
+	}
 
-	SetBoneController( 0, 0 );
-	SetBoneController( 1, 0 );
+	if (pev->spawnflags & SF_ENVMODEL_DROPTOFLOOR)
+	{
+		pev->origin.z += 1;
+		DROP_TO_FLOOR(ENT(pev));
+	}
+
+	if (!m_hParent.Get() && FBitSet(pev->spawnflags, SF_ENVMODEL_NEWLIGHTING))
+	{
+		// tell the client about static entity
+		SetBits(pev->iuser1, CF_STATIC_ENTITY);
+	}
+
+	SetBoneController(0, 0);
+	SetBoneController(1, 0);
 
 	SetSequence();
 
-	if( FBitSet( pev->spawnflags, SF_ENVMODEL_SOLID ))
-	{
-		if( UTIL_AllowHitboxTrace( this ))
-			pev->solid = SOLID_BBOX;
-		else pev->solid = SOLID_SLIDEBOX;
-		AutoSetSize();
-	}
-
-	if( FBitSet( pev->spawnflags, SF_ENVMODEL_DROPTOFLOOR ))
-	{
-		Vector origin = GetLocalOrigin();
-		origin.z += 1;
-		SetLocalOrigin( origin );
-		UTIL_DropToFloor( this );
-	}
-	
-	SetNextThink( 0.1 );
+	SetNextThink(0.1);
 }
 
-void CEnvModel::Precache( void )
+void CEnvModel::Precache(void)
 {
-	PRECACHE_MODEL( GetModel() );
+	PRECACHE_MODEL((char *)STRING(pev->model));
 }
 
-void CEnvModel::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+STATE CEnvModel::GetState(void)
 {
-	if( ShouldToggle( useType ))
+	if (pev->spawnflags & SF_ENVMODEL_OFF)
+		return STATE_OFF;
+	else
+		return STATE_ON;
+}
+
+void CEnvModel::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
+{
+	if (ShouldToggle(useType, !(pev->spawnflags & SF_ENVMODEL_OFF)))
 	{
-		if( pev->spawnflags & SF_ENVMODEL_OFF )
+		if (pev->spawnflags & SF_ENVMODEL_OFF)
 			pev->spawnflags &= ~SF_ENVMODEL_OFF;
-		else pev->spawnflags |= SF_ENVMODEL_OFF;
+		else
+			pev->spawnflags |= SF_ENVMODEL_OFF;
 
 		SetSequence();
-		SetNextThink( 0.1 );
+		SetNextThink(0.1);
 	}
 }
 
-// automatically set collision box
-void CEnvModel :: AutoSetSize( void )
+void CEnvModel::Think(void)
 {
-	studiohdr_t *pstudiohdr;
-	pstudiohdr = (studiohdr_t *)GET_MODEL_PTR( edict() );
+	int iTemp;
 
-	if( pstudiohdr == NULL )
+	//	ALERT(at_console, "env_model Think fr=%f\n", pev->framerate);
+
+	StudioFrameAdvance(); // set m_fSequenceFinished if necessary
+
+//	if (m_fSequenceLoops)
+//	{
+//		SetNextThink( 1E6 );
+//		return; // our work here is done.
+//	}
+	if (m_fSequenceFinished && !m_fSequenceLoops)
 	{
-		UTIL_SetSize( pev, Vector( -10, -10, -10 ), Vector( 10, 10, 10 ));
-		ALERT( at_error, "env_model: unable to fetch model pointer!\n" );
-		return;
-	}
-
-	mstudioseqdesc_t *pseqdesc = (mstudioseqdesc_t *)((byte *)pstudiohdr + pstudiohdr->seqindex);
-	UTIL_SetSize( pev, pseqdesc[pev->sequence].bbmin, pseqdesc[pev->sequence].bbmax );
-}
-
-void CEnvModel::Think( void )
-{
-	StudioFrameAdvance ( ); // set m_fSequenceFinished if necessary
-
-	if( m_fSequenceFinished && !m_fSequenceLoops )
-	{
-		int iTemp;
-
-		if( pev->spawnflags & SF_ENVMODEL_OFF )
+		if (pev->spawnflags & SF_ENVMODEL_OFF)
 			iTemp = m_iAction_Off;
 		else
 			iTemp = m_iAction_On;
 
-		switch( iTemp )
+		switch (iTemp)
 		{
-		case 2:	// change state
-			if( pev->spawnflags & SF_ENVMODEL_OFF )
-				pev->spawnflags &= ~SF_ENVMODEL_OFF;
-			else pev->spawnflags |= SF_ENVMODEL_OFF;
-			SetSequence();
-			break;
-		default:	// remain frozen
-			return;
+			//		case 1: // loop
+			//			pev->animtime = gpGlobals->time;
+			//			m_fSequenceFinished = FALSE;
+			//			m_flLastEventCheck = gpGlobals->time;
+			//			pev->frame = 0;
+			//			break;
+			case 2: // change state
+				if (pev->spawnflags & SF_ENVMODEL_OFF)
+					pev->spawnflags &= ~SF_ENVMODEL_OFF;
+				else
+					pev->spawnflags |= SF_ENVMODEL_OFF;
+				SetSequence();
+				break;
+			default: //remain frozen
+				return;
 		}
 	}
-
-	SetNextThink( 0.1 );
+	SetNextThink(0.1);
 }
 
-void CEnvModel :: SetSequence( void )
+void CEnvModel::SetSequence(void)
 {
 	int iszSeq;
 
-	if( pev->spawnflags & SF_ENVMODEL_OFF )
+	if (pev->spawnflags & SF_ENVMODEL_OFF)
 		iszSeq = m_iszSequence_Off;
 	else
 		iszSeq = m_iszSequence_On;
 
-	if( !iszSeq ) return;
-	pev->sequence = LookupSequence( STRING( iszSeq ));
+	if (!iszSeq)
+		return;
+	pev->sequence = LookupSequence(STRING(iszSeq));
 
-	if( pev->sequence == -1 )
+	if (pev->sequence == -1)
 	{
-		if( pev->targetname )
-			ALERT( at_error, "env_model %s: unknown sequence \"%s\"\n", STRING( pev->targetname ), STRING( iszSeq ));
+		if (pev->targetname)
+			ALERT(at_error, "env_model %s: unknown sequence \"%s\"\n", STRING(pev->targetname), STRING(iszSeq));
 		else
-			ALERT( at_error, "env_model: unknown sequence \"%s\"\n", STRING( pev->targetname ), STRING( iszSeq ));
+			ALERT(at_error, "env_model: unknown sequence \"%s\"\n", STRING(pev->targetname), STRING(iszSeq));
 		pev->sequence = 0;
 	}
 
 	pev->frame = 0;
-	ResetSequenceInfo( );
+	ResetSequenceInfo();
 
-	if( pev->spawnflags & SF_ENVMODEL_OFF )
+	if (pev->spawnflags & SF_ENVMODEL_OFF)
 	{
-		if( m_iAction_Off == 1 )
+		if (m_iAction_Off == 1)
 			m_fSequenceLoops = 1;
 		else
 			m_fSequenceLoops = 0;
 	}
 	else
 	{
-		if( m_iAction_On == 1 )
+		if (m_iAction_On == 1)
 			m_fSequenceLoops = 1;
 		else
 			m_fSequenceLoops = 0;
