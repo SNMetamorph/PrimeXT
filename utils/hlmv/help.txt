@@ -1,0 +1,17 @@
+Вот тексты:
+ g - Show/hide ground
+ h - Show/hide hitboxes
+ o - Show/hide bones
+ 5 - Increase global transparency
+ 6 - Decrease global transparency
+ b - Show/hide background texture
+ s - Enable/disable stencil on mirror
+ m - Enable/disable mirror
+ v - Toggle between first-person and standard view
+ l - Put view model into left hand
+ 1 - Rendermode: wireframe
+ 2 - Rendermode: flat shaded
+ 3 - Rendermode: smooth shaded
+ 4 - Rendermode: texture shaded
+ -\+ - Increase/descrease animation speed
+ Space - Cycle through animation sequences

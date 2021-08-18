@@ -1,0 +1,11 @@
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+	<assemblyIdentity version="1.2.5.0" processorArchitecture="X86" name="XashXT Group HLMV" type="win32">
+	</assemblyIdentity>
+	<description>Paranoia 2 Modelviewer 1.2.5.0</description>
+		<dependency>
+			<dependentAssembly>
+				<assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="6.0.0.0" processorArchitecture="X86" publicKeyToken="6595b64144ccf1df" language="*">
+			</assemblyIdentity>
+		</dependentAssembly>
+	</dependency>
+</assembly>
