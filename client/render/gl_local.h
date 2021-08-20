@@ -34,29 +34,29 @@ GNU General Public License for more details.
 #define ACTUAL_GL_VERSION	30.0f
 
 // limits
-#define MAX_REF_STACK	8			// pass depth
+#define MAX_REF_STACK		8			// pass depth
 #define MAX_VISIBLE_ENTS	4096			// total pack of frame ents
 #define MAX_SORTED_FACES	32768			// bmodels only
 #define MAX_SUBVIEW_FACES	1024			// mirrors, portals, monitors, water, puddles. NOTE: multipass faces can merge view passes
 #define MAX_OCCLUDED_FACES	1024			// mirrors + water
 #define MAX_SORTED_MESHES	2048			// studio only
-#define MAX_MOVIES		16			// max various movies per level
+#define MAX_MOVIES			16			// max various movies per level
 #define MAX_MOVIE_TEXTURES	64			// max # of unique video textures per level
-#define MAX_LIGHTSTYLES	64			// a byte limit, don't modify
-#define MAX_LIGHTMAPS	256			// Xash3D supports up to 256 lightmaps
-#define MAX_DLIGHTS 	64			// per one frame. unsigned int limit
+#define MAX_LIGHTSTYLES		64			// a byte limit, don't modify
+#define MAX_LIGHTMAPS		256			// Xash3D supports up to 256 lightmaps
+#define MAX_DLIGHTS 		64			// per one frame. unsigned int limit
 #define MAX_ENGINE_DLIGHTS 	32
-#define MAX_LIGHTCACHE	2048			// unique models with instanced vertex lighting
-#define MAX_SHADOWS		MAX_DLIGHTS
+#define MAX_LIGHTCACHE			2048			// unique models with instanced vertex lighting
+#define MAX_SHADOWS				MAX_DLIGHTS
 #define MAX_SUBVIEW_TEXTURES	64			// total depth
-#define MAX_FRAMEBUFFERS	MAX_SUBVIEW_TEXTURES
-#define MAX_FBO_ATTACHMENTS	8			// color attachments per FBO
-#define DEFAULT_CUBEMAP_SIZE	32			// same as in Source
-#define AMBIENT_EPSILON	0.001f			// to avoid division by zero
-#define STAIR_INTERP_TIME	100.0f
-#define LIGHT_PROBES	10			// eight OBB corners, center and one reserved slot (NOTE: not all the probes will be used)
-#define LIGHT_SAMPLES	8			// GPU limitation for local arrays (very slowly if more than eight elements)
-#define MOD_FRAMES		20
+#define MAX_FRAMEBUFFERS		MAX_SUBVIEW_TEXTURES
+#define MAX_FBO_ATTACHMENTS		8			// color attachments per FBO
+#define DEFAULT_CUBEMAP_SIZE	128			// same as in Source
+#define AMBIENT_EPSILON			0.001f			// to avoid division by zero
+#define STAIR_INTERP_TIME		100.0f
+#define LIGHT_PROBES			10			// eight OBB corners, center and one reserved slot (NOTE: not all the probes will be used)
+#define LIGHT_SAMPLES			8			// GPU limitation for local arrays (very slowly if more than eight elements)
+#define MOD_FRAMES				20
 
 #define WATER_TEXTURES	29
 #define WATER_ANIMTIME	20.0f
