@@ -226,3 +226,8 @@ void CL_BuildCubemaps_f( void )
 	world->rebuilding_cubemaps = CMREBUILD_CHECKING;
 	world->loading_cubemaps = true;
 }
+
+void R_InitCubemaps()
+{
+	gEngfuncs.pfnAddCommand("buildcubemaps", CL_BuildCubemaps_f);
+}

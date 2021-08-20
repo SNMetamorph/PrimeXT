@@ -983,6 +983,7 @@ bool GL_Init( void )
 	pglPointSize( 10.0f );
 	pglLineWidth( 1.0f );
 
+	R_InitCubemaps();
 	R_InitWeather();
 	DecalsInit();
 	R_GrassInit();
