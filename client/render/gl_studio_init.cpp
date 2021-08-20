@@ -268,7 +268,10 @@ bool CStudioModelRenderer :: StudioSetEntity( CSolidEntry *entry )
 
 bool CStudioModelRenderer :: StudioSetupInstance( void )
 {
-	// first call ?
+	if (RI->currententity->model->type != mod_studio) {
+		// hotfix for bug when worldspawn == RI->currententity but why???
+		return false; 
+	}
 	if( RI->currententity->modelhandle == INVALID_HANDLE )
 	{
 		RI->currententity->modelhandle = m_ModelInstances.AddToTail();
