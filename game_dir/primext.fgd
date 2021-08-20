@@ -1081,6 +1081,11 @@
 	]
 ]
 
+@PointClass iconsprite("sprites/fgd/env_cubemap.spr") size(-16 -16 -16, 16 16 16) color(128 128 255) = env_cubemap : "Cubemap"
+[
+	cubemapsize(integer) : "Resolution (16-512)" : 256
+]
+
 @PointClass iconsprite("sprites/fgd/env_customize.spr") = env_customize : "Change entity properties"
 [
 	targetname(target_source) : "Name"
