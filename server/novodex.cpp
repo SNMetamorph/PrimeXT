@@ -756,36 +756,36 @@ NxConvexMesh *CPhysicNovodex :: ConvexMeshFromStudio( entvars_t *pev, int modeli
 	return pHull;
 }
 
-NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromStudio( entvars_t *pev, int modelindex )
+NxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int modelindex)
 {
-	if( UTIL_GetModelType( modelindex ) != mod_studio )
+	if (UTIL_GetModelType(modelindex) != mod_studio)
 	{
-		ALERT( at_error, "TriangleMeshFromStudio: not a studio model\n" );
+		ALERT(at_error, "TriangleMeshFromStudio: not a studio model\n");
 		return NULL;
-          }
+	}
 
-	model_t *smodel = (model_t *)MODEL_HANDLE( modelindex );
+	model_t *smodel = (model_t *)MODEL_HANDLE(modelindex);
 	studiohdr_t *phdr = (studiohdr_t *)smodel->cache.data;
 	int solidMeshes = 0;
 
-	if( !phdr || phdr->numbones < 1 )
+	if (!phdr || phdr->numbones < 1)
 	{
-		ALERT( at_error, "TriangleMeshFromStudio: bad model header\n" );
+		ALERT(at_error, "TriangleMeshFromStudio: bad model header\n");
 		return NULL;
 	}
 
 	mstudiotexture_t *ptexture = (mstudiotexture_t *)((byte *)phdr + phdr->textureindex);
 
-	for( int i = 0; i < phdr->numtextures; i++ )
+	for (int i = 0; i < phdr->numtextures; i++)
 	{
 		// skip this mesh it's probably foliage or somewhat
-		if( ptexture[i].flags & STUDIO_NF_MASKED )
+		if (ptexture[i].flags & STUDIO_NF_MASKED)
 			continue;
 		solidMeshes++;
 	}
 
 	// model is non-solid
-	if( !solidMeshes )
+	if (!solidMeshes)
 	{
 		m_fDisableWarning = TRUE;
 		return NULL;
@@ -794,21 +794,21 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromStudio( entvars_t *pev, int mo
 	char szMeshFilename[MAX_PATH];
 	NxTriangleMesh *pMesh = NULL;
 
-	MeshNameForModel( smodel->name, szMeshFilename, sizeof( szMeshFilename ));
+	MeshNameForModel(smodel->name, szMeshFilename, sizeof(szMeshFilename));
 
-	if( CheckFileTimes( smodel->name, szMeshFilename ) && !m_fWorldChanged )
+	if (CheckFileTimes(smodel->name, szMeshFilename) && !m_fWorldChanged)
 	{
 		// hull is never than studiomodel. Trying to load it
-		pMesh = m_pPhysics->createTriangleMesh( UserStream( szMeshFilename, true ));
+		pMesh = m_pPhysics->createTriangleMesh(UserStream(szMeshFilename, true));
 
-		if( !pMesh )
+		if (!pMesh)
 		{
 			// we failed to loading existed hull and can't cooking new :(
-			if( m_pCooking == NULL )
+			if (m_pCooking == NULL)
 				return NULL; // don't spam console about missed nxCooking.dll
 
 			// trying to rebuild hull
-			ALERT( at_error, "Triangle mesh for %s is corrupted. Rebuilding...\n", smodel->name );
+			ALERT(at_error, "Triangle mesh for %s is corrupted. Rebuilding...\n", smodel->name);
 		}
 		else
 		{
@@ -819,23 +819,22 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromStudio( entvars_t *pev, int mo
 	else
 	{
 		// can't cooking new hull because nxCooking.dll is missed
-		if( m_pCooking == NULL )
+		if (m_pCooking == NULL)
 			return NULL; // don't spam console about missed nxCooking.dll
 
 		// trying to rebuild hull
-		ALERT( at_console, "Triangle mesh for %s is out of Date. Rebuilding...\n", smodel->name );
+		ALERT(at_console, "Triangle mesh for %s is out of Date. Rebuilding...\n", smodel->name);
 	}
 
 	// at this point nxCooking instance is always valid
-
 	// compute default pose for building mesh from
 	mstudioseqdesc_t *pseqdesc = (mstudioseqdesc_t *)((byte *)phdr + phdr->seqindex);
 	mstudioseqgroup_t *pseqgroup = (mstudioseqgroup_t *)((byte *)phdr + phdr->seqgroupindex) + pseqdesc->seqgroup;
 
 	// sanity check
-	if( pseqdesc->seqgroup != 0 )
+	if (pseqdesc->seqgroup != 0)
 	{
-		ALERT( at_error, "TriangleMeshFromStudio: bad sequence group (must be 0)\n" );
+		ALERT(at_error, "TriangleMeshFromStudio: bad sequence group (must be 0)\n");
 		return NULL;
 	}
 
@@ -844,135 +843,154 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromStudio( entvars_t *pev, int mo
 	static Vector pos[MAXSTUDIOBONES];
 	static Vector4D q[MAXSTUDIOBONES];
 
-	for( int i = 0; i < phdr->numbones; i++, pbone++, panim++ ) 
+	for (int i = 0; i < phdr->numbones; i++, pbone++, panim++)
 	{
-		StudioCalcBoneQuaterion( pbone, panim, q[i] );
-		StudioCalcBonePosition( pbone, panim, pos[i] );
+		StudioCalcBoneQuaterion(pbone, panim, q[i]);
+		StudioCalcBonePosition(pbone, panim, pos[i]);
 	}
 
 	pbone = (mstudiobone_t *)((byte *)phdr + phdr->boneindex);
-	matrix4x4	transform, bonematrix, bonetransform[MAXSTUDIOBONES];
+	matrix4x4 transform, bonematrix, bonetransform[MAXSTUDIOBONES];
 
-	if( pev->startpos != g_vecZero )
-		transform = matrix3x4( g_vecZero, g_vecZero, pev->startpos );
+	if (pev->startpos != g_vecZero)
+		transform = matrix3x4(g_vecZero, g_vecZero, pev->startpos);
 	else transform.Identity();
 
 	// compute bones for default anim
-	for( int i = 0; i < phdr->numbones; i++ ) 
+	for (int i = 0; i < phdr->numbones; i++)
 	{
 		// initialize bonematrix
-		bonematrix = matrix3x4( pos[i], q[i] );
+		bonematrix = matrix3x4(pos[i], q[i]);
 
-		if( pbone[i].parent == -1 ) 
-			bonetransform[i] = transform.ConcatTransforms( bonematrix );
-		else bonetransform[i] = bonetransform[pbone[i].parent].ConcatTransforms( bonematrix );
+		if (pbone[i].parent == -1)
+			bonetransform[i] = transform.ConcatTransforms(bonematrix);
+		else bonetransform[i] = bonetransform[pbone[i].parent].ConcatTransforms(bonematrix);
 	}
 
-	mstudiobodyparts_t *pbodypart = (mstudiobodyparts_t *)((byte *)phdr + phdr->bodypartindex);
-	mstudiomodel_t *psubmodel = (mstudiomodel_t *)((byte *)phdr + pbodypart->modelindex);
-	Vector *pstudioverts = (Vector *)((byte *)phdr + psubmodel->vertindex);
-	Vector *m_verts = new Vector[psubmodel->numverts];
-	byte *pvertbone = ((byte *)phdr + psubmodel->vertinfoindex);
-	Vector *verts = new Vector[psubmodel->numverts * 8];	// allocate temporary vertices array
-	NxU32 *indices = new NxU32[psubmodel->numverts * 24];
+	int body = 0;
+	int totalVertSize = 0;
+	for (int i = 0; i < phdr->numbodyparts; i++)
+	{
+		mstudiobodyparts_t *pbodypart = (mstudiobodyparts_t *)((byte *)phdr + phdr->bodypartindex) + i;
+		int index = (body / pbodypart->base) % pbodypart->nummodels;
+		mstudiomodel_t *psubmodel = (mstudiomodel_t *)((byte *)phdr + pbodypart->modelindex) + index;
+		totalVertSize += psubmodel->numverts;
+	}
+
+	Vector *verts = new Vector[totalVertSize * 8]; // allocate temporary vertices array
+	NxU32 *indices = new NxU32[totalVertSize * 24];
 	int numVerts = 0, numElems = 0;
 	Vector tmp;
 
-	// setup all the vertices
-	for( int i = 0; i < psubmodel->numverts; i++ )
-		m_verts[i] = bonetransform[pvertbone[i]].VectorTransform( pstudioverts[i] );
-
-	ptexture = (mstudiotexture_t *)((byte *)phdr + phdr->textureindex);
-	short *pskinref = (short *)((byte *)phdr + phdr->skinindex);
-
-	for( int j = 0; j < psubmodel->nummesh; j++ ) 
+	for (int k = 0; k < phdr->numbodyparts; k++)
 	{
 		int i;
-		mstudiomesh_t *pmesh = (mstudiomesh_t *)((byte *)phdr + psubmodel->meshindex) + j;
-		short *ptricmds = (short *)((byte *)phdr + pmesh->triindex);
+		mstudiobodyparts_t *pbodypart = (mstudiobodyparts_t *)((byte *)phdr + phdr->bodypartindex) + k;
+		int index = (body / pbodypart->base) % pbodypart->nummodels;
+		mstudiomodel_t *psubmodel = (mstudiomodel_t *)((byte *)phdr + pbodypart->modelindex) + index;
+		Vector *pstudioverts = (Vector *)((byte *)phdr + psubmodel->vertindex);
+		Vector *m_verts = new Vector[psubmodel->numverts];
+		byte *pvertbone = ((byte *)phdr + psubmodel->vertinfoindex);
 
-		if( phdr->numtextures != 0 && phdr->textureindex != 0 )
-		{
-			// skip this mesh it's probably foliage or somewhat
-			if( ptexture[pskinref[pmesh->skinref]].flags & STUDIO_NF_MASKED )
-				continue;
+		// setup all the vertices
+		for (i = 0; i < psubmodel->numverts; i++) {
+			m_verts[i] = bonetransform[pvertbone[i]].VectorTransform(pstudioverts[i]);
 		}
 
-		while( i = *( ptricmds++ ))
+		ptexture = (mstudiotexture_t *)((byte *)phdr + phdr->textureindex);
+		short *pskinref = (short *)((byte *)phdr + phdr->skinindex);
+
+		for (int j = 0; j < psubmodel->nummesh; j++)
 		{
-			int	vertexState = 0;
-			qboolean	tri_strip;
+			mstudiomesh_t *pmesh = (mstudiomesh_t *)((byte *)phdr + psubmodel->meshindex) + j;
+			short *ptricmds = (short *)((byte *)phdr + pmesh->triindex);
 
-			if( i < 0 )
+			if (phdr->numtextures != 0 && phdr->textureindex != 0)
 			{
-				tri_strip = false;
-				i = -i;
+				// skip this mesh it's probably foliage or somewhat
+				if (ptexture[pskinref[pmesh->skinref]].flags & STUDIO_NF_MASKED)
+					continue;
 			}
-			else
-				tri_strip = true;
 
-			for( ; i > 0; i--, ptricmds += 4 )
+			while (i = *(ptricmds++))
 			{
-				// build in indices
-				if( vertexState++ < 3 )
+				int	vertexState = 0;
+				bool tri_strip;
+
+				if (i < 0)
 				{
-					indices[numElems++] = numVerts;
+					tri_strip = false;
+					i = -i;
 				}
-				else if( tri_strip )
+				else
+					tri_strip = true;
+
+				for (; i > 0; i--, ptricmds += 4)
 				{
-					// flip triangles between clockwise and counter clockwise
-					if( vertexState & 1 )
+					// build in indices
+					if (vertexState++ < 3)
 					{
-						// draw triangle [n-2 n-1 n]
-						indices[numElems++] = numVerts - 2;
-						indices[numElems++] = numVerts - 1;
 						indices[numElems++] = numVerts;
+					}
+					else if (tri_strip)
+					{
+						// flip triangles between clockwise and counter clockwise
+						if (vertexState & 1)
+						{
+							// draw triangle [n-2 n-1 n]
+							indices[numElems++] = numVerts - 2;
+							indices[numElems++] = numVerts - 1;
+							indices[numElems++] = numVerts;
+						}
+						else
+						{
+							// draw triangle [n-1 n-2 n]
+							indices[numElems++] = numVerts - 1;
+							indices[numElems++] = numVerts - 2;
+							indices[numElems++] = numVerts;
+						}
 					}
 					else
 					{
-						// draw triangle [n-1 n-2 n]
+						// draw triangle fan [0 n-1 n]
+						indices[numElems++] = numVerts - (vertexState - 1);
 						indices[numElems++] = numVerts - 1;
-						indices[numElems++] = numVerts - 2;
 						indices[numElems++] = numVerts;
 					}
-				}
-				else
-				{
-					// draw triangle fan [0 n-1 n]
-					indices[numElems++] = numVerts - ( vertexState - 1 );
-					indices[numElems++] = numVerts - 1;
-					indices[numElems++] = numVerts;
-				}
 
-				verts[numVerts++] = m_verts[ptricmds[0]];
+					//	verts[numVerts++] = m_verts[ptricmds[0]];
+					verts[numVerts] = m_verts[ptricmds[0]];
+					numVerts++;
+				}
 			}
 		}
+
+		delete[] m_verts;
 	}
 
 	NxTriangleMeshDesc meshDesc;
 	meshDesc.numTriangles = numElems / 3;
 	meshDesc.pointStrideBytes = sizeof(Vector);
-	meshDesc.triangleStrideBytes	= 3 * sizeof( NxU32 );
+	meshDesc.triangleStrideBytes = 3 * sizeof(NxU32);
 	meshDesc.points = verts;
 	meshDesc.triangles = indices;
 	meshDesc.numVertices = numVerts;
 	meshDesc.flags = 0;
 
 	m_pCooking->NxInitCooking();
-	bool status = m_pCooking->NxCookTriangleMesh( meshDesc, UserStream( szMeshFilename, false ));
+	bool status = m_pCooking->NxCookTriangleMesh(meshDesc, UserStream(szMeshFilename, false));
 
-	delete [] verts;
-	delete [] m_verts;
-	delete [] indices;
+	delete[] verts;
+	delete[] indices;
 
-	if( !status )
+	if (!status)
 	{
-		ALERT( at_error, "failed to create triangle mesh from %s\n", smodel->name );
+		ALERT(at_error, "failed to create triangle mesh from %s\n", smodel->name);
 		return NULL;
 	}
 
-	pMesh = m_pPhysics->createTriangleMesh( UserStream( szMeshFilename, true ));
-	if( !pMesh ) ALERT( at_error, "failed to create triangle mesh from %s\n", smodel->name );
+	pMesh = m_pPhysics->createTriangleMesh(UserStream(szMeshFilename, true));
+	if (!pMesh) ALERT(at_error, "failed to create triangle mesh from %s\n", smodel->name);
 
 	return pMesh;
 }
