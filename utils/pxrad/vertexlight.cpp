@@ -18,8 +18,8 @@
 
 typedef struct
 {
-	int	modelnum : 10;
-	int	vertexnum : 22;
+	unsigned int modelnum : 32;
+	unsigned int vertexnum : 32;
 } vertremap_t;
 
 static entity_t	*g_vertexlight[MAX_MAP_MODELS];
