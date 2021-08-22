@@ -460,10 +460,6 @@ fast ambient comptation
 */
 static bool R_PointAmbientFromAxisAlignedSamples( const Vector &p1, mstudiolight_t *light )
 {
-	// use lightprobes instead
-	if( world->numleaflights && world->leafs )
-		return false;
-
 	mworldlight_t *pSkyLight = R_FindAmbientSkyLight();
 	Vector radcolor[NUMVERTEXNORMALS];
 	Vector lightBoxColor[6], p2;
@@ -500,10 +496,6 @@ at the given position in worldspace
 */
 static bool R_PointAmbientFromSphericalSamples( const Vector &p1, mstudiolight_t *light )
 {
-	// use lightprobes instead
-	if( world->numleaflights && world->leafs )
-		return false;
-
 	// Figure out the color that rays hit when shot out from this position.
 	float tanTheta = tan( VERTEXNORMAL_CONE_INNER_ANGLE );
 	mworldlight_t *pSkylight = R_FindAmbientSkyLight();
@@ -557,15 +549,19 @@ void R_PointAmbientFromLeaf( const Vector &point, mstudiolight_t *light )
 {
 	memset( light->ambient, 0, sizeof( light->ambient ));
 
-	if( r_lighting_extended->value > 1.0f )
+	// try to approximate ambient lighting only if we can't use lightprobes or vertex lighting
+	if (world->numleaflights < 1 || !world->leafs)
 	{
-		if( R_PointAmbientFromSphericalSamples( point, light ))
-			return;
-	}
-	else
-	{
-		if( R_PointAmbientFromAxisAlignedSamples( point, light ))
-			return;
+		if (r_lighting_extended->value > 1.0f)
+		{
+			if (R_PointAmbientFromSphericalSamples(point, light))
+				return;
+		}
+		else
+		{
+			if (R_PointAmbientFromAxisAlignedSamples(point, light))
+				return;
+		}
 	}
 
 	mleaf_t *leaf = Mod_PointInLeaf( point, worldmodel->nodes );
