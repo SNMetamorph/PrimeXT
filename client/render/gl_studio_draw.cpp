@@ -1669,6 +1669,8 @@ void CStudioModelRenderer :: StudioStaticLight( cl_entity_t *ent, mstudiolight_t
 {
 	bool	ambient_light = false;
 	bool	skipZCheck = true;
+	bool	staticEntity = FBitSet(ent->curstate.iuser1, CF_STATIC_ENTITY);
+	bool	badVertexLightCache = FBitSet(m_pModelInstance->info_flags, MF_VL_BAD_CACHE);
 
 	if( FBitSet( ent->model->flags, STUDIO_AMBIENT_LIGHT ))
 		ambient_light = true;
@@ -1694,11 +1696,11 @@ void CStudioModelRenderer :: StudioStaticLight( cl_entity_t *ent, mstudiolight_t
 		{
 			R_LightForSky( ent->origin, &m_pModelInstance->newlight );
 		}
-		else if( FBitSet( ent->curstate.iuser1, CF_STATIC_ENTITY ) && FBitSet( m_pModelInstance->info_flags, MF_VL_BAD_CACHE ))
+		else if (staticEntity && badVertexLightCache || world->numleaflights < 1)
 		{
-			float	dynamic = r_dynamic->value;
-			alight_t	lighting;
-			Vector	dir;
+			float dynamic = r_dynamic->value;
+			alight_t lighting;
+			Vector dir;
 
 			lighting.plightvec = dir;
 
@@ -1737,7 +1739,7 @@ void CStudioModelRenderer :: StudioStaticLight( cl_entity_t *ent, mstudiolight_t
 		InterpolateOrigin( m_pModelInstance->oldlight.ambient[i], m_pModelInstance->newlight.ambient[i], light->ambient[i], frac );
 
 	// find worldlights for dynamic lighting
-	if( FBitSet( m_pModelInstance->info_flags, MF_POSITION_CHANGED ) && !FBitSet( ent->curstate.iuser1, CF_STATIC_ENTITY ))
+	if( FBitSet( m_pModelInstance->info_flags, MF_POSITION_CHANGED ) && !staticEntity)
 	{
 		Vector origin = (m_pModelInstance->absmin + m_pModelInstance->absmax) * 0.5f;
 		Vector mins = m_pModelInstance->absmin - origin;
