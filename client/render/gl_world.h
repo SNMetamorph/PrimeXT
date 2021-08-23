@@ -175,10 +175,11 @@ typedef struct
 	Vector2D		orthohalf;
 
 	// cubemap builder internal state
-	bool		loading_cubemaps;
-	bool		build_default_cubemap;
+	bool	loading_cubemaps;
+	bool	build_default_cubemap;
 	int		rebuilding_cubemaps;
 	int		cubemap_build_number;
+	bool	ignore_restart_check; // to prevent bug with invalid restart check in GL_InitModelLightCache
 } gl_world_t;
 
 extern gl_world_t	*world;

@@ -1002,9 +1002,10 @@ void GL_InitModelLightCache( void )
 	static char	worldname[64];
 	char		token[2048];
 
-	if( !Q_stricmp( world->name, worldname ))
+	if (!Q_stricmp( world->name, worldname) && !world->ignore_restart_check)
 		return; // just a restart
 
+	world->ignore_restart_check = false;
 	Q_strncpy( worldname, world->name, sizeof( worldname ));
 	RI->currententity = GET_ENTITY( 0 ); // to have something valid here
 

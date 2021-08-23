@@ -590,7 +590,7 @@ static void R_SetupViewCache( const ref_viewpass_t *rvp )
 		}
 
 		// don't draw the entities while render skybox or cubemap
-		if( !FBitSet( RI->params, ( RP_ENVVIEW|RP_SKYVIEW )))
+		if (!FBitSet(RI->params, (RP_ENVVIEW | RP_SKYVIEW)))
 		{
 			// before process of tr.draw_entities
 			// we can add muzzleflashes here
@@ -1157,8 +1157,17 @@ BOOL HUD_SpeedsMessage( char *out, size_t size )
 
 void HUD_ProcessEntData( qboolean allocate )
 {
-	if( allocate ) Mod_PrepareModelInstances();
-	else Mod_ThrowModelInstances();
+	if (allocate) 
+	{
+		Mod_PrepareModelInstances();
+		if (strlen(world->name) < 1) 
+		{
+			// flush world name, cached in GL_InitModelLightCache
+			world->ignore_restart_check = true;
+		}
+	}
+	else 
+		Mod_ThrowModelInstances();
 }
 
 void HUD_BuildLightmaps( void )
