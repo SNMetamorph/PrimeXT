@@ -14,10 +14,10 @@ You can discuss with community members in our [Discord](discord.gg/BxQUMUescJ) s
 ## Building
 1) Install [Python](https://python.org), it will be used next for waf build system<br>
 Install [Git](https://git-scm.com/download/win) for cloning project
-2) Clone this repository, following the instruction.
+2) Clone this repository: enter these commands to Git console
 ```
-git clone --recursive https://github.com/SNMetamorph/xashxt-fwgs.git
-cd xashxt-fwgs
+git clone --recursive https://github.com/SNMetamorph/PrimeXT.git
+cd PrimeXT
 git submodule update --init --recursive
 ```
 
@@ -25,8 +25,8 @@ git submodule update --init --recursive
 For example, you can use this configuration.<br>
 Here `..\build-x86` is output directory<br>
 ```
-waf configure -T debug —prefix=..\build-x86 —enable-physx
+waf configure -T debug --prefix=..\build-x86 --enable-physx
 ```
-
-4) Build project using `waf build` command
-5) Copy compiled binaries to output directory using `waf install` command
+4) Generate solution for Visual Studio using `waf msdev` command. But use it only for developing, for building project you should use commands from next 2 steps.
+5) Build project using `waf build` command
+6) Copy compiled binaries to output directory using `waf install` command
