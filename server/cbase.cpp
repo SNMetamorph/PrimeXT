@@ -1623,14 +1623,16 @@ int CBaseEntity :: IsDormant( void )
 BOOL CBaseEntity :: IsInWorld( BOOL checkVelocity )
 {
 	Vector absOrigin = GetAbsOrigin();
+	const float originLimit = 32768.f;
+	const float velocityLimit = CVAR_GET_FLOAT("sv_maxvelocity");
 
 	// position 
-	if( absOrigin.x >= 16384 ) return FALSE;
-	if( absOrigin.y >= 16384 ) return FALSE;
-	if( absOrigin.z >= 16384 ) return FALSE;
-	if( absOrigin.x <= -16384 ) return FALSE;
-	if( absOrigin.y <= -16384 ) return FALSE;
-	if( absOrigin.z <= -16384 ) return FALSE;
+	if( absOrigin.x >= originLimit) return FALSE;
+	if( absOrigin.y >= originLimit) return FALSE;
+	if( absOrigin.z >= originLimit) return FALSE;
+	if( absOrigin.x <= -originLimit) return FALSE;
+	if( absOrigin.y <= -originLimit) return FALSE;
+	if( absOrigin.z <= -originLimit) return FALSE;
 
 	if( !checkVelocity )
 		return TRUE;
@@ -1638,12 +1640,12 @@ BOOL CBaseEntity :: IsInWorld( BOOL checkVelocity )
 	Vector absVelocity = GetAbsVelocity();
 
 	// speed
-	if( absVelocity.x >= 2000 ) return FALSE;
-	if( absVelocity.y >= 2000 ) return FALSE;
-	if( absVelocity.z >= 2000 ) return FALSE;
-	if( absVelocity.x <= -2000 ) return FALSE;
-	if( absVelocity.y <= -2000 ) return FALSE;
-	if( absVelocity.z <= -2000 ) return FALSE;
+	if( absVelocity.x >= velocityLimit) return FALSE;
+	if( absVelocity.y >= velocityLimit) return FALSE;
+	if( absVelocity.z >= velocityLimit) return FALSE;
+	if( absVelocity.x <= -velocityLimit) return FALSE;
+	if( absVelocity.y <= -velocityLimit) return FALSE;
+	if( absVelocity.z <= -velocityLimit) return FALSE;
 
 	return TRUE;
 }
