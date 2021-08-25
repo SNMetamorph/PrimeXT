@@ -76,6 +76,10 @@ varying vec3		var_Position;
 varying vec3	var_Normal;
 #endif
 
+#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
+varying vec3	var_TangentViewDir;
+#endif
+
 void main( void )
 {
 	vec3 light = vec3( 0.0 );
@@ -89,9 +93,11 @@ void main( void )
 
 // parallax     
 #if defined( PARALLAX_SIMPLE )
-	vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse.xy, normalize(var_ViewDir));
+	vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse.xy, normalize(var_TangentViewDir));
+	//vec_TexDiffuse = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse.xy, normalize(var_TangentViewDir));
+	//vec_TexDiffuse = ParallaxReliefMap(var_TexDiffuse.xy, normalize(var_TangentViewDir));
 #elif defined( PARALLAX_OCCLUSION )
-	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse.xy, normalize(var_ViewDir)).xy;
+	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse.xy, normalize(var_TangentViewDir)).xy;
 #endif
 	
 // compute the normal first

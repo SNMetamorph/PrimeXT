@@ -89,7 +89,7 @@ varying vec4		var_ShadowCoord;
 #endif
 
 #if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
-varying vec3		var_ViewDir;
+varying vec3		var_TangentViewDir;
 #endif
 
 void main( void )
@@ -104,7 +104,7 @@ void main( void )
 #endif
 	vec3 V = normalize( var_ViewVec );
 	vec3 L = vec3( 0.0 );
-	vec2 vec_TexDiffuse = var_TexDiffuse.xy;  
+	vec2 vec_TexDiffuse = var_TexDiffuse.xy; 
 
 #if defined( LIGHT_SPOT )
 	L = normalize( var_LightVec );
@@ -127,9 +127,11 @@ void main( void )
 
 // parallax     
 #if defined( PARALLAX_SIMPLE )
-	vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse.xy, normalize(var_ViewDir));
+	vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse.xy, normalize(var_TangentViewDir));
+	//vec_TexDiffuse = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse.xy, normalize(var_TangentViewDir));
+	//vec_TexDiffuse = ParallaxReliefMap(var_TexDiffuse.xy, normalize(var_TangentViewDir));
 #elif defined( PARALLAX_OCCLUSION )
-	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse.xy, normalize(var_ViewDir)).xy;
+	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse.xy, normalize(var_TangentViewDir)).xy;
 #endif
 
 // compute the normal first

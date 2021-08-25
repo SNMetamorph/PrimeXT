@@ -58,7 +58,7 @@ varying vec4	var_ShadowCoord;
 #endif
 
 #if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
-varying vec3	var_ViewDir;
+varying vec3	var_TangentViewDir;
 #endif
 
 void main( void )
@@ -102,7 +102,7 @@ void main( void )
 #endif
 
 #if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
-	var_ViewDir = var_ViewVec * tbn;
+	var_TangentViewDir = normalize((u_ViewOrigin.xyz * tbn) - (worldpos.xyz * tbn));
 #endif
 
 #if defined( PLANAR_REFLECTION )

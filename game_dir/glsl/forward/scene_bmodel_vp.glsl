@@ -51,6 +51,10 @@ varying vec3	var_Position;
 varying vec3	var_Normal;
 #endif
 
+#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
+varying vec3	var_TangentViewDir;
+#endif
+
 void main( void )
 {
 	vec4 position = vec4( attr_Position, 1.0 ); // in object space
@@ -91,6 +95,10 @@ void main( void )
 	// transform viewdir into tangent space
 	vec3 V = ( u_ViewOrigin - worldpos.xyz ); // don't normalize!
 	var_ViewDir = V * tbn;
+
+#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
+	var_TangentViewDir = normalize((u_ViewOrigin * tbn) - (worldpos.xyz * tbn));
+#endif
 
 #if !defined( HAS_NORMALMAP )
 	var_Normal = N * tbn;
