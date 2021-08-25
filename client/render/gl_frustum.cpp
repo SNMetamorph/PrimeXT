@@ -260,8 +260,10 @@ bool CFrustum :: CullBox( const Vector &mins, const Vector &maxs, int userClipFl
 {
 	int iClipFlags;
 
-	if( CVAR_TO_BOOL( r_nocull ))
+	if (CVAR_TO_BOOL(r_nocull))
 		return false;
+	else if (RP_CUBEPASS()) // disable culling when rendering envmap
+		return true;
 
 	if( userClipFlags != 0 )
 		iClipFlags = userClipFlags;

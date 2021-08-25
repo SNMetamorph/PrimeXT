@@ -589,8 +589,8 @@ static void R_SetupViewCache( const ref_viewpass_t *rvp )
 			RI->view.parallelSplitDistances[NUM_SHADOW_SPLITS] = farClip;
 		}
 
-		// don't draw the entities while render skybox or cubemap
-		if (!FBitSet(RI->params, (RP_ENVVIEW | RP_SKYVIEW)))
+		// don't draw the entities while render skybox
+		if (!FBitSet(RI->params, (RP_SKYVIEW)))
 		{
 			// before process of tr.draw_entities
 			// we can add muzzleflashes here

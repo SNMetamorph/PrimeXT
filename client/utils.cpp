@@ -337,7 +337,7 @@ bool Mod_BoxVisible( const Vector mins, const Vector maxs, const byte *visbits )
 	mnode_t	*headnode;
 	int	i, count;
 
-	if( !visbits || !mins || !maxs )
+	if( !visbits || !mins || !maxs || RP_CUBEPASS())
 		return true;
 
 	count = Mod_BoxLeafnums( mins, maxs, leafList, ARRAYSIZE( leafList ), &headnode );
