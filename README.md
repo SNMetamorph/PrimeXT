@@ -10,7 +10,7 @@ We need interested people to work on this SDK with us! Main goals of this projec
 - Writing actual documentation<br>
 - Code refactoring<br>
 
-You can discuss with community members in our [Discord](discord.gg/BxQUMUescJ) server.
+You can discuss with community members in our [Discord](https://discord.gg/BxQUMUescJ) server.
 ## Building
 1) Install [Python](https://python.org), it will be used next for waf build system<br>
 Install [Git](https://git-scm.com/download/win) for cloning project
