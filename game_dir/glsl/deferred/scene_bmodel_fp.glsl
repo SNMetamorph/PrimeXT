@@ -20,6 +20,7 @@ GNU General Public License for more details.
 #include "terrain.h"
 #include "cubemap.h"
 #include "deferred\fitnormals.h"
+#include "parallax.h"
 
 // texture units
 #if defined( APPLY_TERRAIN )
@@ -61,11 +62,19 @@ void main( void )
 	vec4 albedo = vec4( 0.0 );
 	vec4 normal = vec4( 0.0 );
 	vec4 smooth = vec4( 0.0 );
+	vec2 vec_TexDiffuse = var_TexDiffuse;
+
+// parallax     
+#if defined( PARALLAX_SIMPLE )
+	vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse.xy, normalize(var_ViewDir));
+#elif defined( PARALLAX_OCCLUSION )
+	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse.xy, normalize(var_ViewDir)).xy;
+#endif
 
 #if defined( APPLY_TERRAIN )
 	vec4 mask0, mask1, mask2, mask3;
 	TerrainReadMask( var_TexGlobal, mask0, mask1, mask2, mask3 );
-	albedo = TerrainApplyDiffuse( u_ColorMap, var_TexDiffuse, mask0, mask1, mask2, mask3 );
+	albedo = TerrainApplyDiffuse( u_ColorMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 
 	// apply the detail texture
 #if defined( HAS_DETAIL )
@@ -73,7 +82,7 @@ void main( void )
 #endif
 
 #if defined( HAS_NORMALMAP )
-	normal.xyz = TerrainApplyNormal( u_NormalMap, var_TexDiffuse, mask0, mask1, mask2, mask3 );
+	normal.xyz = TerrainApplyNormal( u_NormalMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 	normal.xyz = (( var_WorldMat * normal.xyz ) + 1.0 ) * 0.5;
 #else
 	normal.xyz = normalize( var_WorldMat[2] );
@@ -81,12 +90,12 @@ void main( void )
 #endif
 
 #if defined( HAS_GLOSSMAP )
-	smooth = TerrainApplySpecular( u_GlossMap, var_TexDiffuse, mask0, mask1, mask2, mask3 );
+	smooth = TerrainApplySpecular( u_GlossMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 	smooth.a = TerrainCalcSmoothness( u_Smoothness, mask0, mask1, mask2, mask3 );
 #endif
 
 #else	// !APPLY_TERRAIN
-	albedo = colormap2D( u_ColorMap, var_TexDiffuse );
+	albedo = colormap2D( u_ColorMap, vec_TexDiffuse );
 
 	// apply the detail texture
 #if defined( HAS_DETAIL )
@@ -94,7 +103,7 @@ void main( void )
 #endif
 	// apply fullbright pixels
 #if defined( HAS_LUMA )
-	albedo.rgb += texture2D( u_GlowMap, var_TexDiffuse ).rgb;
+	albedo.rgb += texture2D( u_GlowMap, vec_TexDiffuse ).rgb;
 #endif
 
 #if defined( HAS_LUMA ) || defined( LIGHTING_FULLBRIGHT )
@@ -102,7 +111,7 @@ void main( void )
 #endif
 
 #if defined( HAS_NORMALMAP )
-	normal.xyz = normalmap2D( u_NormalMap, var_TexDiffuse );
+	normal.xyz = normalmap2D( u_NormalMap, vec_TexDiffuse );
 	normal.xyz = (( var_WorldMat * normal.xyz ) + 1.0 ) * 0.5;
 #else
 	normal.xyz = normalize( var_WorldMat[2] );
@@ -110,7 +119,7 @@ void main( void )
 #endif
 
 #if defined( HAS_GLOSSMAP )
-	smooth = texture2D( u_GlossMap, var_TexDiffuse );
+	smooth = texture2D( u_GlossMap, vec_TexDiffuse );
 	smooth.a = u_Smoothness;
 #endif
 

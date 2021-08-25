@@ -57,6 +57,10 @@ varying vec4	var_ProjCoord;
 varying vec4	var_ShadowCoord;
 #endif
 
+#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
+varying vec3	var_ViewDir;
+#endif
+
 void main( void )
 {
 	vec4 position = vec4( attr_Position, 1.0 ); // in object space
@@ -95,6 +99,10 @@ void main( void )
 	var_WorldMat = tbn;
 #else
 	var_Normal = tbn[2];
+#endif
+
+#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
+	var_ViewDir = var_ViewVec * tbn;
 #endif
 
 #if defined( PLANAR_REFLECTION )

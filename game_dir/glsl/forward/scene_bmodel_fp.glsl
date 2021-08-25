@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #include "cubemap.h"
 #include "screen.h"
 #include "fresnel.h"
+#include "parallax.h"
 
 // texture units
 #if defined( APPLY_TERRAIN )
@@ -85,15 +86,23 @@ void main( void )
 	vec4 mask0, mask1, mask2, mask3;
 	TerrainReadMask( var_TexGlobal, mask0, mask1, mask2, mask3 );
 #endif
-	// compute the normal first
+
+// parallax     
+#if defined( PARALLAX_SIMPLE )
+	vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse.xy, normalize(var_ViewDir));
+#elif defined( PARALLAX_OCCLUSION )
+	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse.xy, normalize(var_ViewDir)).xy;
+#endif
+	
+// compute the normal first
 #if defined( HAS_NORMALMAP )
 #if defined( APPLY_TERRAIN )
-	vec3 N = TerrainApplyNormal( u_NormalMap, var_TexDiffuse, mask0, mask1, mask2, mask3 );
+	vec3 N = TerrainApplyNormal( u_NormalMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 #else
 #if defined( LIQUID_SURFACE )
 	vec3 N = normalmap2D( u_NormalMap, var_TexGlobal );
 #else
-	vec3 N = normalmap2D( u_NormalMap, var_TexDiffuse );
+	vec3 N = normalmap2D( u_NormalMap, vec_TexDiffuse );
 #endif
 #endif
 #else

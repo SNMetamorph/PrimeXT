@@ -1182,6 +1182,17 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 		GL_AddShaderDirective( options, "HAS_NORMALMAP" );
 	}
 
+	if (FBitSet(mat->flags, BRUSH_HAS_HEIGHTMAP) && mat->reliefScale > 0.0f)
+	{
+		if ((mat->gl_heightmap_id != tr.blackTexture) && (cv_parallax->value > 0.0f))
+		{
+			if (cv_parallax->value == 1.0f)
+				GL_AddShaderDirective(options, "PARALLAX_SIMPLE");
+			else if (cv_parallax->value >= 2.0f)
+				GL_AddShaderDirective(options, "PARALLAX_OCCLUSION");
+		}
+	} 
+
 	// and finally select the render-mode
 	if( FBitSet( mat->flags, BRUSH_LIQUID ))
 	{
@@ -1316,8 +1327,21 @@ static word Mod_ShaderLightForward( CDynLight *dl, msurface_t *s )
 		}
 	}
 
-	if( CVAR_TO_BOOL( cv_specular ) && FBitSet( mat->flags, BRUSH_HAS_SPECULAR ))
-		GL_AddShaderDirective( options, "HAS_GLOSSMAP" );
+	if (CVAR_TO_BOOL(cv_specular) && FBitSet(mat->flags, BRUSH_HAS_SPECULAR))
+	{
+		GL_AddShaderDirective(options, "HAS_GLOSSMAP");
+	}
+
+	if (FBitSet(mat->flags, BRUSH_HAS_HEIGHTMAP) && mat->reliefScale > 0.0f)
+	{
+		if ((mat->gl_heightmap_id != tr.blackTexture) && (cv_parallax->value > 0.0f))
+		{
+			if (cv_parallax->value == 1.0f)
+				GL_AddShaderDirective(options, "PARALLAX_SIMPLE");
+			else if (cv_parallax->value >= 2.0f)
+				GL_AddShaderDirective(options, "PARALLAX_OCCLUSION");
+		}
+	}
 
 	if( FBitSet( mat->flags, BRUSH_MULTI_LAYERS ) && landscape && landscape->terrain )
 	{
@@ -1441,6 +1465,17 @@ static word Mod_ShaderSceneDeferred( msurface_t *s )
 		GL_AddShaderDirective( options, "HAS_NORMALMAP" );
 		GL_EncodeNormal( options, mat->gl_normalmap_id );
 		GL_AddShaderDirective( options, "COMPUTE_TBN" );
+	}
+
+	if (FBitSet(mat->flags, BRUSH_HAS_HEIGHTMAP) && mat->reliefScale > 0.0f)
+	{
+		if ((mat->gl_heightmap_id != tr.blackTexture) && (cv_parallax->value > 0.0f))
+		{
+			if (cv_parallax->value == 1.0f)
+				GL_AddShaderDirective(options, "PARALLAX_SIMPLE");
+			else if (cv_parallax->value >= 2.0f)
+				GL_AddShaderDirective(options, "PARALLAX_OCCLUSION");
+		}
 	}
 
 	if( !RP_CUBEPASS() && ( CVAR_TO_BOOL( cv_specular ) && FBitSet( mat->flags, BRUSH_HAS_SPECULAR )))
@@ -3180,6 +3215,13 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 		case UT_HEIGHTMAP:
 			u->SetValue( mat->gl_heightmap_id );
 			break;
+		case UT_RELIEFPARAMS: 
+		{
+			float width = RENDER_GET_PARM(PARM_TEX_WIDTH, mat->gl_heightmap_id);
+			float height = RENDER_GET_PARM(PARM_TEX_HEIGHT, mat->gl_heightmap_id);
+			u->SetValue(width, height, mat->reliefScale, cv_shadow_offset->value);
+			break;
+		}
 		case UT_BSPPLANESMAP:
 			u->SetValue( tr.packed_planes_texture );
 			break;

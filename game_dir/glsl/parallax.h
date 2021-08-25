@@ -84,11 +84,11 @@ vec3 ParallaxOcclusionMap( const in vec2 texCoord, const in vec3 viewVec )
 	float lod = ComputeLOD( texCoord );
 
 	vec2 delta = vec2( viewVec.x, viewVec.y ) * bumpScale / (viewVec.z * PARALLAX_STEPS);
-	float NB0 = texture2D( u_HeightMap, texCoord ).r;
+	float NB0 = 1.0 - texture2D( u_HeightMap, texCoord ).r;
 	float height = 1.0 - step;
 	vec2 offset = texCoord + delta;
 	
-	float NB1 = texture2D( u_HeightMap, offset ).r;
+	float NB1 = 1.0 - texture2D( u_HeightMap, offset ).r;
 
 	for( int i = 0; i < int( PARALLAX_STEPS ); i++ )
 	{
@@ -98,7 +98,7 @@ vec3 ParallaxOcclusionMap( const in vec2 texCoord, const in vec3 viewVec )
 		NB0 = NB1;
 		height -= step;
 		offset += delta;
-		NB1 = texture2DLod( u_HeightMap, offset, lod ).r;
+		NB1 = 1.0 - texture2DLod( u_HeightMap, offset, lod ).r;
 	}
 
 	vec2 offsetBest = offset;
@@ -121,7 +121,7 @@ vec3 ParallaxOcclusionMap( const in vec2 texCoord, const in vec3 viewVec )
 		t = (t0 * delta1 - t1 * delta0) / denom;
 		offsetBest = -t * intersect.xy + intersect.zw;
 
-		float NB = texture2DLod( u_HeightMap, offsetBest, lod ).r;
+		float NB = 1.0 - texture2DLod( u_HeightMap, offsetBest, lod ).r;
 
 		error = t - NB;
 		if( error < 0.0 )
@@ -167,5 +167,13 @@ float SelfShadow( in vec3 N, in vec3 L, in vec2 texCoord )
 
 	return clamp(( height - tex ) * 8.0, 0.0, 1.0 );
 }
+
+vec2 ParallaxMapSimple(const in vec2 texCoords, const in vec3 viewDir)
+{ 
+	float heightScale = u_ReliefParams.z * 0.1;
+    float height = 1.0 - texture2D(u_HeightMap, texCoords).r; // inverse here that we can use height map instead of depth map 
+    vec2 p = viewDir.xy / viewDir.z * (height * heightScale);
+    return texCoords - p;    
+} 
 
 #endif//PARALLAX_H

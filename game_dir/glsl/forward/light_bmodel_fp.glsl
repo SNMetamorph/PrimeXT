@@ -18,6 +18,7 @@ GNU General Public License for more details.
 #include "texfetch.h"
 #include "lightmodel.h"
 #include "terrain.h"
+#include "parallax.h"
 
 // texture units
 #if defined( APPLY_TERRAIN )
@@ -87,6 +88,10 @@ varying vec4		var_ProjCoord;
 varying vec4		var_ShadowCoord;
 #endif
 
+#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
+varying vec3		var_ViewDir;
+#endif
+
 void main( void )
 {
 #if !defined( LIGHT_PROJ )
@@ -99,12 +104,13 @@ void main( void )
 #endif
 	vec3 V = normalize( var_ViewVec );
 	vec3 L = vec3( 0.0 );
+	vec2 vec_TexDiffuse = var_TexDiffuse.xy;  
 
 #if defined( LIGHT_SPOT )
-	L = normalize( u_LightDir.xyz );
+	L = normalize( var_LightVec );
 	
 	// spot attenuation
-	float spotDot = dot( normalize( var_LightVec ), L );
+	float spotDot = dot( normalize( u_LightDir.xyz ), L );
 	float fov = ( u_LightDir.w * FOV_MULT * ( M_PI / 180.0 ));
 	float spotCos = cos( fov + fov );
 	if( spotDot < spotCos ) discard;
@@ -118,12 +124,20 @@ void main( void )
 	vec4 mask0, mask1, mask2, mask3;
 	TerrainReadMask( var_TexGlobal, mask0, mask1, mask2, mask3 );
 #endif
-	// compute the normal first
+
+// parallax     
+#if defined( PARALLAX_SIMPLE )
+	vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse.xy, normalize(var_ViewDir));
+#elif defined( PARALLAX_OCCLUSION )
+	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse.xy, normalize(var_ViewDir)).xy;
+#endif
+
+// compute the normal first
 #if defined( HAS_NORMALMAP )
 #if defined( APPLY_TERRAIN )
-	vec3 N = TerrainApplyNormal( u_NormalMap, var_TexDiffuse, mask0, mask1, mask2, mask3 );
+	vec3 N = TerrainApplyNormal( u_NormalMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 #else
-	vec3 N = normalmap2D( u_NormalMap, var_TexDiffuse );
+	vec3 N = normalmap2D( u_NormalMap, vec_TexDiffuse );
 #endif
 #else
 	vec3 N = normalize( var_Normal );
@@ -132,9 +146,9 @@ void main( void )
 #if defined( PLANAR_REFLECTION ) && !defined( LIQUID_UNDERWATER ) // HACKHACK
 	vec4 diffuse = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, u_RefractScale );
 #elif defined( APPLY_TERRAIN )
-	vec4 diffuse = TerrainApplyDiffuse( u_ColorMap, var_TexDiffuse, mask0, mask1, mask2, mask3 );
+	vec4 diffuse = TerrainApplyDiffuse( u_ColorMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 #else
-	vec4 diffuse = colormap2D( u_ColorMap, var_TexDiffuse );
+	vec4 diffuse = colormap2D( u_ColorMap, vec_TexDiffuse );
 #endif
 
 #if defined( HAS_NORMALMAP )
@@ -164,9 +178,9 @@ void main( void )
 	// compute the specular term
 #if defined( HAS_GLOSSMAP )
 #if defined( APPLY_TERRAIN )
-	glossmap = TerrainApplySpecular( u_GlossMap, var_TexDiffuse, mask0, mask1, mask2, mask3 );
+	glossmap = TerrainApplySpecular( u_GlossMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 #else
-	glossmap = texture2D( u_GlossMap, var_TexDiffuse );
+	glossmap = texture2D( u_GlossMap, vec_TexDiffuse );
 #endif
 #endif//HAS_GLOSSMAP
 
