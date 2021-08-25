@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 15 August 2021)
+// PrimeXT FGD (last updated 25 August 2021)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -10,9 +10,10 @@
 	skyname(string) : "Environment map (cl_skyname)"
 	sounds(integer) : "CD track to play" : 1
 	light(integer) : "Default light level"
-	WaveHeight(string) : "Default Wave Height"
+	WaveHeight(string) : "Default wave height" : "0.0"
 	MaxRange(string) : "Max viewable distance" : "131072"
 	chaptertitle(string) : "Chapter Title Message"
+	time(string) : "Day time (hours minutes)" : "-1 -1"
 	startdark(choices) : "Level Fade In" : 0 =
 	[	
 		0 : "No"
@@ -1084,6 +1085,13 @@
 @PointClass iconsprite("sprites/fgd/env_cubemap.spr") size(-16 -16 -16, 16 16 16) color(128 128 255) = env_cubemap : "Cubemap"
 [
 	cubemapsize(integer) : "Resolution (16-512)" : 256
+]
+
+@PointClass base(Targetname, MoveWith) = env_sun : "Sun" 
+[
+	pitch(integer) : "Pitch" : 0
+    yaw(integer) : "Yaw" : 0
+    roll(integer) : "Roll" : 0
 ]
 
 @PointClass iconsprite("sprites/fgd/env_customize.spr") = env_customize : "Change entity properties"
@@ -2970,8 +2978,9 @@
 
 @PointClass base(Targetname, Angles, Light, ZHLT_point) iconsprite("sprites/fgd/light_env.spr") = light_environment : "Environment" 
 [
-	_diffuse_light(color255) : "Diffuse light" : "255 255 128 200"
 	pitch(integer) : "Pitch" : 0
+	_light(color255) : "Brightness" : "255 255 128 200"
+    _diffuse_light(color255) : "Shade" : "255 255 128 200"
 ]
 
 @SolidClass base(Targetname, Target, Targetx, Parent, Angles, RenderFields, ZHLT, Appearflags) = momentary_door : "Momentary/Continuous door" 
