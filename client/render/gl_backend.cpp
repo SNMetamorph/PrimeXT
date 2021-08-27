@@ -184,7 +184,7 @@ bool GL_BackendStartFrame( ref_viewpass_t *rvp, int params )
 	static float cached_lighting = 0.0f;
 	static float shadowmap_size = 0.0f;
 	static int waterlevel_old;
-	float levelTime = gEngfuncs.GetClientTime(); // gHUD.m_flLevelTime;
+	float levelTime = r_sun_daytime->value;
 	float blurAmount = 0.f; // gHUD.m_flBlurAmount;
 
 	r_speeds_msg[0] = r_depth_msg[0] = '\0';

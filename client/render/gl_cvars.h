@@ -78,6 +78,7 @@ extern cvar_t *r_studio_decals;
 extern cvar_t *r_hand;
 extern cvar_t *r_sunshadows;
 extern cvar_t *r_sun_allowed;
+extern cvar_t *r_sun_daytime;
 extern cvar_t *r_shadow_split_weight;
 extern cvar_t *r_wireframe;
 extern cvar_t *r_lightstyles;

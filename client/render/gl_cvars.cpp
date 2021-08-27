@@ -74,6 +74,7 @@ cvar_t *r_studio_decals;
 cvar_t *r_hand;
 cvar_t *r_sunshadows;
 cvar_t *r_sun_allowed;
+cvar_t *r_sun_daytime;
 cvar_t *r_shadow_split_weight;
 cvar_t *r_wireframe;
 cvar_t *r_lightstyles;
@@ -270,6 +271,7 @@ void InitializeConVars()
 	cv_realtime_puddles = CVAR_REGISTER("gl_realtime_puddles", "0", FCVAR_ARCHIVE);
 	r_sunshadows = CVAR_REGISTER("gl_sun_shadows", "0", FCVAR_ARCHIVE);
 	r_sun_allowed = CVAR_REGISTER("r_sun_allowed", "1", FCVAR_ARCHIVE);
+	r_sun_daytime = CVAR_REGISTER("r_sun_daytime", "1", FCVAR_CLIENTDLL);
 	r_shadowmap_size = CVAR_REGISTER("gl_shadowmap_size", "512", FCVAR_ARCHIVE);
 	r_occlusion_culling = CVAR_REGISTER("r_occlusion_culling", "0", FCVAR_ARCHIVE);
 	r_show_lightprobes = CVAR_REGISTER("r_show_lightprobes", "0", FCVAR_ARCHIVE);
