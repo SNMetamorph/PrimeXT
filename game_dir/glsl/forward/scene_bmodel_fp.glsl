@@ -91,13 +91,12 @@ void main( void )
 	TerrainReadMask( var_TexGlobal, mask0, mask1, mask2, mask3 );
 #endif
 
-// parallax     
 #if defined( PARALLAX_SIMPLE )
-	vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse.xy, normalize(var_TangentViewDir));
-	//vec_TexDiffuse = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse.xy, normalize(var_TangentViewDir));
-	//vec_TexDiffuse = ParallaxReliefMap(var_TexDiffuse.xy, normalize(var_TangentViewDir));
+	//vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse.xy, var_TangentViewDir);
+	vec_TexDiffuse = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse.xy, var_TangentViewDir);
+	//vec_TexDiffuse = ParallaxReliefMap(var_TexDiffuse.xy, var_TangentViewDir);
 #elif defined( PARALLAX_OCCLUSION )
-	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse.xy, normalize(var_TangentViewDir)).xy;
+	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse.xy, var_TangentViewDir).xy; 
 #endif
 	
 // compute the normal first

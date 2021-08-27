@@ -41,6 +41,16 @@ float GetHeightMapSampleLOD(sampler2D heightMap, const in vec2 texCoord, float l
 	return texture2DLod(heightMap, texCoord, lod).r;
 }
 
+float GetDepthMapSample(sampler2D heightMap, const in vec2 texCoord)
+{
+	return 1.0 - GetHeightMapSample(heightMap, texCoord);
+}
+
+float GetDepthMapSampleLOD(sampler2D heightMap, const in vec2 texCoord, float lod)
+{
+	return 1.0 - GetHeightMapSampleLOD(heightMap, texCoord, lod);
+}
+
 vec2 ParallaxOffsetMap( sampler2D normalMap, const in vec2 texCoord, const in vec3 viewVec )
 {
 	float bumpScale = u_ReliefParams.z * 0.1;
@@ -52,7 +62,7 @@ vec2 ParallaxOffsetMap( sampler2D normalMap, const in vec2 texCoord, const in ve
 		float nz = normalmap2D( normalMap, newCoords.xy ).z;
 		float h = GetHeightMapSampleLOD(u_HeightMap, newCoords.xy, lod);
 		float height = h * bumpScale;
-		newCoords += (height - newCoords.z) * nz * vec3(viewVec.xy, 1.0);
+		newCoords += (height - newCoords.z) * nz * vec3(viewVec.x, -viewVec.y, viewVec.z);
 	}
 
 	return newCoords.xy;
@@ -62,27 +72,25 @@ vec2 ParallaxReliefMap( const in vec2 texCoord, const in vec3 viewVec )
 {
 	// 14 sample relief mapping: linear search and then binary search, 
 	float lod = ComputeLOD( texCoord );
-	vec3 offsetBest;
-
 	vec2 scaleVector = vec2( 1.0 / u_ReliefParams.x, 1.0 / u_ReliefParams.y );
-	vec3 offsetVector = vec3( viewVec.xy * scaleVector * vec2( u_ReliefParams.z * 100.0 ), -1.0 );
-	offsetBest = vec3( texCoord, 1.0 );
+	vec3 offsetVector = vec3( vec2(viewVec.x, -viewVec.y) * scaleVector * vec2( u_ReliefParams.z * 100.0 ), -1.0 );
+	vec3 offsetBest = vec3( texCoord, 1.0 );
 	offsetVector *= 0.1;
 
-	offsetBest += offsetVector *  step( 1.0 - GetHeightMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z );
-	offsetBest += offsetVector *  step( 1.0 - GetHeightMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z );
-	offsetBest += offsetVector *  step( 1.0 - GetHeightMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z );
-	offsetBest += offsetVector *  step( 1.0 - GetHeightMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z );
-	offsetBest += offsetVector *  step( 1.0 - GetHeightMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z );
-	offsetBest += offsetVector *  step( 1.0 - GetHeightMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z );
-	offsetBest += offsetVector *  step( 1.0 - GetHeightMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z );
-	offsetBest += offsetVector *  step( 1.0 - GetHeightMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z );
-	offsetBest += offsetVector *  step( 1.0 - GetHeightMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z );
-	offsetBest += offsetVector * (step( 1.0 - GetHeightMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z ) - 0.5);
-	offsetBest += offsetVector * (step( 1.0 - GetHeightMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z ) * 0.5 - 0.25);
-	offsetBest += offsetVector * (step( 1.0 - GetHeightMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z ) * 0.25 - 0.125);
-	offsetBest += offsetVector * (step( 1.0 - GetHeightMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z ) * 0.125 - 0.0625);
-	offsetBest += offsetVector * (step( 1.0 - GetHeightMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z ) * 0.0625 - 0.03125);
+	offsetBest += offsetVector *  step( GetDepthMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z );
+	offsetBest += offsetVector *  step( GetDepthMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z );
+	offsetBest += offsetVector *  step( GetDepthMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z );
+	offsetBest += offsetVector *  step( GetDepthMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z );
+	offsetBest += offsetVector *  step( GetDepthMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z );
+	offsetBest += offsetVector *  step( GetDepthMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z );
+	offsetBest += offsetVector *  step( GetDepthMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z );
+	offsetBest += offsetVector *  step( GetDepthMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z );
+	offsetBest += offsetVector *  step( GetDepthMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z );
+	offsetBest += offsetVector * (step( GetDepthMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z ) - 0.5);
+	offsetBest += offsetVector * (step( GetDepthMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z ) * 0.5 - 0.25);
+	offsetBest += offsetVector * (step( GetDepthMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z ) * 0.25 - 0.125);
+	offsetBest += offsetVector * (step( GetDepthMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z ) * 0.125 - 0.0625);
+	offsetBest += offsetVector * (step( GetDepthMapSampleLOD( u_HeightMap, offsetBest.xy, lod ), offsetBest.z ) * 0.0625 - 0.03125);
 
 	return offsetBest.xy;  
 }
@@ -90,15 +98,15 @@ vec2 ParallaxReliefMap( const in vec2 texCoord, const in vec3 viewVec )
 vec3 ParallaxOcclusionMap( const in vec2 texCoord, const in vec3 viewVec )
 {
 	float step =  1.0 / PARALLAX_STEPS;
-	float bumpScale = 0.1 * u_ReliefParams.z;
+	float bumpScale = 0.2 * u_ReliefParams.z;
 	float lod = ComputeLOD( texCoord );
 
-	vec2 delta = vec2( viewVec.x, viewVec.y ) * bumpScale / PARALLAX_STEPS;
-	float NB0 = 1.0 - GetHeightMapSample(u_HeightMap, texCoord);
+	vec2 delta = bumpScale * vec2(viewVec.x, -viewVec.y) / (viewVec.z * PARALLAX_STEPS);
+	float NB0 = GetDepthMapSample(u_HeightMap, texCoord);
 	float height = 1.0 - step;
 	vec2 offset = texCoord + delta;
 	
-	float NB1 = 1.0 - GetHeightMapSample(u_HeightMap, offset);
+	float NB1 = GetDepthMapSample(u_HeightMap, offset);
 
 	for( int i = 0; i < int( PARALLAX_STEPS ); i++ )
 	{
@@ -108,7 +116,7 @@ vec3 ParallaxOcclusionMap( const in vec2 texCoord, const in vec3 viewVec )
 		NB0 = NB1;
 		height -= step;
 		offset += delta;
-		NB1 = 1.0 - GetHeightMapSampleLOD(u_HeightMap, offset, lod);
+		NB1 = GetDepthMapSampleLOD(u_HeightMap, offset, lod);
 	}
 
 	vec2 offsetBest = offset;
@@ -131,7 +139,7 @@ vec3 ParallaxOcclusionMap( const in vec2 texCoord, const in vec3 viewVec )
 		t = (t0 * delta1 - t1 * delta0) / denom;
 		offsetBest = -t * intersect.xy + intersect.zw;
 
-		float NB = 1.0 - GetHeightMapSampleLOD(u_HeightMap, offsetBest, lod);
+		float NB = GetDepthMapSampleLOD(u_HeightMap, offsetBest, lod);
 
 		error = t - NB;
 		if( error < 0.0 )
@@ -180,10 +188,9 @@ float ParallaxSelfShadow( in vec3 N, in vec3 L, in vec2 texCoord )
 
 vec2 ParallaxMapSimple(const in vec2 texCoords, const in vec3 viewDir)
 { 
-	float heightScale = u_ReliefParams.z * 0.1;
-    float height = GetHeightMapSample(u_HeightMap, texCoords); 
-    vec2 p = viewDir.xy * (height * heightScale) / viewDir.z;
-    return texCoords - p;    
+	float heightScale = u_ReliefParams.z * 0.25;
+	float offset = texture2D(u_HeightMap, texCoords).r * heightScale - 0.0075;
+	return (offset * vec2(viewDir.x, -viewDir.y) + texCoords);
 } 
 
 #endif//PARALLAX_H

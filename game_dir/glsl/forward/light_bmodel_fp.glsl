@@ -90,6 +90,7 @@ varying vec4		var_ShadowCoord;
 
 #if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
 varying vec3		var_TangentViewDir;
+varying vec3		var_TangentLightDir;
 #endif
 
 void main( void )
@@ -125,13 +126,12 @@ void main( void )
 	TerrainReadMask( var_TexGlobal, mask0, mask1, mask2, mask3 );
 #endif
 
-// parallax     
 #if defined( PARALLAX_SIMPLE )
-	vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse.xy, normalize(var_TangentViewDir));
-	//vec_TexDiffuse = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse.xy, normalize(var_TangentViewDir));
-	//vec_TexDiffuse = ParallaxReliefMap(var_TexDiffuse.xy, normalize(var_TangentViewDir));
+	//vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse, var_TangentViewDir);
+	vec_TexDiffuse = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse.xy, var_TangentViewDir);
+	//vec_TexDiffuse = ParallaxReliefMap(var_TexDiffuse, var_TangentViewDir);
 #elif defined( PARALLAX_OCCLUSION )
-	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse.xy, normalize(var_TangentViewDir)).xy;
+	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse, var_TangentViewDir).xy;
 #endif
 
 // compute the normal first
@@ -213,7 +213,14 @@ void main( void )
 	}
 #endif
 #endif
-	if( shadow <= 0.0 ) discard; // fast reject
+
+// parallax selfshadowing
+#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
+	//shadow *= ParallaxSelfShadow(N, var_TangentLightDir, vec_TexDiffuse);
+#endif
+
+	if (shadow <= 0.0) 
+		discard; // fast reject
 
 	vec3 albedo = diffuse.rgb;
 	float factor = DiffuseBRDF( N, V, L, smoothness, NdotL );
