@@ -254,7 +254,7 @@ bool GL_BackendStartFrame( ref_viewpass_t *rvp, int params )
 	// keep world in actual state
 	GET_ENTITY( 0 )->curstate.messagenum = r_currentMessageNum;
 
-	if (levelTime != -1.0f && CVAR_TO_BOOL( r_sun_allowed ))
+	if (levelTime != -1.0f && r_sun_allowed->value == 1.0f)
 	{
 		Vector	skyVector;
 		matrix4x4	a;
