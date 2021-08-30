@@ -1246,16 +1246,19 @@
 	]
 ]
 
-@PointClass color(255 255 128) base(Targetname, Parent) iconsprite("sprites/fgd/env_dynlight.spr") = env_dynlight : "Dynamic light"
+@PointClass color(255 255 128) base(Targetname, Parent) iconsprite("sprites/fgd/env_dynlight.spr") = env_dynlight : "Dynamic light source"
 [
 	rendercolor(color255) : "Light Color (R G B)" : "255 255 255"
 	renderamt(integer) : "Radius" : 256
 	scale(integer) : "Cone (spotlights)" : 0
-	rendermode(integer) : "texture (spotlights)" : 0
+	rendermode(integer) : "Texture (spotlights)" : 0
     message(string) : "Media file"
 	spawnflags(flags) =
 	[
-		1 : "Start off" : 0
+		1: "Start Off" : 0
+		2: "Disable Shadows" : 0
+		4: "Disable Bump" : 0
+		8: "Enable Lensflare Effect" : 0
 	]
 ]
 
