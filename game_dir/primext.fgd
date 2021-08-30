@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 25 August 2021)
+// PrimeXT FGD (last updated 30 August 2021)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -1090,8 +1090,8 @@
 @PointClass base(Targetname, MoveWith) = env_sun : "Sun" 
 [
 	pitch(integer) : "Pitch" : 0
-    yaw(integer) : "Yaw" : 0
-    roll(integer) : "Roll" : 0
+        yaw(integer) : "Yaw" : 0
+        roll(integer) : "Roll" : 0
 ]
 
 @PointClass iconsprite("sprites/fgd/env_customize.spr") = env_customize : "Change entity properties"
@@ -1488,7 +1488,7 @@
 	]
 ]
 
-@PointClass base(Targetname, Target, RenderFields) size(-16 -16 -16, 16 16 16) color(100 100 0) = env_render : "Render Controls"
+@PointClass base(Targetname, Target, RenderFields) iconsprite("sprites/fgd/env_render.spr") size(-16 -16 -16, 16 16 16) color(100 100 0) = env_render : "Render Controls"
 [
 	m_fScale(string) : "New Scale"
 	netname(string): "Fire when Complete"
@@ -1554,7 +1554,7 @@
 	m_iszTouchOther(target_destination) : "Fire on Collision (noworld)"
 	m_vecSize(string) : "Shot size (X Y Z) depr." : "0 0 0"
 ]
-@PointClass base(Targetname, Angles) size(-16 -16 -16, 16 16 16) = env_sky : "3D Skybox"
+@PointClass base(Targetname, Angles) iconsprite("sprites/fgd/env_sky.spr") size(-16 -16 -16, 16 16 16) = env_sky : "3D Skybox"
 [
 	fov(integer) : "Field of View"
 	scale(string) : "Scale of Skybox" : "1"
@@ -2980,7 +2980,7 @@
 [
 	pitch(integer) : "Pitch" : 0
 	_light(color255) : "Brightness" : "255 255 128 200"
-    _diffuse_light(color255) : "Shade" : "255 255 128 200"
+        _diffuse_light(color255) : "Shade" : "255 255 128 200"
 ]
 
 @SolidClass base(Targetname, Target, Targetx, Parent, Angles, RenderFields, ZHLT, Appearflags) = momentary_door : "Momentary/Continuous door" 
