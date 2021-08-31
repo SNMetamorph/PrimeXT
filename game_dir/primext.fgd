@@ -36,7 +36,7 @@
 		1 : "First Team"
 	]
 	gravity(string) : "Global Gravity (0..800)" : 800
-	fog(color255): "Global Fog (R G B D)" : "192 168 1 1"
+	fog(color255): "Global Fog (R G B D)" : "0 0 0 0"
 ]
 
 //
