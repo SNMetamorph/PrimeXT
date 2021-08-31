@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 30 August 2021)
+// PrimeXT FGD (last updated 31 August 2021)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -1685,7 +1685,6 @@
 	skin(integer) : "Skin" : 0
 	body(integer) : "Body" : 0
 	scale(string) : "Scale (1.0 = normal size)" : "1.0"
-	xform(string) : "Scale (X Y Z)" : "1 1 1"
 	sequence(integer) : "Sequence" : 0
 	frame(integer) : "Frame"
 	colormap(string): "Colormap"
