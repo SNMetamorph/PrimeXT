@@ -87,7 +87,7 @@ void V_Init( void )
 	cl_vsmoothing = CVAR_REGISTER("cl_vsmoothing", "0.05", FCVAR_ARCHIVE);
 	cl_viewsize = CVAR_GET_POINTER("viewsize");
 	
-	InitializeConVars();
+	R_InitializeConVars();
 	ADD_COMMAND( "thirdperson", V_ThirdPerson );
 	ADD_COMMAND( "firstperson", V_FirstPerson );
 	ADD_COMMAND( "centerview", V_StartPitchDrift );
