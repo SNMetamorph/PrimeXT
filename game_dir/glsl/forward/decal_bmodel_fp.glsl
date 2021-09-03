@@ -66,10 +66,11 @@ void main( void )
 	vec2 vecTexCoord = var_TexDiffuse.xy;
 
 #if defined( PARALLAX_SIMPLE )
-	float offset = texture2D( u_HeightMap, vecTexCoord ).r * 0.04 - 0.02;
-	vecTexCoord = ( offset * -V.xy + vecTexCoord );
+	//vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse.xy, var_TangentViewDir);
+	vecTexCoord = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse.xy, var_TangentViewDir);
+	//vec_TexDiffuse = ParallaxReliefMap(var_TexDiffuse.xy, var_TangentViewDir);
 #elif defined( PARALLAX_OCCLUSION )
-	vecTexCoord = ParallaxOcclusionMap( var_TexDiffuse.xy, V ).xy;
+	vecTexCoord = ParallaxOcclusionMap(var_TexDiffuse.xy, var_TangentViewDir).xy; 
 #endif
 	vec4 diffuse = decalmap2D( u_DecalMap, vecTexCoord );
 
@@ -145,7 +146,7 @@ void main( void )
 #if defined( APPLY_FOG_EXP )
 	float fogFactor = saturate( exp2( -u_FogParams.w * ( gl_FragCoord.z / gl_FragCoord.w )));
 #if defined( APPLY_COLORBLEND )
-	diffuse.rgb = mix( diffuse.rgb, vec3( 0.5 ), fogFactor ); // mixing to base
+	diffuse.rgb = mix( u_FogParams.xyz, diffuse.rgb, fogFactor );
 #else
 	diffuse.a *= fogFactor; // modulate alpha
 #endif
