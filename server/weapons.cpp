@@ -150,14 +150,7 @@ const char *DamageDecal( CBaseEntity *pEntity, int bitsDamageType )
 {
 	if (!pEntity) 
 	{
-		switch (RANDOM_LONG(1, 5))
-		{
-			case 1: return "{shot1";
-			case 2: return "{shot2";
-			case 3: return "{shot3";
-			case 4: return "{shot4";
-			case 5: return "{shot5";
-		}
+		return "shot";
 	}
 	return pEntity->DamageDecal( bitsDamageType );
 }

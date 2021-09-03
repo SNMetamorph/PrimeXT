@@ -111,19 +111,11 @@ void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType )
 
 	CBaseEntity *pEntity = CBaseEntity::Instance( pTrace->pHit );
 
-	if ( RANDOM_FLOAT( 0 , 1 ) < 0.5 )
-	{
-		if( pEntity && UTIL_GetModelType( pEntity->pev->modelindex ) == mod_studio )
-			UTIL_StudioDecalTrace( pTrace, "{scorch1");
-		else 
-			UTIL_DecalTrace( pTrace, "{scorch1" );
+	if (pEntity && GET_MODEL_PTR(pEntity->edict())) {
+		UTIL_StudioDecalTrace(pTrace, "scorch");
 	}
-	else
-	{
-		if( pEntity && UTIL_GetModelType( pEntity->pev->modelindex ) == mod_studio )
-			UTIL_StudioDecalTrace( pTrace, "{scorch2" );
-		else 
-			UTIL_DecalTrace( pTrace, "{scorch2" );
+	else {
+		UTIL_TraceCustomDecal(pTrace, "scorch", RANDOM_FLOAT(0.0f, 360.0f));
 	}
 
 	flRndSound = RANDOM_FLOAT( 0 , 1 );

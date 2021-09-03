@@ -3562,9 +3562,9 @@ void CSprayCan::Think( void )
 		CBaseEntity *pEntity = CBaseEntity::Instance( tr.pHit );
 
 		if( pEntity && UTIL_GetModelType( pEntity->pev->modelindex ) == mod_studio )
-			UTIL_StudioDecalTrace( &tr, "{lambda06" );
+			UTIL_StudioDecalTrace( &tr, "decal_ban4" );
 		else 
-			UTIL_DecalTrace( &tr, "{lambda06" );
+			UTIL_DecalTrace( &tr, "decal_ban4" );
 
 		UTIL_Remove( this );
 	}
@@ -3604,7 +3604,7 @@ void CBloodSplat::Spray ( void )
 	if( g_Language != LANGUAGE_GERMAN )
 	{
 		UTIL_MakeVectors( GetAbsAngles() );
-		UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + gpGlobals->v_forward * 128, dont_ignore_monsters, pev->owner, &tr );
+		UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + gpGlobals->v_forward * 256, dont_ignore_monsters, pev->owner, &tr );
 
 		CBaseEntity *pEntity = CBaseEntity::Instance( tr.pHit );
 

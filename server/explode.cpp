@@ -158,15 +158,15 @@ void CEnvExplosion::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 	}
 
 	// draw decal
-	if (! ( pev->spawnflags & SF_ENVEXPLOSION_NODECAL))
+	if (!(pev->spawnflags & SF_ENVEXPLOSION_NODECAL))
 	{
-		if ( RANDOM_FLOAT( 0 , 1 ) < 0.5 )
+		if (RANDOM_FLOAT(0, 1) < 0.5)
 		{
-			UTIL_DecalTrace( &tr, "{scorch1" );
+			UTIL_TraceCustomDecal(&tr, "scorch1", RANDOM_FLOAT(0.0f, 360.0f));
 		}
 		else
 		{
-			UTIL_DecalTrace( &tr, "{scorch2" );
+			UTIL_TraceCustomDecal(&tr, "scorch2", RANDOM_FLOAT(0.0f, 360.0f));
 		}
 	}
 

@@ -1790,12 +1790,12 @@ Vector UTIL_RandomBloodVector( void )
 
 void UTIL_BloodDecalTrace( TraceResult *pTrace, int bloodColor )
 {
-	if ( UTIL_ShouldShowBlood( bloodColor ) )
+	if (UTIL_ShouldShowBlood(bloodColor))
 	{
-		if ( bloodColor == BLOOD_COLOR_RED )
-			UTIL_DecalTrace( pTrace, "{blood1" ); // TODO make it more varying
+		if (bloodColor == BLOOD_COLOR_RED)
+			UTIL_TraceCustomDecal(pTrace, "redblood", RANDOM_FLOAT(0.0f, 360.0f));
 		else
-			UTIL_DecalTrace( pTrace, "{yblood1" );
+			UTIL_TraceCustomDecal(pTrace, "yellowblood", RANDOM_FLOAT(0.0f, 360.0f));
 	}
 }
 
@@ -1804,9 +1804,9 @@ void UTIL_BloodStudioDecalTrace(TraceResult *pTrace, int bloodColor)
 	if (UTIL_ShouldShowBlood(bloodColor))
 	{
 		if (bloodColor == BLOOD_COLOR_RED)
-			UTIL_StudioDecalTrace(pTrace, "{blood1"); // TODO make it more varying
+			UTIL_StudioDecalTrace(pTrace, "redblood"); // TODO make it more varying
 		else
-			UTIL_StudioDecalTrace(pTrace, "{yblood1");
+			UTIL_StudioDecalTrace(pTrace, "yellowblood");
 	}
 }
 

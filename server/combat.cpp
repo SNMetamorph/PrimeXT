@@ -582,16 +582,16 @@ void CBaseMonster::CallGibMonster( void )
 
 const char *CBaseMonster::DamageDecal( int bitsDamageType )
 {
-	if( bitsDamageType & ( DMG_BULLET|DMG_CLUB ))
+	if (bitsDamageType & (DMG_BULLET | DMG_CLUB))
 	{
-		if( BloodColor() == BLOOD_COLOR_RED )
-			return "{blood1";
-		else if( BloodColor() == BLOOD_COLOR_YELLOW )
-			return "{yblood1";
+		if (BloodColor() == BLOOD_COLOR_RED)
+			return "bodyhurt_red";
+		else if (BloodColor() == BLOOD_COLOR_YELLOW)
+			return "bodyhurt_yellow";
 	}
 
 	// Assume no blood is vehicles or furniture
-	return "{shot1";
+	return "shot";
 }
 
 /*
@@ -1565,34 +1565,17 @@ void CBaseEntity :: TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr,
 	if (BloodColor() == DONT_BLEED)
 		return;
 	
-	if (flDamage == 0)
+	if (flDamage < 1.f)
 		return;
-
-	if (! (bitsDamageType & (DMG_CRUSH | DMG_BULLET | DMG_SLASH | DMG_BLAST | DMG_CLUB | DMG_MORTAR)))
+	
+	if (!(bitsDamageType & (DMG_CRUSH | DMG_BULLET | DMG_SLASH | DMG_BLAST | DMG_CLUB | DMG_MORTAR)))
 		return;
 	
 	// make blood decal on the wall! 
-	TraceResult Bloodtr;
-	Vector vecTraceDir; 
+	TraceResult bloodTrace;
+	Vector traceDir; 
 	float flNoise;
 	int cCount;
-	int i;
-
-/*
-	if ( !IsAlive() )
-	{
-		// dealing with a dead monster. 
-		if ( pev->max_health <= 0 )
-		{
-			// no blood decal for a monster that has already decalled its limit.
-			return; 
-		}
-		else
-		{
-			pev->max_health--;
-		}
-	}
-*/
 
 	if (flDamage < 10)
 	{
@@ -1610,19 +1593,15 @@ void CBaseEntity :: TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr,
 		cCount = 4;
 	}
 
-	for ( i = 0 ; i < cCount ; i++ )
+	for (int i = 0 ; i < cCount; i++)
 	{
-		vecTraceDir = vecDir * -1;// trace in the opposite direction the shot came from (the direction the shot is going)
-
-		vecTraceDir.x += RANDOM_FLOAT( -flNoise, flNoise );
-		vecTraceDir.y += RANDOM_FLOAT( -flNoise, flNoise );
-		vecTraceDir.z += RANDOM_FLOAT( -flNoise, flNoise );
-
-		UTIL_TraceLine( ptr->vecEndPos, ptr->vecEndPos + vecTraceDir * -172, ignore_monsters, ENT(pev), &Bloodtr);
-
-		if ( Bloodtr.flFraction != 1.0 )
-		{
-			UTIL_BloodDecalTrace( &Bloodtr, BloodColor() );
+		traceDir = vecDir;// trace in the opposite direction the shot came from (the direction the shot is going)
+		traceDir.x += RANDOM_FLOAT( -flNoise, flNoise );
+		traceDir.y += RANDOM_FLOAT( -flNoise, flNoise );
+		traceDir.z += RANDOM_FLOAT( -flNoise, flNoise );
+		UTIL_TraceLine( ptr->vecEndPos, ptr->vecEndPos + traceDir * 172, ignore_monsters, ENT(pev), &bloodTrace); 
+		if (bloodTrace.flFraction < 1.0f) {
+			UTIL_BloodDecalTrace( &bloodTrace, BloodColor() );
 		}
 	}
 }
