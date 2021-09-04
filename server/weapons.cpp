@@ -188,7 +188,7 @@ void DecalGunshot( TraceResult *pTrace, int iBulletType )
 			break;
 		case BULLET_PLAYER_CROWBAR:
 			// wall decal
-			UTIL_DecalTrace( pTrace, DamageDecal( pEntity, DMG_CLUB ) );
+			UTIL_TraceCustomDecal( pTrace, DamageDecal( pEntity, DMG_CLUB ) );
 			break;
 		}
 	}
