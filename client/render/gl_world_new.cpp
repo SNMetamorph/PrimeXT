@@ -1055,19 +1055,17 @@ then alloc lightmaps
 */
 static void Mod_FinalizeWorld( void )
 {
-	int	i;
-
 	world->sortedfaces = (unsigned short *)Mem_Alloc( worldmodel->numsurfaces * sizeof( unsigned short ));
 	world->numsortedfaces = worldmodel->numsurfaces;
 
 	// initial filling
-	for( i = 0; i < worldmodel->numsurfaces; i++ )
+	for (int i = 0; i < worldmodel->numsurfaces; i++)
 		world->sortedfaces[i] = i;
 
-	qsort( world->sortedfaces, worldmodel->numsurfaces, sizeof( unsigned short ), (cmpfunc)Mod_SurfaceCompareBuild );
+	qsort(world->sortedfaces, worldmodel->numsurfaces, sizeof( unsigned short ), (cmpfunc)Mod_SurfaceCompareBuild);
 
 	// alloc surface lightmaps and compute lm coords (for sorted list)
-	for( i = 0; i < worldmodel->numsurfaces; i++ )
+	for (int i = 0; i < worldmodel->numsurfaces; i++)
 	{
 		msurface_t *surf = &worldmodel->surfaces[world->sortedfaces[i]];
 
@@ -2500,21 +2498,17 @@ loading the new map
 void Mod_PrepareModelInstances( void )
 {
 	// invalidate model handles
-	for( int i = 1; i < RENDER_GET_PARM( PARM_MAX_ENTITIES, 0 ); i++ )
+	for (int i = 1; i < RENDER_GET_PARM(PARM_MAX_ENTITIES, 0); i++)
 	{
 		cl_entity_t *e = GET_ENTITY( i );
-		if( !e ) break;
+		if (!e) {
+			break;
+		}
 		e->modelhandle = INVALID_HANDLE;
+		e->hCachedMatrix = WORLD_MATRIX;
 	}
 
-	//if( gHUD.m_pHeadShieldEnt != NULL )
-	//{
-	//	gHUD.m_pHeadShieldEnt->modelhandle = INVALID_HANDLE;
-	//	gHUD.m_pHeadShieldEnt->curstate.movetype = MOVETYPE_WALK;
-	//}
-
 	GET_VIEWMODEL()->modelhandle = INVALID_HANDLE;
-
 	memset( tr.draw_entities, 0, sizeof( tr.draw_entities ));
 }
 

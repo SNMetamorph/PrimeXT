@@ -1031,7 +1031,7 @@ Called always when map is changed or restarted
 */
 void R_NewMap( void )
 {
-	// setup special flags
+	// initialize world surfaces, setup special flags
 	for( int i = 0; i < worldmodel->numsurfaces; i++ )
 	{
 		msurface_t *surf = &worldmodel->surfaces[i];
@@ -1047,6 +1047,7 @@ void R_NewMap( void )
 		info->cubemap[0] = &world->defaultCubemap;
 		info->cubemap[1] = &world->defaultCubemap;
 		info->checkcount = -1;
+		info->parent = nullptr;
 	}
 
 	// we need to reapply cubemaps to surfaces after restart level
