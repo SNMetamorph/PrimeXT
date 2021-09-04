@@ -263,6 +263,9 @@ void CPhysEntity :: TraceAttack( entvars_t *pevAttacker, float flDamage, Vector 
 			break;
 		}
 	}
+
+	// call base class method also
+	CBaseDelay::TraceAttack(pevAttacker, flDamage, vecDir, ptr, bitsDamageType);
 }
 
 void CPhysEntity :: Touch( CBaseEntity *pOther )
@@ -303,24 +306,26 @@ void CPhysEntity :: Touch( CBaseEntity *pOther )
 	WorldPhysic->SetLinearMomentum( this, vecVelocity );
 }
 
-int CPhysEntity :: TakeDamage( entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType )
+int CPhysEntity::TakeDamage( entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType )
 {
 	Vector	vecTemp;
 
 	// if Attacker == Inflictor, the attack was a melee or other instant-hit attack.
 	// (that is, no actual entity projectile was involved in the attack so use the shooter's origin). 
-	if ( pevAttacker == pevInflictor )	
+	if (pevAttacker == pevInflictor)	
 	{
 		vecTemp = pevInflictor->origin - ( pev->absmin + ( pev->size * 0.5 ) );
-		
 		// if a client hit the breakable with a crowbar, and breakable is crowbar-sensitive, break it now.
-		if ( FBitSet ( pevAttacker->flags, FL_CLIENT ) &&
-				 FBitSet ( pev->spawnflags, SF_PHYS_CROWBAR ) && (bitsDamageType & DMG_CLUB))
+		if (FBitSet(pevAttacker->flags, FL_CLIENT) &&
+			FBitSet(pev->spawnflags, SF_PHYS_CROWBAR) &&
+			(bitsDamageType & DMG_CLUB))
+		{
 			flDamage = pev->health;
+		}
 	}
 	else
-	// an actual missile was involved.
 	{
+		// an actual missile was involved.
 		vecTemp = pevInflictor->origin - ( pev->absmin + ( pev->size * 0.5 ) );
 	}
 	
@@ -335,10 +340,10 @@ int CPhysEntity :: TakeDamage( entvars_t* pevInflictor, entvars_t* pevAttacker, 
 	if ( bitsDamageType & DMG_POISON )
 		flDamage *= 0.1;
 
-// this global is still used for glass and other non-monster killables, along with decals.
+	// this global is still used for glass and other non-monster killables, along with decals.
 	g_vecAttackDir = vecTemp.Normalize();
 		
-// do the damage
+	// do the damage
 	pev->health -= flDamage;
 	if (pev->health <= 0)
 	{
@@ -348,9 +353,7 @@ int CPhysEntity :: TakeDamage( entvars_t* pevInflictor, entvars_t* pevAttacker, 
 
 	// Make a shard noise each time func breakable is hit.
 	// Don't play shard noise if cbreakable actually died.
-
 	DamageSound();
-
 	return 1;
 }
 
