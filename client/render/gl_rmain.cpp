@@ -235,7 +235,7 @@ gl_state_t *GL_GetCache( word hCachedMatrix )
 	if( hCachedMatrix >= tr.cached_state.Count( ))
 	{
 		ASSERT( tr.cached_state.Count() > 0 );
-		ALERT( at_aiconsole, "request invalid cachenum %d\n", hCachedMatrix );
+		//ALERT( at_aiconsole, "GL_GetCache: requested invalid cachenum %d\n", hCachedMatrix );
 		return &tr.cached_state[WORLD_MATRIX];
 	}
 
