@@ -430,11 +430,16 @@ void CPhysEntity :: DamageSound( void )
 
 const char* CPhysEntity :: DamageDecal( int bitsDamageType )
 {
-	if (m_Material == matGlass)
-		return "{break1";
-
-	if ( m_Material == matUnbreakableGlass )
-		return "{bproof1";
+	switch (m_Material)
+	{
+		case matGlass:
+		case matUnbreakableGlass:
+			return "shot_glass";
+		case matWood:
+			return "shot_wood";
+		case matMetal:
+			return "shot_metal";
+	}
 
 	return CBaseEntity::DamageDecal( bitsDamageType );
 }
