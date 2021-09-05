@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 31 August 2021)
+// PrimeXT FGD (last updated 5 September 2021)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -701,7 +701,7 @@
 	]
 ]
 
-@BaseClass base(Targetname, Target, Targetx, Parent, Filter) = Trigger
+@BaseClass base(Targetname, Targetx, Parent, Filter) = Trigger
 [
 	master(target_destination) : "Master" 
 	//sounds(choices) : "Sound style" : 0 =
@@ -716,6 +716,18 @@
 		4: "Pushables": 0
 		8: "Check Angles" : 0
 		16 : "All Physics" : 0
+	]
+]
+
+@BaseClass = TriggerCond
+[
+	netname(string) : "Triggered only by entity"
+	spawnflags(flags) = 
+	[
+		1: "Monsters"	: 0
+		2: "No Clients"	: 0
+		4: "Pushables"	: 0
+		8: "Everything else" : 0
 	]
 ]
 
@@ -992,8 +1004,7 @@
 	LightningStart(target_destination) : "Start Entity" 
 	LightningEnd(target_destination) : "Ending Entity" 
 ]
-
-@PointClass base(Targetname, Target, BeamStartEnd, RenderFxChoices) size(-16-16 -16, 16 16 16) iconsprite("sprites/fgd/env_beam.spr") = env_beam : "Energy Beam Effect"
+@PointClass base(Targetname, Target, BeamStartEnd, RenderFxChoices) iconsprite("sprites/fgd/env_beam.spr") = env_beam : "Energy Beam Effect"
 [
 	renderamt(integer) : "Brightness (1 - 255)" : 100
 	rendercolor(color255) : "Beam Color (R G B)" : "0 0 0"
@@ -1087,11 +1098,11 @@
 	cubemapsize(integer) : "Resolution (16-512)" : 256
 ]
 
-@PointClass base(Targetname, MoveWith) = env_sun : "Sun" 
+@PointClass base(Targetname, Parent) = env_sun : "Sun" 
 [
 	pitch(integer) : "Pitch" : 0
-        yaw(integer) : "Yaw" : 0
-        roll(integer) : "Roll" : 0
+    yaw(integer) : "Yaw" : 0
+    roll(integer) : "Roll" : 0
 ]
 
 @PointClass iconsprite("sprites/fgd/env_customize.spr") = env_customize : "Change entity properties"
@@ -4240,14 +4251,14 @@
 
 @SolidClass base(Trigger) = trigger_once : "Trigger: Activate once" []
 
-@PointClass base(Targetname) iconsprite("sprites/fgd/trigger.spr") = trigger_onsight : "Trigger when A sees B"
+@PointClass base(Targetname, Parent) iconsprite("sprites/fgd/trigger.spr") = trigger_onsight : "Trigger when A sees B"
 [
-	master(target_destination) : "Master" 
-	netname(target_detination) : "Looking Entity (blank=player)"
+	master(string) : "Master" 
+	netname(string) : "Looking Entity (blank=player)"
 	message(string) : "Entity/classname to Look at"
-	target(target_detination) : "Fire when Seen"
-	noise(target_detination) : "Fire when no Longer seen"
-	noise1(target_detination) : "Fire on/off (seen/not seen)"
+	target(string) : "Fire when Seen"
+	noise(string) : "Fire when no Longer seen"
+	noise1(string) : "Fire on/off (seen/not seen)"
 	frags(string) : "Distance (0=unlimited)" : "512"
 	max_health(choices) : "Field of view (degrees)" : 90 =
 	[
@@ -4295,7 +4306,7 @@
 	value(string): "Send Value (depr.)"
 ]
 
-@SolidClass base(Targetname, Target, Targetx, Parent) = trigger_sound : "Brush-based DSP Sound"
+@SolidClass base(Targetname, Targetx, Parent) = trigger_sound : "Brush-based DSP Sound"
 [
 	master(target_destination) : "Master" 
 	roomtype(choices) : "Room Type" : 0 =
