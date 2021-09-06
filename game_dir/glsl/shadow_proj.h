@@ -49,7 +49,99 @@ float ShadowProj( const in vec3 world )
 	vec4 cam = gl_ModelViewMatrix * vec4( world.xyz, 1.0 );
 	float vertexDistanceToCamera = -cam.z;
 	vec3 shadowVert;
+
+#if defined( SHADOW_VOGEL_DISK ) // vogel disk shadows smoothing
+#define SAMPLE_COUNT 16
+	float stepSize = 6.4 / 2560.0;		
+	float rotation = InterleavedGradientNoise(gl_FragCoord.xy) * 6.2832;
 	
+#if (NUM_SHADOW_SPLITS == 1)
+	if( vertexDistanceToCamera < u_ShadowSplitDist.x )
+	{
+		shadowVert = WorldToTexel( world, 0 );
+        for( int i = 0; i < SAMPLE_COUNT; i += 1 )
+	    {
+	 	    shadow += shadow2D( u_ShadowMap0, shadowVert + vec3(stepSize * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+	    }
+	}
+	else
+	{
+		shadowVert = WorldToTexel( world, 1 );
+        for( int i = 0; i < SAMPLE_COUNT; i += 1 )
+		{
+			shadow += shadow2D( u_ShadowMap1, shadowVert + vec3(stepSize * 0.5 * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+		}         
+	}
+#elif (NUM_SHADOW_SPLITS == 2)
+	if( vertexDistanceToCamera < u_ShadowSplitDist.x )
+	{
+		shadowVert = WorldToTexel( world, 0 );
+		for( int i = 0; i < SAMPLE_COUNT; i += 1 )
+		{
+			shadow += shadow2D( u_ShadowMap0, shadowVert + vec3(stepSize * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+		}
+	}
+	else if( vertexDistanceToCamera < u_ShadowSplitDist.y )
+	{
+		shadowVert = WorldToTexel( world, 1 );
+		for( int i = 0; i < SAMPLE_COUNT; i += 1 )
+		{
+			shadow += shadow2D( u_ShadowMap1, shadowVert + vec3(stepSize * 0.5 * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+		}
+		
+	}
+	else
+	{
+		shadowVert = WorldToTexel( world, 2 );
+		for( int i = 0; i < SAMPLE_COUNT; i += 1 )
+		{
+			shadow += shadow2D( u_ShadowMap2, shadowVert + vec3(stepSize * 0.25 * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+		}
+	}
+#elif (NUM_SHADOW_SPLITS == 3)
+	if( vertexDistanceToCamera < u_ShadowSplitDist.x )
+	{
+		shadowVert = WorldToTexel( world, 0 );
+		for( int i = 0; i < SAMPLE_COUNT; i += 1 )
+		{
+			shadow += shadow2D( u_ShadowMap0, shadowVert + vec3(stepSize * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+		}
+	}
+	else if( vertexDistanceToCamera < u_ShadowSplitDist.y )
+	{
+		shadowVert = WorldToTexel( world, 1 );
+		for( int i = 0; i < SAMPLE_COUNT; i += 1 )
+		{
+			shadow += shadow2D( u_ShadowMap1, shadowVert + vec3(stepSize * 0.5 * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+		}
+	}
+	else if( vertexDistanceToCamera < u_ShadowSplitDist.z )
+	{
+		shadowVert = WorldToTexel( world, 2 );
+		for( int i = 0; i < SAMPLE_COUNT; i += 1 )
+		{
+			shadow += shadow2D( u_ShadowMap2, shadowVert + vec3(stepSize * 0.25 *  VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+		}
+	}
+	else
+	{
+		shadowVert = WorldToTexel( world, 3 );
+		for( int i = 0; i < SAMPLE_COUNT; i += 1 )
+		{
+			shadow += shadow2D( u_ShadowMap3, shadowVert + vec3(stepSize * 0.125 * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+		}
+	}
+#else
+	{
+		shadowVert = WorldToTexel( world, 0 );
+		for( int i = 0; i < SAMPLE_COUNT; i += 1 )
+		{
+			shadow += shadow2D( u_ShadowMap0, shadowVert + vec3(stepSize * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+		}
+	}
+#endif			
+	shadow /= float(SAMPLE_COUNT);	
+#else // PCF shadows smoothing 
 #if (NUM_SHADOW_SPLITS == 1)
 	if( vertexDistanceToCamera < u_ShadowSplitDist.x )
 	{
@@ -130,6 +222,7 @@ float ShadowProj( const in vec3 world )
 	}
 #endif
 #endif
+#endif // GL_EXT_gpu_shader4
 	return shadow;
 }
 

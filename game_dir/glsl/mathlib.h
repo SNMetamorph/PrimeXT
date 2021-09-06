@@ -96,4 +96,18 @@ float get_shadow_offset( in float lightCos )
 	return clamp( bias, 0.0, 0.005 );
 }
 
+vec2 VogelDiskSample(int sampleIndex, int samplesCount, float phi)
+{
+	float goldenAngle = 2.4;
+	float r = sqrt(float(sampleIndex) + 0.5) * inversesqrt(float(samplesCount));
+	float theta = sampleIndex * goldenAngle + phi;
+	return r * vec2(cos(theta), sin(theta));
+}
+
+float InterleavedGradientNoise(vec2 position_screen)
+{
+	vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);
+	return fract(magic.z * fract(dot(position_screen, magic.xy)));
+}
+
 #endif//MATHLIB_H

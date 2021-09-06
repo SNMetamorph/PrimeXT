@@ -32,12 +32,15 @@ float depthCube( const in vec3 coord, const float scale, const float bias )
 
 float ShadowOmni( const in vec3 I, const in vec4 params )
 {
-#if defined( SHADOW_PCF2X2 ) || defined( SHADOW_PCF3X3 )
+#if defined( SHADOW_PCF2X2 ) || defined( SHADOW_PCF3X3 ) || defined( SHADOW_VOGEL_DISK )
 	vec3 forward, right, up;
-
 	forward = normalize( I );
 	MakeNormalVectors( forward, right, up );
 
+	float shadow = 0.0;
+#endif
+
+#if defined( SHADOW_PCF2X2 ) || defined( SHADOW_PCF3X3 )
 #if defined( SHADOW_PCF2X2 )
 	float filterWidth = params.x * length( I ) * 2.0;	// PCF2X2
 #elif defined( SHADOW_PCF3X3 )
@@ -47,8 +50,6 @@ float ShadowOmni( const in vec3 I, const in vec4 params )
 #endif
 	// compute step size for iterating through the kernel
 	float stepSize = NUM_SAMPLES * filterWidth / NUM_SAMPLES;
-
-	float shadow = 0.0;
 
 	for( float i = -filterWidth; i < filterWidth; i += stepSize )
 	{
@@ -60,10 +61,21 @@ float ShadowOmni( const in vec3 I, const in vec4 params )
 
 	// return average of the samples
 	shadow *= ( 4.0 / ( NUM_SAMPLES * NUM_SAMPLES ));
-
 	return shadow;
+#elif defined( SHADOW_VOGEL_DISK )
+	float stepSize = 1.1;
+	float rotation = InterleavedGradientNoise(gl_FragCoord.xy) * 6.2832;
+
+	for( int i = 0; i < 16; ++i)
+	{
+		vec2 vogel = stepSize * VogelDiskSample(i, 16, rotation); 
+		shadow += depthCube(I + right * vogel.x + up * vogel.y, params.z, params.w );
+	}
+	
+	shadow *= 0.0625;	
+	return shadow;	
 #else
-	return depthCube( I, params.z, params.w ); // no PCF
+	return depthCube( I, params.z, params.w ); // no shadow smoothing at all
 #endif
 }
 

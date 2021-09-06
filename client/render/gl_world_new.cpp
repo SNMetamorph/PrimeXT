@@ -1368,19 +1368,23 @@ static word Mod_ShaderLightForward( CDynLight *dl, msurface_t *s )
 
 	if( CVAR_TO_BOOL( r_shadows ) && !FBitSet( dl->flags, DLF_NOSHADOWS ))
 	{
+		int shadow_smooth_type = static_cast<int>(r_shadows->value);
 		// shadow cubemaps only support if GL_EXT_gpu_shader4 is support
 		if( dl->type == LIGHT_DIRECTIONAL && CVAR_TO_BOOL( r_sunshadows ))
 		{
 			GL_AddShaderDirective( options, "APPLY_SHADOW" );
+			if (shadow_smooth_type == 4)
+				GL_AddShaderDirective(options, "SHADOW_VOGEL_DISK");
 		}
 		else if( dl->type == LIGHT_SPOT || GL_Support( R_EXT_GPU_SHADER4 ))
 		{
 			GL_AddShaderDirective( options, "APPLY_SHADOW" );
-
-			if( r_shadows->value == 2.0f ) 
-				GL_AddShaderDirective( options, "SHADOW_PCF2X2" );
-			else if( r_shadows->value >= 3.0f ) 
-				GL_AddShaderDirective( options, "SHADOW_PCF3X3" );
+			if (shadow_smooth_type == 2)
+				GL_AddShaderDirective(options, "SHADOW_PCF2X2");
+			else if (shadow_smooth_type == 3)
+				GL_AddShaderDirective(options, "SHADOW_PCF3X3");
+			else if (shadow_smooth_type == 4)
+				GL_AddShaderDirective(options, "SHADOW_VOGEL_DISK");
 		}
 	}
 

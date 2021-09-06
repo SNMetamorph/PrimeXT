@@ -29,7 +29,6 @@ float ShadowSpot( const in vec4 projection, const in vec2 texel )
 	coord.r = float( clamp( float( coord.r ), 0.0, 1.0 ));
 
 #if defined( SHADOW_PCF2X2 ) || defined( SHADOW_PCF3X3 )
-
 #if defined( SHADOW_PCF2X2 )
 	float filterWidth = texel.x * length( coord ) * 0.5;
 #elif defined( SHADOW_PCF3X3 )
@@ -39,7 +38,6 @@ float ShadowSpot( const in vec4 projection, const in vec2 texel )
 #endif
 	// compute step size for iterating through the kernel
 	float stepSize = NUM_SAMPLES * ( filterWidth / NUM_SAMPLES );
-
 	float shadow = 0.0;
 
 	for( float i = -filterWidth; i < filterWidth; i += stepSize )
@@ -52,7 +50,18 @@ float ShadowSpot( const in vec4 projection, const in vec2 texel )
 
 	// return average of the samples
 	shadow *= ( 4.0 / ( NUM_SAMPLES * NUM_SAMPLES ));
-
+	return shadow;
+#elif defined( SHADOW_VOGEL_DISK )
+	float shadow = 0.0;	
+	float stepSize = 6.4 / 3200.0;	
+	float rotation = InterleavedGradientNoise(gl_FragCoord.xy) * 6.2832;
+	
+	for( int i = 0; i < 16; ++i )
+	{
+		shadow += shadow2D(u_ShadowMap, coord + vec3(stepSize * VogelDiskSample(i, 16, rotation), 0.0)).r;
+	}
+	
+    shadow *= 0.0625;	
 	return shadow;
 #else
 	return shadow2D( u_ShadowMap, coord ).r; // no PCF
