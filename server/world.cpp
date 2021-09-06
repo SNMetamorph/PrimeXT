@@ -633,10 +633,11 @@ float g_flWeaponCheat;
 
 void CWorld :: Spawn( void )
 {
+	// important! without it all studiomodel don't became darker in dynamic sun mode
+	LIGHT_STYLE(20, "m"); 
 	g_fGameOver = FALSE;
-	Precache( );
-
-	SetModel( GetModel() );
+	Precache();
+	SetModel(GetModel());
 }
 
 void CWorld :: Precache( void )
