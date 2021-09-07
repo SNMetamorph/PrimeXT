@@ -265,12 +265,13 @@ bool GL_BackendStartFrame( ref_viewpass_t *rvp, int params )
 
 		a.CreateRotate( RAD2DEG( timeAng ) - 180.0f, 1.0, 0.5f, 0.0f );
 		a.ConcatRotate( longitude, -0.5f, 1.0f, 0.0f );
-		skyVector = a.VectorRotate( Vector( 0.0f, 0.0f, 1.0f ));
-
-		gEngfuncs.Con_NPrintf( 7, "time %i:%02.f\n", (int)time, ( time - (int)time ) * 59.0f );
-		skyVector = skyVector.Normalize();
+		skyVector = a.VectorRotate( Vector( 0.0f, 0.0f, 1.0f )).Normalize();
 		GL_ComputeSunParams( skyVector );
 		allow_dynamic_sun = true;
+
+		gEngfuncs.Con_NPrintf(7, "Day Time: %i:%02.f\n", (int)time, (time - (int)time) * 59.0f);
+		gEngfuncs.Con_NPrintf(8, "Sun Ambient: %f\n", tr.sun_ambient);
+		gEngfuncs.Con_NPrintf(9, "Ambient Factor %f\n", tr.ambientFactor);
 	}
 	else
 	{
