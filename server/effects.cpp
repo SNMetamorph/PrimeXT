@@ -3235,7 +3235,6 @@ public:
 LINK_ENTITY_TO_CLASS(env_dynlight, CDynamicLight);
 
 // =================== ENV_PARTICLE ==============================================
-
 #define SF_PARTICLE_START_ON		BIT( 0 )
 
 class CBaseParticle : public CPointEntity
@@ -3245,7 +3244,7 @@ public:
 	void Spawn( void );
 	void KeyValue( KeyValueData *pkvd );
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	virtual STATE GetState( void ) { return (pev->renderfx == kRenderFxAurora) ? STATE_ON : STATE_OFF; };
+	virtual STATE GetState( void ) { return (pev->body != 0) ? STATE_ON : STATE_OFF; };
 	void StartMessage( CBasePlayer *pPlayer );
 };
 
@@ -3278,12 +3277,15 @@ void CBaseParticle :: StartMessage( CBasePlayer *pPlayer )
 
 void CBaseParticle::Spawn( void )
 {
+	pev->solid = SOLID_NOT;
+	pev->movetype = MOVETYPE_NONE;
+	pev->renderamt = 128;
+	pev->rendermode = kRenderTransTexture;
+	pev->body = (pev->spawnflags & SF_PARTICLE_START_ON) != 0; // 'body' determines whether the effect is active or not
+
 	SET_MODEL( edict(), "sprites/null.spr" );
 	UTIL_SetSize( pev, Vector( -8, -8, -8 ), Vector( 8, 8, 8 ));
 	RelinkEntity();
-
-	if( FBitSet( pev->spawnflags, SF_PARTICLE_START_ON ))
-		pev->renderfx = kRenderFxAurora;
 }
 
 void CBaseParticle::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
@@ -3297,11 +3299,11 @@ void CBaseParticle::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 
 	if( useType == USE_ON )
 	{
-		pev->renderfx = kRenderFxAurora;
+		pev->body = 1;
 	}
 	else if( useType == USE_OFF )
 	{
-		pev->renderfx = kRenderFxNone;
+		pev->body = 0;
 	}
 }
 
