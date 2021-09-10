@@ -1260,10 +1260,10 @@
 @PointClass color(255 255 128) base(Targetname, Parent) iconsprite("sprites/fgd/env_dynlight.spr") = env_dynlight : "Dynamic light source"
 [
 	rendercolor(color255) : "Light Color (R G B)" : "255 255 255"
-	renderamt(integer) : "Radius" : 256
-	scale(integer) : "Cone (spotlights)" : 0
-	rendermode(integer) : "Texture (spotlights)" : 0
-    message(string) : "Media file"
+	renderamt(integer) : "Light Distance" : 256
+	scale(integer) : "Cutoff Angle (0 for omnidirect)" : 0
+	rendermode(integer) : "Texture (only for spotlight)" : 0
+    message(string) : "Media file (only for spotlight)"
 	spawnflags(flags) =
 	[
 		1: "Start Off" : 0
