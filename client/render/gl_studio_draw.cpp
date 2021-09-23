@@ -1762,32 +1762,37 @@ StudioClientEvents
 */
 void CStudioModelRenderer :: StudioClientEvents( void )
 {
-	mstudioseqdesc_t	*pseqdesc;
-	mstudioevent_t	*pevent;
+	mstudioseqdesc_t	*pSeqDesc;
+	mstudioevent_t	*pEvent;
+	int iSeqNum = RI->currententity->curstate.sequence;
 
-	pseqdesc = (mstudioseqdesc_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqindex) + RI->currententity->curstate.sequence;
-	pevent = (mstudioevent_t *)((byte *)m_pStudioHeader + pseqdesc->eventindex);
+	// invalid sequence number, just ignore it
+	if (iSeqNum < 0 || iSeqNum >= m_pStudioHeader->numseq)
+		return;
+
+	pSeqDesc = (mstudioseqdesc_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqindex) + iSeqNum;
+	pEvent = (mstudioevent_t *)((byte *)m_pStudioHeader + pSeqDesc->eventindex);
 
 	// no events for this animation or gamepaused
-	if( pseqdesc->numevents == 0 || tr.frametime == 0 )
+	if( pSeqDesc->numevents == 0 || tr.frametime == 0 )
 		return;
 
 	// don't playing events from thirdperson model
 	if( RP_LOCALCLIENT( RI->currententity ) && !FBitSet( RI->params, RP_THIRDPERSON ))
 		return;
 
-	float frame = StudioEstimateFrame( pseqdesc ); // get start offset
-	float start = frame - RI->currententity->curstate.framerate * tr.frametime * pseqdesc->fps;
+	float frame = StudioEstimateFrame( pSeqDesc ); // get start offset
+	float start = frame - RI->currententity->curstate.framerate * tr.frametime * pSeqDesc->fps;
 	float end = frame;
 
-	for( int i = 0; i < pseqdesc->numevents; i++ )
+	for( int i = 0; i < pSeqDesc->numevents; i++ )
 	{
 		// ignore all non-client-side events
-		if( pevent[i].event < EVENT_CLIENT )
+		if( pEvent[i].event < EVENT_CLIENT )
 			continue;
 
-		if( (float)pevent[i].frame > start && (float)pevent[i].frame <= end )
-			HUD_StudioEvent( &pevent[i], RI->currententity );
+		if( (float)pEvent[i].frame > start && (float)pEvent[i].frame <= end )
+			HUD_StudioEvent( &pEvent[i], RI->currententity );
 	}
 }
 
