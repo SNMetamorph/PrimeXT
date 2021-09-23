@@ -3501,14 +3501,15 @@ class CEnvModel : public CBaseAnimating
 {
 	DECLARE_CLASS(CEnvModel, CBaseAnimating);
 public:
-	void Spawn(void);
-	void Precache(void);
-	void EXPORT Think(void);
+	void Spawn();
+	void Precache();
+	void EXPORT Think();
 	void KeyValue(KeyValueData *pkvd);
-	STATE GetState(void);
+	STATE GetState();
 	void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
-	virtual int	ObjectCaps(void) { return CBaseEntity::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
-	void SetSequence(void);
+	virtual int	ObjectCaps() { return CBaseEntity::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+	void SetSequence();
+	void AutoSetSize();
 
 	DECLARE_DATADESC();
 
@@ -3551,49 +3552,49 @@ void CEnvModel::KeyValue(KeyValueData *pkvd)
 	}
 	else
 	{
-		CBaseAnimating::KeyValue(pkvd);
+		BaseClass::KeyValue(pkvd);
 	}
 }
 
 void CEnvModel::Spawn(void)
 {
 	Precache();
-	SET_MODEL(ENT(pev), STRING(pev->model));
-	UTIL_SetOrigin(this, pev->origin);
+	SET_MODEL(edict(), STRING(pev->model));
+	RelinkEntity(true);
 
-#if 0	// g-cont. just for testing gloss-effect
-	pev->movetype = MOVETYPE_NOCLIP;
-	pev->avelocity = Vector(5, 5, 5);
-#endif
-	if (pev->spawnflags & SF_ENVMODEL_SOLID)
+	SetBoneController(0, 0);
+	SetBoneController(1, 0);
+	SetSequence();
+
+	if (FBitSet(pev->spawnflags, SF_ENVMODEL_SOLID))
 	{
-		pev->solid = SOLID_SLIDEBOX;
-		UTIL_SetSize(pev, Vector(-10, -10, -10), Vector(10, 10, 10));	//LRCT
+		if (UTIL_AllowHitboxTrace(this))
+			pev->solid = SOLID_BBOX;
+		else 
+			pev->solid = SOLID_SLIDEBOX;
+		AutoSetSize();
 	}
 
-	if (pev->spawnflags & SF_ENVMODEL_DROPTOFLOOR)
+	if (FBitSet(pev->spawnflags, SF_ENVMODEL_DROPTOFLOOR))
 	{
-		pev->origin.z += 1;
-		DROP_TO_FLOOR(ENT(pev));
+		Vector origin = GetLocalOrigin();
+		origin.z += 1;
+		SetLocalOrigin(origin);
+		UTIL_DropToFloor(this);
 	}
 
-	if (!m_hParent.Get() && FBitSet(pev->spawnflags, SF_ENVMODEL_NEWLIGHTING))
+	if (FBitSet(pev->spawnflags, SF_ENVMODEL_NEWLIGHTING) && !m_hParent.Get())
 	{
 		// tell the client about static entity
 		SetBits(pev->iuser1, CF_STATIC_ENTITY);
 	}
-
-	SetBoneController(0, 0);
-	SetBoneController(1, 0);
-
-	SetSequence();
 
 	SetNextThink(0.1);
 }
 
 void CEnvModel::Precache(void)
 {
-	PRECACHE_MODEL((char *)STRING(pev->model));
+	PRECACHE_MODEL(GetModel());
 }
 
 STATE CEnvModel::GetState(void)
@@ -3699,6 +3700,23 @@ void CEnvModel::SetSequence(void)
 		else
 			m_fSequenceLoops = 0;
 	}
+}
+
+// automatically set collision box
+void CEnvModel::AutoSetSize()
+{
+	studiohdr_t *pstudiohdr;
+	pstudiohdr = (studiohdr_t *)GET_MODEL_PTR(edict());
+
+	if (pstudiohdr == NULL)
+	{
+		UTIL_SetSize(pev, Vector(-10, -10, -10), Vector(10, 10, 10));
+		ALERT(at_error, "CEnvModel::AutoSetSize: unable to fetch model pointer\n");
+		return;
+	}
+
+	mstudioseqdesc_t *pseqdesc = (mstudioseqdesc_t *)((byte *)pstudiohdr + pstudiohdr->seqindex);
+	UTIL_SetSize(pev, pseqdesc[pev->sequence].bbmin, pseqdesc[pev->sequence].bbmax);
 }
 
 // =================== ENV_STATIC ==============================================
