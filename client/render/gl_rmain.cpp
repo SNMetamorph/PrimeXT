@@ -57,16 +57,20 @@ const char *R_GetNameForView( void )
 
 	passName[0] = '\0';
 
-	if( FBitSet( RI->params, RP_MIRRORVIEW ))
-		Q_strncat( passName, "mirror ", sizeof( passName ));
-	if( FBitSet( RI->params, RP_ENVVIEW ))
-		Q_strncat( passName, "cubemap ", sizeof( passName ));	
-	if( FBitSet( RI->params, RP_SKYVIEW ))
-		Q_strncat( passName, "skybox ", sizeof( passName ));
-	if( FBitSet( RI->params, RP_SHADOWVIEW ))
-		Q_strncat( passName, "shadow ", sizeof( passName ));
-	if( RP_NORMALPASS( ))
-		Q_strncat( passName, "general ", sizeof( passName ));
+	if (FBitSet(RI->params, RP_MIRRORVIEW))
+		Q_strncat(passName, "mirror ", sizeof(passName));
+	if (FBitSet(RI->params, RP_ENVVIEW))
+		Q_strncat(passName, "cubemap ", sizeof(passName));
+	if (FBitSet(RI->params, RP_SKYVIEW))
+		Q_strncat(passName, "skybox ", sizeof(passName));
+	if (FBitSet(RI->params, RP_PORTALVIEW))
+		Q_strncat(passName, "portal ", sizeof(passName));
+	if (FBitSet(RI->params, RP_SCREENVIEW))
+		Q_strncat(passName, "screen ", sizeof(passName));
+	if (FBitSet(RI->params, RP_SHADOWVIEW))
+		Q_strncat(passName, "shadow ", sizeof(passName));
+	if (RP_NORMALPASS())
+		Q_strncat(passName, "general ", sizeof(passName));
 
 	return passName;	
 }
@@ -82,7 +86,7 @@ void R_BuildViewPassHierarchy( void )
 {
 	char	empty[MAX_REF_STACK];
 
-	if( (int)r_speeds->value == 8 )
+	if( (int)r_speeds->value == 5 )
 	{
 		int	num_faces = 0;
 
@@ -690,7 +694,7 @@ static void R_SetupViewCache( const ref_viewpass_t *rvp )
 				}
 
 				// and store faces that required additional pass from another point into separate list
-				if( FBitSet( surf->flags, SURF_REFLECT|SURF_REFLECT_PUDDLE ) && CVAR_TO_BOOL( r_allow_mirrors ))
+				if (FBitSet( surf->flags, SURF_REFLECT | SURF_REFLECT_PUDDLE | SURF_PORTAL | SURF_SCREEN))
 				{
 					if( !FBitSet( RI->currentmodel->flags, BIT( 2 )) || tr.waterlevel < 3 )
 						R_AddSurfaceToDrawList( surf, DRAWLIST_SUBVIEW );

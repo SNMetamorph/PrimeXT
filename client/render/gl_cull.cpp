@@ -50,15 +50,20 @@ bool R_CullModel( cl_entity_t *e, const Vector &absmin, const Vector &absmax )
 		if( UTIL_IsLocal( e->index ) && RI->currentlight->key == FLASHLIGHT_KEY )
 			return true;
 	}
-#if 0	
-	// don't cull local player because we draw legs instead
-	if( RP_LOCALCLIENT( e ) && !FBitSet( RI->params, RP_THIRDPERSON ) && UTIL_IsLocal( RI->view.entity ))
+	
+	if (RP_LOCALCLIENT(e))
 	{
-		// player can view himself from the portal camera
-		if( !FBitSet( RI->params, RP_MIRRORVIEW|RP_SHADOWVIEW ))
+		if (FBitSet(RI->params, RP_FORCE_NOPLAYER))
 			return true;
+
+		if (!FBitSet(RI->params, RP_THIRDPERSON) && UTIL_IsLocal(RI->view.entity))
+		{
+			// player can view himself from the portal camera
+			if (!FBitSet(RI->params, RP_MIRRORVIEW | RP_SHADOWVIEW | RP_SCREENVIEW | RP_PORTALVIEW))
+				return true;
+		}
 	}
-#endif
+
 	return R_CullBox( absmin, absmax );
 }
 
@@ -194,7 +199,7 @@ int R_CullSurface( msurface_t *surf, const Vector &vieworg, CFrustum *frustum, i
 		}
 		else dist = PlaneDiff( vieworg, surf->plane );
 
-		if( glState.faceCull == GL_FRONT || ( RI->params & RP_MIRRORVIEW ))
+		if( glState.faceCull == GL_FRONT || (RI->params & (RP_MIRRORVIEW | RP_PORTALVIEW)))
 		{
 			if( surf->flags & SURF_PLANEBACK )
 			{

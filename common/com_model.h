@@ -270,13 +270,15 @@ typedef struct mcubemap_s
 // user-defined flags
 #define SURF_HAS_DECALS		BIT( 9 )		// this surface has decals
 #define SURF_LANDSCAPE		BIT( 10 )		// this is multi-layered texture surface
-#define SURF_MOVIE			BIT( 11 )		// screen movie
-#define SURF_GRASS_UPDATE	BIT( 12 )		// gamma has changed, need to update grass
-#define SURF_NODRAW			BIT( 13 )		// failed to create shader for this surface
-#define SURF_OCCLUDED		BIT( 14 )		// occlusion query result
-#define SURF_QUEUED			BIT( 15 )		// add to queue for occlusion
-#define SURF_NODLIGHT		BIT( 16 )		// failed to create dlight shader for this surface
-#define SURF_NOSUNLIGHT		BIT( 17 )		// failed to create sun light shader for this surface
+#define SURF_PORTAL			BIT( 11 )		// portal surface
+#define SURF_SCREEN			BIT( 12 )		// screen surface
+#define SURF_MOVIE			BIT( 13 )		// screen movie
+#define SURF_GRASS_UPDATE	BIT( 14 )		// gamma has changed, need to update grass
+#define SURF_NODRAW			BIT( 15 )		// failed to create shader for this surface
+#define SURF_OCCLUDED		BIT( 16 )		// occlusion query result
+#define SURF_QUEUED			BIT( 17 )		// add to queue for occlusion
+#define SURF_NODLIGHT		BIT( 18 )		// failed to create dlight shader for this surface
+#define SURF_NOSUNLIGHT		BIT( 19 )		// failed to create sun light shader for this surface
 
 #define SURF_FULLBRIGHT		BIT( 25 )		// completely ignore lighting on this brush
 #define SURF_OF_SUBMODEL	BIT( 26 )		// this face is owned by submodel (to differentiate from world faces)

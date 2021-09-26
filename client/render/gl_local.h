@@ -20,6 +20,7 @@ GNU General Public License for more details.
 #include "gl_export.h"
 #include "ref_params.h"
 #include "com_model.h"
+#include "pm_movevars.h"
 #include "r_studioint.h"
 #include "gl_framebuffer.h"
 #include "gl_frustum.h"
@@ -114,7 +115,8 @@ enum RefParams
 	RP_NOGRASS			= BIT(12),	// don't draw grass
 	RP_DEFERREDSCENE	= BIT(13),	// render scene into geometry buffer
 	RP_DEFERREDLIGHT	= BIT(14),	// render scene into low-res lightmap
-	RP_THIRDPERSON		= BIT(15)	// camera is thirdperson
+	RP_THIRDPERSON		= BIT(15),	// camera is thirdperson
+	RP_FORCE_NOPLAYER	= BIT(16)	// ignore player drawing in some special cases
 };
 
 inline RefParams operator|(RefParams a, RefParams b)
@@ -135,7 +137,7 @@ inline RefParams operator|(RefParams a, RefParams b)
 #define RF_SKYVISIBLE	BIT( 0 )	// sky is visible for this frame
 #define RF_HASDYNLIGHTS	BIT( 1 )	// pass have dynlights
 
-#define RP_NONVIEWERREF	(RP_MIRRORVIEW|RP_ENVVIEW|RP_SHADOWVIEW|RP_SKYVIEW)
+#define RP_NONVIEWERREF	(RP_MIRRORVIEW|RP_PORTALVIEW|RP_SCREENVIEW|RP_ENVVIEW|RP_SHADOWVIEW|RP_SKYVIEW)
 #define RP_LOCALCLIENT( e )	(gEngfuncs.GetLocalPlayer() && ((e)->index == gEngfuncs.GetLocalPlayer()->index && e->curstate.entityType == ET_PLAYER ))
 #define RP_NORMALPASS()	( FBitSet( RI->params, RP_NONVIEWERREF ) == 0 )
 #define RP_CUBEPASS()	( FBitSet( RI->params, RP_SKYVIEW|RP_ENVVIEW ))
@@ -600,7 +602,7 @@ typedef struct
 	float		lightstyle[MAX_LIGHTSTYLES];	// value 0 - 65536
 	gl_movie_t	cinematics[MAX_MOVIES];	// precached cinematics
 
-	struct movevars_s	*movevars;
+	movevars_t	*movevars;
 
 	// generic light that used to cache shaders
 	CDynLight		defaultlightSpot;
@@ -648,7 +650,9 @@ typedef struct
 	unsigned int	c_culled_entities;
 	unsigned int	c_total_tris;	// triangle count
 
-	unsigned int	c_subview_passes;
+	unsigned int	c_mirror_passes;
+	unsigned int	c_portal_passes;
+	unsigned int	c_screen_passes;
 	unsigned int	c_shadow_passes;
 
 	unsigned int	c_worldlights;

@@ -50,6 +50,8 @@ extern cvar_t *r_dof_focal_length;
 extern cvar_t *r_dof_fstop;
 extern cvar_t *r_dof_debug;
 extern cvar_t *r_allow_mirrors;
+extern cvar_t *r_allow_portals;
+extern cvar_t *r_allow_screens;
 extern cvar_t *cv_renderer;
 extern cvar_t *cv_brdf;
 extern cvar_t *cv_bump;
