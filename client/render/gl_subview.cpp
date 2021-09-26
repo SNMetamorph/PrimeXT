@@ -21,6 +21,7 @@ GNU General Public License for more details.
 #include <stringlib.h>
 #include "gl_occlusion.h"
 #include "gl_cvars.h"
+#include "gl_studio.h"
 
 #define MIRROR_PLANE_EPSILON		0.1f
 
@@ -38,7 +39,7 @@ R_SetupMirrorView
 Prepare view for mirroring
 ================
 */
-texFlags_t R_SetupMirrorView( msurface_t *surf, ref_viewpass_t *rvp )
+texFlags_t R_SetupMirrorView( msurface_t *surf, ref_viewpass_t *rvp, matrix4x4 &viewmat)
 {
 	cl_entity_t	*ent = surf->info->parent;
 	matrix3x3		matAngles;
@@ -53,8 +54,13 @@ texFlags_t R_SetupMirrorView( msurface_t *surf, ref_viewpass_t *rvp )
 
 	glm = GL_GetCache( ent->hCachedMatrix );
 
-	if( ent->hCachedMatrix != WORLD_MATRIX )
-		glm->transform.TransformPositivePlane( plane, plane );
+	if (ent->hCachedMatrix != WORLD_MATRIX) {
+		viewmat = glm->transform;
+		viewmat.TransformPositivePlane(plane, plane);
+	}
+	else {
+		viewmat.Identity();
+	}
 
 	// reflect view by mirror plane
 	d = -2.0f * ( DotProduct( GetVieworg(), plane.normal ) - plane.dist );
@@ -76,8 +82,6 @@ texFlags_t R_SetupMirrorView( msurface_t *surf, ref_viewpass_t *rvp )
 	Vector angles = matAngles.GetAngles();
 
 	plane.dist += ON_EPSILON; // to prevent z-fighting with reflective water
-
-	rvp->flags = RP_MIRRORVIEW|RP_CLIPPLANE|RP_MERGE_PVS;
 	RI->view.frustum.SetPlane( FRUSTUM_NEAR, plane.normal, plane.dist );
 	RI->clipPlane = plane;
 
@@ -88,10 +92,13 @@ texFlags_t R_SetupMirrorView( msurface_t *surf, ref_viewpass_t *rvp )
 
 	rvp->fov_x = RI->view.fov_x;
 	rvp->fov_y = RI->view.fov_y;
+	rvp->flags = RP_MIRRORVIEW | RP_CLIPPLANE | RP_MERGE_PVS;
 
 	// put pvsorigin before the mirror plane to avoid get recursion with himself
-	if( ent == GET_ENTITY( 0 )) origin = surf->info->origin + (1.0f * plane.normal);
-	else origin = glm->transform.VectorTransform( surf->info->origin ) + (1.0f * plane.normal);
+	if( ent == GET_ENTITY( 0 )) 
+		origin = surf->info->origin + (1.0f * plane.normal);
+	else 
+		origin = glm->transform.VectorTransform( surf->info->origin ) + (1.0f * plane.normal);
 	material_t *mat = R_TextureAnimation( surf )->material;
 
 	RI->view.pvspoint = origin;
@@ -128,6 +135,218 @@ texFlags_t R_SetupMirrorView( msurface_t *surf, ref_viewpass_t *rvp )
 		SetBits( rvp->flags, RP_NOSHADOWS|RP_WATERPASS|RP_NOGRASS ); // don't draw grass from puddles
 
 	return static_cast<texFlags_t>(TF_SCREEN);
+}
+
+/*
+=============================================================
+
+	PORTAL RENDERING
+
+=============================================================
+*/
+/*
+================
+R_SetupPortalView
+
+Setup portal view and near plane
+================
+*/
+texFlags_t R_SetupPortalView(msurface_t *surf, ref_viewpass_t *rvp, cl_entity_t *camera)
+{
+	cl_entity_t *ent = surf->info->parent;
+	matrix4x4	surfaceMat, cameraMat, viewMat;
+	Vector		origin, angles;
+	mplane_t	plane;
+
+	if (!R_StaticEntity(ent))
+	{
+		if (ent->angles != g_vecZero)
+			surfaceMat = matrix4x4(ent->origin, ent->angles);
+		else surfaceMat = matrix4x4(ent->origin, g_vecZero);
+	}
+	else surfaceMat.Identity();
+
+	if (!R_StaticEntity(camera))
+	{
+		if (camera->angles != g_vecZero)
+			cameraMat = matrix4x4(camera->origin, camera->angles);
+		else cameraMat = matrix4x4(camera->origin, g_vecZero);
+	}
+	else cameraMat.Identity();
+
+	// now get the camera origin and orientation
+	viewMat.SetForward(GetVForward());
+	viewMat.SetRight(GetVRight());
+	viewMat.SetUp(GetVUp());
+	viewMat.SetOrigin(GetVieworg());
+
+	surfaceMat = surfaceMat.Invert();
+	viewMat = surfaceMat.ConcatTransforms(viewMat);
+	viewMat = cameraMat.ConcatTransforms(viewMat);
+
+	angles = viewMat.GetAngles();
+	origin = viewMat.GetOrigin();
+
+	rvp->viewangles[0] = anglemod(angles[0]);
+	rvp->viewangles[1] = anglemod(angles[1]);
+	rvp->viewangles[2] = -anglemod(angles[2]);
+	
+	rvp->vieworigin = origin;
+	rvp->fov_x = RI->view.fov_x;
+	rvp->fov_y = RI->view.fov_y;
+	rvp->flags = RP_PORTALVIEW | RP_CLIPPLANE;
+
+	// set clipping plane
+	SetPlane(&plane, cameraMat.GetForward(), DotProduct(cameraMat.GetForward(), camera->origin));
+	plane.dist += ON_EPSILON; // to prevent z-fighting with reflective water
+	RI->view.frustum.SetPlane(FRUSTUM_NEAR, plane.normal, plane.dist);
+	RI->clipPlane = plane;
+	RI->view.pvspoint = camera->origin;
+
+	rvp->viewport[0] = rvp->viewport[1] = 0;
+	if (GL_Support(R_ARB_TEXTURE_NPOT_EXT))
+	{
+		// allow screen size
+		rvp->viewport[2] = bound(96, RI->view.port[2], 1024);
+		rvp->viewport[3] = bound(72, RI->view.port[3], 768);
+	}
+	else
+	{
+		rvp->viewport[2] = NearestPOW(RI->view.port[2], true);
+		rvp->viewport[3] = NearestPOW(RI->view.port[3], true);
+		rvp->viewport[2] = bound(128, rvp->viewport[2], 1024);
+		rvp->viewport[3] = bound(64, rvp->viewport[3], 512);
+	}
+
+	return static_cast<texFlags_t>(TF_SCREEN);
+}
+
+/*
+=============================================================
+
+	SCREEN RENDERING
+
+=============================================================
+*/
+/*
+================
+R_SetupScreenView
+
+Setup screen view
+================
+*/
+texFlags_t R_SetupScreenView(msurface_t *surf, ref_viewpass_t *rvp, matrix4x4 &viewmat, cl_entity_t *camera)
+{
+	cl_entity_t *ent = surf->info->parent;
+	Vector		origin, angles;
+	float		fov = 90;
+
+	viewmat.Identity();
+	if (camera->player && UTIL_IsLocal(camera->curstate.number))
+	{
+		ref_params_t viewparams;
+		memcpy(&viewparams, &tr.viewparams, sizeof(viewparams));
+
+		// player seen through camera. Restore firstperson view here
+		if (tr.viewparams.viewentity > tr.viewparams.maxclients)
+			V_CalcFirstPersonRefdef(&viewparams);
+
+		rvp->flags = RP_SCREENVIEW | RP_FORCE_NOPLAYER;
+		RI->view.pvspoint = viewparams.vieworg;
+		return TF_NOMIPMAP;
+	}
+
+	origin = camera->origin;
+	angles = camera->angles;
+
+	studiohdr_t *viewmonster = (studiohdr_t *)IEngineStudio.Mod_Extradata(camera->model);
+
+	// it's monster
+	if (viewmonster && FBitSet(camera->curstate.eflags, EFLAG_SLERP))
+	{
+		Vector forward;
+		AngleVectors(angles, forward, NULL, NULL);
+
+		Vector viewpos = viewmonster->eyeposition;
+
+		if (viewpos == g_vecZero)
+			viewpos = Vector(0, 0, 8.0f);// monster_cockroach
+		origin += viewpos + forward * 8.0f;	// best value for humans
+	}
+
+	// smooth step stair climbing
+	// lasttime goes into ent->latched.sequencetime
+	// oldz goes into ent->latched.prevanimtime
+	// HACKHACK we store interpolate values into func_monitor entity to avoid broke lerp
+	if (origin[2] - ent->latched.prevanimtime > 0.0f)
+	{
+		float steptime;
+
+		steptime = tr.time - ent->latched.sequencetime;
+		if (steptime < 0) steptime = 0;
+
+		ent->latched.prevanimtime += steptime * 150.0f;
+
+		if (ent->latched.prevanimtime > origin[2])
+			ent->latched.prevanimtime = origin[2];
+		if (origin[2] - ent->latched.prevanimtime > tr.movevars->stepsize)
+			ent->latched.prevanimtime = origin[2] - tr.movevars->stepsize;
+
+		origin[2] += ent->latched.prevanimtime - origin[2];
+	}
+	else
+	{
+		ent->latched.prevanimtime = origin[2];
+	}
+
+	ent->latched.sequencetime = tr.time;
+
+	// setup the screen fov
+	if (ent->curstate.fuser2 != 0.0f)
+		fov = bound(10, ent->curstate.fuser2, 120);
+
+	if (GL_Support(R_ARB_TEXTURE_NPOT_EXT))
+	{
+		texture_t *t = surf->texinfo->texture;
+
+		if ((t->width == 64) && (t->height == 64))
+		{
+			// HACKHACK: for default texture
+			rvp->viewport[2] = rvp->viewport[3] = 512;
+		}
+		else
+		{
+			rvp->viewport[2] = bound(64, t->width * 2, 1024);
+			rvp->viewport[3] = bound(64, t->height * 2, 1024);
+		}
+	}
+	else 
+		rvp->viewport[2] = rvp->viewport[3] = 512;
+
+	// setup the screen FOV
+	if (rvp->viewport[2] == rvp->viewport[3])
+	{
+		rvp->fov_x = fov;
+		rvp->fov_y = fov;
+	}
+	else
+	{
+		rvp->fov_x = fov;
+		rvp->fov_y = V_CalcFov(rvp->fov_x, rvp->viewport[2], rvp->viewport[3]);
+	}
+	rvp->viewport[0] = rvp->viewport[1] = 0;
+	rvp->viewangles[0] = anglemod(angles[0]);
+	rvp->viewangles[1] = anglemod(angles[1]);
+	rvp->viewangles[2] = anglemod(angles[2]);
+	rvp->vieworigin = origin;
+	RI->view.pvspoint = camera->origin;
+
+	rvp->flags = RP_SCREENVIEW;
+	if (camera->player) {
+		SetBits(rvp->flags, RP_FORCE_NOPLAYER); // camera set to player don't draw him
+	}
+
+	return TF_NOMIPMAP;
 }
 
 /*
@@ -223,16 +442,68 @@ bool R_CheckMirrorClone( msurface_t *surf, msurface_t *check )
 	return true;
 }
 
+bool R_CheckScreenSource(msurface_t *surf, msurface_t *check)
+{
+	if (!FBitSet(surf->flags, SURF_SCREEN))
+		return false;
+
+	if (!FBitSet(check->flags, SURF_SCREEN))
+		return false;
+
+	if (!check->info->subtexture[glState.stack_position - 1])
+		return false;
+
+	// different fov
+	if (surf->info->parent->curstate.fuser2 != check->info->parent->curstate.fuser2)
+		return false;
+
+	// different cameras
+	if (surf->info->parent->curstate.sequence != check->info->parent->curstate.sequence)
+		return false;
+
+	// just reuse the handle
+	surf->info->subtexture[glState.stack_position - 1] = check->info->subtexture[glState.stack_position - 1];
+
+	return true;
+}
+
+bool R_CheckPortalSource(msurface_t *surf, msurface_t *check)
+{
+	if (!FBitSet(surf->flags, SURF_PORTAL))
+		return false;
+
+	if (!FBitSet(check->flags, SURF_PORTAL))
+		return false;
+
+	if (!check->info->subtexture[glState.stack_position - 1])
+		return false;
+
+	// different cameras
+	if (surf->info->parent->curstate.sequence != check->info->parent->curstate.sequence)
+		return false;
+
+	// just reuse the handle
+	surf->info->subtexture[glState.stack_position - 1] = check->info->subtexture[glState.stack_position - 1];
+
+	return true;
+}
+
 bool R_CanSkipPass( int end, msurface_t *surf, ref_instance_t *prevRI )
 {
 	// IMPORTANT: limit the recursion depth
 	if( surf == prevRI->reject_face )
 		return true;
 
-	for( int i = 0; i < end; i++ )
+	for (int i = 0; i < end; i++)
 	{
-		if( R_CheckMirrorClone( surf, prevRI->frame.subview_faces[i] ))
-			return true;			
+		if (R_CheckMirrorClone(surf, prevRI->frame.subview_faces[i]))
+			return true;
+
+		if (R_CheckPortalSource(surf, prevRI->frame.subview_faces[i]))
+			return true;
+
+		if (R_CheckScreenSource(surf, prevRI->frame.subview_faces[i]))
+			return true;
 	}
 
 	// occluded by query
@@ -241,9 +512,48 @@ bool R_CanSkipPass( int end, msurface_t *surf, ref_instance_t *prevRI )
 		// don't use me
 		surf->info->subtexture[glState.stack_position-1] = 0;
 		return true;
-          }
+    }
 
 	return false;
+}
+
+static void R_CalcMirrorSubviewMatrix(const ref_viewpass_t &rvp, int subview, const matrix4x4 &viewmatrix, cl_entity_t *camera)
+{
+	matrix4x4	worldView, modelView, projection;
+
+	worldView.CreateModelview();
+	worldView.ConcatRotate(-rvp.viewangles[2], 1, 0, 0);
+	worldView.ConcatRotate(-rvp.viewangles[0], 0, 1, 0);
+	worldView.ConcatRotate(-rvp.viewangles[1], 0, 0, 1);
+	worldView.ConcatTranslate(-rvp.vieworigin[0], -rvp.vieworigin[1], -rvp.vieworigin[2]);
+	projection.CreateProjection(rvp.fov_x, rvp.fov_y, Z_NEAR, RI->view.farClip);
+
+	// create personal projection matrix for mirror
+	if (R_StaticEntity(camera))
+	{
+		tr.subviewTextures[subview - 1].matrix = projection.Concat(worldView);
+	}
+	else
+	{
+		modelView = worldView.ConcatTransforms(viewmatrix);
+		tr.subviewTextures[subview - 1].matrix = projection.Concat(modelView); // RI->view.worldProjectionMatrix;
+	}
+}
+
+static void R_CalcPortalSubviewMatrix(const ref_viewpass_t &rvp, int subview)
+{
+	tr.subviewTextures[subview - 1].matrix = RI->view.projectionMatrix.Concat(RI->view.worldMatrix);
+}
+
+void R_CalcSubviewMatrix(const ref_viewpass_t &rvp, msurface_t *surf, int subview, const matrix4x4 &viewmatrix, cl_entity_t *camera)
+{
+	// we don't need to calc subview matrix for screen pass because it's not used
+	if (FBitSet(surf->flags, SURF_REFLECT | SURF_REFLECT_PUDDLE)) {
+		R_CalcMirrorSubviewMatrix(rvp, subview, viewmatrix, camera);
+	}
+	else if (FBitSet(surf->flags, SURF_PORTAL)) {
+		R_CalcPortalSubviewMatrix(rvp, subview);
+	}	
 }
 
 /*
@@ -280,6 +590,7 @@ void R_RenderSubview( void )
 	ref_instance_t	*prevRI;
 	unsigned int	oldFBO;
 	ref_viewpass_t	rvp;
+	matrix4x4		viewmatrix;
 
 	// player is outside world. Don't draw subview for speedup reasons
 	if( R_CheckOutside( ))
@@ -304,6 +615,7 @@ void R_RenderSubview( void )
 		cl_entity_t *e = RI->currententity = surf->info->parent;
 		mextrasurf_t *es = surf->info;
 		texFlags_t texFlags = TF_COLORMAP;
+		cl_entity_t *camera;
 		int subview = 0;
 		RI->currentmodel = e->model;
 
@@ -313,15 +625,33 @@ void R_RenderSubview( void )
 		ASSERT( RI->currententity != NULL );
 		ASSERT( RI->currentmodel != NULL );
 
+		if (!FBitSet(surf->flags, SURF_REFLECT | SURF_REFLECT_PUDDLE))
+		{
+			if (e->curstate.sequence <= 0)
+				continue;	// target is missed
+			camera = GET_ENTITY(e->curstate.sequence);
+		}
+		else camera = e; // mirror camera is himself
+
 		// NOTE: we can do additionaly culling here by PVS
 		if( !e || e->curstate.messagenum != r_currentMessageNum )
 			continue; // bad camera, ignore
 
 		// setup view apropriate by type
-		if( FBitSet( surf->flags, SURF_REFLECT|SURF_REFLECT_PUDDLE ))
+		if (FBitSet(surf->flags, SURF_REFLECT | SURF_REFLECT_PUDDLE))
 		{
-			texFlags = R_SetupMirrorView( surf, &rvp );
-			r_stats.c_subview_passes++;
+			texFlags = R_SetupMirrorView(surf, &rvp, viewmatrix);
+			r_stats.c_mirror_passes++;
+		}
+		else if (FBitSet(surf->flags, SURF_PORTAL))
+		{
+			texFlags = R_SetupPortalView(surf, &rvp, camera);
+			r_stats.c_portal_passes++;
+		}
+		else if (FBitSet(surf->flags, SURF_SCREEN))
+		{
+			texFlags = R_SetupScreenView(surf, &rvp, viewmatrix, camera);
+			r_stats.c_screen_passes++;
 		}
 		else continue; // ???
 
@@ -331,6 +661,7 @@ void R_RenderSubview( void )
 		{
 			if(( subview = R_AllocateSubviewTexture( rvp.viewport, texFlags )) == 0 )
 				continue;
+			R_CalcSubviewMatrix(rvp, surf, subview, viewmatrix, camera);
 		}
 
 		// reset the subinfo
@@ -339,13 +670,13 @@ void R_RenderSubview( void )
 		R_RenderScene( &rvp, (RefParams)rvp.flags );
 		RI->reject_face = NULL;
 
-		if( !GL_Support( R_FRAMEBUFFER_OBJECT ))
-			subview = R_AllocateSubviewTexture( rvp.viewport, texFlags );
+		if (!GL_Support(R_FRAMEBUFFER_OBJECT)) 
+		{
+			subview = R_AllocateSubviewTexture(rvp.viewport, texFlags);	
+			R_CalcSubviewMatrix(rvp, surf, subview, viewmatrix, camera);
+		}
 
-		ASSERT( subview > 0 && subview < MAX_SUBVIEW_TEXTURES );
 		surf->info->subtexture[glState.stack_position-1] = subview; // now it's valid
-		tr.subviewTextures[subview-1].matrix = RI->view.worldProjectionMatrix;
-
 		GL_BindFBO( oldFBO );
 		R_ResetRefState();
 	}

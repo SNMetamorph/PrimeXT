@@ -86,10 +86,16 @@ bool Surf_CheckSubview( mextrasurf_t *es, bool puddle )
 	// we can't directly compare here
 	if(( tr.realframecount - tr.subviewTextures[handle-1].texframe ) <= 1 )
 	{
-		if( puddle && FBitSet( es->surf->flags, SURF_REFLECT_PUDDLE ))
-			return true;
-		if( !puddle && FBitSet( es->surf->flags, SURF_REFLECT ))
-			return true;
+		if (puddle)
+		{
+			if (FBitSet(es->surf->flags, SURF_REFLECT_PUDDLE))
+				return true;
+		}
+		else 
+		{
+			if (FBitSet(es->surf->flags, SURF_REFLECT | SURF_PORTAL | SURF_SCREEN))
+				return true;
+		}
 	}
 	return false;
 }
@@ -1093,7 +1099,7 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 		return 0;
 
 	// mirror is actual only if we has actual screen texture!
-	bool mirror = Surf_CheckSubview( s->info );
+	bool mirror = Surf_CheckSubview( s->info ) && !FBitSet(s->flags, SURF_SCREEN);
 
 	if( es->forwardScene[mirror].IsValid() && es->lastRenderMode == e->curstate.rendermode )
 		return es->forwardScene[mirror].GetHandle(); // valid
@@ -2628,6 +2634,7 @@ static void Mod_LoadWorld( model_t *mod, const byte *buf )
 	for( i = 0; i < worldmodel->numsurfaces; i++ )
 	{
 		msurface_t *surf = &worldmodel->surfaces[i];
+		texture_t *tex = surf->texinfo->texture;
 
 		if( FBitSet( surf->flags, SURF_DRAWSKY ))
 			SetBits( world->features, WORLD_HAS_SKYBOX );
@@ -2637,20 +2644,32 @@ static void Mod_LoadWorld( model_t *mod, const byte *buf )
 			SetBits( surf->flags, SURF_REFLECT );
 		}
 
-		if( !Q_strncmp( surf->texinfo->texture->name, "movie", 5 ))
+		if( !Q_strncmp(tex->name, "movie", 5 ))
 		{
 			SetBits( world->features, WORLD_HAS_MOVIES );
 			SetBits( surf->flags, SURF_MOVIE );
 		}
 
-		if( !Q_strncmp( surf->texinfo->texture->name, "mirror", 6 ) || !Q_strncmp( surf->texinfo->texture->name, "reflect", 7 ))
+		if( !Q_strncmp(tex->name, "mirror", 6)
+			|| !Q_strncmp(tex->name, "reflect", 7)
+			|| !Q_strncmp(tex->name, "reflect1", 8)
+			|| !Q_strncmp(tex->name, "!reflect", 8)
+			|| !Q_strncmp(tex->name, "water", 5))
 		{
-			SetBits( surf->flags, SURF_REFLECT );
+			SetBits(world->features, WORLD_HAS_MIRRORS);
+			SetBits(surf->flags, SURF_REFLECT);
 		}
 
-		if( !Q_strncmp( surf->texinfo->texture->name, "water", 5 ))
+		if (!Q_strncmp(tex->name, "portal", 6))
 		{
-			SetBits( surf->flags, SURF_REFLECT );
+			SetBits(world->features, WORLD_HAS_PORTALS);
+			SetBits(surf->flags, SURF_PORTAL);
+		}
+
+		if (!Q_strncmp(tex->name, "monitor", 7))
+		{
+			SetBits(world->features, WORLD_HAS_SCREENS);
+			SetBits(surf->flags, SURF_SCREEN);
 		}
 
 		if( FBitSet( surf->flags, SURF_REFLECT ))
@@ -3047,13 +3066,22 @@ bool R_AddSurfaceToDrawList( msurface_t *surf, drawlist_t drawlist_type )
 		RI->frame.light_faces.AddToTail( entry_s );
 		break;
 	case DRAWLIST_SUBVIEW:
-		if( RI->frame.num_subview_faces >= MAX_SUBVIEW_FACES )
+		if ( RI->frame.num_subview_faces >= MAX_SUBVIEW_FACES )
 			return false;
-		if( !FBitSet( surf->flags, SURF_REFLECT ))
-		{
-			if( !FBitSet( surf->flags, SURF_REFLECT_PUDDLE ) || !CVAR_TO_BOOL( cv_realtime_puddles ))
-				return false; // if realtime puddles not allowed
-		}
+
+		// check for restrictions
+		if (FBitSet(surf->flags, SURF_REFLECT) && !CVAR_TO_BOOL(r_allow_mirrors))
+			return false;
+
+		if (FBitSet(surf->flags, SURF_REFLECT_PUDDLE) && !CVAR_TO_BOOL(cv_realtime_puddles))
+			return false;
+
+		if (FBitSet(surf->flags, SURF_PORTAL) && !CVAR_TO_BOOL(r_allow_portals))
+			return false;
+
+		if (FBitSet(surf->flags, SURF_SCREEN) && !CVAR_TO_BOOL(r_allow_screens))
+			return false;
+
 		RI->frame.subview_faces[RI->frame.num_subview_faces] = surf;
 		RI->frame.num_subview_faces++;
 		GL_SurfaceOccluded( surf );// fetch queries result

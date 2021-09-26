@@ -990,8 +990,8 @@ static void R_DecalNodeSurfaces( mnode_t *node, decalClip_t *clip )
 		if( FBitSet( surf->flags, ( SURF_DRAWTURB|SURF_DRAWSKY|SURF_CONVEYOR|SURF_DRAWTILED )))
 			continue;
 
-		// no puddles on transparent surfaces or mirrors
-		if( FBitSet( clip->flags, FDECAL_PUDDLE ) && FBitSet( surf->flags, ( SURF_TRANSPARENT|SURF_REFLECT )))
+		// no puddles on transparent surfaces, mirrors, screens, portals
+		if( FBitSet( clip->flags, FDECAL_PUDDLE ) && FBitSet( surf->flags, ( SURF_TRANSPARENT | SURF_REFLECT | SURF_SCREEN | SURF_PORTAL )))
 			continue;
 
 		if( !BoundsIntersect( esrf->mins, esrf->maxs, clip->mins, clip->maxs ))

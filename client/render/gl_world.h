@@ -25,11 +25,13 @@ GNU General Public License for more details.
 
 // world features
 #define WORLD_HAS_MOVIES	BIT( 0 )
-
-#define WORLD_HAS_GRASS	BIT( 2 )
-#define WORLD_HAS_DELUXEMAP	BIT( 3 )
-#define WORLD_HAS_SKYBOX	BIT( 4 )
-#define WORLD_WATERALPHA	BIT( 5 )
+#define WORLD_HAS_MIRRORS	BIT( 1 )
+#define WORLD_HAS_PORTALS	BIT( 2 )
+#define WORLD_HAS_SCREENS	BIT( 3 )
+#define WORLD_HAS_GRASS		BIT( 4 )
+#define WORLD_HAS_DELUXEMAP	BIT( 5 )
+#define WORLD_HAS_SKYBOX	BIT( 6 )
+#define WORLD_WATERALPHA	BIT( 7 )
 
 #define MAX_MAP_ELEMS	MAX_MAP_VERTS * 5	// should be enough
 #define SHADOW_ZBUF_RES	8		// 6 * 8 * 8 * 2 * 4 = 3k bytes per light
