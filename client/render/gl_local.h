@@ -96,23 +96,31 @@ GNU General Public License for more details.
 #define IsReflectShader( x )		((x) && FBitSet( (x)->status, SHADER_USE_CUBEMAPS ))
 
 // refparams
-#define RP_NONE				0
-#define RP_MIRRORVIEW		BIT( 0 )	// lock pvs at vieworg
-#define RP_ENVVIEW			BIT( 1 )	// used for cubemapshot
-#define RP_CLIPPLANE		BIT( 2 )	// mirrors used
-#define RP_DRAW_WORLD		BIT( 3 )	// otherwise it's player customization window
-#define RP_DRAW_OVERVIEW	BIT( 4 )	// dev_overview is active, draw orthogonal projection
-#define RP_MERGE_PVS		BIT( 5 )	// merge PVS with previous pass
-#define RP_SKYVIEW			BIT( 6 )	// render skyonly
-#define RP_PORTALVIEW		BIT( 7 )	// view through portal
-#define RP_SCREENVIEW		BIT( 8 )	// view through screen
-#define RP_SHADOWVIEW		BIT( 9 )	// view through light
-#define RP_NOSHADOWS		BIT( 10 )	// disable shadows for this pass
-#define RP_WATERPASS		BIT( 11 )	// it's mirorring plane for water surface
-#define RP_NOGRASS			BIT( 12 )	// don't draw grass
-#define RP_DEFERREDSCENE	BIT( 13 )	// render scene into geometry buffer
-#define RP_DEFERREDLIGHT	BIT( 14 )	// render scene into low-res lightmap
-#define RP_THIRDPERSON		BIT( 15 )	// camera is thirdperson
+enum RefParams
+{
+	RP_NONE				= 0,
+	RP_MIRRORVIEW		= BIT(0),	// lock pvs at vieworg
+	RP_ENVVIEW			= BIT(1),	// used for cubemapshot
+	RP_CLIPPLANE		= BIT(2),	// mirrors used
+	RP_DRAW_WORLD		= BIT(3),	// otherwise it's player customization window
+	RP_DRAW_OVERVIEW	= BIT(4),	// dev_overview is active, draw orthogonal projection
+	RP_MERGE_PVS		= BIT(5),	// merge PVS with previous pass
+	RP_SKYVIEW			= BIT(6),	// render skyonly
+	RP_PORTALVIEW		= BIT(7),	// view through portal
+	RP_SCREENVIEW		= BIT(8),	// view through screen
+	RP_SHADOWVIEW		= BIT(9),	// view through light
+	RP_NOSHADOWS		= BIT(10),	// disable shadows for this pass
+	RP_WATERPASS		= BIT(11),	// it's mirorring plane for water surface
+	RP_NOGRASS			= BIT(12),	// don't draw grass
+	RP_DEFERREDSCENE	= BIT(13),	// render scene into geometry buffer
+	RP_DEFERREDLIGHT	= BIT(14),	// render scene into low-res lightmap
+	RP_THIRDPERSON		= BIT(15)	// camera is thirdperson
+};
+
+inline RefParams operator|(RefParams a, RefParams b)
+{
+	return static_cast<RefParams>(static_cast<int>(a) | static_cast<int>(b));
+}
 
 // RI->view.changed
 #define RC_ORIGIN_CHANGED	BIT( 0 )	// origin is changed from the previous frame
@@ -400,7 +408,7 @@ typedef struct
 
 typedef struct
 {
-	int		params;		// rendering parameters
+	RefParams params; // rendering parameters
 
 	// NEW STATE
 	ref_viewcache_t	view;		// cached view
@@ -742,8 +750,8 @@ void R_PopRefState( void );
 void R_ResetRefState( void );
 ref_instance_t *R_GetPrevInstance( void );
 void CompressNormalizedVector( char outVec[3], const Vector &inVec );
-bool GL_BackendStartFrame( ref_viewpass_t *rvp, int params );
-void GL_BackendEndFrame( ref_viewpass_t *rvp, int params );
+bool GL_BackendStartFrame( ref_viewpass_t *rvp, RefParams params );
+void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params );
 int R_GetSpriteTexture( const model_t *m_pSpriteModel, int frame );
 void GL_BindDrawbuffer( gl_drawbuffer_t *framebuffer );
 void GL_DepthRange( GLfloat depthmin, GLfloat depthmax );
@@ -867,7 +875,7 @@ void CL_DecayLights( void );
 //
 void R_ClearScene( void );
 int R_ComputeFxBlend( cl_entity_t *e );
-void R_RenderScene( const ref_viewpass_t *rvp, int params );
+void R_RenderScene( const ref_viewpass_t *rvp, RefParams params );
 qboolean R_AddEntity( struct cl_entity_s *clent, int entityType );
 bool R_WorldToScreen( const Vector &point, Vector &screen );
 void R_ScreenToWorld( const Vector &screen, Vector &point );
@@ -966,7 +974,7 @@ void RenderFSQ( int wide, int tall );
 //
 void Mod_ThrowModelInstances( void );
 void Mod_PrepareModelInstances( void );
-void GL_LoadAndRebuildCubemaps( int refParams );
+void GL_LoadAndRebuildCubemaps( RefParams refParams );
 void Mod_SetOrthoBounds( const float *mins, const float *maxs );
 bool Mod_CheckLayerNameForSurf( msurface_t *surf, const char *checkName );
 bool Mod_CheckLayerNameForPixel( mfaceinfo_t *land, const Vector &point, const char *checkName );
