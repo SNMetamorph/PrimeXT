@@ -227,7 +227,7 @@ rebuild cubemaps that older than bspfile
 loading actual cubemaps into videomemory
 ==================
 */
-void GL_LoadAndRebuildCubemaps( int refParams )
+void GL_LoadAndRebuildCubemaps( RefParams refParams )
 {
 	if( !world->loading_cubemaps && world->rebuilding_cubemaps == CMREBUILD_INACTIVE )
 		return; // job is done

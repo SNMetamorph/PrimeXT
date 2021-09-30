@@ -122,7 +122,7 @@ void R_ResetRefState( void )
 	RI = &glState.stack[glState.stack_position];
 
 	// copy params from old refresh
-	RI->params = 0;
+	RI->params = RP_NONE;
 	memcpy( &RI->view, &prevRI->view, sizeof( ref_viewcache_t ));
 	memcpy( &RI->glstate, &prevRI->glstate, sizeof( ref_glstate_t ));
 
@@ -962,7 +962,7 @@ void R_RenderTransList( void )
 R_RenderScene
 ===============
 */
-void R_RenderScene( const ref_viewpass_t *rvp, int params )
+void R_RenderScene( const ref_viewpass_t *rvp, RefParams params )
 {
 	int	err;
 	
@@ -1017,7 +1017,7 @@ void R_RenderScene( const ref_viewpass_t *rvp, int params )
 R_RenderDeferredScene
 ===============
 */
-void R_RenderDeferredScene( const ref_viewpass_t *rvp, int params )
+void R_RenderDeferredScene( const ref_viewpass_t *rvp, RefParams params )
 {
 	int	err;
 
@@ -1065,8 +1065,8 @@ the client (e.g. playersetup preview)
 */
 int HUD_RenderFrame( const struct ref_viewpass_s *rvp )
 {
-	int		refParams = RP_NONE;
-	ref_viewpass_t	defVP = *rvp;
+	RefParams refParams = RP_NONE;
+	ref_viewpass_t defVP = *rvp;
 
 	// setup some renderer flags
 	if( !FBitSet( rvp->flags, RF_DRAW_CUBEMAP ))

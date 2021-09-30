@@ -178,7 +178,7 @@ void GL_ComputeSunParams( const Vector &skyVector )
 GL_BackendStartFrame
 ==============
 */
-bool GL_BackendStartFrame( ref_viewpass_t *rvp, int params )
+bool GL_BackendStartFrame( ref_viewpass_t *rvp, RefParams params )
 {
 	bool allow_dynamic_sun = false;
 	static float cached_lighting = 0.0f;
@@ -424,7 +424,7 @@ bool GL_BackendStartFrame( ref_viewpass_t *rvp, int params )
 GL_BackendEndFrame
 ==============
 */
-void GL_BackendEndFrame( ref_viewpass_t *rvp, int params )
+void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 {
 	mstudiolight_t	light;
 

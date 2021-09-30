@@ -336,7 +336,7 @@ void R_RenderSubview( void )
 		// reset the subinfo
 		surf->info->subtexture[glState.stack_position-1] = 0;
 		RI->reject_face = surf;
-		R_RenderScene( &rvp, rvp.flags );
+		R_RenderScene( &rvp, (RefParams)rvp.flags );
 		RI->reject_face = NULL;
 
 		if( !GL_Support( R_FRAMEBUFFER_OBJECT ))
