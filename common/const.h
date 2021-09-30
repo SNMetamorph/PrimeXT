@@ -149,20 +149,6 @@
 #define CF_MONOCHROME		(1<<1)	// use monocrhome image
 #define CF_MOVIE_SOUND		(1<<2)	// allow sound
 
-// custom flags for env_projector
-#define CF_NOATTEN			(1<<0)	// don't use attenuation for this light
-#define CF_TEXTURE			(1<<1)	// custom texture specified
-#define CF_SPRITE			(1<<2)	// custom sprite specified
-#define CF_MOVIE			(1<<3)	// custom movie specified
-#define CF_ASPECT4X3		(1<<4)	// use normal aspect instead of quad
-#define CF_ASPECT3X4		(1<<5)	// use portrait aspect instead of quad
-#define CF_STATIC_ENTITY		(1<<6)	// this entity is completely static (non-moving brush or env_static)
-#define CF_CUBEMAP			(1<<7)	// auto set on the client
-#define CF_NOWORLD_PROJECTION		(1<<8)	// don't apply projection to the world brushes
-#define CF_NOLIGHT_IN_SOLID		(1<<9)	// check lights who currently stuck in solid and disable this (point lights only)
-#define CF_NOSHADOWS		(1<<10)	// ignore shadows for this light
-#define CF_FLIPTEXTURE		(1<<11)	// mirror projection texture
-
 // entity flags
 #define EFLAG_SLERP			1	// do studio interpolation of this entity
 #define EFLAG_INTERMISSION		2	// it's a intermission spot
