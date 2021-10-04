@@ -815,7 +815,7 @@ matrix4x4 matrix4x4 :: InvertFull( void ) const
 	return *this;
 }
 
-matrix4x4 matrix4x4 :: ConcatTransforms( const matrix4x4 mat2 )
+matrix4x4 matrix4x4 :: ConcatTransforms( const matrix4x4 mat2 ) const
 {
 	matrix4x4 out;
 
@@ -841,7 +841,7 @@ matrix4x4 matrix4x4 :: ConcatTransforms( const matrix4x4 mat2 )
 	return out;
 }
 
-matrix4x4 matrix4x4 :: Concat( const matrix4x4 mat2 )
+matrix4x4 matrix4x4 :: Concat( const matrix4x4 mat2 ) const
 {
 	matrix4x4 out;
 

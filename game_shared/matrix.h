@@ -1086,8 +1086,8 @@ public:
 
 	matrix4x4 Invert( void ) const;	// basic orthonormal invert
 	matrix4x4 InvertFull( void ) const;	// full invert
-	matrix4x4 ConcatTransforms( const matrix4x4 mat2 );
-	matrix4x4 Concat( const matrix4x4 mat2 );
+	matrix4x4 ConcatTransforms( const matrix4x4 mat2 ) const;
+	matrix4x4 Concat( const matrix4x4 mat2 ) const;
 
 	matrix4x4 QuakeToNewton( void ) const;
 	matrix4x4 NewtonToQuake( void ) const;
