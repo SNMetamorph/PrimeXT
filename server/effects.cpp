@@ -3858,6 +3858,56 @@ void CEnvStatic :: AutoSetSize( void )
 	UTIL_SetSize( pev, pseqdesc[pev->sequence].bbmin * pev->startpos, pseqdesc[pev->sequence].bbmax * pev->startpos );
 }
 
+class CStaticDecal : public CPointEntity
+{
+public:
+	void KeyValue(KeyValueData *pkvd)
+	{
+		if (FStrEq(pkvd->szKeyName, "texture"))
+		{
+			pev->netname = ALLOC_STRING(pkvd->szValue);
+			pkvd->fHandled = TRUE;
+		}
+		else CBaseEntity::KeyValue(pkvd);
+	}
+
+	int PasteDecal(int dir)
+	{
+		TraceResult tr;
+		Vector vecdir = g_vecZero;
+		vecdir[dir % 3] = (dir & 1) ? 32.0f : -32.0f;
+		UTIL_TraceLine(pev->origin, pev->origin + vecdir, ignore_monsters, edict(), &tr);
+		return UTIL_TraceCustomDecal(&tr, STRING(pev->netname), pev->angles.y, TRUE);
+	}
+
+	void Spawn(void)
+	{
+		if (pev->skin <= 0 || pev->skin > 6)
+		{
+			// try all directions
+			int i;
+			for (i = 0; i < 6; i++)
+			{
+				if (PasteDecal(i)) 
+					break;
+			}
+			if (i == 6) ALERT(at_warning, "failed to place decal %s\n", STRING(pev->netname));
+		}
+		else
+		{
+			// try specified direction
+			PasteDecal(pev->skin - 1);
+		}
+
+		// NOTE: don't need to keep this entity
+		// with new custom decal save\restore system
+		UTIL_Remove(this);
+	}
+};
+
+LINK_ENTITY_TO_CLASS(env_static_decal, CStaticDecal);
+//LINK_ENTITY_TO_CLASS(infodecal, CStaticDecal);	// now an alias
+
 #define SF_REMOVE_ON_FIRE		0x0001
 #define SF_KILL_CENTER		0x0002
 

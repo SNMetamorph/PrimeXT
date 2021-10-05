@@ -1709,6 +1709,21 @@
 	]
 ]
 
+@PointClass size(-8 -8 -8, 8 8 8) color(160 24 160) = env_static_decal : "Custom Decal Painter" 
+[
+	netname(string) : "Decal group name" : "0"
+	skin(choices) : "Direction" : 0 =
+	[
+		0 : "Auto"
+		1 : "Negative X"
+		2 : "Positive X"
+		3 : "Negative Y"
+		4 : "Positive Y"
+		5 : "Negative Z"
+		6 : "Positive Z"
+	]
+]
+
 @PointClass base(Targetname, Target, Parent) size(-32 -32 -32, 32 32 32) color(0 255 0) iconsprite("sprites/fgd/env_warpball.spr") = env_warpball : "Warp In Ball"
 [
 	spawnflags(flags) =
