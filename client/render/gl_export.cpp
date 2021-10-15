@@ -318,6 +318,7 @@ static dllfunc_t fbofuncs[] =
 { "glGetRenderbufferParameteriv"          , (void **)&pglGetRenderbufferParameteriv },
 { "glIsFramebuffer"                       , (void **)&pglIsFramebuffer },
 { "glBindFramebuffer"                     , (void **)&pglBindFramebuffer },
+{ "glBlitFramebuffer"                     , (void **)&pglBlitFramebuffer },
 { "glDeleteFramebuffers"                  , (void **)&pglDeleteFramebuffers },
 { "glGenFramebuffers"                     , (void **)&pglGenFramebuffers },
 { "glCheckFramebufferStatus"              , (void **)&pglCheckFramebufferStatus },
