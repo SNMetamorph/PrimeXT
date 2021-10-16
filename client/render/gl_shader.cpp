@@ -297,6 +297,7 @@ static uniformTable_t glsl_uniformTable[] =
 { "u_ScreenHeight",		UT_SCREENHEIGHT,		0 },
 { "u_FocalDepth",		UT_FOCALDEPTH,		0 },
 { "u_FocalLength",		UT_FOCALLENGTH,		0 },
+{ "u_Exposure",		UT_EXPOSURE,		0 },
 { "u_DofDebug",		UT_DOFDEBUG,		0 },
 { "u_FStop",		UT_FSTOP,			0 },
 { "u_GrayScale",		UT_GRAYSCALE,		0 },
@@ -1321,6 +1322,7 @@ void GL_ReloadShaders()
 	GL_FreeUberShaders();
 	gEngfuncs.Con_Printf("GL_ReloadShaders: ubershaders reloading requested\n");
 	tr.params_changed = true;
+	InitPostShaders();
 }
 
 void GL_InitGPUShaders()
