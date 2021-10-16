@@ -408,7 +408,7 @@ qboolean R_AddEntity( struct cl_entity_s *clent, int entityType )
 		tr.local_client_added = true;
 	}
 
-	if( clent->curstate.renderfx == 71 ) // dynamic light
+	if (clent->curstate.renderfx == kRenderFxDynamicLight) // dynamic light
 	{
 		CDynLight *dl = CL_AllocDlight( clent->curstate.number );
 
@@ -445,7 +445,7 @@ qboolean R_AddEntity( struct cl_entity_s *clent, int entityType )
 
 		return true; // no reason to drawing this entity
           }
-	else if( clent->curstate.renderfx == 72 ) // dynamic light with avi file
+	else if (clent->curstate.renderfx == kRenderFxCinemaLight) // dynamic light with avi file
 	{
 		if( !clent->curstate.sequence )
 			return true; // bad avi file
