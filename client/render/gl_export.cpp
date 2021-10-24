@@ -717,23 +717,23 @@ static void GL_InitExtensions( void )
 
 	glConfig.max_texture_units = RENDER_GET_PARM( PARM_MAX_IMAGE_UNITS, 0 );
 
-	if( GL_Support( R_DEBUG_OUTPUT ))
+	if (GL_Support(R_DEBUG_OUTPUT))
 	{
-		if( developer_level >= 2 )
+		if (developer_level >= DEV_NORMAL)
 		{
-			pglDebugMessageCallbackARB( GL_DebugOutput, NULL );
+			pglDebugMessageCallbackARB(GL_DebugOutput, NULL);
 		}
 
-		if( developer_level >= 3 )
+		if (developer_level >= DEV_EXTENDED)
 		{
 			// force everything to happen in the main thread instead of in a separate driver thread
-			pglEnable( GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB );
+			pglEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
 		}
 
-		if( developer_level >= 4 )
+		if (developer_level >= DEV_EXTENDED)
 		{
 			// enable all the low priority messages
-			pglDebugMessageControlARB( GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW_ARB, 0, NULL, true );
+			pglDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW_ARB, 0, NULL, true);
 		}
 	}
 }
