@@ -522,6 +522,7 @@ typedef struct
 
 	int		screen_color;
 	int		screen_depth;
+	gl_drawbuffer_t *screencopy_fbo;
 
 	int		grayTexture;
 	int		whiteTexture;
@@ -547,12 +548,22 @@ typedef struct
 	CFrameBuffer	fbo_filter;	// store filtered lightmap
 	CFrameBuffer	fbo_shadow;	// store shadowflags
 
+	// deffered rendering framebuffers
 	gl_drawbuffer_t	*defscene_fbo;
 	gl_drawbuffer_t	*deflight_fbo;
 	word		defSceneShader[2];	// geometry pass
 	word		defLightShader;	// light pass
 	word		defDynLightShader[2];// dynamic light pass
 	word		bilateralShader;	// upscale filter
+
+	// HDR rendering stuff
+	gl_drawbuffer_t *screen_temp_fbo;
+	gl_drawbuffer_t *screen_temp_fbo_msaa;
+	uint	screen_temp_fbo_mip[7];
+	uint	screen_temp_fbo_texture_color;
+	uint	screen_temp_fbo_texture_depth;
+	uint	screen_temp_fbo_msaa_texture_color;
+	uint	screen_temp_fbo_msaa_texture_depth;
 
 	// skybox shaders
 	word		skyboxEnv[2];	// skybox & sun
@@ -964,14 +975,17 @@ void R_DrawSkyBox( void );
 //
 // gl_postprocess.cpp
 //
-void InitPostTextures( void );
-void InitPostEffects( void );
-void RenderDOF( void );
-void RenderUnderwaterBlur( void );
-void RenderNerveGasBlur( void );
-void RenderMonochrome( void );
-void RenderSunShafts( void );
-void RenderFSQ( int wide, int tall );
+void InitPostShaders();
+void InitPostTextures();
+void InitPostEffects();
+void RenderDOF();
+void RenderUnderwaterBlur();
+void RenderNerveGasBlur();
+void RenderMonochrome();
+void RenderSunShafts();
+void RenderBloom();
+void RenderTonemap();
+void RenderFSQ(int wide, int tall);
 
 //
 // gl_world_new.cpp

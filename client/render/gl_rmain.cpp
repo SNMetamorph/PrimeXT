@@ -1071,6 +1071,7 @@ int HUD_RenderFrame( const struct ref_viewpass_s *rvp )
 {
 	RefParams refParams = RP_NONE;
 	ref_viewpass_t defVP = *rvp;
+	bool hdr_rendering = CVAR_TO_BOOL(r_hdr);
 
 	// setup some renderer flags
 	if( !FBitSet( rvp->flags, RF_DRAW_CUBEMAP ))
@@ -1099,6 +1100,9 @@ int HUD_RenderFrame( const struct ref_viewpass_s *rvp )
 
 	if( !GL_BackendStartFrame( &defVP, refParams ))
 		return 0;
+
+	if (hdr_rendering)
+		GL_BindDrawbuffer(tr.screen_temp_fbo_msaa);
 
 	if( CVAR_TO_BOOL( cv_deferred ))
 	{
