@@ -60,7 +60,7 @@ void CPlayerFlashlight::Update(ref_params_t *pparams)
 	R_SetupLightParams(flashlight, origin, pparams->viewangles, 700.0f, 35.0f + add, LIGHT_SPOT);
 	R_SetupLightTexture(flashlight, tr.flashlightTexture);
 
-	flashlight->color = Vector(1.4f, 1.4f, 1.4f); // make model dymanic lighting happy
+	flashlight->color = Vector(100.4f, 100.4f, 100.4f); // make model dymanic lighting happy
 	flashlight->die = pparams->time + 0.05f;
 
 	if (texName && (!Q_strnicmp(texName, "reflect", 7) || !Q_strnicmp(texName, "mirror", 6)) && r_allow_mirrors->value)

@@ -25,6 +25,10 @@ public:
 	word	monoShader;		// monochrome effect
 	word	genSunShafts;		// sunshafts effect
 	word	drawSunShafts;		// sunshafts effect
+	word	tonemapShader;
+	word	blurMipShader;
+	word	bloomShader;
+
 	int	target_rgb[2];
 	float	grayScaleFactor;
 	float	blurFactor[2];
@@ -37,7 +41,6 @@ public:
 	float	m_flOffsetDepth;
 	float	m_flStartTime;
 	float	m_flDelayTime;
-	//int	g_iGunLastMode;
 	float	m_flStartLength;
 	float	m_flOffsetLength;
 	float	m_flLastLength;
@@ -64,53 +67,109 @@ public:
 
 void CBasePostEffects :: InitScreenColor( void )
 {
-	if( tr.screen_color )
-	{
-		FREE_TEXTURE( tr.screen_color );
-		tr.screen_color = 0;
-          }
+	int tex_flags = 0;
+	bool hdr_rendering = CVAR_TO_BOOL(r_hdr);
 
-	tr.screen_color = CREATE_TEXTURE( "*screencolor", glState.width, glState.height, NULL, TF_COLORBUFFER );
+	if (tr.screen_color)
+	{
+		FREE_TEXTURE(tr.screen_color);
+		tr.screen_color = 0;
+	}
+
+	if (hdr_rendering)
+		tex_flags = TF_COLORBUFFER | TF_HAS_ALPHA | TF_ARB_16BIT | TF_ARB_FLOAT;
+	else
+		tex_flags = TF_COLORBUFFER;
+
+	tr.screen_color = CREATE_TEXTURE( "*screencolor", glState.width, glState.height, NULL, tex_flags);
+	if (hdr_rendering)
+	{
+		if (!tr.screencopy_fbo)
+			tr.screencopy_fbo = GL_AllocDrawbuffer("*screencopy_fbo", glState.width, glState.height, 1);
+
+		GL_AttachColorTextureToFBO(tr.screencopy_fbo, tr.screen_color, 0);
+		GL_CheckFBOStatus(tr.screencopy_fbo);
+	}
 }
 
 void CBasePostEffects :: InitScreenDepth( void )
 {
-	if( tr.screen_depth )
+	bool hdr_rendering = CVAR_TO_BOOL(r_hdr);
+	if (tr.screen_depth)
 	{
-		FREE_TEXTURE( tr.screen_depth );
+		FREE_TEXTURE(tr.screen_depth);
 		tr.screen_depth = 0;
-          }
+	}
 
 	tr.screen_depth = CREATE_TEXTURE( "*screendepth", glState.width, glState.height, NULL, TF_DEPTHBUFFER ); 
+	if (hdr_rendering)
+	{
+		if (!tr.screencopy_fbo)
+			tr.screencopy_fbo = GL_AllocDrawbuffer("*screencopy_fbo", glState.width, glState.height, 1);
+
+		GL_AttachDepthTextureToFBO(tr.screencopy_fbo, tr.screen_depth, 0);
+		GL_CheckFBOStatus(tr.screencopy_fbo);
+	}
+
 }
 
 void CBasePostEffects :: InitTargetColor( int slot )
 {
+	int tex_flags = 0;
+	bool hdr_rendering = CVAR_TO_BOOL(r_hdr);
+
 	if( target_rgb[slot] )
 	{
 		FREE_TEXTURE( target_rgb[slot] );
 		target_rgb[slot] = 0;
 	}
 
-	target_rgb[slot] = CREATE_TEXTURE( va( "*target%i", slot ), TARGET_SIZE, TARGET_SIZE, NULL, TF_IMAGE );
+	if (hdr_rendering)
+		tex_flags = TF_IMAGE | TF_ARB_16BIT | TF_ARB_FLOAT;
+	else
+		tex_flags = TF_IMAGE;
+
+	target_rgb[slot] = CREATE_TEXTURE(va( "*target%i", slot ), TARGET_SIZE, TARGET_SIZE, NULL, tex_flags);
 }
 
 void CBasePostEffects :: RequestScreenColor( void )
 {
-	GL_Bind( GL_TEXTURE0, tr.screen_color );
-	pglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, glState.width, glState.height );
+	bool hdr_rendering = CVAR_TO_BOOL(r_hdr);
+	if (hdr_rendering)
+	{
+		pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, tr.screencopy_fbo->id);
+		//pglBindFramebuffer(GL_READ_FRAMEBUFFER, tr.screen_temp_fbo_msaa);
+		pglBlitFramebuffer(0, 0, glState.width, glState.height, 0, 0, glState.width, glState.height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
+	}
+	else
+	{
+		GL_Bind(GL_TEXTURE0, tr.screen_color);
+		pglCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, glState.width, glState.height);
+	}
 }
 
 void CBasePostEffects :: RequestScreenDepth( void )
 {
-	GL_Bind( GL_TEXTURE0, tr.screen_depth );
-	pglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, glState.width, glState.height );
+	bool hdr_rendering = CVAR_TO_BOOL(r_hdr);
+	if (hdr_rendering)
+	{
+		pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, tr.screencopy_fbo->id);
+		//pglBindFramebuffer(GL_READ_FRAMEBUFFER, tr.screen_temp_fbo_msaa);
+		pglBlitFramebuffer(0, 0, glState.width, glState.height, 0, 0, glState.width, glState.height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
+	}
+	else
+	{
+		GL_Bind(GL_TEXTURE0, tr.screen_depth);
+		pglCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, glState.width, glState.height);
+	}
 }
 
 void CBasePostEffects :: RequestTargetCopy( int slot )
 {
-	GL_Bind( GL_TEXTURE0, target_rgb[slot] );
-	pglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, TARGET_SIZE, TARGET_SIZE );
+	GL_Bind(GL_TEXTURE0, target_rgb[slot]);
+	pglCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, TARGET_SIZE, TARGET_SIZE);
 }
 
 void CBasePostEffects :: SetNormalViewport( void )
@@ -284,35 +343,48 @@ void CBasePostEffects :: End( void )
 
 static CBasePostEffects	post;
 
-void InitPostEffects( void )
+void InitPostShaders()
 {
 	char options[MAX_OPTIONS_LENGTH];
 
+	// monochrome effect
+	post.monoShader = GL_FindShader("postfx/monochrome", "postfx/generic", "postfx/monochrome");
+
+	// gaussian blur for X
+	GL_SetShaderDirective(options, "BLUR_X");
+	post.blurShader[0] = GL_FindShader("postfx/gaussblur", "postfx/generic", "postfx/gaussblur", options);
+
+	// gaussian blur for Y
+	GL_SetShaderDirective(options, "BLUR_Y");
+	post.blurShader[1] = GL_FindShader("postfx/gaussblur", "postfx/generic", "postfx/gaussblur", options);
+
+	// DOF with bokeh
+	post.dofShader = GL_FindShader("postfx/dofbokeh", "postfx/generic", "postfx/dofbokeh");
+
+	// prepare sunshafts
+	post.genSunShafts = GL_FindShader("postfx/genshafts", "postfx/generic", "postfx/genshafts");
+
+	// render sunshafts
+	post.drawSunShafts = GL_FindShader("postfx/drawshafts", "postfx/generic", "postfx/drawshafts");
+
+	// tonemapping 
+	post.tonemapShader = GL_FindShader("postfx/tonemap", "postfx/generic", "postfx/tonemap");
+
+	// bloom effect
+	post.blurMipShader = GL_FindShader("postfx/gaussblurmip", "postfx/generic", "postfx/gaussblurmip");
+	post.bloomShader = GL_FindShader("postfx/bloom", "postfx/generic", "postfx/bloom");
+}
+
+void InitPostEffects( void )
+{
 	v_posteffects = CVAR_REGISTER( "gl_posteffects", "1", FCVAR_ARCHIVE );
 	v_sunshafts = CVAR_REGISTER( "gl_sunshafts", "1", FCVAR_ARCHIVE );
 	v_grayscale = CVAR_REGISTER( "gl_grayscale", "0", 0 );
-
+	r_hdr_tonemap = CVAR_REGISTER("r_hdr_tonemap", "1", FCVAR_ARCHIVE);
+	r_hdr_exposure = CVAR_REGISTER("r_hdr_exposure", "1", FCVAR_ARCHIVE);
+	r_hdr_bloom = CVAR_REGISTER("r_hdr_bloom", "1", FCVAR_ARCHIVE);
 	memset( &post, 0, sizeof( post ));
-
-	// monochrome effect
-	post.monoShader = GL_FindShader( "postfx/monochrome", "postfx/generic", "postfx/monochrome" );
-
-	// gaussian blur for X
-	GL_SetShaderDirective( options, "BLUR_X" );
-	post.blurShader[0] = GL_FindShader( "postfx/gaussblur", "postfx/generic", "postfx/gaussblur", options );
-
-	// gaussian blur for Y
-	GL_SetShaderDirective( options, "BLUR_Y" );
-	post.blurShader[1] = GL_FindShader( "postfx/gaussblur", "postfx/generic", "postfx/gaussblur", options );
-
-	// DOF with bokeh
-	post.dofShader = GL_FindShader( "postfx/dofbokeh", "postfx/generic", "postfx/dofbokeh" );
-
-	// prepare sunshafts
-	post.genSunShafts = GL_FindShader( "postfx/genshafts", "postfx/generic", "postfx/genshafts" );
-
-	// render sunshafts
-	post.drawSunShafts = GL_FindShader( "postfx/drawshafts", "postfx/generic", "postfx/drawshafts" );
+	InitPostShaders();
 }
 
 void InitPostTextures( void )
@@ -449,6 +521,9 @@ void V_RenderPostEffect( word hProgram )
 			break;
 		case UT_FOCALLENGTH:
 			u->SetValue( post.m_flLastLength );
+			break;
+		case UT_EXPOSURE:
+			u->SetValue(r_hdr_exposure->value);
 			break;
 		case UT_DOFDEBUG:
 			u->SetValue( CVAR_TO_BOOL( r_dof_debug ));
@@ -593,5 +668,108 @@ void RenderSunShafts( void )
 	post.SetNormalViewport();
 	V_RenderPostEffect( post.drawSunShafts );
 
+	post.End();
+}
+
+void RenderBloom()
+{
+	if (!CVAR_TO_BOOL(r_hdr_bloom))
+		return;
+
+	if (FBitSet(RI->params, RP_ENVVIEW)) // no bloom in cubemaps
+		return;
+
+	if (post.blurMipShader <= 0)
+	{
+		GL_BindShader(NULL);
+		return; // bad shader?
+	}
+
+	if (post.bloomShader <= 0)
+	{
+		GL_BindShader(NULL);
+		return; // bad shader?
+	}
+
+	GL_BindShader(&glsl_programs[post.blurMipShader]);
+	GL_Bind(GL_TEXTURE0, tr.screen_temp_fbo->colortarget[0]);
+	GL_Setup2D();
+
+	int w = glState.width;
+	int h = glState.height;
+	glsl_program_t *shader = RI->currentshader;
+
+	// render and blur mips
+	for (int i = 1; i <= 6; i++)
+	{
+		w /= 2;
+		h /= 2;
+
+		pglViewport(0, 0, w, h);
+		for (int j = 0; j < shader->numUniforms; j++)
+		{
+			uniform_t *u = &shader->uniforms[j];
+			switch (u->type)
+			{
+				case UT_SCREENSIZEINV:
+					u->SetValue(1.0f / (float)w, 1.0f / (float)h);
+					break;
+				case UT_MIPLOD:
+					u->SetValue((float)(i - 1));
+					break;
+				case UT_TEXCOORDCLAMP:
+					u->SetValue(0.0f, 0.0f, 1.0f, 1.0f);
+					break;
+				case UT_BLOOMFIRSTPASS:
+					u->SetValue((i > 1) ? 1 : 0);
+					break;
+			}
+		}
+
+		pglBindFramebuffer(GL_FRAMEBUFFER_EXT, tr.screen_temp_fbo_mip[i]);
+		RenderFSQ(glState.width, glState.height);
+	}
+
+	w = glState.width / 2;
+	h = glState.height / 2;
+
+	pglViewport(0, 0, w, h);
+	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, tr.screen_temp_fbo_mip[1]);
+	GL_BindShader(&glsl_programs[post.bloomShader]);
+
+	shader = RI->currentshader;
+	for (int j = 0; j < shader->numUniforms; j++)
+	{
+		uniform_t *u = &shader->uniforms[j];
+		switch (u->type)
+		{
+			case UT_SCREENSIZEINV:
+				u->SetValue((float)w, (float)h);	//actual screen size, not inverted
+				break;
+		}
+	}
+	RenderFSQ(glState.width, glState.height);
+
+	// blend screen image & first mip together
+	pglViewport(0, 0, glState.width, glState.height);
+	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
+	GL_BindShader(NULL);
+	GL_Blend(GL_TRUE);
+	pglBlendFunc(GL_ONE, GL_ONE);
+	pglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_LOD, 1.0);
+	RenderFSQ(glState.width, glState.height);
+	pglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_LOD, 0.0);
+	GL_Blend(GL_FALSE);
+	post.End();
+}
+
+void RenderTonemap()
+{
+	if (!CVAR_TO_BOOL(r_hdr_tonemap))
+		return;
+
+	GL_Setup2D();
+	post.RequestScreenColor();
+	V_RenderPostEffect(post.tonemapShader);
 	post.End();
 }
