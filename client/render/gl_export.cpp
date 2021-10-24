@@ -621,7 +621,7 @@ static void GL_InitExtensions( void )
 	if( !GL_Support( R_EXT_GPU_SHADER4 ))
 		ALERT( at_warning, "GL_EXT_gpu_shader4 not support. Shadows from omni lights will be disabled\n" );
 
-	GL_CheckExtension( "GL_ARB_debug_output", debugoutputfuncs, "gl_debug_output", R_DEBUG_OUTPUT, true );
+	GL_CheckExtension( "GL_ARB_debug_output", debugoutputfuncs, "gl_debug_output", R_DEBUG_OUTPUT );
 
 	// vp and fp shaders
 	GL_CheckExtension( "GL_ARB_shader_objects", shaderobjectsfuncs, "gl_shaderobjects", R_SHADER_OBJECTS_EXT );
