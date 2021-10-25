@@ -871,9 +871,13 @@ typedef unsigned int GLhandleARB;
 #define GL_DEBUG_TYPE_PORTABILITY_ARB		0x824F
 #define GL_DEBUG_TYPE_PERFORMANCE_ARB		0x8250
 #define GL_DEBUG_TYPE_OTHER_ARB		0x8251
+#define GL_DEBUG_TYPE_MARKER        0x8268
+#define GL_DEBUG_TYPE_PUSH_GROUP    0x8269
+#define GL_DEBUG_TYPE_POP_GROUP     0x826A
 #define GL_DEBUG_SEVERITY_HIGH_ARB		0x9146
-#define GL_DEBUG_SEVERITY_MEDIUM_ARB		0x9147
+#define GL_DEBUG_SEVERITY_MEDIUM_ARB	0x9147
 #define GL_DEBUG_SEVERITY_LOW_ARB		0x9148 
+#define GL_DEBUG_SEVERITY_NOTIFICATION  0x826B
 
 // helper opengl functions
 EXTERN GLenum ( APIENTRY *pglGetError )(void);
@@ -1368,5 +1372,12 @@ EXTERN void ( APIENTRY *pglDebugMessageControlARB)( GLenum source, GLenum type, 
 EXTERN void ( APIENTRY *pglDebugMessageInsertARB)( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const char* buf );
 EXTERN void ( APIENTRY *pglDebugMessageCallbackARB)( pglDebugProcARB callback, void* userParam );
 EXTERN GLuint ( APIENTRY *pglGetDebugMessageLogARB)( GLuint count, GLsizei bufsize, GLenum* sources, GLenum* types, GLuint* ids, GLuint* severities, GLsizei* lengths, char* messageLog );
+
+EXTERN void (APIENTRY *pglGetObjectLabel)(GLenum identifier, GLuint name, GLsizei bufSize, GLsizei *length, GLcharARB *label);
+EXTERN void (APIENTRY *pglGetObjectPtrLabel)(const void *ptr, GLsizei bufSize, GLsizei *length, GLcharARB *label);
+EXTERN void (APIENTRY *pglObjectLabel)(GLenum identifier, GLuint name, GLsizei length, const GLcharARB *label);
+EXTERN void (APIENTRY *pglObjectPtrLabel)(const void *ptr, GLsizei length, const GLcharARB *label);
+EXTERN void (APIENTRY *pglPopDebugGroup)(void);
+EXTERN void (APIENTRY *pglPushDebugGroup)(GLenum source, GLuint id, GLsizei length, const GLcharARB *message);
 
 #endif//GL_EXPORT_H

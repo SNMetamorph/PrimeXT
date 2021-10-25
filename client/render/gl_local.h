@@ -461,6 +461,7 @@ enum
 	R_BINARY_SHADER_EXT,
 	R_PARANOIA_EXT,		// custom OpenGL32.dll with hacked function glDepthRange
 	R_DEBUG_OUTPUT,
+	R_KHR_DEBUG,
 	R_EXTCOUNT,		// must be last
 };
 
@@ -759,40 +760,42 @@ extern ref_globals_t	tr;
 //
 // gl_backend.cpp
 //
-void R_InitRefState( void );
-void R_PushRefState( void );
-void R_PopRefState( void );
-void R_ResetRefState( void );
-ref_instance_t *R_GetPrevInstance( void );
-void CompressNormalizedVector( char outVec[3], const Vector &inVec );
-bool GL_BackendStartFrame( ref_viewpass_t *rvp, RefParams params );
-void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params );
-int R_GetSpriteTexture( const model_t *m_pSpriteModel, int frame );
-void GL_BindDrawbuffer( gl_drawbuffer_t *framebuffer );
-void GL_DepthRange( GLfloat depthmin, GLfloat depthmax );
-void R_RenderQuadPrimitive( CSolidEntry *entry );
-void GL_LoadMatrix( const matrix4x4 &source );
-void GL_LoadTexMatrix( const matrix4x4 &source );
-void GL_BindFrameBuffer( int buffer, int texture );
-void R_Speeds_Printf( const char *msg, ... );
-int R_AllocFrameBuffer( int viewport[4] );
-void GL_CheckVertexArrayBinding( void );
-void R_FreeFrameBuffer( int buffer );
-void GL_CleanupAllTextureUnits( void );
-void GL_ComputeScreenRays( void );
-void GL_DisableAllTexGens( void );
-void GL_DepthMask( GLint enable );
-void GL_FrontFace( GLenum front );
-void GL_ClipPlane( bool enable );
-void GL_BindFBO( GLuint buffer );
-void GL_AlphaTest( GLint enable );
-void GL_DepthTest( GLint enable );
-void GL_CleanupDrawState( void );
-void GL_SetDefaultState( void );
-void GL_Blend( GLint enable );
-void GL_Cull( GLenum cull );
-void GL_Setup2D( void );
-void GL_Setup3D( void );
+void R_InitRefState(void);
+void R_PushRefState(void);
+void R_PopRefState(void);
+void R_ResetRefState(void);
+ref_instance_t *R_GetPrevInstance(void);
+void CompressNormalizedVector(char outVec[3], const Vector &inVec);
+bool GL_BackendStartFrame(ref_viewpass_t *rvp, RefParams params);
+void GL_BackendEndFrame(ref_viewpass_t *rvp, RefParams params);
+int R_GetSpriteTexture(const model_t *m_pSpriteModel, int frame);
+void GL_BindDrawbuffer(gl_drawbuffer_t *framebuffer);
+void GL_DepthRange(GLfloat depthmin, GLfloat depthmax);
+void R_RenderQuadPrimitive(CSolidEntry *entry);
+void GL_LoadMatrix(const matrix4x4 &source);
+void GL_LoadTexMatrix(const matrix4x4 &source);
+void GL_BindFrameBuffer(int buffer, int texture);
+void R_Speeds_Printf(const char *msg, ...);
+int R_AllocFrameBuffer(int viewport[4]);
+void GL_CheckVertexArrayBinding(void);
+void R_FreeFrameBuffer(int buffer);
+void GL_CleanupAllTextureUnits(void);
+void GL_ComputeScreenRays(void);
+void GL_DisableAllTexGens(void);
+void GL_DepthMask(GLint enable);
+void GL_FrontFace(GLenum front);
+void GL_ClipPlane(bool enable);
+void GL_BindFBO(GLuint buffer);
+void GL_AlphaTest(GLint enable);
+void GL_DepthTest(GLint enable);
+void GL_DebugGroupPush(const char *markerName);
+void GL_DebugGroupPop();
+void GL_CleanupDrawState(void);
+void GL_SetDefaultState(void);
+void GL_Blend(GLint enable);
+void GL_Cull(GLenum cull);
+void GL_Setup2D(void);
+void GL_Setup3D(void);
 
 //
 // gl_cubemaps.cpp

@@ -184,6 +184,17 @@ static dllfunc_t debugoutputfuncs[] =
 { NULL, NULL }
 };
 
+static dllfunc_t khr_debug_funcs[] =
+{
+{ "glGetObjectLabel"	, (void **)&pglGetObjectLabel },
+{ "glGetObjectPtrLabel"	, (void **)&pglGetObjectPtrLabel },
+{ "glObjectLabel"		, (void **)&pglObjectLabel },
+{ "glObjectPtrLabel"	, (void **)&pglObjectPtrLabel },
+{ "glPopDebugGroup"		, (void **)&pglPopDebugGroup },
+{ "glPushDebugGroup"	, (void **)&pglPushDebugGroup },
+{ NULL, NULL }
+};
+
 static dllfunc_t multitexturefuncs[] =
 {
 { "glMultiTexCoord1fARB"     , (void **)&pglMultiTexCoord1f },
@@ -621,7 +632,8 @@ static void GL_InitExtensions( void )
 	if( !GL_Support( R_EXT_GPU_SHADER4 ))
 		ALERT( at_warning, "GL_EXT_gpu_shader4 not support. Shadows from omni lights will be disabled\n" );
 
-	GL_CheckExtension( "GL_ARB_debug_output", debugoutputfuncs, "gl_debug_output", R_DEBUG_OUTPUT );
+	GL_CheckExtension("GL_ARB_debug_output", debugoutputfuncs, "gl_debug_output", R_DEBUG_OUTPUT);
+	GL_CheckExtension("GL_KHR_debug", khr_debug_funcs, "gl_khr_debug", R_KHR_DEBUG);
 
 	// vp and fp shaders
 	GL_CheckExtension( "GL_ARB_shader_objects", shaderobjectsfuncs, "gl_shaderobjects", R_SHADER_OBJECTS_EXT );
