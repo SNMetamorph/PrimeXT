@@ -650,7 +650,12 @@ extern CStudioModelRenderer g_StudioRenderer;
 
 // implementation of drawing funcs
 inline void R_RunViewmodelEvents( void ) { g_StudioRenderer.RunViewModelEvents(); }
-inline void R_DrawViewModel( void ) { g_StudioRenderer.DrawViewModel(); }
+inline void R_DrawViewModel( void ) 
+{ 
+	GL_DebugGroupPush(__FUNCTION__);
+	g_StudioRenderer.DrawViewModel(); 
+	GL_DebugGroupPop();
+}
 inline void R_DrawHeadShield( void ) { g_StudioRenderer.DrawHeadShield(); }
 inline void R_ProcessStudioData( model_t *mod, qboolean create, const byte *buffer )
 {
@@ -685,7 +690,9 @@ inline void R_RenderDeferredStudioList( void )
 
 inline void R_RenderSolidStudioList( void )
 {
+	GL_DebugGroupPush(__FUNCTION__);
 	g_StudioRenderer.RenderSolidStudioList();
+	GL_DebugGroupPop();
 }
 
 inline void R_RenderTransMesh( CTransEntry *entry )
@@ -705,7 +712,9 @@ inline void R_RenderShadowStudioList( void )
 
 inline void R_RenderDebugStudioList( bool bViewModel )
 {
+	GL_DebugGroupPush(__FUNCTION__);
 	g_StudioRenderer.RenderDebugStudioList( bViewModel );
+	GL_DebugGroupPop();
 }
 
 inline void R_AddStudioToDrawList( cl_entity_t *e, bool update = false )

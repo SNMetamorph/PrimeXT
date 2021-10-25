@@ -598,10 +598,11 @@ void RenderMonochrome( void )
 	if( !post.Begin( )) return;
 
 	// apply monochromatic
+	GL_DebugGroupPush(__FUNCTION__);
 	post.RequestScreenColor();
 	V_RenderPostEffect( post.monoShader );
-
 	post.End();
+	GL_DebugGroupPop();
 }
 
 void RenderUnderwaterBlur( void )
@@ -613,7 +614,9 @@ void RenderUnderwaterBlur( void )
 	float blurX = RemapVal( factor, -1.0f, 1.0f, 0.18f, 0.23f );
 	float blurY = RemapVal( factor, -1.0f, 1.0f, 0.15f, 0.24f );
 
+	GL_DebugGroupPush(__FUNCTION__);
 	RenderBlur( blurX, blurY );
+	GL_DebugGroupPop();
 }
 
 void RenderNerveGasBlur( void )
@@ -629,7 +632,9 @@ void RenderNerveGasBlur( void )
 	blurX = bound( 0.0f, blurX, blurAmount);
 	blurY = bound( 0.0f, blurY, blurAmount);
 
+	GL_DebugGroupPush(__FUNCTION__);
 	RenderBlur( blurX, blurY );
+	GL_DebugGroupPop();
 }
 
 void RenderDOF( void )
@@ -637,11 +642,12 @@ void RenderDOF( void )
 	if( !post.ProcessDepthOfField( ))
 		return;
 
+	GL_DebugGroupPush(__FUNCTION__);
 	post.RequestScreenColor();
 	post.RequestScreenDepth();
 	V_RenderPostEffect( post.dofShader );
-
 	post.End();
+	GL_DebugGroupPop();
 }
 
 void RenderSunShafts( void )
@@ -649,6 +655,7 @@ void RenderSunShafts( void )
 	if( !post.ProcessSunShafts( ))
 		return;
 
+	GL_DebugGroupPush(__FUNCTION__);
 	post.RequestScreenColor();
 	post.RequestScreenDepth();
 
@@ -667,8 +674,8 @@ void RenderSunShafts( void )
 	// back to normal size
 	post.SetNormalViewport();
 	V_RenderPostEffect( post.drawSunShafts );
-
 	post.End();
+	GL_DebugGroupPop();
 }
 
 void RenderBloom()
@@ -691,6 +698,7 @@ void RenderBloom()
 		return; // bad shader?
 	}
 
+	GL_DebugGroupPush(__FUNCTION__);
 	GL_BindShader(&glsl_programs[post.blurMipShader]);
 	GL_Bind(GL_TEXTURE0, tr.screen_temp_fbo->colortarget[0]);
 	GL_Setup2D();
@@ -761,6 +769,7 @@ void RenderBloom()
 	pglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_LOD, 0.0);
 	GL_Blend(GL_FALSE);
 	post.End();
+	GL_DebugGroupPop();
 }
 
 void RenderTonemap()
@@ -768,8 +777,10 @@ void RenderTonemap()
 	if (!CVAR_TO_BOOL(r_hdr_tonemap))
 		return;
 
+	GL_DebugGroupPush(__FUNCTION__);
 	GL_Setup2D();
 	post.RequestScreenColor();
 	V_RenderPostEffect(post.tonemapShader);
 	post.End();
+	GL_DebugGroupPop();
 }

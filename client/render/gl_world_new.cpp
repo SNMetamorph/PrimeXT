@@ -3836,6 +3836,7 @@ void R_RenderSolidBrushList( void )
 	if( !RI->frame.solid_faces.Count() )
 		return;
 
+	GL_DebugGroupPush(__FUNCTION__);
 	GL_Blend( GL_FALSE );
 	GL_AlphaTest( GL_FALSE );
 	GL_DepthMask( GL_TRUE );
@@ -3947,6 +3948,7 @@ void R_RenderSolidBrushList( void )
 
 	// render all decals with gray base
 	R_RenderDecalsSolidList( DRAWLIST_TRANS );
+	GL_DebugGroupPop();
 }
 
 void R_RenderTransSurface( CTransEntry *entry )

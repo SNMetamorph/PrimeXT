@@ -438,6 +438,7 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	mstudiolight_t	light;
 	bool hdr_rendering = CVAR_TO_BOOL(r_hdr);
 	tr.frametime = tr.saved_frametime;
+	GL_DebugGroupPush(__FUNCTION__);
 
 	// go into 2D mode (in case we draw PlayerSetup between two 2d calls)
 	if( !FBitSet( params, RP_DRAW_WORLD ))
@@ -466,7 +467,7 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	R_PushRefState();
 	RI->params = params;
 	RI->view.fov_x = rvp->fov_x;
-	RI->view.fov_y = rvp->fov_y;
+	RI->view.fov_y = rvp->fov_y; 
 
 	if( !CVAR_TO_BOOL( cv_deferred ))
 		R_DrawViewModel();		// 3D
@@ -500,6 +501,7 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	// render screen quad 
 	if (hdr_rendering)
 	{
+		GL_DebugGroupPush("R_RenderScreenFBO");
 		GL_BindFBO(FBO_MAIN);
 		GL_Setup2D();
 		GL_Bind(GL_TEXTURE0, tr.screen_temp_fbo->colortarget[0]);
@@ -507,6 +509,7 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 		RenderFSQ(glState.width, glState.height);
 		GL_DepthMask(GL_TRUE);
 		GL_Bind(GL_TEXTURE0, 0);
+		GL_DebugGroupPop();
 	}
 
 	GL_CleanupDrawState();
@@ -516,7 +519,7 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	GL_PrintStats( params );
 
 	R_UnloadFarGrass();
-
+	GL_DebugGroupPop();
 	tr.params_changed = false;
 	tr.realframecount++;
 
@@ -843,6 +846,20 @@ void GL_DepthTest( GLint enable )
 
 	if( enable ) pglEnable( GL_DEPTH_TEST );
 	else pglDisable( GL_DEPTH_TEST );
+}
+
+void GL_DebugGroupPush(const char *markerName)
+{
+	if (developer_level > 0 && GL_Support(R_KHR_DEBUG)) {
+		pglPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION_ARB, 0, -1, markerName);
+	}
+}
+
+void GL_DebugGroupPop()
+{
+	if (developer_level > 0 && GL_Support(R_KHR_DEBUG)) {
+		pglPopDebugGroup();
+	}
 }
 
 /*

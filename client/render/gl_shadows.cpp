@@ -600,6 +600,7 @@ void R_RenderShadowmaps( void )
 	// check for dynamic lights
 	if( !HasDynamicLights( )) return;
 
+	GL_DebugGroupPush(__FUNCTION__);
 	R_PushRefState(); // make refinst backup
 	oldFBO = glState.frameBuffer;
 
@@ -658,4 +659,5 @@ void R_RenderShadowmaps( void )
 	GL_BindFBO( oldFBO );
 	GL_BindShader( NULL );
 	RI->currentlight = NULL;
+	GL_DebugGroupPop();
 }

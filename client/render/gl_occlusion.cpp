@@ -170,6 +170,7 @@ void R_RenderSurfOcclusionList( void )
 	if( !RI->frame.num_subview_faces )
 		return;
 
+	GL_DebugGroupPush(__FUNCTION__);
 	pglColorMask( GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE );
 	GL_DepthMask( GL_FALSE );
 	GL_AlphaTest( GL_FALSE );
@@ -190,6 +191,7 @@ void R_RenderSurfOcclusionList( void )
 
 	for( i = 0; i < RI->frame.num_subview_faces; i++ )
 		GL_DebugSurfaceOcclusion( RI->frame.subview_faces[i] );
+	GL_DebugGroupPop();
 }
 
 /*

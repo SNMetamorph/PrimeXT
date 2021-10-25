@@ -885,7 +885,9 @@ void R_DrawParticles( qboolean trans )
 	if( FBitSet( RI->params, RP_DRAW_OVERVIEW ))
 		SetBits( rvp.flags, RF_DRAW_OVERVIEW );
 
+	GL_DebugGroupPush(__FUNCTION__);
 	DRAW_PARTICLES( &rvp, trans, tr.frametime );
+	GL_DebugGroupPop();
 }
 
 /*
@@ -915,6 +917,7 @@ void R_RenderTransList( void )
 	if( !RI->frame.trans_list.Count() )
 		return;
 
+	GL_DebugGroupPush(__FUNCTION__);
 	GL_Blend( GL_FALSE ); // mixing screencopy with diffuse so we don't need blend
 	GL_AlphaTest( GL_FALSE );
 	// yes, we rendering translucent objects with enabdled depthwrite
@@ -959,6 +962,7 @@ void R_RenderTransList( void )
 	GL_Cull( GL_FRONT );
 
 	DBG_DrawGlassScissors();
+	GL_DebugGroupPop();
 }
 
 /*
@@ -978,6 +982,7 @@ void R_RenderScene( const ref_viewpass_t *rvp, RefParams params )
 		tr.frametime = tr.saved_frametime;
 	else tr.frametime = 0.0;
 
+	GL_DebugGroupPush(__FUNCTION__);
 	R_BuildViewPassHierarchy();
 	R_SetupViewCache( rvp );
 
@@ -1014,6 +1019,7 @@ void R_RenderScene( const ref_viewpass_t *rvp, RefParams params )
 
 	GL_BindShader( NULL );
 	R_ResetGLstate();
+	GL_DebugGroupPop();
 }
 
 /*
@@ -1027,7 +1033,7 @@ void R_RenderDeferredScene( const ref_viewpass_t *rvp, RefParams params )
 
 	// now we know about pass specific
 	RI->params = params;
-
+	GL_DebugGroupPush(__FUNCTION__);
 	R_SetupViewCache( rvp );
 
 	// draw all the shadowmaps
@@ -1052,8 +1058,8 @@ void R_RenderDeferredScene( const ref_viewpass_t *rvp, RefParams params )
 		ALERT( at_error, "OpenGL: error %x while render solid objects\n", err );
 
 	GL_DrawDeferredPass();
-
 	R_ResetGLstate();
+	GL_DebugGroupPop();
 }
 
 /*
@@ -1098,8 +1104,12 @@ int HUD_RenderFrame( const struct ref_viewpass_s *rvp )
 	if( FBitSet( rvp->flags, RF_DRAW_WORLD ))
 		SetBits( refParams, RP_DRAW_WORLD );
 
-	if( !GL_BackendStartFrame( &defVP, refParams ))
+	GL_DebugGroupPush(__FUNCTION__);
+	if (!GL_BackendStartFrame(&defVP, refParams))
+	{
+		GL_DebugGroupPop();
 		return 0;
+	}
 
 	if (hdr_rendering)
 		GL_BindDrawbuffer(tr.screen_temp_fbo_msaa);
@@ -1123,7 +1133,7 @@ int HUD_RenderFrame( const struct ref_viewpass_s *rvp )
 	defVP = *rvp;
 
 	GL_BackendEndFrame( &defVP, refParams );
-
+	GL_DebugGroupPop();
 	return 1;
 }
 

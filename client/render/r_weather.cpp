@@ -856,9 +856,10 @@ void R_DrawWeather( void )
 	if( FBitSet( RI->params, RP_SKYVIEW))
 		return;
 
+	GL_DebugGroupPush(__FUNCTION__);
 	ProcessRain();
 	ProcessFXObjects();
-
 	DrawRain();
 	DrawFXObjects();
+	GL_DebugGroupPop();
 }
