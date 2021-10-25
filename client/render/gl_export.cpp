@@ -376,6 +376,17 @@ static void CALLBACK GL_DebugOutput(GLenum source, GLenum type, GLuint id, GLenu
 
 	string[0] = '\0';
 
+	if (GL_Support(R_KHR_DEBUG))
+	{
+		switch (type)
+		{
+			case GL_DEBUG_TYPE_MARKER:
+			case GL_DEBUG_TYPE_PUSH_GROUP:
+			case GL_DEBUG_TYPE_POP_GROUP:
+				return; // ignore debug group messages because they needed only for graphics profiler
+		}
+	}
+
 	switch( type )
 	{
 	case GL_DEBUG_TYPE_ERROR_ARB:
@@ -729,15 +740,15 @@ static void GL_InitExtensions( void )
 
 	glConfig.max_texture_units = RENDER_GET_PARM( PARM_MAX_IMAGE_UNITS, 0 );
 
+	if (GL_Support(R_KHR_DEBUG)) {
+		pglEnable(GL_DEBUG_OUTPUT);
+	}
+
 	if (GL_Support(R_DEBUG_OUTPUT))
 	{
 		if (developer_level >= DEV_NORMAL)
 		{
 			pglDebugMessageCallbackARB(GL_DebugOutput, NULL);
-		}
-
-		if (developer_level >= DEV_EXTENDED)
-		{
 			// force everything to happen in the main thread instead of in a separate driver thread
 			pglEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
 		}
