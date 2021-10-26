@@ -22,8 +22,8 @@ GNU General Public License for more details.
 #define EXTERN
 #include "studio.h"
 #include "studiomdl.h"
-#include <activity.h>
-#include <activitymap.h>
+#include "activity.h"
+#include "activitymap.h"
 
 CUtlArray< char >	g_KeyValueText;
 char		filename[1024];
