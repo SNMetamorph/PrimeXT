@@ -1470,11 +1470,12 @@ void RemapVertices( void )
 
 	for( i = 0; i < g_nummodels; i++ )
 	{
+		int m;
 		matrix3x4	srcBoneToWorld[MAXSTUDIOSRCBONES];
 		matrix3x4	destBoneToWorld[MAXSTUDIOSRCBONES];
 		Vector	tmp1, tmp2, vdest, ndest;
 		s_model_t	*pmodel = g_model[i];
-
+		
 		BuildRawTransforms( pmodel, g_vecZero, g_radZero, srcBoneToWorld );
 		TranslateAnimations( pmodel->boneGlobalToLocal, srcBoneToWorld, destBoneToWorld );
 
@@ -1496,7 +1497,7 @@ void RemapVertices( void )
 					break; // staticprop
 				}
 
-				for( int m = 0; m < pmodel->srcvert[j].globalWeight.numbones; m++ )
+				for( m = 0; m < pmodel->srcvert[j].globalWeight.numbones; m++ )
 				{
 					if( k == pmodel->srcvert[j].globalWeight.bone[m] )
 					{
