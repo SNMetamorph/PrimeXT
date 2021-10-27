@@ -5423,8 +5423,9 @@ int main( int argc, char **argv )
 
 	if( argc == 1 )
 	{
-		Msg( "	    P2:Savior Studio Model Compiler\n" );
-		Msg( "		 XashXT Group 2018(^1c^7)\n\n\n" );
+		Msg("	PrimeXT Studio Model Compiler\n");
+		Msg("	Based on P2:Savior Studio Model Compiler\n" );
+		Msg("	Copyright (^1c^7) XashXT Group 2018\n\n\n" );
 
 		Msg( "usage: studiomdl <options> file.qc\n"
 		"\nlist options:\n"
