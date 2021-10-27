@@ -709,8 +709,7 @@ typedef struct s_model_s
 	int		numnorms;
 	s_normal_t	norm[MAXSTUDIOVERTS];
 
-	int		numsrcverts;
-	s_srcvertex_t	srcvert[MAXSRCSTUDIOVERTS];
+	CUtlArray<s_srcvertex_t> srcvert;
 
 	int		nummesh;
 	s_mesh_t		*pmesh[MAXSTUDIOMESHES];

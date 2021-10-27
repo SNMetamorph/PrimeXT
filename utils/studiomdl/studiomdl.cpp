@@ -753,10 +753,14 @@ void Grab_Triangles( s_model_t *pmodel )
 				COM_FatalError( "%s: error on line %d: %s", filename, linecount, line );
 			}
 
-			s_srcvertex_t	*srcv = &pmodel->srcvert[pmodel->numsrcverts];
+			pmodel->srcvert.AddToTail();
+			s_srcvertex_t	*srcv = &pmodel->srcvert[pmodel->srcvert.Count() - 1];
 			int		iCount = 0, bones[MAXSTUDIOSRCBONES];
 			float		weights[MAXSTUDIOSRCBONES];
 			s_boneweight_t	boneWeight;
+
+			// clean memory before use to avoid bug
+			memset(srcv, 0, sizeof(*srcv));
 
 			// get support for Source bone weights description
 			i = sscanf( line, "%d %f %f %f %f %f %f %f %f %d %d %f %d %f %d %f %d %f",
@@ -854,10 +858,7 @@ void Grab_Triangles( s_model_t *pmodel )
 			}
 
 			srcv->localWeight = boneWeight;
-			ptriv->vertindex = ptriv->normindex = pmodel->numsrcverts++;
-
-			if( pmodel->numsrcverts >= MAXSRCSTUDIOVERTS )
-				COM_FatalError( "too many source vertices in model: \"%s\"\n", pmodel->name );
+			ptriv->vertindex = ptriv->normindex = pmodel->srcvert.Count() - 1;
 
 			// tag bone as being used
 			// pmodel->bone[bone].ref = 1;
