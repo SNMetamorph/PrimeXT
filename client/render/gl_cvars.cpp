@@ -104,7 +104,7 @@ cvar_t *v_grayscale;
 void R_InitializeConVars()
 {
 	// setup some engine cvars for custom rendering
-	r_shadows = CVAR_REGISTER("r_shadows", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+	r_shadows = CVAR_REGISTER("r_shadows", "4", FCVAR_ARCHIVE);
 	r_shadow_split_weight = CVAR_REGISTER("r_pssm_split_weight", "0.9", FCVAR_ARCHIVE);
 	r_pssm_show_split = CVAR_REGISTER("r_pssm_show_split", "0", 0); // debug feature
 	r_scissor_glass_debug = CVAR_REGISTER("r_scissor_glass_debug", "0", FCVAR_ARCHIVE);
@@ -154,7 +154,7 @@ void R_InitializeConVars()
 	cv_bumpvecs = CVAR_REGISTER("bump_vecs", "0", 0);
 	cv_specular = CVAR_REGISTER("gl_specular", "1", FCVAR_ARCHIVE);
 	cv_dynamiclight = CVAR_REGISTER("gl_dynlight", "1", FCVAR_ARCHIVE);
-	cv_parallax = CVAR_REGISTER("gl_parallax", "1", FCVAR_ARCHIVE);
+	cv_parallax = CVAR_REGISTER("gl_parallax", "2", FCVAR_ARCHIVE);
 	cv_shadow_offset = CVAR_REGISTER("gl_shadow_offset", "0.02", FCVAR_ARCHIVE);
 	cv_deferred = CVAR_REGISTER("gl_deferred", "0", FCVAR_ARCHIVE);
 	cv_deferred_full = CVAR_REGISTER("gl_deferred_fullres_shadows", "0", FCVAR_ARCHIVE);
@@ -165,11 +165,11 @@ void R_InitializeConVars()
 	cv_water = CVAR_REGISTER("gl_waterblur", "1", FCVAR_ARCHIVE);
 	cv_decalsdebug = CVAR_REGISTER("gl_decals_debug", "0", FCVAR_ARCHIVE);
 	cv_realtime_puddles = CVAR_REGISTER("gl_realtime_puddles", "0", FCVAR_ARCHIVE);
-	r_sunshadows = CVAR_REGISTER("gl_sun_shadows", "0", FCVAR_ARCHIVE);
-	r_sun_allowed = CVAR_REGISTER("r_sun_allowed", "1", FCVAR_ARCHIVE);
-	r_sun_daytime = CVAR_REGISTER("r_sun_daytime", "1", FCVAR_CLIENTDLL);
-	r_shadowmap_size = CVAR_REGISTER("gl_shadowmap_size", "512", FCVAR_ARCHIVE);
-	r_occlusion_culling = CVAR_REGISTER("r_occlusion_culling", "0", FCVAR_ARCHIVE);
+	r_sunshadows = CVAR_REGISTER("gl_sun_shadows", "1", FCVAR_ARCHIVE);
+	r_sun_allowed = CVAR_REGISTER("r_sun_allowed", "0", FCVAR_ARCHIVE);
+	r_sun_daytime = CVAR_REGISTER("r_sun_daytime", "12", FCVAR_CLIENTDLL);
+	r_shadowmap_size = CVAR_REGISTER("gl_shadowmap_size", "1024", FCVAR_ARCHIVE);
+	r_occlusion_culling = CVAR_REGISTER("r_occlusion_culling", "1", FCVAR_ARCHIVE);
 	r_show_lightprobes = CVAR_REGISTER("r_show_lightprobes", "0", FCVAR_ARCHIVE);
 	r_show_cubemaps = CVAR_REGISTER("r_show_cubemaps", "0", FCVAR_ARCHIVE);
 	r_show_viewleaf = CVAR_REGISTER("r_show_viewleaf", "0", FCVAR_ARCHIVE);
@@ -180,7 +180,7 @@ void R_InitializeConVars()
 	r_allow_screens = CVAR_REGISTER("gl_allow_screens", "1", FCVAR_ARCHIVE);
 	r_studio_decals = CVAR_REGISTER("r_studio_decals", "32", FCVAR_ARCHIVE);
 	cv_show_tbn = CVAR_REGISTER("gl_show_basis", "0", FCVAR_ARCHIVE);
-	cv_brdf = CVAR_REGISTER("r_lighting_brdf", "1", FCVAR_ARCHIVE);
+	cv_brdf = CVAR_REGISTER("r_lighting_brdf", "0", FCVAR_ARCHIVE);
 
 	r_grass = CVAR_REGISTER("r_grass", "1", FCVAR_ARCHIVE);
 	r_grass_alpha = CVAR_REGISTER("r_grass_alpha", "0.5", FCVAR_ARCHIVE);
