@@ -253,6 +253,9 @@ typedef struct glsl_prog_s
 {
 	char		name[64];
 	char		options[MAX_OPTIONS_LENGTH];	// UberShader preprocess agrs
+	char		vp_name[64];
+	char		fp_name[64];
+	bool initialized;
 	GLhandleARB	handle;
 	unsigned short	status;
 	struct glsl_prog_s	*nextHash;

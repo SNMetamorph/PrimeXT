@@ -1057,6 +1057,7 @@ static void GL_FreeGPUShader( glsl_program_t *shader )
 		}
 
 		pglDeleteObjectARB( shader->handle );
+		shader->initialized = false;
 		memset( shader, 0, sizeof( *shader ));
 	}
 }
@@ -1078,8 +1079,11 @@ static glsl_program_t *GL_CreateUberShader( GLint slot, const char *glname, cons
 	shader->handle = pglCreateProgramObjectARB();
 	if( !shader->handle ) return NULL; // some bad happens
 
-	Q_strncpy( shader->name, glname, sizeof( shader->name ));
-	Q_strncpy( shader->options, options, sizeof( shader->options ));
+	shader->initialized = true;
+	Q_strncpy(shader->fp_name, fpname, sizeof(shader->fp_name));
+	Q_strncpy(shader->vp_name, vpname, sizeof(shader->vp_name));
+	Q_strncpy(shader->name, glname, sizeof(shader->name));
+	Q_strncpy(shader->options, options, sizeof(shader->options));
 
 	if( !GL_LoadGPUBinaryShader( shader, vpname, fpname, checksum ))
 	{
@@ -1155,7 +1159,7 @@ word GL_FindUberShader( const char *glname, const char *options )
 	int i;
 	// find free spot
 	for( i = 1; i < num_glsl_programs; i++ )
-		if( !glsl_programs[i].name[0] )
+		if( !glsl_programs[i].initialized )
 			break;
 
 	double start = Sys_DoubleTime();
@@ -1198,7 +1202,7 @@ word GL_FindShader( const char *glname, const char *vpname, const char *fpname, 
 	int i;
 	// find free spot
 	for( i = 1; i < num_glsl_programs; i++ )
-		if( !glsl_programs[i].name[0] )
+		if (!glsl_programs[i].initialized)
 			break;
 
 	double start = Sys_DoubleTime();
@@ -1306,7 +1310,7 @@ void GL_ListGPUShaders()
 	for( uint i = 1; i < num_glsl_programs; i++ )
 	{
 		glsl_program_t *cur = &glsl_programs[i];
-		if( !cur->name[0] ) continue;
+		if( !cur->initialized ) continue;
 
 		const char *options = GL_PretifyListOptions( cur->options );
 
@@ -1320,12 +1324,59 @@ void GL_ListGPUShaders()
 	Msg( "Total %i shaders\n", count );
 }
 
+void GL_ReloadShader(word shaderNum)
+{
+	glsl_program_t *shader = &glsl_programs[shaderNum];
+	if (shader && shader->handle)
+	{
+		uint		hash;
+		glsl_program_t *cur;
+		glsl_program_t **prev;
+		const char *find;
+
+		find = va("%s %s", shader->name, shader->options);
+		if (shader->uniforms != nullptr)
+		{
+			Mem_Free(shader->uniforms);
+			shader->uniforms = nullptr;
+			shader->numUniforms = 0;
+		}
+
+		// remove from hash table
+		hash = COM_HashKey(find, SHADERS_HASH_SIZE);
+		prev = &glsl_programsHashTable[hash];
+
+		while (1)
+		{
+			cur = *prev;
+			if (!cur) break;
+
+			if (cur == shader)
+			{
+				*prev = cur->nextHash;
+				break;
+			}
+			prev = &cur->nextHash;
+		}
+
+		// remove old stuff
+		pglDeleteObjectARB(shader->handle);
+		shader->initialized = false;
+		shader->handle = 0;
+		shader->status = 0;
+		shader->nextHash = nullptr;
+		shader->attribs = 0;
+		GL_FindShader(shader->name, shader->vp_name, shader->fp_name, shader->options);
+	}
+}
+
 void GL_ReloadShaders()
 {
-	GL_FreeUberShaders();
-	gEngfuncs.Con_Printf("GL_ReloadShaders: ubershaders reloading requested\n");
 	tr.params_changed = true;
-	InitPostShaders();
+	gEngfuncs.Con_Printf("GL_ReloadShaders: reloading requested\n");
+	
+	for (uint i = 1; i < num_glsl_programs; i++) 
+		GL_ReloadShader(i);
 }
 
 void GL_InitGPUShaders()
