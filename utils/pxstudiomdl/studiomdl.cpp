@@ -5394,10 +5394,17 @@ void ParseScript( void )
 	}
 }
 
+void PrintTitle()
+{
+	Msg("	PrimeXT Studio Model Compiler\n");
+	Msg("	Based on P2:Savior Studio Model Compiler\n");
+	Msg("	Copyright (^1c^7) XashXT Group 2018\n\n\n");
+}
+
 int main( int argc, char **argv )
 {
 	int	i;
-	char	path[1024];
+	static char path[1024];
 
 	atexit( Sys_CloseLog );
 	COM_InitCmdlib( argv, argc );
@@ -5423,10 +5430,7 @@ int main( int argc, char **argv )
 
 	if( argc == 1 )
 	{
-		Msg("	PrimeXT Studio Model Compiler\n");
-		Msg("	Based on P2:Savior Studio Model Compiler\n" );
-		Msg("	Copyright (^1c^7) XashXT Group 2018\n\n\n" );
-
+		PrintTitle();
 		Msg( "usage: studiomdl <options> file.qc\n"
 		"\nlist options:\n"
 		"^2-t^7 - replace all model textures with specified\n"
@@ -5444,9 +5448,7 @@ int main( int argc, char **argv )
 	}
 
 	Sys_InitLog( "studiomdl.log" );
-
-	Msg( "	    P2:Savior Studio Model Compiler\n" );
-	Msg( "		 XashXT Group 2018(^1c^7)\n\n\n" );
+	PrintTitle();
 
 	for( i = 1; i < argc - 1; i++ )
 	{
