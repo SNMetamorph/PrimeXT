@@ -1022,6 +1022,84 @@ void GL_InitModelLightCache( void )
 	GL_EndBuildingLightmaps( (worldmodel->lightdata != NULL), FBitSet( world->features, WORLD_HAS_DELUXEMAP ) ? true : false );
 }
 
+void GL_InitTempScreenFBO(void)
+{
+	GLenum	MRTBuffers[1] = { GL_COLOR_ATTACHMENT0_EXT };
+
+	if (!GL_Support(R_FRAMEBUFFER_OBJECT) || !GL_Support(R_DRAW_BUFFERS_EXT))
+		return;
+
+	if (!tr.screen_temp_fbo)
+		tr.screen_temp_fbo = GL_AllocDrawbuffer("*screen_temp_fbo", glState.width, glState.height, 1);
+	else
+		GL_ResizeDrawbuffer(tr.screen_temp_fbo, glState.width, glState.height, 1);
+
+	FREE_TEXTURE(tr.screen_temp_fbo_texture_color);
+	FREE_TEXTURE(tr.screen_temp_fbo_texture_depth);
+
+	tr.screen_temp_fbo_texture_color = CREATE_TEXTURE("*screen_temp_fbo_texture_color", glState.width, glState.height, NULL, TF_HAS_ALPHA | TF_ARB_16BIT | TF_CLAMP | TF_ARB_FLOAT);
+	tr.screen_temp_fbo_texture_depth = CREATE_TEXTURE("*screen_temp_fbo_texture_depth", glState.width, glState.height, NULL, TF_RT_DEPTH | TF_CLAMP);
+
+	GL_Bind(GL_TEXTURE0, tr.screen_temp_fbo_texture_color);
+	pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	pglEnable(GL_TEXTURE_2D);
+	pglGenerateMipmap(GL_TEXTURE_2D);
+	pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	GL_Bind(GL_TEXTURE0, 0);
+
+	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, tr.screen_temp_fbo->id);
+	pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, tr.screen_temp_fbo_texture_color, 0);
+	pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, tr.screen_temp_fbo_texture_depth, 0);
+	tr.screen_temp_fbo->colortarget[0] = tr.screen_temp_fbo_texture_color;
+	tr.screen_temp_fbo->depthtarget = tr.screen_temp_fbo_texture_depth;
+
+	// check the framebuffer status
+	GL_CheckFBOStatus(tr.screen_temp_fbo);
+
+	// mips
+	for (int i = 0; i <= 6; i++)
+	{
+		if (tr.screen_temp_fbo_mip[i] <= 0)
+			pglGenFramebuffers(1, &tr.screen_temp_fbo_mip[i]);
+		pglBindFramebuffer(GL_FRAMEBUFFER_EXT, tr.screen_temp_fbo_mip[i]);
+		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, tr.screen_temp_fbo_texture_color, i);
+	}
+
+	pglDrawBuffersARB(ARRAYSIZE(MRTBuffers), MRTBuffers);
+
+	FREE_TEXTURE(tr.screen_temp_fbo_msaa_texture_color);
+	FREE_TEXTURE(tr.screen_temp_fbo_msaa_texture_depth);
+
+	tr.screen_temp_fbo_msaa_texture_color = CREATE_TEXTURE("*screen_temp_fbo_msaa_texture_color", glState.width, glState.height, NULL, TF_NOMIPMAP | TF_HAS_ALPHA | TF_ARB_16BIT | TF_ARB_FLOAT);
+	tr.screen_temp_fbo_msaa_texture_depth = CREATE_TEXTURE("*screen_temp_fbo_msaa_texture_depth", glState.width, glState.height, NULL, TF_RT_DEPTH);
+
+	if (!tr.screen_temp_fbo_msaa)
+		tr.screen_temp_fbo_msaa = GL_AllocDrawbuffer("*screen_temp_fbo_msaa", glState.width, glState.height, 1);
+	else
+		GL_ResizeDrawbuffer(tr.screen_temp_fbo_msaa, glState.width, glState.height, 1);
+
+	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, tr.screen_temp_fbo_msaa->id);
+	pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, tr.screen_temp_fbo_msaa_texture_color, 0);
+	pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, tr.screen_temp_fbo_msaa_texture_depth, 0);
+	tr.screen_temp_fbo_msaa->colortarget[0] = tr.screen_temp_fbo_msaa_texture_color;
+	tr.screen_temp_fbo_msaa->depthtarget = tr.screen_temp_fbo_msaa_texture_depth;
+
+	// check the framebuffer status
+	GL_CheckFBOStatus(tr.screen_temp_fbo_msaa);
+}
+
+
+void GL_VidInitTempScreenFBO(void)
+{
+	GL_InitTempScreenFBO();
+
+	// unbind the framebuffer
+	GL_BindDrawbuffer(NULL);
+}
+
 /*
 ==================
 R_NewMap
@@ -1161,6 +1239,9 @@ void R_VidInit( void )
 
 	R_InitCommonTextures();
 	GL_VidInitDrawBuffers();
+	if (CVAR_TO_BOOL(gl_hdr)) {
+		GL_VidInitTempScreenFBO();
+	}
 }
 
 /*

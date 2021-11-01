@@ -461,6 +461,7 @@ enum
 	R_BINARY_SHADER_EXT,
 	R_PARANOIA_EXT,		// custom OpenGL32.dll with hacked function glDepthRange
 	R_DEBUG_OUTPUT,
+	R_KHR_DEBUG,
 	R_EXTCOUNT,		// must be last
 };
 
@@ -522,6 +523,7 @@ typedef struct
 
 	int		screen_color;
 	int		screen_depth;
+	gl_drawbuffer_t *screencopy_fbo;
 
 	int		grayTexture;
 	int		whiteTexture;
@@ -547,12 +549,22 @@ typedef struct
 	CFrameBuffer	fbo_filter;	// store filtered lightmap
 	CFrameBuffer	fbo_shadow;	// store shadowflags
 
+	// deffered rendering framebuffers
 	gl_drawbuffer_t	*defscene_fbo;
 	gl_drawbuffer_t	*deflight_fbo;
 	word		defSceneShader[2];	// geometry pass
 	word		defLightShader;	// light pass
 	word		defDynLightShader[2];// dynamic light pass
 	word		bilateralShader;	// upscale filter
+
+	// HDR rendering stuff
+	gl_drawbuffer_t *screen_temp_fbo;
+	gl_drawbuffer_t *screen_temp_fbo_msaa;
+	uint	screen_temp_fbo_mip[7];
+	uint	screen_temp_fbo_texture_color;
+	uint	screen_temp_fbo_texture_depth;
+	uint	screen_temp_fbo_msaa_texture_color;
+	uint	screen_temp_fbo_msaa_texture_depth;
 
 	// skybox shaders
 	word		skyboxEnv[2];	// skybox & sun
@@ -748,40 +760,42 @@ extern ref_globals_t	tr;
 //
 // gl_backend.cpp
 //
-void R_InitRefState( void );
-void R_PushRefState( void );
-void R_PopRefState( void );
-void R_ResetRefState( void );
-ref_instance_t *R_GetPrevInstance( void );
-void CompressNormalizedVector( char outVec[3], const Vector &inVec );
-bool GL_BackendStartFrame( ref_viewpass_t *rvp, RefParams params );
-void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params );
-int R_GetSpriteTexture( const model_t *m_pSpriteModel, int frame );
-void GL_BindDrawbuffer( gl_drawbuffer_t *framebuffer );
-void GL_DepthRange( GLfloat depthmin, GLfloat depthmax );
-void R_RenderQuadPrimitive( CSolidEntry *entry );
-void GL_LoadMatrix( const matrix4x4 &source );
-void GL_LoadTexMatrix( const matrix4x4 &source );
-void GL_BindFrameBuffer( int buffer, int texture );
-void R_Speeds_Printf( const char *msg, ... );
-int R_AllocFrameBuffer( int viewport[4] );
-void GL_CheckVertexArrayBinding( void );
-void R_FreeFrameBuffer( int buffer );
-void GL_CleanupAllTextureUnits( void );
-void GL_ComputeScreenRays( void );
-void GL_DisableAllTexGens( void );
-void GL_DepthMask( GLint enable );
-void GL_FrontFace( GLenum front );
-void GL_ClipPlane( bool enable );
-void GL_BindFBO( GLuint buffer );
-void GL_AlphaTest( GLint enable );
-void GL_DepthTest( GLint enable );
-void GL_CleanupDrawState( void );
-void GL_SetDefaultState( void );
-void GL_Blend( GLint enable );
-void GL_Cull( GLenum cull );
-void GL_Setup2D( void );
-void GL_Setup3D( void );
+void R_InitRefState(void);
+void R_PushRefState(void);
+void R_PopRefState(void);
+void R_ResetRefState(void);
+ref_instance_t *R_GetPrevInstance(void);
+void CompressNormalizedVector(char outVec[3], const Vector &inVec);
+bool GL_BackendStartFrame(ref_viewpass_t *rvp, RefParams params);
+void GL_BackendEndFrame(ref_viewpass_t *rvp, RefParams params);
+int R_GetSpriteTexture(const model_t *m_pSpriteModel, int frame);
+void GL_BindDrawbuffer(gl_drawbuffer_t *framebuffer);
+void GL_DepthRange(GLfloat depthmin, GLfloat depthmax);
+void R_RenderQuadPrimitive(CSolidEntry *entry);
+void GL_LoadMatrix(const matrix4x4 &source);
+void GL_LoadTexMatrix(const matrix4x4 &source);
+void GL_BindFrameBuffer(int buffer, int texture);
+void R_Speeds_Printf(const char *msg, ...);
+int R_AllocFrameBuffer(int viewport[4]);
+void GL_CheckVertexArrayBinding(void);
+void R_FreeFrameBuffer(int buffer);
+void GL_CleanupAllTextureUnits(void);
+void GL_ComputeScreenRays(void);
+void GL_DisableAllTexGens(void);
+void GL_DepthMask(GLint enable);
+void GL_FrontFace(GLenum front);
+void GL_ClipPlane(bool enable);
+void GL_BindFBO(GLuint buffer);
+void GL_AlphaTest(GLint enable);
+void GL_DepthTest(GLint enable);
+void GL_DebugGroupPush(const char *markerName);
+void GL_DebugGroupPop();
+void GL_CleanupDrawState(void);
+void GL_SetDefaultState(void);
+void GL_Blend(GLint enable);
+void GL_Cull(GLenum cull);
+void GL_Setup2D(void);
+void GL_Setup3D(void);
 
 //
 // gl_cubemaps.cpp
@@ -964,14 +978,17 @@ void R_DrawSkyBox( void );
 //
 // gl_postprocess.cpp
 //
-void InitPostTextures( void );
-void InitPostEffects( void );
-void RenderDOF( void );
-void RenderUnderwaterBlur( void );
-void RenderNerveGasBlur( void );
-void RenderMonochrome( void );
-void RenderSunShafts( void );
-void RenderFSQ( int wide, int tall );
+void InitPostShaders();
+void InitPostTextures();
+void InitPostEffects();
+void RenderDOF();
+void RenderUnderwaterBlur();
+void RenderNerveGasBlur();
+void RenderMonochrome();
+void RenderSunShafts();
+void RenderBloom();
+void RenderTonemap();
+void RenderFSQ(int wide, int tall);
 
 //
 // gl_world_new.cpp

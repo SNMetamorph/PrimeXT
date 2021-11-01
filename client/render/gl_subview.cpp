@@ -605,6 +605,7 @@ void R_RenderSubview( void )
 	if( !RI->frame.num_subview_faces )
 		return; // nothing to render
 
+	GL_DebugGroupPush(__FUNCTION__);
 	R_PushRefState(); // make refinst backup
 	prevRI = R_GetPrevInstance();
 
@@ -682,4 +683,5 @@ void R_RenderSubview( void )
 	}
 
 	R_PopRefState(); // restore ref instance
+	GL_DebugGroupPop();
 }

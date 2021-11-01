@@ -39,6 +39,10 @@ cvar_t *r_overview;
 cvar_t *r_novis;
 cvar_t *r_nocull;
 cvar_t *r_lockpvs;
+cvar_t *gl_hdr;
+cvar_t *r_tonemap;
+cvar_t *r_tonemap_exposure;
+cvar_t *r_bloom;
 cvar_t *r_dof;
 cvar_t *r_dof_hold_time;
 cvar_t *r_dof_change_time;
@@ -141,7 +145,7 @@ void R_InitializeConVars()
 	r_polyoffset = CVAR_GET_POINTER("gl_polyoffset");
 
 	v_glows = CVAR_REGISTER("gl_glows", "1", FCVAR_ARCHIVE);
-
+	gl_hdr = CVAR_REGISTER("gl_hdr", "1", FCVAR_GLCONFIG);
 	r_dof = CVAR_REGISTER("r_dof", "1", FCVAR_ARCHIVE);
 	r_dof_hold_time = CVAR_REGISTER("r_dof_hold_time", "0.2", FCVAR_ARCHIVE);
 	r_dof_change_time = CVAR_REGISTER("r_dof_change_time", "0.8", FCVAR_ARCHIVE);

@@ -385,6 +385,102 @@ int R_ComputeFxBlend( cl_entity_t *e )
 	return blend;
 }
 
+static bool R_HandleLightEntity(cl_entity_t *ent)
+{
+	// not light entity
+	if (ent->curstate.renderfx != kRenderFxDynamicLight &&
+		ent->curstate.renderfx != kRenderFxCinemaLight)
+	{
+		return false;
+	}
+
+	float radius = ent->curstate.renderamt * 8.0f;
+	float fov = ent->curstate.scale;
+	float brightness = ent->curstate.framerate;
+	CDynLight *dlight = CL_AllocDlight(ent->curstate.number);
+	int tex = 0, flags = 0, type = 0;
+	Vector origin, angles;
+
+	if (ent->curstate.renderfx == kRenderFxDynamicLight) // dynamic light
+	{
+		if (fov) // spotlight
+		{
+			int i = bound(0, ent->curstate.rendermode, 7);
+			tex = tr.spotlightTexture[i];
+			type = LIGHT_SPOT;
+		}
+		else 
+			type = LIGHT_OMNI;
+
+		if (ent->curstate.effects & EF_NOSHADOW)
+			flags |= DLF_NOSHADOWS;
+
+		if (ent->curstate.effects & EF_NOBUMP)
+			flags |= DLF_NOBUMP;
+
+		if (ent->curstate.effects & EF_LENSFLARE)
+			flags |= DLF_LENSFLARE;
+	}
+	else if (ent->curstate.renderfx == kRenderFxCinemaLight) // dynamic light with avi file
+	{
+		if (!ent->curstate.sequence)
+			return true; // bad avi file
+
+		if (dlight->spotlightTexture == tr.spotlightTexture[1])
+			return true; // bad avi file
+
+		flags = DLF_ASPECT3X4;	// fit to film01.avi aspect
+		type = LIGHT_SPOT;
+
+		// found the corresponding cinstate
+		const char *cinname = gRenderfuncs.GetFileByIndex(ent->curstate.sequence);
+		int hCin = R_PrecacheCinematic(cinname);
+
+		if (hCin >= 0 && !dlight->cinTexturenum)
+			dlight->cinTexturenum = R_AllocateCinematicTexture(TF_SPOTLIGHT);
+
+		if (hCin == -1 || dlight->cinTexturenum <= 0 || !CIN_IS_ACTIVE(tr.cinematics[hCin].state))
+		{
+			// cinematic textures limit exceeded or movie not found
+			dlight->spotlightTexture = tr.spotlightTexture[1];
+			return true;
+		}
+
+		gl_movie_t *cin = &tr.cinematics[hCin];
+
+		// advances cinematic time
+		float cin_time = fmod(ent->curstate.fuser2, cin->length);
+
+		// read the next frame
+		int cin_frame = CIN_GET_FRAME_NUMBER(cin->state, cin_time);
+		if (cin_frame != dlight->lastframe)
+		{
+			// upload the new frame
+			byte *raw = CIN_GET_FRAMEDATA(cin->state, cin_frame);
+			CIN_UPLOAD_FRAME(tr.cinTextures[dlight->cinTexturenum - 1], cin->xres, cin->yres, cin->xres, cin->yres, raw);
+			dlight->lastframe = cin_frame;
+		}
+
+		if (ent->curstate.effects & EF_NOSHADOW)
+			flags |= DLF_NOSHADOWS;
+
+		if (ent->curstate.effects & EF_NOBUMP)
+			flags |= DLF_NOBUMP;
+
+		tex = tr.cinTextures[dlight->cinTexturenum - 1];
+	}
+
+	R_GetLightVectors(ent, origin, angles);
+	R_SetupLightParams(dlight, origin, angles, radius, fov, type, flags);
+	R_SetupLightTexture(dlight, tex);
+
+	dlight->color[0] = (ent->curstate.rendercolor.r / 255.f) * brightness;
+	dlight->color[1] = (ent->curstate.rendercolor.g / 255.f) * brightness;
+	dlight->color[2] = (ent->curstate.rendercolor.b / 255.f) * brightness;
+	dlight->die = tr.time + 0.05f;
+
+	return true; // no reason to drawing this entity
+}
 /*
 ===============
 R_AddEntity
@@ -408,106 +504,8 @@ qboolean R_AddEntity( struct cl_entity_s *clent, int entityType )
 		tr.local_client_added = true;
 	}
 
-	if( clent->curstate.renderfx == 71 ) // dynamic light
-	{
-		CDynLight *dl = CL_AllocDlight( clent->curstate.number );
-
-		float radius = clent->curstate.renderamt * 8.0f;
-		float fov = clent->curstate.scale;
-		int tex = 0, flags = 0, type;
-		Vector origin, angles;
-
-		if( clent->curstate.scale ) // spotlight
-		{
-			int i = bound( 0, clent->curstate.rendermode, 7 );
-			tex = tr.spotlightTexture[i];
-			type = LIGHT_SPOT;
-		}		
-		else type = LIGHT_OMNI;
-
-		if( clent->curstate.effects & EF_NOSHADOW )
-			flags |= DLF_NOSHADOWS;
-
-		if( clent->curstate.effects & EF_NOBUMP )
-			flags |= DLF_NOBUMP;
-
-		if( clent->curstate.effects & EF_LENSFLARE )
-			flags |= DLF_LENSFLARE;
-
-		R_GetLightVectors( clent, origin, angles );
-		R_SetupLightParams( dl, origin, angles, radius, clent->curstate.scale, type, flags );
-		R_SetupLightTexture( dl, tex );
-
-		dl->color[0] = (float)clent->curstate.rendercolor.r / 128;
-		dl->color[1] = (float)clent->curstate.rendercolor.g / 128;
-		dl->color[2] = (float)clent->curstate.rendercolor.b / 128;
-		dl->die = tr.time + 0.05f;
-
-		return true; // no reason to drawing this entity
-          }
-	else if( clent->curstate.renderfx == 72 ) // dynamic light with avi file
-	{
-		if( !clent->curstate.sequence )
-			return true; // bad avi file
-
-		CDynLight *dl = CL_AllocDlight( clent->curstate.number );
-
-		if( dl->spotlightTexture == tr.spotlightTexture[1] )
-			return true; // bad avi file
-
-		float radius = clent->curstate.renderamt * 8.0f;
-		float fov = clent->curstate.scale;
-		Vector origin, angles;
-		int flags = DLF_ASPECT3X4;	// fit to film01.avi aspect
-
-		// found the corresponding cinstate
-		const char *cinname = gRenderfuncs.GetFileByIndex( clent->curstate.sequence );
-		int hCin = R_PrecacheCinematic( cinname );
-
-		if( hCin >= 0 && !dl->cinTexturenum )
-			dl->cinTexturenum = R_AllocateCinematicTexture( TF_SPOTLIGHT );
-
-		if( hCin == -1 || dl->cinTexturenum <= 0 || !CIN_IS_ACTIVE( tr.cinematics[hCin].state ))
-		{
-			// cinematic textures limit exceeded or movie not found
-			dl->spotlightTexture = tr.spotlightTexture[1];
-			return true;
-		}
-
-		gl_movie_t *cin = &tr.cinematics[hCin];
-		float cin_time;
-
-		// advances cinematic time
-		cin_time = fmod( clent->curstate.fuser2, cin->length );
-
-		// read the next frame
-		int cin_frame = CIN_GET_FRAME_NUMBER( cin->state, cin_time );
-
-		if( cin_frame != dl->lastframe )
-		{
-			// upload the new frame
-			byte *raw = CIN_GET_FRAMEDATA( cin->state, cin_frame );
-			CIN_UPLOAD_FRAME( tr.cinTextures[dl->cinTexturenum-1], cin->xres, cin->yres, cin->xres, cin->yres, raw );
-			dl->lastframe = cin_frame;
-		}
-
-		if( clent->curstate.effects & EF_NOSHADOW )
-			flags |= DLF_NOSHADOWS;
-
-		if( clent->curstate.effects & EF_NOBUMP )
-			flags |= DLF_NOBUMP;
-
-		R_GetLightVectors( clent, origin, angles );
-		R_SetupLightParams( dl, origin, angles, radius, clent->curstate.scale, LIGHT_SPOT, flags );
-		R_SetupLightTexture( dl, tr.cinTextures[dl->cinTexturenum-1] );
-
-		dl->color[0] = (float)clent->curstate.rendercolor.r / 128;
-		dl->color[1] = (float)clent->curstate.rendercolor.g / 128;
-		dl->color[2] = (float)clent->curstate.rendercolor.b / 128;
-		dl->die = GET_CLIENT_TIME() + 0.05f;
-
-		return true; // no reason to drawing this entity
-          }
+	if (R_HandleLightEntity(clent))
+		return true;
 
 	if( clent->curstate.effects & EF_SCREENMOVIE )
 	{

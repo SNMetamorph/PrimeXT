@@ -755,6 +755,8 @@ enum
 	kRenderFxGlowShell,			// Glowing Shell
 	kRenderFxClampMinScale,		// Keep this sprite from getting very small (SPRITES only!)
 	kRenderFxAurora,			// set particle trail for this entity
+	kRenderFxDynamicLight = 71, // Used for mark dynamic light source entity
+	kRenderFxCinemaLight = 72	// Dynamic light with avi file
 };
 
 typedef int		string_t;

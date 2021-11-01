@@ -436,8 +436,9 @@ GL_BackendEndFrame
 void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 {
 	mstudiolight_t	light;
-
+	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
 	tr.frametime = tr.saved_frametime;
+	GL_DebugGroupPush(__FUNCTION__);
 
 	// go into 2D mode (in case we draw PlayerSetup between two 2d calls)
 	if( !FBitSet( params, RP_DRAW_WORLD ))
@@ -466,30 +467,54 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	R_PushRefState();
 	RI->params = params;
 	RI->view.fov_x = rvp->fov_x;
-	RI->view.fov_y = rvp->fov_y;
+	RI->view.fov_y = rvp->fov_y; 
 
 	if( !CVAR_TO_BOOL( cv_deferred ))
 		R_DrawViewModel();		// 3D
 
-	RenderSunShafts();			// 2D
-	RenderDOF();			// 2D
+	if (hdr_rendering)
+	{
+		// copy image from multisampling framebuffer to screen framebuffer
+		pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, tr.screen_temp_fbo->id);
+		pglBindFramebuffer(GL_READ_FRAMEBUFFER, tr.screen_temp_fbo_msaa->id);
+		pglBlitFramebuffer(0, 0, glState.width, glState.height, 0, 0, glState.width, glState.height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		GL_BindFBO(tr.screen_temp_fbo->id);
+	}
 
+	RenderSunShafts();			// 2D
+	RenderDOF();				// 2D
 	RenderNerveGasBlur();		// 2D
 	RenderUnderwaterBlur();		// 2D
+	if (hdr_rendering)
+	{
+		RenderBloom();
+		RenderTonemap();		// should be last step!!!
+	}
 
-	if( !CVAR_TO_BOOL( cv_deferred ))
-		R_DrawHeadShield();		// 3D
+	//if( !CVAR_TO_BOOL( cv_deferred ))
+	//	R_DrawHeadShield();		// 3D
 	R_RenderDebugStudioList( true );	// 3D
 
 	RenderMonochrome();			// 2D
 	R_ShowLightMaps();			// 2D
 
-	//if( g_iGunMode == 3 ) // when using iron sight on weapon???
-	//{
-	//	// used for lighting scope
-	//	R_LightVec( rvp->vieworigin, &light, true );
-	//	tr.ambientLight = light.diffuse;
-	//}
+	// render screen quad 
+	if (hdr_rendering)
+	{
+		GL_DebugGroupPush("R_RenderScreenFBO");
+		// copy depth from HDR framebuffer to screen framebuffer
+		pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, FBO_MAIN);
+		pglBindFramebuffer(GL_READ_FRAMEBUFFER, tr.screen_temp_fbo->id);
+		pglBlitFramebuffer(0, 0, glState.width, glState.height, 0, 0, glState.width, glState.height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		GL_BindFBO(FBO_MAIN);
+		GL_Setup2D();
+		GL_Bind(GL_TEXTURE0, tr.screen_temp_fbo->colortarget[0]);
+		RenderFSQ(glState.width, glState.height);
+		GL_Bind(GL_TEXTURE0, 0);
+		GL_Setup3D();
+		GL_Blend(GL_TRUE);
+		GL_DebugGroupPop();
+	}
 
 	GL_CleanupDrawState();
 	R_PopRefState();
@@ -498,7 +523,7 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	GL_PrintStats( params );
 
 	R_UnloadFarGrass();
-
+	GL_DebugGroupPop();
 	tr.params_changed = false;
 	tr.realframecount++;
 
@@ -825,6 +850,20 @@ void GL_DepthTest( GLint enable )
 
 	if( enable ) pglEnable( GL_DEPTH_TEST );
 	else pglDisable( GL_DEPTH_TEST );
+}
+
+void GL_DebugGroupPush(const char *markerName)
+{
+	if (developer_level > 0 && GL_Support(R_KHR_DEBUG)) {
+		pglPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION_ARB, 0, -1, markerName);
+	}
+}
+
+void GL_DebugGroupPop()
+{
+	if (developer_level > 0 && GL_Support(R_KHR_DEBUG)) {
+		pglPopDebugGroup();
+	}
 }
 
 /*

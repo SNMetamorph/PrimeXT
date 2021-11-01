@@ -331,6 +331,7 @@ void R_DrawSkyBox( void )
 	if( !FBitSet( RI->view.flags, RF_SKYVISIBLE ))
 		return;
 
+	GL_DebugGroupPush(__FUNCTION__);
 	GL_DepthRange( 0.9f, 1.0f );
 	GL_DepthMask( GL_FALSE );
 	GL_Blend( GL_FALSE );
@@ -371,4 +372,5 @@ void R_DrawSkyBox( void )
 
 	// back to normal depth range
 	GL_DepthRange( gldepthmin, gldepthmax );
+	GL_DebugGroupPop();
 }

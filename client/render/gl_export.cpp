@@ -184,6 +184,17 @@ static dllfunc_t debugoutputfuncs[] =
 { NULL, NULL }
 };
 
+static dllfunc_t khr_debug_funcs[] =
+{
+{ "glGetObjectLabel"	, (void **)&pglGetObjectLabel },
+{ "glGetObjectPtrLabel"	, (void **)&pglGetObjectPtrLabel },
+{ "glObjectLabel"		, (void **)&pglObjectLabel },
+{ "glObjectPtrLabel"	, (void **)&pglObjectPtrLabel },
+{ "glPopDebugGroup"		, (void **)&pglPopDebugGroup },
+{ "glPushDebugGroup"	, (void **)&pglPushDebugGroup },
+{ NULL, NULL }
+};
+
 static dllfunc_t multitexturefuncs[] =
 {
 { "glMultiTexCoord1fARB"     , (void **)&pglMultiTexCoord1f },
@@ -318,6 +329,7 @@ static dllfunc_t fbofuncs[] =
 { "glGetRenderbufferParameteriv"          , (void **)&pglGetRenderbufferParameteriv },
 { "glIsFramebuffer"                       , (void **)&pglIsFramebuffer },
 { "glBindFramebuffer"                     , (void **)&pglBindFramebuffer },
+{ "glBlitFramebuffer"                     , (void **)&pglBlitFramebuffer },
 { "glDeleteFramebuffers"                  , (void **)&pglDeleteFramebuffers },
 { "glGenFramebuffers"                     , (void **)&pglGenFramebuffers },
 { "glCheckFramebufferStatus"              , (void **)&pglCheckFramebufferStatus },
@@ -363,6 +375,17 @@ static void CALLBACK GL_DebugOutput(GLenum source, GLenum type, GLuint id, GLenu
 	char		*msg;
 
 	string[0] = '\0';
+
+	if (GL_Support(R_KHR_DEBUG))
+	{
+		switch (type)
+		{
+			case GL_DEBUG_TYPE_MARKER:
+			case GL_DEBUG_TYPE_PUSH_GROUP:
+			case GL_DEBUG_TYPE_POP_GROUP:
+				return; // ignore debug group messages because they needed only for graphics profiler
+		}
+	}
 
 	switch( type )
 	{
@@ -620,7 +643,8 @@ static void GL_InitExtensions( void )
 	if( !GL_Support( R_EXT_GPU_SHADER4 ))
 		ALERT( at_warning, "GL_EXT_gpu_shader4 not support. Shadows from omni lights will be disabled\n" );
 
-	GL_CheckExtension( "GL_ARB_debug_output", debugoutputfuncs, "gl_debug_output", R_DEBUG_OUTPUT, true );
+	GL_CheckExtension("GL_ARB_debug_output", debugoutputfuncs, "gl_debug_output", R_DEBUG_OUTPUT);
+	GL_CheckExtension("GL_KHR_debug", khr_debug_funcs, "gl_khr_debug", R_KHR_DEBUG);
 
 	// vp and fp shaders
 	GL_CheckExtension( "GL_ARB_shader_objects", shaderobjectsfuncs, "gl_shaderobjects", R_SHADER_OBJECTS_EXT );
@@ -716,23 +740,23 @@ static void GL_InitExtensions( void )
 
 	glConfig.max_texture_units = RENDER_GET_PARM( PARM_MAX_IMAGE_UNITS, 0 );
 
-	if( GL_Support( R_DEBUG_OUTPUT ))
+	if (GL_Support(R_KHR_DEBUG)) {
+		pglEnable(GL_DEBUG_OUTPUT);
+	}
+
+	if (GL_Support(R_DEBUG_OUTPUT))
 	{
-		if( developer_level >= 2 )
+		if (developer_level >= DEV_NORMAL)
 		{
-			pglDebugMessageCallbackARB( GL_DebugOutput, NULL );
-		}
-
-		if( developer_level >= 3 )
-		{
+			pglDebugMessageCallbackARB(GL_DebugOutput, NULL);
 			// force everything to happen in the main thread instead of in a separate driver thread
-			pglEnable( GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB );
+			pglEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
 		}
 
-		if( developer_level >= 4 )
+		if (developer_level >= DEV_EXTENDED)
 		{
 			// enable all the low priority messages
-			pglDebugMessageControlARB( GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW_ARB, 0, NULL, true );
+			pglDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW_ARB, 0, NULL, true);
 		}
 	}
 }
