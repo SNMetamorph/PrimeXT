@@ -1077,7 +1077,7 @@ int HUD_RenderFrame( const struct ref_viewpass_s *rvp )
 {
 	RefParams refParams = RP_NONE;
 	ref_viewpass_t defVP = *rvp;
-	bool hdr_rendering = CVAR_TO_BOOL(r_hdr);
+	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
 
 	// setup some renderer flags
 	if( !FBitSet( rvp->flags, RF_DRAW_CUBEMAP ))

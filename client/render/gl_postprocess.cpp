@@ -68,7 +68,7 @@ public:
 void CBasePostEffects :: InitScreenColor( void )
 {
 	int tex_flags = 0;
-	bool hdr_rendering = CVAR_TO_BOOL(r_hdr);
+	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
 
 	if (tr.screen_color)
 	{
@@ -94,7 +94,7 @@ void CBasePostEffects :: InitScreenColor( void )
 
 void CBasePostEffects :: InitScreenDepth( void )
 {
-	bool hdr_rendering = CVAR_TO_BOOL(r_hdr);
+	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
 	if (tr.screen_depth)
 	{
 		FREE_TEXTURE(tr.screen_depth);
@@ -116,7 +116,7 @@ void CBasePostEffects :: InitScreenDepth( void )
 void CBasePostEffects :: InitTargetColor( int slot )
 {
 	int tex_flags = 0;
-	bool hdr_rendering = CVAR_TO_BOOL(r_hdr);
+	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
 
 	if( target_rgb[slot] )
 	{
@@ -134,11 +134,10 @@ void CBasePostEffects :: InitTargetColor( int slot )
 
 void CBasePostEffects :: RequestScreenColor( void )
 {
-	bool hdr_rendering = CVAR_TO_BOOL(r_hdr);
+	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
 	if (hdr_rendering)
 	{
 		pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, tr.screencopy_fbo->id);
-		//pglBindFramebuffer(GL_READ_FRAMEBUFFER, tr.screen_temp_fbo_msaa);
 		pglBlitFramebuffer(0, 0, glState.width, glState.height, 0, 0, glState.width, glState.height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
 	}
@@ -151,11 +150,10 @@ void CBasePostEffects :: RequestScreenColor( void )
 
 void CBasePostEffects :: RequestScreenDepth( void )
 {
-	bool hdr_rendering = CVAR_TO_BOOL(r_hdr);
+	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
 	if (hdr_rendering)
 	{
 		pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, tr.screencopy_fbo->id);
-		//pglBindFramebuffer(GL_READ_FRAMEBUFFER, tr.screen_temp_fbo_msaa);
 		pglBlitFramebuffer(0, 0, glState.width, glState.height, 0, 0, glState.width, glState.height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 		pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
 	}
@@ -380,9 +378,9 @@ void InitPostEffects( void )
 	v_posteffects = CVAR_REGISTER( "gl_posteffects", "1", FCVAR_ARCHIVE );
 	v_sunshafts = CVAR_REGISTER( "gl_sunshafts", "1", FCVAR_ARCHIVE );
 	v_grayscale = CVAR_REGISTER( "gl_grayscale", "0", 0 );
-	r_hdr_tonemap = CVAR_REGISTER("r_hdr_tonemap", "1", FCVAR_ARCHIVE);
-	r_hdr_exposure = CVAR_REGISTER("r_hdr_exposure", "1", FCVAR_ARCHIVE);
-	r_hdr_bloom = CVAR_REGISTER("r_hdr_bloom", "1", FCVAR_ARCHIVE);
+	r_tonemap = CVAR_REGISTER("r_tonemap", "1", FCVAR_ARCHIVE);
+	r_tonemap_exposure = CVAR_REGISTER("r_tonemap_exposure", "1", FCVAR_ARCHIVE);
+	r_bloom = CVAR_REGISTER("r_bloom", "1", FCVAR_ARCHIVE);
 	memset( &post, 0, sizeof( post ));
 	InitPostShaders();
 }
@@ -523,7 +521,7 @@ void V_RenderPostEffect( word hProgram )
 			u->SetValue( post.m_flLastLength );
 			break;
 		case UT_EXPOSURE:
-			u->SetValue(r_hdr_exposure->value);
+			u->SetValue(r_tonemap_exposure->value);
 			break;
 		case UT_DOFDEBUG:
 			u->SetValue( CVAR_TO_BOOL( r_dof_debug ));
@@ -680,7 +678,7 @@ void RenderSunShafts( void )
 
 void RenderBloom()
 {
-	if (!CVAR_TO_BOOL(r_hdr_bloom))
+	if (!CVAR_TO_BOOL(r_bloom))
 		return;
 
 	if (FBitSet(RI->params, RP_ENVVIEW)) // no bloom in cubemaps
@@ -774,7 +772,7 @@ void RenderBloom()
 
 void RenderTonemap()
 {
-	if (!CVAR_TO_BOOL(r_hdr_tonemap))
+	if (!CVAR_TO_BOOL(r_tonemap))
 		return;
 
 	GL_DebugGroupPush(__FUNCTION__);

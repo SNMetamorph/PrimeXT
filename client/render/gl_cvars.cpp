@@ -39,10 +39,10 @@ cvar_t *r_overview;
 cvar_t *r_novis;
 cvar_t *r_nocull;
 cvar_t *r_lockpvs;
-cvar_t *r_hdr;
-cvar_t *r_hdr_tonemap;
-cvar_t *r_hdr_exposure;
-cvar_t *r_hdr_bloom;
+cvar_t *gl_hdr;
+cvar_t *r_tonemap;
+cvar_t *r_tonemap_exposure;
+cvar_t *r_bloom;
 cvar_t *r_dof;
 cvar_t *r_dof_hold_time;
 cvar_t *r_dof_change_time;
@@ -108,7 +108,7 @@ cvar_t *v_grayscale;
 void R_InitializeConVars()
 {
 	// setup some engine cvars for custom rendering
-	r_shadows = CVAR_REGISTER("r_shadows", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+	r_shadows = CVAR_REGISTER("r_shadows", "0", FCVAR_ARCHIVE);
 	r_shadow_split_weight = CVAR_REGISTER("r_pssm_split_weight", "0.9", FCVAR_ARCHIVE);
 	r_pssm_show_split = CVAR_REGISTER("r_pssm_show_split", "0", 0); // debug feature
 	r_scissor_glass_debug = CVAR_REGISTER("r_scissor_glass_debug", "0", FCVAR_ARCHIVE);
@@ -145,7 +145,7 @@ void R_InitializeConVars()
 	r_polyoffset = CVAR_GET_POINTER("gl_polyoffset");
 
 	v_glows = CVAR_REGISTER("gl_glows", "1", FCVAR_ARCHIVE);
-	r_hdr = CVAR_REGISTER("r_hdr", "1", FCVAR_GLCONFIG);
+	gl_hdr = CVAR_REGISTER("gl_hdr", "1", FCVAR_GLCONFIG);
 	r_dof = CVAR_REGISTER("r_dof", "1", FCVAR_ARCHIVE);
 	r_dof_hold_time = CVAR_REGISTER("r_dof_hold_time", "0.2", FCVAR_ARCHIVE);
 	r_dof_change_time = CVAR_REGISTER("r_dof_change_time", "0.8", FCVAR_ARCHIVE);

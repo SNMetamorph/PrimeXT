@@ -436,7 +436,7 @@ GL_BackendEndFrame
 void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 {
 	mstudiolight_t	light;
-	bool hdr_rendering = CVAR_TO_BOOL(r_hdr);
+	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
 	tr.frametime = tr.saved_frametime;
 	GL_DebugGroupPush(__FUNCTION__);
 

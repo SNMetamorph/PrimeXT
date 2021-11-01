@@ -1239,7 +1239,7 @@ void R_VidInit( void )
 
 	R_InitCommonTextures();
 	GL_VidInitDrawBuffers();
-	if (CVAR_TO_BOOL(r_hdr)) {
+	if (CVAR_TO_BOOL(gl_hdr)) {
 		GL_VidInitTempScreenFBO();
 	}
 }
