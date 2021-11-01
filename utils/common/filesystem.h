@@ -20,6 +20,7 @@ GNU General Public License for more details.
 #include <wadfile.h>
 
 #define FILE_BUFF_SIZE	(65535)
+#define WAD3_NAMELEN	16
 
 // replace lumps in a wad
 #define REP_IGNORE		0
@@ -75,6 +76,18 @@ typedef struct vfile_s
 	size_t		length;
 	size_t		offset;
 } vfile_t;
+
+typedef struct
+{
+	int		filepos;		// file offset in WAD
+	int		disksize;		// compressed or uncompressed
+	int		size;		// uncompressed
+	signed char		type;
+	signed char		attribs;		// file attribs
+	signed char		img_type;		// IMG_*
+	signed char		pad;
+	char		name[WAD3_NAMELEN];		// must be null terminated
+} dlumpinfo_t;
 
 extern const wadtype_t wad_hints[];
 

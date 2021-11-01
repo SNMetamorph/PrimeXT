@@ -257,7 +257,7 @@ void MakeStaticProp( void )
 		Vector mins, maxs;
 		ClearBounds( mins, maxs );
 
-		for( j = 0; j < pmodel->numsrcverts; j++ )
+		for( j = 0; j < pmodel->srcvert.Count(); j++ )
 		{
 			for( k = 0; k < pmodel->srcvert[j].localWeight.numbones; k++ )
 			{
@@ -294,7 +294,7 @@ void MakeStaticProp( void )
 				centerOffset = -0.5f * (mins + maxs);
 			}
 
-			for( j = 0; j < pmodel->numsrcverts; j++ )
+			for( j = 0; j < pmodel->srcvert.Count(); j++ )
 			{
 				pmodel->srcvert[j].vert += centerOffset;
 			}
@@ -393,7 +393,7 @@ void TagUsedBones( void )
 			pmodel->boneref[k] = 0;
 		}
 
-		for( j = 0; j < pmodel->numsrcverts; j++ )
+		for( j = 0; j < pmodel->srcvert.Count(); j++ )
 		{
 			for( k = 0; k < pmodel->srcvert[j].localWeight.numbones; k++ )
 			{
@@ -1470,15 +1470,16 @@ void RemapVertices( void )
 
 	for( i = 0; i < g_nummodels; i++ )
 	{
+		int m;
 		matrix3x4	srcBoneToWorld[MAXSTUDIOSRCBONES];
 		matrix3x4	destBoneToWorld[MAXSTUDIOSRCBONES];
 		Vector	tmp1, tmp2, vdest, ndest;
 		s_model_t	*pmodel = g_model[i];
-
+		
 		BuildRawTransforms( pmodel, g_vecZero, g_radZero, srcBoneToWorld );
 		TranslateAnimations( pmodel->boneGlobalToLocal, srcBoneToWorld, destBoneToWorld );
 
-		for( j = 0; j < pmodel->numsrcverts; j++ )
+		for( j = 0; j < pmodel->srcvert.Count(); j++ )
 		{
 			vdest.Init();
 			ndest.Init();
@@ -1496,7 +1497,7 @@ void RemapVertices( void )
 					break; // staticprop
 				}
 
-				for( int m = 0; m < pmodel->srcvert[j].globalWeight.numbones; m++ )
+				for( m = 0; m < pmodel->srcvert[j].globalWeight.numbones; m++ )
 				{
 					if( k == pmodel->srcvert[j].globalWeight.bone[m] )
 					{
@@ -4220,7 +4221,7 @@ static void CalcSequenceBoundingBoxes( void )
 			// include vertices
 			for( k = 0; k < g_nummodels; k++ )
 			{
-				for( j = 0; j < g_model[k]->numsrcverts; j++ )
+				for( j = 0; j < g_model[k]->srcvert.Count(); j++ )
 				{
 					s_srcvertex_t *v = &g_model[k]->srcvert[j];
 					pos = g_vecZero;
@@ -4450,7 +4451,7 @@ static void SetupHitBoxes( void )
 		{
 			Vector	p;
 
-			for( j = 0; j < g_model[i]->numsrcverts; j++ )
+			for( j = 0; j < g_model[i]->srcvert.Count(); j++ )
 			{
 				for( n = 0; n < g_model[i]->srcvert[j].globalWeight.numbones; n++ )
 				{

@@ -206,6 +206,7 @@ void MsgAnim( int level, const char *pMsg, ... )
 	va_list	argptr;
 	char	text[1024];
 	char	empty[1024];
+	int		j;
 
 	if( devloper_level < level ) return;
 
@@ -214,7 +215,7 @@ void MsgAnim( int level, const char *pMsg, ... )
 	va_end( argptr );
 
 	// fill clear string
-	for( int j = 0; j < Q_strlen( text ); j++ )
+	for( j = 0; j < Q_strlen( text ); j++ )
 		empty[j] = ' ';
 	empty[j] = '\r';
 	empty[j+1] = '\0';

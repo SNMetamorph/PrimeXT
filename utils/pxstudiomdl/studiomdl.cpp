@@ -22,8 +22,8 @@ GNU General Public License for more details.
 #define EXTERN
 #include "studio.h"
 #include "studiomdl.h"
-#include <activity.h>
-#include <activitymap.h>
+#include "activity.h"
+#include "activitymap.h"
 
 CUtlArray< char >	g_KeyValueText;
 char		filename[1024];
@@ -753,10 +753,14 @@ void Grab_Triangles( s_model_t *pmodel )
 				COM_FatalError( "%s: error on line %d: %s", filename, linecount, line );
 			}
 
-			s_srcvertex_t	*srcv = &pmodel->srcvert[pmodel->numsrcverts];
+			pmodel->srcvert.AddToTail();
+			s_srcvertex_t	*srcv = &pmodel->srcvert[pmodel->srcvert.Count() - 1];
 			int		iCount = 0, bones[MAXSTUDIOSRCBONES];
 			float		weights[MAXSTUDIOSRCBONES];
 			s_boneweight_t	boneWeight;
+
+			// clean memory before use to avoid bug
+			memset(srcv, 0, sizeof(*srcv));
 
 			// get support for Source bone weights description
 			i = sscanf( line, "%d %f %f %f %f %f %f %f %f %d %d %f %d %f %d %f %d %f",
@@ -854,10 +858,7 @@ void Grab_Triangles( s_model_t *pmodel )
 			}
 
 			srcv->localWeight = boneWeight;
-			ptriv->vertindex = ptriv->normindex = pmodel->numsrcverts++;
-
-			if( pmodel->numsrcverts >= MAXSRCSTUDIOVERTS )
-				COM_FatalError( "too many source vertices in model: \"%s\"\n", pmodel->name );
+			ptriv->vertindex = ptriv->normindex = pmodel->srcvert.Count() - 1;
 
 			// tag bone as being used
 			// pmodel->bone[bone].ref = 1;
@@ -5393,10 +5394,17 @@ void ParseScript( void )
 	}
 }
 
+void PrintTitle()
+{
+	Msg("	PrimeXT Studio Model Compiler\n");
+	Msg("	Based on P2:Savior Studio Model Compiler\n");
+	Msg("	Copyright (^1c^7) XashXT Group 2018\n\n\n");
+}
+
 int main( int argc, char **argv )
 {
 	int	i;
-	char	path[1024];
+	static char path[1024];
 
 	atexit( Sys_CloseLog );
 	COM_InitCmdlib( argv, argc );
@@ -5422,9 +5430,7 @@ int main( int argc, char **argv )
 
 	if( argc == 1 )
 	{
-		Msg( "	    P2:Savior Studio Model Compiler\n" );
-		Msg( "		 XashXT Group 2018(^1c^7)\n\n\n" );
-
+		PrintTitle();
 		Msg( "usage: studiomdl <options> file.qc\n"
 		"\nlist options:\n"
 		"^2-t^7 - replace all model textures with specified\n"
@@ -5442,9 +5448,7 @@ int main( int argc, char **argv )
 	}
 
 	Sys_InitLog( "studiomdl.log" );
-
-	Msg( "	    P2:Savior Studio Model Compiler\n" );
-	Msg( "		 XashXT Group 2018(^1c^7)\n\n\n" );
+	PrintTitle();
 
 	for( i = 1; i < argc - 1; i++ )
 	{
