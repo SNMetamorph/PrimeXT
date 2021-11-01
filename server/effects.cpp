@@ -3089,6 +3089,7 @@ void CEnvSky::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useTy
 
 class CDynamicLight : public CPointEntity
 {
+	DECLARE_CLASS(CDynamicLight, CPointEntity);
 public:
 	void Spawn()
 	{
@@ -3096,10 +3097,11 @@ public:
 		pev->movetype = MOVETYPE_NONE;
 
 		Precache();
+		UpdateState();
 
 		if (pev->sequence)
-			pev->renderfx = 72;	// dynamic light with avi-texture
-		else pev->renderfx = 71;	// dynamic light
+			pev->renderfx = kRenderFxCinemaLight;	// dynamic light with avi-texture
+		else pev->renderfx = kRenderFxDynamicLight;	// dynamic light
 
 		SET_MODEL(ENT(pev), "sprites/null.spr"); // should be visible to send to client
 
@@ -3161,6 +3163,17 @@ public:
 		}
 	}
 
+	void KeyValue(KeyValueData *pkvd)
+	{
+		if (FStrEq(pkvd->szKeyName, "brightness"))
+		{
+			m_flBrightness = Q_atof(pkvd->szValue);
+			pkvd->fHandled = TRUE;
+			UpdateState();
+		}
+		else BaseClass::KeyValue(pkvd);
+	}
+
 	STATE GetState(void)
 	{
 		if (pev->effects & EF_NODRAW)
@@ -3213,9 +3226,15 @@ public:
 		if (pVisHelper) UTIL_SetOrigin(pVisHelper, tr.vecEndPos + tr.vecPlaneNormal * 8.0f);
 	}
 
+	void UpdateState()
+	{
+		pev->framerate = m_flBrightness;
+	}
+
 	void EXPORT CineThink(void)
 	{
 		UpdatePVSPoint();
+		UpdateState();
 
 		// update as 30 frames per second
 		pev->fuser2 += CIN_FRAMETIME;
@@ -3225,11 +3244,15 @@ public:
 	void EXPORT PVSThink(void)
 	{
 		UpdatePVSPoint();
+		UpdateState();
 
 		// static light should be updated in case
 		// moving platform under them
 		SetNextThink(m_hParent.Get() ? 0.01f : 0.1f);
 	}
+
+private:
+	float	m_flBrightness = 2.0f;
 };
 
 LINK_ENTITY_TO_CLASS(env_dynlight, CDynamicLight);
