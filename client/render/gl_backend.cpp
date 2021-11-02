@@ -182,6 +182,23 @@ void GL_ComputeSunParams( const Vector &skyVector )
 	tr.sky_normal = skyVector;
 }
 
+void R_RenderScreenQuad()
+{
+	GL_DebugGroupPush(__FUNCTION__);
+	// copy depth from HDR framebuffer to screen framebuffer
+	pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, FBO_MAIN);
+	pglBindFramebuffer(GL_READ_FRAMEBUFFER, tr.screen_temp_fbo->id);
+	pglBlitFramebuffer(0, 0, glState.width, glState.height, 0, 0, glState.width, glState.height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+	GL_BindFBO(FBO_MAIN);
+	GL_Setup2D();
+	GL_Bind(GL_TEXTURE0, tr.screen_temp_fbo->colortarget[0]);
+	RenderFSQ(glState.width, glState.height);
+	GL_Bind(GL_TEXTURE0, 0);
+	GL_Setup3D();
+	GL_Blend(GL_TRUE);
+	GL_DebugGroupPop();
+}
+
 /*
 ==============
 GL_BackendStartFrame
@@ -498,22 +515,8 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	RenderMonochrome();			// 2D
 	R_ShowLightMaps();			// 2D
 
-	// render screen quad 
-	if (hdr_rendering)
-	{
-		GL_DebugGroupPush("R_RenderScreenFBO");
-		// copy depth from HDR framebuffer to screen framebuffer
-		pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, FBO_MAIN);
-		pglBindFramebuffer(GL_READ_FRAMEBUFFER, tr.screen_temp_fbo->id);
-		pglBlitFramebuffer(0, 0, glState.width, glState.height, 0, 0, glState.width, glState.height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-		GL_BindFBO(FBO_MAIN);
-		GL_Setup2D();
-		GL_Bind(GL_TEXTURE0, tr.screen_temp_fbo->colortarget[0]);
-		RenderFSQ(glState.width, glState.height);
-		GL_Bind(GL_TEXTURE0, 0);
-		GL_Setup3D();
-		GL_Blend(GL_TRUE);
-		GL_DebugGroupPop();
+	if (hdr_rendering) {
+		R_RenderScreenQuad();
 	}
 
 	GL_CleanupDrawState();
