@@ -17,9 +17,6 @@ GNU General Public License for more details.
 #define SHADOW_OMNI_H
 
 #extension GL_EXT_gpu_shader4 : require
-
-#define NUM_SAMPLES		4.0
-
 uniform samplerCubeShadow	u_ShadowMap;
 
 float depthCube( const in vec3 coord, const float scale, const float bias )
@@ -42,25 +39,27 @@ float ShadowOmni( const in vec3 I, const in vec4 params )
 
 #if defined( SHADOW_PCF2X2 ) || defined( SHADOW_PCF3X3 )
 #if defined( SHADOW_PCF2X2 )
-	float filterWidth = params.x * length( I ) * 2.0;	// PCF2X2
+	#define NUM_SAMPLES	4.0
+	float filterWidth = params.x * length( I ) * 2.0;	// PCF 2x2
 #elif defined( SHADOW_PCF3X3 )
-	float filterWidth = params.x * length( I ) * 3.0;	// PCF3X3
-#else	// dead code
-	float filterWidth = params.x * length( I );	 // Hardware PCF1X1
+	#define NUM_SAMPLES	4.0
+	float filterWidth = params.x * length( I ) * 4.0;	// PCF 4x4
 #endif
 	// compute step size for iterating through the kernel
-	float stepSize = NUM_SAMPLES * filterWidth / NUM_SAMPLES;
-
-	for( float i = -filterWidth; i < filterWidth; i += stepSize )
+	int k = 0;
+	float a = filterWidth / 2.0;
+	float stepSize = filterWidth / NUM_SAMPLES;
+	for (float i = -a; i <= a; i += stepSize)
 	{
-		for( float j = -filterWidth; j < filterWidth; j += stepSize )
+		for (float j = -a; j <= a; j += stepSize)
 		{
 			shadow += depthCube( I + right * i + up * j, params.z, params.w );
+			k += 1;
 		}
 	}
 
 	// return average of the samples
-	shadow *= ( 4.0 / ( NUM_SAMPLES * NUM_SAMPLES ));
+	shadow /= k;
 	return shadow;
 #elif defined( SHADOW_VOGEL_DISK )
 	float stepSize = 1.1;
