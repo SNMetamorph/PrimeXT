@@ -3686,23 +3686,26 @@ void CEnvModel::Think(void)
 
 void CEnvModel::SetSequence(void)
 {
-	int iszSeq;
+	int iszSequence;
 
 	if (pev->spawnflags & SF_ENVMODEL_OFF)
-		iszSeq = m_iszSequence_Off;
+		iszSequence = m_iszSequence_Off;
 	else
-		iszSeq = m_iszSequence_On;
+		iszSequence = m_iszSequence_On;
 
-	if (!iszSeq)
-		return;
-	pev->sequence = LookupSequence(STRING(iszSeq));
+	if (!iszSequence) {
+		pev->sequence = 0;
+	}
+	else {
+		pev->sequence = LookupSequence(STRING(iszSequence));
+	}
 
 	if (pev->sequence == -1)
 	{
 		if (pev->targetname)
-			ALERT(at_error, "env_model %s: unknown sequence \"%s\"\n", STRING(pev->targetname), STRING(iszSeq));
+			ALERT(at_error, "env_model %s: unknown sequence \"%s\"\n", STRING(pev->targetname), STRING(iszSequence));
 		else
-			ALERT(at_error, "env_model: unknown sequence \"%s\"\n", STRING(pev->targetname), STRING(iszSeq));
+			ALERT(at_error, "env_model: unknown sequence \"%s\"\n", STRING(pev->targetname), STRING(iszSequence));
 		pev->sequence = 0;
 	}
 
