@@ -64,10 +64,10 @@ void main( void )
 	vec3 L = vec3( 0.0 );
 
 #if defined( LIGHT_SPOT )
-	L = normalize( u_LightDir.xyz );
+	L = normalize( var_LightVec );
 	
 	// spot attenuation
-	float spotDot = dot( normalize( var_LightVec ), L );
+	float spotDot = dot( normalize( u_LightDir.xyz ), L );
 	float fov = ( u_LightDir.w * FOV_MULT * ( M_PI / 180.0 ));
 	float spotCos = cos( fov + fov );
 	if( spotDot < spotCos ) discard;
