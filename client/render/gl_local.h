@@ -25,6 +25,7 @@ GNU General Public License for more details.
 #include "gl_framebuffer.h"
 #include "gl_frustum.h"
 #include "gl_primitive.h"
+#include "gl_shader.h"
 #include "cl_dlight.h"
 #include "cl_entity.h"
 #include "xash3d_features.h"
@@ -684,6 +685,7 @@ typedef struct
 	double		create_light_cache;
 	double		create_buffer_object;
 	double		total_buildtime;
+	glsl_program_t *last_compiled_shader;
 } ref_buildstats_t;
 
 typedef enum

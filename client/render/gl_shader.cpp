@@ -1167,6 +1167,8 @@ word GL_FindUberShader( const char *glname, const char *options )
 	prog = GL_CreateUberShader( i, glname, glname, glname, options, checksum );
 	double end = Sys_DoubleTime();
 	r_buildstats.compile_shader += (end - start);
+	r_buildstats.last_compiled_shader = prog;
+
 	if( RENDER_GET_PARM( PARM_CLIENT_ACTIVE, 0 ))
 		r_buildstats.total_buildtime += (end - start);
 
@@ -1210,6 +1212,8 @@ word GL_FindShader( const char *glname, const char *vpname, const char *fpname, 
 	prog = GL_CreateUberShader( i, glname, vpname, fpname, options, checksum );
 	double end = Sys_DoubleTime();
 	r_buildstats.compile_shader += (end - start);
+	r_buildstats.last_compiled_shader = prog;
+
 	if( RENDER_GET_PARM( PARM_CLIENT_ACTIVE, 0 ))
 		r_buildstats.total_buildtime += (end - start);
 

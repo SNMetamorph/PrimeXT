@@ -222,15 +222,22 @@ bool GL_BackendStartFrame( ref_viewpass_t *rvp, RefParams params )
 
 	if( r_buildstats.total_buildtime > 0.0 && RENDER_GET_PARM( PARM_CLIENT_ACTIVE, 0 ))
 	{
+		glsl_program_t *shader = r_buildstats.last_compiled_shader;
 		// display time to building some stuff: lighting, VBO, shaders etc
-		if( r_buildstats.compile_shader > 0.0 )
-			ALERT( at_aiconsole, "shader compiled in %g secs\n", r_buildstats.compile_shader );
-		if( r_buildstats.create_buffer_object > 0.0 )
-			ALERT( at_aiconsole, "creating VBO in %g secs\n", r_buildstats.create_buffer_object - r_buildstats.compile_shader );
-		if( r_buildstats.create_light_cache > 0.0 )
-			ALERT( at_aiconsole, "creating VL cache in %g secs\n", r_buildstats.create_light_cache );
-		if( r_buildstats.create_buffer_object > 0.0 || r_buildstats.create_light_cache > 0.0 )
-			ALERT( at_aiconsole, "total building time %g\n", r_buildstats.total_buildtime );
+		if (r_buildstats.compile_shader > 0.0) {
+			ALERT(at_aiconsole, "^3GL_BackendStartFrame: ^7shader \"%s\" compiled in %.1f msec\n", shader->name, r_buildstats.compile_shader * 1000.0);
+		}
+		if (r_buildstats.create_buffer_object > 0.0) 
+		{
+			double time = (r_buildstats.create_buffer_object - r_buildstats.compile_shader) * 1000.0;
+			ALERT(at_aiconsole, "^3GL_BackendStartFrame: ^7VBO created in %1.f msec\n", time);
+		}
+		if (r_buildstats.create_light_cache > 0.0) {
+			ALERT(at_aiconsole, "^3GL_BackendStartFrame: ^7VL cache created in %.1f msec\n", r_buildstats.create_light_cache * 1000.0);
+		}
+		if (r_buildstats.create_buffer_object > 0.0 || r_buildstats.create_light_cache > 0.0) {
+			ALERT(at_aiconsole, "^3GL_BackendStartFrame: ^7total building time = %g seconds\n", r_buildstats.total_buildtime);
+		}
 		memset( &r_buildstats, 0, sizeof( r_buildstats ));
 	}
 
