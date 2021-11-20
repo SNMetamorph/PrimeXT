@@ -26,6 +26,7 @@ GNU General Public License for more details.
 #include "material.h"
 #include "gl_occlusion.h"
 #include "gl_cvars.h"
+#include "gl_debug.h"
 #include "r_weather.h"
 
 #define MAX_RESERVED_UNIFORMS		22	// while MAX_LIGHTSTYLES 64

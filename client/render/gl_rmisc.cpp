@@ -25,6 +25,7 @@ GNU General Public License for more details.
 #include "gl_grass.h"
 #include "gl_shader.h"
 #include "gl_cvars.h"
+#include "gl_debug.h"
 #include "r_weather.h"
 
 #define DEFAULT_SMOOTHNESS	0.35f

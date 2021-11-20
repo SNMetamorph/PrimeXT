@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #include "gl_occlusion.h"
 #include "gl_world.h"
 #include "gl_cvars.h"
+#include "gl_debug.h"
 
 /*
 ===============

@@ -32,6 +32,7 @@ GNU General Public License for more details.
 #include "gl_grass.h"
 #include "gl_shader.h"
 #include "gl_cvars.h"
+#include "gl_debug.h"
 #include "screenfade.h"
 #include "shake.h"
 
@@ -853,20 +854,6 @@ void GL_DepthTest( GLint enable )
 
 	if( enable ) pglEnable( GL_DEPTH_TEST );
 	else pglDisable( GL_DEPTH_TEST );
-}
-
-void GL_DebugGroupPush(const char *markerName)
-{
-	if (developer_level > 0 && GL_Support(R_KHR_DEBUG)) {
-		pglPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION_ARB, 0, -1, markerName);
-	}
-}
-
-void GL_DebugGroupPop()
-{
-	if (developer_level > 0 && GL_Support(R_KHR_DEBUG)) {
-		pglPopDebugGroup();
-	}
 }
 
 /*

@@ -26,6 +26,7 @@ GNU General Public License for more details.
 #include "gl_world.h"
 #include "gl_grass.h"
 #include "gl_cvars.h"
+#include "gl_debug.h"
 #include "r_weather.h"
 #include "tri.h"
 

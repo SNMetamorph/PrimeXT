@@ -788,8 +788,6 @@ void GL_ClipPlane(bool enable);
 void GL_BindFBO(GLuint buffer);
 void GL_AlphaTest(GLint enable);
 void GL_DepthTest(GLint enable);
-void GL_DebugGroupPush(const char *markerName);
-void GL_DebugGroupPop();
 void GL_CleanupDrawState(void);
 void GL_SetDefaultState(void);
 void GL_Blend(GLint enable);
@@ -818,22 +816,6 @@ bool R_CullNodeTopView( mnode_t *node );
 #define R_CullBox( mins, maxs )		( RI->view.frustum.CullBox( mins, maxs ))
 #define R_CullSphere( centre, radius )		( RI->view.frustum.CullSphere( centre, radius ))
 #define R_CullFrustum( otherFrustum )		( RI->view.frustum.CullFrustum( otherFrustum ))
-
-//
-// gl_debug.cpp
-//
-void DBG_PrintVertexVBOSizes( void );
-void DBG_DrawLightFrustum( void );
-void DBG_DrawGlassScissors( void );
-void DrawLightProbes( void );
-void R_ShowLightMaps( void );
-void R_RenderLightProbeInternal( const Vector &origin, const Vector lightCube[] );
-void DBG_DrawBBox( const Vector &mins, const Vector &maxs );
-void DrawWirePoly( msurface_t *surf );
-void DrawTangentSpaces( void );
-void DrawWireFrame( void );
-void DrawViewLeaf( void );
-void DrawCubeMaps( void );
 
 //
 // gl_deferred.cpp

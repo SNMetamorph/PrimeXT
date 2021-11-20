@@ -3,6 +3,7 @@
 //
 //		2006
 
+#include "gl_debug.h"
 #include "hud.h"
 #include "utils.h"
 #include "const.h"
@@ -20,6 +21,7 @@
 #include "gl_shader.h"
 #include "vertex_fmt.h"
 #include "gl_cvars.h"
+#include "mathlib.h"
 
 void GL_GpuMemUsage_f( void )
 {
@@ -35,6 +37,20 @@ void GL_GpuMemUsage_f( void )
 	Msg( "TEX used memory %s\n", Q_memprint( RENDER_GET_PARM( PARM_TEX_MEMORY, 0 )));
 	Msg( "VBO used memory %s\n", Q_memprint( tr.total_vbo_memory ));
 	Msg( "GPU used memory %s\n", Q_memprint(( total_mem_kb - cur_avail_mem_kb ) * 1024 ));
+}
+
+void GL_DebugGroupPush(const char *markerName)
+{
+	if (developer_level > 0 && GL_Support(R_KHR_DEBUG)) {
+		pglPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION_ARB, 0, -1, markerName);
+	}
+}
+
+void GL_DebugGroupPop()
+{
+	if (developer_level > 0 && GL_Support(R_KHR_DEBUG)) {
+		pglPopDebugGroup();
+	}
 }
 
 void DBG_PrintVertexVBOSizes( void )
@@ -91,9 +107,9 @@ static void CubeFace( const vec3_t org, int v0, int v1, int v2, int v3, float si
 	unclamped[1] = TEXTURE_TO_TEXGAMMA( color[1] ) * scale;
 	unclamped[2] = TEXTURE_TO_TEXGAMMA( color[2] ) * scale;
 
-	col[0] = min((unclamped[0] >> 7), 255 );
-	col[1] = min((unclamped[1] >> 7), 255 );
-	col[2] = min((unclamped[2] >> 7), 255 );
+	col[0] = Q_min((unclamped[0] >> 7), 255 );
+	col[1] = Q_min((unclamped[1] >> 7), 255 );
+	col[2] = Q_min((unclamped[2] >> 7), 255 );
 
 //	pglColor3ub( col[0], col[1], col[2] );
 	pglColor3ub( color[0], color[1], color[2] );

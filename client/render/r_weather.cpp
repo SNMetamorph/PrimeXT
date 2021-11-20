@@ -23,6 +23,7 @@ GNU General Public License for more details.
 #include "xash3d_features.h"
 #include "r_weather.h"
 #include "gl_local.h"
+#include "gl_debug.h"
 #include "matrix.h"
 #include <mathlib.h>
 

@@ -12,6 +12,7 @@
 #include "stringlib.h"
 #include "gl_world.h"
 #include "gl_cvars.h"
+#include "gl_debug.h"
 
 #define DEAD_GRAYSCALE_TIME		5.0f
 #define TARGET_SIZE			256

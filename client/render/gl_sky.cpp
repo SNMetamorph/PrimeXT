@@ -8,6 +8,7 @@
 #include "gl_local.h"
 #include "gl_shader.h"
 #include "gl_cvars.h"
+#include "gl_debug.h"
 
 #define MAX_CLIP_VERTS	128	// skybox clip vertices
 
