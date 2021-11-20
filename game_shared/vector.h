@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "port.h"
+#include "mathlib_defs.h"
 
 #define PITCH		0
 #define YAW		1
@@ -253,7 +254,7 @@ public:
 	inline void CopyToArray( float *rgfl ) const	{ rgfl[0] = x, rgfl[1] = y, rgfl[2] = z; }
 	inline float Length(void) const					{ return sqrt( x*x + y*y + z*z ); }
 	inline float LengthSqr(void) const				{ return (x*x + y*y + z*z); }
-	inline float MaxCoord() const					{ return fmaxf(x, fmaxf(y, z)); }
+	inline float MaxCoord() const					{ return Q_max(x, Q_max(y, z)); }
 	operator float *()								{ return &x; } // Vectors will now automatically convert to float * when needed
 	operator const float *() const					{ return &x; } 
 		
