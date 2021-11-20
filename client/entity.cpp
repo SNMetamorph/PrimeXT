@@ -20,6 +20,7 @@
 #include "gl_local.h"
 #include "gl_studio.h"
 #include "gl_cvars.h"
+#include "gl_rpart.h"
 #include "flashlight.h"
 
 #define DLLEXPORT __declspec( dllexport )
@@ -377,13 +378,13 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 		R_StudioAttachmentPosDir( entity, 0, &pos, &dir );
 		HUD_MuzzleFlash( entity, pos, dir, atoi( event->options), mul );
 		DlightFlash((float *)&entity->attachment[0], entity->index ); 		
-		//EV_GunSmoke( entity->attachment[0] );
+		g_pParticles.GunSmoke(entity->attachment[0], 2);
 		break;
 	case 5007:		 		
-		//EV_GunSmoke( entity->attachment[0] );
+		g_pParticles.GunSmoke(entity->attachment[0], 2);
 		break;
 	case 5008:		 		
-		//EV_GunSmoke( entity->attachment[1] );
+		g_pParticles.GunSmoke(entity->attachment[1], 2);
 		break;
 	case 5009: // custom shell ejection
 		shell = gEngfuncs.pEventAPI->EV_FindModelIndex( event->options );
@@ -399,19 +400,19 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 		R_StudioAttachmentPosDir( entity, 1, &pos, &dir );
 		HUD_MuzzleFlash( entity, pos, dir, atoi( event->options), mul );
 		DlightFlash((float *)&entity->attachment[1], entity->index );
-		//EV_GunSmoke( entity->attachment[1] );
+		g_pParticles.GunSmoke(entity->attachment[1], 2);
 		break;
 	case 5021:
 		R_StudioAttachmentPosDir( entity, 2, &pos, &dir );
 		HUD_MuzzleFlash( entity, pos, dir, atoi( event->options), mul );
 		DlightFlash((float *)&entity->attachment[2], entity->index );
-		//EV_GunSmoke( entity->attachment[2] );
+		g_pParticles.GunSmoke(entity->attachment[2], 2);
 		break;
 	case 5031:
 		R_StudioAttachmentPosDir( entity, 3, &pos, &dir );
 		HUD_MuzzleFlash( entity, pos, dir, atoi( event->options), mul );
 		DlightFlash((float *)&entity->attachment[3], entity->index );
-		//EV_GunSmoke( entity->attachment[3] );
+		g_pParticles.GunSmoke(entity->attachment[3], 2);
 		break;
 	case 5002:
 		gEngfuncs.pEfxAPI->R_SparkEffect( (float *)&entity->attachment[0], atoi( event->options), -100, 100 );
