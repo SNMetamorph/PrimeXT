@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#include "mathlib.h"
+
 uniform sampler2D	u_ScreenMap;
 uniform vec2		u_ScreenSizeInv;
 uniform float		u_MipLod;	// source mip level, not target one
@@ -25,11 +27,6 @@ void main( void )
 {
 	//gaussian 3x3
 	float weight[3];
-	//weight[0] = 0.2;
-	//weight[1] = 0.12;
-	//weight[2] = 0.08;		
-
-	//better?
 	weight[0] = 0.25;
 	weight[1] = 0.125;
 	weight[2] = 0.0625;	
@@ -53,8 +50,7 @@ void main( void )
 	if (u_BloomFirstPass > 0) 
 	{
 		tex *= min(1.0, length(tex) * 0.5);	// threshold
-		float brightness = dot(tex.rgb, vec3(0.2126, 0.7152, 0.0722));
-		tex *= min(brightness * 4.0, 1.0);
+		tex *= min(GetLuminance(tex.rgb) * 4.0, 1.0);
 	}
 
 	gl_FragColor = tex;

@@ -16,6 +16,8 @@ GNU General Public License for more details.
 #ifndef MATHLIB_H
 #define MATHLIB_H
 
+#include "const.h"
+
 #ifndef saturate
 #define saturate( x )	clamp( x, 0.0, 1.0 )
 #endif
@@ -33,7 +35,11 @@ float RemapVal( float val, float A, float B, float C, float D )
 	return C + (D - C) * (val - A) / (B - A);
 }
 
-float GetLuminance( vec3 color ) { return dot( color, vec3( 0.2126, 0.7152, 0.0722 )); }
+float GetLuminance(vec3 color) 
+{ 
+	// YUV luminance according to BT.709
+	return dot(color, vec3(0.2126, 0.7152, 0.0722)); 
+}
 
 void MakeNormalVectors( const vec3 forward, inout vec3 right, inout vec3 up )
 {
