@@ -282,18 +282,9 @@ void DLLEXPORT HUD_CreateEntities( void )
 
 void DlightFlash( const Vector &origin, int index )
 {
-	dlight_t *dl = gEngfuncs.pEfxAPI->CL_AllocDlight( index );
-	dl->origin = origin;
-	dl->radius = 128;
-	dl->color.r = 180;
-	dl->color.g = 160;
-	dl->color.b = 120;
-	dl->die = GET_CLIENT_TIME() + 0.06f;
-
 	CDynLight *pl = CL_AllocDlight( index );
-
 	R_SetupLightParams( pl, origin, g_vecZero, 128.0f, 0.0f, LIGHT_OMNI, DLF_NOSHADOWS );
-	pl->color = Vector( 0.7f, 0.6f, 0.5f );
+	pl->color = Vector( 1.75f, 1.5f, 1.25f );
 	pl->die = GET_CLIENT_TIME() + 0.06f;
 }
 
