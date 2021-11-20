@@ -607,7 +607,7 @@ static void GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum s
 	GLcharARB *buffer = (GLcharARB *)source.GetBuffer();
 	int bufferSize = source.GetSize();
 
-	ALERT( at_aiconsole, "loading '%s'\n", filename );
+	ALERT(at_aiconsole, "^2GL_LoadGPUShader: ^7loading \"%s\" from file \"%s\"\n", name, filename);
 	object = pglCreateShaderObjectARB( shaderType );
 	pglShaderSourceARB( object, GL_TRUE, (const GLcharARB **)&buffer, &bufferSize );
 
@@ -669,7 +669,7 @@ static bool GL_LoadGPUBinaryShader( glsl_program_t *shader, const char *vpname, 
 
 	if( linked )
 	{
-		ALERT( at_aiconsole, "loading %s\n", szFilename );
+		ALERT( at_aiconsole, "^2GL_LoadGPUBinaryShader: ^7loaded \"%s\" from \"%s\"\n", shader->name, szFilename);
 		SetBits( shader->status, SHADER_PROGRAM_LINKED );
 		return true;
 	}
