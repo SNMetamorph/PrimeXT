@@ -101,6 +101,7 @@ BEGIN_DATADESC( CBaseMonster )
 	DEFINE_FUNCTION( CorpseFallThink ),
 	DEFINE_FUNCTION( MonsterInitThink ),
 
+	DEFINE_FIELD( m_flLastYawTime, FIELD_TIME ),
 	DEFINE_FIELD( m_flHungryTime, FIELD_TIME ),
 	DEFINE_FIELD( m_flDistTooFar, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flDistLook, FIELD_FLOAT ),
@@ -2514,14 +2515,15 @@ float	CBaseMonster::FlYawDiff ( void )
 //=========================================================
 float CBaseMonster::ChangeYaw ( int yawSpeed )
 {
-	float	ideal, current, move, speed;
 	Vector	angles = GetAbsAngles();
+	float	current = UTIL_AngleMod( angles.y );
+	float	ideal = pev->ideal_yaw;
+	float	move;
 
-	current = UTIL_AngleMod( angles.y );
-	ideal = pev->ideal_yaw;
 	if (current != ideal)
 	{
-		speed = (float)yawSpeed * gpGlobals->frametime * 10;
+		float timeDelta = Q_min(gpGlobals->time - m_flLastYawTime, 0.25);
+		float speed = (float)yawSpeed * timeDelta * 2;
 		move = ideal - current;
 
 		if (ideal > current)
@@ -2536,17 +2538,19 @@ float CBaseMonster::ChangeYaw ( int yawSpeed )
 		}
 
 		if (move > 0)
-		{// turning to the monster's left
+		{
+			// turning to the monster's left
 			if (move > speed)
 				move = speed;
 		}
 		else
-		{// turning to the monster's right
+		{
+			// turning to the monster's right
 			if (move < -speed)
 				move = -speed;
 		}
 		
-		angles.y = UTIL_AngleMod (current + move);
+		angles.y = UTIL_AngleMod(current + move);
 
 		// turn head in desired direction only if they have a turnable head
 		if (m_afCapability & bits_CAP_TURN_HEAD)

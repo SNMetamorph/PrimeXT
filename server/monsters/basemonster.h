@@ -95,7 +95,7 @@ public:
 	int		m_failSchedule;				// Schedule type to choose if current schedule fails
 
 	float		m_flHungryTime;// set this is a future time to stop the monster from eating for a while. 
-
+	float		m_flLastYawTime;
 	float		m_flDistTooFar;	// if enemy farther away than this, bits_COND_ENEMY_TOOFAR set in CheckEnemy
 	float		m_flDistLook;	// distance monster sees (Default 2048)
 
