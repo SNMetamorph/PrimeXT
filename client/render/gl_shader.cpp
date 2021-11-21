@@ -1166,8 +1166,7 @@ word GL_FindUberShader( const char *glname, const char *options )
 	uint checksum = FILE_CRC32( find, Q_strlen( find ));
 	prog = GL_CreateUberShader( i, glname, glname, glname, options, checksum );
 	double end = Sys_DoubleTime();
-	r_buildstats.compile_shader += (end - start);
-	r_buildstats.last_compiled_shader = prog;
+	r_buildstats.compile_shaders += (end - start);
 
 	if( RENDER_GET_PARM( PARM_CLIENT_ACTIVE, 0 ))
 		r_buildstats.total_buildtime += (end - start);
@@ -1211,8 +1210,7 @@ word GL_FindShader( const char *glname, const char *vpname, const char *fpname, 
 	uint checksum = FILE_CRC32( find, Q_strlen( find ));
 	prog = GL_CreateUberShader( i, glname, vpname, fpname, options, checksum );
 	double end = Sys_DoubleTime();
-	r_buildstats.compile_shader += (end - start);
-	r_buildstats.last_compiled_shader = prog;
+	r_buildstats.compile_shaders += (end - start);
 
 	if( RENDER_GET_PARM( PARM_CLIENT_ACTIVE, 0 ))
 		r_buildstats.total_buildtime += (end - start);

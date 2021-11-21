@@ -681,11 +681,10 @@ typedef struct
 
 typedef struct
 {
-	double		compile_shader;
+	double		compile_shaders;
 	double		create_light_cache;
 	double		create_buffer_object;
 	double		total_buildtime;
-	glsl_program_t *last_compiled_shader;
 } ref_buildstats_t;
 
 typedef enum
