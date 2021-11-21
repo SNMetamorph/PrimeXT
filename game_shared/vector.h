@@ -258,7 +258,7 @@ public:
 	operator float *()								{ return &x; } // Vectors will now automatically convert to float * when needed
 	operator const float *() const					{ return &x; } 
 		
-	inline Vector Normalize( void ) const
+	inline Vector Normalize() const
 	{
 		float flLen = Length();
 
@@ -271,7 +271,8 @@ public:
 		return *this; // can't normalize
 	}
 
-	inline Vector NormalizeFast(void) const
+	// unsafe and not recommended to use, instead use Normalize()
+	inline Vector NormalizeFast() const
 	{
 		float ilength = ReverseSqrt(x * x + y * y + z * z);
 		return Vector(x * ilength, y * ilength, z * ilength);
@@ -322,15 +323,13 @@ public:
 private:
 	inline float ReverseSqrt(float number) const 
 	{
-		if (number == 0.0f)
-			return 0.0f;
-
-		int x = number * 0.5f;
-		int i = *(int *)&number;	// evil floating point bit level hacking
+		const float	threehalfs = 1.5F;
+		float x2 = number * 0.5F;
+		float y = number;
+		int i = *(long *)&y;	// evil floating point bit level hacking
 		i = 0x5f3759df - (i >> 1);	// what the fuck?
-		int y = *(float *)&i;
-		y = y * (1.5f - (x * y * y));	// first iteration
-
+		y = *(float *)&i;
+		y = y * (1.5F - (x2 * y * y));   // 1st iteration
 		return y;
 	}
 };
