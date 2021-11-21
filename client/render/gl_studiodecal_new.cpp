@@ -1189,7 +1189,7 @@ void CStudioModelRenderer :: AddDecalToModel( DecalBuildInfo_t& buildInfo )
 				svert_t *out = &m_arrayxvert[m_nNumArrayVerts];
 
 				out->vertex = pstudioverts[ptricmds[0]];
-				out->normal = pstudionorms[ptricmds[1]].NormalizeFast();
+				out->normal = pstudionorms[ptricmds[1]].Normalize();
 				out->binormal = g_vecZero;
 				out->tangent = g_vecZero;
 				out->stcoord[0] = 0.0f;
