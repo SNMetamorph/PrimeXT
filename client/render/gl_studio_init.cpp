@@ -111,9 +111,6 @@ void CStudioModelRenderer :: Init( void )
 	m_pCvarDrawViewModel	= IEngineStudio.GetCvar( "r_drawviewmodel" );
 	m_pCvarHand		= CVAR_REGISTER( "cl_righthand", "0", FCVAR_ARCHIVE );
 	m_pCvarViewmodelFov		= CVAR_REGISTER( "cl_viewmodel_fov", "60", FCVAR_ARCHIVE );
-	m_pCvarHeadShieldFov	= CVAR_REGISTER( "cl_headshield_fov", "63", FCVAR_ARCHIVE );
-	m_pCvarLegsOffset		= CVAR_REGISTER( "legs_offset", "20", FCVAR_ARCHIVE );
-	m_pCvarDrawLegs		= CVAR_REGISTER( "r_drawlegs", "1", FCVAR_ARCHIVE );
 	m_pCvarCompatible		= CVAR_REGISTER( "r_studio_compatible", "1", FCVAR_ARCHIVE );
 	m_pCvarLodScale		= CVAR_REGISTER( "cl_lod_scale", "5.0", FCVAR_ARCHIVE );
 	m_pCvarLodBias		= CVAR_REGISTER( "cl_lod_bias", "0", FCVAR_ARCHIVE );
@@ -127,8 +124,6 @@ Init
 */
 void CStudioModelRenderer :: VidInit( void )
 {
-	// tell the engine what models is used
-	m_pPlayerLegsModel = IEngineStudio.Mod_ForName( "models/player_legs.mdl", false );
 }
 
 /*
@@ -179,18 +174,9 @@ bool CStudioModelRenderer :: StudioSetEntity( cl_entity_t *pEnt )
 	{
 		int	iPlayerIndex;
 
-		if( RP_NORMALPASS() && RP_LOCALCLIENT( RI->currententity ) && !FBitSet( RI->params, RP_THIRDPERSON ))
+		if (RP_NORMALPASS() && RP_LOCALCLIENT(RI->currententity) && !FBitSet(RI->params, RP_THIRDPERSON))
 		{
-			if( !CVAR_TO_BOOL( m_pCvarDrawLegs ) || !m_pPlayerLegsModel )
-				return false;
-
-			// do simple cull for player legs
-			if( FBitSet( gHUD.m_iKeyBits, IN_DUCK ) && RI->view.angles[PITCH] <= 30.0f )
-				return false;
-			else if( !FBitSet( gHUD.m_iKeyBits, IN_DUCK ) && RI->view.angles[PITCH] <= 50.0f )
-				return false;
-
-			RI->currentmodel = m_pPlayerLegsModel;
+			return false;
 		}
 		else
 		{

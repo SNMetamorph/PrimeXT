@@ -358,7 +358,7 @@ void CStudioModelRenderer :: StudioSetUpTransform( void )
 
 	if( !m_fShootDecal && RI->currententity->curstate.renderfx != kRenderFxDeadPlayer )
 	{
-		if( m_iDrawModelType == DRAWSTUDIO_HEADSHIELD || m_iDrawModelType == DRAWSTUDIO_RUNEVENTS )
+		if (m_iDrawModelType == DRAWSTUDIO_RUNEVENTS)
 			e = gEngfuncs.GetLocalPlayer();
 
 		// calculate how much time has passed since the last V_CalcRefdef
@@ -455,19 +455,6 @@ void CStudioModelRenderer :: StudioSetUpTransform( void )
 	{
 		// apply studiomodel scale (clamp scale to prevent too big sizes on some HL maps)
 		scale = Vector( RI->currententity->curstate.scale, RI->currententity->curstate.scale, RI->currententity->curstate.scale );
-	}
-
-	if( RP_LOCALCLIENT( RI->currententity ) && !FBitSet( RI->params, RP_THIRDPERSON ))
-	{
-		// offset only for legs or water reflection
-		if(( RI->currentmodel == m_pPlayerLegsModel ) || FBitSet( RI->params, RP_SHADOWVIEW|RP_MIRRORVIEW ) || ( GetVForward().z == 1.0f ))
-		{
-			Vector ang, forward;
-			ang = tr.cached_viewangles;
-			ang[PITCH] = ang[ROLL] = 0; // yaw only
-			AngleVectors( ang, forward, NULL, NULL );
-			origin += forward * -m_pCvarLegsOffset->value;
-		}
 	}
 
 	// build the rotation matrix
@@ -1748,10 +1735,6 @@ void CStudioModelRenderer :: StudioStaticLight( cl_entity_t *ent, mstudiolight_t
 		R_FindWorldLights( origin, mins, maxs, m_pModelInstance->lights, skipZCheck );
 		ClearBits( m_pModelInstance->info_flags, MF_POSITION_CHANGED );
 	}
-
-	// use inverted light vector for head shield (hack)
-	if( m_iDrawModelType == DRAWSTUDIO_HEADSHIELD )
-		light->normal = -light->normal;
 }
 
 /*
@@ -2163,8 +2146,6 @@ void CStudioModelRenderer :: AddMeshToDrawList( studiohdr_t *phdr, vbomesh_t *me
 	mstudiomaterial_t *mat = NULL;
 	bool cache_from_model = false;
 
-	if( RI->currentmodel == m_pPlayerLegsModel )
-		cache_from_model = true;
 	if( RI->currentmodel == IEngineStudio.GetModelByIndex( RI->currententity->curstate.weaponmodel ))
 		cache_from_model = true;
 
@@ -2363,8 +2344,7 @@ void CStudioModelRenderer :: AddStudioModelToDrawList( cl_entity_t *e, bool upda
 		if( RI->currententity->curstate.weaponmodel )
 			pweaponmodel = IEngineStudio.GetModelByIndex( RI->currententity->curstate.weaponmodel );
 
-		// don't draw p_model for firstperson legs
-		if( pweaponmodel && ( RI->currentmodel != m_pPlayerLegsModel ))
+		if (pweaponmodel && RI->currentmodel)
 		{
 			m_pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata( pweaponmodel );
 
@@ -2429,8 +2409,7 @@ void CStudioModelRenderer :: AddStudioModelToDrawList( cl_entity_t *e, bool upda
 	if( RI->currententity->curstate.weaponmodel )
 		pweaponmodel = IEngineStudio.GetModelByIndex( RI->currententity->curstate.weaponmodel );
 
-	// don't draw p_model for firstperson legs
-	if( pweaponmodel && ( RI->currentmodel != m_pPlayerLegsModel ))
+	if (pweaponmodel && RI->currentmodel)
 	{
 		RI->currentmodel = pweaponmodel;
 		m_pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata( RI->currentmodel );
@@ -2493,11 +2472,6 @@ bool CStudioModelRenderer :: ComputeCustomFov( matrix4x4 &projMatrix, matrix4x4 
 	else if( m_pCvarViewmodelFov->value > 120 )
 		gEngfuncs.Cvar_SetValue( "cl_viewmodel_fov", 120 );
 
-	if( m_pCvarHeadShieldFov->value < 50 )
-		gEngfuncs.Cvar_SetValue( "cl_headshield_fov", 50 );
-	else if( m_pCvarHeadShieldFov->value > 120 )
-		gEngfuncs.Cvar_SetValue( "cl_headshield_fov", 120 );
-
 	// Find the offset our current FOV is from the default value
 	float flFOVOffset = 90.0f - (float)RI->view.fov_x;
 
@@ -2507,10 +2481,6 @@ bool CStudioModelRenderer :: ComputeCustomFov( matrix4x4 &projMatrix, matrix4x4 
 		// Adjust the viewmodel's FOV to move with any FOV offsets on the viewer's end
 		m_flViewmodelFov = flDesiredFOV = m_pCvarViewmodelFov->value - flFOVOffset;
 		break;
-	case DRAWSTUDIO_HEADSHIELD:
-		// Adjust the headshield's FOV to move with any FOV offsets on the viewer's end
-		flDesiredFOV = m_pCvarHeadShieldFov->value - flFOVOffset;
-		break;
 	default:	// failed case, unchanged
 		flDesiredFOV = RI->view.fov_x;
 		break;
@@ -2519,10 +2489,6 @@ bool CStudioModelRenderer :: ComputeCustomFov( matrix4x4 &projMatrix, matrix4x4 
 	// calc local FOV
 	float fov_x = flDesiredFOV;
 	float fov_y = V_CalcFov( fov_x, ScreenWidth, ScreenHeight );
-
-	// don't adjust FOV for viewmodel, faceprotect only
-	if( m_iDrawModelType == DRAWSTUDIO_HEADSHIELD && RENDER_GET_PARM( PARM_WIDESCREEN, 0 ))
-		V_AdjustFov( fov_x, fov_y, ScreenWidth, ScreenHeight, false );
 
 	if( fov_x != RI->view.fov_x )
 	{
@@ -3356,7 +3322,7 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force )
 	if( entry->m_pRenderModel == IEngineStudio.GetModelByIndex( e->curstate.weaponmodel ))
 		weapon_model = true;
 
-	if( weapon_model || RI->currentmodel == m_pPlayerLegsModel )
+	if (weapon_model || RI->currentmodel)
 		mat = &entry->m_pRenderModel->materials[pskinref[pMesh->skinref]];
 	else mat = &m_pModelInstance->materials[pskinref[pMesh->skinref]]; // NOTE: use local copy for right cache shadernums
 	mstudiolight_t *light = &inst->light;
