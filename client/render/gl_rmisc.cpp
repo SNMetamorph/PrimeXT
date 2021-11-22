@@ -1023,13 +1023,42 @@ void GL_InitModelLightCache( void )
 	GL_EndBuildingLightmaps( (worldmodel->lightdata != NULL), FBitSet( world->features, WORLD_HAS_DELUXEMAP ) ? true : false );
 }
 
-void GL_InitMultisampleScreenFBO()
+static void GL_InitScreenFBOTextures(int colorFlags, int depthFlags)
+{
+	tr.screen_temp_fbo_msaa_texture_color = CREATE_TEXTURE("*screen_temp_fbo_msaa_texture_color", glState.width, glState.height, NULL, colorFlags);
+	tr.screen_temp_fbo_msaa_texture_depth = CREATE_TEXTURE("*screen_temp_fbo_msaa_texture_depth", glState.width, glState.height, NULL, depthFlags);
+}
+
+static void GL_DestroyScreenFBOTextures()
 {
 	FREE_TEXTURE(tr.screen_temp_fbo_msaa_texture_color);
 	FREE_TEXTURE(tr.screen_temp_fbo_msaa_texture_depth);
+	tr.screen_temp_fbo_msaa_texture_color = 0;
+	tr.screen_temp_fbo_msaa_texture_depth = 0;
+}
 
-	tr.screen_temp_fbo_msaa_texture_color = CREATE_TEXTURE("*screen_temp_fbo_msaa_texture_color", glState.width, glState.height, NULL, TF_NOMIPMAP | TF_HAS_ALPHA | TF_ARB_16BIT | TF_ARB_FLOAT);
-	tr.screen_temp_fbo_msaa_texture_depth = CREATE_TEXTURE("*screen_temp_fbo_msaa_texture_depth", glState.width, glState.height, NULL, TF_RT_DEPTH);
+void GL_InitMultisampleScreenFBO()
+{
+	int texColorFlags = TF_NOMIPMAP | TF_HAS_ALPHA | TF_ARB_16BIT | TF_ARB_FLOAT | TF_MULTISAMPLE;
+	int texDepthFlags = TF_RT_DEPTH | TF_MULTISAMPLE;
+	int texTarget = GL_TEXTURE_2D_MULTISAMPLE;
+
+	GL_DestroyScreenFBOTextures();
+	for (int i = 0; !tr.screen_temp_fbo_msaa_texture_color && !tr.screen_temp_fbo_msaa_texture_depth; ++i)
+	{
+		if (i > 2) {
+			HOST_ERROR("GL_InitMultisampleScreenFBO: failed to create FBO textures\n");
+		}
+
+		GL_InitScreenFBOTextures(texColorFlags, texDepthFlags);
+		if (!tr.screen_temp_fbo_msaa_texture_color || !tr.screen_temp_fbo_msaa_texture_depth)
+		{
+			texTarget = GL_TEXTURE_2D;
+			ClearBits(texColorFlags, TF_MULTISAMPLE);
+			ClearBits(texDepthFlags, TF_MULTISAMPLE);
+			ALERT(at_warning, "GL_InitMultisampleScreenFBO: failed to create multisample textures, MSAA not available\n");
+		}
+	}
 
 	if (!tr.screen_temp_fbo_msaa)
 		tr.screen_temp_fbo_msaa = GL_AllocDrawbuffer("*screen_temp_fbo_msaa", glState.width, glState.height, 1);
@@ -1037,8 +1066,8 @@ void GL_InitMultisampleScreenFBO()
 		GL_ResizeDrawbuffer(tr.screen_temp_fbo_msaa, glState.width, glState.height, 1);
 
 	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, tr.screen_temp_fbo_msaa->id);
-	pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, tr.screen_temp_fbo_msaa_texture_color, 0);
-	pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, tr.screen_temp_fbo_msaa_texture_depth, 0);
+	pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, texTarget, tr.screen_temp_fbo_msaa_texture_color, 0);
+	pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, texTarget, tr.screen_temp_fbo_msaa_texture_depth, 0);
 	tr.screen_temp_fbo_msaa->colortarget[0] = tr.screen_temp_fbo_msaa_texture_color;
 	tr.screen_temp_fbo_msaa->depthtarget = tr.screen_temp_fbo_msaa_texture_depth;
 

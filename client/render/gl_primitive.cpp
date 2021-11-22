@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #include "gl_studio.h"
 #include "gl_world.h"
 #include "gl_grass.h"
+#include "gl_cvars.h"
 
 void CSolidEntry :: SetRenderPrimitive( const Vector verts[4], const Vector4D &color, int texture, int rendermode )
 {
@@ -75,20 +76,63 @@ void CTransEntry :: ComputeScissor( const Vector &absmin, const Vector &absmax )
 
 void CTransEntry :: RequestScreenColor( void )
 {
-	if( !m_bScissorReady ) return;
+	if (!m_bScissorReady) 
+		return;
 
+	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
 	float y2 = (float)RI->view.port[3] - m_vecRect.w - m_vecRect.y;
-	GL_Bind( GL_TEXTURE0, tr.screen_color );
-	pglCopyTexSubImage2D( GL_TEXTURE_2D, 0, m_vecRect.x, y2, m_vecRect.x, y2, m_vecRect.z, m_vecRect.w );
+	if (hdr_rendering)
+	{
+		pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, tr.screencopy_fbo->id);
+		pglBlitFramebuffer(
+			m_vecRect.x, 
+			y2, 
+			m_vecRect.x + m_vecRect.z, 
+			y2 + m_vecRect.w, m_vecRect.x, 
+			y2, 
+			m_vecRect.x + m_vecRect.z, 
+			y2 + m_vecRect.w, 
+			GL_COLOR_BUFFER_BIT, 
+			GL_LINEAR // why?
+		);
+		pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
+	}
+	else
+	{
+		GL_Bind(GL_TEXTURE0, tr.screen_color);
+		pglCopyTexSubImage2D(GL_TEXTURE_2D, 0, m_vecRect.x, y2, m_vecRect.x, y2, m_vecRect.z, m_vecRect.w);
+	}
 }
 
 void CTransEntry :: RequestScreenDepth( void )
 {
-	if( !m_bScissorReady ) return;
+	if (!m_bScissorReady) 
+		return;
 
+	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
 	float y2 = (float)RI->view.port[3] - m_vecRect.w - m_vecRect.y;
-	GL_Bind( GL_TEXTURE0, tr.screen_depth );
-	pglCopyTexSubImage2D( GL_TEXTURE_2D, 0, m_vecRect.x, y2, m_vecRect.x, y2, m_vecRect.z, m_vecRect.w );
+	if (hdr_rendering)
+	{
+		pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, tr.screencopy_fbo->id);
+		pglBlitFramebuffer(
+			m_vecRect.x, 
+			y2, 
+			m_vecRect.x + m_vecRect.z, 
+			y2 + m_vecRect.w, 
+			m_vecRect.x, 
+			y2, 
+			m_vecRect.x + m_vecRect.z, 
+			y2 + m_vecRect.w, 
+			GL_DEPTH_BUFFER_BIT, 
+			GL_NEAREST
+		);
+		pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
+	}
+	else
+	{
+		GL_Bind(GL_TEXTURE0, tr.screen_depth);
+		pglCopyTexSubImage2D(GL_TEXTURE_2D, 0, m_vecRect.x, y2, m_vecRect.x, y2, m_vecRect.z, m_vecRect.w);
+	}
 }
 
 void CTransEntry :: RenderScissorDebug( void )
