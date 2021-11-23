@@ -3,68 +3,25 @@
 //
 //		2006
 
+#include "gl_postprocess.h"
 #include "hud.h"
 #include "utils.h"
 #include "const.h"
 #include "gl_local.h"
-#include "mathlib.h"
-#include "gl_shader.h"
 #include "stringlib.h"
 #include "gl_world.h"
 #include "gl_cvars.h"
 #include "gl_debug.h"
 
-#define DEAD_GRAYSCALE_TIME		5.0f
-#define TARGET_SIZE			256
+static CBasePostEffects	post;
 
-// post-process shaders
-class CBasePostEffects
+void CBasePostEffects::Initialize()
 {
-public:
-	word	blurShader[2];		// e.g. underwater blur	
-	word	dofShader;		// iron sight with dof
-	word	monoShader;		// monochrome effect
-	word	genSunShafts;		// sunshafts effect
-	word	drawSunShafts;		// sunshafts effect
-	word	tonemapShader;
-	word	blurMipShader;
-	word	bloomShader;
-
-	int	target_rgb[2];
-	float	grayScaleFactor;
-	float	blurFactor[2];
-	bool	m_bUseTarget;
-
-	// DOF parameters
-	float	m_flCachedDepth;
-	float	m_flLastDepth;
-	float	m_flStartDepth;
-	float	m_flOffsetDepth;
-	float	m_flStartTime;
-	float	m_flDelayTime;
-	float	m_flStartLength;
-	float	m_flOffsetLength;
-	float	m_flLastLength;
-	float	m_flDOFStartTime;
-
-	// sunshafts variables
-	Vector	m_vecSunLightColor;
-	Vector	m_vecSunPosition;
-
-	void InitScreenColor( void );
-	void InitScreenDepth( void );
-	void InitTargetColor( int slot );
-	void RequestScreenColor( void );
-	void RequestScreenDepth( void );
-	void RequestTargetCopy( int slot );
-	bool ProcessDepthOfField( void );
-	bool ProcessSunShafts( void );
-	void InitDepthOfField( void );
-	void SetNormalViewport( void );
-	void SetTargetViewport( void );
-	bool Begin( void );
-	void End( void );
-};
+	post.InitScreenColor();
+	post.InitScreenDepth();
+	post.InitTargetColor(0);
+	post.InitDepthOfField();
+}
 
 void CBasePostEffects :: InitScreenColor( void )
 {
@@ -183,35 +140,13 @@ void CBasePostEffects :: SetTargetViewport( void )
 
 void CBasePostEffects :: InitDepthOfField( void )
 {
-	//g_iGunLastMode = 1;
+
 }
 
 bool CBasePostEffects :: ProcessDepthOfField( void )
 {
 	if( !CVAR_TO_BOOL( r_dof ) ) // or no iron sight on weapon
 		return false; // disabled or unitialized
-
-//	if( g_iGunMode != g_iGunLastMode )
-//	{
-//		if( g_iGunMode == 1 )
-//		{
-//			// disable iron sight
-//			m_flStartLength = m_flLastLength;
-//			m_flOffsetLength = -m_flStartLength;
-//			m_flDOFStartTime = tr.time;
-//		}
-//		else
-//		{
-//			// enable iron sight
-//			m_flStartLength = m_flLastLength;
-//			m_flOffsetLength = r_dof_focal_length->value;
-//			m_flDOFStartTime = tr.time;
-//		}
-//
-//
-////		ALERT( at_console, "Iron sight changed( %i )\n", g_iGunMode );
-//		g_iGunLastMode = g_iGunMode;
-//	}
 
 	if( m_flDOFStartTime == 0.0f )
 		return false; // iron sight disabled
@@ -340,8 +275,6 @@ void CBasePostEffects :: End( void )
 	GL_Setup3D();
 }
 
-static CBasePostEffects	post;
-
 void InitPostShaders()
 {
 	char options[MAX_OPTIONS_LENGTH];
@@ -388,10 +321,7 @@ void InitPostEffects( void )
 
 void InitPostTextures( void )
 {
-	post.InitScreenColor();
-	post.InitScreenDepth();
-	post.InitTargetColor( 0 );
-	post.InitDepthOfField();
+	post.Initialize();
 }
 
 static float GetGrayscaleFactor( void )

@@ -17,6 +17,7 @@ GNU General Public License for more details.
 #ifndef GL_SHADER_H
 #define GL_SHADER_H
 #include "custom.h"
+#include "gl_export.h"
 
 #define MAX_OPTIONS_LENGTH		512
 #define MAX_GLSL_PROGRAMS		4096
