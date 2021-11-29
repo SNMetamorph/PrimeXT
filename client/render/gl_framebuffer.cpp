@@ -86,7 +86,7 @@ void GL_ResizeDrawbuffer( gl_drawbuffer_t *fbo, int width, int height, int depth
 GL_AttachColorTextureToFBO
 ==================
 */
-void GL_AttachColorTextureToFBO( gl_drawbuffer_t *fbo, int texture, int colorIndex, int index )
+void GL_AttachColorTextureToFBO( gl_drawbuffer_t *fbo, int texture, int colorIndex, int index, int mipLevel )
 {
 	GLuint	target = RENDER_GET_PARM( PARM_TEX_TARGET, texture );
 	GLuint	format = RENDER_GET_PARM( PARM_TEX_GLFORMAT, texture );
@@ -122,7 +122,7 @@ void GL_AttachColorTextureToFBO( gl_drawbuffer_t *fbo, int texture, int colorInd
 		GL_BindDrawbuffer( fbo );
 
 		// Set up the color attachment
-		pglFramebufferTexture2D( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + colorIndex, GL_TEXTURE_2D, texture, 0 );
+		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + colorIndex, GL_TEXTURE_2D, texture, mipLevel);
 	}
 	else if( target == GL_TEXTURE_CUBE_MAP_ARB )
 	{
@@ -157,7 +157,7 @@ void GL_AttachColorTextureToFBO( gl_drawbuffer_t *fbo, int texture, int colorInd
 		GL_BindDrawbuffer( fbo );
 
 		// set up the color attachment
-		pglFramebufferTexture2D( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + colorIndex, GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + index, texture, 0 );
+		pglFramebufferTexture2D( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + colorIndex, GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + index, texture, mipLevel);
 	}
 	else if( target == GL_TEXTURE_2D_ARRAY_EXT )
 	{
@@ -181,7 +181,7 @@ void GL_AttachColorTextureToFBO( gl_drawbuffer_t *fbo, int texture, int colorInd
 			fbo->height = RENDER_GET_PARM( PARM_TEX_HEIGHT, texture );
 			fbo->depth = RENDER_GET_PARM( PARM_TEX_DEPTH, texture );
 
-			pglTexImage3D( target, 0, format, fbo->width, fbo->height, fbo->depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
+			pglTexImage3D( target, mipLevel, format, fbo->width, fbo->height, fbo->depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
 		}
 
 		// bind the drawbuffer
@@ -212,14 +212,14 @@ void GL_AttachColorTextureToFBO( gl_drawbuffer_t *fbo, int texture, int colorInd
 			fbo->height = RENDER_GET_PARM( PARM_TEX_HEIGHT, texture );
 			fbo->depth = RENDER_GET_PARM( PARM_TEX_DEPTH, texture );
 
-			pglTexImage3D( target, 0, format, fbo->width, fbo->height, fbo->depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
+			pglTexImage3D( target, mipLevel, format, fbo->width, fbo->height, fbo->depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
 		}
 
 		// bind the drawbuffer
 		GL_BindDrawbuffer( fbo );
 
 		// Set up the color attachment
-		pglFramebufferTexture3D( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + colorIndex, GL_TEXTURE_3D, texture, 0, index );
+		pglFramebufferTexture3D( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + colorIndex, GL_TEXTURE_3D, texture, mipLevel, index );
 	}
 	else
 	{

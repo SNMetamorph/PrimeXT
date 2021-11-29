@@ -830,7 +830,7 @@ void GL_DrawDeferredPass( void );
 //
 gl_drawbuffer_t *GL_AllocDrawbuffer( const char *name, int width, int height, int depth = 1 );
 void GL_ResizeDrawbuffer( gl_drawbuffer_t *fbo, int width, int height, int depth = 1 );
-void GL_AttachColorTextureToFBO( gl_drawbuffer_t *fbo, int textrue, int colorIndex, int side = 0 );
+void GL_AttachColorTextureToFBO( gl_drawbuffer_t *fbo, int texture, int colorIndex, int cubemapSide = 0, int mipLevel = 0 );
 void GL_AttachDepthTextureToFBO( gl_drawbuffer_t *fbo, int texture, int side = 0 );
 void GL_CheckFBOStatus( gl_drawbuffer_t *fbo );
 void GL_VidInitDrawBuffers( void );
@@ -961,7 +961,6 @@ void R_DrawSkyBox( void );
 //
 // gl_postprocess.cpp
 //
-void InitPostShaders();
 void InitPostTextures();
 void InitPostEffects();
 void RenderDOF();

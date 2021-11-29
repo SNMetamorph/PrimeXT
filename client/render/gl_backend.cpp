@@ -501,7 +501,7 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 		// copy image from multisampling framebuffer to screen framebuffer
 		pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, tr.screen_temp_fbo->id);
 		pglBindFramebuffer(GL_READ_FRAMEBUFFER, tr.screen_temp_fbo_msaa->id);
-		pglBlitFramebuffer(0, 0, glState.width, glState.height, 0, 0, glState.width, glState.height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		pglBlitFramebuffer(0, 0, glState.width, glState.height, 0, 0, glState.width, glState.height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);  
 		GL_BindFBO(tr.screen_temp_fbo->id);
 	}
 
