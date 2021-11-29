@@ -14,13 +14,49 @@
 #include "gl_debug.h"
 
 static CBasePostEffects	post;
+void V_RenderPostEffect(word hProgram);
 
-void CBasePostEffects::Initialize()
+void CBasePostEffects::InitializeTextures()
 {
-	post.InitScreenColor();
-	post.InitScreenDepth();
-	post.InitTargetColor(0);
-	post.InitDepthOfField();
+	InitScreenColor();
+	InitScreenDepth();
+	InitTargetColor(0);
+	InitDepthOfField();
+	InitLuminanceTexture();
+}
+
+void CBasePostEffects::InitializeShaders()
+{
+	char options[MAX_OPTIONS_LENGTH];
+
+	// monochrome effect
+	monoShader = GL_FindShader("postfx/monochrome", "postfx/generic", "postfx/monochrome");
+
+	// gaussian blur for X
+	GL_SetShaderDirective(options, "BLUR_X");
+	blurShader[0] = GL_FindShader("postfx/gaussblur", "postfx/generic", "postfx/gaussblur", options);
+
+	// gaussian blur for Y
+	GL_SetShaderDirective(options, "BLUR_Y");
+	blurShader[1] = GL_FindShader("postfx/gaussblur", "postfx/generic", "postfx/gaussblur", options);
+
+	// DOF with bokeh
+	dofShader = GL_FindShader("postfx/dofbokeh", "postfx/generic", "postfx/dofbokeh");
+
+	// prepare sunshafts
+	genSunShafts = GL_FindShader("postfx/genshafts", "postfx/generic", "postfx/genshafts");
+
+	// render sunshafts
+	drawSunShafts = GL_FindShader("postfx/drawshafts", "postfx/generic", "postfx/drawshafts");
+
+	// tonemapping 
+	tonemapShader = GL_FindShader("postfx/tonemap", "postfx/generic", "postfx/tonemap");
+	luminanceGenShader = GL_FindShader("postfx/generate_luminance", "postfx/generic", "postfx/generate_luminance");
+	luminanceDownscaleShader = GL_FindShader("postfx/downscale_luminance", "postfx/generic", "postfx/downscale_luminance");
+
+	// bloom effect
+	blurMipShader = GL_FindShader("postfx/gaussblurmip", "postfx/generic", "postfx/gaussblurmip");
+	bloomShader = GL_FindShader("postfx/bloom", "postfx/generic", "postfx/bloom");
 }
 
 void CBasePostEffects :: InitScreenColor( void )
@@ -93,6 +129,7 @@ void CBasePostEffects :: InitTargetColor( int slot )
 void CBasePostEffects :: RequestScreenColor( void )
 {
 	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
+	GL_Bind(GL_TEXTURE0, tr.screen_color);
 	if (hdr_rendering)
 	{
 		pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, tr.screencopy_fbo->id);
@@ -101,7 +138,6 @@ void CBasePostEffects :: RequestScreenColor( void )
 	}
 	else
 	{
-		GL_Bind(GL_TEXTURE0, tr.screen_color);
 		pglCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, glState.width, glState.height);
 	}
 }
@@ -109,6 +145,7 @@ void CBasePostEffects :: RequestScreenColor( void )
 void CBasePostEffects :: RequestScreenDepth( void )
 {
 	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
+	GL_Bind(GL_TEXTURE0, tr.screen_depth);
 	if (hdr_rendering)
 	{
 		pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, tr.screencopy_fbo->id);
@@ -117,7 +154,6 @@ void CBasePostEffects :: RequestScreenDepth( void )
 	}
 	else
 	{
-		GL_Bind(GL_TEXTURE0, tr.screen_depth);
 		pglCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, glState.width, glState.height);
 	}
 }
@@ -126,6 +162,55 @@ void CBasePostEffects :: RequestTargetCopy( int slot )
 {
 	GL_Bind(GL_TEXTURE0, target_rgb[slot]);
 	pglCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, TARGET_SIZE, TARGET_SIZE);
+}
+
+void CBasePostEffects::GenerateLuminance()
+{
+	GL_DebugGroupPush(__FUNCTION__);
+	// render luminance to first mip
+	pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, avg_luminance_fbo[0]->id);
+	V_RenderPostEffect(luminanceGenShader);
+
+	// downscale luminance to other mips
+	GL_Bind(GL_TEXTURE0, avg_luminance_texture);
+	GL_BindShader(&glsl_programs[luminanceDownscaleShader]);
+	const int mipCount = ARRAYSIZE(avg_luminance_fbo);
+	for (int a = 2, i = 1; i < mipCount; ++i, a *= 2)
+	{
+		gl_drawbuffer_t *fbo = avg_luminance_fbo[i];
+		int w = Q_max(fbo->width / a, 1);
+		int h = Q_max(fbo->height / a, 1);
+		
+		for (int j = 0; j < RI->currentshader->numUniforms; j++)
+		{
+			uniform_t *u = &RI->currentshader->uniforms[j];
+			switch (u->type)
+			{
+				case UT_SCREENSIZEINV:
+					u->SetValue(1.0f / (float)w, 1.0f / (float)h);
+					break;
+				case UT_MIPLOD:
+					u->SetValue((float)(i - 1));
+					break;
+				case UT_TEXCOORDCLAMP:
+					u->SetValue(0.0f, 0.0f, 1.0f, 1.0f);
+					break;
+			}
+		}
+
+		pglViewport(0, 0, w, h);
+		pglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo->id);
+		RenderFSQ(glState.width, glState.height);
+	}
+
+	// extract average luminance from last mip
+	pglBindFramebuffer(GL_READ_FRAMEBUFFER, avg_luminance_fbo[mipCount - 1]->id);
+	pglReadPixels(0, 0, 1, 1, GL_RED, GL_FLOAT, &avg_luminance);
+
+	// restore GL state
+	pglViewport(0, 0, glState.width, glState.height);
+	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
+	GL_DebugGroupPop();
 }
 
 void CBasePostEffects :: SetNormalViewport( void )
@@ -141,6 +226,29 @@ void CBasePostEffects :: SetTargetViewport( void )
 void CBasePostEffects :: InitDepthOfField( void )
 {
 
+}
+ 
+void CBasePostEffects::InitLuminanceTexture()
+{
+	const int texWidth = 1280;
+	const int texHeight = 720;
+	const int mipCount = ARRAYSIZE(avg_luminance_fbo);
+
+	FREE_TEXTURE(avg_luminance_texture);
+	avg_luminance_texture = CREATE_TEXTURE("*screen_avg_luminance", texWidth, texHeight, NULL, TF_ARB_16BIT | TF_ARB_FLOAT); // make it TF_LUMINANCE for using just 1 color channel
+	GL_Bind(GL_TEXTURE0, avg_luminance_texture);
+	pglGenerateMipmap(GL_TEXTURE_2D);
+	pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	GL_Bind(GL_TEXTURE0, 0);
+
+	for (int i = 0; i < mipCount; ++i)
+	{
+		if (!avg_luminance_fbo[i]) {
+			avg_luminance_fbo[i] = GL_AllocDrawbuffer("*screen_avg_luminance_fbo", texWidth, texHeight, 1);
+		}
+		GL_AttachColorTextureToFBO(avg_luminance_fbo[i], avg_luminance_texture, 0, 0, i);
+		GL_CheckFBOStatus(avg_luminance_fbo[i]);
+	}
 }
 
 bool CBasePostEffects :: ProcessDepthOfField( void )
@@ -275,38 +383,6 @@ void CBasePostEffects :: End( void )
 	GL_Setup3D();
 }
 
-void InitPostShaders()
-{
-	char options[MAX_OPTIONS_LENGTH];
-
-	// monochrome effect
-	post.monoShader = GL_FindShader("postfx/monochrome", "postfx/generic", "postfx/monochrome");
-
-	// gaussian blur for X
-	GL_SetShaderDirective(options, "BLUR_X");
-	post.blurShader[0] = GL_FindShader("postfx/gaussblur", "postfx/generic", "postfx/gaussblur", options);
-
-	// gaussian blur for Y
-	GL_SetShaderDirective(options, "BLUR_Y");
-	post.blurShader[1] = GL_FindShader("postfx/gaussblur", "postfx/generic", "postfx/gaussblur", options);
-
-	// DOF with bokeh
-	post.dofShader = GL_FindShader("postfx/dofbokeh", "postfx/generic", "postfx/dofbokeh");
-
-	// prepare sunshafts
-	post.genSunShafts = GL_FindShader("postfx/genshafts", "postfx/generic", "postfx/genshafts");
-
-	// render sunshafts
-	post.drawSunShafts = GL_FindShader("postfx/drawshafts", "postfx/generic", "postfx/drawshafts");
-
-	// tonemapping 
-	post.tonemapShader = GL_FindShader("postfx/tonemap", "postfx/generic", "postfx/tonemap");
-
-	// bloom effect
-	post.blurMipShader = GL_FindShader("postfx/gaussblurmip", "postfx/generic", "postfx/gaussblurmip");
-	post.bloomShader = GL_FindShader("postfx/bloom", "postfx/generic", "postfx/bloom");
-}
-
 void InitPostEffects( void )
 {
 	v_posteffects = CVAR_REGISTER( "gl_posteffects", "1", FCVAR_ARCHIVE );
@@ -316,12 +392,12 @@ void InitPostEffects( void )
 	r_tonemap_exposure = CVAR_REGISTER("r_tonemap_exposure", "1", FCVAR_ARCHIVE);
 	r_bloom = CVAR_REGISTER("r_bloom", "1", FCVAR_ARCHIVE);
 	memset( &post, 0, sizeof( post ));
-	InitPostShaders();
+	post.InitializeShaders();
 }
 
 void InitPostTextures( void )
 {
-	post.Initialize();
+	post.InitializeTextures();
 }
 
 static float GetGrayscaleFactor( void )
@@ -452,8 +528,11 @@ void V_RenderPostEffect( word hProgram )
 			u->SetValue( post.m_flLastLength );
 			break;
 		case UT_EXPOSURE:
-			u->SetValue(r_tonemap_exposure->value);
+		{
+			float exposure = 0.5f / Q_max(post.avg_luminance, 0.00001);
+			u->SetValue(exposure);
 			break;
+		}
 		case UT_DOFDEBUG:
 			u->SetValue( CVAR_TO_BOOL( r_dof_debug ));
 			break;
@@ -709,6 +788,7 @@ void RenderTonemap()
 	GL_DebugGroupPush(__FUNCTION__);
 	GL_Setup2D();
 	post.RequestScreenColor();
+	post.GenerateLuminance();
 	V_RenderPostEffect(post.tonemapShader);
 	post.End();
 	GL_DebugGroupPop();

@@ -32,9 +32,9 @@ float rand(vec2 co)
 void main( void )
 {
     const float gamma = 2.2;
-	vec3 diffuse = texture2D( u_ScreenMap, var_TexCoord ).rgb;
-	diffuse = vec3(1.0) - exp(-diffuse * u_Exposure); // tone compression with exposure
-	//diffuse = pow(diffuse, vec3(1.0 / gamma)); // gamma-correction
-    //= pow(diffuse, vec3(0.454545)) + 0.5 * vec3(rand(gl_FragCoord.xy) * 0.00784 - 0.00392);	
-    gl_FragColor = vec4(diffuse, 1.0);
+	vec3 color = texture2D(u_ScreenMap, var_TexCoord).rgb;
+	color = vec3(1.0) - exp(-u_Exposure * color); // tone compression with exposure
+	//color = pow(color, vec3(1.0 / gamma)); // gamma-correction
+    //= pow(color, vec3(0.454545)) + 0.5 * vec3(rand(gl_FragCoord.xy) * 0.00784 - 0.00392);	
+    gl_FragColor = vec4(color, 1.0);
 }

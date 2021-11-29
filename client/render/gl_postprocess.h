@@ -1,5 +1,6 @@
 #pragma once
 #include "mathlib.h"
+#include "gl_local.h"
 #include "gl_shader.h"
 
 #define DEAD_GRAYSCALE_TIME		5.0f
@@ -15,6 +16,8 @@ public:
 	word	genSunShafts;		// sunshafts effect
 	word	drawSunShafts;		// sunshafts effect
 	word	tonemapShader;
+	word	luminanceGenShader;
+	word	luminanceDownscaleShader;
 	word	blurMipShader;
 	word	bloomShader;
 
@@ -35,14 +38,22 @@ public:
 	float	m_flLastLength;
 	float	m_flDOFStartTime;
 
+	// automatic exposure 
+	gl_drawbuffer_t	*avg_luminance_fbo[11];
+	int	avg_luminance_texture;
+	float avg_luminance;
+
 	// sunshafts variables
 	Vector	m_vecSunLightColor;
 	Vector	m_vecSunPosition;
 
-	void Initialize();
+	void InitializeTextures();
+	void InitializeShaders();
+
 	void RequestScreenColor();
 	void RequestScreenDepth();
 	void RequestTargetCopy(int slot);
+	void GenerateLuminance();
 	bool ProcessDepthOfField();
 	bool ProcessSunShafts();
 	void SetNormalViewport();
@@ -55,4 +66,5 @@ private:
 	void InitScreenDepth();
 	void InitTargetColor(int slot);
 	void InitDepthOfField();
+	void InitLuminanceTexture();
 };
