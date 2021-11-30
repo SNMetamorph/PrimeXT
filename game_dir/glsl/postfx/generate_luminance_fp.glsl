@@ -23,6 +23,7 @@ varying vec2		var_TexCoord;
 void main()
 {
 	vec4 color = texture2D(u_ScreenMap, var_TexCoord);
-	float luminance = GetLuminance(color.rgb);
+	float weight = 1.05 - 0.2 * length(var_TexCoord - vec2(0.5, 0.5));
+	float luminance = weight * GetLuminance(color.rgb);
 	gl_FragColor = vec4(luminance, 0.0, 0.0, 1.0);
 }

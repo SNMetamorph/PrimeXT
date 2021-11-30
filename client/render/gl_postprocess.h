@@ -42,6 +42,7 @@ public:
 	gl_drawbuffer_t	*avg_luminance_fbo[11];
 	int	avg_luminance_texture;
 	float avg_luminance;
+	float avg_luminance_interp;
 
 	// sunshafts variables
 	Vector	m_vecSunLightColor;

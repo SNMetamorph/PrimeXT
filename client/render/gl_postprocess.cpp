@@ -206,6 +206,8 @@ void CBasePostEffects::GenerateLuminance()
 	// extract average luminance from last mip
 	pglBindFramebuffer(GL_READ_FRAMEBUFFER, avg_luminance_fbo[mipCount - 1]->id);
 	pglReadPixels(0, 0, 1, 1, GL_RED, GL_FLOAT, &avg_luminance);
+	float t = Q_min(1.0f, tr.frametime * 3.0f);
+	avg_luminance_interp = avg_luminance_interp * (1.0f - t) + t * avg_luminance;
 
 	// restore GL state
 	pglViewport(0, 0, glState.width, glState.height);
@@ -529,7 +531,7 @@ void V_RenderPostEffect( word hProgram )
 			break;
 		case UT_EXPOSURE:
 		{
-			float exposure = 0.5f / Q_max(post.avg_luminance, 0.00001);
+			float exposure = 0.5f / Q_max(post.avg_luminance_interp, 0.00001);
 			u->SetValue(exposure);
 			break;
 		}
