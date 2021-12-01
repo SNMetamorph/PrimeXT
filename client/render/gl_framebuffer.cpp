@@ -94,7 +94,7 @@ void GL_AttachColorTextureToFBO( gl_drawbuffer_t *fbo, int texture, int colorInd
 	GLint	height = RENDER_GET_PARM( PARM_TEX_HEIGHT, texture );
 	GLint	depth = RENDER_GET_PARM( PARM_TEX_DEPTH, texture );
 
-	if( target == GL_TEXTURE_2D )
+	if( target == GL_TEXTURE_2D || target == GL_TEXTURE_2D_MULTISAMPLE )
 	{
 		// set the texture
 		fbo->colortarget[colorIndex] = texture;
@@ -122,7 +122,7 @@ void GL_AttachColorTextureToFBO( gl_drawbuffer_t *fbo, int texture, int colorInd
 		GL_BindDrawbuffer( fbo );
 
 		// Set up the color attachment
-		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + colorIndex, GL_TEXTURE_2D, texture, mipLevel);
+		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + colorIndex, target, texture, mipLevel);
 	}
 	else if( target == GL_TEXTURE_CUBE_MAP_ARB )
 	{
@@ -240,7 +240,7 @@ void GL_AttachDepthTextureToFBO( gl_drawbuffer_t *fbo, int texture, int index )
 	GLint	height = RENDER_GET_PARM( PARM_TEX_HEIGHT, texture );
 	GLint	depth = RENDER_GET_PARM( PARM_TEX_DEPTH, texture );
 
-	if( target == GL_TEXTURE_2D )
+	if( target == GL_TEXTURE_2D || target == GL_TEXTURE_2D_MULTISAMPLE )
 	{
 		// set the texture
 		fbo->depthtarget = texture;
@@ -268,7 +268,7 @@ void GL_AttachDepthTextureToFBO( gl_drawbuffer_t *fbo, int texture, int index )
 		GL_BindDrawbuffer( fbo );
 
 		// Set up the color attachment
-		pglFramebufferTexture2D( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, texture, 0 );
+		pglFramebufferTexture2D( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, target, texture, 0 );
 	}
 	else if( target == GL_TEXTURE_CUBE_MAP_ARB )
 	{
