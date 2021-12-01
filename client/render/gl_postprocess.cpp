@@ -718,7 +718,7 @@ void RenderBloom()
 	glsl_program_t *shader = RI->currentshader;
 
 	// render and blur mips
-	for (int i = 1; i <= 6; i++)
+	for (int i = 0; i < 6; i++)
 	{
 		w /= 2;
 		h /= 2;
@@ -733,7 +733,7 @@ void RenderBloom()
 					u->SetValue(1.0f / (float)w, 1.0f / (float)h);
 					break;
 				case UT_MIPLOD:
-					u->SetValue((float)(i - 1));
+					u->SetValue((float)i);
 					break;
 				case UT_TEXCOORDCLAMP:
 					u->SetValue(0.0f, 0.0f, 1.0f, 1.0f);
@@ -752,7 +752,7 @@ void RenderBloom()
 	h = glState.height / 2;
 
 	pglViewport(0, 0, w, h);
-	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, tr.screen_temp_fbo_mip[1]);
+	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, tr.screen_temp_fbo_mip[0]);
 	GL_BindShader(&glsl_programs[post.bloomShader]);
 
 	shader = RI->currentshader;
