@@ -739,7 +739,7 @@ void RenderBloom()
 					u->SetValue(0.0f, 0.0f, 1.0f, 1.0f);
 					break;
 				case UT_BLOOMFIRSTPASS:
-					u->SetValue((i > 1) ? 1 : 0);
+					u->SetValue((i < 1) ? 1 : 0);
 					break;
 			}
 		}
