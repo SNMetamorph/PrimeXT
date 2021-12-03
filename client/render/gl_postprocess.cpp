@@ -531,7 +531,10 @@ void V_RenderPostEffect( word hProgram )
 			break;
 		case UT_EXPOSURE:
 		{
-			float exposure = 0.5f / Q_max(post.avg_luminance_interp, 0.00001);
+			const float minLuminance = 0.15f;
+			const float maxLuminance = 100000.0f;
+			const float avgBright = 0.25f;
+			float exposure = avgBright / Q_min(maxLuminance, Q_max(post.avg_luminance_interp, minLuminance));
 			u->SetValue(exposure);
 			break;
 		}

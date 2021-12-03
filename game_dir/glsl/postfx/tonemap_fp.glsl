@@ -14,6 +14,7 @@ GNU General Public License for more details.
 */
 
 #include "const.h"
+#include "mathlib.h"
 
 uniform sampler2D	u_ScreenMap;
 uniform float       u_Exposure;
@@ -29,12 +30,55 @@ float rand(vec2 co)
     return abs(fract(sin(sn) * c));
 }
 
-void main( void )
+vec3 TonemapExposure(vec3 source, float exposure)
+{
+    return vec3(1.0) - exp(-exposure * source);
+}
+
+vec3 TonemapFilmic(vec3 source)
+{
+	source = max(vec3(0.), source - vec3(0.004));
+	source = (source * (6.2 * source + .5)) / (source * (6.2 * source + 1.7) + 0.06);
+	return source;
+}
+
+float CurveMGS5(float x)
+{
+    const float a = 0.6;
+    const float b = 0.45333;
+    if (x <= a)
+        return x;
+    else
+        return min(1.0, a + b - (b*b) / (x - a + b));
+}
+
+vec3 TonemapMGS5(vec3 source)
+{
+    return vec3(
+        CurveMGS5(source.r),
+        CurveMGS5(source.g),
+        CurveMGS5(source.b)
+    );
+}
+
+// tonemapping by ForhaxeD, too dark for some reason
+// vec3 TonemapForhaxed(vec3 source, float averageLuminance)
+// {
+//     const float middleGrey = 0.6f;
+//     const float maxLuminance = 16.0f;
+//     float lumAvg = exp(averageLuminance);
+//     float lumPixel = GetLuminance(source);
+//     float lumScaled = (lumPixel * middleGrey) / lumAvg;
+//     float lumCompressed = (lumScaled * (1 + (lumScaled / (maxLuminance * maxLuminance)))) / (1 + lumScaled);
+//     return lumCompressed * source;
+// }
+
+void main()
 {
     const float gamma = 2.2;
-	vec3 color = texture2D(u_ScreenMap, var_TexCoord).rgb;
-	color = vec3(1.0) - exp(-u_Exposure * color); // tone compression with exposure
-	//color = pow(color, vec3(1.0 / gamma)); // gamma-correction
-    //= pow(color, vec3(0.454545)) + 0.5 * vec3(rand(gl_FragCoord.xy) * 0.00784 - 0.00392);	
-    gl_FragColor = vec4(color, 1.0);
+	vec3 source = texture2D(u_ScreenMap, var_TexCoord).rgb;
+	vec3 output = TonemapMGS5(source * u_Exposure); // tone compression with exposure
+	//output = pow(output, vec3(1.0 / gamma)); // gamma-correction
+    //output = pow(output, vec3(0.454545)) + 0.5 * vec3(rand(gl_FragCoord.xy) * 0.00784 - 0.00392);	
+    gl_FragColor = vec4(output, 1.0);
 }
