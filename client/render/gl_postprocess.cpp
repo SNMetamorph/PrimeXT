@@ -164,10 +164,10 @@ void CBasePostEffects :: RequestTargetCopy( int slot )
 	pglCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, TARGET_SIZE, TARGET_SIZE);
 }
 
-void CBasePostEffects::GenerateLuminance()
+float CBasePostEffects::ComputeAvgLuminance()
 {
-	GL_DebugGroupPush(__FUNCTION__);
 	// render luminance to first mip
+	GL_DebugGroupPush(__FUNCTION__);
 	pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, avg_luminance_fbo[0]->id);
 	V_RenderPostEffect(luminanceGenShader);
 
@@ -204,15 +204,27 @@ void CBasePostEffects::GenerateLuminance()
 	}
 
 	// extract average luminance from last mip
+	float averageLuminance;
 	pglBindFramebuffer(GL_READ_FRAMEBUFFER, avg_luminance_fbo[mipCount - 1]->id);
-	pglReadPixels(0, 0, 1, 1, GL_RED, GL_FLOAT, &avg_luminance);
-	float t = Q_min(1.0f, tr.frametime * 3.0f);
-	avg_luminance_interp = avg_luminance_interp * (1.0f - t) + t * avg_luminance;
+	pglReadPixels(0, 0, 1, 1, GL_RED, GL_FLOAT, &averageLuminance);
 
 	// restore GL state
 	pglViewport(0, 0, glState.width, glState.height);
 	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
 	GL_DebugGroupPop();
+
+	return averageLuminance;
+}
+
+float CBasePostEffects::ComputeEV100FromAvgLuminance(float avgLum)
+{
+	return log2(avgLum * 100.0f / 12.5f);
+}
+
+float CBasePostEffects::ConvertEV100ToExposure(float ev100)
+{
+	float maxLuminance = 1.2f * pow(2.0f, ev100);
+	return 1.0f / maxLuminance;
 }
 
 void CBasePostEffects :: SetNormalViewport( void )
@@ -251,6 +263,30 @@ void CBasePostEffects::InitLuminanceTexture()
 		GL_AttachColorTextureToFBO(avg_luminance_fbo[i], avg_luminance_texture, 0, 0, i);
 		GL_CheckFBOStatus(avg_luminance_fbo[i]);
 	}
+}
+
+float CBasePostEffects::ComputeExposure(float avgLuminance)
+{
+	const float exposureMin = 0.01f;
+	const float exposureMax = 1.0f;
+	const float exposureScale = 2.0f;
+	const float	adaptRateToDark = 0.7f;
+	const float adaptRateToBright = 1.6f;
+	static float exposureInterp;
+	float currentAdaptRate;
+
+	// calculate & interpolate exposure
+	float ev100 = ComputeEV100FromAvgLuminance(avgLuminance / (1.0f - avgLuminance));
+	float exposure = bound(exposureMin, ConvertEV100ToExposure(ev100) * exposureScale, exposureMax);
+
+	if (exposure > exposureInterp)
+		currentAdaptRate = adaptRateToDark;
+	else
+		currentAdaptRate = adaptRateToBright;
+
+	float t = bound(0.0f, tr.frametime * currentAdaptRate, 1.0f);
+	exposureInterp = exposureInterp * (1.0f - t) + exposure * t;
+	return exposureInterp;
 }
 
 bool CBasePostEffects :: ProcessDepthOfField( void )
@@ -529,14 +565,8 @@ void V_RenderPostEffect( word hProgram )
 			u->SetValue( post.m_flLastLength );
 			break;
 		case UT_EXPOSURE:
-		{
-			const float minLuminance = 0.15f;
-			const float maxLuminance = 100000.0f;
-			const float avgBright = 0.25f;
-			float exposure = avgBright / Q_min(maxLuminance, Q_max(post.avg_luminance_interp, minLuminance));
-			u->SetValue(exposure);
+			u->SetValue( tr.camera_exposure );
 			break;
-		}
 		case UT_DOFDEBUG:
 			u->SetValue( CVAR_TO_BOOL( r_dof_debug ));
 			break;
@@ -792,7 +822,7 @@ void RenderTonemap()
 	GL_DebugGroupPush(__FUNCTION__);
 	GL_Setup2D();
 	post.RequestScreenColor();
-	post.GenerateLuminance();
+	tr.camera_exposure = post.ComputeExposure(post.ComputeAvgLuminance());
 	V_RenderPostEffect(post.tonemapShader);
 	post.End();
 	GL_DebugGroupPop();

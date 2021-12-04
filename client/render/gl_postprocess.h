@@ -41,8 +41,6 @@ public:
 	// automatic exposure 
 	gl_drawbuffer_t	*avg_luminance_fbo[11];
 	int	avg_luminance_texture;
-	float avg_luminance;
-	float avg_luminance_interp;
 
 	// sunshafts variables
 	Vector	m_vecSunLightColor;
@@ -54,7 +52,6 @@ public:
 	void RequestScreenColor();
 	void RequestScreenDepth();
 	void RequestTargetCopy(int slot);
-	void GenerateLuminance();
 	bool ProcessDepthOfField();
 	bool ProcessSunShafts();
 	void SetNormalViewport();
@@ -62,10 +59,16 @@ public:
 	bool Begin();
 	void End();
 
+	float ComputeAvgLuminance();
+	float ComputeExposure(float avgLuminance);
+
 private:
 	void InitScreenColor();
 	void InitScreenDepth();
 	void InitTargetColor(int slot);
 	void InitDepthOfField();
+
 	void InitLuminanceTexture();
+	float ComputeEV100FromAvgLuminance(float avgLum);
+	float ConvertEV100ToExposure(float ev100);
 };

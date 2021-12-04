@@ -20,10 +20,23 @@ uniform vec2		u_ScreenSizeInv;
 
 varying vec2		var_TexCoord;
 
+float GetLogLuminance(vec3 source)
+{
+	float lum = GetLuminance(source);
+	return lum / (1 + lum);
+}
+
 void main()
 {
-	vec4 color = texture2D(u_ScreenMap, var_TexCoord);
-	float weight = 1.05 - 1.9 * length(var_TexCoord - vec2(0.5, 0.5));
-	float luminance = max(weight, 0.0) * GetLuminance(color.rgb);
-	gl_FragColor = vec4(luminance, 0.0, 0.0, 1.0);
+	float samples[4];
+	vec2 pixelOffset = u_ScreenSizeInv;
+	float weight = 1.05 - 0.2 * length(var_TexCoord - vec2(0.5, 0.5));
+
+	samples[0] = GetLogLuminance(weight * texture2D(u_ScreenMap, var_TexCoord).xyz);
+	samples[1] = GetLogLuminance(weight * texture2D(u_ScreenMap, var_TexCoord + vec2(pixelOffset.x, 0)).xyz);
+	samples[2] = GetLogLuminance(weight * texture2D(u_ScreenMap, var_TexCoord + vec2(0, pixelOffset.y)).xyz);
+	samples[3] = GetLogLuminance(weight * texture2D(u_ScreenMap, var_TexCoord + pixelOffset).xyz);
+
+	float luminance = (samples[0] + samples[1] + samples[2] + samples[3]) / 4.0;
+	gl_FragColor = vec4(luminance, 0.0, 0.0, 0.0);
 }

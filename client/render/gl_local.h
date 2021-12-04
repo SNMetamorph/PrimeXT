@@ -643,6 +643,7 @@ typedef struct
 	float		light_gamma;
 	float		light_threshold;
 	float		smoothing_threshold;
+	float		camera_exposure;
 
 	// original player vieworg and angles
 	Vector		cached_vieworigin;
