@@ -41,7 +41,6 @@ cvar_t *r_nocull;
 cvar_t *r_lockpvs;
 cvar_t *gl_hdr;
 cvar_t *r_tonemap;
-cvar_t *r_tonemap_exposure;
 cvar_t *r_bloom;
 cvar_t *r_dof;
 cvar_t *r_dof_hold_time;

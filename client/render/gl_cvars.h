@@ -45,7 +45,6 @@ extern cvar_t *r_nocull;
 extern cvar_t *r_lockpvs;
 extern cvar_t *gl_hdr;
 extern cvar_t *r_tonemap;
-extern cvar_t *r_tonemap_exposure;
 extern cvar_t *r_bloom;
 extern cvar_t *r_dof;
 extern cvar_t *r_dof_hold_time;

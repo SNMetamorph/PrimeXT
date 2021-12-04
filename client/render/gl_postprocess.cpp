@@ -391,7 +391,6 @@ void InitPostEffects( void )
 	v_sunshafts = CVAR_REGISTER( "gl_sunshafts", "1", FCVAR_ARCHIVE );
 	v_grayscale = CVAR_REGISTER( "gl_grayscale", "0", 0 );
 	r_tonemap = CVAR_REGISTER("r_tonemap", "1", FCVAR_ARCHIVE);
-	r_tonemap_exposure = CVAR_REGISTER("r_tonemap_exposure", "1", FCVAR_ARCHIVE);
 	r_bloom = CVAR_REGISTER("r_bloom", "1", FCVAR_ARCHIVE);
 	memset( &post, 0, sizeof( post ));
 	post.InitializeShaders();
