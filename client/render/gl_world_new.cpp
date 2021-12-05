@@ -4019,10 +4019,9 @@ R_RenderShadowBrushList
 */
 void R_RenderShadowBrushList( void )
 {
-	int		cached_matrix = -1;
-	material_t	*cached_material = NULL;
-	qboolean		flush_buffer = false;
-	int		startv, endv;
+	int			cached_matrix = -1;
+	qboolean	flush_buffer = false;
+	int			startv, endv;
 
 	if( !RI->frame.solid_faces.Count() )
 		return;
@@ -4039,22 +4038,18 @@ void R_RenderShadowBrushList( void )
 		if( entry->m_bDrawType != DRAWTYPE_SURFACE )
 			continue;
 
-		mextrasurf_t *es = entry->m_pSurf->info;
-		cl_entity_t *e = RI->currententity = es->parent;
-		RI->currentmodel = e->model;
-		msurface_t *s = entry->m_pSurf;
-
-		if( !entry->m_hProgram ) continue;
-
-		material_t *mat = s->texinfo->texture->material;
+		msurface_t *surf = entry->m_pSurf;
+		mextrasurf_t *esurf = surf->info;
+		cl_entity_t *entity = RI->currententity = esurf->parent;
+		RI->currentmodel = entity->model;
+		
+		if( !entry->m_hProgram ) 
+			continue;
 
 		if(( i == 0 ) || ( RI->currentshader != &glsl_programs[entry->m_hProgram] ))
 			flush_buffer = true;
 
-		if( cached_matrix != es->parent->hCachedMatrix )
-			flush_buffer = true;
-
-		if( cached_material != mat )
+		if( cached_matrix != esurf->parent->hCachedMatrix )
 			flush_buffer = true;
 
 		if( flush_buffer )
@@ -4073,15 +4068,15 @@ void R_RenderShadowBrushList( void )
 		}
 
 		// now cache values
-		cached_matrix = es->parent->hCachedMatrix;
-		cached_material = mat;
+		cached_matrix = esurf->parent->hCachedMatrix;
 
 		if( numTempElems == 0 ) // new chain has started, apply uniforms
 			R_SetSurfaceUniforms( entry->m_hProgram, entry->m_pSurf, ( i == 0 ));
-		startv = Q_min( startv, es->firstvertex );
-		endv = Q_max( es->firstvertex + es->numverts, endv );
 
-		R_DrawSurface( es );
+		startv = Q_min( startv, esurf->firstvertex );
+		endv = Q_max( esurf->firstvertex + esurf->numverts, endv );
+
+		R_DrawSurface( esurf );
 	}
 
 	if( numTempElems )
