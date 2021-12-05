@@ -13,11 +13,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-uniform sampler2D		u_ColorMap;
 
 varying vec2		var_TexCoord;
 
 void main( void )
 {
-	gl_FragColor = texture2D( u_ColorMap, var_TexCoord );
+	gl_FragColor = vec4(1.0);
 }
