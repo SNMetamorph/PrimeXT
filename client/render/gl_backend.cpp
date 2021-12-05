@@ -166,20 +166,19 @@ GL_ComputeSunParams
 */
 void GL_ComputeSunParams( const Vector &skyVector )
 {
-	float	sunPos = -skyVector.z;
-	float	RefractionFactor = ( 1.0f - sqrt( Q_max( sunPos, 0.0f )));
-	Vector	SunColor = Vector( 1.0f, 1.0f, 1.0f ) - Vector( 0.0f, 0.5f, 1.0f ) * RefractionFactor;
-
 	// calculate ambient and diffuse light color
-	Vector	DiffuseColor = Vector( 1.0f, 1.0f, 1.0f ) - Vector( 0.0f, 0.25f, 0.5f ) * RefractionFactor;
-	float	AmbientIntensity = 0.0025f + 0.1875f * Q_min( 1.0f, Q_max( 0.0f, ( 0.375f + sunPos ) / 0.25f ));
-	float	DiffuseIntensity = 0.75f * Q_min( 1.0f, Q_max( 0.0f, ( 0.03125f + sunPos ) / 0.0625f ));
+	float	sunPos = -skyVector.z;
+	float	sunBrightness = 0.75f;
+	float	refractionFactor = 1.0f - sqrt(Q_max(sunPos, 0.0f));
+	vec3_t	sunColor = vec3_t(1.0f, 1.0f, 1.0f) - vec3_t(0.0f, 0.3f, 0.6f) * refractionFactor;
+	float	ambientIntensity = 0.0025f + sunBrightness * Q_min(1.0f, Q_max(0.0f, (0.375f + sunPos) / 0.25f));
+	float	diffuseIntensity = sunBrightness * Q_min(1.0f, Q_max(0.0f, (0.03125f + sunPos) / 0.0625f));
 
-	float ambientFactor = RemapVal( tr.ambientFactor, AMBIENT_EPSILON, r_lighting_modulate->value, 0.0f, 1.0f );
-	tr.sun_ambient = AmbientIntensity * ambientFactor * 2.0f; 
-	tr.sun_ambient = bound( 0.0f, tr.sun_ambient, tr.ambientFactor );
-	tr.sun_diffuse = DiffuseColor * DiffuseIntensity;
-	tr.sun_refract = RefractionFactor;
+	float ambientFactor = RemapVal(tr.ambientFactor, AMBIENT_EPSILON, r_lighting_modulate->value, 0.0f, 1.0f);
+	tr.sun_ambient = Q_max(ambientIntensity * ambientFactor, 0.0f);
+	tr.sun_ambient = bound(0.0f, tr.sun_ambient, tr.ambientFactor);
+	tr.sun_diffuse = sunColor * diffuseIntensity;
+	tr.sun_refract = refractionFactor;
 	tr.sky_normal = skyVector;
 }
 
