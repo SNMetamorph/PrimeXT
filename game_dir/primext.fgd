@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 5 September 2021)
+// PrimeXT FGD (last updated 6 December 2021)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -1262,7 +1262,7 @@
 	rendercolor(color255) : "Color (R G B)" : "255 255 255"
 	renderamt(integer) : "Distance" : 256
 	brightness(string) : "Brightness" : "2.0"
-	scale(integer) : "Cutoff Angle (0 for omnidirect)" : 0
+	scale(integer) : "Cutoff Angle (0 for omnidirect)" : 60
 	rendermode(integer) : "Texture (only for spotlight)" : 0
     message(string) : "Media file (only for spotlight)"
 	spawnflags(flags) =
