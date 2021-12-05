@@ -20,6 +20,7 @@ GNU General Public License for more details.
 #include "gl_grass.h"
 #include "gl_shader.h"
 #include "gl_cvars.h"
+#include "gl_debug.h"
 #include <utlarray.h>
 #include <stringlib.h>
 #include "vertex_fmt.h"
@@ -1066,6 +1067,7 @@ void R_RenderShadowGrassOnList( void )
 	if( !RI->frame.grass_list.Count())
 		return; // don't waste time
 
+	GL_DebugGroupPush(__FUNCTION__);
 	GL_AlphaTest( GL_TRUE );
 	pglAlphaFunc( GL_GREATER, r_grass_alpha->value );
 	GL_Cull( GL_NONE );	// grass is double-sided poly
@@ -1107,6 +1109,7 @@ void R_RenderShadowGrassOnList( void )
 
 	// restore old binding
 	GL_Cull( GL_FRONT );
+	GL_DebugGroupPop();
 }
 
 /*

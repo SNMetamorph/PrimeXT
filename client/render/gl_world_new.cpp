@@ -4027,6 +4027,7 @@ void R_RenderShadowBrushList( void )
 	if( !RI->frame.solid_faces.Count() )
 		return;
 
+	GL_DebugGroupPush(__FUNCTION__);
 	pglBindVertexArray( world->vertex_array_object );
 	pglAlphaFunc( GL_GREATER, 0.25f );
 	numTempElems = 0;
@@ -4095,4 +4096,5 @@ void R_RenderShadowBrushList( void )
 
 	R_RenderShadowGrassOnList();
 	GL_CleanupDrawState();
+	GL_DebugGroupPop();
 }

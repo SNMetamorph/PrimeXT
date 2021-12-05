@@ -505,6 +505,7 @@ void R_RenderShadowScene( CDynLight *pl, int split = 0 )
 	RI->params = RP_SHADOWVIEW;
 	bool using_fbo = false;
 
+	GL_DebugGroupPush(__FUNCTION__);
 	if( pl->type == LIGHT_DIRECTIONAL )
 	{
 		if( tr.sunShadowFBO[split].Active( ))
@@ -543,6 +544,8 @@ void R_RenderShadowScene( CDynLight *pl, int split = 0 )
 
 	if( !using_fbo )
 		pl->shadowTexture[split] = R_AllocateShadowTexture();
+
+	GL_DebugGroupPop();
 }
 
 /*
@@ -557,6 +560,7 @@ void R_RenderShadowCubeSide( CDynLight *pl, int side )
 	RI->params = RP_SHADOWVIEW;
 	bool using_fbo = false;
 
+	GL_DebugGroupPush(__FUNCTION__);
 	if( tr.fbo_shadowCM.Active( ))
 	{
 		RI->view.port[2] = tr.fbo_shadowCM.GetWidth();
@@ -585,6 +589,8 @@ void R_RenderShadowCubeSide( CDynLight *pl, int side )
 
 	if( !using_fbo )
 		pl->shadowTexture[0] = R_AllocateShadowCubemap( side );
+
+	GL_DebugGroupPop();
 }
 
 void R_RenderShadowmaps( void )
@@ -628,7 +634,7 @@ void R_RenderShadowmaps( void )
 				R_RenderShadowCubeSide( pl, j );
 				R_ResetRefState(); // restore ref instance
 			}
-                    }
+        }
 		else if( pl->type == LIGHT_SPOT )
 		{
 			if( !Mod_CheckBoxVisible( pl->absmin, pl->absmax ))

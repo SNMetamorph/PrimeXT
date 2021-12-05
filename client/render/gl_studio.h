@@ -708,9 +708,7 @@ inline void R_RenderShadowStudioList( void )
 
 inline void R_RenderDebugStudioList( bool bViewModel )
 {
-	GL_DebugGroupPush(__FUNCTION__);
 	g_StudioRenderer.RenderDebugStudioList( bViewModel );
-	GL_DebugGroupPop();
 }
 
 inline void R_AddStudioToDrawList( cl_entity_t *e, bool update = false )
