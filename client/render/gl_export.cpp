@@ -684,11 +684,12 @@ static void GL_InitExtensions( void )
 		return;
 	}
 
-	GL_CheckExtension( "GL_ARB_get_program_binary", binaryshaderfuncs, "gl_binaryshader", R_BINARY_SHADER_EXT );
-	GL_CheckExtension( "GL_ARB_depth_texture", NULL, "gl_depthtexture", R_DEPTH_TEXTURE );
-	GL_CheckExtension( "GL_ARB_shadow", NULL, "gl_arb_shadow", R_SHADOW_EXT );
-	GL_CheckExtension( "GL_ARB_texture_rectangle", NULL, "gl_texture_rectangle", R_TEXTURE_2D_RECT_EXT, true );
-
+	GL_CheckExtension("GL_ARB_get_program_binary", binaryshaderfuncs, "gl_binaryshader", R_BINARY_SHADER_EXT);
+	GL_CheckExtension("GL_ARB_depth_texture", NULL, "gl_depthtexture", R_DEPTH_TEXTURE);
+	GL_CheckExtension("GL_ARB_shadow", NULL, "gl_arb_shadow", R_SHADOW_EXT);
+	GL_CheckExtension("GL_ARB_texture_rectangle", NULL, "gl_texture_rectangle", R_TEXTURE_2D_RECT_EXT, true);
+	GL_CheckExtension("GL_ARB_pixel_buffer_object", NULL, NULL, R_ARB_PIXEL_BUFFER_OBJECT);
+	
 	if( GL_Support( R_BINARY_SHADER_EXT ))
 	{
 		pglGetIntegerv( GL_NUM_PROGRAM_BINARY_FORMATS, &glConfig.num_formats );
