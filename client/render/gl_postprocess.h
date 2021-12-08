@@ -41,6 +41,7 @@ public:
 	// automatic exposure 
 	gl_drawbuffer_t	*avg_luminance_fbo[11];
 	int	avg_luminance_texture;
+	GLuint avg_luminance_pbo[2];
 
 	// sunshafts variables
 	Vector	m_vecSunLightColor;
@@ -68,7 +69,7 @@ private:
 	void InitTargetColor(int slot);
 	void InitDepthOfField();
 
-	void InitLuminanceTexture();
+	void InitAutoExposure();
 	float ComputeEV100FromAvgLuminance(float avgLum);
 	float ConvertEV100ToExposure(float ev100);
 };

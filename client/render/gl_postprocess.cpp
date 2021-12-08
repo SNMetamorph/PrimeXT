@@ -22,7 +22,7 @@ void CBasePostEffects::InitializeTextures()
 	InitScreenDepth();
 	InitTargetColor(0);
 	InitDepthOfField();
-	InitLuminanceTexture();
+	InitAutoExposure();
 }
 
 void CBasePostEffects::InitializeShaders()
@@ -205,10 +205,26 @@ float CBasePostEffects::ComputeAvgLuminance()
 
 	// extract average luminance from last mip
 	float averageLuminance;
+	static int pboIndex = 0;
+
+	// send asynchronous command to copy pixel to first PBO
 	pglBindFramebuffer(GL_READ_FRAMEBUFFER, avg_luminance_fbo[mipCount - 1]->id);
-	pglReadPixels(0, 0, 1, 1, GL_RED, GL_FLOAT, &averageLuminance);
+	pglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, avg_luminance_pbo[pboIndex++ % 2]);
+	pglReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
+	pglReadPixels(0, 0, 1, 1, GL_RED, GL_FLOAT, nullptr);
+
+	// read actual pixel value from second PBO
+	pglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, avg_luminance_pbo[pboIndex % 2]);
+	GLubyte *src = (GLubyte *)pglMapBufferARB(GL_PIXEL_PACK_BUFFER_ARB, GL_READ_ONLY_ARB);
+	if (src)
+	{
+		memcpy(&averageLuminance, src, sizeof(averageLuminance));
+		pglUnmapBufferARB(GL_PIXEL_PACK_BUFFER_ARB);
+	}
+	pboIndex %= 2;
 
 	// restore GL state
+	pglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
 	pglViewport(0, 0, glState.width, glState.height);
 	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
 	GL_DebugGroupPop();
@@ -242,7 +258,7 @@ void CBasePostEffects :: InitDepthOfField( void )
 
 }
  
-void CBasePostEffects::InitLuminanceTexture()
+void CBasePostEffects::InitAutoExposure()
 {
 	const int texWidth = 1280;
 	const int texHeight = 720;
@@ -254,6 +270,17 @@ void CBasePostEffects::InitLuminanceTexture()
 	pglGenerateMipmap(GL_TEXTURE_2D);
 	pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	GL_Bind(GL_TEXTURE0, 0);
+
+	if (GL_Support(R_ARB_PIXEL_BUFFER_OBJECT))
+	{
+		pglGenBuffersARB(2, avg_luminance_pbo);
+		for (int i = 0; i < 2; ++i)
+		{
+			pglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, avg_luminance_pbo[i]);
+			pglBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, sizeof(float), nullptr, GL_STREAM_READ_ARB);
+		}
+		pglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
+	}
 
 	for (int i = 0; i < mipCount; ++i)
 	{
