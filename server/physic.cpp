@@ -38,13 +38,17 @@ GNU General Public License for more details.
 CPhysicsPushedEntities	s_PushedEntities;
 CPhysicsPushedEntities	*g_pPushedEntities = &s_PushedEntities;
 
-unsigned int EngineSetFeatures( void )
+unsigned int EngineSetFeatures(void)
 {
-	unsigned int flags = (ENGINE_WRITE_LARGE_COORD|ENGINE_TRANSFORM_TRACE_AABB|ENGINE_COMPUTE_STUDIO_LERP);
-
-	flags |= ENGINE_LARGE_LIGHTMAPS|ENGINE_LOAD_DELUXEDATA;
-	flags |= ENGINE_COMPENSATE_QUAKE_BUG;
-
+	unsigned int flags = (
+		ENGINE_WRITE_LARGE_COORD |
+		ENGINE_PHYSICS_PUSHER_EXT |
+		ENGINE_COMPUTE_STUDIO_LERP |
+		ENGINE_LARGE_LIGHTMAPS |
+		ENGINE_LOAD_DELUXEDATA |
+		ENGINE_COMPENSATE_QUAKE_BUG |
+		ENGINE_LINEAR_GAMMA_SPACE
+	);
 	return flags;
 }
 
