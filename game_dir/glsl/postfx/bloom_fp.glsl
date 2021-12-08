@@ -16,45 +16,24 @@ GNU General Public License for more details.
 #include "texfetch.h"
 
 uniform sampler2D	u_ScreenMap;
-uniform vec2		u_ScreenSizeInv;	//actually screensize
+uniform vec2		u_ScreenSizeInv;	// actually screensize
 
 varying vec2		var_TexCoord;
 
-void main( void )
+void main()
 {	
-	vec4 tex = vec4(0.0);// = textureBicubic(u_ScreenMap, var_TexCoord);	
-	
-	/*
-	tex = texture2DLod(u_ScreenMap, var_TexCoord, 6.0);
-	tex += texture2DLod(u_ScreenMap, var_TexCoord, 5.0);
-	tex += texture2DLod(u_ScreenMap, var_TexCoord, 4.0);
-	tex += texture2DLod(u_ScreenMap, var_TexCoord, 3.0);
-	tex += texture2DLod(u_ScreenMap, var_TexCoord, 2.0);
-	tex += texture2DLod(u_ScreenMap, var_TexCoord, 1.0);
-	tex /= 6.0;
-	*/	
-	
-	/*
-	tex = texture2DLod(u_ScreenMap, var_TexCoord, 5.5);
-	tex += texture2DLod(u_ScreenMap, var_TexCoord, 3.5);
-	tex += texture2DLod(u_ScreenMap, var_TexCoord, 1.5);
-	tex /= 3.0;
-	*/	
-	
+	vec4 tex = vec4(0.0);	
 	vec2 texSize = floor(u_ScreenSizeInv * 0.5); 
-	//tex += textureBicubic(u_ScreenMap, var_TexCoord, 1.0 , texSize);
-	//texSize = floor(texSize * 0.5);
-	
-	
-	tex += textureBicubic(u_ScreenMap, var_TexCoord, 2.0 , texSize) * 2.0;
+
+	tex += textureBicubic(u_ScreenMap, var_TexCoord, 2.0, texSize) * 2.0;
 	texSize = floor(texSize * 0.5);
-	tex += textureBicubic(u_ScreenMap, var_TexCoord, 3.0 , texSize);
+	tex += textureBicubic(u_ScreenMap, var_TexCoord, 3.0, texSize);
 	texSize = floor(texSize * 0.5);
-	tex += textureBicubic(u_ScreenMap, var_TexCoord, 4.0 , texSize);
+	tex += textureBicubic(u_ScreenMap, var_TexCoord, 4.0, texSize);
 	texSize = floor(texSize * 0.5);
-	tex += textureBicubic(u_ScreenMap, var_TexCoord, 5.0 , texSize);
+	tex += textureBicubic(u_ScreenMap, var_TexCoord, 5.0, texSize);
 	texSize = floor(texSize * 0.5);
-	tex += textureBicubic(u_ScreenMap, var_TexCoord, 6.0 , texSize);
+	tex += textureBicubic(u_ScreenMap, var_TexCoord, 6.0, texSize);
 	tex *= 0.2;		
 		
 	tex += texture2DLod(u_ScreenMap, var_TexCoord, 1.0);	

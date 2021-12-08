@@ -33,14 +33,14 @@ void main( void )
 			
 	vec4 tex_sample[9];
 	tex_sample[0] = texture2DLod(u_ScreenMap, clamp(var_TexCoord ,u_TexCoordClamp.xy , u_TexCoordClamp.zw), u_MipLod);
-	tex_sample[1] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(u_ScreenSizeInv.x , 0.0) ,u_TexCoordClamp.xy , u_TexCoordClamp.zw), u_MipLod);
-	tex_sample[2] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(-u_ScreenSizeInv.x , 0.0) ,u_TexCoordClamp.xy , u_TexCoordClamp.zw), u_MipLod);
-	tex_sample[3] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(0.0 , -u_ScreenSizeInv.y) ,u_TexCoordClamp.xy , u_TexCoordClamp.zw), u_MipLod);
-	tex_sample[4] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(0.0 , u_ScreenSizeInv.y) ,u_TexCoordClamp.xy , u_TexCoordClamp.zw), u_MipLod);		
-	tex_sample[5] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(u_ScreenSizeInv.x , u_ScreenSizeInv.y) ,u_TexCoordClamp.xy , u_TexCoordClamp.zw), u_MipLod);
-	tex_sample[6] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(-u_ScreenSizeInv.x , u_ScreenSizeInv.y) ,u_TexCoordClamp.xy , u_TexCoordClamp.zw), u_MipLod);
-	tex_sample[7] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(-u_ScreenSizeInv.x , -u_ScreenSizeInv.y) ,u_TexCoordClamp.xy , u_TexCoordClamp.zw), u_MipLod);
-	tex_sample[8] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(u_ScreenSizeInv.x , -u_ScreenSizeInv.y) ,u_TexCoordClamp.xy , u_TexCoordClamp.zw), u_MipLod);	
+	tex_sample[1] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(u_ScreenSizeInv.x, 0.0) ,u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
+	tex_sample[2] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(-u_ScreenSizeInv.x, 0.0) ,u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
+	tex_sample[3] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(0.0, -u_ScreenSizeInv.y) ,u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
+	tex_sample[4] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(0.0, u_ScreenSizeInv.y) ,u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);		
+	tex_sample[5] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(u_ScreenSizeInv.x, u_ScreenSizeInv.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
+	tex_sample[6] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(-u_ScreenSizeInv.x, u_ScreenSizeInv.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
+	tex_sample[7] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(-u_ScreenSizeInv.x, -u_ScreenSizeInv.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
+	tex_sample[8] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(u_ScreenSizeInv.x, -u_ScreenSizeInv.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);	
 	
 	vec4 tex;
 	tex = weight[0] * tex_sample[0];
@@ -49,8 +49,10 @@ void main( void )
 	
 	if (u_BloomFirstPass > 0) 
 	{
-		tex *= min(1.0, length(tex) * 0.5);	// threshold
-		tex *= min(GetLuminance(tex.rgb) * 4.0, 1.0);
+		const float threshold = 2.8;
+		const float transitionSmooth = 0.4;
+		float luminance = GetLuminance(tex.rgb);
+		tex *= smoothstep(threshold - transitionSmooth, threshold, luminance);
 	}
 
 	gl_FragColor = tex;
