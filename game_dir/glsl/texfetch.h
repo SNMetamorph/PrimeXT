@@ -79,6 +79,12 @@ vec3 chromemap2D( sampler2D tex, vec2 screenCoord, vec3 N, float aberration )
 	return screenmap;
 }
 
+vec4 lightmap2D(sampler2D tex, const vec2 uv, float lightmapGamma)
+{
+	vec4 sample = texture2D(tex, uv);
+	return vec4(pow(sample.rgb, vec3(1.0 / lightmapGamma)), sample.a);
+}
+
 vec3 deluxemap2D( sampler2D tex, const vec2 uv )
 {
 	vec3 deluxmap = texture2D( tex, uv ).xyz;

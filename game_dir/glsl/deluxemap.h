@@ -16,14 +16,17 @@ GNU General Public License for more details.
 #ifndef DELUXEMAP_H
 #define DELUXEMAP_H
 
+#include "texfetch.h"
+
 uniform sampler2D		u_LightMap;
 uniform sampler2D		u_DeluxeMap;
 uniform float		u_AmbientFactor;
 uniform float		u_DiffuseFactor;
+uniform float		u_LightGamma;
 
 void ApplyLightStyle( const vec3 lminfo, const vec3 N, const vec3 V, const vec3 glossmap, float smoothness, inout vec3 light, inout vec3 gloss )
 {
-	vec4 lmsrc = texture2D( u_LightMap, lminfo.xy );
+	vec4 lmsrc = lightmap2D( u_LightMap, lminfo.xy, u_LightGamma );
 	vec3 lightmap = lmsrc.rgb * LIGHT_SCALE;
 
 #if defined( HAS_DELUXEMAP )

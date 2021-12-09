@@ -3365,6 +3365,9 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 		case UT_GAMMATABLE:
 			u->SetValue( &tr.gamma_table[0][0], 64 );
 			break;
+		case UT_LIGHTGAMMA:
+			u->SetValue(tr.light_gamma);
+			break;
 		case UT_LIGHTDIR:
 			if( pl )
 			{
