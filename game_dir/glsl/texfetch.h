@@ -16,13 +16,20 @@ GNU General Public License for more details.
 #ifndef TEXFETCH_H
 #define TEXFETCH_H
 
-#define colormap2D		texture2D
+#include "const.h"
+
 #define detailmap2D		texture2D
 #define decalmap2D		texture2D
 
 #if defined( GLSL_ALLOW_TEXTURE_ARRAY )
 #define colormap2DArray( tex, uv, layer )	texture2DArray( tex, vec3( uv, layer ))
 #endif
+
+vec4 colormap2D(sampler2D tex, vec2 uv)
+{
+	vec4 sample = texture2D(tex, uv);
+	return vec4(pow(sample.rgb, vec3(2.2)), sample.a); // gamma space -> linear space
+}
 
 vec4 reflectmap2D( sampler2D tex, vec4 projTC, vec3 N, vec3 fragCoord, float refraction )
 {

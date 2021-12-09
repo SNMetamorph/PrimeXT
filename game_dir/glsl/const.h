@@ -31,6 +31,7 @@ GNU General Public License for more details.
 #define PUDDLE_NORMAL	vec3( 0.0, 0.0, 1.0 )
 #define SHADE_LAMBERT	1.495
 #define FOV_MULT		0.5		// FIXME: this should be 0.25
+#define SCREEN_GAMMA    2.2     // TODO: make it as uniform and controlled by 'gamma' cvar
 
 // signed distance field stuff
 #define SOFT_EDGE_MIN		0.15
