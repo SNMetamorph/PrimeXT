@@ -116,7 +116,7 @@ void main( void )
 
 	// compute the specular term
 #if defined( HAS_GLOSSMAP )
-	glossmap = texture2D( u_GlossMap, var_TexDiffuse );
+	glossmap = colormap2D( u_GlossMap, var_TexDiffuse );
 #endif//HAS_GLOSSMAP
 
 	vec3 light = vec3( 1.0 );

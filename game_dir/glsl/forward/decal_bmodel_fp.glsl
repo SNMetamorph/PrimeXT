@@ -103,7 +103,7 @@ void main( void )
 #endif
 
 #if defined( HAS_GLOSSMAP ) && defined( HAS_DELUXEMAP )
-	glossmap = texture2D( u_GlossMap, vecTexCoord );
+	glossmap = colormap2D( u_GlossMap, vecTexCoord );
 #endif
 
 #if defined( APPLY_STYLE0 )

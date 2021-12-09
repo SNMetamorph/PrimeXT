@@ -14,6 +14,7 @@ GNU General Public License for more details.
 */
 
 #include "const.h"
+#include "texfetch.h"
 #include "matrix.h"
 #include "mathlib.h"
 #include "lightmodel.h"
@@ -53,7 +54,7 @@ void main( void )
 		discard;
 
 	vec3 diffuse = texture2D( u_ColorMap, var_TexCoord ).rgb;
-	vec4 glossmap = texture2D( u_GlossMap, var_TexCoord );
+	vec4 glossmap = colormap2D( u_GlossMap, var_TexCoord );
 	float srcW = texture2D( u_DepthMap, var_TexCoord ).r;
 	float w = linearizeDepth( u_zFar, RemapVal( srcW, 0.0, 0.8, 0.0, 1.0 ));
 	vec4 worldpos = vec4( u_ViewOrigin + var_RayVec * w, 1.0 ); // nudge point to avoid z-fighting

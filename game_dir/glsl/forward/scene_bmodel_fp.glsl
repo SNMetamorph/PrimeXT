@@ -181,9 +181,9 @@ void main( void )
 	glossmap = TerrainApplySpecular( u_GlossMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 #else
 #if defined( LIQUID_SURFACE )
-	glossmap = texture2D( u_GlossMap, var_TexGlobal );
+	glossmap = colormap2D( u_GlossMap, var_TexGlobal );
 #else
-	glossmap = texture2D( u_GlossMap, vec_TexDiffuse );
+	glossmap = colormap2D( u_GlossMap, vec_TexDiffuse );
 #endif
 #endif
 #endif//(HAS_GLOSSMAP && HAS_DELUXEMAP)

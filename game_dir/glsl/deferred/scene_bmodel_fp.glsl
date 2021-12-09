@@ -119,7 +119,7 @@ void main( void )
 #endif
 
 #if defined( HAS_GLOSSMAP )
-	smooth = texture2D( u_GlossMap, vec_TexDiffuse );
+	smooth = colormap2D( u_GlossMap, vec_TexDiffuse );
 	smooth.a = u_Smoothness;
 #endif
 

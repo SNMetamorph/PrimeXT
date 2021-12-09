@@ -22,7 +22,11 @@ GNU General Public License for more details.
 #define decalmap2D		texture2D
 
 #if defined( GLSL_ALLOW_TEXTURE_ARRAY )
-#define colormap2DArray( tex, uv, layer )	texture2DArray( tex, vec3( uv, layer ))
+vec4 colormap2DArray(sampler2DArray tex, vec2 uv, float layer)
+{
+	vec4 sample = texture2DArray(tex, vec3(uv, layer));
+	return vec4(pow(sample.rgb, vec3(2.2)), sample.a);
+}
 #endif
 
 vec4 colormap2D(sampler2D tex, vec2 uv)

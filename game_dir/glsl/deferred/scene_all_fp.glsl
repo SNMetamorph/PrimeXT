@@ -14,6 +14,7 @@ GNU General Public License for more details.
 */
 
 #include "const.h"
+#include "texfetch.h"
 #include "mathlib.h"
 #include "lightmodel.h"
 #include "deferred\wlfetch.h"
@@ -52,7 +53,7 @@ void main( void )
 		return;
 	}
 
-	vec4 glossmap = texture2D( u_GlossMap, var_TexCoord );
+	vec4 glossmap = colormap2D( u_GlossMap, var_TexCoord );
 	float w = texture2D( u_DepthMap, var_TexCoord ).r;
 	normal.xyz = normalize( normal.xyz * 2.0 - 1.0 );
 	w = linearizeDepth( u_zFar, RemapVal( w, 0.0, 0.8, 0.0, 1.0 ));

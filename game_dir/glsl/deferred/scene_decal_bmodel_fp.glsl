@@ -104,7 +104,7 @@ void main( void )
 #endif
 
 #if defined( HAS_GLOSSMAP )
-	smooth = texture2D( u_GlossMap, vecTexCoord.xy );
+	smooth = colormap2D( u_GlossMap, vecTexCoord.xy );
 	smooth.a = u_Smoothness;
 #endif
 	vec4 diffuse = decalmap2D( u_DecalMap, vecTexCoord.xy );

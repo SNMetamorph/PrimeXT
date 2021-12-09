@@ -90,7 +90,7 @@ void main( void )
 	vec3 L = normalize( var_LightDir );
 	vec3 V = normalize( var_ViewDir );
 #if defined( HAS_GLOSSMAP )
-	glossmap = texture2D( u_GlossMap, var_TexDiffuse );
+	glossmap = colormap2D( u_GlossMap, var_TexDiffuse );
 #endif
 
 #if defined (SURFACE_LIGHTING)	// lightmapped surfaces

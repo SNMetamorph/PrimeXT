@@ -182,7 +182,7 @@ void main( void )
 #if defined( APPLY_TERRAIN )
 	glossmap = TerrainApplySpecular( u_GlossMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 #else
-	glossmap = texture2D( u_GlossMap, vec_TexDiffuse );
+	glossmap = colormap2D( u_GlossMap, vec_TexDiffuse );
 #endif
 #endif//HAS_GLOSSMAP
 

@@ -75,7 +75,7 @@ void main( void )
 	CompressUnsignedNormalToNormalsBuffer( normal.xyz );
 
 #if defined( HAS_GLOSSMAP )
-	smooth = texture2D( u_GlossMap, var_TexDiffuse );
+	smooth = colormap2D( u_GlossMap, var_TexDiffuse );
 	smooth.a = u_Smoothness;
 #endif
 

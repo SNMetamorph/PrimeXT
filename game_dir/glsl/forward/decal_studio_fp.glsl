@@ -109,7 +109,7 @@ void main( void )
 // compute the specular term
 #if defined( HAS_GLOSSMAP )
 	float NdotL2 = saturate( dot( N, L ));
-	glossmap = texture2D( u_GlossMap, vecTexCoord );
+	glossmap = colormap2D( u_GlossMap, vecTexCoord );
 	specular = SpecularBRDF( N, V, L, u_Smoothness, glossmap.rgb ) * NdotL2;
 	diffuse.rgb *= saturate( 1.0 - GetLuminance( specular ));
 #if defined (VERTEX_LIGHTING)
