@@ -21,10 +21,10 @@ uniform samplerCubeShadow	u_ShadowMap;
 
 float depthCube( const in vec3 coord, const float scale, const float bias )
 {
-	float fs_z = max( abs( coord.x ), max( abs( coord.y ), abs( coord.z ))) - 4.0;	// acne remove factor
-	float depth = (( fs_z * scale + bias ) / fs_z ) * 0.5 + 0.5;
-
-	return shadowCube( u_ShadowMap, vec4( coord, depth )).r;
+	const float acneRemoveFactor = 1.0;
+	float fs_z = max(abs(coord.x), max(abs(coord.y), abs(coord.z))) - acneRemoveFactor;
+	float depth = ((fs_z * scale + bias) / fs_z) * 0.5 + 0.5;
+	return shadowCube(u_ShadowMap, vec4(coord, depth)).r;
 }
 
 float ShadowOmni( const in vec3 I, const in vec4 params )
