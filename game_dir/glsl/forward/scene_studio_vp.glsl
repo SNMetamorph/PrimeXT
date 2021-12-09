@@ -46,7 +46,7 @@ uniform vec2	u_LightShade;
 uniform vec3	u_LightDir;
 
 uniform float	u_LightStyleValues[MAX_LIGHTSTYLES];
-uniform vec4	u_GammaTable[64];
+uniform float	u_LightGamma;
 uniform vec4	u_LightStyles;
 
 varying vec2	var_TexDiffuse;
@@ -124,14 +124,10 @@ void main( void )
 	var_DiffuseLight = min(( lightmap * LIGHTMAP_SHIFT ), 1.0 );
 	srcL = ( deluxmap * LIGHTMAP_SHIFT ); // get lightvector
 
-	// apply screen gamma
-	gammaIndex = (var_DiffuseLight.r * 255.0);
-	var_DiffuseLight.r = u_GammaTable[int(gammaIndex/4.0)][int(mod(gammaIndex, 4.0 ))];
-	gammaIndex = (var_DiffuseLight.g * 255.0);
-	var_DiffuseLight.g = u_GammaTable[int(gammaIndex/4.0)][int(mod(gammaIndex, 4.0 ))];
-	gammaIndex = (var_DiffuseLight.b * 255.0);
-	var_DiffuseLight.b = u_GammaTable[int(gammaIndex/4.0)][int(mod(gammaIndex, 4.0 ))];
+	// apply gamma-correction for vertex lighting
+	var_DiffuseLight = pow(var_DiffuseLight, vec3(1.0 / u_LightGamma));
 	var_DiffuseLight *= LIGHT_SCALE;
+
 #elif defined (SURFACE_LIGHTING)
 #if defined( APPLY_STYLE0 )
 	var_TexLight0.xy = attr_TexCoord1.xy;
