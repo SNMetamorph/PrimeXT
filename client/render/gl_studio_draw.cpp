@@ -3878,17 +3878,24 @@ void CStudioModelRenderer :: RenderDebugStudioList( bool bViewModel )
 
 void CStudioModelRenderer :: ClearLightCache( void )
 {
-	for( int i = 0; i < MAX_LIGHTCACHE; i++ )
+	for (int i = 0; i < m_ModelInstances.Count(); i++)
+	{
+		ModelInstance_t *instance = &m_ModelInstances[i];
+		instance->light_update = true;
+	}
+
+	// clear models lightmaps cache
+	for (int i = 0; i < MAX_LIGHTCACHE; i++)
 	{
 		mstudiocache_t *cache = tr.surface_light_cache[i];
 
-		if( !cache || cache->numsurfaces <= 0 )
+		if (!cache || cache->numsurfaces <= 0)
 			continue;
 
-		for( int j = 0; j < cache->numsurfaces; j++ )
+		for (int j = 0; j < cache->numsurfaces; j++)
 		{
 			mstudiosurface_t *surf = &cache->surfaces[j];
-			SetBits( surf->flags, SURF_LM_UPDATE|SURF_GRASS_UPDATE );
+			SetBits(surf->flags, SURF_LM_UPDATE | SURF_GRASS_UPDATE);
 		}
 		cache->update_light = true;
 	}
