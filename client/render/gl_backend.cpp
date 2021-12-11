@@ -385,9 +385,10 @@ bool GL_BackendStartFrame( ref_viewpass_t *rvp, RefParams params )
 	else if( tr.movevars->fog_settings != 0 )
 	{
 		// enable global exponential color fog
-		tr.fogColor[0] = (float)TEXTURE_TO_TEXGAMMA((tr.movevars->fog_settings & 0xFF000000) >> 24) / 255.0f;
-		tr.fogColor[1] = (float)TEXTURE_TO_TEXGAMMA((tr.movevars->fog_settings & 0xFF0000) >> 16) / 255.0f;
-		tr.fogColor[2] = (float)TEXTURE_TO_TEXGAMMA((tr.movevars->fog_settings & 0xFF00) >> 8) / 255.0f;
+		// apply gamma-correction because user sets color in sRGB space
+		tr.fogColor[0] = pow((tr.movevars->fog_settings & 0xFF000000 >> 24) / 255.0f, 1.f / 2.2f);
+		tr.fogColor[1] = pow((tr.movevars->fog_settings & 0xFF0000 >> 16) / 255.0f, 1.f / 2.2f);
+		tr.fogColor[2] = pow((tr.movevars->fog_settings & 0xFF00 >> 8) / 255.0f, 1.f / 2.2f);
 		tr.fogDensity = (tr.movevars->fog_settings & 0xFF) * 0.000025f;
 		tr.fogSkyDensity = tr.fogDensity * SKY_FOG_FACTOR;
 		tr.fogEnabled = true;

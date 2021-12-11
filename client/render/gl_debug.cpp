@@ -103,9 +103,9 @@ static void CubeFace( const vec3_t org, int v0, int v1, int v2, int v3, float si
 	uint unclamped[3];
 	int col[3];
 
-	unclamped[0] = TEXTURE_TO_TEXGAMMA( color[0] ) * scale;
-	unclamped[1] = TEXTURE_TO_TEXGAMMA( color[1] ) * scale;
-	unclamped[2] = TEXTURE_TO_TEXGAMMA( color[2] ) * scale;
+	unclamped[0] = R_LightToTexGamma( color[0] ) * scale;
+	unclamped[1] = R_LightToTexGamma( color[1] ) * scale;
+	unclamped[2] = R_LightToTexGamma( color[2] ) * scale;
 
 	col[0] = Q_min((unclamped[0] >> 7), 255 );
 	col[1] = Q_min((unclamped[1] >> 7), 255 );

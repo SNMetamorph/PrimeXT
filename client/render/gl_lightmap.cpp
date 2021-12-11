@@ -285,9 +285,9 @@ static void R_BuildLightMapForStyle( msurface_t *surf, byte *dest, int style )
 	{
 		for( s = 0; s < smax; s++ )
 		{
-			dest[0] = TEXTURE_TO_TEXGAMMA( lm->r );
-			dest[1] = TEXTURE_TO_TEXGAMMA( lm->g );
-			dest[2] = TEXTURE_TO_TEXGAMMA( lm->b );
+			dest[0] = lm->r;
+			dest[1] = lm->g;
+			dest[2] = lm->b;
 
 			if( esrf->shadows != NULL )
 				dest[3] = *sm++;
@@ -335,9 +335,9 @@ static void R_BuildLightMapForStyle( mstudiosurface_t *surf, byte *dest, int sty
 	{
 		for( s = 0; s < smax; s++ )
 		{
-			dest[0] = TEXTURE_TO_TEXGAMMA( lm->r );
-			dest[1] = TEXTURE_TO_TEXGAMMA( lm->g );
-			dest[2] = TEXTURE_TO_TEXGAMMA( lm->b );
+			dest[0] = lm->r;
+			dest[1] = lm->g;
+			dest[2] = lm->b;
 
 			if( surf->shadows != NULL )
 				dest[3] = *sm++;

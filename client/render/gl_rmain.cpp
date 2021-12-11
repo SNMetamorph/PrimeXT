@@ -1191,16 +1191,18 @@ void HUD_ProcessEntData( qboolean allocate )
 
 void HUD_BuildLightmaps( void )
 {
-	int	i;
-
-	if( !g_fRenderInitialized ) return;
+	if (!g_fRenderInitialized ) 
+		return;
 
 	// put the gamma into GLSL-friendly array
-	for( i = 0; i < 256; i++ )
-		tr.gamma_table[i/4][i%4] = (float)TEXTURE_TO_TEXGAMMA( i ) / 255.0f;
+	// TODO: get rid of this
+	for (int i = 0; i < 256; i++) {
+		tr.gamma_table[i / 4][i % 4] = (float)TEXTURE_TO_TEXGAMMA(i) / 255.0f;
+	}
 
-	for( i = 0; i < worldmodel->numsurfaces; i++ )
-		SetBits( worldmodel->surfaces[i].flags, SURF_LM_UPDATE|SURF_GRASS_UPDATE );
+	for (int i = 0; i < worldmodel->numsurfaces; i++) {
+		SetBits(worldmodel->surfaces[i].flags, SURF_LM_UPDATE | SURF_GRASS_UPDATE);
+	}
 
 	R_StudioClearLightCache();
 }

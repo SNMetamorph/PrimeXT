@@ -430,9 +430,9 @@ void R_GrassLightForVertex( msurface_t *fa, mextrasurf_t *es, const Vector &vert
 	for( map = 0; map < MAXLIGHTMAPS && fa->styles[map] != 255; map++ )
 	{
 		color24 out;
-		out.r = TEXTURE_TO_TEXGAMMA( lm->r );
-		out.g = TEXTURE_TO_TEXGAMMA( lm->g );
-		out.b = TEXTURE_TO_TEXGAMMA( lm->b );
+		out.r = R_LightToTexGamma( lm->r );
+		out.g = R_LightToTexGamma( lm->g );
+		out.b = R_LightToTexGamma( lm->b );
 		light[map] = PackColor( out );
 		lm += size; // skip to next lightmap
 	}
