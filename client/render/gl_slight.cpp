@@ -178,9 +178,9 @@ static bool R_GetDirectLightFromSurface( msurface_t *surf, const Vector &point, 
 			info->normal += localDir * (float)scale; // direction factor
 
 			// compute diffuse color
-			localDiffuse.r += TEXTURE_TO_TEXGAMMA( lm->r ) * scale;
-			localDiffuse.g += TEXTURE_TO_TEXGAMMA( lm->g ) * scale;
-			localDiffuse.b += TEXTURE_TO_TEXGAMMA( lm->b ) * scale;
+			localDiffuse.r += R_LightToTexGamma( lm->r ) * scale;
+			localDiffuse.g += R_LightToTexGamma( lm->g ) * scale;
+			localDiffuse.b += R_LightToTexGamma( lm->b ) * scale;
 
 			lm += size; // skip to next lightmap
 			dm += size; // skip to next deluxemap
@@ -202,9 +202,9 @@ static bool R_GetDirectLightFromSurface( msurface_t *surf, const Vector &point, 
 			uint	scale = tr.lightstyle[surf->styles[map]];
 
 			// compute diffuse color
-			localDiffuse.r += TEXTURE_TO_TEXGAMMA( lm->r ) * scale;
-			localDiffuse.g += TEXTURE_TO_TEXGAMMA( lm->g ) * scale;
-			localDiffuse.b += TEXTURE_TO_TEXGAMMA( lm->b ) * scale;
+			localDiffuse.r += R_LightToTexGamma( lm->r ) * scale;
+			localDiffuse.g += R_LightToTexGamma( lm->g ) * scale;
+			localDiffuse.b += R_LightToTexGamma( lm->b ) * scale;
 			lm += size; // skip to next lightmap
 		}
 
@@ -231,9 +231,9 @@ static bool R_GetDirectLightFromSurface( msurface_t *surf, const Vector &point, 
 
 			for( int i = 0; i < size; i++, lm++ )
 			{
-				localAverage.x += (float)TEXTURE_TO_TEXGAMMA( lm->r ) * scale;
-				localAverage.y += (float)TEXTURE_TO_TEXGAMMA( lm->g ) * scale;
-				localAverage.z += (float)TEXTURE_TO_TEXGAMMA( lm->b ) * scale;
+				localAverage.x += (float)R_LightToTexGamma( lm->r ) * scale;
+				localAverage.y += (float)R_LightToTexGamma( lm->g ) * scale;
+				localAverage.z += (float)R_LightToTexGamma( lm->b ) * scale;
 			}
 
 			localAverage *= (1.0f / (float)size );
@@ -610,9 +610,9 @@ R_LightIdentity
 static void R_LightIdentity( mstudiolight_t *light )
 {
 	// get default values
-	light->diffuse.x = (float)TEXTURE_TO_TEXGAMMA( 255 ) / 255.0f;
-	light->diffuse.y = (float)TEXTURE_TO_TEXGAMMA( 255 ) / 255.0f;
-	light->diffuse.z = (float)TEXTURE_TO_TEXGAMMA( 255 ) / 255.0f;
+	light->diffuse.x = (float)R_LightToTexGamma( 255 ) / 255.0f;
+	light->diffuse.y = (float)R_LightToTexGamma( 255 ) / 255.0f;
+	light->diffuse.z = (float)R_LightToTexGamma( 255 ) / 255.0f;
 	light->normal = Vector( 0.0f, 0.0f, 0.0f );
 }
 
@@ -624,9 +624,9 @@ R_LightMin
 static void R_LightMin( mstudiolight_t *light )
 {
 	// get minlight values
-	light->diffuse.x = (float)TEXTURE_TO_TEXGAMMA( 10 ) / 255.0f;
-	light->diffuse.y = (float)TEXTURE_TO_TEXGAMMA( 10 ) / 255.0f;
-	light->diffuse.z = (float)TEXTURE_TO_TEXGAMMA( 10 ) / 255.0f;
+	light->diffuse.x = (float)R_LightToTexGamma( 10 ) / 255.0f;
+	light->diffuse.y = (float)R_LightToTexGamma( 10 ) / 255.0f;
+	light->diffuse.z = (float)R_LightToTexGamma( 10 ) / 255.0f;
 	light->normal = Vector( 0.0f, 0.0f, 0.0f );
 }
 

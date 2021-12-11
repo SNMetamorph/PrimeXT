@@ -1113,13 +1113,25 @@ void GL_InitTempScreenFBO()
 	GL_InitMultisampleScreenFBO();
 }
 
-
 void GL_VidInitTempScreenFBO(void)
 {
 	GL_InitTempScreenFBO();
 
 	// unbind the framebuffer
 	GL_BindDrawbuffer(NULL);
+}
+
+/*
+=================
+R_LightToTexGamma
+Convert gamma from light-space to linear-space
+TODO: get rid of that when completely HDR rendering pipeline will be ready for usage
+=================
+*/
+byte R_LightToTexGamma(byte input)
+{
+	float a = input / 255.f;
+	return static_cast<byte>(pow(a, 1.0f / tr.light_gamma) * 255.f);
 }
 
 /*
