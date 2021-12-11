@@ -545,9 +545,9 @@ reconstruct the ambient lighting for a leaf
 at the given position in worldspace
 =================
 */
-void R_PointAmbientFromLeaf( const Vector &point, mstudiolight_t *light )
+void R_PointAmbientFromLeaf(const Vector &point, mstudiolight_t *light)
 {
-	memset( light->ambient, 0, sizeof( light->ambient ));
+	memset(light->ambient, 0, sizeof(light->ambient));
 
 	// try to approximate ambient lighting only if we can't use lightprobes or vertex lighting
 	if (world->numleaflights < 1 || !world->leafs)
@@ -564,35 +564,38 @@ void R_PointAmbientFromLeaf( const Vector &point, mstudiolight_t *light )
 		}
 	}
 
-	mleaf_t *leaf = Mod_PointInLeaf( point, worldmodel->nodes );
-	mextraleaf_t *info = LEAF_INFO( leaf, worldmodel );
-	mlightprobe_t *pAmbientProbe = info->ambient_light;
-	float totalFactor = 0.0f;
-	int i;
+	mleaf_t *leaf = Mod_PointInLeaf(point, worldmodel->nodes);
+	mextraleaf_t *info = LEAF_INFO(leaf, worldmodel);
 
-	if( info->num_lightprobes > 0 )
+	if (info->num_lightprobes > 0)
 	{
-		for( i = 0; i < info->num_lightprobes; i++, pAmbientProbe++ )
+		float totalFactor = 0.0f;
+		mlightprobe_t *pAmbientProbe = info->ambient_light;
+		for (int i = 0; i < info->num_lightprobes; i++, pAmbientProbe++)
 		{
 			// do an inverse squared distance weighted average of the samples
 			// to reconstruct  the original function
+			vec3_t probeColor;
 			float dist = (pAmbientProbe->origin - point).LengthSqr();
 			float factor = 1.0f / (dist + 1.0f);
 			totalFactor += factor;
 
-			for( int j = 0; j < 6; j++ )
+			for (int j = 0; j < 6; j++)
 			{
-				Vector v;
+				probeColor.x = (float)pAmbientProbe->cube.color[j][0] * (1.0f / 255.0f);
+				probeColor.y = (float)pAmbientProbe->cube.color[j][1] * (1.0f / 255.0f);
+				probeColor.z = (float)pAmbientProbe->cube.color[j][2] * (1.0f / 255.0f);
+				
+				// gamma-correction, but should we do it?
+				for (int k = 0; k < 3; ++k) {
+					//probeColor[k] = pow(probeColor[k], 1.0f / tr.light_gamma);
+				}
 
-				v.x = (float)pAmbientProbe->cube.color[j][0] * (1.0f / 255.0f);
-				v.y = (float)pAmbientProbe->cube.color[j][1] * (1.0f / 255.0f);
-				v.z = (float)pAmbientProbe->cube.color[j][2] * (1.0f / 255.0f);
-
-				light->ambient[j] += v * factor;
+				light->ambient[j] += probeColor * factor;
 			}
 		}
 
-		for( i = 0; i < 6; i++ )
+		for (int i = 0; i < 6; i++)
 		{
 			light->ambient[i] *= (1.0f / totalFactor) * AMBIENT_CUBE_SCALE;
 		}
