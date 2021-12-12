@@ -515,10 +515,7 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 		RenderTonemap();		// should be last step!!!
 	}
 
-	//if( !CVAR_TO_BOOL( cv_deferred ))
-	//	R_DrawHeadShield();		// 3D
-	R_RenderDebugStudioList( true );	// 3D
-
+	R_RenderDebugStudioList( true ); // 3D
 	RenderMonochrome();			// 2D
 	R_ShowLightMaps();			// 2D
 

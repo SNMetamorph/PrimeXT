@@ -261,8 +261,6 @@ private:
 
 	void StudioDrawAttachments( bool bCustomFov );
 
-	int HeadShieldThink( void );
-
 	// intermediate structure. Used only for build unique submodels
 	struct TmpModel_t
 	{
@@ -618,9 +616,6 @@ public:
 	// Draw view model (at end the frame)
 	void	DrawViewModel( void );
 
-	// draw head shield (after viewmodel)
-	void	DrawHeadShield( void );
-
 	void	RenderDeferredStudioList( void );
 
 	void	RenderSolidStudioList( void );
@@ -652,7 +647,6 @@ inline void R_DrawViewModel( void )
 	g_StudioRenderer.DrawViewModel(); 
 	GL_DebugGroupPop();
 }
-inline void R_DrawHeadShield( void ) { g_StudioRenderer.DrawHeadShield(); }
 inline void R_ProcessStudioData( model_t *mod, qboolean create, const byte *buffer )
 {
 	if( mod->type == mod_studio )

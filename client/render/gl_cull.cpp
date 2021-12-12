@@ -29,7 +29,7 @@ R_CullModel
 */
 bool R_CullModel( cl_entity_t *e, const Vector &absmin, const Vector &absmax )
 {
-	if( e == GET_VIEWMODEL( )) // || e == gHUD.m_pHeadShieldEnt )
+	if (e == GET_VIEWMODEL())
 	{
 		if( RI->params & RP_NONVIEWERREF )
 			return true;
