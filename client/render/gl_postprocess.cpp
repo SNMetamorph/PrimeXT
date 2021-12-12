@@ -51,6 +51,7 @@ void CBasePostEffects::InitializeShaders()
 
 	// tonemapping 
 	tonemapShader = GL_FindShader("postfx/tonemap", "postfx/generic", "postfx/tonemap");
+	exposureGenShader = GL_FindShader("postfx/generate_exposure", "postfx/generic", "postfx/generate_exposure");
 	luminanceGenShader = GL_FindShader("postfx/generate_luminance", "postfx/generic", "postfx/generate_luminance");
 	luminanceDownscaleShader = GL_FindShader("postfx/downscale_luminance", "postfx/generic", "postfx/downscale_luminance");
 
@@ -164,7 +165,7 @@ void CBasePostEffects :: RequestTargetCopy( int slot )
 	pglCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, TARGET_SIZE, TARGET_SIZE);
 }
 
-float CBasePostEffects::ComputeAvgLuminance()
+void CBasePostEffects::RenderAverageLuminance()
 {
 	// render luminance to first mip
 	GL_DebugGroupPush(__FUNCTION__);
@@ -172,7 +173,6 @@ float CBasePostEffects::ComputeAvgLuminance()
 	V_RenderPostEffect(luminanceGenShader);
 
 	// downscale luminance to other mips
-	GL_Bind(GL_TEXTURE0, avg_luminance_texture);
 	GL_BindShader(&glsl_programs[luminanceDownscaleShader]);
 	const int mipCount = ARRAYSIZE(avg_luminance_fbo);
 	for (int a = 2, i = 1; i < mipCount; ++i, a *= 2)
@@ -186,6 +186,9 @@ float CBasePostEffects::ComputeAvgLuminance()
 			uniform_t *u = &RI->currentshader->uniforms[j];
 			switch (u->type)
 			{
+				case UT_SCREENMAP:
+					u->SetValue(avg_luminance_texture);
+					break;
 				case UT_SCREENSIZEINV:
 					u->SetValue(1.0f / (float)w, 1.0f / (float)h);
 					break;
@@ -203,33 +206,52 @@ float CBasePostEffects::ComputeAvgLuminance()
 		RenderFSQ(glState.width, glState.height);
 	}
 
-	// extract average luminance from last mip
-	float averageLuminance;
-	static int pboIndex = 0;
-
-	// send asynchronous command to copy pixel to first PBO
-	pglBindFramebuffer(GL_READ_FRAMEBUFFER, avg_luminance_fbo[mipCount - 1]->id);
-	pglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, avg_luminance_pbo[pboIndex++ % 2]);
-	pglReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
-	pglReadPixels(0, 0, 1, 1, GL_RED, GL_FLOAT, nullptr);
-
-	// read actual pixel value from second PBO
-	pglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, avg_luminance_pbo[pboIndex % 2]);
-	GLubyte *src = (GLubyte *)pglMapBufferARB(GL_PIXEL_PACK_BUFFER_ARB, GL_READ_ONLY_ARB);
-	if (src)
-	{
-		memcpy(&averageLuminance, src, sizeof(averageLuminance));
-		pglUnmapBufferARB(GL_PIXEL_PACK_BUFFER_ARB);
-	}
-	pboIndex %= 2;
-
 	// restore GL state
-	pglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
 	pglViewport(0, 0, glState.width, glState.height);
 	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
 	GL_DebugGroupPop();
+}
 
-	return averageLuminance;
+int CBasePostEffects::RenderExposureStorage()
+{
+	const int mipCount = ARRAYSIZE(avg_luminance_fbo);
+	static int fboIndex = 0;
+	const int sourceIndex = fboIndex % 2;
+	const int destIndex = (fboIndex + 1) % 2;
+
+	GL_DebugGroupPush(__FUNCTION__);
+	GL_BindShader(&glsl_programs[exposureGenShader]);
+	fboIndex = (fboIndex + 1) % 2;
+
+	for (int j = 0; j < RI->currentshader->numUniforms; j++)
+	{
+		uniform_t *u = &RI->currentshader->uniforms[j];
+		switch (u->type)
+		{
+			case UT_SCREENMAP:
+				u->SetValue(avg_luminance_texture);
+				break;
+			case UT_NORMALMAP:
+				u->SetValue(exposure_storage_texture[sourceIndex]);
+				break;
+			case UT_MIPLOD:
+				u->SetValue(mipCount - 1);
+				break;
+			case UT_TIMEDELTA:
+				u->SetValue((float)tr.frametime);
+				break;
+		}
+	}
+
+	pglViewport(0, 0, 1, 1);
+	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, exposure_storage_fbo[destIndex]->id);
+	RenderFSQ(glState.width, glState.height);
+
+	// restore GL state
+	pglViewport(0, 0, glState.width, glState.height);
+	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
+	GL_DebugGroupPop();
+	return exposure_storage_texture[destIndex];
 }
 
 float CBasePostEffects::ComputeEV100FromAvgLuminance(float avgLum)
@@ -264,23 +286,13 @@ void CBasePostEffects::InitAutoExposure()
 	const int texHeight = 720;
 	const int mipCount = ARRAYSIZE(avg_luminance_fbo);
 
+	// make this textures TF_LUMINANCE for using just one color channel
 	FREE_TEXTURE(avg_luminance_texture);
-	avg_luminance_texture = CREATE_TEXTURE("*screen_avg_luminance", texWidth, texHeight, NULL, TF_ARB_16BIT | TF_ARB_FLOAT); // make it TF_LUMINANCE for using just 1 color channel
+	avg_luminance_texture = CREATE_TEXTURE("*screen_avg_luminance", texWidth, texHeight, NULL, TF_ARB_16BIT | TF_ARB_FLOAT); 
 	GL_Bind(GL_TEXTURE0, avg_luminance_texture);
 	pglGenerateMipmap(GL_TEXTURE_2D);
 	pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	GL_Bind(GL_TEXTURE0, 0);
-
-	if (GL_Support(R_ARB_PIXEL_BUFFER_OBJECT))
-	{
-		pglGenBuffersARB(2, avg_luminance_pbo);
-		for (int i = 0; i < 2; ++i)
-		{
-			pglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, avg_luminance_pbo[i]);
-			pglBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, sizeof(float), nullptr, GL_STREAM_READ_ARB);
-		}
-		pglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
-	}
 
 	for (int i = 0; i < mipCount; ++i)
 	{
@@ -290,30 +302,22 @@ void CBasePostEffects::InitAutoExposure()
 		GL_AttachColorTextureToFBO(avg_luminance_fbo[i], avg_luminance_texture, 0, 0, i);
 		GL_CheckFBOStatus(avg_luminance_fbo[i]);
 	}
-}
 
-float CBasePostEffects::ComputeExposure(float avgLuminance)
-{
-	const float exposureMin = 0.01f;
-	const float exposureMax = 1.0f;
-	const float exposureScale = 2.0f;
-	const float	adaptRateToDark = 0.7f;
-	const float adaptRateToBright = 1.6f;
-	static float exposureInterp;
-	float currentAdaptRate;
+	for (int i = 0; i < 2; ++i) 
+	{
+		FREE_TEXTURE(exposure_storage_texture[i]);
+		exposure_storage_texture[i] = CREATE_TEXTURE(va("*exposure_storage%d", i), 1, 1, NULL, TF_ARB_FLOAT);
+		GL_Bind(GL_TEXTURE0, exposure_storage_texture[i]);
+		pglGenerateMipmap(GL_TEXTURE_2D);
+		pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		GL_Bind(GL_TEXTURE0, 0);
 
-	// calculate & interpolate exposure
-	float ev100 = ComputeEV100FromAvgLuminance(avgLuminance / (1.0f - avgLuminance));
-	float exposure = bound(exposureMin, ConvertEV100ToExposure(ev100) * exposureScale, exposureMax);
-
-	if (exposure > exposureInterp)
-		currentAdaptRate = adaptRateToDark;
-	else
-		currentAdaptRate = adaptRateToBright;
-
-	float t = bound(0.0f, tr.frametime * currentAdaptRate, 1.0f);
-	exposureInterp = exposureInterp * (1.0f - t) + exposure * t;
-	return exposureInterp;
+		if (!exposure_storage_fbo[i]) {
+			exposure_storage_fbo[i] = GL_AllocDrawbuffer("*exposure_storage_fbo", 1, 1, 1);
+		}
+		GL_AttachColorTextureToFBO(exposure_storage_fbo[i], exposure_storage_texture[i], 0);
+		GL_CheckFBOStatus(exposure_storage_fbo[i]);
+	}
 }
 
 bool CBasePostEffects :: ProcessDepthOfField( void )
@@ -591,9 +595,6 @@ void V_RenderPostEffect( word hProgram )
 		case UT_FOCALLENGTH:
 			u->SetValue( post.m_flLastLength );
 			break;
-		case UT_EXPOSURE:
-			u->SetValue( tr.camera_exposure );
-			break;
 		case UT_DOFDEBUG:
 			u->SetValue( CVAR_TO_BOOL( r_dof_debug ));
 			break;
@@ -849,8 +850,37 @@ void RenderTonemap()
 	GL_DebugGroupPush(__FUNCTION__);
 	GL_Setup2D();
 	post.RequestScreenColor();
-	tr.camera_exposure = post.ComputeExposure(post.ComputeAvgLuminance());
-	V_RenderPostEffect(post.tonemapShader);
+	int exposureTexture = post.RenderExposureStorage();
+
+	GL_BindShader(&glsl_programs[post.tonemapShader]);
+	glsl_program_t *shader = RI->currentshader;
+	for (int i = 0; i < shader->numUniforms; i++)
+	{
+		uniform_t *u = &shader->uniforms[i];
+		switch (u->type)
+		{
+			case UT_SCREENMAP:
+				if (post.m_bUseTarget) // HACKHACK
+					u->SetValue(post.target_rgb[0]);
+				else 
+					u->SetValue(tr.screen_color);
+				break;
+			case UT_COLORMAP:
+				u->SetValue(exposureTexture);
+				break;
+		}
+	}
+	RenderFSQ(glState.width, glState.height);
+	post.End();
+	GL_DebugGroupPop();
+}
+
+void RenderAverageLuminance()
+{
+	GL_DebugGroupPush(__FUNCTION__);
+	GL_Setup2D();
+	post.RequestScreenColor();
+	post.RenderAverageLuminance();
 	post.End();
 	GL_DebugGroupPop();
 }

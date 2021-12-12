@@ -644,7 +644,6 @@ typedef struct
 	float		light_gamma;
 	float		light_threshold;
 	float		smoothing_threshold;
-	float		camera_exposure;
 
 	// original player vieworg and angles
 	Vector		cached_vieworigin;
@@ -974,6 +973,7 @@ void RenderSunShafts();
 void RenderBloom();
 void RenderTonemap();
 void RenderFSQ(int wide, int tall);
+void RenderAverageLuminance();
 
 //
 // gl_world_new.cpp

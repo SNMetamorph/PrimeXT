@@ -182,7 +182,7 @@ void GL_ComputeSunParams( const Vector &skyVector )
 	tr.sky_normal = skyVector;
 }
 
-void R_RenderScreenQuad()
+static void R_RenderScreenQuad()
 {
 	GL_DebugGroupPush(__FUNCTION__);
 	// copy depth from HDR framebuffer to screen framebuffer
@@ -503,6 +503,7 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 		pglBindFramebuffer(GL_READ_FRAMEBUFFER, tr.screen_temp_fbo_msaa->id);
 		pglBlitFramebuffer(0, 0, glState.width, glState.height, 0, 0, glState.width, glState.height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);  
 		GL_BindFBO(tr.screen_temp_fbo->id);
+		RenderAverageLuminance();
 	}
 
 	RenderSunShafts();			// 2D

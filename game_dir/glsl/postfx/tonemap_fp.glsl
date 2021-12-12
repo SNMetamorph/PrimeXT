@@ -17,7 +17,7 @@ GNU General Public License for more details.
 #include "mathlib.h"
 
 uniform sampler2D	u_ScreenMap;
-uniform float       u_Exposure;
+uniform sampler2D   u_ColorMap;
 varying vec2	    var_TexCoord;
 
 // vec3 TonemapExposure(vec3 source, float exposure)
@@ -67,8 +67,9 @@ void main()
 {
     vec3 output;
     vec3 source = texture2D(u_ScreenMap, var_TexCoord).rgb;
+    float exposure = texture2D(u_ColorMap, vec2(0.5)).r;
 
-	output = TonemapMGS5(source * u_Exposure); // tone compression with exposure
+	output = TonemapMGS5(source * exposure); // tone compression with exposure
 	output = pow(output, vec3(1.0 / SCREEN_GAMMA)); // gamma-correction (linear space -> sRGB space)
     gl_FragColor = vec4(output, 1.0);
 }

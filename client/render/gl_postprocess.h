@@ -16,6 +16,7 @@ public:
 	word	genSunShafts;		// sunshafts effect
 	word	drawSunShafts;		// sunshafts effect
 	word	tonemapShader;
+	word	exposureGenShader;
 	word	luminanceGenShader;
 	word	luminanceDownscaleShader;
 	word	blurMipShader;
@@ -40,8 +41,9 @@ public:
 
 	// automatic exposure 
 	gl_drawbuffer_t	*avg_luminance_fbo[11];
-	int	avg_luminance_texture;
-	GLuint avg_luminance_pbo[2];
+	gl_drawbuffer_t *exposure_storage_fbo[2];
+	int	avg_luminance_texture = 0;
+	int exposure_storage_texture[2] = { 0 };
 
 	// sunshafts variables
 	Vector	m_vecSunLightColor;
@@ -60,8 +62,8 @@ public:
 	bool Begin();
 	void End();
 
-	float ComputeAvgLuminance();
-	float ComputeExposure(float avgLuminance);
+	void RenderAverageLuminance();
+	int RenderExposureStorage();
 
 private:
 	void InitScreenColor();
