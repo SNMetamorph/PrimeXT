@@ -306,12 +306,7 @@ void CBasePostEffects::InitAutoExposure()
 	for (int i = 0; i < 2; ++i) 
 	{
 		FREE_TEXTURE(exposure_storage_texture[i]);
-		exposure_storage_texture[i] = CREATE_TEXTURE(va("*exposure_storage%d", i), 1, 1, NULL, TF_ARB_FLOAT);
-		GL_Bind(GL_TEXTURE0, exposure_storage_texture[i]);
-		pglGenerateMipmap(GL_TEXTURE_2D);
-		pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		GL_Bind(GL_TEXTURE0, 0);
-
+		exposure_storage_texture[i] = CREATE_TEXTURE(va("*exposure_storage%d", i), 1, 1, NULL, TF_ARB_16BIT | TF_ARB_FLOAT);
 		if (!exposure_storage_fbo[i]) {
 			exposure_storage_fbo[i] = GL_AllocDrawbuffer("*exposure_storage_fbo", 1, 1, 1);
 		}
