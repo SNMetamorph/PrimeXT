@@ -44,23 +44,14 @@ varying vec2	    var_TexCoord;
 //     return lumCompressed * source;
 // }
 
-float CurveMGS5(float x)
+vec3 TonemapMGS5(vec3 source)
 {
     const float a = 0.6;
     const float b = 0.45333;
-    if (x <= a)
-        return x;
-    else
-        return min(1.0, a + b - (b*b) / (x - a + b));
-}
-
-vec3 TonemapMGS5(vec3 source)
-{
-    return vec3(
-        CurveMGS5(source.r),
-        CurveMGS5(source.g),
-        CurveMGS5(source.b)
-    );
+    vec3 t = step(a, source);
+    vec3 f1 = source;
+    vec3 f2 = min(vec3(1.0), a + b - (b*b) / (f1 - a + b));
+    return mix(f1, f2, t);
 }
 
 void main()
