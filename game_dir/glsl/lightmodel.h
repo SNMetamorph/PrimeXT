@@ -16,12 +16,30 @@ GNU General Public License for more details.
 #ifndef LIGHTMODEL_H
 #define LIGHTMODEL_H
 
+#include "const.h"
+
 #define FALL_LIGHTMODEL_BLINN		// default lightmodel Blinn\Phong
 #define BRDF_LIGHTMODEL_DISNEY	// physical based lightmodel Disney\Oren Nayar
 
 float SmoothnessToRoughness( float smoothness )
 {
 	return ( 1.0 - smoothness ) * ( 1.0 - smoothness );
+}
+
+// used for spot/omni lights
+float LightAttenuation(vec3 lightVec, float radius)
+{
+#if 0
+	// quadratic attenuation with culling, based on filament and UE
+	float distanceSquare = dot(lightVec, lightVec);
+	float attenFactor = distanceSquare * radius * radius;
+	float smoothFactor = max(1.0 - attenFactor * attenFactor, 0.0);
+	return (smoothFactor * smoothFactor) / max(distanceSquare, 1.0);	
+#else
+	// default attenuation model from P2:Savior
+	float distance = length(lightVec);
+	return 1.0 - saturate(pow(distance * radius, LIGHT_FALLOFF));
+#endif
 }
 
 #if defined( BRDF_LIGHTMODEL_DISNEY )

@@ -67,16 +67,15 @@ varying vec4		var_ShadowCoord;
 
 void main( void )
 {
-#if !defined( LIGHT_PROJ )
-	float dist = length( var_LightVec );
-	float atten = 1.0 - saturate( pow( dist * u_LightOrigin.w, LIGHT_FALLOFF ));
-	if( atten <= 0.0 ) discard; // fast reject
-#else
-	// directional light has no attenuation
-	float atten = 1.0;
-#endif
 	vec3 V = normalize( var_ViewVec );
 	vec3 L = vec3( 0.0 );
+	float atten = 1.0;
+
+#if !defined( LIGHT_PROJ )
+	atten = LightAttenuation(var_LightVec, u_LightOrigin.w);
+	if (atten <= 0.0) 
+		discard; // fast reject
+#endif
 
 #if defined( LIGHT_SPOT )
 	L = normalize( var_LightVec );
