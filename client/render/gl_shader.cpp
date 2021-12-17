@@ -529,7 +529,7 @@ static void GL_ParseFile( const char *filename, CVirtualFS *file, CVirtualFS *ou
 	GL_PopFileStack();
 }
 
-static bool GL_ProcessShader( const char *filename, CVirtualFS *out, const char *defines = NULL )
+static bool GL_ProcessShader( const char *filename, GLenum shaderType, CVirtualFS *out, const char *defines = NULL )
 {
 	CVirtualFS file;
 
@@ -542,6 +542,14 @@ static bool GL_ProcessShader( const char *filename, CVirtualFS *out, const char 
 	out->Printf( "#version 120\n" ); // OpenGL 2.1 required (because 'flat' modifier support only starts from this version)
 	out->Printf( "#ifndef M_PI\n#define M_PI 3.14159265358979323846\n#endif\n" );
 	out->Printf( "#ifndef M_PI2\n#define M_PI2 6.28318530717958647692\n#endif\n" );
+
+	if (shaderType == GL_FRAGMENT_SHADER_ARB) {
+		out->Printf("#define GLSL_SHADER_FRAGMENT\n");
+	}
+	else if (shaderType == GL_VERTEX_SHADER_ARB) {
+		out->Printf("#define GLSL_SHADER_VERTEX\n");
+	}
+
 	if( GL_Support( R_EXT_GPU_SHADER4 ))
 	{
 		out->Printf( "#extension GL_EXT_gpu_shader4 : require\n" ); // support bitwise ops
@@ -601,7 +609,7 @@ static void GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum s
 	}
 
 	// load includes, add some directives
-	if( !GL_ProcessShader( filename, &source, defines ))
+	if( !GL_ProcessShader( filename, shaderType, &source, defines ))
 		return;
 
 	GLcharARB *buffer = (GLcharARB *)source.GetBuffer();
