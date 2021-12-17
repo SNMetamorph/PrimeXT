@@ -19,12 +19,12 @@ GNU General Public License for more details.
 #include "const.h"
 
 #define FALL_LIGHTMODEL_BLINN		// default lightmodel Blinn\Phong
-#define BRDF_LIGHTMODEL_DISNEY		// physical based lightmodel Disney\Oren Nayar
 
-float SmoothnessToRoughness( float smoothness )
+struct LightingData
 {
-	return ( 1.0 - smoothness ) * ( 1.0 - smoothness );
-}
+	vec3 diffuse;
+	vec3 specular;
+};
 
 // used for spot/omni lights
 float LightAttenuation(vec3 lightVec, float radius)
@@ -42,7 +42,11 @@ float LightAttenuation(vec3 lightVec, float radius)
 #endif
 }
 
-#if defined( BRDF_LIGHTMODEL_DISNEY )
+float SmoothnessToRoughness(float smoothness)
+{
+	return (1.0 - smoothness) * (1.0 - smoothness);
+}
+
 float DiffuseBRDF( vec3 N, vec3 V, vec3 L, float Gloss, float NdotL )
 {
 #if defined( APPLY_PBS )
@@ -78,5 +82,23 @@ vec3 SpecularBRDF( vec3 N, vec3 V, vec3 L, float Gloss, vec3 SpecCol )
 #endif
 }
 
-#endif
+// diffuse + specular
+LightingData ComputeLighting(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, vec4 materialInfo, float smoothness)
+{
+	float gloss = materialInfo.r;
+	float metallicity = materialInfo.g;
+	float ambientOcclusion = materialInfo.b;
+	LightingData output;
+
+#if defined( APPLY_PBS )
+#else
+	float NdotL = saturate( dot( N, L ));
+	float specular = pow(max(dot(N, normalize(V + L)), 0.0), smoothness * smoothness * 256.0);
+	output.diffuse = lightColor * NdotL * albedo;
+	output.specular = lightColor * NdotL * gloss * specular;
+	return output;
+#endif	
+}
+
+
 #endif//LIGHTMODEL_H
