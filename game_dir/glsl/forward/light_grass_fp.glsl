@@ -111,6 +111,7 @@ void main( void )
 #endif
 	if( shadow <= 0.0 ) discard; // fast reject
 
+	// using diffuse lighting only for grass
 	vec3 albedo = diffuse.rgb;
 	diffuse.rgb *= light.rgb * NdotL * atten * shadow;
 #if defined( LIGHT_PROJ )

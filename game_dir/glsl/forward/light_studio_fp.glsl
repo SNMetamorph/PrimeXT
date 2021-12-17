@@ -145,18 +145,18 @@ void main( void )
 	}
 #endif
 #endif
-	if( shadow <= 0.0 ) discard; // fast reject
+	if (shadow <= 0.0) 
+		discard; // fast reject
  
 	vec3 albedo = diffuse.rgb;
-	float factor = DiffuseBRDF( N, V, L, smoothness, NdotL );
-	diffuse.rgb *= light.rgb * factor * atten * shadow;
+	light *= atten * shadow; // apply attenuation and shadowing
+	LightingData lighting = ComputeLighting(N, V, L, albedo, light, glossmap, smoothness);
+	diffuse.rgb = lighting.diffuse;
+	diffuse.rgb += lighting.specular;
 #if defined( LIGHT_PROJ )
-	diffuse.rgb += (albedo * u_LightDiffuse * u_AmbientFactor);
+	diffuse.rgb += (albedo * u_LightDiffuse * u_AmbientFactor); // what is this?
 #endif
-#if defined( HAS_GLOSSMAP )
-	vec3 gloss = SpecularBRDF( N, V, L, smoothness, glossmap.rgb ) * light * NdotL * atten;
-	diffuse.rgb += gloss * shadow;
-#endif
+
 	// compute final color
 	gl_FragColor = diffuse;
 }
