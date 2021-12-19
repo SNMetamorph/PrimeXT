@@ -18,7 +18,6 @@ GNU General Public License for more details.
 
 #include "const.h"
 
-#define TITANFALL_BRDF
 #define FALL_LIGHTMODEL_BLINN		// default lightmodel Blinn\Phong
 
 struct LightingData
@@ -119,7 +118,7 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
     float denom = (NdotH2 * (a2 - 1.0) + 1.0);
     denom = M_PI * denom * denom;
 
-    return nom / denom;
+    return nom / max(denom, 0.0001);
 }
 // ----------------------------------------------------------------------------
 float GeometrySchlickGGX(float NdotV, float roughness)
@@ -130,7 +129,7 @@ float GeometrySchlickGGX(float NdotV, float roughness)
     float nom   = NdotV;
     float denom = NdotV * (1.0 - k) + k;
 
-    return nom / denom;
+    return nom / max(denom, 0.0001);
 }
 // ----------------------------------------------------------------------------
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
@@ -148,13 +147,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-/*
-float a = glossmap.r * glossmap.r (roughness)
-float m = glossmap.g (metalness)
-vec3 F0 = mix(vec3(0.03), albedo.rgb, m);
-float NV = abs(dot(N,V));
-*/
-LightingData ComputeLightingBRDF(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, vec4 materialInfo, out vec3 diffuseMultiscatter)
+LightingData ComputeLightingBRDF(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, vec4 materialInfo)
 {
 	LightingData output;
 	float roughness = SmoothnessToRoughness(materialInfo.r);
@@ -171,8 +164,8 @@ LightingData ComputeLightingBRDF(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 light
 	vec3 F    = fresnelSchlick(max(dot(H, V), 0.0), F0);
 		
 	vec3 numerator    = NDF * G * F; 
-	float denominator = 4 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // + 0.0001 to prevent divide by zero
-	vec3 specular = numerator / denominator;
+	float denominator = 4 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0);
+	vec3 specular = numerator / max(denominator, 0.0001);
 	
 	// kS is equal to Fresnel
 	vec3 kS = F;
@@ -199,11 +192,10 @@ LightingData ComputeLighting(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColo
 	float metalness = materialInfo.g;
 	float ambientOcclusion = materialInfo.b;
 	LightingData output;
-
+	
 #if defined( APPLY_PBS )
-	vec3 diffuseMultiscatter;
-	output = ComputeLightingBRDF(N, V, L, albedo, lightColor, materialInfo, diffuseMultiscatter);
-	output.diffuse = albedo * (output.diffuse + albedo * diffuseMultiscatter);
+	output = ComputeLightingBRDF(N, V, L, albedo, lightColor, materialInfo);
+	output.diffuse = albedo * output.diffuse;
 #else
 	float NdotL = saturate( dot( N, L ));
 	float specular = pow(max(dot(N, normalize(V + L)), 0.0), smoothness * smoothness * 256.0);
