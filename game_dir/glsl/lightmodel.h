@@ -108,29 +108,44 @@ vec3 SpecularBRDF( vec3 N, vec3 V, vec3 L, float Gloss, vec3 SpecCol )
 #endif
 }
 
-float filterRoughness(vec3 n)
+float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
-#ifdef GLSL_SHADER_FRAGMENT
-/*
-    vec2 hpp   = h.xy;// / h.z;
-    vec2 deltaU = dFdx(hpp);
-    vec2 deltaV = dFdy(hpp);
+    float a = roughness*roughness;
+    float a2 = a*a;
+    float NdotH = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH*NdotH;
 
-    // Compute filtering region
-    vec2 boundingRectangle = abs(deltaU) + abs(deltaV);
-	vec2 variance = 0.25 * boundingRectangle * boundingRectangle;
-	float kernelRoughness2 = min(2.0 * max(variance.x, variance.y) , 0.18);
-*/
-	vec3 dndu = dFdx(n);
-	vec3 dndv = dFdy(n);
-	float variance = 0.25 * (dot(dndu , dndu) + dot(dndv , dndv));
-	float kernelRoughness2 = min(variance, 0.18);
-	//float variance = dot(dndu , dndu) + dot(dndv , dndv);
-	//float kernelRoughness2 = min(variance, 1.0);
-    return kernelRoughness2;
-#else
-	return 1.0; // just stub because we can't use dFdx/dFdy functions in vertex shaders
-#endif
+    float nom   = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = M_PI * denom * denom;
+
+    return nom / denom;
+}
+// ----------------------------------------------------------------------------
+float GeometrySchlickGGX(float NdotV, float roughness)
+{
+    float r = (roughness + 1.0);
+    float k = (r*r) / 8.0;
+
+    float nom   = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+
+    return nom / denom;
+}
+// ----------------------------------------------------------------------------
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
+
+    return ggx1 * ggx2;
+}
+// ----------------------------------------------------------------------------
+vec3 fresnelSchlick(float cosTheta, vec3 F0)
+{
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
 /*
@@ -145,54 +160,36 @@ LightingData ComputeLightingBRDF(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 light
 	float roughness = SmoothnessToRoughness(materialInfo.r);
 	float metalness = materialInfo.g;
 	float ambientOcclusion = materialInfo.b;
-	float ambient_factor = min(length(L), 1.0);	//range 0.5 - 1.0, 1.0 means completely directional
-	float r_modifier = ambient_factor * 2.0 - 1.0;
-	vec3 F0 = mix(vec3(0.03), albedo, metalness);
 
+	vec3 F0 = mix(vec3(0.02), albedo, metalness);
 	L = normalize(L);
 	vec3 H = normalize(L + V);   
-	float LV = dot(L, V);
-	float NH = dot(N, H);
-	float NL = dot(N, L);
-	float NV = abs(dot(N, V));
 
-	float a = clamp(roughness + filterRoughness(N), 0.0, 1.0);
-	LV = max(LV, 0.000);
-	NL = clamp(NL, 0.0, 1.0);
-	NH = max(abs(NH), 0.1);
-  
-	// diffuse
-	#if defined( TITANFALL_BRDF )
-		float facing = 0.5 + 0.5 * LV;
-		float rough = facing * (0.9 - 0.4 * facing) * (0.5 + NH) / NH;
-		float smoothed = 1.05 * (1.0 - pow(1.0 - NL , 5.0)) * (1.0 - pow(1.0 - NV , 5.0));
-		float single = mix(smoothed, rough, a);
-		float multi = 0.1159 * a;
-	#else
-		float single = 1.0;
-		float multi = 0.0;
-	#endif
+	// Cook-Torrance BRDF
+	float NDF = DistributionGGX(N, H, roughness);   
+	float G   = GeometrySmith(N, V, L, roughness);      
+	vec3 F    = fresnelSchlick(max(dot(H, V), 0.0), F0);
 		
-	// specular
-	float a2 = a * a;
-	a2 = max(a2 , 0.001);
-	float d = ((NH * NH) * (a2 - 1.0) + 1.0);  
-	float ggx = a2 / ( (d * d));
-	ggx /= 2.0 * mix(2.0 * NL * NV, NL + NV, a);	  
-  
-	vec3 result = vec3(single, multi, ggx) * NL;	
-	result = max(result, vec3(0.0));
+	vec3 numerator    = NDF * G * F; 
+	float denominator = 4 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // + 0.0001 to prevent divide by zero
+	vec3 specular = numerator / denominator;
 	
-	// fresnel?
-	float HV = clamp(dot(H,V), 0.0 , 1.0);
-	vec3 F = F0 + (vec3(1.0) - F0) * pow(1.0 - HV , 5.0);
-	vec3 kD = (vec3(1.0) - F) * (1.0 - metalness);
-    
-	#if defined( TITANFALL_BRDF )
-		diffuseMultiscatter = result.y * kD * lightColor * 3.14159265;
-	#endif
-	output.diffuse = result.x * kD * lightColor; 
-	output.specular = result.z * F * lightColor * 3.14159265;
+	// kS is equal to Fresnel
+	vec3 kS = F;
+	// for energy conservation, the diffuse and specular light can't
+	// be above 1.0 (unless the surface emits light); to preserve this
+	// relationship the diffuse component (kD) should equal 1.0 - kS.
+	vec3 kD = vec3(1.0) - kS;
+	// multiply kD by the inverse metalness such that only non-metals 
+	// have diffuse lighting, or a linear blend if partly metal (pure metals
+	// have no diffuse light).
+	kD *= 1.0 - metalness;	  
+
+	// scale light by NdotL
+	float NdotL = max(dot(N, L), 0.0);        
+
+	output.diffuse = (kD * albedo / M_PI) * lightColor * NdotL;
+	output.specular = kS * specular * lightColor * NdotL;
 	return output;
 }
 
