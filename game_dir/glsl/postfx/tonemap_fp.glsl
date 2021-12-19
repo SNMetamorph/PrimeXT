@@ -20,9 +20,9 @@ uniform sampler2D	u_ScreenMap;
 uniform sampler2D   u_ColorMap;
 varying vec2	    var_TexCoord;
 
-// vec3 TonemapExposure(vec3 source, float exposure)
+// vec3 TonemapExposure(vec3 source)
 // {
-//     return vec3(1.0) - exp(-exposure * source);
+//     return vec3(1.0) - exp(-source);
 // }
 
 // vec3 TonemapFilmic(vec3 source)
@@ -32,26 +32,19 @@ varying vec2	    var_TexCoord;
 // 	return source;
 // }
 
-// tonemapping by ForhaxeD, too dark for some reason
-// vec3 TonemapForhaxed(vec3 source, float averageLuminance)
+// vec3 TonemapMGS5(vec3 source)
 // {
-//     const float middleGrey = 0.6f;
-//     const float maxLuminance = 16.0f;
-//     float lumAvg = exp(averageLuminance);
-//     float lumPixel = GetLuminance(source);
-//     float lumScaled = (lumPixel * middleGrey) / lumAvg;
-//     float lumCompressed = (lumScaled * (1 + (lumScaled / (maxLuminance * maxLuminance)))) / (1 + lumScaled);
-//     return lumCompressed * source;
+//     const float a = 0.6;
+//     const float b = 0.45333;
+//     vec3 t = step(a, source);
+//     vec3 f1 = source;
+//     vec3 f2 = min(vec3(1.0), a + b - (b*b) / (f1 - a + b));
+//     return mix(f1, f2, t);
 // }
 
-vec3 TonemapMGS5(vec3 source)
+vec3 TonemapReinhard(vec3 source)
 {
-    const float a = 0.6;
-    const float b = 0.45333;
-    vec3 t = step(a, source);
-    vec3 f1 = source;
-    vec3 f2 = min(vec3(1.0), a + b - (b*b) / (f1 - a + b));
-    return mix(f1, f2, t);
+    return source / (source + vec3(1.0));
 }
 
 void main()
@@ -60,7 +53,7 @@ void main()
     vec3 source = texture2D(u_ScreenMap, var_TexCoord).rgb;
     float exposure = texture2D(u_ColorMap, vec2(0.5)).r;
 
-	output = TonemapMGS5(source * exposure); // tone compression with exposure
+	output = TonemapReinhard(source * exposure); // tone compression with exposure
 	output = pow(output, vec3(1.0 / SCREEN_GAMMA)); // gamma-correction (linear space -> sRGB space)
     gl_FragColor = vec4(output, 1.0);
 }
