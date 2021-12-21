@@ -182,7 +182,6 @@ void CBasePostEffects::PrintLuminanceValue()
 	int	height = RENDER_GET_PARM(PARM_TEX_HEIGHT, avg_luminance_texture);
 	const int mipCount = ARRAYSIZE(avg_luminance_fbo);
 
-	// it isn't accurate if luminance texture size is not equal to screen size
 	pglBindFramebuffer(GL_READ_FRAMEBUFFER, avg_luminance_fbo[0]->id);
 	pglReadPixels(width / 2, height / 2, 1, 1, GL_GREEN, GL_FLOAT, &luminance);
 	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
@@ -195,7 +194,9 @@ void CBasePostEffects::RenderAverageLuminance()
 {
 	// render luminance to first mip
 	GL_DebugGroupPush(__FUNCTION__);
-	pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, avg_luminance_fbo[0]->id);
+	gl_drawbuffer_t *baseLevel = avg_luminance_fbo[0];
+	pglViewport(0, 0, baseLevel->width, baseLevel->height);
+	pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, baseLevel->id);
 	V_RenderPostEffect(luminanceGenShader);
 
 	// downscale luminance to other mips
