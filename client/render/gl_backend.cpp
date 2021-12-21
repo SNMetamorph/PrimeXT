@@ -64,7 +64,7 @@ GL_PrintStats
 display renderer stats
 ==============
 */
-void GL_PrintStats( int params )
+static void GL_PrintStats( int params )
 {
 	GLint cur_avail_mem_kb = 0;
 	GLint total_mem_kb = 0;

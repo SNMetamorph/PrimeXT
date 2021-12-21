@@ -171,6 +171,26 @@ void CBasePostEffects :: RequestTargetCopy( int slot )
 	pglCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, TARGET_SIZE, TARGET_SIZE);
 }
 
+void CBasePostEffects::PrintLuminanceValue()
+{
+	if (!CVAR_TO_BOOL(r_show_luminance))
+		return;
+
+	float luminance;
+	char valueString[32];
+	int	width = RENDER_GET_PARM(PARM_TEX_WIDTH, avg_luminance_texture);
+	int	height = RENDER_GET_PARM(PARM_TEX_HEIGHT, avg_luminance_texture);
+	const int mipCount = ARRAYSIZE(avg_luminance_fbo);
+
+	// it isn't accurate if luminance texture size is not equal to screen size
+	pglBindFramebuffer(GL_READ_FRAMEBUFFER, avg_luminance_fbo[0]->id);
+	pglReadPixels(width / 2, height / 2, 1, 1, GL_GREEN, GL_FLOAT, &luminance);
+	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
+
+	Q_snprintf(valueString, sizeof(valueString), "%.2f", luminance);
+	gEngfuncs.pfnCenterPrint(valueString);
+}
+
 void CBasePostEffects::RenderAverageLuminance()
 {
 	// render luminance to first mip
@@ -260,17 +280,6 @@ int CBasePostEffects::RenderExposureStorage()
 	GL_CleanupAllTextureUnits();
 	GL_DebugGroupPop();
 	return exposure_storage_texture[destIndex];
-}
-
-float CBasePostEffects::ComputeEV100FromAvgLuminance(float avgLum)
-{
-	return log2(avgLum * 100.0f / 12.5f);
-}
-
-float CBasePostEffects::ConvertEV100ToExposure(float ev100)
-{
-	float maxLuminance = 1.2f * pow(2.0f, ev100);
-	return 1.0f / maxLuminance;
 }
 
 void CBasePostEffects :: SetNormalViewport( void )
@@ -879,6 +888,7 @@ void RenderTonemap()
 		}
 	}
 	RenderFSQ(glState.width, glState.height);
+	post.PrintLuminanceValue();
 	post.End();
 	GL_DebugGroupPop();
 }
