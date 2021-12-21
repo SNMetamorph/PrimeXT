@@ -26,6 +26,7 @@ GNU General Public License for more details.
 #include "gl_world.h"
 #include "gl_grass.h"
 #include "gl_cvars.h"
+#include "gl_postprocess.h"
 #include "screenfade.h"
 #include "shake.h"
 
@@ -176,6 +177,12 @@ void R_CheckChanges(void)
 		settings_changed = true;
 	}
 
+	if (FBitSet(r_show_luminance->flags, FCVAR_CHANGED))
+	{
+		ClearBits(r_show_luminance->flags, FCVAR_CHANGED);
+		settings_changed = true;
+	}
+
 	if (FBitSet(r_test->flags, FCVAR_CHANGED))
 	{
 		ClearBits(r_test->flags, FCVAR_CHANGED);
@@ -253,8 +260,11 @@ void R_ClearScene( void )
 
 	R_CheckChanges();
 
-	if( tr.params_changed )
+	if (tr.params_changed)
+	{
 		R_InitDynLightShaders();
+		InitPostprocessShaders();
+	}
 }
 
 /*

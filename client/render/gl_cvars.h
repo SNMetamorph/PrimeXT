@@ -35,6 +35,7 @@ extern cvar_t *r_occlusion_culling;
 extern cvar_t *r_show_lightprobes;
 extern cvar_t *r_show_cubemaps;
 extern cvar_t *r_show_viewleaf;
+extern cvar_t *r_show_luminance;
 extern cvar_t *cv_crosshair;
 extern cvar_t *r_shadows;
 extern cvar_t *r_fullbright;

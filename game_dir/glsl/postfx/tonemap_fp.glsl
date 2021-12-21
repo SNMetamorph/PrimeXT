@@ -20,6 +20,19 @@ uniform sampler2D	u_ScreenMap;
 uniform sampler2D   u_ColorMap;
 varying vec2	    var_TexCoord;
 
+vec3 ColorGradient(float t)
+{
+    float red = smoothstep(0.33, 0.66, t);
+    float green = smoothstep(0.66, 1.0, t);
+    float blue = smoothstep(0.00, 0.66, t) - smoothstep(0.33, 0.66, t);
+    return vec3(red, green, blue);
+}
+
+float GetGradientFraction(float luminance, float limit, float slope)
+{
+    return clamp(pow(luminance / limit, slope), 0.0, 1.0);
+}
+
 // vec3 TonemapExposure(vec3 source)
 // {
 //     return vec3(1.0) - exp(-source);
@@ -51,9 +64,17 @@ void main()
 {
     vec3 output;
     vec3 source = texture2D(u_ScreenMap, var_TexCoord).rgb;
-    float exposure = texture2D(u_ColorMap, vec2(0.5)).r;
 
+#if defined( DEBUG_LUMINANCE )
+    const float slope = 0.9;
+    const float limit = 20.0;
+    float luminance = GetLuminance(source);
+    float fraction = GetGradientFraction(luminance, limit, slope);
+    output = ColorGradient(fraction);
+#else
+    float exposure = texture2D(u_ColorMap, vec2(0.5)).r;
 	output = TonemapReinhard(source * exposure); // tone compression with exposure
-	output = pow(output, vec3(1.0 / SCREEN_GAMMA)); // gamma-correction (linear space -> sRGB space)
+    output = pow(output, vec3(1.0 / SCREEN_GAMMA)); // gamma-correction (linear space -> sRGB space)
+#endif
     gl_FragColor = vec4(output, 1.0);
 }
