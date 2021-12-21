@@ -28,6 +28,7 @@ void CBasePostEffects::InitializeTextures()
 void CBasePostEffects::InitializeShaders()
 {
 	char options[MAX_OPTIONS_LENGTH];
+	memset(options, 0, sizeof(options));
 
 	// monochrome effect
 	monoShader = GL_FindShader("postfx/monochrome", "postfx/generic", "postfx/monochrome");
@@ -49,8 +50,13 @@ void CBasePostEffects::InitializeShaders()
 	// render sunshafts
 	drawSunShafts = GL_FindShader("postfx/drawshafts", "postfx/generic", "postfx/drawshafts");
 
-	// tonemapping 
-	tonemapShader = GL_FindShader("postfx/tonemap", "postfx/generic", "postfx/tonemap");
+	// tonemapping
+	if (CVAR_TO_BOOL(r_show_luminance)) {
+		GL_SetShaderDirective(options, "DEBUG_LUMINANCE");
+	}
+	tonemapShader = GL_FindShader("postfx/tonemap", "postfx/generic", "postfx/tonemap", options);
+
+	// automatic exposure correction
 	exposureGenShader = GL_FindShader("postfx/generate_exposure", "postfx/generic", "postfx/generate_exposure");
 	luminanceGenShader = GL_FindShader("postfx/generate_luminance", "postfx/generic", "postfx/generate_luminance");
 	luminanceDownscaleShader = GL_FindShader("postfx/downscale_luminance", "postfx/generic", "postfx/downscale_luminance");
@@ -449,7 +455,7 @@ void CBasePostEffects :: End( void )
 	GL_Setup3D();
 }
 
-void InitPostEffects( void )
+void InitPostEffects()
 {
 	v_posteffects = CVAR_REGISTER( "gl_posteffects", "1", FCVAR_ARCHIVE );
 	v_sunshafts = CVAR_REGISTER( "gl_sunshafts", "1", FCVAR_ARCHIVE );
@@ -460,9 +466,14 @@ void InitPostEffects( void )
 	post.InitializeShaders();
 }
 
-void InitPostTextures( void )
+void InitPostTextures()
 {
 	post.InitializeTextures();
+}
+
+void InitPostprocessShaders()
+{
+	post.InitializeShaders();
 }
 
 static float GetGrayscaleFactor( void )

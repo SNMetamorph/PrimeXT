@@ -31,6 +31,7 @@ cvar_t *r_occlusion_culling;
 cvar_t *r_show_lightprobes;
 cvar_t *r_show_cubemaps;
 cvar_t *r_show_viewleaf;
+cvar_t *r_show_luminance;
 cvar_t *cv_crosshair;
 cvar_t *r_shadows;
 cvar_t *r_fullbright;
@@ -176,6 +177,7 @@ void R_InitializeConVars()
 	r_show_lightprobes = CVAR_REGISTER("r_show_lightprobes", "0", FCVAR_ARCHIVE);
 	r_show_cubemaps = CVAR_REGISTER("r_show_cubemaps", "0", FCVAR_ARCHIVE);
 	r_show_viewleaf = CVAR_REGISTER("r_show_viewleaf", "0", FCVAR_ARCHIVE);
+	r_show_luminance = CVAR_REGISTER("r_show_luminance", "0", FCVAR_ARCHIVE);
 	cv_decals = CVAR_REGISTER("gl_decals", "1", FCVAR_ARCHIVE);
 	r_lightstyles = CVAR_REGISTER("gl_lightstyles", "1", FCVAR_ARCHIVE);
 	r_allow_mirrors = CVAR_REGISTER("gl_allow_mirrors", "1", FCVAR_ARCHIVE);

@@ -965,6 +965,7 @@ void R_DrawSkyBox( void );
 //
 void InitPostTextures();
 void InitPostEffects();
+void InitPostprocessShaders();
 void RenderDOF();
 void RenderUnderwaterBlur();
 void RenderNerveGasBlur();
