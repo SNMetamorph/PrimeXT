@@ -207,6 +207,7 @@ void CBasePostEffects::RenderAverageLuminance()
 	}
 
 	// restore GL state
+	GL_CleanupAllTextureUnits();
 	pglViewport(0, 0, glState.width, glState.height);
 	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
 	GL_DebugGroupPop();
@@ -250,6 +251,7 @@ int CBasePostEffects::RenderExposureStorage()
 	// restore GL state
 	pglViewport(0, 0, glState.width, glState.height);
 	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
+	GL_CleanupAllTextureUnits();
 	GL_DebugGroupPop();
 	return exposure_storage_texture[destIndex];
 }
