@@ -62,6 +62,7 @@ public:
 	bool Begin();
 	void End();
 
+	void PrintLuminanceValue();
 	void RenderAverageLuminance();
 	int RenderExposureStorage();
 
@@ -70,8 +71,5 @@ private:
 	void InitScreenDepth();
 	void InitTargetColor(int slot);
 	void InitDepthOfField();
-
 	void InitAutoExposure();
-	float ComputeEV100FromAvgLuminance(float avgLum);
-	float ConvertEV100ToExposure(float ev100);
 };
