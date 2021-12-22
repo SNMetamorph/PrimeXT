@@ -242,7 +242,7 @@ void CBasePostEffects::RenderAverageLuminance()
 
 int CBasePostEffects::RenderExposureStorage()
 {
-	const int mipCount = ARRAYSIZE(avg_luminance_fbo);
+	const float mipCount = static_cast<float>(ARRAYSIZE(avg_luminance_fbo));
 	static int fboIndex = 0;
 	const int sourceIndex = fboIndex % 2;
 	const int destIndex = (fboIndex + 1) % 2;
@@ -265,7 +265,7 @@ int CBasePostEffects::RenderExposureStorage()
 			case UT_MIPLOD:
 				u->SetValue(mipCount - 1);
 				break;
-			case UT_TIMEDELTA:
+			case UT_TIMEDELTA: 
 				u->SetValue((float)tr.frametime);
 				break;
 		}

@@ -48,14 +48,15 @@ void main()
 {
 	const float exposureMin = 0.01;
 	const float exposureMax = 1.0;
-	const float exposureScale = 2.0;
+	const float exposureScale = 1.0;
 	const float adaptRateToDark = 0.6;
 	const float adaptRateToBright = 1.6;
 
 	float currentAdaptRate;
-	float avgLuminance = texture2DLod(u_ScreenMap, vec2(0.5), u_MipLod).r;
+	float avgLuminanceLog = texture2DLod(u_ScreenMap, vec2(0.5), u_MipLod).r;
 	float prevExposure = texture2D(u_NormalMap, vec2(0.5)).r;
-	float ev100 = ComputeEV100FromAvgLuminance(avgLuminance / (1.0 - avgLuminance));
+	float avgLuminance = avgLuminanceLog / (1.0 - avgLuminanceLog);
+	float ev100 = ComputeEV100FromAvgLuminance(avgLuminance);
 	float currentExposure = clamp(ConvertEV100ToExposure(ev100) * exposureScale, exposureMin, exposureMax);
 
 	if (currentExposure > prevExposure)
