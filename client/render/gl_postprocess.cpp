@@ -622,8 +622,8 @@ void V_RenderPostEffect( word hProgram )
 		case UT_ZFAR:
 			u->SetValue( RI->view.farClip );
 			break;
-		case UT_GAMMATABLE:
-			u->SetValue( &tr.gamma_table[0][0], 64 );
+		case UT_LIGHTGAMMA:
+			u->SetValue( tr.light_gamma );
 			break;
 		case UT_DIFFUSEFACTOR:
 			u->SetValue( tr.diffuseFactor );

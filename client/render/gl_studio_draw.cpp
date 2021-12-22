@@ -3475,8 +3475,8 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force )
 		case UT_TEXELSIZE:
 			u->SetValue( 1.0f / (float)sunSize[0], 1.0f / (float)sunSize[1], 1.0f / (float)sunSize[2], 1.0f / (float)sunSize[3] );
 			break;
-		case UT_GAMMATABLE:
-			u->SetValue( &tr.gamma_table[0][0], 64 );
+		case UT_LIGHTGAMMA:
+			u->SetValue(tr.light_gamma);
 			break;
 		case UT_LIGHTDIR:
 			if( pl )
@@ -3571,9 +3571,6 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force )
 			break;
 		case UT_LIGHTNUMS1:
 			u->SetValue( (float)inst->lights[4], (float)inst->lights[5], (float)inst->lights[6], (float)inst->lights[7] );
-			break;
-		case UT_LIGHTGAMMA:
-			u->SetValue( tr.light_gamma );
 			break;
 		case UT_LIGHTSCALE:
 			u->SetValue( tr.direct_scale );

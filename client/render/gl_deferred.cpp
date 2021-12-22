@@ -308,17 +308,17 @@ static void GL_DrawDeferred( word hProgram, int pass )
 		case UT_LIGHTSTYLEVALUES:
 			u->SetValue( &tr.lightstyle[0], MAX_LIGHTSTYLES );
 			break;
-		case UT_GAMMATABLE:
+		case UT_GAMMATABLE: // TODO get rid of this
 			u->SetValue( &tr.gamma_table[0][0], 64 );
+			break;
+		case UT_LIGHTGAMMA:
+			u->SetValue( tr.light_gamma );
 			break;
 		case UT_LIGHTTHRESHOLD:
 			u->SetValue( tr.light_threshold );
 			break;
 		case UT_LIGHTSCALE:
 			u->SetValue( tr.direct_scale );
-			break;
-		case UT_LIGHTGAMMA:
-			u->SetValue( tr.light_gamma );
 			break;
 		case UT_ZFAR:
 			u->SetValue( RI->view.farClip );

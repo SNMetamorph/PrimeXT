@@ -37,7 +37,7 @@ uniform vec2	u_LightShade;
 uniform vec3	u_LightDir;
 
 #if defined (VERTEX_LIGHTING)
-uniform vec4	u_GammaTable[64];
+uniform float 	u_LightGamma;
 uniform vec4	u_LightStyles;
 #endif
 
@@ -77,7 +77,6 @@ void main( void )
 #if defined (VERTEX_LIGHTING)
 	vec3 lightmap = vec3( 0.0 );
 	vec3 deluxmap = vec3( 0.0 );
-	float gammaIndex;
 
 	if( u_LightStyles.x != 0.0 )
 	{
@@ -107,12 +106,7 @@ void main( void )
 	srcL = ( deluxmap * LIGHTMAP_SHIFT ); // get lightvector
 
 	// apply screen gamma
-	gammaIndex = (var_DiffuseLight.r * 255.0);
-	var_DiffuseLight.r = u_GammaTable[int(gammaIndex/4.0)][int(mod(gammaIndex, 4.0 ))];
-	gammaIndex = (var_DiffuseLight.g * 255.0);
-	var_DiffuseLight.g = u_GammaTable[int(gammaIndex/4.0)][int(mod(gammaIndex, 4.0 ))];
-	gammaIndex = (var_DiffuseLight.b * 255.0);
-	var_DiffuseLight.b = u_GammaTable[int(gammaIndex/4.0)][int(mod(gammaIndex, 4.0 ))];
+	var_DiffuseLight = pow(var_DiffuseLight, vec3(1.0 / u_LightGamma));
 	var_DiffuseLight *= LIGHT_SCALE;
 #else
 	vec3 N = normalize( srcN );

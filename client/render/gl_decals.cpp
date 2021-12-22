@@ -1423,6 +1423,9 @@ void R_SetDecalUniforms( brushdecal_t *decal )
 		case UT_ZFAR:
 			u->SetValue( -tr.farclip * 1.74f );
 			break;
+		case UT_LIGHTGAMMA:
+			u->SetValue( tr.light_gamma );
+			break;
 		case UT_LIGHTSTYLES:
 			for( map = 0; map < MAXLIGHTMAPS; map++ )
 			{

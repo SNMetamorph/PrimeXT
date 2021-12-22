@@ -1171,9 +1171,11 @@ void R_NewMap( void )
 	tr.sky_speed = 0;
 
 	// reset light settings
-	tr.light_gamma = 0.5;
-	tr.direct_scale = 2.0;
-	tr.light_threshold = 196;
+	// by default map compilers uses gamma 0.5
+	// in case map compiled with P2ST, game parses value from worldspawn entdata
+	tr.light_gamma = 0.5f; 
+	tr.direct_scale = 2.0f;
+	tr.light_threshold = 196.0f;
 	tr.ambient_color = g_vecZero;
 	tr.smoothing_threshold = 0.642788f; // 50 degrees
 }
