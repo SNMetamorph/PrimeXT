@@ -1651,17 +1651,14 @@ void CStudioModelRenderer :: SetDecalUniforms( studiodecal_t *pDecal )
 			}
 			u->SetValue( lightstyles.x, lightstyles.y, lightstyles.z, lightstyles.w );
 			break;
-		case UT_LIGHTGAMMA:
-			u->SetValue(tr.light_gamma);
-			break;
 		case UT_REALTIME:
 			u->SetValue( (float)tr.time );
 			break;
 		case UT_VIEWORIGIN:
 			u->SetValue( GetVieworg().x, GetVieworg().y, GetVieworg().z );
 			break;
-		case UT_GAMMATABLE:
-			u->SetValue( &tr.gamma_table[0][0], 64 );
+		case UT_LIGHTGAMMA:
+			u->SetValue(tr.light_gamma);
 			break;
 		case UT_LIGHTDIR:
 			if( pl )

@@ -242,7 +242,7 @@ void CBasePostEffects::RenderAverageLuminance()
 
 int CBasePostEffects::RenderExposureStorage()
 {
-	const int mipCount = ARRAYSIZE(avg_luminance_fbo);
+	const float mipCount = static_cast<float>(ARRAYSIZE(avg_luminance_fbo));
 	static int fboIndex = 0;
 	const int sourceIndex = fboIndex % 2;
 	const int destIndex = (fboIndex + 1) % 2;
@@ -265,7 +265,7 @@ int CBasePostEffects::RenderExposureStorage()
 			case UT_MIPLOD:
 				u->SetValue(mipCount - 1);
 				break;
-			case UT_TIMEDELTA:
+			case UT_TIMEDELTA: 
 				u->SetValue((float)tr.frametime);
 				break;
 		}
@@ -622,8 +622,8 @@ void V_RenderPostEffect( word hProgram )
 		case UT_ZFAR:
 			u->SetValue( RI->view.farClip );
 			break;
-		case UT_GAMMATABLE:
-			u->SetValue( &tr.gamma_table[0][0], 64 );
+		case UT_LIGHTGAMMA:
+			u->SetValue( tr.light_gamma );
 			break;
 		case UT_DIFFUSEFACTOR:
 			u->SetValue( tr.diffuseFactor );
