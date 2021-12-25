@@ -20,11 +20,13 @@ endif()
 # Project Options
 option(BUILD_CLIENT "Build client library" ON)
 option(BUILD_SERVER "Build server library" ON)
+option(BUILD_UTILS "Build developer utilities (map/models compilers, etc.)" ON)
 option(64BIT "Build project with 64-bit support" OFF)
 option(ENABLE_PHYSX "Enable PhysX support (works only on Windows at the moment)" ON)
 set(GAMEDIR "primext" CACHE STRING "Game directory name")
 set(SERVER_INSTALL_DIR "bin" CACHE STRING "Server library path relative to game directory")
 set(CLIENT_INSTALL_DIR "bin" CACHE STRING "Client library path relative to game directory")
+set(UTILS_INSTALL_DIR "utils" CACHE STRING "Utilities path relative to game directory")
 set(SERVER_LIBRARY_NAME "server" CACHE STRING "Library name for Linux/MacOS/Windows")
 
 
@@ -56,6 +58,10 @@ endif()
 
 if(BUILD_SERVER)
 	add_subdirectory(server)
+endif()
+
+if(BUILD_UTILS)
+	add_subdirectory(utils)
 endif()
 
 if(NOT MSVC)
