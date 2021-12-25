@@ -790,13 +790,14 @@ int StudioModel :: hasLocalBlending( void )
 
 float StudioModel::SetController( int iController, float flValue )
 {
+	int i;
 	if (!m_pstudiohdr)
 		return 0.0f;
 
 	mstudiobonecontroller_t	*pbonecontroller = (mstudiobonecontroller_t *)((byte *)m_pstudiohdr + m_pstudiohdr->bonecontrollerindex);
 
 	// find first controller that matches the index
-	for (int i = 0; i < m_pstudiohdr->numbonecontrollers; i++, pbonecontroller++)
+	for (i = 0; i < m_pstudiohdr->numbonecontrollers; i++, pbonecontroller++)
 	{
 		if (pbonecontroller->index == iController)
 			break;
