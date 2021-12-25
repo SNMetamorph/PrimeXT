@@ -13,8 +13,8 @@
 //
 
 #include <mxGlWindow.h>
-#include <GL\gl.h>
-#include <GL\wglext.h>
+#include <gl.h>
+#include <wglext.h>
 #include <stdio.h>
 
 static BOOL (WINAPI *wglGetPixelFormatAttribiv)( HDC hDC, int iPixelFormat, int iLayerPlane, UINT nAttributes, const int *piAttrib, int *piValues);

@@ -664,14 +664,9 @@ int main( int argc, char *argv[] )
 		}
 	}
 
-	if( IsAliasModel( cmdline ) && COM_FileExists( "q1mv.exe" ))
+	if( IsAliasModel( cmdline ))
 	{
-		strcpy (cmdline, "q1mv.exe" );
-		for (int i = 1; i < argc; i++)
-		{
-			strcat (cmdline, " ");
-			strcat (cmdline, argv[i]);
-		}
+		// TODO print message q1 alias models deprecated
 		WinExec (cmdline, SW_SHOW);
 		return 0;
 	}

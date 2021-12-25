@@ -1,33 +1,36 @@
 cmake_minimum_required(VERSION 2.8.12)
 
-project(pxstudiomdl)
+project(pxmv)
 include(CompilerRuntime)
 
 # find and add source files
 list(APPEND DIR_SOURCES
+	"../../game_shared/bone_setup.cpp"
+	"../../game_shared/common.cpp"
+	"../../game_shared/ikcontext.cpp"
+	"../../game_shared/jigglebones.cpp"
 	"../../game_shared/mathlib.cpp"
 	"../../game_shared/matrix.cpp"
-	"../common/cmdlib.cpp"
+	"../../game_shared/procbones.cpp"
+	"../../game_shared/stringlib.cpp"
 	"../common/conprint.cpp"
-	"../common/filesystem.cpp"
-	"../common/scriplib.cpp"
-	"../common/stringlib.cpp"
-	"../common/zone.cpp"
-	"imagelib.cpp"
-	"optimize.cpp"
-    "quantizer.cpp"
-    "simpilfy.cpp"
-    "skin.cpp"
-    "studiomdl.cpp"
-    "write.cpp"
+	"ControlPanel.cpp"
+	"FileAssociation.cpp"
+    "GlWindow.cpp"
+	"ViewerSettings.cpp"
+    "mdlviewer.cpp"
+    "pakviewer.cpp"
+    "studio_render.cpp"
+    "studio_utils.cpp"
 )
 
 add_executable(${PROJECT_NAME} ${DIR_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"."
-	"../../game_shared" # should be first because mathlib.h also locates i
+	"../mxtk"
+	"../mxtk/include"
+	"../../game_shared" # should be first because mathlib.h also locates in ../common
 	"../../engine"
-	"../../server"
 	"../../common"
 	"../common"
 )
@@ -57,15 +60,31 @@ if(CMAKE_CONFIGURATION_TYPES MATCHES Debug)
 		# enable "Edit and Continue" MSVC feature
 		target_compile_options(${PROJECT_NAME} PRIVATE /ZI) 
 		target_link_options(${PROJECT_NAME} PRIVATE /INCREMENTAL /SAFESEH:NO)
-		#target_link_libraries(${PROJECT_NAME} msvcrtd.lib)
 	endif()
 else()
+	target_compile_definitions(${PROJECT_NAME} PRIVATE HAVE_SCALE=1)
 	# release mode compiler/linker flags
 	if(MSVC)
 		target_compile_options(${PROJECT_NAME} PRIVATE /Ob1) # disable force function inlining, to prevent segfault in release mode
 		target_compile_options(${PROJECT_NAME} PRIVATE /O1) # enable optimizing to minimize size
-		#target_link_libraries(${PROJECT_NAME} msvcrt.lib)
 	endif()
+endif()
+
+# TODO make mxtk crossplatform, also compile it instead using pre-made .lib
+find_library(LIBRARY_MXTK
+	NAMES mxtk
+	HINTS "${CMAKE_SOURCE_DIR}/utils/common"
+)
+
+if(MSVC)
+	target_link_libraries(${PROJECT_NAME} PRIVATE
+		"comctl32"
+		"opengl32"
+		"glu32"
+		"winmm"
+		"${LIBRARY_MXTK}"
+	)
+else()
 endif()
 
 # set static compiler runtime
