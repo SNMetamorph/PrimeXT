@@ -1,4 +1,5 @@
 #include <utlarray.h>
+#include "mathlib.h"
 
 #ifndef EXTERN
 #define EXTERN extern
