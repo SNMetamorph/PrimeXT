@@ -470,7 +470,7 @@ MDLViewer::handleEvent (mxEvent *event)
 
 #ifdef WIN32
 		case IDC_HELP_GOTOHOMEPAGE:
-			ShellExecute (0, "open", "http://cs-mapping.com.ua/forum/forumdisplay.php?f=189", 0, 0, SW_SHOW);
+			ShellExecute (0, "open", APP_GITHUB_LINK, 0, 0, SW_SHOW);
 			break;
 #endif
 
