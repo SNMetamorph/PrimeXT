@@ -81,7 +81,7 @@ ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0,
 	tab->add (wBody, "Body Parts");
 	cBodypart = new mxChoice (wBody, 5, 5, 112, 22, IDC_BODYPART);
 	mxToolTip::add (cBodypart, "Choose a bodypart");
-	BodyPartLabel = new mxLabel (wBody, 120, 8, 50, 20, "Body 0");
+	BodyPartLabel = new mxLabel (wBody, 120, 8, 150, 20, "Body 0");
 	cSubmodel = new mxChoice (wBody, 5, 30, 112, 22, IDC_SUBMODEL);
 	mxToolTip::add (cSubmodel, "Choose a submodel of current bodypart");
 	mxLabel *SubModeLabel = new mxLabel (wBody, 120, 33, 55, 20, "Sub-model");
