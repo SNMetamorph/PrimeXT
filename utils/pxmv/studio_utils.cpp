@@ -25,6 +25,7 @@
 
 #include <mx.h>
 #include "mdlviewer.h"
+#include "app_info.h"
 
 StudioModel g_studioModel;
 extern bool bUseWeaponOrigin;
@@ -240,7 +241,7 @@ void StudioModel :: FreeModel( void )
 {
 	if( g_viewerSettings.numModelChanges )
 	{
-		if( !mxMessageBox( g_GlWindow, "Model has changes. Do you wish to save them?", g_appTitle, MX_MB_YESNO | MX_MB_QUESTION ))
+		if( !mxMessageBox( g_GlWindow, "Model has changes. Do you wish to save them?", APP_TITLE_STR, MX_MB_YESNO | MX_MB_QUESTION ))
 		{
 			char *ptr = (char *)mxGetSaveFileName( g_GlWindow , g_viewerSettings.modelPath, "*.mdl", g_viewerSettings.modelPath );
 			if( ptr )
@@ -254,7 +255,7 @@ void StudioModel :: FreeModel( void )
 					strcat( filename, ".mdl" );
 
 				if( !g_studioModel.SaveModel( filename ))
-					mxMessageBox( g_GlWindow, "Error saving model.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
+					mxMessageBox( g_GlWindow, "Error saving model.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 			}
 		}
 
@@ -366,8 +367,8 @@ studiohdr_t *StudioModel::LoadModel( char *modelname )
 		strncmp ((const char *) buffer, "IDSQ", 4))
 	{
 		if (!strncmp ((const char *) buffer, "IDPO", 4 ))
-			mxMessageBox( g_GlWindow, "Quake 1 models doesn't supported.", g_appTitle, MX_MB_OK | MX_MB_ERROR );
-		else mxMessageBox( g_GlWindow, "Unknown file format.", g_appTitle, MX_MB_OK | MX_MB_ERROR );
+			mxMessageBox( g_GlWindow, "Quake 1 models doesn't supported.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR );
+		else mxMessageBox( g_GlWindow, "Unknown file format.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR );
 
 		free (buffer);
 		return 0;
@@ -381,7 +382,7 @@ studiohdr_t *StudioModel::LoadModel( char *modelname )
 
 	if( phdr->version != STUDIO_VERSION )
 	{
-		mxMessageBox( g_GlWindow, "Unsupported studio version.", g_appTitle, MX_MB_OK | MX_MB_ERROR );
+		mxMessageBox( g_GlWindow, "Unsupported studio version.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR );
 		free (buffer);
 		return 0;
 	}
@@ -1270,7 +1271,7 @@ bool StudioModel::SetEditMode( int mode )
 	if( mode == EDIT_MODEL && g_viewerSettings.editMode == EDIT_SOURCE && g_viewerSettings.numSourceChanges > 0 )
 	{
 		Q_strcpy( str, "we have some virtual changes for QC-code.\nApply them to real model or all the changes will be lost?" );
-		int ret = mxMessageBox( g_GlWindow, str, g_appTitle, MX_MB_YESNOCANCEL | MX_MB_QUESTION );
+		int ret = mxMessageBox( g_GlWindow, str, APP_TITLE_STR, MX_MB_YESNOCANCEL | MX_MB_QUESTION );
 
 		if( ret == 2 ) return false;	// cancelled
 	
@@ -1399,7 +1400,7 @@ bool StudioModel::AddEditField( int type, int id )
 {
 	if( m_numeditfields >= MAX_EDITFIELDS )
 	{
-		mxMessageBox( g_GlWindow, "Edit fields limit exceeded.", g_appTitle, MX_MB_OK | MX_MB_ERROR );
+		mxMessageBox( g_GlWindow, "Edit fields limit exceeded.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR );
 		return false;
 	}
 

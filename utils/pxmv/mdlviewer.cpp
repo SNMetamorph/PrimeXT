@@ -28,9 +28,9 @@
 #include "pakviewer.h"
 #include "FileAssociation.h"
 #include "stringlib.h"
+#include "app_info.h"
 
 MDLViewer *g_MDLViewer = 0;
-char g_appTitle[] = "Paranoia 2 Model Viewer v1.31 stable";
 static char recentFiles[8][256] = { "", "", "", "", "", "", "", "" };
 extern bool bUseWeaponOrigin;
 extern bool bUseWeaponLeftHand;
@@ -78,7 +78,7 @@ void MDLViewer::saveRecentFiles( void )
 	}
 }
 
-MDLViewer :: MDLViewer() : mxWindow( 0, 0, 0, 0, 0, g_appTitle, mxWindow::Normal )
+MDLViewer :: MDLViewer() : mxWindow( 0, 0, 0, 0, 0, APP_TITLE_STR, mxWindow::Normal )
 {
 	// create menu stuff
 	mb = new mxMenuBar (this);
@@ -264,7 +264,7 @@ MDLViewer::handleEvent (mxEvent *event)
 
 			if( !g_studioModel.SaveModel( filename ))
 			{
-				mxMessageBox( this, "Error saving model.", g_appTitle, MX_MB_OK | MX_MB_ERROR );
+				mxMessageBox( this, "Error saving model.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR );
 			}
 			else
 			{
@@ -296,7 +296,7 @@ MDLViewer::handleEvent (mxEvent *event)
 
 				}
 				else
-					mxMessageBox (this, "Error loading texture.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
+					mxMessageBox (this, "Error loading texture.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 			}
 		}
 		break;
@@ -476,15 +476,14 @@ MDLViewer::handleEvent (mxEvent *event)
 
 		case IDC_HELP_ABOUT:
 			mxMessageBox (this,
-				"Paranoia 2 Model Viewer v1.31 (c) 2019 by Unkle Mike\n"
-				"Based on original HLMV code by Mete Ciragan\n\n"
+				APP_TITLE_STR " " APP_VERSION_STRING2 "\n"
+				"Based on P2MV code by Unkle Mike\n\n"
 				"Left-drag to rotate.\n"
 				"Right-drag to zoom.\n"
 				"Shift-left-drag to x-y-pan.\n"
 				"Ctrl-drag to move lights.\n\n"
-				"Build:\t" __DATE__ ".\n"
-				"Email:\tg-cont@rambler.ru\n"
-				"Web:\thttp://www.hlfx.ru/forum", "About Paranoia 2 Model Viewer",
+				"Build:\t" APP_BUILD_DATE "\n"
+				"Web:\t" APP_GITHUB_LINK, "About PXMV",
 				MX_MB_OK | MX_MB_INFORMATION );
 			break;
 		

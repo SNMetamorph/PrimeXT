@@ -26,15 +26,12 @@
 #include <mxBmp.h>
 #include "mdlviewer.h"
 #include "stringlib.h"
-
-extern char g_appTitle[];
+#include "app_info.h"
 
 ControlPanel *g_ControlPanel = 0;
 bool g_bStopPlaying = false;
 bool g_bEndOfSequence = false;
 static int g_nCurrFrame = 0;
-
-
 
 ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0, "Control Panel", mxWindow::Normal )
 {
@@ -725,7 +722,7 @@ ControlPanel::handleEvent (mxEvent *event)
 				image.data = (void *) ((byte *) phdr + ptexture->index);
 				image.palette = (void *) ((byte *) phdr + ptexture->width * ptexture->height + ptexture->index);
 				if (!mxBmpWrite (filename, &image))
-					mxMessageBox (this, "Error writing .BMP texture.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
+					mxMessageBox (this, "Error writing .BMP texture.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 				image.data = 0;
 				image.palette = 0;
 			}
@@ -749,14 +746,14 @@ ControlPanel::handleEvent (mxEvent *event)
 			mxImage *image = mxBmpRead (filename);
 			if (!image)
 			{
-				mxMessageBox (this, "Error loading .BMP texture.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
+				mxMessageBox (this, "Error loading .BMP texture.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 				return 1;
 			}
 
 			if (!image->palette)
 			{
 				delete image;
-				mxMessageBox (this, "Error loading .BMP texture.  Must be 8-bit!", g_appTitle, MX_MB_OK | MX_MB_ERROR);
+				mxMessageBox (this, "Error loading .BMP texture.  Must be 8-bit!", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 				return 1;
 			}
 
@@ -773,7 +770,7 @@ ControlPanel::handleEvent (mxEvent *event)
 					g_viewerSettings.numModelChanges++;
 				}
 				else
-					mxMessageBox (this, "Texture must be of same size.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
+					mxMessageBox (this, "Texture must be of same size.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 			}
 
 			delete image;
@@ -1035,7 +1032,7 @@ ControlPanel::handleEvent (mxEvent *event)
 			char	str[1024];
 
 			Q_strcpy( str, "there is no reliable methods to autodetect changes between half-float and old fixed point.\nIf model will seems to be broken after proceed don't save her!\nIf you not sure what it is should doing, just press 'No' and forget about this tool" );
-			if( mxMessageBox( g_GlWindow, str, g_appTitle, MX_MB_YESNO | MX_MB_QUESTION | MX_MB_WARNING ) == 0 )
+			if( mxMessageBox( g_GlWindow, str, APP_TITLE_STR, MX_MB_YESNO | MX_MB_QUESTION | MX_MB_WARNING ) == 0 )
 				g_studioModel.ConvertTexCoords();
 		}
 		break;
@@ -1286,7 +1283,7 @@ int ControlPanel::loadModel (const char *filename, bool centering)
 			setSequence( 0 );
 
 			COM_FileBase( filename, basename );
-			Q_snprintf( str, sizeof( str ), "%s - %s.mdl", g_appTitle, basename );
+			Q_snprintf( str, sizeof( str ), "%s - %s.mdl", APP_TITLE_STR, basename );
 			g_MDLViewer->setLabel( str );
 
 			COM_ExtractFilePath( filename, basepath );
@@ -1298,12 +1295,12 @@ int ControlPanel::loadModel (const char *filename, bool centering)
 		else
 		{
 			Q_strncpy( g_viewerSettings.modelPath, filename, sizeof( g_viewerSettings.modelPath ));
-			mxMessageBox (this, "Error post-loading model.", g_appTitle, MX_MB_ERROR | MX_MB_OK);
+			mxMessageBox (this, "Error post-loading model.", APP_TITLE_STR, MX_MB_ERROR | MX_MB_OK);
 		}
 	}
 	else
 	{
-//		mxMessageBox (this, "Error loading model.", g_appTitle, MX_MB_ERROR | MX_MB_OK);
+//		mxMessageBox (this, "Error loading model.", APP_TITLE_STR, MX_MB_ERROR | MX_MB_OK);
 	}
 
 	return 0;

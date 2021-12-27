@@ -32,11 +32,11 @@
 #include "ControlPanel.h"
 #include "stringlib.h"
 #include "mdlviewer.h"
+#include "app_info.h"
 #include "muzzle1.h"
 #include "muzzle2.h"
 #include "muzzle3.h"
 
-extern char g_appTitle[];
 extern bool g_bStopPlaying;
 extern bool bUseWeaponOrigin;
 extern bool bUseWeaponLeftHand;
@@ -450,7 +450,7 @@ void GlWindow :: draw( void )
 					image->flip_vertical();
 
 					if( !mxBmpWrite( g_viewerSettings.uvmapPath, image ))
-						mxMessageBox( this, "Error writing .BMP texture.", g_appTitle, MX_MB_OK|MX_MB_ERROR );
+						mxMessageBox( this, "Error writing .BMP texture.", APP_TITLE_STR, MX_MB_OK|MX_MB_ERROR );
 				}
 
 				// cleanup
@@ -792,7 +792,7 @@ void GlWindow :: dumpViewport( const char *filename )
 		image->flip_vertical();
 
 		if( !mxBmpWrite( filename, image ))
-			mxMessageBox( this, "Error writing screenshot.", g_appTitle, MX_MB_OK|MX_MB_ERROR );
+			mxMessageBox( this, "Error writing screenshot.", APP_TITLE_STR, MX_MB_OK|MX_MB_ERROR );
 
 		delete image;
 	}

@@ -25,7 +25,7 @@
 #include "StudioModel.h"
 #include "ControlPanel.h"
 #include "FileAssociation.h"
-
+#include "app_info.h"
 
 
 int
@@ -187,7 +187,7 @@ PAKViewer::handleEvent (mxEvent *event)
 					char str[256];
 					_makeTempFileName (str, e);
 					if (!pak_ExtractFile (d_pakFile, d_currLumpName, str))
-						mxMessageBox (this, "Error extracting from PAK file.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
+						mxMessageBox (this, "Error extracting from PAK file.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 					else
 					{
 						if (program)
@@ -197,7 +197,7 @@ PAKViewer::handleEvent (mxEvent *event)
 							strcat (path, " ");
 							strcat (path, str);
 							if ((int) WinExec (path, SW_SHOW) <= 32)
-								mxMessageBox (this, "Error executing specified program.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
+								mxMessageBox (this, "Error executing specified program.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 						}
 					}
 				}
@@ -208,10 +208,10 @@ PAKViewer::handleEvent (mxEvent *event)
 					char str[256];
 					_makeTempFileName (str, e);
 					if (!pak_ExtractFile (d_pakFile, d_currLumpName, str))
-						mxMessageBox (this, "Error extracting from PAK file.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
+						mxMessageBox (this, "Error extracting from PAK file.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 					else
 						if ((int) ShellExecute ((HWND) getHandle (), "open", str, 0, 0, SW_SHOW) <= 32)
-							mxMessageBox (this, "Error executing document with associated program.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
+							mxMessageBox (this, "Error executing document with associated program.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 				}
 
 				// HLMV default
@@ -295,7 +295,7 @@ PAKViewer::OnLoadModel ()
 
 	if (!pak_ExtractFile (d_pakFile, d_currLumpName, str2))
 	{
-		mxMessageBox (this, "Error extracting from PAK file.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
+		mxMessageBox (this, "Error extracting from PAK file.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 		return 1;
 	}
 
@@ -303,7 +303,7 @@ PAKViewer::OnLoadModel ()
 	studiohdr_t *hdr = g_studioModel.LoadModel (str2);
 	if (!hdr)
 	{
-//		mxMessageBox (this, "Error reading model header.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
+//		mxMessageBox (this, "Error reading model header.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 		return 1;
 	}
 
@@ -320,7 +320,7 @@ PAKViewer::OnLoadModel ()
 		if (!pak_ExtractFile (d_pakFile, texturename, str2))
 		{
 			g_studioModel.FreeModel ();
-			mxMessageBox (this, "Error extracting from PAK file 1.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
+			mxMessageBox (this, "Error extracting from PAK file 1.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 			return 1;
 		}
 	}
@@ -340,7 +340,7 @@ PAKViewer::OnLoadModel ()
 			if (!pak_ExtractFile (d_pakFile, seqgroupname, str2))
 			{
 				g_studioModel.FreeModel ();
-				mxMessageBox (this, "Error extracting from PAK file 2.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
+				mxMessageBox (this, "Error extracting from PAK file 2.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 				return 1;
 			}
 		}
@@ -372,7 +372,7 @@ PAKViewer::OnLoadTexture (int pos)
 
 	if (!pak_ExtractFile (d_pakFile, d_currLumpName, str2))
 	{
-		mxMessageBox (this, "Error extracting from PAK file.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
+		mxMessageBox (this, "Error extracting from PAK file.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 		return 1;
 	}
 
@@ -384,7 +384,7 @@ PAKViewer::OnLoadTexture (int pos)
 			g_ControlPanel->setShowGround (true);
 	}
 	else
-		mxMessageBox (this, "Error loading texture.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
+		mxMessageBox (this, "Error loading texture.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 
 	return 1;
 }
@@ -408,7 +408,7 @@ PAKViewer::OnPlaySound ()
 
 	if (!pak_ExtractFile (d_pakFile, d_currLumpName, str2))
 	{
-		mxMessageBox (this, "Error extracting from PAK file.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
+		mxMessageBox (this, "Error extracting from PAK file.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 		return 1;
 	}
 
@@ -427,7 +427,7 @@ PAKViewer::OnExtract ()
 	if (ptr)
 	{
 		if (!pak_ExtractFile (d_pakFile, d_currLumpName, ptr))
-			mxMessageBox (this, "Error extracting from PAK file.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
+			mxMessageBox (this, "Error extracting from PAK file.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 	}
 
 	return 1;
