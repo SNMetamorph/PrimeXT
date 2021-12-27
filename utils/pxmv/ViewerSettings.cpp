@@ -204,29 +204,32 @@ int SaveViewerSettings( void )
 	return 1;
 }
 
-bool IsAliasModel( const char *path )
+bool IsAliasModel(const char *path)
 {
 	byte	buffer[256];
 	FILE	*fp;
+	int		remainBytes;
 
-	if( !path ) return false;
-
-	// load the model
-	if(( fp = fopen( path, "rb" )) == NULL )
+	if (!path) 
 		return false;
 
-	fread( buffer, sizeof( buffer ), 1, fp );
-	fclose( fp );
+	// load the model
+	if ((fp = fopen(path, "rb")) == NULL)
+		return false;
 
-	if( ftell( fp ) < sizeof( 84 ))
+	fread(buffer, sizeof(buffer), 1, fp);
+	remainBytes = ftell(fp);
+	fclose(fp);
+
+	if (remainBytes < 84)
 		return false;
 
 	// skip invalid signature
-	if( Q_strncmp((const char *)buffer, "IDPO", 4 ))
+	if (Q_strncmp((const char *)buffer, "IDPO", 4))
 		return false;
 
 	// skip unknown version
-	if( *(int *)&buffer[4] != 6 )
+	if (*(int *)&buffer[4] != 6)
 		return false;
 
 	return true;
