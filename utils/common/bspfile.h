@@ -76,6 +76,7 @@ BRUSH MODELS
 .bsp contain level static geometry with including PVS and lightning info
 ==============================================================================
 */
+#define UTILS_INCLUDED_BSPFILE
 #include "..\..\common\bspfile.h"
 
 // header
