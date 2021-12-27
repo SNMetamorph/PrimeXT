@@ -237,31 +237,34 @@ static bool ValidateModel( const char *path )
 	byte		buffer[256];
 	studiohdr_t	*phdr;
 	FILE		*fp;
+	int			remainBytes;
 
-	if( !path ) return false;
-
-	// load the model
-	if(( fp = fopen( path, "rb" )) == NULL )
+	if (!path)
 		return false;
 
-	fread( buffer, sizeof( buffer ), 1, fp );
-	fclose( fp );
+	// load the model
+	if ((fp = fopen(path, "rb")) == NULL)
+		return false;
 
-	if( ftell( fp ) < sizeof( studiohdr_t ))
+	fread(buffer, sizeof(buffer), 1, fp);
+	remainBytes = ftell(fp);
+	fclose(fp);
+
+	if (remainBytes < sizeof(studiohdr_t))
 		return false;
 
 	// skip invalid signature
-	if( Q_strncmp((const char *)buffer, "IDST", 4 ))
+	if (Q_strncmp((const char *)buffer, "IDST", 4))
 		return false;
 
 	phdr = (studiohdr_t *)buffer;
 
 	// skip unknown version
-	if( phdr->version != STUDIO_VERSION )
+	if (phdr->version != STUDIO_VERSION)
 		return false;
 
 	// skip modelnameT.mdl
-	if( phdr->numbones <= 0 )
+	if (phdr->numbones <= 0)
 		return false;
 
 	return true;
