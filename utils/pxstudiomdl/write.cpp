@@ -965,18 +965,18 @@ void WriteModel( void )
 	cur = (int)pData;
 	for( i = 0; i < g_nummodels; i++ ) 
 	{
-		static int normmap[MAXSTUDIOVERTS];
-		static int normimap[MAXSTUDIOVERTS];
+		static CUtlArray<int> normmap;
+		static CUtlArray<int> normimap;
 		int n = 0;
 
 		CopyStringTruncate( pmodel[i].name, g_model[i]->name, sizeof( pmodel[0].name ));
-
-		// save bbox info
+		normmap.SetSize(g_model[i]->norm.Count());
+		normimap.SetSize(g_model[i]->vert.Count());
 
 		// remap normals to be sorted by skin reference
 		for (j = 0; j < g_model[i]->nummesh; j++)
 		{
-			for (k = 0; k < g_model[i]->numnorms; k++)
+			for (k = 0; k < g_model[i]->norm.Count(); k++)
 			{
 				if (g_model[i]->norm[k].skinref == g_model[i]->pmesh[j]->skinref)
 				{
@@ -990,7 +990,7 @@ void WriteModel( void )
 		
 		// save vertice bones
 		pbone = pData;
-		pmodel[i].numverts	= g_model[i]->numverts;
+		pmodel[i].numverts	= g_model[i]->vert.Count();
 		pmodel[i].vertinfoindex = (pData - pStart);
 		for (j = 0; j < pmodel[i].numverts; j++)
 		{
@@ -999,7 +999,7 @@ void WriteModel( void )
 		ALIGN( pbone );
 
 		// save normal bones
-		pmodel[i].numnorms	= g_model[i]->numnorms;
+		pmodel[i].numnorms	= g_model[i]->norm.Count();
 		pmodel[i].norminfoindex = ((byte *)pbone - pStart);
 		for (j = 0; j < pmodel[i].numnorms; j++)
 		{
@@ -1062,25 +1062,25 @@ void WriteModel( void )
 
 		// save group info
 		pvert = (Vector *)pData;
-		pData += g_model[i]->numverts * sizeof( Vector );
+		pData += g_model[i]->vert.Count() * sizeof( Vector );
 		pmodel[i].vertindex		= ((byte *)pvert - pStart); 
 		ALIGN( pData );			
 
 		pnorm = (Vector *)pData;
-		pData += g_model[i]->numnorms * sizeof( Vector );
+		pData += g_model[i]->norm.Count() * sizeof( Vector );
 		pmodel[i].normindex		= ((byte *)pnorm - pStart); 
 		ALIGN( pData );
 
-		for (j = 0; j < g_model[i]->numverts; j++)
+		for (j = 0; j < g_model[i]->vert.Count(); j++)
 		{
 			VectorCopy( g_model[i]->vert[j].org, pvert[j] );
 		}
 
-		for (j = 0; j < g_model[i]->numnorms; j++)
+		for (j = 0; j < g_model[i]->norm.Count(); j++)
 		{
 			VectorCopy( g_model[i]->norm[normimap[j]].org, pnorm[j] );
 		}
-		Msg( "vertices   %7d bytes (%d vertices, %d normals)\n", pData - cur, g_model[i]->numverts, g_model[i]->numnorms );
+		Msg( "vertices   %7d bytes (%d vertices, %d normals)\n", pData - cur, g_model[i]->vert.Count(), g_model[i]->norm.Count() );
 		cur = (int)pData;
 
 		// save mesh info

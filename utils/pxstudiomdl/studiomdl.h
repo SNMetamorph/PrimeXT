@@ -704,12 +704,8 @@ typedef struct s_model_s
 
 	Vector		boundingbox[MAXSTUDIOSRCBONES][2];
 
-	int		numverts;
-	s_vertex_t	vert[MAXSTUDIOVERTS];
-
-	int		numnorms;
-	s_normal_t	norm[MAXSTUDIOVERTS];
-
+	CUtlArray<s_vertex_t> vert;
+	CUtlArray<s_normal_t> norm;
 	CUtlArray<s_srcvertex_t> srcvert;
 
 	int		nummesh;

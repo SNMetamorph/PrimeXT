@@ -548,50 +548,48 @@ s_trianglevert_t *LookupTriangle( s_mesh_t *pmesh, int index )
 
 int LookupNormal( s_model_t *pmodel, s_srcvertex_t *srcv )
 {
-	int	i;
-
-	for( i = 0; i < pmodel->numnorms; i++ )
+	for (int i = 0; i < pmodel->norm.Count(); i++)
 	{
 		if( DotProduct( pmodel->norm[i].org, srcv->norm ) > g_normal_blend && pmodel->norm[i].skinref == srcv->skinref
 			&& !memcmp( &pmodel->norm[i].globalWeight, &srcv->globalWeight, sizeof( s_boneweight_t ))) {
 			return i;
 		}
 	}
+	
+	int k = pmodel->norm.AddToTail();
+	pmodel->norm[k].org = srcv->norm;
+	pmodel->norm[k].globalWeight = srcv->globalWeight;
+	pmodel->norm[k].skinref = srcv->skinref;
 
-	if( i >= MAXSTUDIOVERTS )
-		COM_FatalError( "too many normals in model: \"%s\"\n", pmodel->name );
+	if (k == MAXSTUDIOVERTS) {
+		MsgDev(D_WARN, "exceed MAXSTUDIOVERTS limit in model: \"%s\"\nModel may not work with some mods or software (except PrimeXT)\n", pmodel->name);
+	}
 
-	pmodel->norm[i].org = srcv->norm;
-	pmodel->norm[i].globalWeight = srcv->globalWeight;
-	pmodel->norm[i].skinref = srcv->skinref;
-	pmodel->numnorms = i + 1;
-
-	return i;
+	return k;
 }
 
 int LookupVertex( s_model_t *pmodel, s_srcvertex_t *srcv )
 {
-	int	i;
-
 	// assume 3 digits of accuracy
 	srcv->vert.x = (int)(srcv->vert.x * 1000) / 1000.0;
 	srcv->vert.y = (int)(srcv->vert.y * 1000) / 1000.0;
 	srcv->vert.z = (int)(srcv->vert.z * 1000) / 1000.0;
 
-	for( i = 0; i < pmodel->numverts; i++ )
+	for (int i = 0; i < pmodel->vert.Count(); i++)
 	{
 		if( pmodel->vert[i].org == srcv->vert && !memcmp( &pmodel->vert[i].globalWeight, &srcv->globalWeight, sizeof( s_boneweight_t )))
 			return i;
 	}
 
-	if( i >= MAXSTUDIOVERTS )
-		COM_FatalError( "too many vertices in model: \"%s\"\n", pmodel->name );
+	int k = pmodel->vert.AddToTail();
+	pmodel->vert[k].org = srcv->vert;
+	pmodel->vert[k].globalWeight = srcv->globalWeight;
 
-	pmodel->vert[i].org = srcv->vert;
-	pmodel->vert[i].globalWeight = srcv->globalWeight;
-	pmodel->numverts = i + 1;
+	if (k == MAXSTUDIOVERTS) {
+		MsgDev(D_WARN, "exceed MAXSTUDIOVERTS limit in model: \"%s\"\nModel may not work with some mods or software (except PrimeXT)\n", pmodel->name);
+	}
 
-	return i;
+	return k;
 }
 
 int LookupActivity( const char *szActivity )
