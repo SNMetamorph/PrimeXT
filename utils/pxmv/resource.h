@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
-// Used by hlmviewer.rc
+// Used by pxmv.rc
 //
 #define IDI_ICON1                       101
 
