@@ -472,6 +472,7 @@ void InitPostEffects()
 	v_grayscale = CVAR_REGISTER( "gl_grayscale", "0", 0 );
 	r_tonemap = CVAR_REGISTER("r_tonemap", "1", FCVAR_ARCHIVE);
 	r_bloom = CVAR_REGISTER("r_bloom", "1", FCVAR_ARCHIVE);
+	r_bloom_scale = CVAR_REGISTER("r_bloom_scale", "0.7", FCVAR_ARCHIVE);
 	memset( &post, 0, sizeof( post ));
 	post.InitializeShaders();
 }
@@ -818,6 +819,9 @@ void RenderBloom()
 					break;
 				case UT_BLOOMFIRSTPASS:
 					u->SetValue((i < 1) ? 1 : 0);
+					break;
+				case UT_REFRACTSCALE:
+					u->SetValue(r_bloom_scale->value);
 					break;
 			}
 		}
