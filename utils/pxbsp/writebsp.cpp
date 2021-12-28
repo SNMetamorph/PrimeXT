@@ -691,12 +691,13 @@ EmitVertex
 */
 int EmitVertex( const vec3_t point )
 {
+	int i;
 	dvertex_t	*vert;
 
 	if( g_numvertexes == MAX_MAP_VERTS )
 		COM_FatalError( "MAX_MAP_VERTS limit exceeded\n" );
 
-	for( int i = 0; i < g_numvertexes; i++ )
+	for( i = 0; i < g_numvertexes; i++ )
 	{
 		if( VectorCompareEpsilon2( point, g_dvertexes[i].point, EQUAL_EPSILON ))
 			return i;

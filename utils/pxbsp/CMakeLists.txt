@@ -33,12 +33,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"."
 	"../common"
 	"../../common"
-	#"../../game_shared"
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
 	DOUBLEVEC_T=1
 	IGNORE_SEARCH_IN_WADS=1
+	PXBSP_COMPILING=1 # to avoid header hell because pxbsp uses another mathlib implementation
 )
 
 if(NOT MSVC)

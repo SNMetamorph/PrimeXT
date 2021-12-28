@@ -15,7 +15,9 @@ GNU General Public License for more details.
 
 #ifndef COLOR24_H
 #define COLOR24_H
+#ifndef PXBSP_COMPILING
 #include "const.h"
+#endif
 
 struct color24
 {

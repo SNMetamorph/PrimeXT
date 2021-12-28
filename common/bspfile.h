@@ -16,7 +16,7 @@ GNU General Public License for more details.
 #ifndef BSPFILE_H
 #define BSPFILE_H
 
-#ifndef UTILS_INCLUDED_BSPFILE
+#ifndef PXBSP_COMPILING
 #include "color24.h"
 #include "const.h"
 #endif

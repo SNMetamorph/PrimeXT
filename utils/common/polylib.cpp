@@ -805,7 +805,7 @@ winding_t *TryMergeWindingEpsilon( winding_t *w1, winding_t *w2, const vec3_t pl
 	int	edge1, edge2;
 	winding_t	*neww;
 	vec_t	dot;
-	int	k;
+	int	i, k;
 
 	// check for early out
 	if( !w1 || !w2 ) return NULL;
@@ -815,7 +815,7 @@ winding_t *TryMergeWindingEpsilon( winding_t *w1, winding_t *w2, const vec3_t pl
 	//
 	// find a common edge
 	//
-	for( int i = 0; i < w1->numpoints; i++ )
+	for( i = 0; i < w1->numpoints; i++ )
 	{
 		vec_t	*p1 = w1->p[i];
 		vec_t	*p2 = w1->p[(i + 1) % w1->numpoints];
