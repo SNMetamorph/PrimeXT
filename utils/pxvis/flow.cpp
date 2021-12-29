@@ -324,7 +324,8 @@ inline static void RecursiveLeafFlow( int leafnum, threaddata_t *thread, pstack_
 
 		if( stack.numseperators[0] )
 		{
-			for( int n = 0; n < stack.numseperators[0]; n++ )
+			int n;
+			for( n = 0; n < stack.numseperators[0]; n++ )
 			{
 				stack.pass = ChopWindingEpsilon( stack.pass, &stack, &stack.seperators[0][n], VIS_EPSILON );
 				if( !stack.pass ) break; // target is not visible
