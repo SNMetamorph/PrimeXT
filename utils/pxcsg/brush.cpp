@@ -626,14 +626,14 @@ void AddHullEdge( expand_t *ex, const vec3_t p1, const vec3_t p2 )
 {
 	vec3_t	edgevec, planevec;
 	vec3_t	normal, origin;
-	int	a, b, c, d, e;
+	int	a, b, c, d, e, i;
 	int	pt1, pt2;
 	vec_t	length;
 	
 	pt1 = AddHullPoint( ex, p1 );
 	pt2 = AddHullPoint( ex, p2 );
 
-	for( int i = 0; i < ex->numedges; i++ )
+	for( i = 0; i < ex->numedges; i++ )
 	{
 		if(( ex->edges[i][0] == pt1 && ex->edges[i][1] == pt2 ) || ( ex->edges[i][0] == pt2 && ex->edges[i][1] == pt1 ))
 			return; // already added

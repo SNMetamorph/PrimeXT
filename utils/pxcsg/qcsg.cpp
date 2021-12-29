@@ -387,13 +387,13 @@ void SetLightStyles( void )
 	char	value[10];
 	char	lighttargets[MAX_SWITCHED_LIGHTS][64];
 	bool	newtexlight = false;
-	int	stylenum = 0;
+	int		i, j, stylenum = 0;
 
 	// any light that is controlled (has a targetname)
 	// must have a unique style number generated for it
-	for( int i = 1; i < g_mapentities.Count(); i++ )
+	for( i = 1; i < g_mapentities.Count(); i++ )
 	{
-		mapent_t		*e = &g_mapentities[i];
+		mapent_t	*e = &g_mapentities[i];
 		const char	*classname = ValueForKey( (entity_t *)e, "classname" );
 		const char	*t = NULL;
 
@@ -461,7 +461,7 @@ void SetLightStyles( void )
 		}
 
 		// find this targetname
-		for( int j = 0; j < stylenum; j++ )
+		for( j = 0; j < stylenum; j++ )
 		{
 			if( !Q_strcmp( lighttargets[j], t ))
 				break;
@@ -540,17 +540,16 @@ tell designer about world bounds
 void BoundWorld( void )
 {
 	const char	*axis[3] = { "X", "Y", "Z" };
-	int		negative_world_bounds = 0;
-
+	int	i, j, negative_world_bounds = 0;
 	ClearBounds( world_mins, world_maxs );
 
-	for( int i = 0; i < g_nummapbrushes; i++ )
+	for( i = 0; i < g_nummapbrushes; i++ )
 	{
 		brushhull_t *h = &g_mapbrushes[i].hull[0];
 
 		if( !h->faces ) continue;
 
-		for( int j = 0; j < 3; j++ )
+		for( j = 0; j < 3; j++ )
 		{
 			if( h->mins[j] > WORLD_MAXS || h->maxs[j] < WORLD_MINS )
 				break;

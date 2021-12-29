@@ -42,7 +42,7 @@ void TEX_LoadTextures( CUtlArray<mapent_t> *entities, bool merge )
 	char	tmpWadName[64];
 	char	*pszWadString;
 	char	*pszWadFile;
-	int	startcount;
+	int		i, startcount;
 
 	if( !merge )
 	{
@@ -72,7 +72,7 @@ void TEX_LoadTextures( CUtlArray<mapent_t> *entities, bool merge )
 		COM_FileBase( pszWadFile, tmpWadName );
 
 		// check for duplicate
-		for( int i = 0; i < g_wadcount; i++ )
+		for( i = 0; i < g_wadcount; i++ )
 		{
 			if( !Q_stricmp( g_wadlist[i].name, tmpWadName ))
 				break;
@@ -88,7 +88,7 @@ void TEX_LoadTextures( CUtlArray<mapent_t> *entities, bool merge )
 	}
 
 	// set wads that should be included...
-	for( int i = startcount; i < g_wadcount; i++ )
+	for( i = startcount; i < g_wadcount; i++ )
 	{
 		if( g_wadtextures )
 		{
@@ -189,10 +189,11 @@ bool TEX_LoadMiptex( const char *name, mipentry_t *tex )
 
 int TEX_FindMiptex( const char *name )
 {
+	int i;
 	ThreadLock ();
 
 	// see if already loaded
-	for( int i = 0; i < g_nummiptex; i++ )
+	for( i = 0; i < g_nummiptex; i++ )
 	{
 		if( !Q_stricmp( name, g_miptex[i].name ))
 		{

@@ -21,6 +21,8 @@ GNU General Public License for more details.
 
 #define FILE_BUFF_SIZE	(65535)
 #define WAD3_NAMELEN	16
+#define HINT_NAMELEN	5	// e.g. _mask, _norm
+#define MAX_FILES_IN_WAD	65535	// real limit as above <2Gb size not a lumpcount
 
 // replace lumps in a wad
 #define REP_IGNORE		0
@@ -76,6 +78,13 @@ typedef struct vfile_s
 	size_t		length;
 	size_t		offset;
 } vfile_t;
+
+typedef struct
+{
+	int		ident;		// should be WAD3
+	int		numlumps;		// num files
+	int		infotableofs;	// LUT offset
+} dwadinfo_t;
 
 typedef struct
 {
