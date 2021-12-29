@@ -16,7 +16,7 @@ add_subdirectory(pxcsg)
 set(DIR_UTILS_OUTPUT 
 	${CMAKE_SOURCE_DIR}/build/bin/${CMAKE_BUILD_TYPE}
 )
-set_target_properties(pxstudiomdl pxmv pxbsp PROPERTIES 
+set_target_properties(pxstudiomdl pxmv pxbsp pxcsg PROPERTIES 
     ARCHIVE_OUTPUT_DIRECTORY ${DIR_UTILS_OUTPUT}
     LIBRARY_OUTPUT_DIRECTORY ${DIR_UTILS_OUTPUT}
     RUNTIME_OUTPUT_DIRECTORY ${DIR_UTILS_OUTPUT}
