@@ -378,13 +378,16 @@ static void R_ShadowPassSetupViewCache( CDynLight *pl, int split = 0 )
 
 	msurface_t	*surf;
 	mextrasurf_t	*esrf;
-	int		i, j;
 
 	// add all studio models, mark visible bmodels
-	for( i = 0; i < tr.num_draw_entities; i++ )
+	for (int i = 0; i < tr.num_draw_entities; i++)
 	{
 		RI->currententity = tr.draw_entities[i];
 		RI->currentmodel = RI->currententity->model;
+
+		// skip entities with disabled shadow casting
+		if (RI->currententity->curstate.effects & EF_NOSHADOW)
+			continue;
 
 		switch( RI->currentmodel->type )
 		{
@@ -398,12 +401,10 @@ static void R_ShadowPassSetupViewCache( CDynLight *pl, int split = 0 )
 	}
 
 	// create drawlist for faces, do additional culling for world faces
-	for( i = 0; i < world->numsortedfaces; i++ )
+	for (int i = 0; i < world->numsortedfaces; i++)
 	{
 		ASSERT( world->sortedfaces != NULL );
-
-		j = world->sortedfaces[i];
-
+		int j = world->sortedfaces[i];
 		ASSERT( j >= 0 && j < worldmodel->numsurfaces );
 
 		if( CHECKVISBIT( RI->view.visfaces, j ))
