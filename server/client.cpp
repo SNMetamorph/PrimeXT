@@ -1308,6 +1308,7 @@ void CreateBaseline( int player, int eindex, struct entity_state_s *baseline, st
 		baseline->colormap		= entity->v.colormap;
 		baseline->modelindex	= entity->v.modelindex;//SV_ModelIndex(pr_strings + entity->v.model);
 		baseline->movetype		= entity->v.movetype;
+		baseline->effects		= entity->v.effects; // for correct handling "disable dynamic shadows" flag for env_static
 
 		baseline->scale		= entity->v.scale;
 		baseline->solid		= entity->v.solid;
