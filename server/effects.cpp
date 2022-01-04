@@ -3515,10 +3515,11 @@ void CDecLED :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 //=================================================================
 // env_model: like env_sprite, except you can specify a sequence.
 //=================================================================
-#define SF_ENVMODEL_OFF		1
-#define SF_ENVMODEL_DROPTOFLOOR	2
-#define SF_ENVMODEL_SOLID		4
-#define SF_ENVMODEL_NEWLIGHTING	8
+#define SF_ENVMODEL_OFF				1
+#define SF_ENVMODEL_DROPTOFLOOR		2
+#define SF_ENVMODEL_SOLID			4
+#define SF_ENVMODEL_NEWLIGHTING		8
+#define SF_ENVMODEL_NODYNSHADOWS	16
 
 class CEnvModel : public CBaseAnimating
 {
@@ -3610,6 +3611,11 @@ void CEnvModel::Spawn(void)
 	{
 		// tell the client about static entity
 		SetBits(pev->iuser1, CF_STATIC_ENTITY);
+	}
+
+	if (FBitSet(pev->spawnflags, SF_ENVMODEL_NODYNSHADOWS))
+	{
+		SetBits(pev->effects, EF_NOSHADOW);
 	}
 
 	SetNextThink(0.1);
@@ -3746,10 +3752,11 @@ void CEnvModel::AutoSetSize()
 }
 
 // =================== ENV_STATIC ==============================================
-#define SF_STATIC_SOLID	BIT( 0 )
-#define SF_STATIC_DROPTOFLOOR	BIT( 1 )
-#define SF_STATIC_NOSHADOW	BIT( 2 )	// hlrad
-#define SF_STATIC_NOVLIGHT	BIT( 4 )	// hlrad
+#define SF_STATIC_SOLID			BIT(0)
+#define SF_STATIC_DROPTOFLOOR	BIT(1)
+#define SF_STATIC_NOSHADOW		BIT(2)	// reserved for pxrad, disables shadows on lightmap
+#define SF_STATIC_NOVLIGHT		BIT(4)	// reserved for pxrad, disables vertex lighting
+#define SF_STATIC_NODYNSHADOWS	BIT(5)
 
 class CEnvStatic : public CBaseEntity
 {
@@ -3840,6 +3847,10 @@ void CEnvStatic :: Spawn( void )
 	else
 	{
 		UTIL_SetOrigin( this, GetLocalOrigin( ));
+	}
+
+	if (FBitSet(pev->spawnflags, SF_STATIC_NODYNSHADOWS)) {
+		SetBits(pev->effects, EF_NOSHADOW);
 	}
 
 	if( FBitSet( pev->spawnflags, SF_STATIC_SOLID ))
