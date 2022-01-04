@@ -1440,6 +1440,7 @@
 		1: "Initially Off" : 0
 		2: "Drop to Floor" : 0
 		4: "Solid" : 0
+		16: "Disable shadows cast (for dynamic lights)" : 0
 	]
 ]
 
@@ -1706,7 +1707,8 @@
 	[
 		1: "Solid" : 0
 		2: "Drop to Floor" : 0
-		4: "Disable shadow" : 0
+		4: "Disable shadow (for lightmap)" : 0
+		32: "Disable shadow (for dynamic lights)" : 0
 	]
 ]
 
