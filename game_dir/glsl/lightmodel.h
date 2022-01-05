@@ -147,6 +147,22 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
+// Source: Y. Tokuyoshi, A. Kaplanyan "Improved Geometric Specular Antialiasing"
+float SpecularAntialiasing(vec3 n, float roughness)
+{
+#ifdef GLSL_SHADER_FRAGMENT
+	const float sigma2 = 0.5; // default value is 0.25
+	const float kappa = 0.18;
+	vec3 dndu = dFdx(n);
+	vec3 dndv = dFdy(n);
+	float variance = sigma2 * (dot(dndu, dndu) + dot(dndv, dndv));
+	float kernelRoughness2 = min(variance, kappa);
+    return saturate(roughness + kernelRoughness2);
+#else
+	return roughness;
+#endif
+}
+
 LightingData ComputeLightingBRDF(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, vec4 materialInfo)
 {
 	LightingData output;
@@ -157,7 +173,8 @@ LightingData ComputeLightingBRDF(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 light
 	vec3 F0 = mix(vec3(0.02), albedo, metalness);
 	L = normalize(L);
 	vec3 H = normalize(L + V);   
-
+	roughness = SpecularAntialiasing(N, roughness);
+	
 	// Cook-Torrance BRDF
 	float NDF = DistributionGGX(N, H, roughness);   
 	float G   = GeometrySmith(N, V, L, roughness);      
