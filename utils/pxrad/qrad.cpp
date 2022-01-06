@@ -440,9 +440,9 @@ vec_t CalcSightArea( const vec3_t receiver_origin, const vec3_t receiver_normal,
 	vec3_t	*pnormal, *pedge;
 	vec_t	*psize, dot;
 	vec_t	area = 0.0;
-	int	i, j;
+	int	i, j, x;
 
-	for( int x = 0; x < numedges; x++ )
+	for( x = 0; x < numedges; x++ )
 	{
 		vec3_t	v1, v2, normal;
 

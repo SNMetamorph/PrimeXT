@@ -55,10 +55,11 @@ StoreNormal
 */
 unsigned short StoreNormal( const vec3_t normal )
 {
+	int i;
 	static bool	showerror = false;
 
 	// search if already added
-	for( int i = 1; i < g_numnormals; i++ )
+	for( i = 1; i < g_numnormals; i++ )
 	{
 		dnormal_t	*dv = &g_dnormals[i];
 

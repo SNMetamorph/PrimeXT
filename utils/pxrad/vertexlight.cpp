@@ -103,6 +103,7 @@ void AddStylesToMesh( tmesh_t *mesh, byte newstyles[4] )
 
 void SmoothModelNormals( int modelnum, int threadnum = -1 )
 {
+	int hashSize;
 	entity_t	*mapent = g_vertexlight[modelnum];
 	tmesh_t	*mesh;
 
@@ -123,7 +124,7 @@ void SmoothModelNormals( int modelnum, int threadnum = -1 )
 
 	vec3_t	*normals = (vec3_t *)Mem_Alloc( mesh->numverts * sizeof( vec3_t ));
 
-	for( int hashSize = 1; hashSize < mesh->numverts; hashSize <<= 1 );
+	for( hashSize = 1; hashSize < mesh->numverts; hashSize <<= 1 );
 	hashSize = hashSize >> 2;
 
 	// build a map from vertex to a list of triangles that share the vert.
@@ -634,12 +635,13 @@ static void GenerateLightCacheNumbers( void )
 
 static int ModelSize( tmesh_t *mesh )
 {
+	int lightstyles;
 	if( !mesh ) return 0;
 
 	if( !mesh->verts || mesh->numverts <= 0 )
 		return 0; 
 
-	for( int lightstyles = 0; lightstyles < MAXLIGHTMAPS; lightstyles++ )
+	for( lightstyles = 0; lightstyles < MAXLIGHTMAPS; lightstyles++ )
 	{
 		if( mesh->styles[lightstyles] == 255 )
 			break;

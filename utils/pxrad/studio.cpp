@@ -524,6 +524,7 @@ bool StudioConstructMesh( entity_t *ent, void *extradata, const char *modname, u
 	studiohdr_t	*phdr = (studiohdr_t *)extradata;
 	double		start = I_FloatTime();
 	vec3_t		origin, angles;
+	int		i;
 	int		body, skin;
 	int		numFaces;
 	vec3_t		xform;
@@ -562,7 +563,7 @@ bool StudioConstructMesh( entity_t *ent, void *extradata, const char *modname, u
 	static vec3_t	pos[MAXSTUDIOBONES];
 	static vec4_t	q[MAXSTUDIOBONES];
 
-	for( int i = 0; i < phdr->numbones; i++, pbone++, panim++ ) 
+	for( i = 0; i < phdr->numbones; i++, pbone++, panim++ ) 
 		StudioCalcBoneTransform( 0, pbone, panim, pos[i], q[i] );
 	pbone = (mstudiobone_t *)((byte *)phdr + phdr->boneindex);
 	matrix3x4	transform, bonematrix, bonetransform[MAXSTUDIOBONES];
