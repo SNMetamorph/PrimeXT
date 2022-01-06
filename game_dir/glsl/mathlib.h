@@ -96,6 +96,31 @@ vec3 ApplyGamma( in vec3 color, float gamma, float contrast )
 	return color;
 }
 
+// Source: "Moving Frostbite to Physically Based Rendering 3.0", SIGGRAPH 2014
+vec3 ConvertSRGBToLinear(vec3 color)
+{
+#if 1
+	vec3 linearRGBLo = color / 12.92;
+	vec3 linearRGBHi = pow((color + 0.055) / 1.055, vec3(2.4));
+	vec3 linearRGB = mix(linearRGBLo, linearRGBHi, step(0.04045, color));
+	return linearRGB;
+#else
+	return pow(color, vec3(2.2));
+#endif
+}
+
+vec3 ConvertLinearToSRGB(vec3 color)
+{
+#if 1
+	vec3 sRGBLo = color * 12.92;
+	vec3 sRGBHi = (pow(abs(color), vec3(1.0 / 2.4)) * 1.055) - 0.055;
+	vec3 sRGB = mix(sRGBLo, sRGBHi, step(0.0031308, color));
+	return sRGB;
+#else
+	return pow(color, vec3(1.0 / 2.2));
+#endif
+}
+
 float get_shadow_offset( in float lightCos )
 {
 	float bias = 0.0005 * tan( acos( saturate( lightCos )));

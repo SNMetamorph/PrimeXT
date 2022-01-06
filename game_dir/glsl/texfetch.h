@@ -17,6 +17,7 @@ GNU General Public License for more details.
 #define TEXFETCH_H
 
 #include "const.h"
+#include "mathlib.h"
 
 #define detailmap2D		texture2D
 #define decalmap2D		texture2D
@@ -25,14 +26,14 @@ GNU General Public License for more details.
 vec4 colormap2DArray(sampler2DArray tex, vec2 uv, float layer)
 {
 	vec4 sample = texture2DArray(tex, vec3(uv, layer));
-	return vec4(pow(sample.rgb, vec3(2.2)), sample.a);
+	return vec4(ConvertSRGBToLinear(sample.rgb), sample.a);
 }
 #endif
 
 vec4 colormap2D(sampler2D tex, vec2 uv)
 {
 	vec4 sample = texture2D(tex, uv);
-	return vec4(pow(sample.rgb, vec3(2.2)), sample.a); // gamma space -> linear space
+	return vec4(ConvertSRGBToLinear(sample.rgb), sample.a);
 }
 
 vec4 reflectmap2D( sampler2D tex, vec4 projTC, vec3 N, vec3 fragCoord, float refraction )

@@ -13,13 +13,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "const.h"
+#include "const.h" 
 #include "mathlib.h"
 
 uniform sampler2D	u_ScreenMap;
 uniform sampler2D   u_ColorMap;
 varying vec2	    var_TexCoord;
-
 vec3 ColorGradient(float t)
 {
     float red = smoothstep(0.33, 0.66, t);
@@ -74,7 +73,7 @@ void main()
 #else
     float exposure = texture2D(u_ColorMap, vec2(0.5)).r;
 	output = TonemapMGS5(source * exposure); // tone compression with exposure
-    output = pow(output, vec3(1.0 / SCREEN_GAMMA)); // gamma-correction (linear space -> sRGB space)
+    output = ConvertLinearToSRGB(output); // gamma-correction
 #endif
     gl_FragColor = vec4(output, 1.0);
 }
