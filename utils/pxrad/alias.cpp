@@ -11,7 +11,7 @@
 // alias.c
 
 #include "qrad.h"
-#include "..\..\engine\alias.h"
+#include "alias.h"
 #include "model_trace.h"
 
 static trivertex_t	*g_poseverts[MAXALIASFRAMES];
