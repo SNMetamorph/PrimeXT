@@ -1199,7 +1199,7 @@ static void PurgePatches( localtrian_t *lt )
 
 	for( i = 0; i < points.Count(); i++ )
 	{
-		vec_t	sangle, cangle;
+		float	sangle, cangle;
 
 		cur = dists[i].second;
 		if( valid[cur] == 0 )

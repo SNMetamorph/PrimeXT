@@ -130,6 +130,7 @@ void CalcTriangleVectors( int modelnum, int threadnum = -1 )
 	entity_t	*mapent = g_modellight[modelnum];
 	tmesh_t	*mesh;
 	trivert_t	v[3];
+	int hashSize;
 
 	// sanity check
 	if( !mapent || !mapent->cache )
@@ -147,7 +148,7 @@ void CalcTriangleVectors( int modelnum, int threadnum = -1 )
 	{
 		vec3_t	*normals = (vec3_t *)Mem_Alloc( mesh->numverts * sizeof( vec3_t ));
 
-		for( int hashSize = 1; hashSize < mesh->numverts; hashSize <<= 1 );
+		for( hashSize = 1; hashSize < mesh->numverts; hashSize <<= 1 );
 		hashSize = hashSize >> 2;
 
 		// build a map from vertex to a list of triangles that share the vert.
@@ -1307,7 +1308,8 @@ static int ModelSize( tmesh_t *mesh )
 	if( !mesh->faces || mesh->numfaces <= 0 )
 		return 0; 
 
-	for( int lightstyles = 0; lightstyles < MAXLIGHTMAPS; lightstyles++ )
+	int lightstyles;
+	for( lightstyles = 0; lightstyles < MAXLIGHTMAPS; lightstyles++ )
 	{
 		if( mesh->styles[lightstyles] == 255 )
 			break;

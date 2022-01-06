@@ -11,7 +11,7 @@
 // trace.c
 
 #include "qrad.h"
-#include "..\..\engine\alias.h"
+#include "alias.h"
 #include "..\..\engine\studio.h"
 #include "model_trace.h"
 
@@ -291,7 +291,7 @@ int TestLine_r( tnode_t *head, int node, vec_t p1f, vec_t p2f, const vec3_t star
 	tnode_t	*tnode;
 	float	front, back;
 	float	frac, midf;
-	int	r, side;
+	int		i, j, r, side;
 	vec3_t	mid;
 loc0:
 	if( node < 0 )
@@ -386,7 +386,7 @@ loc0:
 
 #ifdef HLRAD_TRACE_FACES
 	// walk through real faces
-	for( int i = 0; i < tnode->numfaces; i++ )
+	for( i = 0; i < tnode->numfaces; i++ )
 	{
 		twface_t	*wf = g_world_faces[tnode->firstface + i];
 		int	contents;
@@ -399,7 +399,7 @@ loc0:
 		if( DotProduct( delta, delta ) >= wf->radius )
 			continue;	// no intersection
 
-		for( int j = 0; j < wf->numedges; j++ )
+		for( j = 0; j < wf->numedges; j++ )
 		{
 			if( PlaneDiff( mid, &wf->edges[j] ) > FRAC_EPSILON )
 				break; // outside the bounds
@@ -795,7 +795,7 @@ InitWorldTrace
 */
 void InitWorldTrace( void )
 {
-	int	i;
+	int	i, j;
 
 	memset( &entity_tree, 0, sizeof( entity_tree ));
 
@@ -830,7 +830,7 @@ void InitWorldTrace( void )
 				if( PointInLeaf( end )->contents != CONTENTS_SOLID )
 				{
 					// delicate drop-to-floor
-					for( int j = 0; j < 256; j++ )
+					for( j = 0; j < 256; j++ )
 					{
 						if( PointInLeaf( end )->contents == CONTENTS_SOLID )
 							break; // we hit the floor

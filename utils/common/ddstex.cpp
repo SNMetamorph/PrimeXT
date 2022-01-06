@@ -457,13 +457,14 @@ static size_t Image_DXTCalcSize( const char *name, dds_t *hdr, size_t filesize )
 
 static int Image_DXTCalcMipmapCount( rgbdata_t *pix ) 
 {
+	int mipcount;
 	int	width, height;
 
 	if( FBitSet( pix->flags, IMAGE_SKYBOX|IMAGE_NOMIPS ))
 		return 1;
 
 	// mip-maps can't exceeds 16
-	for( int mipcount = 0; mipcount < 16; mipcount++ )
+	for( mipcount = 0; mipcount < 16; mipcount++ )
 	{
 		width = Q_max( 1, ( pix->width >> mipcount ));
 		height = Q_max( 1, ( pix->height >> mipcount ));
