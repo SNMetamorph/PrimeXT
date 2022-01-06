@@ -31,7 +31,6 @@ list(APPEND DIR_SOURCES
 	"model_lightmaps.cpp"
 	"qrad.cpp"
 	"raytracer.cpp"
-	#"raytrace/sseconst.cpp"
 	"studio.cpp"
 	"textures.cpp"
 	"trace.cpp"
@@ -46,7 +45,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
-	DOUBLEVEC_T=1
 	IGNORE_SEARCH_IN_WADS=1
 	ALLOW_WADS_IN_PACKS=1
 	HLRAD_PSAVIOR=1
@@ -81,6 +79,19 @@ else()
 		target_compile_options(${PROJECT_NAME} PRIVATE /Ob1) # disable force function inlining, to prevent segfault in release mode
 		target_compile_options(${PROJECT_NAME} PRIVATE /O1) # enable optimizing to minimize size
 	endif()
+endif()
+
+# TODO make squish crossplatform, also compile it instead using pre-made .lib
+find_library(LIBRARY_SQUISH
+	NAMES squish
+	HINTS "${CMAKE_SOURCE_DIR}/utils/common"
+)
+
+if(MSVC)
+	target_link_libraries(${PROJECT_NAME} PRIVATE
+		"${LIBRARY_SQUISH}"
+	)
+else()
 endif()
 
 # set static compiler runtime
