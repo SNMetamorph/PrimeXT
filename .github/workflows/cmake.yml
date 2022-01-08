@@ -43,9 +43,9 @@ jobs:
           mkdir publish\
           mkdir publish\bin
           mkdir publish\devkit
-          move build\${{env.BUILD_TYPE}}\ publish\
-          move game_dir\ publish\
-          powershell Compress-Archive -Path publish\ build.zip
+          move build\${{env.BUILD_TYPE}}\* publish\
+          move game_dir\* publish\
+          powershell Compress-Archive -Path publish\* build.zip
 
       - name: Create release
         id: create_release
