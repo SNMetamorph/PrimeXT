@@ -71,11 +71,12 @@ else()
 	add_definitions(-D_CRT_SILENCE_NONCONFORMING_TGMATH_H)
 endif()
 
+# set build output directory
 set(DIR_COMMON_OUTPUT 
 	${CMAKE_BINARY_DIR}/${CMAKE_CONFIGURATION_TYPES}/bin/
 )
 
-# set build output directory
+message(STATUS "Common binaries output directory: ${DIR_COMMON_OUTPUT}")
 if(MSVC)
 	set_target_properties(client server PROPERTIES 
 		ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${DIR_COMMON_OUTPUT}
