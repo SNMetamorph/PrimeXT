@@ -53,7 +53,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag: continious
+          tag: ${{ github.ref }}
           name: Continious build
           draft: false
           prerelease: true
@@ -68,5 +68,6 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./build.zip
           asset_name: primext-win32.zip
+          tag: ${{ github.ref }}
           overwrite: true
           prerelease: true
