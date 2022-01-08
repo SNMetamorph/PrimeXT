@@ -37,15 +37,6 @@ if(64BIT AND CMAKE_SIZEOF_VOID_P EQUAL 4)
 	message(FATAL_ERROR "You enabled 64-bit support, but compiler configured for 32-bit, check build configuration!")
 endif()
 
-if($<CONFIG:Debug>)
-	set(BUILD_CONFIG_TYPE_NAME "Debug" CACHE STRING "")
-elseif($<CONFIG:Release>)
-	set(BUILD_CONFIG_TYPE_NAME "Release" CACHE STRING "")
-else()
-	message(WARNING "Unknown build configuration type, fallback to Debug type!")
-	set(BUILD_CONFIG_TYPE_NAME "Debug" CACHE STRING "")
-endif()
-
 # Xash3D FWGS Library Naming Scheme compliance
 # Documentation: https://github.com/FWGS/xash3d-fwgs/blob/master/Documentation/library-naming.md
 include(LibraryNaming)
@@ -81,7 +72,7 @@ endif()
 
 # set build output directory
 set(DIR_COMMON_OUTPUT 
-	${CMAKE_BINARY_DIR}/${BUILD_CONFIG_TYPE_NAME}/bin/
+	${CMAKE_BINARY_DIR}/$<CONFIG>/bin/
 )
 
 message(STATUS "Common binaries output directory: ${DIR_COMMON_OUTPUT}")

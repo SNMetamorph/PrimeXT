@@ -55,20 +55,18 @@ else()
 	target_compile_definitions(${PROJECT_NAME} PRIVATE _CRT_SECURE_NO_WARNINGS=1 _CRT_NONSTDC_NO_DEPRECATE=1)
 endif()
 
-if(CMAKE_CONFIGURATION_TYPES MATCHES Debug)
-	# debug mode compiler/linker flags
-	if(MSVC)
-		target_compile_options(${PROJECT_NAME} PRIVATE /Od) # disable optimizing at all
-		# enable "Edit and Continue" MSVC feature
-		target_compile_options(${PROJECT_NAME} PRIVATE /ZI) 
-		target_link_options(${PROJECT_NAME} PRIVATE /INCREMENTAL /SAFESEH:NO)
-	endif()
-else()
-	# release mode compiler/linker flags
-	if(MSVC)
-		target_compile_options(${PROJECT_NAME} PRIVATE /Ob1) # disable force function inlining, to prevent segfault in release mode
-		target_compile_options(${PROJECT_NAME} PRIVATE /O1) # enable optimizing to minimize size
-	endif()
+if(MSVC)
+	# debug mode compiler flags
+	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:/Od>) # disable optimizing at all
+	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:/ZI>) # enable "Edit and Continue" MSVC feature
+	target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:
+		/INCREMENTAL 
+		/SAFESEH:NO
+	>)
+
+	# release mode compiler flags
+	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release>:/Ob1>) # disable force function inlining, to prevent segfault in release mode
+	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release>:/O1>) # enable optimizing to minimize size
 endif()
 
 # set static compiler runtime

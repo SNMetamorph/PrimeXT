@@ -14,7 +14,7 @@ add_subdirectory(pxvis)
 
 # set build output directory
 set(DIR_UTILS_OUTPUT 
-	${CMAKE_BINARY_DIR}/${BUILD_CONFIG_TYPE_NAME}/devkit/
+	${CMAKE_BINARY_DIR}/$<CONFIG>/devkit/
 )
 
 message(STATUS "Utility binaries output directory: ${DIR_UTILS_OUTPUT}")
