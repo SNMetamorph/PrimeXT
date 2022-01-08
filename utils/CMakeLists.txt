@@ -14,7 +14,7 @@ add_subdirectory(pxvis)
 
 # set build output directory
 set(DIR_UTILS_OUTPUT 
-	${CMAKE_SOURCE_DIR}/build/${CMAKE_CONFIGURATION_TYPES}/devkit/
+	${CMAKE_BINARY_DIR}/${CMAKE_CONFIGURATION_TYPES}/devkit/
 )
 
 if(MSVC)

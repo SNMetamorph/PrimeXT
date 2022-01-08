@@ -72,7 +72,7 @@ else()
 endif()
 
 set(DIR_COMMON_OUTPUT 
-	${CMAKE_SOURCE_DIR}/build/${CMAKE_CONFIGURATION_TYPES}/bin/
+	${CMAKE_BINARY_DIR}/${CMAKE_CONFIGURATION_TYPES}/bin/
 )
 
 # set build output directory
