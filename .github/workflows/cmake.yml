@@ -1,0 +1,71 @@
+name: Continious build
+on: [push, pull_request]
+jobs:
+  build-win32:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        conf: [Debug]
+
+    env:
+      BUILD_TYPE: ${{ matrix.conf }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Create build environment
+        # Some projects don't allow in-source building, so create a separate build directory
+        # We'll use this as our working directory for all subsequent commands
+        run: cmake -E make_directory ${{github.workspace}}/build
+
+      - name: Configure CMake
+        # Use a bash shell so we can use the same syntax for environment variable
+        # access regardless of the host operating system
+        shell: bash
+        working-directory: ${{github.workspace}}/build
+        # Note the current convention is to use the -S and -B options here to specify source
+        # and build directories, but this is only available with CMake 3.13 and higher.
+        # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
+        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G "Visual Studio 16 2019" -A win32 -Wno-dev
+
+      - name: Build
+        working-directory: ${{github.workspace}}/build
+        shell: bash
+        # Execute the build.  You can specify a specific target with "--target <NAME>"
+        run: cmake --build . --config $BUILD_TYPE
+
+      - name: Prepare artifacts
+        run: |
+          mkdir publish\
+          mkdir publish\bin
+          mkdir publish\devkit
+          move build\${{env.BUILD_TYPE}}\*.* publish\
+          move game_dir\*.* publish\
+          powershell Compress-Archive -Path publish\* build.zip
+
+      - name: Create release
+        id: create_release
+        uses: ncipollo/release-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag: continious
+          name: Continious build
+          draft: false
+          prerelease: true
+          allowUpdates: true
+          
+      - name: Upload artifacts
+        id: upload-artifacts
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./build.zip
+          asset_name: primext-win32.zip
+          tag: continious
+          overwrite: true
+          prerelease: true
