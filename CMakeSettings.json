@@ -15,7 +15,7 @@
       "name": "x86-Debug",
       "generator": "Visual Studio 16 2019",
       "configurationType": "Debug",
-      "buildRoot": "${projectDir}\\build\\cache\\${name}",
+      "buildRoot": "${projectDir}\\build",
       "installRoot": "${projectDir}\\build\\install\\${name}",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",

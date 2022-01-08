@@ -29,7 +29,6 @@ set(CLIENT_INSTALL_DIR "bin" CACHE STRING "Client library path relative to game 
 set(UTILS_INSTALL_DIR "utils" CACHE STRING "Utilities path relative to game directory")
 set(SERVER_LIBRARY_NAME "server" CACHE STRING "Library name for Linux/MacOS/Windows")
 
-
 if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT 64BIT)
 	message(FATAL_ERROR "You disabled 64-bit support, but compiler configured for 64-bit, check build configuration!")
 endif()
@@ -71,11 +70,12 @@ else()
 	add_definitions(-D_CRT_SILENCE_NONCONFORMING_TGMATH_H)
 endif()
 
+# set build output directory
 set(DIR_COMMON_OUTPUT 
-	${CMAKE_SOURCE_DIR}/build/${CMAKE_CONFIGURATION_TYPES}/bin/
+	${CMAKE_BINARY_DIR}/$<CONFIG>/bin/
 )
 
-# set build output directory
+message(STATUS "Common binaries output directory: ${DIR_COMMON_OUTPUT}")
 if(MSVC)
 	set_target_properties(client server PROPERTIES 
 		ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${DIR_COMMON_OUTPUT}
