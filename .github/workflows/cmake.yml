@@ -57,7 +57,9 @@ jobs:
           name: Continious build
           draft: false
           prerelease: true
-          allowUpdates: false
+          allowUpdates: true
+          removeArtifacts: true
+          replacesArtifacts: true
           
       - name: Upload artifacts
         id: upload-artifacts
