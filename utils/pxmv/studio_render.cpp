@@ -26,13 +26,9 @@ typedef struct sortedmesh_s
 } sortedmesh_t;
 
 ////////////////////////////////////////////////////////////////////////
-
-Vector		g_xformverts[MAXSTUDIOVERTS];		// transformed vertices
-Vector		g_xformnorms[MAXSTUDIOVERTS];		// transformed vertices
-Vector		g_lightvalues[MAXSTUDIOVERTS];	// light surface normals
-Vector		*g_pxformverts;
-Vector		*g_pxformnorms;
-Vector		*g_pvlightvalues;
+CUtlArray<Vector>	g_xformverts;	// transformed vertices
+CUtlArray<Vector>	g_xformnorms;	// transformed vertices
+CUtlArray<Vector>	g_lightvalues;	// light surface normals
 
 Vector		g_lightvec;			// light vector in model reference frame
 Vector		g_blightvec[MAXSTUDIOBONES];		// light vectors in bone reference frames
@@ -872,10 +868,6 @@ void StudioModel :: DrawModel( bool bMirror )
 
 	g_smodels_total++; // render data cache cookie
 
-	g_pxformverts = &g_xformverts[0];
-	g_pxformnorms = &g_xformnorms[0];
-	g_pvlightvalues = &g_lightvalues[0];
-
 	if( m_pstudiohdr->numbodyparts == 0 )
 		return;
 
@@ -1248,6 +1240,11 @@ void StudioModel::DrawPoints ( bool bWireframe )
 	if (m_skinnum != 0 && m_skinnum < m_ptexturehdr->numskinfamilies)
 		pskinref += (m_skinnum * m_ptexturehdr->numskinref);
 
+	// pre-allocate buffers
+	g_xformverts.SetSize(m_pmodel->numverts);
+	g_xformnorms.SetSize(m_pmodel->numnorms);
+	g_lightvalues.SetSize(m_pmodel->numnorms);
+
 	if( FBitSet( m_pstudiohdr->flags, STUDIO_HAS_BONEWEIGHTS ) && m_pmodel->blendvertinfoindex != 0 && m_pmodel->blendnorminfoindex != 0 )
 	{
 		pvertweight = (mstudioboneweight_t *)((byte *)m_pstudiohdr + m_pmodel->blendvertinfoindex);
@@ -1256,34 +1253,34 @@ void StudioModel::DrawPoints ( bool bWireframe )
 		for (i = 0; i < m_pmodel->numverts; i++)
 		{
 			ComputeSkinMatrix( &pvertweight[i], skinMat );
-			g_pxformverts[i] = skinMat.VectorTransform( pstudioverts[i] );
+			g_xformverts[i] = skinMat.VectorTransform( pstudioverts[i] );
 		}
 
 		for (i = 0; i < m_pmodel->numnorms; i++)
 		{
 			ComputeSkinMatrix( &pnormweight[i], skinMat );
-			g_pxformnorms[i] = skinMat.VectorRotate( pstudionorms[i] );
+			g_xformnorms[i] = skinMat.VectorRotate( pstudionorms[i] );
 
 			if( g_viewerSettings.renderMode == RM_BONEWEIGHTS )
-				ComputeWeightColor( &pnormweight[i], g_pvlightvalues[i] );
+				ComputeWeightColor( &pnormweight[i], g_lightvalues[i] );
 		}
 	}
 	else
 	{
 		for( i = 0; i < m_pmodel->numverts; i++ )
 		{
-			g_pxformverts[i] = m_pbonetransform[pvertbone[i]].VectorTransform( pstudioverts[i] );
+			g_xformverts[i] = m_pbonetransform[pvertbone[i]].VectorTransform( pstudioverts[i] );
 		}
 
 		for( i = 0; i < m_pmodel->numnorms; i++ )
 		{
-			g_pxformnorms[i] = m_pbonetransform[pnormbone[i]].VectorRotate( pstudionorms[i] );
+			g_xformnorms[i] = m_pbonetransform[pnormbone[i]].VectorRotate( pstudionorms[i] );
 		}
 
 		if( g_viewerSettings.renderMode == RM_BONEWEIGHTS )
 		{
 			for( i = 0; i < m_pmodel->numnorms; i++ )
-				g_pvlightvalues[i] = Vector( 0.0f, 1.0f, 0.0f );
+				g_lightvalues[i] = Vector( 0.0f, 1.0f, 0.0f );
 		}
 	}
 
@@ -1315,7 +1312,7 @@ void StudioModel::DrawPoints ( bool bWireframe )
 // clip and draw all triangles
 //
 
-	lv = g_pvlightvalues;
+	lv = &g_lightvalues[0];
 	need_sort = false;
 
 	for( j = k = 0; j < m_pmodel->nummesh; j++ ) 
@@ -1332,11 +1329,11 @@ void StudioModel::DrawPoints ( bool bWireframe )
 		for( i = 0; i < pmesh[j].numnorms; i++, k++, lv++, pstudionorms++, pnormbone++ )
 		{
 			if( g_viewerSettings.renderMode != RM_BONEWEIGHTS )
-                              {
+            {
 				if( FBitSet( m_pstudiohdr->flags, STUDIO_HAS_BONEWEIGHTS ))
-					Lighting ( *lv, -1, flags, g_pxformnorms[k] );
+					Lighting ( *lv, -1, flags, g_xformnorms[k] );
 				else Lighting ( *lv, *pnormbone, flags, *pstudionorms );
-                              }
+            }
 
 			// FIX: move this check out of the inner loop
 			if (flags & STUDIO_NF_CHROME)
@@ -1418,11 +1415,11 @@ void StudioModel::DrawPoints ( bool bWireframe )
 						// FIX: put these in as integer coords, not floats
 						glTexCoord2f(g_chrome[ptricmds[1]].x * s, g_chrome[ptricmds[1]].y * t);
 					
-						lv = &g_pvlightvalues[ptricmds[1]];
+						lv = &g_lightvalues[ptricmds[1]];
 						glColor4f( lv->x, lv->y, lv->z, transparency);
                                                   }
 
-					av = g_pxformverts[ptricmds[0]];
+					av = g_xformverts[ptricmds[0]];
 					glVertex3f(av[0], av[1], av[2]);
 				}
 				glEnd( );
@@ -1459,11 +1456,11 @@ void StudioModel::DrawPoints ( bool bWireframe )
 							glTexCoord2f(ptricmds[2]*s, ptricmds[3]*t);
 						}
 
-						lv = &g_pvlightvalues[ptricmds[1]];
+						lv = &g_lightvalues[ptricmds[1]];
 						glColor4f( lv->x, lv->y, lv->z, transparency);
                                                   }
 
-					av = g_pxformverts[ptricmds[0]];
+					av = g_xformverts[ptricmds[0]];
 					glVertex3f(av[0], av[1], av[2]);
 				}
 				glEnd( );
@@ -1512,8 +1509,8 @@ void StudioModel::DrawPoints ( bool bWireframe )
 			{
 				for( i = abs( i ); i > 0; i--, ptricmds += 4 )
 				{
-					av = g_pxformverts[ptricmds[0]];
-					nv = g_pxformnorms[ptricmds[1]];
+					av = g_xformverts[ptricmds[0]];
+					nv = g_xformnorms[ptricmds[1]];
 					glVertex3f( av[0], av[1], av[2] );
 					glVertex3f( av[0] + nv[0] * 2.0f, av[1] + nv[1] * 2.0f, av[2] + nv[2] * 2.0f );
 				}
