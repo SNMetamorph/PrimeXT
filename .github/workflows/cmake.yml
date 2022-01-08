@@ -68,6 +68,5 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./build.zip
           asset_name: primext-win32.zip
-          tag: continious
           overwrite: true
           prerelease: true
