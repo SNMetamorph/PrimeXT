@@ -29,13 +29,21 @@ set(CLIENT_INSTALL_DIR "bin" CACHE STRING "Client library path relative to game 
 set(UTILS_INSTALL_DIR "utils" CACHE STRING "Utilities path relative to game directory")
 set(SERVER_LIBRARY_NAME "server" CACHE STRING "Library name for Linux/MacOS/Windows")
 
-
 if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT 64BIT)
 	message(FATAL_ERROR "You disabled 64-bit support, but compiler configured for 64-bit, check build configuration!")
 endif()
 
 if(64BIT AND CMAKE_SIZEOF_VOID_P EQUAL 4)
 	message(FATAL_ERROR "You enabled 64-bit support, but compiler configured for 32-bit, check build configuration!")
+endif()
+
+if($<CONFIG:Debug>)
+	set(BUILD_CONFIG_TYPE_NAME "Debug" CACHE STRING "")
+elseif($<CONFIG:Release>)
+	set(BUILD_CONFIG_TYPE_NAME "Release" CACHE STRING "")
+else()
+	message(WARNING "Unknown build configuration type, fallback to Debug type!")
+	set(BUILD_CONFIG_TYPE_NAME "Debug" CACHE STRING "")
 endif()
 
 # Xash3D FWGS Library Naming Scheme compliance
@@ -73,7 +81,7 @@ endif()
 
 # set build output directory
 set(DIR_COMMON_OUTPUT 
-	${CMAKE_BINARY_DIR}/${CMAKE_CONFIGURATION_TYPES}/bin/
+	${CMAKE_BINARY_DIR}/${BUILD_CONFIG_TYPE_NAME}/bin/
 )
 
 message(STATUS "Common binaries output directory: ${DIR_COMMON_OUTPUT}")
