@@ -1,5 +1,5 @@
-name: Continious build
-on: [push, pull_request]
+name: nightly-builds
+on: push
 jobs:
   build-win32:
     runs-on: windows-latest
@@ -57,7 +57,7 @@ jobs:
           name: Continious build
           draft: false
           prerelease: true
-          allowUpdates: true
+          allowUpdates: false
           
       - name: Upload artifacts
         id: upload-artifacts
