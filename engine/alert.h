@@ -16,6 +16,8 @@
 #ifndef ALERT_H
 #define ALERT_H
 
+// override ARRAYSIZE definition (because of collision with WinSDK macros)
+#undef ARRAYSIZE
 #define ARRAYSIZE( p )	(sizeof( p ) / sizeof( p[0] ))
 
 typedef enum
