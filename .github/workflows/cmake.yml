@@ -38,6 +38,13 @@ jobs:
         # Execute the build.  You can specify a specific target with "--target <NAME>"
         run: cmake --build . --config $BUILD_TYPE
 
+      - name: Update continious tag
+        uses: richardsimko/update-tag@v1
+        with:
+            tag_name: continious
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
       - name: Prepare artifacts
         run: |
           mkdir publish\
