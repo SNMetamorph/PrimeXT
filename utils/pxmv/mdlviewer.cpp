@@ -89,7 +89,7 @@ MDLViewer :: MDLViewer() : mxWindow( 0, 0, 0, 0, 0, APP_TITLE_STR, mxWindow::Nor
 
 	mb->addMenu ("File", menuFile);
 	mb->addMenu ("Options", menuOptions);
-	mb->addMenu ("Tools", menuView);
+	//mb->addMenu ("Tools", menuView);
 	mb->addMenu ("Help", menuHelp);
 
 	mxMenu *menuRecentModels = new mxMenu ();
@@ -138,7 +138,7 @@ MDLViewer :: MDLViewer() : mxWindow( 0, 0, 0, 0, 0, APP_TITLE_STR, mxWindow::Nor
 	//menuOptions->add ("Dump Model Info", IDC_OPTIONS_DUMP);
 #endif
 
-	menuView->add ("File Associations...", IDC_VIEW_FILEASSOCIATIONS);
+	//menuView->add ("File Associations...", IDC_VIEW_FILEASSOCIATIONS);
 
 #ifdef WIN32
 	menuHelp->add ("Goto Homepage...", IDC_HELP_GOTOHOMEPAGE);
