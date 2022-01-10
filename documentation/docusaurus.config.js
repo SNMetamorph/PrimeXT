@@ -9,7 +9,7 @@ const config = {
   title: 'PrimeXT Documentation',
   tagline: 'New stage of Half-Life 1 modding',
   url: 'https://snmetamorph.github.io',
-  baseUrl: '/primext/',
+  baseUrl: '/PrimeXT/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
