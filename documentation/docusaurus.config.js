@@ -6,15 +6,15 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'My Site',
-  tagline: 'Dinosaurs are cool',
-  url: 'https://your-docusaurus-test-site.com',
-  baseUrl: '/',
+  title: 'PrimeXT Documentation',
+  tagline: 'New stage of Half-Life 1 modding',
+  url: 'https://snmetamorph.github.io',
+  baseUrl: '/primext/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
-  organizationName: 'facebook', // Usually your GitHub org/user name.
-  projectName: 'docusaurus', // Usually your repo name.
+  organizationName: 'SNMetamorph', // Usually your GitHub org/user name.
+  projectName: 'PrimeXT', // Usually your repo name.
 
   presets: [
     [
