@@ -29,6 +29,7 @@ GNU General Public License for more details.
 #include "gl_debug.h"
 #include "r_weather.h"
 
+#define CALLBACK
 #define MAX_RESERVED_UNIFORMS		22	// while MAX_LIGHTSTYLES 64
 #define PROJ_SIZE			64
 

@@ -42,7 +42,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"."
 	"../common"
 	"../../common"
-	"${CMAKE_SOURCE_DIR}/external/squish"
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
@@ -83,7 +82,7 @@ endif()
 # TODO make squish crossplatform, also compile it instead using pre-made .lib
 find_library(LIBRARY_SQUISH
 	NAMES squish
-	HINTS "${CMAKE_SOURCE_DIR}/external/squish"
+	HINTS "${CMAKE_SOURCE_DIR}/utils/common"
 )
 
 if(MSVC)

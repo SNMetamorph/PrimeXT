@@ -25,7 +25,7 @@
 template <typename T>
 inline T AlignValue( T val, unsigned alignment )
 {
-	return (T)( ( (unsigned int)val + alignment - 1 ) & ~( alignment - 1 ) );
+    return (T)( ( (unsigned int)val + alignment - 1 ) & ~( alignment - 1 ) );
 }
 
 //-----------------------------------------------------------------------------

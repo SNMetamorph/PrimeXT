@@ -35,7 +35,8 @@ endif()
 add_executable(${PROJECT_NAME} ${DIR_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"."
-	"${CMAKE_SOURCE_DIR}/external/mxtk"
+	"../mxtk"
+	"../mxtk/include"
 	"../../game_shared" # should be first because mathlib.h also locates in ../common
 	"../../engine"
 	"../../common"
@@ -77,7 +78,7 @@ endif()
 # TODO make mxtk crossplatform, also compile it instead using pre-made .lib
 find_library(LIBRARY_MXTK
 	NAMES mxtk
-	HINTS "${CMAKE_SOURCE_DIR}/external/mxtk"
+	HINTS "${CMAKE_SOURCE_DIR}/utils/common"
 )
 
 if(MSVC)
