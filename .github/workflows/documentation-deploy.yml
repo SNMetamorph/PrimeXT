@@ -18,6 +18,7 @@ jobs:
       - name: Build website
         working-directory: documentation
         run: |
+          npm install
           npm ci
           npm run build
 
