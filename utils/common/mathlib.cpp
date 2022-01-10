@@ -193,17 +193,8 @@ SinCos
 */
 void SinCos( float radians, float *sine, float *cosine )
 {
-	_asm
-	{
-		fld	dword ptr [radians]
-		fsincos
-
-		mov edx, dword ptr [cosine]
-		mov eax, dword ptr [sine]
-
-		fstp dword ptr [edx]
-		fstp dword ptr [eax]
-	}
+	*sine = sinf(radians);
+	*cosine = cosf(radians);
 }
 
 /*
