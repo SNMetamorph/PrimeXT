@@ -17,7 +17,7 @@ GNU General Public License for more details.
 #define GL_EXPORT_H
 
 // not needed since we have GL_GetProcAddress in RenderAPI
-#include <windows.h>
+// <windows.h>
 #include <stdarg.h>
 #ifndef APIENTRY
 #define APIENTRY

@@ -1213,7 +1213,7 @@ void R_GrassSetupFrame( void )
 
 	if( m_flGrassFadeStart < GRASS_ANIM_DIST )
 		m_flGrassFadeStart = GRASS_ANIM_DIST;
-	m_flGrassFadeDist = max( 0.0f, r_grass_fade_dist->value );
+	m_flGrassFadeDist = Q_max( 0.0f, r_grass_fade_dist->value );
 	m_flGrassFadeEnd = m_flGrassFadeStart + m_flGrassFadeDist;
 }
 
@@ -1748,7 +1748,7 @@ void R_GrassInit( void )
 			{
 				// seed is optional
 				entry.seed = Q_atoi( token );
-				entry.seed = max( 1, entry.seed );
+				entry.seed = Q_max( 1, entry.seed );
 			}
 			else entry.seed = random_seed++;
 

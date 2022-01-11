@@ -34,12 +34,12 @@ typedef unsigned long	ulong;
 
 typedef unsigned char	uint8;
 typedef signed char		int8;
-typedef __int16		int16;
-typedef unsigned __int16	uint16;
-typedef __int32		int32;
-typedef unsigned __int32	uint32;
-typedef __int64		int64;
-typedef unsigned __int64	uint64;
+typedef __int16_t		int16;
+typedef unsigned 	uint16;
+typedef __int32_t		int32;
+typedef unsigned 	uint32;
+typedef __int64_t		int64;
+typedef unsigned 	uint64;
 
 #undef true
 #undef false
