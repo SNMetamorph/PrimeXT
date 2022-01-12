@@ -177,19 +177,6 @@ ref_instance_t *R_GetPrevInstance( void )
 
 const Vector gl_state_t :: GetModelOrigin( void )
 {
-	if( m_bSkyEntity )
-	{
-		if( tr.sky_speed )
-		{
-			Vector trans = RI->view.origin - tr.sky_origin;
-			trans = trans - (RI->view.origin - tr.sky_world_origin) / tr.sky_speed;
-			Vector skypos = tr.sky_origin + (RI->view.origin - tr.sky_world_origin) / tr.sky_speed;
-			return skypos - transform.GetOrigin();
-		}
-
-		return tr.sky_origin - transform.GetOrigin();
-	}
-
 	return transform.VectorITransform( RI->view.origin );
 }
 
@@ -203,19 +190,14 @@ build matrix pack or find already existed
 unsigned short GL_CacheState( const Vector &origin, const Vector &angles, bool skyentity )
 {
 	gl_state_t state;
-	int	i;
-
 	state.transform = matrix4x4( origin, angles, 1.0f );
 	state.transform.CopyToArray( state.modelMatrix );
-	state.m_bSkyEntity = skyentity;
 
-	for( i = 0; i < tr.cached_state.Count(); i++ )
+	for (int i = 0; i < tr.cached_state.Count(); i++)
 	{
 		// NOTE: (MVP == MV == M). So no reason to compare all the matrices
-		if( !memcmp( tr.cached_state[i].modelMatrix, state.modelMatrix, sizeof( state.modelMatrix )))
-		{
-			if( tr.cached_state[i].m_bSkyEntity == skyentity )
-				return i;
+		if( !memcmp( tr.cached_state[i].modelMatrix, state.modelMatrix, sizeof( state.modelMatrix ))) {
+			return i;
 		}
 	}
 
@@ -245,19 +227,6 @@ gl_state_t *GL_GetCache( word hCachedMatrix )
 	}
 
 	glm = &tr.cached_state[hCachedMatrix];
-
-	// sky entities can't be cached properly...
-	if( glm->m_bSkyEntity )
-	{
-		Vector origin = glm->transform.GetOrigin();
-		Vector trans = GetVieworg() - tr.sky_origin;
-		skycache.transform = matrix4x4( origin + trans, g_vecZero, 1.0f );
-		skycache.transform.CopyToArray( skycache.modelMatrix );
-		skycache.m_bSkyEntity = glm->m_bSkyEntity;
-
-		return &skycache;
-	}
-
 	return glm;
 }
 
@@ -451,10 +420,6 @@ static void R_SetupViewCache( const ref_viewpass_t *rvp )
 			fullvis = true;
 
 		ENGINE_SET_PVS( RI->view.pvspoint, REFPVS_RADIUS, RI->view.pvsarray, mergevis, fullvis );
-
-		// add skyorigin in each pass in case it was specified
-		if( tr.sky_origin != g_vecZero && !fullvis )
-			ENGINE_SET_PVS( tr.sky_origin, REFPVS_RADIUS, RI->view.pvsarray, true, fullvis );
 		SetBits( RI->view.changed, RC_PVS_CHANGED );
 	}
 

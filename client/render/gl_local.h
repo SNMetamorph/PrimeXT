@@ -245,7 +245,6 @@ class gl_state_t
 public:
 	GLfloat		modelMatrix[16];	// matrix4x4( origin, angles, scale )
 	matrix4x4		transform;	// entity transformation matrix 
-	bool		m_bSkyEntity;
 	const Vector GetModelOrigin( void );
 };
 
@@ -590,10 +589,7 @@ typedef struct
 	float		fogSkyDensity;
 
 	// sky params
-	Vector		sky_origin;
-	Vector		sky_world_origin;
-	float		sky_speed;
-
+	//
 	Vector		sky_normal;	// sky vector
 	Vector		sky_ambient;	// sky ambient color
 
