@@ -1623,9 +1623,7 @@ void CStudioModelRenderer :: SetDecalUniforms( studiodecal_t *pDecal )
 			else u->SetValue( 1.0f );
 			break;
 		case UT_FOGPARAMS:
-			if( e->curstate.renderfx == SKYBOX_ENTITY )
-				u->SetValue( tr.fogColor[0], tr.fogColor[1], tr.fogColor[2], tr.fogSkyDensity );
-			else u->SetValue( tr.fogColor[0], tr.fogColor[1], tr.fogColor[2], tr.fogDensity );
+			u->SetValue( tr.fogColor[0], tr.fogColor[1], tr.fogColor[2], tr.fogDensity );
 			break;
 		case UT_BONESARRAY:
 			u->SetValue( &inst->m_glstudiobones[0][0], num_bones * 3 );

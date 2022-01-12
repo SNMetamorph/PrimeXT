@@ -146,27 +146,7 @@ void CSpriteModelRenderer :: SpriteComputeOrigin( cl_entity_t *e )
 		}
 	}
 
-	if( e->curstate.renderfx == SKYBOX_ENTITY )
-	{
-		Vector trans = GetVieworg() - tr.sky_origin;
-
-		if( tr.sky_speed )
-		{
-			trans = trans - (GetVieworg() - tr.sky_world_origin) / tr.sky_speed;
-			Vector skypos = tr.sky_origin + (GetVieworg() - tr.sky_world_origin) / tr.sky_speed;
-			tr.modelorg = skypos - sprite_origin;
-		}
-		else
-		{
-			tr.modelorg = tr.sky_origin - sprite_origin;
-		}
-
-		sprite_origin += trans; // move to the sky position
-	}
-	else
-	{
-		tr.modelorg = sprite_origin;
-	}
+	tr.modelorg = sprite_origin;
 }
 
 /*

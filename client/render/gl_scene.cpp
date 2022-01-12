@@ -535,7 +535,7 @@ qboolean R_AddEntity( struct cl_entity_s *clent, int entityType )
 		return true;
 #endif
 	if( clent->model->type == mod_brush )
-		clent->hCachedMatrix = GL_CacheState( clent->origin, clent->angles, ( clent->curstate.renderfx == SKYBOX_ENTITY ));
+		clent->hCachedMatrix = GL_CacheState( clent->origin, clent->angles );
 	clent->curstate.entityType = entityType;
 
 	// mark static entity as visible

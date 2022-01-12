@@ -67,7 +67,6 @@ GNU General Public License for more details.
 
 #define FLASHLIGHT_KEY	-666
 #define SUNLIGHT_KEY	-777
-#define SKYBOX_ENTITY	70
 
 #define LM_SAMPLE_SIZE	16
 #define LM_SAMPLE_EXTRASIZE	8
@@ -89,7 +88,7 @@ GNU General Public License for more details.
 #define OFFSET( type, var )	((const void *)&(((type *)NULL)->var))
 #define R_OpaqueEntity( e )	(( (e)->curstate.rendermode == kRenderNormal ) || ( (e)->curstate.rendermode == kRenderTransAlpha ))
 #define R_ModelOpaque( rm )	(( rm == kRenderNormal ) || ( rm == kRenderTransAlpha ))
-#define R_StaticEntity( e )	( (e)->origin == g_vecZero && (e)->angles == g_vecZero && (e)->curstate.renderfx != SKYBOX_ENTITY )
+#define R_StaticEntity( e )	( (e)->origin == g_vecZero && (e)->angles == g_vecZero )
 #define R_FullBright()	( CVAR_TO_BOOL( r_fullbright ) || !worldmodel->lightdata )
 #define RP_OUTSIDE( leaf )	(((( leaf ) - worldmodel->leafs ) - 1 ) == -1 )
 #define R_WaterEntity( m )	( FBitSet( m->flags, BIT( 2 )))

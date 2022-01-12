@@ -1442,9 +1442,7 @@ void R_SetDecalUniforms( brushdecal_t *decal )
 			u->SetValue( (float)tr.time );
 			break;
 		case UT_FOGPARAMS:
-			if( e->curstate.renderfx == SKYBOX_ENTITY )
-				u->SetValue( tr.fogColor[0], tr.fogColor[1], tr.fogColor[2], tr.fogSkyDensity );
-			else u->SetValue( tr.fogColor[0], tr.fogColor[1], tr.fogColor[2], tr.fogDensity );
+			u->SetValue( tr.fogColor[0], tr.fogColor[1], tr.fogColor[2], tr.fogDensity );
 			break;
 		case UT_TEXOFFSET:
 			u->SetValue( es->texofs[0], es->texofs[1] );
