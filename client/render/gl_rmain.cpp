@@ -826,13 +826,13 @@ void R_Clear( int bitMask )
 	// change ordering for overview
 	if( FBitSet( RI->params, RP_DRAW_OVERVIEW ))
 	{
-		gldepthmin = 0.8f;
+		gldepthmin = 1.0f;
 		gldepthmax = 0.0f;
 	}
 	else
 	{ 
 		gldepthmin = 0.0f;
-		gldepthmax = 0.8f;
+		gldepthmax = 1.0f;
 	}
 
 	GL_DepthRange( gldepthmin, gldepthmax );
