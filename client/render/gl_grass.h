@@ -52,7 +52,6 @@ typedef struct gvert_s
 #define FGRASS_NODRAW	BIT( 0 )		// grass shader is failed to build
 #define FGRASS_NODLIGHT	BIT( 1 )		// grass dlight shader is failed to build
 #define FGRASS_NOSUNLIGHT	BIT( 2 )		// grass dlight shader is failed to build
-#define FRGASS_SKYENTITY	BIT( 3 )		// it's sky grass
 
 // all the grassdata for one polygon and specified texture
 // stored into single vbo

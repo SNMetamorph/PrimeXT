@@ -934,16 +934,8 @@ void R_RenderGrassOnList( void )
 			update_params = true;
 		}
 
-		if( FBitSet( g->flags, FRGASS_SKYENTITY ))
-		{
-			GL_DepthRange( 0.8f, 0.9f );
-			GL_ClipPlane( false );
-		}
-		else
-		{
-			GL_DepthRange( gldepthmin, gldepthmax );
-			GL_ClipPlane( true );
-		}
+		GL_DepthRange( gldepthmin, gldepthmax );
+		GL_ClipPlane( true );
 
 		if( hLastShader != hCurrentShader )
 		{
@@ -1587,8 +1579,6 @@ void R_AddGrassToDrawList( msurface_t *s, drawlist_t drawlist_type )
 	for( int i = 0; i < hdr->count; i++ )
 	{
 		grass_t *grass = &hdr->g[i];
-
-		ClearBits( grass->flags, FRGASS_SKYENTITY ); 
 		grass->hCachedMatrix = e->hCachedMatrix;
 
 		switch( drawlist_type )

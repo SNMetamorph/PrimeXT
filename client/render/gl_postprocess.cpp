@@ -367,7 +367,6 @@ bool CBasePostEffects :: ProcessDepthOfField( void )
 
 	// get current depth value
 	pglReadPixels( glState.width >> 1, glState.height >> 1, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depthValue );
-	depthValue = RemapVal( depthValue, 0.0, 0.8, 0.0, 1.0 );
 	depthValue = -zFar * zNear / ( depthValue * ( zFar - zNear ) - zFar ); // linearize it
 	float holdTime = bound( 0.01f, r_dof_hold_time->value, 0.5f );
 	float changeTime = bound( 0.1f, r_dof_change_time->value, 2.0f );
