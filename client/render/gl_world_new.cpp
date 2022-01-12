@@ -2139,8 +2139,6 @@ void Mod_InitBSPModelsTexture( void )
 			continue;
 
 		glm = GL_GetCache( e->hCachedMatrix );
-		if( glm->m_bSkyEntity ) continue;
-
 		visible_ents[world->num_visible_models] = e;
 		world->num_visible_models++;
 	}

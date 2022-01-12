@@ -1167,8 +1167,7 @@ void R_NewMap( void )
 		world->loading_cubemaps = true;
 
 	// reset sky settings
-	tr.sky_origin = tr.sky_world_origin = g_vecZero;
-	tr.sky_speed = 0;
+	//
 
 	// reset light settings
 	// by default map compilers uses gamma 0.5
