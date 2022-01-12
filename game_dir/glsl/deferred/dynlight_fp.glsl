@@ -56,7 +56,7 @@ void main( void )
 	vec3 diffuse = texture2D( u_ColorMap, var_TexCoord ).rgb;
 	vec4 glossmap = colormap2D( u_GlossMap, var_TexCoord );
 	float srcW = texture2D( u_DepthMap, var_TexCoord ).r;
-	float w = linearizeDepth( u_zFar, RemapVal( srcW, 0.0, 0.8, 0.0, 1.0 ));
+	float w = linearizeDepth( u_zFar, srcW );
 	vec4 worldpos = vec4( u_ViewOrigin + var_RayVec * w, 1.0 ); // nudge point to avoid z-fighting
 	vec3 lvec = u_LightOrigin.xyz - worldpos.xyz;
 	vec3 N = normalize( normal.xyz * 2.0 - 1.0 );

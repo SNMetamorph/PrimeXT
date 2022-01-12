@@ -75,7 +75,7 @@ void main( void )
 #ifdef LATER
 	vec4 vertex = vec4( var_Position + var_WorldMat * vec3( 0.0, 0.0, vecTexCoord.z * 15.0 ), 1.0 );
 	vec4 p = gl_ModelViewProjectionMatrix * vertex;
-	gl_FragDepth = RemapVal( 0.5 * (p.z / p.w + 1.0), 0.0, 1.0, 0.0, 0.8 );
+	gl_FragDepth = 0.5 * (p.z / p.w + 1.0);
 #endif
 #endif
 

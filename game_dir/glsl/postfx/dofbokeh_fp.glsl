@@ -195,7 +195,6 @@ vec3 debugFocus( vec3 col, float blur, float depth )
 
 float linearize( float depth )
 {
-	depth = RemapVal( depth, 0.0, 0.8, 0.0, 1.0 );
 	return -zfar * znear / ( depth * ( zfar - znear ) - zfar );
 }
 
