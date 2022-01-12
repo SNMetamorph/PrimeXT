@@ -60,7 +60,7 @@ void main( void )
 	vec4 shadowsrc = texture2D( u_ShadowMap, var_TexCoord );
 	float w = texture2D( u_DepthMap, var_TexCoord ).r;
 	normal.xyz = normalize( normal.xyz * 2.0 - 1.0 );
-	w = linearizeDepth( u_zFar, RemapVal( w, 0.0, 0.8, 0.0, 1.0 ));
+	w = linearizeDepth( u_zFar, w );
 	vec3 pos = u_ViewOrigin + var_RayVec * (w - 1.0); // nudge point to avoid z-fighting
 	vec3 V = normalize( -var_RayVec );
 

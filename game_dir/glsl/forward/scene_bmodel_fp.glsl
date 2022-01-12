@@ -118,11 +118,11 @@ void main( void )
 #if defined( LIQUID_SURFACE )
 	vec_TexDiffuse.x += N.x * 4.0 * u_RefractScale;
 	vec_TexDiffuse.y += N.y * 4.0 * u_RefractScale;
-	float fOwnDepth = RemapVal( gl_FragCoord.z, 0.0, 0.8, 0.0, 1.0 );
+	float fOwnDepth = gl_FragCoord.z;
 	fOwnDepth = linearizeDepth( u_zFar, fOwnDepth );
 	fOwnDepth = RemapVal( fOwnDepth, Z_NEAR, u_zFar, 0.0, 1.0 );
 
-	float fSampledDepth = RemapVal( texture2D( u_DepthMap, gl_FragCoord.xy * u_ScreenSizeInv ).r, 0.0, 0.8, 0.0, 1.0 );
+	float fSampledDepth = texture2D( u_DepthMap, gl_FragCoord.xy * u_ScreenSizeInv ).r;
 	fSampledDepth = linearizeDepth( u_zFar, fSampledDepth );
 	fSampledDepth = RemapVal( fSampledDepth, Z_NEAR, u_zFar, 0.0, 1.0 );
 
