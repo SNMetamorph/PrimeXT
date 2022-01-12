@@ -3126,17 +3126,8 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 
 	if( !FBitSet( RI->params, RP_SHADOWVIEW ))
 	{
-		// setup some GL-states
-		if( e->curstate.renderfx == SKYBOX_ENTITY )
-		{
-			GL_DepthRange( 0.8f, 0.9f );
-			GL_ClipPlane( false );
-		}
-		else
-		{
-			GL_DepthRange( gldepthmin, gldepthmax );
-			GL_ClipPlane( true );
-		}
+		GL_DepthRange( gldepthmin, gldepthmax );
+		GL_ClipPlane( true );
 
 		if( tr.waterlevel >= 3 && RP_NORMALPASS() && FBitSet( s->flags, SURF_DRAWTURB ))
 			GL_Cull( GL_BACK );
@@ -3294,9 +3285,7 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 			u->SetValue( mat->detailScale[0], mat->detailScale[1] );
 			break;
 		case UT_FOGPARAMS:
-			if( e->curstate.renderfx == SKYBOX_ENTITY )
-				u->SetValue( tr.fogColor[0], tr.fogColor[1], tr.fogColor[2], tr.fogSkyDensity );
-			else u->SetValue( tr.fogColor[0], tr.fogColor[1], tr.fogColor[2], tr.fogDensity );
+			u->SetValue( tr.fogColor[0], tr.fogColor[1], tr.fogColor[2], tr.fogDensity );
 			break;
 		case UT_SHADOWPARMS:
 			if( pl != NULL )
@@ -3490,9 +3479,6 @@ void R_BuildFaceListForLight( CDynLight *pl, bool solid )
 			RI->currententity = es->parent;
 			RI->currentmodel = RI->currententity->model;
 
-			if( RI->currententity->curstate.renderfx == SKYBOX_ENTITY )
-				continue; // fast reject
-
 			if( FBitSet( RI->currententity->curstate.effects, EF_FULLBRIGHT ))
 				continue;
 
@@ -3524,9 +3510,6 @@ void R_BuildFaceListForLight( CDynLight *pl, bool solid )
 
 			RI->currententity = es->parent;
 			RI->currentmodel = RI->currententity->model;
-
-			if( RI->currententity->curstate.renderfx == SKYBOX_ENTITY )
-				continue; // fast reject
 
 			if( FBitSet( RI->currententity->curstate.effects, EF_FULLBRIGHT ))
 				continue;

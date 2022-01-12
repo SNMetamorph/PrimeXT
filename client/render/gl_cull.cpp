@@ -83,39 +83,17 @@ bool R_CullBrushModel( cl_entity_t *e )
 	if( !e || !e->model )
 		return true;
 
-	// skybox entity
-	if( e->curstate.renderfx == SKYBOX_ENTITY )
+	if( e->angles != g_vecZero )
 	{
-		if( FBitSet( RI->params, RP_SHADOWVIEW ))
-			return true;
-
-		Vector trans = GetVieworg() - tr.sky_origin;
-
-		if( tr.sky_speed )
-		{
-			trans = trans - (GetVieworg() - tr.sky_world_origin) / tr.sky_speed;
-			Vector skypos = tr.sky_origin + (GetVieworg() - tr.sky_world_origin) / tr.sky_speed;
-			tr.modelorg = skypos - e->origin;
-		}
-		else tr.modelorg = tr.sky_origin - e->origin;
-
-		absmin = e->origin + trans + clmodel->mins;
-		absmax = e->origin + trans + clmodel->maxs;
+		absmin = e->origin - clmodel->radius;
+		absmax = e->origin + clmodel->radius;
 	}
 	else
 	{
-		if( e->angles != g_vecZero )
-		{
-			absmin = e->origin - clmodel->radius;
-			absmax = e->origin + clmodel->radius;
-		}
-		else
-		{
-			absmin = e->origin + clmodel->mins;
-			absmax = e->origin + clmodel->maxs;
-		}
-		tr.modelorg = glm->GetModelOrigin();
+		absmin = e->origin + clmodel->mins;
+		absmax = e->origin + clmodel->maxs;
 	}
+	tr.modelorg = glm->GetModelOrigin();
 
 	return R_CullModel( e, absmin, absmax );
 }

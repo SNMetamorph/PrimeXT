@@ -176,7 +176,7 @@ int CStudioModelRenderer :: StudioComputeBBox( void )
 	}
 
 	// prevent to compute env_static bounds every frame
-	if( FBitSet( RI->currententity->curstate.iuser1, CF_STATIC_ENTITY ) && RI->currententity->curstate.renderfx != SKYBOX_ENTITY )
+	if( FBitSet( RI->currententity->curstate.iuser1, CF_STATIC_ENTITY ) )
 		SetBits( m_pModelInstance->info_flags, MF_STATIC_BOUNDS );
 
 	if( FBitSet( RI->currententity->curstate.iuser1, CF_STATIC_ENTITY ))
@@ -287,17 +287,7 @@ int CStudioModelRenderer :: StudioCheckLOD( void )
 
 const Vector CStudioModelRenderer :: StudioGetOrigin( void )
 {
-	Vector origin = RI->currententity->origin;
-
-	if( RI->currententity->curstate.renderfx == SKYBOX_ENTITY )
-	{
-		// calc skybox origin
-		Vector trans = GetVieworg() - tr.sky_origin;
-		if( tr.sky_speed ) trans -= (GetVieworg() - tr.sky_world_origin) / tr.sky_speed;
-		origin += trans;
-	}
-
-	return origin;
+	return RI->currententity->origin;
 }
 
 /*
@@ -1636,11 +1626,7 @@ void CStudioModelRenderer :: StudioStaticLight( cl_entity_t *ent, mstudiolight_t
 	// refresh lighting every 0.1 secs
 	if( m_pModelInstance->light_update )
 	{
-		if( ent->curstate.renderfx == SKYBOX_ENTITY )
-		{
-			R_LightForSky( ent->origin, &m_pModelInstance->newlight );
-		}
-		else if (staticEntity && badVertexLightCache || world->numleaflights < 1)
+		if (staticEntity && badVertexLightCache || world->numleaflights < 1)
 		{
 			float dynamic = r_dynamic->value;
 			alight_t lighting;
@@ -2082,7 +2068,7 @@ AddMeshToDrawList
 void CStudioModelRenderer :: AddMeshToDrawList( studiohdr_t *phdr, vbomesh_t *mesh, bool lightpass )
 {
 	// static entities allows to cull each part individually
-	if( FBitSet( RI->currententity->curstate.iuser1, CF_STATIC_ENTITY ) && RI->currententity->curstate.renderfx != SKYBOX_ENTITY )
+	if( FBitSet( RI->currententity->curstate.iuser1, CF_STATIC_ENTITY ) )
 	{
 		Vector	absmin, absmax;
 
@@ -2121,8 +2107,6 @@ void CStudioModelRenderer :: AddMeshToDrawList( studiohdr_t *phdr, vbomesh_t *me
 
 	if( lightpass )
 	{
-		if( RI->currententity->curstate.renderfx == SKYBOX_ENTITY )
-			return; // skybox entities can't lighting by dynlights
 		if( FBitSet( mat->flags, STUDIO_NF_FULLBRIGHT ))
 			return; // can't light fullbrights
 
@@ -2210,10 +2194,6 @@ do culling, compute bones, add meshes to list
 */
 void CStudioModelRenderer :: AddStudioModelToDrawList( cl_entity_t *e, bool update )
 {
-	// no shadows for skybox ents
-	if( FBitSet( RI->params, RP_SHADOWVIEW ) && e->curstate.renderfx == SKYBOX_ENTITY )
-		return;
-
 	if( !StudioSetEntity( e ))
 		return;
 
@@ -2585,9 +2565,6 @@ void CStudioModelRenderer :: BuildMeshListForLight( CDynLight *pl, bool solid )
 			if( !StudioSetEntity( entry ))
 				continue;
 
-			if( RI->currententity->curstate.renderfx == SKYBOX_ENTITY )
-				continue; // fast reject
-
 			if( FBitSet( RI->currententity->curstate.effects, EF_FULLBRIGHT ))
 				continue;
 
@@ -2611,9 +2588,6 @@ void CStudioModelRenderer :: BuildMeshListForLight( CDynLight *pl, bool solid )
 			// setup the global pointers
 			if( !StudioSetEntity( entry ))
 				continue;
-
-			if( RI->currententity->curstate.renderfx == SKYBOX_ENTITY )
-				continue; // fast reject
 
 			if( FBitSet( RI->currententity->curstate.effects, EF_FULLBRIGHT ))
 				continue;
@@ -2734,16 +2708,8 @@ void CStudioModelRenderer :: RenderDeferredStudioList( void )
 
 		if( m_iDrawModelType == DRAWSTUDIO_NORMAL )
 		{
-			if( entry->m_pParentEntity->curstate.renderfx == SKYBOX_ENTITY )
-			{
-				GL_DepthRange( 0.8f, 0.9f );
-				GL_ClipPlane( false );
-			}
-			else
-			{
-				GL_DepthRange( gldepthmin, gldepthmax );
-				GL_ClipPlane( true );
-			}
+			GL_DepthRange( gldepthmin, gldepthmax );
+			GL_ClipPlane( true );
 		}
 
 		DrawSingleMesh( entry, ( i == 0 ));
@@ -3410,9 +3376,7 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force )
 			u->SetValue( mat->detailScale[0], mat->detailScale[1] );
 			break;
 		case UT_FOGPARAMS:
-			if( e->curstate.renderfx == SKYBOX_ENTITY )
-				u->SetValue( tr.fogColor[0], tr.fogColor[1], tr.fogColor[2], tr.fogSkyDensity );
-			else u->SetValue( tr.fogColor[0], tr.fogColor[1], tr.fogColor[2], tr.fogDensity );
+			u->SetValue( tr.fogColor[0], tr.fogColor[1], tr.fogColor[2], tr.fogDensity );
 			break;
 		case UT_SHADOWPARMS:
 			if( pl != NULL )
@@ -3619,16 +3583,8 @@ void CStudioModelRenderer :: RenderSolidStudioList( void )
 
 		if( m_iDrawModelType == DRAWSTUDIO_NORMAL )
 		{
-			if( entry->m_pParentEntity->curstate.renderfx == SKYBOX_ENTITY )
-			{
-				GL_DepthRange( 0.8f, 0.9f );
-				GL_ClipPlane( false );
-			}
-			else
-			{
-				GL_DepthRange( gldepthmin, gldepthmax );
-				GL_ClipPlane( true );
-			}
+			GL_DepthRange( gldepthmin, gldepthmax );
+			GL_ClipPlane( true );
 		}
 
 		DrawSingleMesh( entry, ( i == 0 ));
@@ -3664,16 +3620,8 @@ void CStudioModelRenderer :: RenderTransMesh( CTransEntry *entry )
 
 	if( m_iDrawModelType == DRAWSTUDIO_NORMAL )
 	{
-		if( entry->m_pParentEntity->curstate.renderfx == SKYBOX_ENTITY )
-		{
-			GL_DepthRange( 0.8f, 0.9f );
-			GL_ClipPlane( false );
-		}
-		else
-		{
-			GL_DepthRange( gldepthmin, gldepthmax );
-			GL_ClipPlane( true );
-		}
+		GL_DepthRange( gldepthmin, gldepthmax );
+		GL_ClipPlane( true );
 	}
 
 	if( entry->m_pParentEntity->curstate.rendermode == kRenderGlow )

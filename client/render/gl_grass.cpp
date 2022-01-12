@@ -1262,8 +1262,7 @@ static word R_GrassShaderSceneForward( msurface_t *s, grass_t *g )
 			GL_AddShaderDirective( options, va( "APPLY_STYLE%i", i ));
 	}
 
-	if( RI->currententity->curstate.renderfx != SKYBOX_ENTITY )
-		GL_AddShaderDirective( options, "APPLY_FADE_DIST" );
+	GL_AddShaderDirective( options, "APPLY_FADE_DIST" );
 
 	if( tr.fogEnabled )
 		GL_AddShaderDirective( options, "APPLY_FOG_EXP" );
@@ -1325,8 +1324,7 @@ static word R_GrassShaderLightForward( CDynLight *dl, grass_t *g )
 		break;
 	}
 
-	if( RI->currententity->curstate.renderfx != SKYBOX_ENTITY )
-		GL_AddShaderDirective( options, "APPLY_FADE_DIST" );
+	GL_AddShaderDirective( options, "APPLY_FADE_DIST" );
 
 	if( CVAR_TO_BOOL( r_shadows ) && !FBitSet( dl->flags, DLF_NOSHADOWS ))
 	{
@@ -1388,8 +1386,7 @@ word R_GrassShaderSceneDeferred( msurface_t *s, grass_t *g )
 
 	material_t *mat = s->texinfo->texture->material;
 
-	if( RI->currententity->curstate.renderfx != SKYBOX_ENTITY )
-		GL_AddShaderDirective( options, "APPLY_FADE_DIST" );
+	GL_AddShaderDirective( options, "APPLY_FADE_DIST" );
 
 	word shaderNum = GL_FindUberShader( glname, options );
 	if( !shaderNum )
@@ -1425,8 +1422,7 @@ word R_GrassShaderLightDeferred( msurface_t *s, grass_t *g )
 
 	material_t *mat = s->texinfo->texture->material;
 
-	if( RI->currententity->curstate.renderfx != SKYBOX_ENTITY )
-		GL_AddShaderDirective( options, "APPLY_FADE_DIST" );
+	GL_AddShaderDirective( options, "APPLY_FADE_DIST" );
 
 	word shaderNum = GL_FindUberShader( glname, options );
 	if( !shaderNum )
@@ -1462,8 +1458,7 @@ static word R_GrassShaderSceneDepth( msurface_t *s, grass_t *g )
 	Q_strncpy( glname, "forward/depth_grass", sizeof( glname ));
 	memset( options, 0, sizeof( options ));
 
-	if( RI->currententity->curstate.renderfx != SKYBOX_ENTITY )
-		GL_AddShaderDirective( options, "APPLY_FADE_DIST" );
+	GL_AddShaderDirective( options, "APPLY_FADE_DIST" );
 
 	word shaderNum = GL_FindUberShader( glname, options );
 	if( !shaderNum ) return 0; // something bad happens
@@ -1505,7 +1500,7 @@ void R_PrecacheGrass( msurface_t *s, mextraleaf_t *leaf )
 	float curdist = VectorDistance( tr.cached_vieworigin, es->origin );
 
 	// but grass that attached to sky entities will be ignoring distance
-	if( curdist > m_flGrassFadeEnd && ( e->curstate.renderfx != SKYBOX_ENTITY ))
+	if( curdist > m_flGrassFadeEnd )
 		return; // too far
 
 	// initialize grass for surface
@@ -1550,7 +1545,7 @@ void R_AddGrassToDrawList( msurface_t *s, drawlist_t drawlist_type )
 	float curdist = VectorDistance( es->origin, tr.cached_vieworigin );
 
 	// but grass that attached to sky entities will be ignoring distance
-	if( curdist > m_flGrassFadeEnd && ( e->curstate.renderfx != SKYBOX_ENTITY ))
+	if( curdist > m_flGrassFadeEnd )
 		return; // too far
 
 	// rebuild mesh with new gamma
@@ -1593,9 +1588,7 @@ void R_AddGrassToDrawList( msurface_t *s, drawlist_t drawlist_type )
 	{
 		grass_t *grass = &hdr->g[i];
 
-		if( e->curstate.renderfx == SKYBOX_ENTITY )
-			SetBits( grass->flags, FRGASS_SKYENTITY );
-		else ClearBits( grass->flags, FRGASS_SKYENTITY ); 
+		ClearBits( grass->flags, FRGASS_SKYENTITY ); 
 		grass->hCachedMatrix = e->hCachedMatrix;
 
 		switch( drawlist_type )
