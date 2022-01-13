@@ -374,6 +374,9 @@ void R_DrawSkyBox( void )
 void R_DrawSkyPortal(cl_entity_t *skyPortal)
 {
 	ref_viewpass_t rvp;
+	const float skyFov = skyPortal->curstate.fuser2;
+	const float skyScale = skyPortal->curstate.scale;
+
 	GL_DebugGroupPush(__FUNCTION__);
 	R_PushRefState();
 
@@ -391,21 +394,19 @@ void R_DrawSkyPortal(cl_entity_t *skyPortal)
 		rvp.viewport[i] = RI->view.port[i];
 	}
 
-	if (skyPortal->curstate.scale)
+	if (skyScale > 0.0f)
 	{
-		// TODO: use world->mins and world->maxs instead ?
-		Vector centre = (worldmodel->mins + worldmodel->maxs) * 0.5f;
-		Vector diff = centre - rvp.vieworigin;
-		float scale = skyPortal->curstate.scale / 100.0f;
-		rvp.vieworigin = skyPortal->curstate.origin + (-scale * diff);
+		float scale = 1.0f / skyScale;
+		rvp.vieworigin = RI->view.origin * scale;
+		rvp.vieworigin += skyPortal->curstate.origin;
 	}
 	else {
 		rvp.vieworigin = skyPortal->curstate.origin;
 	}
 	
-	if (skyPortal->curstate.fuser2)
+	if (skyFov)
 	{
-		rvp.fov_x = skyPortal->curstate.fuser2;
+		rvp.fov_x = skyFov;
 		rvp.fov_y = V_CalcFov(RI->view.fov_x, rvp.viewport[2], rvp.viewport[3]);
 	}
 	else {
@@ -413,7 +414,6 @@ void R_DrawSkyPortal(cl_entity_t *skyPortal)
 		rvp.fov_y = RI->view.fov_y;
 	}
 
-	
 	r_stats.c_sky_passes++;
 	R_RenderScene(&rvp, (RefParams)rvp.flags);
 	R_PopRefState();
