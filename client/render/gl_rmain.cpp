@@ -954,9 +954,9 @@ void R_RenderScene( const ref_viewpass_t *rvp, RefParams params )
 	R_BuildViewPassHierarchy();
 	R_SetupViewCache( rvp );
 
+	R_CheckSkyPortal(tr.sky_camera);
 	R_RenderSubview(); // prepare subview frames
 	R_RenderShadowmaps(); // draw all the shadowmaps
-	R_CheckSkyPortal(tr.sky_camera);
 
 	R_SetupGLstate();
 	R_Clear( ~0 );
