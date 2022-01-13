@@ -13,23 +13,25 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include	"extdll.h"
-#include  "util.h"
-#include	"cbase.h"
-#include	"saverestore.h"
-#include	"client.h"
-#include  "nodes.h"
-#include	"decals.h"
-#include	"gamerules.h"
-#include	"game.h"
-#include	"com_model.h"
-#include	"movelist.h"
-#include	"xash3d_features.h"
-#include  "render_api.h"
-#include	"physic.h"
-#include  "triangleapi.h"
-#include  "pm_defs.h"
-#include  "player.h"
+#include "extdll.h"
+#include "util.h"
+#include "cbase.h"
+#include "saverestore.h"
+#include "client.h"
+#include "nodes.h"
+#include "decals.h"
+#include "gamerules.h"
+#include "game.h"
+#include "com_model.h"
+#include "studio.h"
+#include "movelist.h"
+#include "xash3d_features.h"
+#include "render_api.h"
+#include "physic.h"
+#include "triangleapi.h"
+#include "pm_defs.h"
+#include "player.h"
+#include "sv_materials.h"
 
 #define MOVE_EPSILON	0.01f
 #define MAX_CLIP_PLANES	5
@@ -269,6 +271,39 @@ void PrepWorldFrame( void )
 	WorldPhysic->EndFrame();
 }
 
+void SV_ProcessModelData(model_t *mod, qboolean create, const byte *buffer)
+{
+	CRC32_t ulCrc;
+
+	// g-cont. probably this is redundant :-)
+	if (!IS_DEDICATED_SERVER())
+		return;
+
+	if (FBitSet(mod->flags, MODEL_WORLD))
+		SV_ProcessWorldData(mod, create, buffer);
+
+	if (mod->type == mod_studio)
+	{
+		if (create)
+		{
+			studiohdr_t *src = (studiohdr_t *)buffer;
+			CRC32_INIT(&ulCrc);
+			CRC32_PROCESS_BUFFER(&ulCrc, (byte *)buffer, src->length);
+			mod->modelCRC = CRC32_FINAL(ulCrc);
+		}
+		else
+		{
+			// release collision mesh
+			if (mod->bodymesh != NULL)
+			{
+				mod->bodymesh->CMeshDesc::~CMeshDesc();
+				Mem_Free(mod->bodymesh);
+				mod->bodymesh = NULL;
+			}
+		}
+	}
+}
+
 //
 // Xash3D physics interface
 //
@@ -300,7 +335,8 @@ static physics_interface_t gPhysicsInterface =
 	NULL,
 #endif
 	SV_RestoreDecal,
-	PM_PlayerTouch
+	PM_PlayerTouch,
+	SV_ProcessModelData
 };
 
 int Server_GetPhysicsInterface( int iVersion, server_physics_api_t *pfuncsFromEngine, physics_interface_t *pFunctionTable )

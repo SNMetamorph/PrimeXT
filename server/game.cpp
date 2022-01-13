@@ -18,6 +18,7 @@
 #include "game.h"
 #include "cbase.h"
 #include "client.h"
+#include "sv_materials.h"
 
 cvar_t	displaysoundlist = {"displaysoundlist","0"};
 
@@ -944,9 +945,13 @@ void GameDLLInit( void )
 	SERVER_COMMAND( "exec skill.cfg\n" );
 
 	WorldPhysic->InitPhysic();	// initialize physic world
+	LinkUserMessages();			// yes in the Xash3D we can register messages here
 
-	// Yes in the Xash3D we can register messages here
-	LinkUserMessages();
+	if (IS_DEDICATED_SERVER())
+	{
+		COM_InitMatdef();
+		SV_InitMaterials();
+	}
 }
 
 void GameDLLShutdown( void )
