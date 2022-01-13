@@ -87,12 +87,13 @@ static void GL_PrintStats( int params )
 		R_Speeds_Printf( "Total GLSL shaders %3i", num_glsl_programs - 1 );
 		break;
 	case 3:
-		Q_snprintf( r_speeds_msg, sizeof( r_speeds_msg ), 
-			"%3i mirrors\n%3i portals\n%3i screens\n%3i shadow passes\n%3i screencopy\n%3i occluded",
+		Q_snprintf(r_speeds_msg, sizeof(r_speeds_msg),
+			"%3i mirrors\n%3i portals\n%3i screens\n%3i shadow passes\n%3i 3dsky passes\n%3i screencopy\n%3i occluded",
 			r_stats.c_mirror_passes,
 			r_stats.c_portal_passes,
 			r_stats.c_screen_passes,
-			r_stats.c_shadow_passes, 
+			r_stats.c_shadow_passes,
+			r_stats.c_sky_passes,
 			r_stats.c_screen_copy, 
 			r_stats.c_occlusion_culled 
 		);
@@ -109,7 +110,7 @@ static void GL_PrintStats( int params )
 		break;	
 	case 5: {
 		// draw hierarchy map of recursion calls
-		int totalPasses = r_stats.c_mirror_passes + r_stats.c_screen_passes + r_stats.c_portal_passes;
+		int totalPasses = r_stats.c_mirror_passes + r_stats.c_screen_passes + r_stats.c_portal_passes + r_stats.c_sky_passes;
 		R_Speeds_Printf("total %3i subview passes\n", totalPasses);
 		R_Speeds_Printf("%s", r_depth_msg);
 		break;

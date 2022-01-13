@@ -327,9 +327,8 @@ void R_DrawSkyBox( void )
 	bool	drawSun = true;
 	float	fogDenstity = tr.fogDensity;
 	word	hSkyShader = 0;
-	int	i;
 
-	if( !FBitSet( RI->view.flags, RF_SKYVISIBLE ))
+	if (!FBitSet( RI->view.flags, RF_SKYVISIBLE ) || tr.ignore_2d_skybox)
 		return;
 
 	GL_DebugGroupPush(__FUNCTION__);
@@ -359,7 +358,7 @@ void R_DrawSkyBox( void )
 		else hSkyShader = tr.skyboxEnv[type];
 	}
 
-	for( i = 0; i < 6; i++ )
+	for (int i = 0; i < 6; i++)
 	{
 		if( RI->view.skyMins[0][i] >= RI->view.skyMaxs[0][i] || RI->view.skyMins[1][i] >= RI->view.skyMaxs[1][i] )
 			continue;
@@ -370,4 +369,85 @@ void R_DrawSkyBox( void )
 	GL_ClipPlane( true );
 	GL_DepthMask( GL_TRUE );
 	GL_DebugGroupPop();
+}
+
+void R_DrawSkyPortal(cl_entity_t *skyPortal)
+{
+	ref_viewpass_t rvp;
+	GL_DebugGroupPush(__FUNCTION__);
+	R_PushRefState();
+
+	rvp.flags = RI->params | RP_SKYPORTALVIEW;
+	ClearBits(rvp.flags, RP_CLIPPLANE);
+	rvp.viewentity = 0;
+	rvp.vieworigin = RI->view.origin;
+	rvp.viewangles = RI->view.angles + skyPortal->curstate.angles; // angle offset
+
+	RI->view.frustum.DisablePlane(FRUSTUM_FAR);
+	RI->view.frustum.DisablePlane(FRUSTUM_NEAR);
+	RI->view.pvspoint = skyPortal->curstate.origin;
+
+	for (int i = 0; i < ARRAYSIZE(RI->view.port); ++i) {
+		rvp.viewport[i] = RI->view.port[i];
+	}
+
+	if (skyPortal->curstate.scale)
+	{
+		// TODO: use world->mins and world->maxs instead ?
+		Vector centre = (worldmodel->mins + worldmodel->maxs) * 0.5f;
+		Vector diff = centre - rvp.vieworigin;
+		float scale = skyPortal->curstate.scale / 100.0f;
+		rvp.vieworigin = skyPortal->curstate.origin + (-scale * diff);
+	}
+	else {
+		rvp.vieworigin = skyPortal->curstate.origin;
+	}
+	
+	if (skyPortal->curstate.fuser2)
+	{
+		rvp.fov_x = skyPortal->curstate.fuser2;
+		rvp.fov_y = V_CalcFov(RI->view.fov_x, rvp.viewport[2], rvp.viewport[3]);
+	}
+	else {
+		rvp.fov_x = RI->view.fov_x;
+		rvp.fov_y = RI->view.fov_y;
+	}
+
+	
+	r_stats.c_sky_passes++;
+	R_RenderScene(&rvp, (RefParams)rvp.flags);
+	R_PopRefState();
+	GL_DebugGroupPop();
+}
+
+void R_CheckSkyPortal(cl_entity_t *skyPortal)
+{
+	tr.ignore_2d_skybox = false;
+
+	if (tr.sky_camera == NULL)
+		return;
+
+	if (!CVAR_TO_BOOL(r_allow_3dsky))
+		return;
+
+	if (FBitSet(RI->params, RP_DRAW_OVERVIEW))
+		return;
+
+	// don't allow recursive 3d sky
+	if (FBitSet(RI->params, RP_SKYPORTALVIEW))
+		return;
+
+	if (FBitSet(RI->params, RP_MIRRORVIEW))
+		tr.modelorg = RI->view.pvspoint;
+	else 
+		tr.modelorg = RI->view.origin;
+
+	RI->currententity = GET_ENTITY(0);
+	RI->currentmodel = RI->currententity->model;
+
+	if (FBitSet(RI->view.flags, RF_SKYVISIBLE))
+	{
+		R_DrawSkyPortal(skyPortal);
+		tr.ignore_2d_skybox = true;
+	}
 }

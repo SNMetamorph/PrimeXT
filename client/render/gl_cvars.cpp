@@ -53,6 +53,7 @@ cvar_t *r_dof_debug;
 cvar_t *r_allow_mirrors;
 cvar_t *r_allow_portals;
 cvar_t *r_allow_screens;
+cvar_t *r_allow_3dsky;
 cvar_t *cv_renderer;
 cvar_t *cv_brdf;
 cvar_t *cv_bump;
@@ -184,6 +185,7 @@ void R_InitializeConVars()
 	r_allow_mirrors = CVAR_REGISTER("gl_allow_mirrors", "1", FCVAR_ARCHIVE);
 	r_allow_portals = CVAR_REGISTER("gl_allow_portals", "1", FCVAR_ARCHIVE);
 	r_allow_screens = CVAR_REGISTER("gl_allow_screens", "1", FCVAR_ARCHIVE);
+	r_allow_3dsky = CVAR_REGISTER("gl_allow_3dsky", "1", FCVAR_ARCHIVE);
 	r_studio_decals = CVAR_REGISTER("r_studio_decals", "32", FCVAR_ARCHIVE);
 	cv_show_tbn = CVAR_REGISTER("gl_show_basis", "0", FCVAR_ARCHIVE);
 	cv_brdf = CVAR_REGISTER("r_lighting_brdf", "0", FCVAR_ARCHIVE);

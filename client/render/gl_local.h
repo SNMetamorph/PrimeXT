@@ -107,16 +107,17 @@ enum RefParams
 	RP_DRAW_OVERVIEW	= BIT(4),	// dev_overview is active, draw orthogonal projection
 	RP_MERGE_PVS		= BIT(5),	// merge PVS with previous pass
 	RP_SKYVIEW			= BIT(6),	// render skyonly
-	RP_PORTALVIEW		= BIT(7),	// view through portal
-	RP_SCREENVIEW		= BIT(8),	// view through screen
-	RP_SHADOWVIEW		= BIT(9),	// view through light
-	RP_NOSHADOWS		= BIT(10),	// disable shadows for this pass
-	RP_WATERPASS		= BIT(11),	// it's mirorring plane for water surface
-	RP_NOGRASS			= BIT(12),	// don't draw grass
-	RP_DEFERREDSCENE	= BIT(13),	// render scene into geometry buffer
-	RP_DEFERREDLIGHT	= BIT(14),	// render scene into low-res lightmap
-	RP_THIRDPERSON		= BIT(15),	// camera is thirdperson
-	RP_FORCE_NOPLAYER	= BIT(16)	// ignore player drawing in some special cases
+	RP_SKYPORTALVIEW	= BIT(7),	// view through env_sky camera
+	RP_PORTALVIEW		= BIT(8),	// view through portal
+	RP_SCREENVIEW		= BIT(9),	// view through screen
+	RP_SHADOWVIEW		= BIT(10),	// view through light
+	RP_NOSHADOWS		= BIT(11),	// disable shadows for this pass
+	RP_WATERPASS		= BIT(12),	// it's mirorring plane for water surface
+	RP_NOGRASS			= BIT(13),	// don't draw grass
+	RP_DEFERREDSCENE	= BIT(14),	// render scene into geometry buffer
+	RP_DEFERREDLIGHT	= BIT(15),	// render scene into low-res lightmap
+	RP_THIRDPERSON		= BIT(16),	// camera is thirdperson
+	RP_FORCE_NOPLAYER	= BIT(17)	// ignore player drawing in some special cases
 };
 
 inline RefParams operator|(RefParams a, RefParams b)
@@ -589,8 +590,9 @@ typedef struct
 	float		fogSkyDensity;
 
 	// sky params
-	//
-	Vector		sky_normal;	// sky vector
+	bool		ignore_2d_skybox;	// we already draw 3d skybox, so don't overwrite it in current pass
+	cl_entity_t *sky_camera;
+	Vector		sky_normal;		// sky vector
 	Vector		sky_ambient;	// sky ambient color
 
 	// global ambient\direct factors
@@ -663,6 +665,7 @@ typedef struct
 	unsigned int	c_portal_passes;
 	unsigned int	c_screen_passes;
 	unsigned int	c_shadow_passes;
+	unsigned int	c_sky_passes;
 
 	unsigned int	c_worldlights;
 	unsigned int	c_occlusion_culled;	// culled by occlusion query
@@ -954,6 +957,7 @@ void R_InitDefaultLights( void );
 //
 void R_AddSkyBoxSurface( msurface_t *fa );
 void R_DrawSkyBox( void );
+void R_CheckSkyPortal(cl_entity_t *skyPortal);
 
 //
 // gl_postprocess.cpp
