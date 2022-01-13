@@ -242,6 +242,7 @@ void R_ClearScene( void )
 
 	memset( &r_stats, 0, sizeof( r_stats ));
 
+	tr.sky_camera = nullptr;
 	tr.local_client_added = false;
 	tr.num_draw_entities = 0;
 	tr.cached_state.Purge(); // invalidate cache
@@ -498,16 +499,22 @@ R_AddEntity
 */
 qboolean R_AddEntity( struct cl_entity_s *clent, int entityType )
 {
-	if( !CVAR_TO_BOOL( r_drawentities ))
+	if (!CVAR_TO_BOOL( r_drawentities ))
 		return false; // not allow to drawing
 
-	if( !clent || !clent->model )
+	if (!clent || !clent->model)
 		return false; // if set to invisible, skip
 
-	if( clent->curstate.effects & EF_NODRAW )
+	if (clent->curstate.effects & EF_NODRAW)
 		return false; // done
 
-	if( entityType == ET_PLAYER && RP_LOCALCLIENT( clent ))
+	if (clent->curstate.effects & EF_SKYCAMERA)
+	{
+		tr.sky_camera = clent;
+		return true; // env_sky entity
+	}
+
+	if (entityType == ET_PLAYER && RP_LOCALCLIENT( clent ))
 	{
 		if( tr.local_client_added )
 			return false; // already present in list
@@ -517,7 +524,7 @@ qboolean R_AddEntity( struct cl_entity_s *clent, int entityType )
 	if (R_HandleLightEntity(clent))
 		return true;
 
-	if( clent->curstate.effects & EF_SCREENMOVIE )
+	if (clent->curstate.effects & EF_SCREENMOVIE)
 	{
 		// update cin sound properly
 		R_UpdateCinSound( clent );

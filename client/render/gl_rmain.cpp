@@ -62,6 +62,8 @@ const char *R_GetNameForView( void )
 		Q_strncat(passName, "mirror ", sizeof(passName));
 	if (FBitSet(RI->params, RP_ENVVIEW))
 		Q_strncat(passName, "cubemap ", sizeof(passName));
+	if (FBitSet(RI->params, RP_SKYPORTALVIEW))
+		Q_strncat(passName, "3d_sky ", sizeof(passName));
 	if (FBitSet(RI->params, RP_SKYVIEW))
 		Q_strncat(passName, "skybox ", sizeof(passName));
 	if (FBitSet(RI->params, RP_PORTALVIEW))
@@ -952,11 +954,9 @@ void R_RenderScene( const ref_viewpass_t *rvp, RefParams params )
 	R_BuildViewPassHierarchy();
 	R_SetupViewCache( rvp );
 
-	// prepare subview frames
-	R_RenderSubview();
-
-	// draw all the shadowmaps
-	R_RenderShadowmaps();
+	R_RenderSubview(); // prepare subview frames
+	R_RenderShadowmaps(); // draw all the shadowmaps
+	R_CheckSkyPortal(tr.sky_camera);
 
 	R_SetupGLstate();
 	R_Clear( ~0 );
