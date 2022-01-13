@@ -1573,7 +1573,7 @@
 @PointClass base(Targetname, Angles) iconsprite("sprites/fgd/env_sky.spr") size(-16 -16 -16, 16 16 16) = env_sky : "3D Skybox"
 [
 	fov(integer) : "Field of View"
-	scale(string) : "Scale of Skybox" : "1"
+	scale(string) : "Scale (default 1:16)" : "16"
 	spawnflags(flags) =
 	[
 		1: "Start Off" : 0

@@ -3040,6 +3040,7 @@ public:
 	void Spawn( void );
 	void KeyValue( KeyValueData *pkvd );
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+	inline void SetFovAngle(float angle) { pev->fuser2 = angle; }
 };
 
 LINK_ENTITY_TO_CLASS( env_sky, CEnvSky );
@@ -3048,7 +3049,7 @@ void CEnvSky :: KeyValue( KeyValueData *pkvd )
 {
 	if( FStrEq( pkvd->szKeyName, "fov" ))
 	{
-		pev->fuser2 = Q_atof( pkvd->szValue );
+		SetFovAngle(Q_atof( pkvd->szValue ));
 		pkvd->fHandled = TRUE;
 	}
 	else CPointEntity::KeyValue( pkvd );
