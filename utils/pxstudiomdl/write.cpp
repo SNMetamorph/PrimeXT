@@ -971,7 +971,7 @@ void WriteModel( void )
 
 		CopyStringTruncate( pmodel[i].name, g_model[i]->name, sizeof( pmodel[0].name ));
 		normmap.SetSize(g_model[i]->norm.Count());
-		normimap.SetSize(g_model[i]->vert.Count());
+		normimap.SetSize(g_model[i]->norm.Count());
 
 		// remap normals to be sorted by skin reference
 		for (j = 0; j < g_model[i]->nummesh; j++)
