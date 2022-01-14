@@ -39,6 +39,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"../../game_shared" # should be first because mathlib.h also locates in ../common
 	"../../engine"
 	"../../common"
+	"../../public"
 	"../common"
 )
 

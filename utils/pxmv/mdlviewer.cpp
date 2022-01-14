@@ -29,6 +29,7 @@
 #include "FileAssociation.h"
 #include "stringlib.h"
 #include "app_info.h"
+#include "build.h"
 
 MDLViewer *g_MDLViewer = 0;
 static char recentFiles[8][256] = { "", "", "", "", "", "", "", "" };
@@ -651,6 +652,11 @@ int main( int argc, char *argv[] )
 	//
 	mx_setcwd (mx::getApplicationPath ());
 	atexit( Sys_CloseLog );
+
+#if XASH_WIN32 == 1
+	// HOTFIX hide console window
+	ShowWindow(GetConsoleWindow(), SW_HIDE);
+#endif
 
 	char cmdline[1024] = "";
 	if (argc > 1)
