@@ -43,9 +43,9 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'My Site',
+        title: 'PrimeXT Docs',
         logo: {
-          alt: 'My Site Logo',
+          alt: 'PrimeXT Logo',
           src: 'img/logo.svg',
         },
         items: [
@@ -79,16 +79,16 @@ const config = {
             title: 'Community',
             items: [
               {
-                label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/docusaurus',
+                label: 'GitHub',
+                href: 'https://github.com/SNMetamorph/PrimeXT',
               },
               {
                 label: 'Discord',
-                href: 'https://discordapp.com/invite/docusaurus',
+                href: 'https://discord.gg/BxQUMUescJ',
               },
               {
-                label: 'Twitter',
-                href: 'https://twitter.com/docusaurus',
+                label: 'VKontakte',
+                href: 'https://vk.com/xash3d.modding',
               },
             ],
           },
@@ -96,17 +96,17 @@ const config = {
             title: 'More',
             items: [
               {
-                label: 'Blog',
-                to: '/blog',
+                label: 'HLFX Topic',
+                href: 'https://hlfx.ru/forum/showthread.php?s=&threadid=5371',
               },
               {
-                label: 'GitHub',
-                href: 'https://github.com/facebook/docusaurus',
+                label: 'Xash3D FWGS GitHub',
+                href: 'https://github.com/FWGS/xash3d-fwgs',
               },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} PrimeXT, Inc. Built with Docusaurus.`,
       },
       prism: {
         theme: lightCodeTheme,
