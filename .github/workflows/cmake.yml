@@ -136,7 +136,7 @@ jobs:
           mkdir publish/devkit
           cp -r build/bin/* publish/bin
           cp -r game_dir/* publish/
-          zip -r build.zip publish/*
+          cd publish && zip -r build.zip ./* && cd ..
 
       - name: Create release
         id: create_release
