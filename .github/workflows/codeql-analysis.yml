@@ -60,7 +60,7 @@ jobs:
 
     - name: Build
       # Execute the build.  You can specify a specific target with "--target <NAME>"
-      run: cmake --build ${{github.workspace}}/build --config ${{matrix.conf}}
+      run: cmake --build ${{github.workspace}}/build --config Debug
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
