@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2002, Valve LLC, All rights reserved. ============
+//========= Copyright ï¿½ 1996-2002, Valve LLC, All rights reserved. ============
 //
 // Purpose: 
 //
@@ -22,8 +22,7 @@
 #include "gl_cvars.h"
 #include "gl_rpart.h"
 #include "flashlight.h"
-
-#define DLLEXPORT __declspec( dllexport )
+#include "exportdef.h"
 
 void Game_AddObjects( void );
 
