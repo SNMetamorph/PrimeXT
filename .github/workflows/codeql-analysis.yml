@@ -55,12 +55,13 @@ jobs:
       # and build directories, but this is only available with CMake 3.13 and higher.
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
       run: |
-       cmake -E make_directory ${{github.workspace}}/build
-       cmake $GITHUB_WORKSPACE -DBUILD_UTILS=OFF -DENABLE_PHYSX=OFF
+       cmake -E make_directory ./build
+       cmake -S . -B ./build -DBUILD_UTILS=OFF -DENABLE_PHYSX=OFF
 
     - name: Build
       # Execute the build.  You can specify a specific target with "--target <NAME>"
-      run: cmake --build ${{github.workspace}}/build --config Debug
+      run: cmake --build . --config Debug
 
     - name: Perform CodeQL Analysis
+      working-directory: build
       uses: github/codeql-action/analyze@v1
