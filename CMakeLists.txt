@@ -42,6 +42,16 @@ if(NOT BUILD_SERVER AND NOT BUILD_CLIENT)
 	message(FATAL_ERROR "Nothing to build, check build configuration!")
 endif()
 
+# these should be BEFORE any add_library/add_executable calls
+if(NOT MSVC)
+	#add_compile_options(-Wempty-body) # GCC/Clang flag
+	add_compile_options(-Wreturn-type) # GCC/Clang flag
+	add_compile_options(-Wno-invalid-offsetof)
+	add_compile_options(-Wno-conversion-null)
+else()
+	add_definitions(-D_CRT_SILENCE_NONCONFORMING_TGMATH_H)
+endif()
+
 if(BUILD_CLIENT)
 	add_subdirectory(client)
 endif()
@@ -52,13 +62,6 @@ endif()
 
 if(BUILD_UTILS)
 	add_subdirectory(utils)
-endif()
-
-if(NOT MSVC)
-	#add_compile_options(-Wempty-body) # GCC/Clang flag
-	add_compile_options(-Wreturn-type) # GCC/Clang flag
-else()
-	add_definitions(-D_CRT_SILENCE_NONCONFORMING_TGMATH_H)
 endif()
 
 # set build output directory

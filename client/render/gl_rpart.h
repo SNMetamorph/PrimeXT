@@ -60,7 +60,7 @@ public:
 	bool		Evaluate( float gravity );
 };
 
-typedef enum
+enum
 {
 	NORMAL_IGNORE = 0,
 	NORMAL_OFFSET,
