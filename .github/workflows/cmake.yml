@@ -131,12 +131,12 @@ jobs:
         
       - name: Prepare artifacts
         run: |
-          mkdir publish\
-          mkdir publish\bin
-          mkdir publish\devkit
-          move build\${{env.BUILD_TYPE}}\* publish\
-          move game_dir\* publish\
-          powershell Compress-Archive -Path publish\* build.zip
+          mkdir publish/
+          mkdir publish/bin
+          mkdir publish/devkit
+          cp -r build/${{env.BUILD_TYPE}}/* publish/
+          cp -r game_dir/* publish/
+          zip -r build.zip publish/*
 
       - name: Create release
         id: create_release
