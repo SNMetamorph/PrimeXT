@@ -48,7 +48,7 @@ GNU General Public License for more details.
 #define MAX_LIGHTMAPS		256			// Xash3D supports up to 256 lightmaps
 #define MAX_DLIGHTS 		64			// per one frame. unsigned int limit
 #define MAX_ENGINE_DLIGHTS 	32
-#define MAX_LIGHTCACHE			2048			// unique models with instanced vertex lighting
+#define MAX_LIGHTCACHE			8196	// unique models with instanced vertex lighting, TODO make growable
 #define MAX_SHADOWS				MAX_DLIGHTS
 #define MAX_SUBVIEW_TEXTURES	64			// total depth
 #define MAX_FRAMEBUFFERS		MAX_SUBVIEW_TEXTURES
