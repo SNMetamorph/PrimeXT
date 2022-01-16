@@ -32,7 +32,7 @@ typedef unsigned long	dword;
 typedef unsigned int	uint;
 typedef unsigned long	ulong;
 
-#if XASH_WIN32
+#ifdef _WIN32
 typedef unsigned char	uint8;
 typedef signed char		int8;
 typedef __int16		int16;

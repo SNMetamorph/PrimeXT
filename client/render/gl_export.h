@@ -17,7 +17,7 @@ GNU General Public License for more details.
 #define GL_EXPORT_H
 
 // not needed since we have GL_GetProcAddress in RenderAPI
-#if XASH_WIN32
+#ifdef _WIN32
 #include <windows.h>
 #else
 #define CALLBACK
