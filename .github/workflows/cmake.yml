@@ -65,7 +65,7 @@ jobs:
           draft: false
           prerelease: true
           allowUpdates: true
-          removeArtifacts: true
+          removeArtifacts: false
           replacesArtifacts: true
           
       - name: Upload artifacts
@@ -149,7 +149,7 @@ jobs:
           draft: false
           prerelease: true
           allowUpdates: true
-          removeArtifacts: true
+          removeArtifacts: false
           replacesArtifacts: true
           
       - name: Upload artifacts
