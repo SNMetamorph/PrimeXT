@@ -689,7 +689,7 @@ void CBaseTank :: TrackTarget( void )
 
 		// No line of sight, don't track
 		// g-cont. but allow tracking for non-armed tanks because this may be it's projectors or security cameras
-		if( tr.flFraction == 1.0 || tr.pHit == pTarget->edict() || m_bulletType == BULLET_NONE )
+		if( tr.flFraction == 1.0 || tr.pHit == pTarget->edict() || m_bulletType == TANK_BULLET_NONE )
 		{
 			lineOfSight = TRUE;
 

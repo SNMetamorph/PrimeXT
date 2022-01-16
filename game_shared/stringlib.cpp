@@ -327,7 +327,7 @@ vec3_t Q_atov(const char *str)
 
 vec2_t Q_atov2(const char *str)
 {
-	vec2_t vec = g_vecZero;
+	vec2_t vec = Vector2D( 0.0f, 0.0f );
 	Q_atovn(str, &vec.x, 2);
 	return vec;
 }

@@ -104,7 +104,7 @@ mspriteframe_t *CSpriteModelRenderer :: GetSpriteFrame( int frame, float yaw )
 		}
 		pspriteframe = pspritegroup->frames[i];
 	}
-	else if( m_pSpriteHeader->frames[frame].type == FRAME_ANGLED )
+	else if( m_pSpriteHeader->frames[frame].type == SPR_ANGLED )
 	{
 		int angleframe = (int)(Q_rint(( RI->view.angles[YAW] - yaw + 45.0f ) / 360 * 8 ) - 4) & 7;
 
