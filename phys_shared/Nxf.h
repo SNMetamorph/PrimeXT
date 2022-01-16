@@ -12,7 +12,7 @@
 */
 
 #include "Nx.h"
-#include "Vector.h"
+#include "vector.h"
 
 #ifndef NX_FOUNDATION_USE_F64
 //#include "Nx4F32.h"

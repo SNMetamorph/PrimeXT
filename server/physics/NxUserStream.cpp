@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifdef USE_PHYSICS_ENGINE
+
 #include "extdll.h"
 #include "util.h"
 #include "Nxf.h"
@@ -318,3 +320,4 @@ void MemoryReadBuffer :: readBuffer( void *dest, NxU32 size ) const
 	buffer += size;
 }
 
+#endif // USE_PHYSICS_ENGINE
