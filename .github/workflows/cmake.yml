@@ -134,7 +134,7 @@ jobs:
           mkdir publish/
           mkdir publish/bin
           mkdir publish/devkit
-          cp -r build/${{env.BUILD_TYPE}}/* publish/
+          cp -r build/bin/* publish/bin
           cp -r game_dir/* publish/
           zip -r build.zip publish/*
 
