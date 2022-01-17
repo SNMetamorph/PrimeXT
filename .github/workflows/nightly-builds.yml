@@ -136,7 +136,8 @@ jobs:
           mkdir publish/primext
           mkdir publish/primext/bin
           mkdir publish/primext/devkit
-          cp -r build/* publish/
+          cp -r build/primext/* publish/primext/
+          cp build/primext_run publish/
           cp -r game_dir/* publish/primext
           cd publish && zip -r build.zip ./* && mv build.zip ../ && cd ..
 
