@@ -4349,7 +4349,7 @@ void CTriggerChangeParent :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller,
 		{
 			if( m_iszNewParent != NULL_STRING )
 				pTarget->SetParent( m_iszNewParent );
-			else pTarget->SetParent( NULL );
+			else pTarget->SetParent( 0 );
 		}
 	}
 }
