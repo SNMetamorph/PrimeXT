@@ -51,11 +51,9 @@ if(MSVC)
 endif()
 
 if(MSVC)
-	target_link_libraries(${PROJECT_NAME} PRIVATE
-		"user32"
-		"shell32"
-	)
+	target_link_libraries(${PROJECT_NAME} PRIVATE "user32" "shell32")
 else()
+	target_link_libraries(${PROJECT_NAME} PRIVATE "dl")
 endif()
 
 # set static compiler runtime
