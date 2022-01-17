@@ -14,6 +14,7 @@
 #pragma once
 #endif
 
+#include <stddef.h>
 #include <string.h>
 #include <malloc.h>
 #include <new>
@@ -23,9 +24,9 @@
 #define stackfree( _p )		0
 
 template <typename T>
-inline T AlignValue( T val, unsigned alignment )
+inline T AlignValue( T val, size_t alignment )
 {
-	return (T)( ( (unsigned int)val + alignment - 1 ) & ~( alignment - 1 ) );
+	return (T)( ( (size_t)val + alignment - 1 ) & ~( alignment - 1 ) );
 }
 
 //-----------------------------------------------------------------------------
