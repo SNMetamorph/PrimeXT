@@ -3180,7 +3180,7 @@ bool CBasePlayer::EnterVehicle( CBaseEntity *pVehicle )
 //-----------------------------------------------------------------------------
 void CBasePlayer::LeaveVehicle( const Vector &vecExitPoint, const Vector &vecExitAngles )
 {
-	SetParent( NULL );
+	SetParent( 0 );
 
 	g_engfuncs.pfnSetPhysicsKeyValue( edict(), "incar", "0" );
 	m_iInCarState = VEHICLE_INACTIVE;

@@ -726,7 +726,7 @@ void CBasePlayerItem::AttachToPlayer ( CBasePlayer *pPlayer )
 	pev->owner = pPlayer->edict();
 	pev->nextthink = gpGlobals->time + .1;
 
-	SetParent( NULL );
+	SetParent( 0 );
 	SetTouch( NULL );
 	SetThink( NULL );
 }

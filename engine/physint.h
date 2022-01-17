@@ -16,9 +16,11 @@ GNU General Public License for more details.
 #ifndef PHYSINT_H
 #define PHYSINT_H
 
+#include <stddef.h>
+
 #define SV_PHYSICS_INTERFACE_VERSION	6
 
-#define STRUCT_FROM_LINK( l, t, m )	((t *)((byte *)l - (int)&(((t *)0)->m)))
+#define STRUCT_FROM_LINK( l, t, m )	((t *)((byte *)l - (size_t)&(((t *)0)->m)))
 #define EDICT_FROM_AREA( l )		STRUCT_FROM_LINK( l, edict_t, area )
 #define FACET_FROM_AREA( l )		STRUCT_FROM_LINK( l, mfacet_t, area )
 

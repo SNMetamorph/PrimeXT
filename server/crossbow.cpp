@@ -101,7 +101,7 @@ int CCrossbowBolt :: Classify ( void )
 void CCrossbowBolt :: OnChangeLevel( void )
 {
 	// NOTE: clear parent. We can't moving it properly for non-global entities
-	SetParent( NULL );
+	SetParent( 0 );
 }
 
 void CCrossbowBolt :: TransferReset( void )

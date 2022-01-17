@@ -682,7 +682,7 @@ public:
 			return;
 
 		ClearBits( m_iFlags, MF_TEMP_PARENT );
-		SetParent( NULL );
+		SetParent( 0 );
 	}
 
 	inline modtype_t GetModelType( void )
