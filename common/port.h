@@ -42,15 +42,16 @@ GNU General Public License for more details.
 	#define FALSE false
 	#define TRUE true
 	#define _alloca alloca
-	#define MAX_PATH PATH_MAX
 	typedef int BOOL;
 
 	#if XASH_POSIX
 		#include <unistd.h>
 		#include <dlfcn.h>
+		#include <linux/limits.h>
 
 		#define PATH_SPLITTER "/"
 		#define HAVE_DUP
+		#define MAX_PATH PATH_MAX
 
 		#define O_BINARY    0
 		#define O_TEXT      0
