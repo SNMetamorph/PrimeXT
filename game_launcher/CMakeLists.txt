@@ -1,56 +1,25 @@
 cmake_minimum_required(VERSION 2.8.12)
 
-project(pxrad)
+project(game_launcher)
 include(CompilerRuntime)
 
 # find and add source files
 list(APPEND DIR_SOURCES
-	"../common/basefs.cpp"
-	"../common/bspfile.cpp"
-	"../common/cmdlib.cpp"
-	"../common/conprint.cpp"
-	"../common/crc32.cpp"
-	"../common/ddstex.cpp"
-	"../common/filesystem.cpp"
-	"../common/gamma.cpp"
-	"../common/imagelib.cpp"
-	"../common/mathlib.cpp"
-	"../common/polylib.cpp"
-	"../common/scriplib.cpp"
-	"../common/stringlib.cpp"
-	"../common/threads.cpp"
-	"../common/virtualfs.cpp"
-	"../common/wadfile.cpp"
-	"../common/zone.cpp"
-	"alias.cpp"
-	"ambientcube.cpp"
-	"dirtmap.cpp"
-	"facepos.cpp"
-	"lerp.cpp"
-	"lightmap.cpp"
-	"model_lightmaps.cpp"
-	"qrad.cpp"
-	"raytracer.cpp"
-	"studio.cpp"
-	"textures.cpp"
-	"trace.cpp"
-	"vertexlight.cpp"
+	"game.cpp"
 )
 
-add_executable(${PROJECT_NAME} ${DIR_SOURCES})
+# add resource file
+if(MSVC)
+	list(APPEND DIR_SOURCES
+		"game.rc"
+	)
+endif()
+
+add_executable(${PROJECT_NAME} WIN32 ${DIR_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"."
 	"../common"
-	"../../public"
-	"../../common"
-	"${CMAKE_SOURCE_DIR}/external/squish"
-)
-
-target_compile_definitions(${PROJECT_NAME} PRIVATE 
-	IGNORE_SEARCH_IN_WADS=1
-	ALLOW_WADS_IN_PACKS=1
-	HLRAD_PSAVIOR=1
-	PXBSP_COMPILING=1 # to avoid header hell because of another mathlib implementation
+	"../public"
 )
 
 if(NOT MSVC)
@@ -81,27 +50,48 @@ if(MSVC)
 	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release>:/O1>) # enable optimizing to minimize size
 endif()
 
-# TODO make squish crossplatform, also compile it instead using pre-made .lib
-find_library(LIBRARY_SQUISH
-	NAMES squish
-	HINTS "${CMAKE_SOURCE_DIR}/external/squish"
-)
-
 if(MSVC)
-	target_link_libraries(${PROJECT_NAME} PRIVATE
-		"${LIBRARY_SQUISH}"
-	)
+	target_link_libraries(${PROJECT_NAME} PRIVATE "user32" "shell32")
 else()
+	target_link_libraries(${PROJECT_NAME} PRIVATE "dl")
 endif()
 
 # set static compiler runtime
 set_compiler_runtime(${PROJECT_NAME} STATIC)
 
+# set build output directory
+set(DIR_LAUNCHER_OUTPUT 
+	${CMAKE_BINARY_DIR}/$<CONFIG>/
+)
+
+if(MSVC)
+	set_target_properties(game_launcher PROPERTIES 
+		ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${DIR_LAUNCHER_OUTPUT}
+		ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${DIR_LAUNCHER_OUTPUT}
+		LIBRARY_OUTPUT_DIRECTORY_DEBUG ${DIR_LAUNCHER_OUTPUT}
+		LIBRARY_OUTPUT_DIRECTORY_RELEASE ${DIR_LAUNCHER_OUTPUT}
+		RUNTIME_OUTPUT_DIRECTORY_DEBUG ${DIR_LAUNCHER_OUTPUT}
+		RUNTIME_OUTPUT_DIRECTORY_RELEASE ${DIR_LAUNCHER_OUTPUT}
+	)
+	set(LAUNCHER_OUTPUT_NAME "${GAMEDIR}")
+else()
+	set_target_properties(game_launcher PROPERTIES 
+		ARCHIVE_OUTPUT_DIRECTORY ${DIR_LAUNCHER_OUTPUT}
+		LIBRARY_OUTPUT_DIRECTORY ${DIR_LAUNCHER_OUTPUT}
+		RUNTIME_OUTPUT_DIRECTORY ${DIR_LAUNCHER_OUTPUT}
+	)
+	set(LAUNCHER_OUTPUT_NAME "${GAMEDIR}_run")
+endif()
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+	OUTPUT_NAME "${LAUNCHER_OUTPUT_NAME}"
+	PREFIX "")
+
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)
 
 install( TARGETS ${PROJECT_NAME}
-	DESTINATION "${GAMEDIR}/${UTILS_INSTALL_DIR}/"
+	DESTINATION "${GAMEDIR}/"
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
 	    GROUP_READ GROUP_EXECUTE
 		WORLD_READ WORLD_EXECUTE 

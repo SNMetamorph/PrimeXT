@@ -16,6 +16,8 @@
 #define EXTDLL_H
 
 #include "port.h"
+#include "mathlib.h"
+
 //
 // Global header file for extension DLLs
 //
@@ -31,32 +33,11 @@
 #pragma warning(disable : 4514)		// unreferenced inline function removed
 #pragma warning(disable : 4100)		// unreferenced formal parameter
 
-// Prevent tons of unused windows definitions
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOWINRES
-#define NOSERVICE
-#define NOMCX
-#define NOIME
-#define NOMINMAX
-#include <windows.h>
-#else // _WIN32
-#define FALSE 0
-#define TRUE (!FALSE)
-typedef unsigned long ULONG;
-typedef unsigned char BYTE;
-typedef int BOOL;
+#if XASH_WIN32 != 1
 #include <limits.h>
 #include <stdarg.h>
 #include <ctype.h>
-#ifndef Q_min
-#define Q_min(a,b)  (((a) < (b)) ? (a) : (b))
 #endif
-#ifndef Q_max
-#define Q_max(a,b)  (((a) > (b)) ? (a) : (b))
-//#define _vsnprintf(a,b,c,d) vsnprintf(a,b,c,d)
-#endif
-#endif //_WIN32
 
 // Misc C-runtime library headers
 #include <stdio.h>
@@ -67,7 +48,7 @@ typedef int BOOL;
 // Header file containing definition of globalvars_t and entvars_t
 typedef int	string_t;		// from engine's pr_comp.h;
 
-#ifdef _WIN32
+#if XASH_WIN32 == 1
 typedef HMODULE dllhandle_t;
 #else
 typedef void* dllhandle_t;

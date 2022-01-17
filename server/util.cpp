@@ -3027,13 +3027,6 @@ int UTIL_LoadSoundPreset( int iString )
 	return iString;
 }
 
-#ifndef _WIN32
-// TODO: platform switch, add ability to disable libdl at all
-#include <dlfcn.h>
-#define LoadLibrary(x) dlopen(x,RTLD_NOW)
-#define FreeLibrary dlclose
-#define GetProcAddress dlsym
-#endif
 /*
 ====================
 Sys LoadGameDLL

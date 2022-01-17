@@ -25,7 +25,7 @@ extern "C" {
 
 cl_entity_t *v_intermission_spot;
 float v_idlescale;
-static int pause = 0;
+static bool is_paused = false;
 
 cvar_t	*cl_bobcycle;
 cvar_t	*cl_bob;
@@ -1000,8 +1000,9 @@ void V_CalcRefdef( struct ref_params_s *pparams )
 	// store a local copy in case we need to calc firstperson later
 	memcpy( &tr.viewparams, pparams, sizeof( ref_params_t ));
 
-	pause = pparams->paused;
-	if( pause ) return;
+	is_paused = pparams->paused != 0;
+	if( is_paused ) 
+		return;
 
 	if( pparams->intermission )
 	{
