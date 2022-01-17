@@ -41,6 +41,7 @@ add_executable(${PROJECT_NAME} ${DIR_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"."
 	"../common"
+	"../../public"
 	"../../common"
 	"${CMAKE_SOURCE_DIR}/external/squish"
 )

@@ -28,6 +28,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"../../game_shared" # should be first because mathlib.h also locates i
 	"../../engine"
 	"../../server"
+	"../../public"
 	"../../common"
 	"../common"
 )

@@ -22,7 +22,7 @@ GNU General Public License for more details.
 
 #if XASH_WIN32 == 1
 #include <shellapi.h> // CommandLineToArgvW
-#define ENGINE_LIBRARY "xash.dll"
+#define ENGINE_LIBRARY "xash." OS_LIB_EXT
 #else
 #define ENGINE_LIBRARY "libxash." OS_LIB_EXT
 #endif

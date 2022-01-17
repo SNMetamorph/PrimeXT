@@ -29,12 +29,14 @@ GNU General Public License for more details.
 		#define OPEN_COMMAND "xdg-open"
 	#endif
 	#define OS_LIB_PREFIX "lib"
-	#define VGUI_SUPPORT_DLL "libvgui_support." OS_LIB_EXT
 
 	// Windows-specific
+	#define _cdecl
 	#define __cdecl
 	#define __stdcall
-	#define _inline	static inline
+	#define _inline	inline
+	#define __single_inheritance
+	#define _forceinline inline __attribute__((always_inline))
 	#define FORCEINLINE inline __attribute__((always_inline))
 
 	#if XASH_POSIX
@@ -77,15 +79,11 @@ GNU General Public License for more details.
 	#define read _read
 	#define alloca _alloca
 
-	#define HSPRITE WINAPI_HSPRITE
-		#define WIN32_LEAN_AND_MEAN
-		#include <winsock2.h>
-		#include <windows.h>
-	#undef HSPRITE
+	#define NOMINMAX
+	#include <windows.h>
 
 	#define OS_LIB_PREFIX ""
 	#define OS_LIB_EXT "dll"
-	#define VGUI_SUPPORT_DLL "../vgui_support." OS_LIB_EXT
 	#define HAVE_DUP
 #endif //WIN32
 
@@ -96,9 +94,5 @@ GNU General Public License for more details.
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-
-#if defined XASH_SDL && !defined REF_DLL
-#include <SDL.h>
-#endif
 
 #endif // PORT_H
