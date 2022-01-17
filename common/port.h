@@ -43,6 +43,8 @@ GNU General Public License for more details.
 	#define TRUE true
 	#define _alloca alloca
 	typedef int BOOL;
+	typedef unsigned long ULONG;
+	typedef unsigned char BYTE;
 
 	#if XASH_POSIX
 		#include <unistd.h>
@@ -86,6 +88,11 @@ GNU General Public License for more details.
 	#define read _read
 	#define alloca _alloca
 
+	#define WIN32_LEAN_AND_MEAN
+	#define NOWINRES
+	#define NOSERVICE
+	#define NOMCX
+	#define NOIME
 	#define NOMINMAX
 	#include <windows.h>
 
