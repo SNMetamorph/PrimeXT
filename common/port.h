@@ -36,8 +36,14 @@ GNU General Public License for more details.
 	#define __stdcall
 	#define _inline	inline
 	#define __single_inheritance
+	#define RESTRICT
 	#define _forceinline inline __attribute__((always_inline))
 	#define FORCEINLINE inline __attribute__((always_inline))
+	#define FALSE false
+	#define TRUE true
+	#define _alloca alloca
+	#define MAX_PATH PATH_MAX
+	typedef bool BOOL;
 
 	#if XASH_POSIX
 		#include <unistd.h>

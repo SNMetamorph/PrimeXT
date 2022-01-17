@@ -22,13 +22,11 @@ GNU General Public License for more details.
 
 #if XASH_WIN32 == 1
 #include <shellapi.h> // CommandLineToArgvW
-#define ENGINE_LIBRARY "xash." OS_LIB_EXT
-#else
-#define ENGINE_LIBRARY "libxash." OS_LIB_EXT
 #endif
 
 #define GAMEDIR	"primext"
 #define DISABLE_MENU_CHANGEGAME
+#define ENGINE_LIBRARY OS_LIB_PREFIX "xash." OS_LIB_EXT
 
 #if XASH_WIN32 == 1
 extern "C"
