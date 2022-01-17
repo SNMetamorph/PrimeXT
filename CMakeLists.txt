@@ -21,6 +21,7 @@ endif()
 option(BUILD_CLIENT "Build client library" ON)
 option(BUILD_SERVER "Build server library" ON)
 option(BUILD_UTILS "Build developer utilities (map/models compilers, etc.)" ON)
+option(BUILD_GAME_LAUNCHER "Build game launcher executable" ON)
 option(ENABLE_PHYSX "Enable PhysX support (works only on Windows at the moment)" ON)
 set(GAMEDIR "primext" CACHE STRING "Game directory name")
 set(SERVER_INSTALL_DIR "bin" CACHE STRING "Server library path relative to game directory")
@@ -64,9 +65,13 @@ if(BUILD_UTILS)
 	add_subdirectory(utils)
 endif()
 
+if(BUILD_GAME_LAUNCHER)
+	add_subdirectory(game_launcher)
+endif()
+
 # set build output directory
 set(DIR_COMMON_OUTPUT 
-	${CMAKE_BINARY_DIR}/$<CONFIG>/bin/
+	${CMAKE_BINARY_DIR}/$<CONFIG>/${GAMEDIR}/bin/
 )
 
 message(STATUS "Common binaries output directory: ${DIR_COMMON_OUTPUT}")

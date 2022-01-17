@@ -48,10 +48,11 @@ jobs:
       - name: Prepare artifacts
         run: |
           mkdir publish\
-          mkdir publish\bin
-          mkdir publish\devkit
+          mkdir publish\primext
+          mkdir publish\primext\bin
+          mkdir publish\primext\devkit
           move build\${{env.BUILD_TYPE}}\* publish\
-          move game_dir\* publish\
+          move game_dir\* publish\primext
           powershell Compress-Archive -Path publish\* build.zip
 
       - name: Create release
@@ -132,10 +133,11 @@ jobs:
       - name: Prepare artifacts
         run: |
           mkdir publish/
-          mkdir publish/bin
-          mkdir publish/devkit
-          cp -r build/bin/* publish/bin
-          cp -r game_dir/* publish/
+          mkdir publish/primext
+          mkdir publish/primext/bin
+          mkdir publish/primext/devkit
+          cp -r build/* publish/
+          cp -r game_dir/* publish/primext
           cd publish && zip -r build.zip ./* && mv build.zip ../ && cd ..
 
       - name: Create release
