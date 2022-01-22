@@ -2458,13 +2458,14 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 
 	TraceMesh	trm;	// a name like Doom3 :-)
 
-	trm.SetTraceMesh( pMesh, pHeadNode );
+	trm.SetTraceMesh( pMesh, pHeadNode, pTouch->pev->modelindex );
 	trm.SetupTrace( start, mins, maxs, end, tr );
 
 	if( trm.DoTrace())
 	{
 		if( tr->fraction < 1.0f || tr->startsolid )
 			tr->ent = pTouch->edict();
+		tr->surf = trm.GetLastHitSurface();
 	}
 }
 

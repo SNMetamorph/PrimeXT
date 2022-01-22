@@ -70,7 +70,11 @@ typedef struct gametrace_s
 	float	flPlaneDist;
 	vec3_t	vecPlaneNormal;		// surface normal at impact
 	edict_t	*pHit;			// entity the surface is on
-	int	iHitgroup;		// 0 == generic, non zero is specific body part
+	union
+	{
+		int		iHitgroup;// 0 == generic, non zero is specific body part
+		struct mstudiomat_s *pMat;	// env_static hitting surface
+	};
 } TraceResult;
 
 // CD audio status

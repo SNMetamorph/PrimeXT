@@ -138,7 +138,7 @@ bool CMeshDesc :: InitMeshBuild( const char *debug_name, int numTriangles )
 	return true;
 }
 
-bool CMeshDesc :: AddMeshTrinagle( const Vector triangle[3] )
+bool CMeshDesc :: AddMeshTrinagle( const Vector triangle[3], int skinref )
 {
 	int	i;
 
@@ -278,6 +278,7 @@ bool CMeshDesc :: AddMeshTrinagle( const Vector triangle[3] )
 
 	facet->planes = new mplane_t[numplanes];
 	facet->numplanes = numplanes;
+	facet->skinref = skinref;
 
 	for( i = 0; i < facet->numplanes; i++ )
 	{

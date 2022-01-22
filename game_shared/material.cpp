@@ -52,8 +52,8 @@ matdef_t *COM_CreateDefaultMatdef( void )
 	mat.impact_decal = COM_CopyString( "shot" ); // default Paranoia decal
 	mat.impact_sounds[0] = COM_CopyString( "debris/concrete1.wav" );
 	mat.impact_sounds[1] = COM_CopyString( "debris/concrete2.wav" );
-	mat.impact_sounds[0] = COM_CopyString( "debris/concrete3.wav" );
-	mat.impact_sounds[1] = COM_CopyString( "debris/concrete4.wav" );
+	mat.impact_sounds[2] = COM_CopyString( "debris/concrete3.wav" );
+	mat.impact_sounds[3] = COM_CopyString( "debris/concrete4.wav" );
 	mat.step_sounds[0] = COM_CopyString( "player/pl_beton1.wav" );
 	mat.step_sounds[1] = COM_CopyString( "player/pl_beton2.wav" );
 	mat.step_sounds[2] = COM_CopyString( "player/pl_beton3.wav" );
