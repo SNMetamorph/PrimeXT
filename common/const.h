@@ -814,7 +814,11 @@ typedef struct trace_s
 	vec3_t	endpos;		// final position
 	plane_t	plane;		// surface normal at impact
 	edict_t	*ent;		// entity the surface is on
-	int	hitgroup;		// 0 == generic, non zero is specific body part
+	union
+	{
+		int	hitgroup; // 0 == generic, non zero is specific body part
+		struct mstudiomat_s *surf;	// valid only if ent->v.solid == SOLID_CUSTOM!
+	};
 } trace_t;
 
 #endif//CONST_H

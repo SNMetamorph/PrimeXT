@@ -18,6 +18,9 @@ GNU General Public License for more details.
 
 #include "vector.h"
 #include "meshdesc.h"
+#include "com_model.h"
+#include "physint.h"
+#include "studio.h"
 
 #define FRAC_EPSILON	(1.0f / 32.0f)
 
@@ -31,20 +34,30 @@ private:
 	float		m_flRealFraction;
 	bool		bIsTestPosition;
 	areanode_t	*areanodes;	// AABB for static meshes
+	model_t		*m_pModel;
 	mmesh_t		*mesh;		// mesh to trace
-	trace_t  		*trace;		// output
-	int		checkcount;	// debug
+	trace_t  	*trace;		// output
+	mstudiomaterial_t *material;
+	int			checkcount;	// debug
+	int			m_iBody;
+	int			m_iSkin;
+
 public:
-	TraceMesh() { mesh = NULL; }
-	~TraceMesh() {}
+	TraceMesh();
+	~TraceMesh();
 
 	// trace stuff
-	void SetTraceMesh( mmesh_t *cached_mesh, areanode_t *tree ) { mesh = cached_mesh; areanodes = tree; }
+	void SetTraceMesh(mmesh_t *cached_mesh, areanode_t *tree, int modelIndex);
 	void SetupTrace( const Vector &start, const Vector &mins, const Vector &maxs, const Vector &end, trace_t *trace ); 
 	void ClipBoxToFacet( mfacet_t	*facet );
 	void TestBoxInFacet( mfacet_t	*facet );
 	void ClipToLinks( areanode_t *node );
 	bool DoTrace( void );
+
+	// for tracing studiomodel mesh materials
+	mstudiomaterial_t *GetLastHitSurface(void) { return material; }
+	mstudiomaterial_t *GetMaterialForFacet(const mfacet_t *facet);
+	mstudiotexture_t *GetTextureForFacet(const mfacet_t *facet);
 };
 
 #endif//TRACEMESH_H

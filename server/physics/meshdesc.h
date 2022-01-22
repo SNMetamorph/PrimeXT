@@ -16,6 +16,11 @@ GNU General Public License for more details.
 #ifndef MESHDESC_H
 #define MESHDESC_H
 
+#include "const.h"
+#include "vector.h"
+#include "com_model.h"
+#include "physint.h"
+
 #define AREA_NODES			32
 #define AREA_DEPTH			4
 
@@ -23,8 +28,9 @@ typedef struct
 {
 	Vector	mins, maxs;
 	link_t	area;				// linked to a division node or leaf
-	int	numplanes;
-	mplane_t	*planes;
+	int		skinref;			// pointer to texture for special effects
+	int		numplanes;
+	mplane_t *planes;
 } mfacet_t;
 
 typedef struct
@@ -61,7 +67,7 @@ public:
 
 	// mesh construction
 	bool InitMeshBuild( const char *debug_name, int numTrinagles ); 
-	bool AddMeshTrinagle( const Vector triangle[3] );
+	bool AddMeshTrinagle( const Vector triangle[3], int skinref = 0 );
 	bool FinishMeshBuild( void );
 	void FreeMesh( void );
 

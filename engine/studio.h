@@ -19,6 +19,7 @@
 #include "shader.h"
 #include "color24.h"
 #include "lightlimits.h"
+#include "mathlib.h"
 
 /*
 ==============================================================================

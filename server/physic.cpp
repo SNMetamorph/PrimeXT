@@ -141,12 +141,20 @@ void SV_ClipPMoveToEntity( physent_t *pe, const float *start, float *mins, float
 	WorldPhysic->SweepTest( pTouch, start, mins, maxs, end, &trace );
 
 	// convert trace_t into pmtrace_t
-	memcpy( tr, &trace, 48 );
+	tr->allsolid = trace.allsolid;
+	tr->startsolid = trace.startsolid;
+	tr->inopen = trace.inopen;
+	tr->inwater = trace.inwater;
+	tr->fraction = trace.fraction;
+	tr->endpos = trace.endpos;
+	tr->plane.dist = trace.plane.dist;
+	tr->plane.normal = trace.plane.normal;
 	tr->hitgroup = trace.hitgroup;
 
-	if( trace.ent != NULL )
+	if (trace.ent)
 		tr->ent = pe->info;
-	else tr->ent = -1;
+	else 
+		tr->ent = -1;
 }
 
 int SV_RestoreDecal(decallist_t *entry, edict_t *pEdict, qboolean adjacent)

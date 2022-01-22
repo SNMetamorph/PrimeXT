@@ -13,17 +13,38 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include	"extdll.h"
-#include  "util.h"
-#include	"cbase.h"
-#include	"saverestore.h"
-#include	"client.h"
-#include  "nodes.h"
-#include	"decals.h"
-#include	"gamerules.h"
-#include	"game.h"
-#include	"com_model.h"
-#include  "tracemesh.h"
+#include "tracemesh.h"
+#include "extdll.h"
+#include "util.h"
+#include "cbase.h"
+#include "saverestore.h"
+#include "client.h"
+#include "nodes.h"
+#include "decals.h"
+#include "gamerules.h"
+#include "game.h"
+#include "com_model.h"
+
+TraceMesh::TraceMesh() 
+{ 
+	mesh = nullptr;
+	trace = nullptr;
+	areanodes = nullptr;
+	m_pModel = nullptr;
+	material = nullptr;
+	m_iBody = m_iSkin = 0; // TODO trace mesh should consider body/skin number for valid material tracing
+}
+
+TraceMesh::~TraceMesh()
+{
+}
+
+void TraceMesh::SetTraceMesh(mmesh_t *cached_mesh, areanode_t *tree, int modelIndex)
+{ 
+	mesh = cached_mesh;
+	areanodes = tree;
+	m_pModel = (model_t *)MODEL_HANDLE(modelIndex);
+}
 
 void TraceMesh :: SetupTrace( const Vector &start, const Vector &mins, const Vector &maxs, const Vector &end, trace_t *tr )
 {
@@ -33,6 +54,7 @@ void TraceMesh :: SetupTrace( const Vector &start, const Vector &mins, const Vec
 
 	m_vecStart = start;
 	m_vecEnd = end;
+	material = nullptr;
 
 	// build a bounding box of the entire move
 	ClearBounds( m_vecAbsMins, m_vecAbsMaxs );
@@ -181,6 +203,7 @@ void TraceMesh :: ClipBoxToFacet( mfacet_t *facet )
 			trace->plane.normal = clipplane->normal;
 			trace->plane.dist = clipplane->dist;
 			trace->fraction = enterfrac - DIST_EPSILON * distfrac;
+			material = GetMaterialForFacet(facet); // material was hit
 		}
 	}
 }
@@ -319,4 +342,30 @@ bool TraceMesh :: DoTrace( void )
 	else VectorLerp( m_vecStart, trace->fraction, m_vecEnd, trace->endpos );
 
 	return (trace->fraction != 1.0f);
+}
+
+mstudiomaterial_t *TraceMesh::GetMaterialForFacet(const mfacet_t *facet)
+{
+	if (!m_pModel) 
+		return NULL;
+
+	mstudiomaterial_t *materials = m_pModel->materials;
+	studiohdr_t *phdr = (studiohdr_t *)m_pModel->cache.data;
+	if (!materials || !phdr) 
+		return NULL;
+
+	short *pskinref = (short *)((byte *)phdr + phdr->skinindex);
+	if (m_iSkin > 0 && m_iSkin < phdr->numskinfamilies)
+		pskinref += (m_iSkin * phdr->numskinref);
+
+	return &materials[pskinref[facet->skinref]];
+}
+
+mstudiotexture_t *TraceMesh::GetTextureForFacet(const mfacet_t *facet)
+{
+	mstudiomaterial_t *material = GetMaterialForFacet(facet);
+
+	if (material)
+		return material->pSource;
+	return NULL;
 }

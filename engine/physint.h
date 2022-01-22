@@ -16,7 +16,7 @@ GNU General Public License for more details.
 #ifndef PHYSINT_H
 #define PHYSINT_H
 
-#include <stddef.h>
+#include "eiface.h"
 
 #define SV_PHYSICS_INTERFACE_VERSION	6
 

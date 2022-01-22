@@ -157,68 +157,57 @@ const char *DamageDecal( CBaseEntity *pEntity, int bitsDamageType )
 
 void DecalGunshot( TraceResult *pTrace, int iBulletType )
 {
-	// Is the entity valid
-	if ( !UTIL_IsValidEntity( pTrace->pHit ) )
+	if (!UTIL_IsValidEntity(pTrace->pHit))
 		return;
 
-	entvars_t *pev = VARS(pTrace->pHit);
-
-	if( UTIL_GetModelType( pev->modelindex ) == mod_brush )
+	CBaseEntity *pTarget = CBaseEntity::Instance(pTrace->pHit);
+	if (UTIL_GetModelType(pTarget->pev->modelindex) == mod_brush)
 	{
-		CBaseEntity *pEntity = NULL;
-		// Decal the wall with a gunshot
-		if ( !FNullEnt(pTrace->pHit) )
-			pEntity = CBaseEntity::Instance(pTrace->pHit);
-
-		switch( iBulletType )
+		switch (iBulletType)
 		{
-		case BULLET_PLAYER_9MM:
-		case BULLET_MONSTER_9MM:
-		case BULLET_PLAYER_MP5:
-		case BULLET_MONSTER_MP5:
-		case BULLET_PLAYER_BUCKSHOT:
-		case BULLET_PLAYER_357:
-		default:
-			// smoke and decal
-			UTIL_GunshotDecalTrace( pTrace, DamageDecal( pEntity, DMG_BULLET ) );
-			break;
-		case BULLET_MONSTER_12MM:
-			// smoke and decal
-			UTIL_GunshotDecalTrace( pTrace, DamageDecal( pEntity, DMG_BULLET ) );
-			break;
-		case BULLET_PLAYER_CROWBAR:
-			// wall decal
-			UTIL_TraceCustomDecal( pTrace, DamageDecal( pEntity, DMG_CLUB ) );
-			break;
+			case BULLET_PLAYER_9MM:
+			case BULLET_MONSTER_9MM:
+			case BULLET_PLAYER_MP5:
+			case BULLET_MONSTER_MP5:
+			case BULLET_PLAYER_BUCKSHOT:
+			case BULLET_PLAYER_357:
+			default:
+				// smoke and decal
+				UTIL_GunshotDecalTrace(pTrace, DamageDecal(pTarget, DMG_BULLET));
+				break;
+			case BULLET_MONSTER_12MM:
+				// smoke and decal
+				UTIL_GunshotDecalTrace(pTrace, DamageDecal(pTarget, DMG_BULLET));
+				break;
+			case BULLET_PLAYER_CROWBAR:
+				// wall decal
+				UTIL_TraceCustomDecal(pTrace, DamageDecal(pTarget, DMG_CLUB));
+				break;
 		}
 	}
-	else if( pev->flags & ( FL_MONSTER|FL_CLIENT ) || pev->solid == SOLID_CUSTOM )
+	else if (pTarget->pev->flags & (FL_MONSTER | FL_CLIENT) || pTarget->pev->solid == SOLID_CUSTOM) // is monster/player/studiomodel entity
 	{
-		CBaseEntity *pEntity = NULL;
 		// Decal the model with a blood
-		if ( !FNullEnt(pTrace->pHit) )
-			pEntity = CBaseEntity::Instance(pTrace->pHit);
-
-		switch( iBulletType )
+		switch (iBulletType)
 		{
-		case BULLET_PLAYER_9MM:
-		case BULLET_MONSTER_9MM:
-		case BULLET_PLAYER_MP5:
-		case BULLET_MONSTER_MP5:
-		case BULLET_PLAYER_BUCKSHOT:
-		case BULLET_PLAYER_357:
-		default:
-			// smoke and decal
-			UTIL_StudioDecalTrace( pTrace, DamageDecal( pEntity, DMG_BULLET ));
-			break;
-		case BULLET_MONSTER_12MM:
-			// smoke and decal
-			UTIL_StudioDecalTrace( pTrace, DamageDecal( pEntity, DMG_BULLET ));
-			break;
-		case BULLET_PLAYER_CROWBAR:
-			// wall decal
-			UTIL_StudioDecalTrace( pTrace, DamageDecal( pEntity, DMG_CLUB ));
-			break;
+			case BULLET_PLAYER_9MM:
+			case BULLET_MONSTER_9MM:
+			case BULLET_PLAYER_MP5:
+			case BULLET_MONSTER_MP5:
+			case BULLET_PLAYER_BUCKSHOT:
+			case BULLET_PLAYER_357:
+			default:
+				// smoke and decal
+				UTIL_StudioDecalTrace(pTrace, DamageDecal(pTarget, DMG_BULLET));
+				break;
+			case BULLET_MONSTER_12MM:
+				// smoke and decal
+				UTIL_StudioDecalTrace(pTrace, DamageDecal(pTarget, DMG_BULLET));
+				break;
+			case BULLET_PLAYER_CROWBAR:
+				// wall decal
+				UTIL_StudioDecalTrace(pTrace, DamageDecal(pTarget, DMG_CLUB));
+				break;
 		}
 	}
 }
