@@ -1,10 +1,10 @@
-﻿{
+{
   "version": 2,
   "configurePresets": [
     {
       "name": "windows-x86-debug",
       "displayName": "Windows x86 Debug",
-      "description": "",
+      "description": " ",
       "generator": "Visual Studio 16 2019",
       "binaryDir": "${sourceDir}/build",
       "architecture": {
@@ -19,7 +19,7 @@
     {
       "name": "windows-x86",
       "displayName": "Windows x86 Release",
-      "description": "",
+      "description": " ",
       "generator": "Visual Studio 16 2019",
       "binaryDir": "${sourceDir}/build",
       "architecture": {
@@ -34,7 +34,7 @@
     {
       "name": "windows-x64-debug",
       "displayName": "Windows x64 Debug",
-      "description": "",
+      "description": " ",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "architecture": {
@@ -49,7 +49,7 @@
     {
       "name": "windows-x64",
       "displayName": "Windows x64 Release",
-      "description": "",
+      "description": " ",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "architecture": {

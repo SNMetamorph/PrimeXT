@@ -26,7 +26,7 @@ option(ENABLE_PHYSX "Enable PhysX support (works only on Windows at the moment)"
 set(GAMEDIR "primext" CACHE STRING "Game directory name")
 set(SERVER_INSTALL_DIR "bin" CACHE STRING "Server library path relative to game directory")
 set(CLIENT_INSTALL_DIR "bin" CACHE STRING "Client library path relative to game directory")
-set(UTILS_INSTALL_DIR "utils" CACHE STRING "Utilities path relative to game directory")
+set(UTILS_INSTALL_DIR "devkit" CACHE STRING "Utilities path relative to game directory")
 set(SERVER_LIBRARY_NAME "server" CACHE STRING "Library name for Linux/MacOS/Windows")
 
 # Xash3D FWGS Library Naming Scheme compliance
