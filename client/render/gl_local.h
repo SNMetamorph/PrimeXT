@@ -289,7 +289,7 @@ typedef struct
 	float		refractScale;		// refraction scale for mirrors, windows, water
 	float		aberrationScale;		// chromatic abberation
 	float		reliefScale;		// relief-mapping
-	struct matdef_s	*effects;			// hit, impact, particle effects etc
+	struct matdef_t	*effects;			// hit, impact, particle effects etc
 
 	char		name[64];
 	unsigned short	dt_texturenum;		// detail texture load directly from material specific

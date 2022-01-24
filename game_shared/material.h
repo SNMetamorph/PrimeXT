@@ -15,10 +15,18 @@ GNU General Public License for more details.
 
 #ifndef MATERIAL_H
 #define MATERIAL_H
-#include "vector.h"
-#define MAX_MAT_SOUNDS	8
 
-typedef struct matdef_s
+#include "com_model.h"
+#include "vector.h"
+
+#define MAX_MAT_SOUNDS	8
+#define IMPACT_NONE		0
+#define IMPACT_BODY		1
+#define IMPACT_MATERIAL	2
+
+#define COM_CopyString( s )	_COM_CopyString( s, __FILE__, __LINE__ )
+
+struct matdef_t
 {
 	char		name[32];	// material name
 	const char	*impact_decal;
@@ -27,16 +35,11 @@ typedef struct matdef_s
 	const char	*step_sounds[MAX_MAT_SOUNDS+1];
 	char		detailName[64];			// shared detail texture for materials
 	vec2_t		detailScale;			// detail texture scales x, y
-} matdef_t;
+};
 
-#define IMPACT_NONE		0
-#define IMPACT_BODY		1
-#define IMPACT_MATERIAL	2
-
-#define COM_CopyString( s )	_COM_CopyString( s, __FILE__, __LINE__ )
-matdef_t *COM_MatDefFromSurface( struct msurface_s *surf, const Vector &vecPoint );
-matdef_t *COM_FindMatdef( const char *name );
-matdef_t *COM_DefaultMatdef( void );
-void COM_InitMatdef( void );
+matdef_t *COM_MatDefFromSurface(msurface_t *surf, const Vector &pointOnSurf);
+matdef_t *COM_FindMatdef(const char *name);
+matdef_t *COM_DefaultMatdef();
+void COM_InitMatdef();
 
 #endif//MATERIAL_H

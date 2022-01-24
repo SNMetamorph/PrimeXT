@@ -16,11 +16,12 @@
 #pragma once
 #include "const.h"
 #include "com_model.h"
+#include "material.h"
 
 // material system
 typedef struct
 {
-	struct matdef_s	*effects;	// hit, impact, particle effects etc
+	matdef_t	*effects;	// hit, impact, particle effects etc
 	char		name[64];
 } sv_matdesc_t;
 
@@ -36,7 +37,7 @@ typedef struct
 typedef struct
 {
 	char		names[MAX_LANDSCAPE_LAYERS][64];	// basenames
-	struct matdef_s	*effects[MAX_LANDSCAPE_LAYERS];	// layer settings
+	matdef_t	*effects[MAX_LANDSCAPE_LAYERS];	// layer settings
 } sv_layerMap_t;
 
 typedef struct terrain_s
