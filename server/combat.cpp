@@ -1473,7 +1473,7 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 				pEntity->TraceAttack(pevAttacker, iDamage, vecDir, &tr, DMG_BULLET | ((iDamage > 16) ? DMG_ALWAYSGIB : DMG_NEVERGIB) );
 				
 				TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-				DecalGunshot( &tr, iBulletType );
+				DecalGunshot(&tr, iBulletType, vecSrc, vecEnd);
 			} 
 			else switch(iBulletType)
 			{
@@ -1483,7 +1483,7 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 				if ( !tracer )
 				{
 					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-					DecalGunshot( &tr, iBulletType );
+					DecalGunshot(&tr, iBulletType, vecSrc, vecEnd);
 				}
 				break;
 
@@ -1492,7 +1492,7 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 				if ( !tracer )
 				{
 					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-					DecalGunshot( &tr, iBulletType );
+					DecalGunshot(&tr, iBulletType, vecSrc, vecEnd);
 				}
 				break;
 
@@ -1501,7 +1501,7 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 				if ( !tracer )
 				{
 					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-					DecalGunshot( &tr, iBulletType );
+					DecalGunshot(&tr, iBulletType, vecSrc, vecEnd);
 				}
 				break;
 
@@ -1510,7 +1510,7 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 				if ( !tracer )
 				{
 					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-					DecalGunshot( &tr, iBulletType );
+					DecalGunshot(&tr, iBulletType, vecSrc, vecEnd);
 				}
 				break;
 
@@ -1519,7 +1519,7 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 				if ( !tracer )
 				{
 					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-					DecalGunshot( &tr, iBulletType );
+					DecalGunshot(&tr, iBulletType, vecSrc, vecEnd);
 				}
 				break;
 
@@ -1528,7 +1528,7 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 				if ( !tracer )
 				{
 					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-					DecalGunshot( &tr, iBulletType );
+					DecalGunshot(&tr, iBulletType, vecSrc, vecEnd);
 				}
 				break;
 
@@ -1538,7 +1538,7 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 				if ( !tracer )
 				{
 					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-					DecalGunshot( &tr, iBulletType );
+					DecalGunshot(&tr, iBulletType, vecSrc, vecEnd);
 				}
 				break;
 			
@@ -1555,7 +1555,7 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 			}
 		}
 		// make bullet trails
-		UTIL_BubbleTrail( vecSrc, tr.vecEndPos, (flDistance * tr.flFraction) / 64.0 );
+		UTIL_BubbleTrail(vecSrc, tr.vecEndPos, (flDistance * tr.flFraction) / 64.0);
 	}
 	ApplyMultiDamage(pev, pevAttacker);
 }

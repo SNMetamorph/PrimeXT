@@ -30,6 +30,7 @@
 #include "soundent.h"
 #include "decals.h"
 #include "gamerules.h"
+#include "sv_materials.h"
 
 extern int gEvilImpulse101;
 
@@ -155,37 +156,24 @@ const char *DamageDecal( CBaseEntity *pEntity, int bitsDamageType )
 	return pEntity->DamageDecal( bitsDamageType );
 }
 
-void DecalGunshot( TraceResult *pTrace, int iBulletType )
+void DecalGunshot( TraceResult *pTrace, int iBulletType, const vec3_t &origin, const vec3_t &vecEnd)
 {
 	if (!UTIL_IsValidEntity(pTrace->pHit))
 		return;
 
 	CBaseEntity *pTarget = CBaseEntity::Instance(pTrace->pHit);
+	matdef_t *pMaterial = nullptr;
+	bool characterEntity = pTarget->pev->flags & (FL_MONSTER | FL_CLIENT); // is player/NPC
+	bool studiomodelEntity = pTarget->pev->solid == SOLID_CUSTOM;
+
 	if (UTIL_GetModelType(pTarget->pev->modelindex) == mod_brush)
 	{
-		switch (iBulletType)
-		{
-			case BULLET_PLAYER_9MM:
-			case BULLET_MONSTER_9MM:
-			case BULLET_PLAYER_MP5:
-			case BULLET_MONSTER_MP5:
-			case BULLET_PLAYER_BUCKSHOT:
-			case BULLET_PLAYER_357:
-			default:
-				// smoke and decal
-				UTIL_GunshotDecalTrace(pTrace, DamageDecal(pTarget, DMG_BULLET));
-				break;
-			case BULLET_MONSTER_12MM:
-				// smoke and decal
-				UTIL_GunshotDecalTrace(pTrace, DamageDecal(pTarget, DMG_BULLET));
-				break;
-			case BULLET_PLAYER_CROWBAR:
-				// wall decal
-				UTIL_TraceCustomDecal(pTrace, DamageDecal(pTarget, DMG_CLUB));
-				break;
-		}
+		msurface_t *surf = TRACE_SURFACE(pTrace->pHit, origin, vecEnd);
+		pMaterial = COM_MatDefFromSurface(surf, pTrace->vecEndPos);
+		if (pMaterial) 
+			UTIL_TraceCustomDecal(pTrace, pMaterial->impact_decal, RANDOM_FLOAT(0.0f, 360.0f));
 	}
-	else if (pTarget->pev->flags & (FL_MONSTER | FL_CLIENT) || pTarget->pev->solid == SOLID_CUSTOM) // is monster/player/studiomodel entity
+	else if (characterEntity || studiomodelEntity)
 	{
 		// Decal the model with a blood
 		switch (iBulletType)

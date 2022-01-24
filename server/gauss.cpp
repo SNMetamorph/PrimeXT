@@ -594,7 +594,7 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 			else
 			{
 				// tunnel
-				DecalGunshot( &tr, BULLET_MONSTER_12MM );
+				DecalGunshot(&tr, BULLET_MONSTER_12MM, vecSrc, vecDest);
 
 				// entry wall glow
 				MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos );
@@ -654,7 +654,7 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 							m_pPlayer->RadiusDamage( beam_tr.vecEndPos + vecDir * 8, pev, m_pPlayer->pev, flDamage, CLASS_NONE, DMG_BLAST );
 							CSoundEnt::InsertSound ( bits_SOUND_COMBAT, GetAbsOrigin(), NORMAL_EXPLOSION_VOLUME, 3.0 );
 
-							DecalGunshot( &beam_tr, BULLET_MONSTER_12MM );
+							DecalGunshot( &beam_tr, BULLET_MONSTER_12MM, vecSrc, vecDest);
 							nTotal += 19;
 
 							// exit wall glow

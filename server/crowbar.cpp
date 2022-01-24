@@ -171,7 +171,9 @@ void CCrowbar::PrimaryAttack( void )
 
 void CCrowbar::Smack( void )
 {
-	DecalGunshot( &m_trHit, BULLET_PLAYER_CROWBAR );
+	Vector vecSrc = m_pPlayer->GetGunPosition();
+	Vector vecEnd = vecSrc + gpGlobals->v_forward * 32;
+	DecalGunshot(&m_trHit, BULLET_PLAYER_CROWBAR, vecSrc, vecEnd);
 }
 
 void CCrowbar::SwingAgain( void )
