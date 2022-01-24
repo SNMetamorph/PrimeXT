@@ -108,7 +108,7 @@ typedef struct material_s
 	float		refractScale;		// refraction scale for mirrors, windows, water
 	float		aberrationScale;		// chromatic abberation
 	float		reliefScale;		// relief-mapping
-	struct matdef_s	*effects;			// hit, impact, particle effects etc
+	struct matdef_t	*effects;			// hit, impact, particle effects etc
 
 	// this part is world-specific params
 	struct texture_s	*pSource;			// pointer to original texture
@@ -136,7 +136,7 @@ typedef struct texture_s
 	unsigned short	fb_texturenum;	// auto-luma texturenum
 	unsigned short	dt_texturenum;	// detail-texture binding
 	material_t	*material;	// pointer to texture material
-	struct matdef_s	*effects;		// hit, impact, particle effects etc
+	struct matdef_t	*effects;		// hit, impact, particle effects etc
 	unsigned int	unused;		// reserved 
 } texture_t;
 
@@ -150,7 +150,7 @@ typedef struct
 	vec3_t		mins, maxs;
 
 	// effects per-layers for playing sounds etc
-	struct matdef_s	*effects[MAX_LANDSCAPE_LAYERS];	// hit, impact, particle effects etc
+	struct matdef_t	*effects[MAX_LANDSCAPE_LAYERS];	// hit, impact, particle effects etc
 
 	byte		*heightmap;	// terrain heightmap raw data
 	unsigned short	heightmap_width;

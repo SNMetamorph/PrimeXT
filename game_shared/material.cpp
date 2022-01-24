@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#include "material.h"
+
 #ifndef CLIENT_DLL
 #include"extdll.h"
 #include "util.h"
@@ -21,7 +23,6 @@ GNU General Public License for more details.
 #include "utils.h"
 #endif
 
-#include "material.h"
 #include "stringlib.h"
 #include "com_model.h"
 
@@ -118,13 +119,13 @@ COM_MatDefFromSurface
 safe version to get matdef_t
 =================
 */
-matdef_t *COM_MatDefFromSurface( msurface_t *surf, const Vector &vecPoint )
+matdef_t *COM_MatDefFromSurface(msurface_t *surf, const Vector &pointOnSurf)
 {
 	if( !surf || !surf->texinfo )
 		return NULL;
 
 	mtexinfo_t *tx = surf->texinfo;
-	int layerNum = COM_GetLayerIndexForPoint( tx->faceinfo, vecPoint );
+	int layerNum = COM_GetLayerIndexForPoint( tx->faceinfo, pointOnSurf);
 
 	if( layerNum != -1 && layerNum < MAX_LANDSCAPE_LAYERS )
 	{
