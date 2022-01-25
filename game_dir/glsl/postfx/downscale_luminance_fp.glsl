@@ -24,7 +24,7 @@ varying vec2		var_TexCoord;
 
 void main()
 {
-	vec4 output;
+	vec4 averaged;
 	vec4 texSample[5];
 	vec2 pixelOffset = u_ScreenSizeInv;
 
@@ -34,7 +34,7 @@ void main()
 	texSample[3] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(pixelOffset.x, -pixelOffset.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
 	texSample[4] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(-pixelOffset.x, pixelOffset.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);		
 
-	output = texSample[0] + texSample[1] + texSample[2] + texSample[3] + texSample[4];
-	output /= 5.0;
-	gl_FragColor = output;
+	averaged = texSample[0] + texSample[1] + texSample[2] + texSample[3] + texSample[4];
+	averaged /= 5.0;
+	gl_FragColor = averaged;
 }

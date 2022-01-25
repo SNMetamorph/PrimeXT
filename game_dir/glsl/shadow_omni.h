@@ -16,7 +16,6 @@ GNU General Public License for more details.
 #ifndef SHADOW_OMNI_H
 #define SHADOW_OMNI_H
 
-#extension GL_EXT_gpu_shader4 : require
 uniform samplerCubeShadow	u_ShadowMap;
 
 float depthCube( const in vec3 coord, const float scale, const float bias )
@@ -30,8 +29,9 @@ float depthCube( const in vec3 coord, const float scale, const float bias )
 float ShadowOmni( const in vec3 I, const in vec4 params )
 {
 #if defined( SHADOW_PCF2X2 ) || defined( SHADOW_PCF3X3 ) || defined( SHADOW_VOGEL_DISK )
-	vec3 forward, right, up;
-	forward = normalize( I );
+	vec3 forward = normalize(I);
+	vec3 right = vec3(0.0)
+	vec3 up = vec3(0.0);
 	MakeNormalVectors( forward, right, up );
 
 	float shadow = 0.0;

@@ -165,7 +165,7 @@ float SpecularAntialiasing(vec3 n, float roughness)
 
 LightingData ComputeLightingBRDF(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, vec4 materialInfo)
 {
-	LightingData output;
+	LightingData lighting;
 	float roughness = SmoothnessToRoughness(materialInfo.r);
 	float metalness = materialInfo.g;
 	float ambientOcclusion = materialInfo.b;
@@ -198,9 +198,9 @@ LightingData ComputeLightingBRDF(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 light
 	// scale light by NdotL
 	float NdotL = max(dot(N, L), 0.0);        
 
-	output.diffuse = (kD * albedo / M_PI) * lightColor * NdotL;
-	output.specular = kS * specular * lightColor * NdotL;
-	return output;
+	lighting.diffuse = (kD * albedo / M_PI) * lightColor * NdotL;
+	lighting.specular = kS * specular * lightColor * NdotL;
+	return lighting;
 }
 
 LightingData ComputeLighting(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, vec4 materialInfo, float smoothness)
@@ -208,18 +208,18 @@ LightingData ComputeLighting(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColo
 	float gloss = materialInfo.r;
 	float metalness = materialInfo.g;
 	float ambientOcclusion = materialInfo.b;
-	LightingData output;
+	LightingData lighting;
 	
 #if defined( APPLY_PBS )
-	output = ComputeLightingBRDF(N, V, L, albedo, lightColor, materialInfo);
-	output.diffuse = albedo * output.diffuse;
+	lighting = ComputeLightingBRDF(N, V, L, albedo, lightColor, materialInfo);
+	lighting.diffuse = albedo * lighting.diffuse;
 #else
 	float NdotL = saturate( dot( N, L ));
 	float specular = pow(max(dot(N, normalize(V + L)), 0.0), smoothness * smoothness * 256.0);
-	output.diffuse = lightColor * NdotL * albedo;
-	output.specular = lightColor * NdotL * gloss * specular;
+	lighting.diffuse = lightColor * NdotL * albedo;
+	lighting.specular = lightColor * NdotL * gloss * specular;
 #endif
-	return output;
+	return lighting;
 }
 
 #endif//LIGHTMODEL_H

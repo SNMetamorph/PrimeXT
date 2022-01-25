@@ -27,8 +27,6 @@ uniform vec4		u_TexelSize;	// shadowmap resolution
 
 #include "mathlib.h"
 
-#extension GL_EXT_gpu_shader4 : require
-
 vec3 WorldToTexel( vec3 world, int split )
 {
 	vec4 pos = u_ShadowMatrix[split] * vec4( world, 1.0 );

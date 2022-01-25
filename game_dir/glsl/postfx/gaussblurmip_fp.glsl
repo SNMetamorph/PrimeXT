@@ -43,19 +43,19 @@ void main( void )
 	tex_sample[7] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(-u_ScreenSizeInv.x, -u_ScreenSizeInv.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
 	tex_sample[8] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(u_ScreenSizeInv.x, -u_ScreenSizeInv.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);	
 	
-	vec4 output;
-	output = weight[0] * tex_sample[0];
-	output += weight[1] * (tex_sample[1] + tex_sample[2] + tex_sample[3] + tex_sample[4]);
-	output += weight[2] * (tex_sample[5] + tex_sample[6] + tex_sample[7] + tex_sample[8]);	
+	vec4 outputColor;
+	outputColor = weight[0] * tex_sample[0];
+	outputColor += weight[1] * (tex_sample[1] + tex_sample[2] + tex_sample[3] + tex_sample[4]);
+	outputColor += weight[2] * (tex_sample[5] + tex_sample[6] + tex_sample[7] + tex_sample[8]);	
 	
 	if (u_BloomFirstPass > 0) 
 	{
 		const float threshold = 0.8;
 		const float transitionSmooth = 0.7;
-		float luminance = GetLuminance(output.rgb);
-		output *= smoothstep(threshold - transitionSmooth, threshold, luminance);
-		output = clamp(output * u_RefractScale, vec4(0.0), vec4(25000.0));
+		float luminance = GetLuminance(outputColor.rgb);
+		outputColor *= smoothstep(threshold - transitionSmooth, threshold, luminance);
+		outputColor = clamp(outputColor * u_RefractScale, vec4(0.0), vec4(25000.0));
 	}
 
-	gl_FragColor = output;
+	gl_FragColor = outputColor;
 }

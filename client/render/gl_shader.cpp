@@ -629,7 +629,7 @@ static void GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum s
 	{
 		if( developer_level ) Msg( "%s", GL_PrintInfoLog( object ));
 		if( developer_level ) Msg( "Shader options:%s\n", GL_PretifyListOptions( defines ));
-		ALERT( at_error, "Couldn't compile %s\n", filename ); 
+		ALERT(at_error, "^2GL_LoadGPUShader: ^7couldn't compile \"%s\" from file \"%s\"\n", name, filename);
 		return;
 	}
 

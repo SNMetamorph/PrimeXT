@@ -61,7 +61,7 @@ vec3 TonemapMGS5(vec3 source)
 
 void main()
 {
-    vec3 output;
+    vec3 outputColor;
     vec3 source = texture2D(u_ScreenMap, var_TexCoord).rgb;
 
 #if defined( DEBUG_LUMINANCE )
@@ -69,11 +69,11 @@ void main()
     const float limit = 20.0;
     float luminance = GetLuminance(source);
     float fraction = GetGradientFraction(luminance, limit, slope);
-    output = ColorGradient(fraction);
+    outputColor = ColorGradient(fraction);
 #else
     float exposure = texture2D(u_ColorMap, vec2(0.5)).r;
-	output = TonemapMGS5(source * exposure); // tone compression with exposure
-    output = ConvertLinearToSRGB(output); // gamma-correction
+	outputColor = TonemapMGS5(source * exposure); // tone compression with exposure
+    outputColor = ConvertLinearToSRGB(outputColor); // gamma-correction
 #endif
-    gl_FragColor = vec4(output, 1.0);
+    gl_FragColor = vec4(outputColor, 1.0);
 }
