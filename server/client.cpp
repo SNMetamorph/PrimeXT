@@ -1308,7 +1308,13 @@ void CreateBaseline( int player, int eindex, struct entity_state_s *baseline, st
 		baseline->colormap		= entity->v.colormap;
 		baseline->modelindex	= entity->v.modelindex;//SV_ModelIndex(pr_strings + entity->v.model);
 		baseline->movetype		= entity->v.movetype;
-		baseline->effects		= entity->v.effects; // for correct handling "disable dynamic shadows" flag for env_static
+
+		// for correct handling EF_NOSHADOW flag for env_static
+		// do this ONLY for env_static, we shouldn't place effects value
+		// to baseline, otherwise it will cause bugs
+		if (FBitSet(entity->v.iuser1, CF_STATIC_ENTITY)) {
+			baseline->effects = entity->v.effects; 
+		}
 
 		baseline->scale		= entity->v.scale;
 		baseline->solid		= entity->v.solid;
