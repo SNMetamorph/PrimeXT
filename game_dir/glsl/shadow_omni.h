@@ -30,7 +30,7 @@ float ShadowOmni( const in vec3 I, const in vec4 params )
 {
 #if defined( SHADOW_PCF2X2 ) || defined( SHADOW_PCF3X3 ) || defined( SHADOW_VOGEL_DISK )
 	vec3 forward = normalize(I);
-	vec3 right = vec3(0.0)
+	vec3 right = vec3(0.0);
 	vec3 up = vec3(0.0);
 	MakeNormalVectors( forward, right, up );
 
