@@ -73,7 +73,6 @@ extern void EntvarsKeyvalue( entvars_t *pev, KeyValueData *pkvd );
 
 extern void PM_Move ( struct playermove_s *ppmove, int server );
 extern void PM_Init ( struct playermove_s *ppmove  );
-extern char PM_FindTextureType( char *name );
 
 extern int RunPhysicsFrame( CBaseEntity *pEntity );
 

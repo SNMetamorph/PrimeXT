@@ -206,7 +206,6 @@ extern int CL_IsDead( void );
 
 extern void PM_Init( struct playermove_s *ppmove );
 extern void PM_Move( struct playermove_s *ppmove, int server );
-extern char PM_FindTextureType( char *name );
 extern void V_CalcRefdef( struct ref_params_s *pparams );
 
 extern void CreateDecal(const Vector &p, const Vector &n, float ang, const char *sz, int flags = 0, int eIdx = 0, int mIdx = 0, bool source = true);

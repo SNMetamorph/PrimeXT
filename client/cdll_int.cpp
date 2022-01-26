@@ -101,7 +101,7 @@ void HUD_PlayerMoveInit( struct playermove_s *ppmove )
 
 char HUD_PlayerMoveTexture( char *name )
 {
-	return PM_FindTextureType( name );
+	return '\0';
 }
 
 extern "C" void DLLEXPORT HUD_PlayerMove(struct playermove_s *ppmove, int server)

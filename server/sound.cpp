@@ -23,9 +23,7 @@
 #include "player.h"
 #include "talkmonster.h"
 #include "gamerules.h"
-
-
-static char *memfgets( byte *pMemFile, int fileSize, int &filePos, char *pBuffer, int bufferSize );
+#include "material.h"
 
 
 // ==================== GENERIC AMBIENT SOUND ======================================
@@ -1268,6 +1266,54 @@ int USENTENCEG_Pick(int isentenceg, char *szfound)
 	return -1;
 }
 
+static char *memfgets(byte *pMemFile, int fileSize, int &filePos, char *pBuffer, int bufferSize)
+{
+	// Bullet-proofing
+	if (!pMemFile || !pBuffer)
+		return NULL;
+
+	if (filePos >= fileSize)
+		return NULL;
+
+	int i = filePos;
+	int last = fileSize;
+
+	// fgets always NULL terminates, so only read bufferSize-1 characters
+	if (last - filePos > (bufferSize - 1))
+		last = filePos + (bufferSize - 1);
+
+	int stop = 0;
+
+	// Stop at the next newline (inclusive) or end of buffer
+	while (i < last && !stop)
+	{
+		if (pMemFile[i] == '\n')
+			stop = 1;
+		i++;
+	}
+
+
+	// If we actually advanced the pointer, copy it over
+	if (i != filePos)
+	{
+		// We read in size bytes
+		int size = i - filePos;
+		// copy it out
+		memcpy(pBuffer, pMemFile + filePos, sizeof(byte) * size);
+
+		// If the buffer isn't full, terminate (this is always true)
+		if (size < bufferSize)
+			pBuffer[size] = 0;
+
+		// Update file pointer
+		filePos = i;
+		return pBuffer;
+	}
+
+	// No data read, bail
+	return NULL;
+}
+
 // ===================== SENTENCE GROUPS, MAIN ROUTINES ========================
 
 // Given sentence group rootname (name without number suffix),
@@ -1700,311 +1746,94 @@ void PlayLockSounds( entvars_t *pev, locksound_t *pls, int flocked, int fbutton 
 // texture name to a material type.  Play footstep sound based
 // on material type.
 
-int fTextureTypeInit = FALSE;
-
-#define CTEXTURESMAX		512			// max number of textures loaded
-
-int gcTextures = 0;
-char grgszTextureName[CTEXTURESMAX][CBTEXTURENAMEMAX];	// texture names
-char grgchTextureType[CTEXTURESMAX];						// parallel array of texture types
-
-// open materials.txt,  get size, alloc space, 
-// save in array.  Only works first time called, 
-// ignored on subsequent calls.
-
-static char *memfgets( byte *pMemFile, int fileSize, int &filePos, char *pBuffer, int bufferSize )
-{
-	// Bullet-proofing
-	if ( !pMemFile || !pBuffer )
-		return NULL;
-
-	if ( filePos >= fileSize )
-		return NULL;
-
-	int i = filePos;
-	int last = fileSize;
-
-	// fgets always NULL terminates, so only read bufferSize-1 characters
-	if ( last - filePos > (bufferSize-1) )
-		last = filePos + (bufferSize-1);
-
-	int stop = 0;
-
-	// Stop at the next newline (inclusive) or end of buffer
-	while ( i < last && !stop )
-	{
-		if ( pMemFile[i] == '\n' )
-			stop = 1;
-		i++;
-	}
-
-
-	// If we actually advanced the pointer, copy it over
-	if ( i != filePos )
-	{
-		// We read in size bytes
-		int size = i - filePos;
-		// copy it out
-		memcpy( pBuffer, pMemFile + filePos, sizeof(byte)*size );
-		
-		// If the buffer isn't full, terminate (this is always true)
-		if ( size < bufferSize )
-			pBuffer[size] = 0;
-
-		// Update file pointer
-		filePos = i;
-		return pBuffer;
-	}
-
-	// No data read, bail
-	return NULL;
-}
-
-
 void TEXTURETYPE_Init()
 {
-	char buffer[512];
-	int i, j;
-	byte *pMemFile;
-	int fileSize = 0, filePos = 0;
-
-	if (fTextureTypeInit)
-		return;
-
-	memset(&(grgszTextureName[0][0]), 0, CTEXTURESMAX * CBTEXTURENAMEMAX);
-	memset(grgchTextureType, 0, CTEXTURESMAX);
-
-	gcTextures = 0;
-	memset(buffer, 0, 512);
-
-	pMemFile = g_engfuncs.pfnLoadFileForMe( "sound/materials.txt", &fileSize );
-	if ( !pMemFile )
-		return;
-
-	// for each line in the file...
-	while (memfgets(pMemFile, fileSize, filePos, buffer, 511) != NULL && (gcTextures < CTEXTURESMAX))
-	{
-		// skip whitespace
-		i = 0;
-		while(buffer[i] && isspace(buffer[i]))
-			i++;
-		
-		if (!buffer[i])
-			continue;
-
-		// skip comment lines
-		if (buffer[i] == '/' || !isalpha(buffer[i]))
-			continue;
-
-		// get texture type
-		grgchTextureType[gcTextures] = toupper(buffer[i++]);
-
-		// skip whitespace
-		while(buffer[i] && isspace(buffer[i]))
-			i++;
-		
-		if (!buffer[i])
-			continue;
-
-		// get sentence name
-		j = i;
-		while (buffer[j] && !isspace(buffer[j]))
-			j++;
-
-		if (!buffer[j])
-			continue;
-
-		// null-terminate name and save in sentences array
-		j = Q_min (j, CBTEXTURENAMEMAX-1+i);
-		buffer[j] = 0;
-		strcpy(&(grgszTextureName[gcTextures++][0]), &(buffer[i]));
-	}
-
-	g_engfuncs.pfnFreeFile( pMemFile );
-	
-	fTextureTypeInit = TRUE;
-}
-
-// given texture name, find texture type
-// if not found, return type 'concrete'
-
-// NOTE: this routine should ONLY be called if the 
-// current texture under the player changes!
-
-char TEXTURETYPE_Find(char *name)
-{
-	// CONSIDER: pre-sort texture names and perform faster binary search here
-
-	for (int i = 0; i < gcTextures; i++)
-	{
-		if (!strnicmp(name, &(grgszTextureName[i][0]), CBTEXTURENAMEMAX-1))
-			return (grgchTextureType[i]);
-	}
-
-	return CHAR_TEX_CONCRETE;
 }
 
 // play a strike sound based on the texture that was hit by the attack traceline.  VecSrc/VecEnd are the
 // original traceline endpoints used by the attacker, iBulletType is the type of bullet that hit the texture.
 // returns volume of strike instrument (crowbar) to play
 
-float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int iBulletType)
+float TEXTURETYPE_PlaySound(TraceResult *ptr, Vector vecSrc, Vector vecEnd, int iBulletType)
 {
-// hit the world, try to play sound based on texture material type
-	
-	char chTextureType;
-	float fvol;
-	float fvolbar;
-	char szbuffer[64];
-	const char *pTextureName;
-	float rgfl1[3];
-	float rgfl2[3];
-	char *rgsz[4];
-	int cnt;
+	// hit the world, try to play sound based on texture material type
+	int impactType = IMPACT_NONE;
+	char *rgsz[MAX_MAT_SOUNDS];
 	float fattn = ATTN_NORM;
+	matdef_t *pMat = NULL;
+	float fvol, fvolbar;
+	int cnt;
 
-	if ( !g_pGameRules->PlayTextureSounds() )
-		return 0.0;
+	if (!g_pGameRules->PlayTextureSounds())
+		return 0.0f;
 
 	CBaseEntity *pEntity = CBaseEntity::Instance(ptr->pHit);
 
-	chTextureType = 0;
+	if (!pEntity) return 0.0f; // noting to hit?
 
-	if (pEntity && pEntity->Classify() != CLASS_NONE && pEntity->Classify() != CLASS_MACHINE)
-		// hit body
-		chTextureType = CHAR_TEX_FLESH;
-	else
+	if (pEntity->Classify() != CLASS_NONE && pEntity->Classify() != CLASS_MACHINE)
 	{
-		// hit world
+		// hit body
+		impactType = IMPACT_BODY;
+	}
+	else if (pEntity->pev->solid == SOLID_BSP || pEntity->pev->movetype == MOVETYPE_PUSHSTEP)
+	{
+		msurface_t *surf = TRACE_SURFACE(pEntity->edict(), vecSrc, vecEnd);
 
-		// find texture under strike, get material type
+		if (!surf || !surf->texinfo || !surf->texinfo->texture || !surf->texinfo->texture->material)
+			return 0.0f;
 
-		// copy trace vector into array for trace_texture
+		impactType = IMPACT_MATERIAL;
 
-		vecSrc.CopyToArray(rgfl1);
-		vecEnd.CopyToArray(rgfl2);
+		pMat = surf->texinfo->texture->material->effects; // epic chain!
+	}
+	else if (pEntity->pev->solid == SOLID_CUSTOM)
+	{
+		if (!ptr->pMat) return 0.0f;
 
-		// get texture from entity or world (world is ent(0))
-		if (pEntity)
-			pTextureName = TRACE_TEXTURE( ENT(pEntity->pev), rgfl1, rgfl2 );
-		else
-			pTextureName = TRACE_TEXTURE( ENT(0), rgfl1, rgfl2 );
-			
-		if ( pTextureName )
-		{
-			// strip leading '-0' or '+0~' or '{' or '!'
-			if (*pTextureName == '-' || *pTextureName == '+')
-				pTextureName += 2;
+		impactType = IMPACT_MATERIAL;
 
-			if (*pTextureName == '{' || *pTextureName == '!' || *pTextureName == '~' || *pTextureName == ' ')
-				pTextureName++;
-			// '}}'
-			strcpy(szbuffer, pTextureName);
-			szbuffer[CBTEXTURENAMEMAX - 1] = 0;
-				
-			// ALERT ( at_console, "texture hit: %s\n", szbuffer);
-
-			// get texture type
-			chTextureType = TEXTURETYPE_Find(szbuffer);	
-		}
+		pMat = ptr->pMat->effects;
 	}
 
-	switch (chTextureType)
+	if (!pMat && !impactType)
+		return 0.0f;
+
+	switch (impactType)
 	{
-	default:
-	case CHAR_TEX_CONCRETE: fvol = 0.9;	fvolbar = 0.6;
-		rgsz[0] = "player/pl_step1.wav";
-		rgsz[1] = "player/pl_step2.wav";
-		cnt = 2;
-		break;
-	case CHAR_TEX_METAL: fvol = 0.9; fvolbar = 0.3;
-		rgsz[0] = "player/pl_metal1.wav";
-		rgsz[1] = "player/pl_metal2.wav";
-		cnt = 2;
-		break;
-	case CHAR_TEX_DIRT:	fvol = 0.9; fvolbar = 0.1;
-		rgsz[0] = "player/pl_dirt1.wav";
-		rgsz[1] = "player/pl_dirt2.wav";
-		rgsz[2] = "player/pl_dirt3.wav";
-		cnt = 3;
-		break;
-	case CHAR_TEX_VENT:	fvol = 0.5; fvolbar = 0.3;
-		rgsz[0] = "player/pl_duct1.wav";
-		rgsz[1] = "player/pl_duct1.wav";
-		cnt = 2;
-		break;
-	case CHAR_TEX_GRATE: fvol = 0.9; fvolbar = 0.5;
-		rgsz[0] = "player/pl_grate1.wav";
-		rgsz[1] = "player/pl_grate4.wav";
-		cnt = 2;
-		break;
-	case CHAR_TEX_TILE:	fvol = 0.8; fvolbar = 0.2;
-		rgsz[0] = "player/pl_tile1.wav";
-		rgsz[1] = "player/pl_tile3.wav";
-		rgsz[2] = "player/pl_tile2.wav";
-		rgsz[3] = "player/pl_tile4.wav";
-		cnt = 4;
-		break;
-	case CHAR_TEX_SLOSH: fvol = 0.9; fvolbar = 0.0;
-		rgsz[0] = "player/pl_slosh1.wav";
-		rgsz[1] = "player/pl_slosh3.wav";
-		rgsz[2] = "player/pl_slosh2.wav";
-		rgsz[3] = "player/pl_slosh4.wav";
-		cnt = 4;
-		break;
-	case CHAR_TEX_WOOD: fvol = 0.9; fvolbar = 0.2;
-		rgsz[0] = "debris/wood1.wav";
-		rgsz[1] = "debris/wood2.wav";
-		rgsz[2] = "debris/wood3.wav";
-		cnt = 3;
-		break;
-	case CHAR_TEX_GLASS:
-	case CHAR_TEX_COMPUTER:
-		fvol = 0.8; fvolbar = 0.2;
-		rgsz[0] = "debris/glass1.wav";
-		rgsz[1] = "debris/glass2.wav";
-		rgsz[2] = "debris/glass3.wav";
-		cnt = 3;
-		break;
-	case CHAR_TEX_FLESH:
-		if (iBulletType == BULLET_PLAYER_CROWBAR)
-			return 0.0; // crowbar already makes this sound
-		fvol = 1.0;	fvolbar = 0.2;
-		rgsz[0] = "weapons/bullet_hit1.wav";
-		rgsz[1] = "weapons/bullet_hit2.wav";
-		fattn = 1.0;
-		cnt = 2;
-		break;
+		case IMPACT_BODY:
+			if (iBulletType == BULLET_PLAYER_CROWBAR)
+				return 0.0f; // knife already makes this sound
+			rgsz[0] = "weapons/bullet_hit1.wav";
+			rgsz[1] = "weapons/bullet_hit2.wav";
+			fvol = 1.0f; fvolbar = 0.2f;
+			fattn = 1.0f;
+			cnt = 2;
+			break;
+		case IMPACT_MATERIAL:
+			if (!pMat) return 0.0f;
+			fvol = 1.0f; fvolbar = 0.2f;
+			fattn = 1.0f;
+
+			// count sounds
+			for (cnt = 0; pMat->impact_sounds[cnt] != NULL; cnt++)
+				rgsz[cnt] = (char *)pMat->impact_sounds[cnt];
+			break;
+		default:
+			return 0.0f;
 	}
 
 	// did we hit a breakable?
-
 	if (pEntity && FClassnameIs(pEntity->pev, "func_breakable"))
 	{
 		// drop volumes, the object will already play a damaged sound
-		fvol /= 1.5;
-		fvolbar /= 2.0;	
-	}
-	else if (chTextureType == CHAR_TEX_COMPUTER)
-	{
-		// play random spark if computer
-
-		if ( ptr->flFraction != 1.0 && RANDOM_LONG(0,1))
-		{
-			UTIL_Sparks( ptr->vecEndPos );
-
-			float flVolume = RANDOM_FLOAT ( 0.7 , 1.0 );//random volume range
-			switch ( RANDOM_LONG(0,1) )
-			{
-				case 0: UTIL_EmitAmbientSound(ENT(0), ptr->vecEndPos, "buttons/spark5.wav", flVolume, ATTN_NORM, 0, 100); break;
-				case 1: UTIL_EmitAmbientSound(ENT(0), ptr->vecEndPos, "buttons/spark6.wav", flVolume, ATTN_NORM, 0, 100); break;
-			}
-		}
+		fvol /= 1.5f;
+		fvolbar /= 2.0f;
 	}
 
 	// play material hit sound
-	UTIL_EmitAmbientSound(ENT(0), ptr->vecEndPos, rgsz[RANDOM_LONG(0,cnt-1)], fvol, fattn, 0, 96 + RANDOM_LONG(0,0xf));
-			
+	UTIL_EmitAmbientSound(ENT(0), ptr->vecEndPos, rgsz[RANDOM_LONG(0, cnt - 1)], fvol, fattn, 0, 96 + RANDOM_LONG(0, 0xf));
+
 	return fvolbar;
 }
 

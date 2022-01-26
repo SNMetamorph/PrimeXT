@@ -16,6 +16,11 @@
 #ifndef PM_DEFS_H
 #define PM_DEFS_H
 
+#include "pm_info.h"
+#include "pmtrace.h" // PM_PlayerTrace results.
+#include "usercmd.h"
+#include "material.h"
+
 #define MAX_PHYSENTS	600		// Must have room for all entities in the world.
 #define MAX_MOVEENTS	64
 #define MAX_CLIP_PLANES	5
@@ -39,14 +44,6 @@
 // Values for flags parameter of PM_TraceLine
 #define PM_TRACELINE_PHYSENTSONLY	0
 #define PM_TRACELINE_ANYVISIBLE	1
-
-#include "pm_info.h"
-
-// PM_PlayerTrace results.
-#include "pmtrace.h"
-
-
-#include "usercmd.h"
 
 // physent_t
 typedef struct physent_s
@@ -143,7 +140,8 @@ typedef struct playermove_s
 	int		watertype;
 	int		oldwaterlevel;
 
-	char		sztexturename[256];
+	char		sztexturename[252];	// cutoff four bytes for a new variable (see below)
+	matdef_t	*pMaterial;	// pointer to a material
 	char		chtexturetype;
 
 	float		maxspeed;
@@ -225,5 +223,6 @@ typedef struct playermove_s
 	pmtrace_t		(*PM_PlayerTraceEx) (float *start, float *end, int traceFlags, int (*pfnIgnore)( physent_t *pe ));
 	int		(*PM_TestPlayerPositionEx) (float *pos, pmtrace_t *ptrace, int (*pfnIgnore)( physent_t *pe ));
 	struct pmtrace_s	*(*PM_TraceLineEx)( float *start, float *end, int flags, int usehulll, int (*pfnIgnore)( physent_t *pe ));
+	struct msurface_s	*(*PM_TraceSurface)( int ground, float *vstart, float *vend );
 } playermove_t;
 #endif//PM_DEFS_H
