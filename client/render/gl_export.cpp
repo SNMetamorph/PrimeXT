@@ -432,8 +432,14 @@ static void CALLBACK GL_DebugOutput(GLenum source, GLenum type, GLuint id, GLenu
 		break;
 	}
 
-	if( !string[0] ) return;
-	gEngfuncs.Con_Printf( string );
+	if (!string[0]) {
+		return;
+	}
+	else {
+		const int lastCharacterIndex = sizeof(string) - 1;
+		string[lastCharacterIndex] = '\0';
+		gEngfuncs.Con_Printf(string);
+	}
 }
 
 /*
