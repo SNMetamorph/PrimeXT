@@ -97,6 +97,7 @@ static int R_LightTraceFilter( physent_t *pe )
 /*
 =================
 R_GetDirectLightFromSurface
+gather light from surface lightmap
 =================
 */
 static bool R_GetDirectLightFromSurface( msurface_t *surf, const Vector &point, lightpoint_t *info )
@@ -633,8 +634,7 @@ static void R_LightMin( mstudiolight_t *light )
 /*
 =================
 R_LightVec
-
-check bspmodels to get light from
+iterate through all brush models and gather light from it's lightmaps
 =================
 */
 void R_LightVec( const Vector &point, mstudiolight_t *light, bool ambient )

@@ -1605,6 +1605,7 @@ void CStudioModelRenderer :: StudioStaticLight( cl_entity_t *ent, mstudiolight_t
 	bool	skipZCheck = true;
 	bool	staticEntity = FBitSet(ent->curstate.iuser1, CF_STATIC_ENTITY);
 	bool	badVertexLightCache = FBitSet(m_pModelInstance->info_flags, MF_VL_BAD_CACHE);
+	bool	lightprobesAvailable = world->numleaflights > 0;
 
 	if( FBitSet( ent->model->flags, STUDIO_AMBIENT_LIGHT ))
 		ambient_light = true;
@@ -1626,7 +1627,7 @@ void CStudioModelRenderer :: StudioStaticLight( cl_entity_t *ent, mstudiolight_t
 	// refresh lighting every 0.1 secs
 	if( m_pModelInstance->light_update )
 	{
-		if (staticEntity && badVertexLightCache || world->numleaflights < 1)
+		if (staticEntity && badVertexLightCache || !lightprobesAvailable)
 		{
 			float dynamic = r_dynamic->value;
 			alight_t lighting;

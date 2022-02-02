@@ -57,25 +57,23 @@ varying vec3	var_Normal;
 
 void main( void )
 {
-	// compute the diffuse term
-	vec4 diffuse = colormap2D( u_ColorMap, var_TexDiffuse );
-	vec3 specular = vec3( 0.0 );
+	vec4 albedo = colormap2D( u_ColorMap, var_TexDiffuse );
 	vec4 glossmap = vec4( 0.0 );
-	vec3 light = vec3( 0.0 );
-	vec3 gloss = vec3( 0.0 );
+	vec3 specular = vec3( 0.0 );
+	vec3 diffuse = vec3( 0.0 );
 
 #if defined( HAS_DETAIL )
-	diffuse.rgb *= detailmap2D( u_DetailMap, var_TexDetail ).rgb * DETAIL_SCALE;
+	albedo.rgb *= detailmap2D( u_DetailMap, var_TexDetail ).rgb * DETAIL_SCALE;
 #endif
 	// kRenderTransColor support
-	diffuse.rgb *= u_RenderColor.rgb;
+	albedo.rgb *= u_RenderColor.rgb;
 
 #if defined( SIGNED_DISTANCE_FIELD )
-	diffuse.a *= smoothstep( SOFT_EDGE_MIN, SOFT_EDGE_MAX, diffuse.a ); 
+	albedo.a *= smoothstep( SOFT_EDGE_MIN, SOFT_EDGE_MAX, albedo.a ); 
 #endif//SIGNED_DISTANCE_FIELD
 
 #if !defined( ALPHA_GLASS )
-	diffuse.a *= u_RenderColor.a;
+	albedo.a *= u_RenderColor.a;
 #endif
 
 #if defined( HAS_NORMALMAP )
@@ -93,89 +91,94 @@ void main( void )
 	glossmap = colormap2D( u_GlossMap, var_TexDiffuse );
 #endif
 
-#if defined (SURFACE_LIGHTING)	// lightmapped surfaces
+// lightmapped surfaces
+#if defined (SURFACE_LIGHTING)	
 #if defined( APPLY_STYLE0 )
-	ApplyLightStyle( var_TexLight0, N, V, glossmap.rgb, u_Smoothness, light, gloss );
+	ApplyLightStyle( var_TexLight0, N, V, glossmap.rgb, u_Smoothness, diffuse, specular );
 #endif
 #if defined( APPLY_STYLE1 )
-	ApplyLightStyle( var_TexLight1, N, V, glossmap.rgb, u_Smoothness, light, gloss );
+	ApplyLightStyle( var_TexLight1, N, V, glossmap.rgb, u_Smoothness, diffuse, specular );
 #endif
 #if defined( APPLY_STYLE2 )
-	ApplyLightStyle( var_TexLight2, N, V, glossmap.rgb, u_Smoothness, light, gloss );
+	ApplyLightStyle( var_TexLight2, N, V, glossmap.rgb, u_Smoothness, diffuse, specular );
 #endif
 #if defined( APPLY_STYLE3 )
-	ApplyLightStyle( var_TexLight3, N, V, glossmap.rgb, u_Smoothness, light, gloss );
+	ApplyLightStyle( var_TexLight3, N, V, glossmap.rgb, u_Smoothness, diffuse, specular );
 #endif
 #if defined( APPLY_STYLE0 ) || defined( APPLY_STYLE1 ) || defined( APPLY_STYLE2 ) || defined( APPLY_STYLE3 )
 	// convert values back to normal range and clamp it
-	light = min(( light * LIGHTMAP_SHIFT ), 1.0 );
-	gloss = min(( gloss * LIGHTMAP_SHIFT ), 1.0 );
+	diffuse = min(( diffuse * LIGHTMAP_SHIFT ), 1.0 );
+	specular = min(( specular * LIGHTMAP_SHIFT ), 1.0 );
 #endif
-#elif defined (VERTEX_LIGHTING)	// vertexlight surface
+// vertexlight surface
+#elif defined (VERTEX_LIGHTING)	
 #if defined( HAS_NORMALMAP )
 	float NdotB = ComputeStaticBump( L, N, u_AmbientFactor );
 	float factor = DiffuseBRDF( N, V, L, u_Smoothness, NdotB );
-	light = (var_DiffuseLight * factor) + (var_AmbientLight);
+	diffuse = (var_DiffuseLight * factor) + (var_AmbientLight);
 #else //!HAS_NORMALMAP
-	light = var_AmbientLight + var_DiffuseLight;
+	diffuse = var_AmbientLight + var_DiffuseLight;
 #endif
-#else				// NPC, etc
+// studiomodel entities, players, NPCs, etc.
+#else
 #if defined( HAS_NORMALMAP )
 	float factor = u_LightShade.y;
 	float NdotL = (( dot( N, -L ) + ( SHADE_LAMBERT - 1.0 )) / SHADE_LAMBERT );
-	if( NdotL > 0.0 ) factor -= DiffuseBRDF( N, V, L, u_Smoothness, saturate( NdotL )) * u_LightShade.y;
-	light = (var_DiffuseLight * factor) + (var_AmbientLight);
-#else //!HAS_NORMALMAP
-	light = var_AmbientLight + var_DiffuseLight;
+	if( NdotL > 0.0 ) 
+		factor -= DiffuseBRDF( N, V, L, u_Smoothness, saturate( NdotL )) * u_LightShade.y;
+	diffuse = (var_DiffuseLight * factor) + (var_AmbientLight);
+#else // !HAS_NORMALMAP
+	diffuse = var_AmbientLight + var_DiffuseLight;
 #endif
 #endif // SURFACE_LIGHTING
-	// apply lighting
-	diffuse.rgb *= light;
+
+	// apply diffuse/ambient lighting
+	albedo.rgb *= diffuse;
 
 // compute the specular term
 #if defined( HAS_GLOSSMAP )
 #if defined (SURFACE_LIGHTING)
-	// gloss it's already computed
-	diffuse.rgb *= saturate( 1.0 - GetLuminance( gloss ));
-	diffuse.rgb += gloss;
+	// gloss it's already computed in ApplyLightStyle
+	albedo.rgb *= saturate( 1.0 - GetLuminance( specular ));
+	albedo.rgb += specular;
 #else //!SURFACE_LIGHTING
 	float NdotL2 = saturate( dot( N, L ));
 	specular = SpecularBRDF( N, V, L, u_Smoothness, glossmap.rgb ) * NdotL2;
-	diffuse.rgb *= saturate( 1.0 - GetLuminance( specular ));
+	albedo.rgb *= saturate( 1.0 - GetLuminance( specular ));
 #if defined (VERTEX_LIGHTING)
-	diffuse.rgb += var_DiffuseLight * specular;
+	albedo.rgb += var_DiffuseLight * specular;
 #else
-	diffuse.rgb += var_DiffuseLight * specular * u_LightShade.y; // prevent parazite lighting
+	albedo.rgb += var_DiffuseLight * specular * u_LightShade.y; // prevent parazite lighting
 #endif
 #endif // SURFACE_LIGHTING
 #endif // HAS_GLOSSMAP
 
 #if defined( LIGHTVEC_DEBUG ) && !defined (SURFACE_LIGHTING)
-	light = ( normalize( N + L ) + 1.0 ) * 0.5;
+	diffuse = ( normalize( N + L ) + 1.0 ) * 0.5;
 #endif//LIGHTVEC_DEBUG
 
 #if defined( REFLECTION_CUBEMAP )
 	vec3 reflectance = GetReflectionProbe( var_Position, u_ViewOrigin, var_WorldNormal, glossmap.rgb, u_Smoothness );
-	diffuse.rgb += var_DiffuseLight * reflectance * u_ReflectScale;
+	albedo.rgb += var_DiffuseLight * reflectance * u_ReflectScale;
 #endif//defined( REFLECTION_CUBEMAP )
 
 #if defined( LIGHTMAP_DEBUG ) || defined( LIGHTVEC_DEBUG )
-	diffuse.rgb = light;
+	albedo.rgb = diffuse;
 #endif
 #endif// LIGHTING_FULLBRIGHT
 
 #if defined( HAS_LUMA )
-	diffuse.rgb += texture2D( u_GlowMap, var_TexDiffuse ).rgb;
+	albedo.rgb += texture2D( u_GlowMap, var_TexDiffuse ).rgb;
 #endif
 
 #if defined( TRANSLUCENT )
-	diffuse.rgb = mix( GetScreenColor( N, 1.0 ), diffuse.rgb, diffuse.a );
+	albedo.rgb = mix( GetScreenColor( N, 1.0 ), albedo.rgb, albedo.a );
 #endif
 
 #if defined( APPLY_FOG_EXP )
 	float fogFactor = saturate( exp2( -u_FogParams.w * ( gl_FragCoord.z / gl_FragCoord.w )));
-	diffuse.rgb = mix( u_FogParams.xyz, diffuse.rgb, fogFactor );
+	albedo.rgb = mix( u_FogParams.xyz, albedo.rgb, fogFactor );
 #endif
 	// compute final color
-	gl_FragColor = diffuse;
+	gl_FragColor = albedo;
 }

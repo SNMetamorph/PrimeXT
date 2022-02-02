@@ -42,7 +42,7 @@ uniform vec3	u_ViewOrigin;
 uniform vec3	u_ViewRight;
 uniform float	u_Smoothness;
 uniform vec3	u_LightDiffuse;
-uniform vec2	u_LightShade;
+uniform vec2	u_LightShade; // x is ambientlight, y is shadelight
 uniform vec3	u_LightDir;
 
 uniform float	u_LightStyleValues[MAX_LIGHTSTYLES];
