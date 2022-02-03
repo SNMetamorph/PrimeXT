@@ -685,28 +685,33 @@ static bool GL_LoadGPUBinaryShader( glsl_program_t *shader, const char *vpname, 
 	return false;
 }
 
-static bool GL_SaveGPUBinaryShader( glsl_program_t *shader, uint checksum )
+static bool GL_SaveGPUBinaryShader(glsl_program_t *shader, uint checksum)
 {
 	char	szFilename[MAX_PATH];
 	int	length, result;
 	GLenum	outFormat;
 	byte	*binary;
 
-	if( !GL_Support( R_BINARY_SHADER_EXT ))
+	if (!GL_Support(R_BINARY_SHADER_EXT))
 		return false;
 
-	Q_snprintf( szFilename, sizeof( szFilename ), "cache/glsl/%p.bin", checksum );
-	pglGetObjectParameterivARB( shader->handle, GL_PROGRAM_BINARY_LENGTH, &length );
-	if( length <= 0 ) return false;
+	Q_snprintf(szFilename, sizeof(szFilename), "cache/glsl/%p.bin", checksum);
+	pglGetProgramivARB(shader->handle, GL_PROGRAM_BINARY_LENGTH, &length);
 
-	binary = (byte *)malloc( length );
-	pglGetProgramBinary( shader->handle, length, &length, &outFormat, binary );
+	if (length <= 0) 
+		return false;
 
-	result = SAVE_FILE( szFilename, binary, length );
-	ALERT( at_aiconsole, "write glsl cache: %s\n", szFilename );
-	free( binary );
+	binary = (byte *)malloc(length);
+	pglGetProgramBinary(shader->handle, length, NULL, &outFormat, binary);
+	result = SAVE_FILE(szFilename, binary, length);
+	free(binary);
 
-	return (result != 0 );
+	if (result != 0)
+	{
+		ALERT(at_aiconsole, "^2GL_SaveGPUBinaryShader: ^7wrote \"%s\" cache (length %i, hash %p)\n", shader->name, length, checksum);
+		return true;
+	}
+	return false;
 }
 
 static void GL_LinkProgram( glsl_program_t *shader )
