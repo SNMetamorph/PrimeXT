@@ -182,6 +182,7 @@ static dllfunc_t opengl_200funcs[] =
 { "glGetProgramInfoLog"			, (void **)&pglGetProgramInfoLog },
 { "glGetActiveUniform"			, (void **)&pglGetActiveUniform },
 { "glGetUniformLocation"		, (void **)&pglGetUniformLocation },
+{ "glGetProgramiv"              , (void **)&pglGetProgramiv },
 { NULL, NULL }
 };
 
@@ -299,7 +300,6 @@ static dllfunc_t binaryshaderfuncs[] =
 { "glProgramBinary"              , (void **)&pglProgramBinary },
 { "glGetProgramBinary"           , (void **)&pglGetProgramBinary },
 { "glProgramParameteri"          , (void **)&pglProgramParameteri },
-{ "glGetProgramiv"               , (void **)&pglGetProgramiv },
 { NULL, NULL }
 };
 
