@@ -311,20 +311,39 @@ static uniformTable_t glsl_uniformTable[] =
 { "u_Undefined",		UT_UNDEFINED,		0 },
 };
 
-static char *GL_PrintInfoLog( GLhandleARB object )
+static char *GL_PrintShaderInfoLog( GLhandleARB shader )
 {
 	static char	msg[32768];
-	int		maxLength = 0;
+	int maxLength = sizeof(msg);
+	int length = 0;
 
-	pglGetObjectParameterivARB( object, GL_OBJECT_INFO_LOG_LENGTH_ARB, &maxLength );
+	pglGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
 
-	if( maxLength >= sizeof( msg ))
+	if (length >= maxLength)
 	{
-		ALERT( at_warning, "GL_PrintInfoLog: message exceeds %i symbols\n", sizeof( msg ));
-		maxLength = sizeof( msg ) - 1;
+		ALERT( at_warning, "GL_PrintShaderInfoLog: message exceeds %i symbols\n", maxLength);
+		maxLength -= 1;
 	}
 
-	pglGetInfoLogARB( object, maxLength, &maxLength, msg );
+	pglGetShaderInfoLog(shader, maxLength, &length, msg);
+	return msg;
+}
+
+static char *GL_PrintProgramInfoLog(GLhandleARB program)
+{
+	static char	msg[32768];
+	int maxLength = sizeof(msg);
+	int length = 0;
+
+	pglGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
+
+	if (length >= maxLength)
+	{
+		ALERT(at_warning, "GL_PrintProgramInfoLog: message exceeds %i symbols\n", sizeof(msg));
+		maxLength -= 1;
+	}
+
+	pglGetProgramInfoLog(program, maxLength, &length, msg);
 
 	return msg;
 }
@@ -334,7 +353,7 @@ static char *GL_PrintShaderSource( GLhandleARB object )
 	static char	msg[8192];
 	int		maxLength = 0;
 	
-	pglGetObjectParameterivARB( object, GL_OBJECT_SHADER_SOURCE_LENGTH_ARB, &maxLength );
+	pglGetShaderiv(object, GL_SHADER_SOURCE_LENGTH, &maxLength);
 
 	if( maxLength >= sizeof( msg ))
 	{
@@ -342,7 +361,7 @@ static char *GL_PrintShaderSource( GLhandleARB object )
 		maxLength = sizeof( msg ) - 1;
 	}
 
-	pglGetShaderSourceARB( object, maxLength, &maxLength, msg );
+	pglGetShaderSource( object, maxLength, &maxLength, msg );
 
 	return msg;
 }
@@ -589,7 +608,7 @@ static bool GL_ProcessShader( const char *filename, GLenum shaderType, CVirtualF
 static void GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum shaderType, const char *defines = NULL )
 {
 	char		filename[256];
-	GLhandleARB	object;
+	GLhandleARB	shaderHandle;
 	CVirtualFS	source;
 	GLint		compiled;
 
@@ -616,18 +635,18 @@ static void GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum s
 	int bufferSize = source.GetSize();
 
 	ALERT(at_aiconsole, "^2GL_LoadGPUShader: ^7loading \"%s\" from file \"%s\"\n", name, filename);
-	object = pglCreateShaderObjectARB( shaderType );
-	pglShaderSourceARB( object, GL_TRUE, (const GLcharARB **)&buffer, &bufferSize );
+	shaderHandle = pglCreateShader(shaderType);
+	pglShaderSource(shaderHandle, GL_TRUE, (const GLcharARB **)&buffer, &bufferSize);
 
 	// compile shader
-	pglCompileShaderARB( object );
+	pglCompileShader(shaderHandle);
 
 	// check if shader compiled
-	pglGetObjectParameterivARB( object, GL_OBJECT_COMPILE_STATUS_ARB, &compiled );
+	pglGetShaderiv(shaderHandle, GL_COMPILE_STATUS, &compiled);
 
 	if( !compiled )
 	{
-		if( developer_level ) Msg( "%s", GL_PrintInfoLog( object ));
+		if( developer_level ) Msg( "%s", GL_PrintShaderInfoLog( shaderHandle ));
 		if( developer_level ) Msg( "Shader options:%s\n", GL_PretifyListOptions( defines ));
 		ALERT(at_error, "^2GL_LoadGPUShader: ^7couldn't compile \"%s\" from file \"%s\"\n", name, filename);
 		return;
@@ -635,13 +654,14 @@ static void GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum s
 
 	if( shaderType == GL_VERTEX_SHADER_ARB )
 		shader->status |= SHADER_VERTEX_COMPILED;
-	else shader->status |= SHADER_FRAGMENT_COMPILED;
+	else 
+		shader->status |= SHADER_FRAGMENT_COMPILED;
 
 	// attach shader to program
-	pglAttachObjectARB( shader->handle, object );
+	pglAttachShader(shader->handle, shaderHandle);
 
 	// delete shader, no longer needed
-	pglDeleteObjectARB( object );
+	pglDeleteShader(shaderHandle);
 }
 
 static bool GL_LoadGPUBinaryShader( glsl_program_t *shader, const char *vpname, const char *fpname, uint checksum )
@@ -671,7 +691,7 @@ static bool GL_LoadGPUBinaryShader( glsl_program_t *shader, const char *vpname, 
 	if( !aMemFile ) return false;
 
 	pglProgramBinary( shader->handle, glConfig.binary_formats, aMemFile, length );
-	pglGetObjectParameterivARB( shader->handle, GL_OBJECT_LINK_STATUS_ARB, &linked );
+	pglGetProgramiv( shader->handle, GL_LINK_STATUS, &linked );
 	SetBits( shader->status, SHADER_FRAGMENT_COMPILED|SHADER_VERTEX_COMPILED );
 	FREE_FILE( aMemFile );
 
@@ -696,7 +716,7 @@ static bool GL_SaveGPUBinaryShader(glsl_program_t *shader, uint checksum)
 		return false;
 
 	Q_snprintf(szFilename, sizeof(szFilename), "cache/glsl/%p.bin", checksum);
-	pglGetProgramivARB(shader->handle, GL_PROGRAM_BINARY_LENGTH, &length);
+	pglGetProgramiv(shader->handle, GL_PROGRAM_BINARY_LENGTH, &length);
 
 	if (length <= 0) 
 		return false;
@@ -723,12 +743,12 @@ static void GL_LinkProgram( glsl_program_t *shader )
 	if( GL_Support( R_BINARY_SHADER_EXT ))
 		pglProgramParameteri( shader->handle, GL_PROGRAM_BINARY_RETRIEVABLE_HINT, GL_TRUE );
 
-	pglLinkProgramARB( shader->handle );
+	pglLinkProgram( shader->handle );
 
-	pglGetObjectParameterivARB( shader->handle, GL_OBJECT_LINK_STATUS_ARB, &linked );
+	pglGetProgramiv(shader->handle, GL_LINK_STATUS, &linked);
 	if( !linked )
 	{
-		ALERT( at_error, "%s\n%s shader failed to link\n", GL_PrintInfoLog( shader->handle ), shader->name );
+		ALERT( at_error, "%s\n%s shader failed to link\n", GL_PrintProgramInfoLog( shader->handle ), shader->name );
 		if( developer_level ) Msg( "Shader options:%s\n", GL_PretifyListOptions( shader->options ));
 	}
 	else shader->status |= SHADER_PROGRAM_LINKED;
@@ -736,14 +756,16 @@ static void GL_LinkProgram( glsl_program_t *shader )
 
 static void GL_ValidateProgram( glsl_program_t *shader )
 {
-	GLint	validated = 0;
+	GLint validated = 0;
 
-	if( !shader ) return;
+	if (!shader) 
+		return;
 
-	pglValidateProgramARB( shader->handle );
+	pglValidateProgram(shader->handle);
+	pglGetProgramiv(shader->handle, GL_VALIDATE_STATUS, &validated);
 
-	pglGetObjectParameterivARB( shader->handle, GL_OBJECT_VALIDATE_STATUS_ARB, &validated );
-	if( !validated ) ALERT( at_error, "%s\n%s shader failed to validate\n", GL_PrintInfoLog( shader->handle ), shader->name );
+	if (!validated) 
+		ALERT( at_error, "%s\n%s shader failed to validate\n", GL_PrintProgramInfoLog( shader->handle ), shader->name );
 }
 
 int GL_UniformTypeToDwordCount( GLuint type, bool align = false )
@@ -839,15 +861,15 @@ void GL_ShowProgramUniforms( glsl_program_t *shader )
 		return;
 	
 	// install the executables in the program object as part of current state.
-	pglUseProgramObjectARB( shader->handle );
+	pglUseProgram(shader->handle);
 
 	// query the number of active uniforms
-	pglGetObjectParameterivARB( shader->handle, GL_OBJECT_ACTIVE_UNIFORMS_ARB, &count );
+	pglGetProgramiv(shader->handle, GL_ACTIVE_UNIFORMS, &count);
 
 	// Loop over each of the active uniforms, and set their value
 	for( int i = 0; i < count; i++ )
 	{
-		pglGetActiveUniformARB( shader->handle, i, sizeof( uniformName ), NULL, &size, &type, uniformName );
+		pglGetActiveUniform( shader->handle, i, sizeof( uniformName ), NULL, &size, &type, uniformName );
 		if( developer_level >= DEV_EXTENDED )
 		{
 			if( size != 1 )
@@ -879,7 +901,7 @@ void GL_ShowProgramUniforms( glsl_program_t *shader )
 		tr.show_uniforms_peak = true;
 	}
 
-	pglUseProgramObjectARB( GL_NONE );
+	pglUseProgram(GL_NONE);
 }
 
 static void GL_ParseProgramUniforms( glsl_program_t *shader )
@@ -892,8 +914,8 @@ static void GL_ParseProgramUniforms( glsl_program_t *shader )
 	GLuint	format;
 
 	// query the number of active uniforms
-	pglGetObjectParameterivARB( shader->handle, GL_OBJECT_ACTIVE_UNIFORMS_ARB, &count );
-	pglUseProgramObjectARB( shader->handle );
+	pglGetProgramiv(shader->handle, GL_ACTIVE_UNIFORMS, &count);
+	pglUseProgram(shader->handle);
 
 	shader->uniforms = (uniform_t *)Mem_Alloc( count * sizeof( uniform_t ));
 	shader->numUniforms = 0;
@@ -907,9 +929,9 @@ static void GL_ParseProgramUniforms( glsl_program_t *shader )
 		uniform_t *uniform;
 		int location;
 
-		pglGetActiveUniformARB( shader->handle, i, sizeof( uniformName ), NULL, &size, &format, uniformName );
+		pglGetActiveUniform( shader->handle, i, sizeof( uniformName ), NULL, &size, &format, uniformName );
 
-		if(( location = pglGetUniformLocationARB( shader->handle, uniformName )) == -1 )
+		if(( location = pglGetUniformLocation( shader->handle, uniformName )) == -1 )
 			continue; // ignore built-in uniforms
 
 		// remove array size from name
@@ -968,7 +990,7 @@ static void GL_ParseProgramUniforms( glsl_program_t *shader )
 		tr.show_uniforms_peak = true;
 	}
 
-	pglUseProgramObjectARB( GL_NONE );
+	pglUseProgram(GL_NONE);
 }
 
 static void GL_SetDefaultVertexAttribs( glsl_program_t *shader )
@@ -1023,14 +1045,14 @@ static void GL_ParseProgramVertexAttribs( glsl_program_t *shader )
 
 void GL_BindShader( glsl_program_t *shader )
 {
-	if( !shader && RI->currentshader )
+	if (!shader && RI->currentshader)
 	{
-		pglUseProgramObjectARB( GL_NONE );
+		pglUseProgram(GL_NONE);
 		RI->currentshader = NULL;
 	}
-	else if( shader != RI->currentshader && shader != NULL && shader->handle )
+	else if (shader != RI->currentshader && shader != NULL && shader->handle)
 	{
-		pglUseProgramObjectARB( shader->handle );
+		pglUseProgram(shader->handle);
 		r_stats.num_shader_binds++;
 		RI->currentshader = shader;
 	}
@@ -1040,7 +1062,7 @@ static void GL_FreeGPUShader( glsl_program_t *shader )
 {
 	if( shader && shader->handle )
 	{
-		uint		hash;
+		uint hash;
 		glsl_program_t	*cur;
 		glsl_program_t	**prev;
 		const char	*find;
@@ -1069,7 +1091,7 @@ static void GL_FreeGPUShader( glsl_program_t *shader )
 			prev = &cur->nextHash;
 		}
 
-		pglDeleteObjectARB( shader->handle );
+		pglDeleteProgram(shader->handle);
 		shader->initialized = false;
 		memset( shader, 0, sizeof( *shader ));
 	}
@@ -1089,8 +1111,9 @@ static glsl_program_t *GL_CreateUberShader( GLint slot, const char *glname, cons
 	// alloc new shader
 	glsl_program_t *shader = &glsl_programs[slot];
 
-	shader->handle = pglCreateProgramObjectARB();
-	if( !shader->handle ) return NULL; // some bad happens
+	shader->handle = pglCreateProgram();
+	if( !shader->handle ) 
+		return NULL; // some bad happens
 
 	shader->initialized = true;
 	Q_strncpy(shader->fp_name, fpname, sizeof(shader->fp_name));
@@ -1375,7 +1398,7 @@ void GL_ReloadShader(word shaderNum)
 		}
 
 		// remove old stuff
-		pglDeleteObjectARB(shader->handle);
+		pglDeleteProgram(shader->handle);
 		shader->initialized = false;
 		shader->handle = 0;
 		shader->status = 0;

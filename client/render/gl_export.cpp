@@ -164,6 +164,27 @@ static dllfunc_t opengl_110funcs[] =
 { NULL, NULL }
 };
 
+static dllfunc_t opengl_200funcs[] =
+{
+{ "glCreateShader"				, (void **)&pglCreateShader },
+{ "glAttachShader"				, (void **)&pglAttachShader },
+{ "glCompileShader"				, (void **)&pglCompileShader },
+{ "glShaderSource"				, (void **)&pglShaderSource },
+{ "glGetShaderSource"			, (void **)&pglGetShaderSource },
+{ "glGetShaderiv"				, (void **)&pglGetShaderiv },
+{ "glDeleteShader"		        , (void **)&pglDeleteShader },
+{ "glUseProgram"				, (void **)&pglUseProgram },
+{ "glLinkProgram"				, (void **)&pglLinkProgram },
+{ "glValidateProgram"			, (void **)&pglValidateProgram },
+{ "glCreateProgram"				, (void **)&pglCreateProgram },
+{ "glDeleteProgram"				, (void **)&pglDeleteProgram },
+{ "glGetShaderInfoLog"			, (void **)&pglGetShaderInfoLog },
+{ "glGetProgramInfoLog"			, (void **)&pglGetProgramInfoLog },
+{ "glGetActiveUniform"			, (void **)&pglGetActiveUniform },
+{ "glGetUniformLocation"		, (void **)&pglGetUniformLocation },
+{ NULL, NULL }
+};
+
 static dllfunc_t drawrangeelementsfuncs[] =
 {
 { "glDrawRangeElements" , (void **)&pglDrawRangeElements },
@@ -225,17 +246,6 @@ static dllfunc_t blendseparatefunc[] =
 
 static dllfunc_t shaderobjectsfuncs[] =
 {
-{ "glDeleteObjectARB"             , (void **)&pglDeleteObjectARB },
-{ "glGetHandleARB"                , (void **)&pglGetHandleARB },
-{ "glDetachObjectARB"             , (void **)&pglDetachObjectARB },
-{ "glCreateShaderObjectARB"       , (void **)&pglCreateShaderObjectARB },
-{ "glShaderSourceARB"             , (void **)&pglShaderSourceARB },
-{ "glCompileShaderARB"            , (void **)&pglCompileShaderARB },
-{ "glCreateProgramObjectARB"      , (void **)&pglCreateProgramObjectARB },
-{ "glAttachObjectARB"             , (void **)&pglAttachObjectARB },
-{ "glLinkProgramARB"              , (void **)&pglLinkProgramARB },
-{ "glUseProgramObjectARB"         , (void **)&pglUseProgramObjectARB },
-{ "glValidateProgramARB"          , (void **)&pglValidateProgramARB },
 { "glUniform1fARB"                , (void **)&pglUniform1fARB },
 { "glUniform2fARB"                , (void **)&pglUniform2fARB },
 { "glUniform3fARB"                , (void **)&pglUniform3fARB },
@@ -255,15 +265,10 @@ static dllfunc_t shaderobjectsfuncs[] =
 { "glUniformMatrix2fvARB"         , (void **)&pglUniformMatrix2fvARB },
 { "glUniformMatrix3fvARB"         , (void **)&pglUniformMatrix3fvARB },
 { "glUniformMatrix4fvARB"         , (void **)&pglUniformMatrix4fvARB },
-{ "glGetObjectParameterfvARB"     , (void **)&pglGetObjectParameterfvARB },
-{ "glGetObjectParameterivARB"     , (void **)&pglGetObjectParameterivARB },
 { "glGetInfoLogARB"               , (void **)&pglGetInfoLogARB },
 { "glGetAttachedObjectsARB"       , (void **)&pglGetAttachedObjectsARB },
-{ "glGetUniformLocationARB"       , (void **)&pglGetUniformLocationARB },
-{ "glGetActiveUniformARB"         , (void **)&pglGetActiveUniformARB },
 { "glGetUniformfvARB"             , (void **)&pglGetUniformfvARB },
 { "glGetUniformivARB"             , (void **)&pglGetUniformivARB },
-{ "glGetShaderSourceARB"          , (void **)&pglGetShaderSourceARB },
 { "glVertexAttribPointerARB"      , (void **)&pglVertexAttribPointerARB },
 { "glEnableVertexAttribArrayARB"  , (void **)&pglEnableVertexAttribArrayARB },
 { "glDisableVertexAttribArrayARB" , (void **)&pglDisableVertexAttribArrayARB },
@@ -294,7 +299,7 @@ static dllfunc_t binaryshaderfuncs[] =
 { "glProgramBinary"              , (void **)&pglProgramBinary },
 { "glGetProgramBinary"           , (void **)&pglGetProgramBinary },
 { "glProgramParameteri"          , (void **)&pglProgramParameteri },
-{ "glGetProgramiv"               , (void **)&pglGetProgramivARB },
+{ "glGetProgramiv"               , (void **)&pglGetProgramiv },
 { NULL, NULL }
 };
 
@@ -523,9 +528,10 @@ void GL_CheckExtension( const char *name, const dllfunc_t *funcs, const char *cv
 static void GL_InitExtensions( void )
 {
 	// initialize gl extensions
-	GL_CheckExtension( "OpenGL 1.1.0", opengl_110funcs, NULL, R_OPENGL_110 );
+	GL_CheckExtension("OpenGL 1.1.0", opengl_110funcs, NULL, R_OPENGL_110);
+	GL_CheckExtension("OpenGL 2.0", opengl_200funcs, NULL, R_OPENGL_200);
 
-	if( !GL_Support( R_OPENGL_110 ))
+	if (!GL_Support(R_OPENGL_110))
 	{
 		ALERT( at_error, "OpenGL 1.0 can't be installed. Custom renderer disabled\n" );
 		// TODO this is used in P2 but not here 

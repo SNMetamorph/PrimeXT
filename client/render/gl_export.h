@@ -890,6 +890,13 @@ typedef unsigned int GLhandleARB;
 #define GL_DEBUG_SEVERITY_LOW_ARB		0x9148 
 #define GL_DEBUG_SEVERITY_NOTIFICATION  0x826B
 
+#define GL_COMPILE_STATUS			0x8B81
+#define GL_LINK_STATUS				0x8B82
+#define GL_VALIDATE_STATUS			0x8B83
+#define GL_INFO_LOG_LENGTH			0x8B84
+#define GL_ACTIVE_UNIFORMS			0x8B86
+#define GL_SHADER_SOURCE_LENGTH		0x8B88
+
 // helper opengl functions
 EXTERN GLenum ( APIENTRY *pglGetError )(void);
 EXTERN const GLcharARB * ( APIENTRY *pglGetString )(GLenum name);
@@ -1246,24 +1253,28 @@ EXTERN void ( APIENTRY *pglCompressedTexImage1DARB)(GLenum target, GLint level, 
 EXTERN void ( APIENTRY *pglCompressedTexSubImage3DARB)(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const void *data);
 EXTERN void ( APIENTRY *pglCompressedTexSubImage2DARB)(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void *data);
 EXTERN void ( APIENTRY *pglCompressedTexSubImage1DARB)(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLsizei imageSize, const void *data);
-EXTERN void ( APIENTRY *pglDeleteObjectARB)(GLhandleARB obj);
-EXTERN GLhandleARB ( APIENTRY *pglGetHandleARB)(GLenum pname);
-EXTERN void ( APIENTRY *pglDetachObjectARB)(GLhandleARB containerObj, GLhandleARB attachedObj);
-EXTERN GLhandleARB ( APIENTRY *pglCreateShaderObjectARB)(GLenum shaderType);
-EXTERN void ( APIENTRY *pglShaderSourceARB)(GLhandleARB shaderObj, GLsizei count, const GLcharARB **string, const GLint *length);
-EXTERN void ( APIENTRY *pglCompileShaderARB)(GLhandleARB shaderObj);
-EXTERN GLhandleARB ( APIENTRY *pglCreateProgramObjectARB)(void);
-EXTERN void ( APIENTRY *pglAttachObjectARB)(GLhandleARB containerObj, GLhandleARB obj);
-EXTERN void ( APIENTRY *pglLinkProgramARB)(GLhandleARB programObj);
-EXTERN void ( APIENTRY *pglUseProgramObjectARB)(GLhandleARB programObj);
-EXTERN void ( APIENTRY *pglValidateProgramARB)(GLhandleARB programObj);
-EXTERN void ( APIENTRY *pglBindProgramARB)(GLenum target, GLuint program);
-EXTERN void ( APIENTRY *pglDeleteProgramsARB)(GLsizei n, const GLuint *programs);
-EXTERN void ( APIENTRY *pglGenProgramsARB)(GLsizei n, GLuint *programs);
+
+EXTERN GLhandleARB (APIENTRY *pglCreateShader)(GLenum shaderType);
+EXTERN void (APIENTRY *pglAttachShader)(GLuint program, GLuint shader);
+EXTERN void (APIENTRY *pglCompileShader)(GLuint shader);
+EXTERN void (APIENTRY *pglGetShaderSource)(GLuint shader, GLsizei bufSize, GLsizei *length, GLcharARB *source);
+EXTERN void (APIENTRY *pglShaderSource)(GLuint shader, GLsizei count, const GLcharARB *const *string, const GLint *length);
+EXTERN void (APIENTRY *pglGetShaderiv)(GLuint shader, GLenum pname, GLint *params);
+EXTERN void (APIENTRY *pglDeleteShader)(GLuint shader);
+EXTERN void (APIENTRY *pglLinkProgram)(GLuint program);
+EXTERN void (APIENTRY *pglUseProgram)(GLuint program);
+EXTERN void (APIENTRY *pglValidateProgram)(GLuint program);
+EXTERN GLhandleARB (APIENTRY *pglCreateProgram)(void);
+EXTERN void (APIENTRY *pglDeleteProgram)(GLuint program);
+EXTERN void (APIENTRY *pglGetShaderInfoLog)(GLuint shader, GLsizei maxLength, GLsizei *length, GLcharARB *infoLog);
+EXTERN void (APIENTRY *pglGetProgramInfoLog)(GLuint program, GLsizei maxLength, GLsizei *length, GLcharARB *infoLog);
+EXTERN void (APIENTRY *pglGetActiveUniform)(GLuint program, GLuint index, GLsizei bufSize, GLsizei *length, GLint *size, GLenum *type, GLcharARB *name);
+EXTERN GLint (APIENTRY *pglGetUniformLocation)(GLuint program, const GLcharARB *name);
+
 EXTERN void ( APIENTRY *pglProgramStringARB)(GLenum target, GLenum format, GLsizei len, const void *string);
 EXTERN void ( APIENTRY *pglProgramEnvParameter4fARB)(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
 EXTERN void ( APIENTRY *pglProgramLocalParameter4fARB)(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-EXTERN void ( APIENTRY *pglGetProgramivARB)( GLenum target, GLenum pname, GLint *params );
+EXTERN void ( APIENTRY *pglGetProgramiv)(GLenum target, GLenum pname, GLint *params);
 EXTERN void ( APIENTRY *pglUniform1fARB)(GLint location, GLfloat v0);
 EXTERN void ( APIENTRY *pglUniform2fARB)(GLint location, GLfloat v0, GLfloat v1);
 EXTERN void ( APIENTRY *pglUniform3fARB)(GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
@@ -1283,15 +1294,10 @@ EXTERN void ( APIENTRY *pglUniform4ivARB)(GLint location, GLsizei count, const G
 EXTERN void ( APIENTRY *pglUniformMatrix2fvARB)(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
 EXTERN void ( APIENTRY *pglUniformMatrix3fvARB)(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
 EXTERN void ( APIENTRY *pglUniformMatrix4fvARB)(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
-EXTERN void ( APIENTRY *pglGetObjectParameterfvARB)(GLhandleARB obj, GLenum pname, GLfloat *params);
-EXTERN void ( APIENTRY *pglGetObjectParameterivARB)(GLhandleARB obj, GLenum pname, GLint *params);
 EXTERN void ( APIENTRY *pglGetInfoLogARB)(GLhandleARB obj, GLsizei maxLength, GLsizei *length, GLcharARB *infoLog);
 EXTERN void ( APIENTRY *pglGetAttachedObjectsARB)(GLhandleARB containerObj, GLsizei maxCount, GLsizei *count, GLhandleARB *obj);
-EXTERN GLint ( APIENTRY *pglGetUniformLocationARB)(GLhandleARB programObj, const GLcharARB *name);
-EXTERN void ( APIENTRY *pglGetActiveUniformARB)(GLhandleARB programObj, GLuint index, GLsizei maxLength, GLsizei *length, GLint *size, GLenum *type, GLcharARB *name);
 EXTERN void ( APIENTRY *pglGetUniformfvARB)(GLhandleARB programObj, GLint location, GLfloat *params);
 EXTERN void ( APIENTRY *pglGetUniformivARB)(GLhandleARB programObj, GLint location, GLint *params);
-EXTERN void ( APIENTRY *pglGetShaderSourceARB)(GLhandleARB obj, GLsizei maxLength, GLsizei *length, GLcharARB *source);
 EXTERN void ( APIENTRY *pglGetProgramBinary)( GLuint program, GLsizei bufferSize, GLsizei *length, GLenum *binaryFormat, GLvoid *binary );
 EXTERN void ( APIENTRY *pglProgramBinary)(GLuint program, GLenum binaryFormat, const GLvoid *binary, GLsizei length);
 EXTERN void ( APIENTRY *pglProgramParameteri)(GLuint program, GLenum pname, GLint value);
