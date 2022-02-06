@@ -16,6 +16,7 @@ GNU General Public License for more details.
 
 #ifndef GL_FRAMEBUFFER_H
 #define GL_FRAMEBUFFER_H
+#include "gl_export.h"
 
 typedef enum
 {

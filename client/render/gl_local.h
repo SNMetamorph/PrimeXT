@@ -23,6 +23,7 @@ GNU General Public License for more details.
 #include "pm_movevars.h"
 #include "r_studioint.h"
 #include "gl_framebuffer.h"
+#include "gl_cubemap.h"
 #include "gl_frustum.h"
 #include "gl_primitive.h"
 #include "gl_shader.h"

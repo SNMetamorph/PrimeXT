@@ -25,6 +25,7 @@ GNU General Public License for more details.
 #include "gl_decals.h"
 #include "gl_studiodecal.h"
 #include "gl_debug.h"
+#include "gl_cubemap.h"
 #include "trace.h"
 #include "bs_defs.h"
 #include "ikcontext.h"

@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #include "matrix.h"
 #include "gl_export.h"
 #include "gl_local.h"
+#include "gl_cubemap.h"
 
 // world features
 #define WORLD_HAS_MOVIES	BIT( 0 )
@@ -36,10 +37,6 @@ GNU General Public License for more details.
 #define MAX_MAP_ELEMS	MAX_MAP_VERTS * 5	// should be enough
 #define SHADOW_ZBUF_RES	8		// 6 * 8 * 8 * 2 * 4 = 3k bytes per light
 
-// rebuilding cubemap states
-#define CMREBUILD_INACTIVE	0
-#define CMREBUILD_CHECKING	1
-#define CMREBUILD_WAITING	2
 
 typedef struct bvert_s
 {
@@ -179,8 +176,6 @@ typedef struct
 	// cubemap builder internal state
 	bool	loading_cubemaps;
 	bool	build_default_cubemap;
-	int		rebuilding_cubemaps;
-	int		cubemap_build_number;
 	bool	ignore_restart_check; // to prevent bug with invalid restart check in GL_InitModelLightCache
 } gl_world_t;
 

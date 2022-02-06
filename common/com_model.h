@@ -245,17 +245,6 @@ typedef struct mleaf_s
 
 } mleaf_t;
 
-typedef struct mcubemap_s
-{
-	char		name[64];		// for envshots
-	int		texture;		// gl texturenum
-	vec3_t		mins, maxs;
-	bool		valid;		// don't need to rebuild
-	vec3_t		origin;
-	short		size;		// cubemap size
-	byte		numMips;		// cubemap mipcount
-} mcubemap_t;
-
 // msurface_t flags
 #define SURF_TWOSIDE		BIT( 0 )		// two-sided polygon (e.g. 'water4b')
 #define SURF_PLANEBACK		BIT( 1 )		// plane should be negated
@@ -315,8 +304,8 @@ typedef struct mextrasurf_s
 	unsigned short	light_t[MAXLIGHTMAPS];
 	byte		lights[MAXDYNLIGHTS];// static lights that affected this face (255 = no lights)
 	float		texofs[2];	// conveyor offsets
-	mcubemap_t	*cubemap[2];	// for environment reflective bump-mapping
-	float		lerpFactor;
+	struct mcubemap_s *cubemap[2];	// two cubemaps nearest to surface
+	float		lerpFactor;		// lerp factor between two nearest cubemaps
 	short		subtexture[8];	// MAX_REF_STACK
 	word		cintexturenum;	// cinematic handle
 	word		lightmaptexturenum;	// custom lightmap number
