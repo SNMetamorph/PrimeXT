@@ -13,11 +13,12 @@ enum CubemapBuildState
 
 typedef struct mcubemap_s
 {
-	char		name[64];		// for envshots
-	int		texture;		// gl texturenum
-	vec3_t		mins, maxs;
-	bool		valid;		// don't need to rebuild
-	vec3_t		origin;
-	short		size;		// cubemap size
-	byte		numMips;		// cubemap mipcount
+	char			name[64];
+	int				texture;
+	CFrameBuffer	framebuffer;
+	vec3_t			mins, maxs;
+	vec3_t			origin;
+	bool			valid;
+	short			size;
+	byte			numMips;
 } mcubemap_t;
