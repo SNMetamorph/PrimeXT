@@ -15,6 +15,7 @@ GNU General Public License for more details.
 
 #include "const.h"
 #include "mathlib.h"
+#include "texfetch.h"
 
 uniform sampler2D		u_ColorMap;
 
@@ -28,7 +29,7 @@ varying vec2		var_TexCoord;
 
 void main( void )
 {
-	vec4 sky_color = texture2D( u_ColorMap, var_TexCoord );
+	vec4 sky_color = colormap2D( u_ColorMap, var_TexCoord );
 	vec3 eye = normalize( u_ViewOrigin - var_Vertex.xyz );
 	vec3 sun = normalize( -u_LightDir );
 		
