@@ -2827,7 +2827,7 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 	if( mat->refractScale > 0.0f && Q_stristr( options, "HAS_NORMALMAP" ))
 		GL_AddShaderDirective( options, "APPLY_REFRACTION" );
 
-	if(( world->num_cubemaps > 0 ) && CVAR_TO_BOOL( cv_cubemaps ) && (mat->reflectScale > 0.0f) && !RP_CUBEPASS( ))
+	if(( world->num_cubemaps > 0 ) && CVAR_TO_BOOL( r_cubemap ) && (mat->reflectScale > 0.0f) && !RP_CUBEPASS( ))
 	{
 		GL_AddShaderDirective( options, "REFLECTION_CUBEMAP" );
 		using_cubemaps = true;
@@ -3034,7 +3034,7 @@ word CStudioModelRenderer :: ShaderSceneDeferred( mstudiomaterial_t *mat, bool b
 	if( !RP_CUBEPASS() && ( CVAR_TO_BOOL( cv_specular ) && FBitSet( mat->flags, STUDIO_NF_GLOSSMAP )))
 		GL_AddShaderDirective( options, "HAS_GLOSSMAP" );
 
-	if(( world->num_cubemaps > 0 ) && CVAR_TO_BOOL( cv_cubemaps ) && (mat->reflectScale > 0.0f) && !RP_CUBEPASS( ))
+	if(( world->num_cubemaps > 0 ) && CVAR_TO_BOOL( r_cubemap ) && (mat->reflectScale > 0.0f) && !RP_CUBEPASS( ))
 	{
 		GL_AddShaderDirective( options, "REFLECTION_CUBEMAP" );
 		using_cubemaps = true;

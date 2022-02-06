@@ -87,9 +87,9 @@ void R_CheckChanges(void)
 		settings_changed = true;
 	}
 
-	if (FBitSet(cv_cubemaps->flags, FCVAR_CHANGED))
+	if (FBitSet(r_cubemap->flags, FCVAR_CHANGED))
 	{
-		ClearBits(cv_cubemaps->flags, FCVAR_CHANGED);
+		ClearBits(r_cubemap->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 

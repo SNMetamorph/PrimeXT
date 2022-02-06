@@ -118,8 +118,8 @@ void CL_FindTwoNearestCubeMap( const Vector &pos, mcubemap_t **result1, mcubemap
 	if( !result1 || !result2 )
 		return;
 
-	float maxDist1 = 99999.0f;
-	float maxDist2 = 99999.0f;
+	float maxDist1 = 999999.0f;
+	float maxDist2 = 999999.0f;
 	*result1 = *result2 = NULL;
 
 	for( int i = 0; i < world->num_cubemaps; i++ )
@@ -517,7 +517,8 @@ loading actual cubemaps into videomemory
 */
 void GL_LoadAndRebuildCubemaps(RefParams refParams)
 {
-	if (!world->loading_cubemaps)
+	bool realtimeBaking = CVAR_TO_BOOL(r_cubemap_realtime);
+	if (!world->loading_cubemaps && !realtimeBaking)
 		return; // job is done
 
 	if (RP_CUBEPASS())
@@ -538,6 +539,16 @@ void GL_LoadAndRebuildCubemaps(RefParams refParams)
 		mcubemap_t *cm = &world->cubemaps[i];
 		if (!cm->valid) {
 			GL_RenderCubemap(cm);
+		}
+	}
+
+	if (realtimeBaking)
+	{
+		mcubemap_t *cubemapFirst, *cubemapSecond;
+		CL_FindTwoNearestCubeMap(RI->view.origin, &cubemapFirst, &cubemapSecond);
+		GL_RenderCubemap(cubemapFirst);
+		if (cubemapFirst != cubemapSecond) {
+			GL_RenderCubemap(cubemapSecond);
 		}
 	}
 

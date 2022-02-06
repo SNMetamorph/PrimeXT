@@ -872,7 +872,7 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 		else if( e->curstate.rendermode == kRenderTransColor || e->curstate.rendermode == kRenderTransTexture )
 			shader_translucent = true;
 	}
-	else if(( world->num_cubemaps > 0 ) && CVAR_TO_BOOL( cv_cubemaps ) && (mat->reflectScale > 0.0f) && !RP_CUBEPASS( ))
+	else if(( world->num_cubemaps > 0 ) && CVAR_TO_BOOL( r_cubemap ) && (mat->reflectScale > 0.0f) && !RP_CUBEPASS( ))
 	{
 		if( !FBitSet( mat->flags, BRUSH_REFLECT ))
 		{
@@ -1152,7 +1152,7 @@ static word Mod_ShaderSceneDeferred( msurface_t *s )
 	{
 		GL_AddShaderDirective( options, "HAS_GLOSSMAP" );
 
-		if(( world->num_cubemaps > 0 ) && CVAR_TO_BOOL( cv_cubemaps ) && !RP_CUBEPASS( ))
+		if(( world->num_cubemaps > 0 ) && CVAR_TO_BOOL( r_cubemap ) && !RP_CUBEPASS( ))
 		{
 			GL_AddShaderDirective( options, "REFLECTION_CUBEMAP" );
 			using_cubemaps = true;
