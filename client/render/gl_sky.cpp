@@ -279,12 +279,15 @@ static void GL_DrawSkySide( word hProgram, int skyside )
 
 	Vector sky_color = (tr.sun_light_enabled) ? tr.sun_diffuse : tr.sky_ambient * (1.0f/128.0f) * tr.diffuseFactor;
 	Vector sky_vec = tr.sky_normal.Normalize();
-	glsl_program_t *shader = RI->currentshader;
-
-	ColorNormalize( sky_color, sky_color );
+	
+	if (sky_vec.Length() < 0.01f) {
+		// placeholder sun direction here
+		sky_vec = Vector(0.f, 0.f, 1.f);
+	}
 
 	// setup specified uniforms (and texture bindings)
-	for( int i = 0; i < shader->numUniforms; i++ )
+	glsl_program_t *shader = RI->currentshader;
+	for (int i = 0; i < shader->numUniforms; i++)
 	{
 		uniform_t *u = &shader->uniforms[i];
 
@@ -322,7 +325,7 @@ static void GL_DrawSkySide( word hProgram, int skyside )
 R_DrawSkybox
 ==============
 */
-void R_DrawSkyBox( void )
+void R_DrawSkyBox()
 {
 	bool	drawSun = true;
 	float	fogDenstity = tr.fogDensity;
@@ -339,8 +342,6 @@ void R_DrawSkyBox( void )
 	// clipplane cut the sky if drawing through mirror. Disable it
 	GL_ClipPlane( false );
 
-	int type = tr.sun_light_enabled ? 1 : 0;
-
 	if( FBitSet( RI->params, RP_SKYVIEW ) || ( FBitSet( RI->params, RP_WATERPASS ) && CVAR_TO_BOOL( cv_specular )))
 		drawSun = false;
 
@@ -348,14 +349,19 @@ void R_DrawSkyBox( void )
 	if( tr.waterlevel >= 3 || FBitSet( RI->params, RP_SKYVIEW ))
 		fogDenstity = 0.0f;
 
-	// make sure what light_environment is present
-	if( tr.sky_normal != g_vecZero && drawSun )
+	if (drawSun)
 	{
-		if( FBitSet( RI->params, RP_DEFERREDSCENE ))
+		if (FBitSet(RI->params, RP_DEFERREDSCENE)) {
 			hSkyShader = tr.defSceneSky;
-		else if( FBitSet( RI->params, RP_DEFERREDLIGHT ))
+		}
+		else if (FBitSet(RI->params, RP_DEFERREDLIGHT)) {
 			hSkyShader = tr.defLightSky;
-		else hSkyShader = tr.skyboxEnv[type];
+		}
+		else 
+		{
+			int type = tr.sun_light_enabled ? 1 : 0;
+			hSkyShader = tr.skyboxEnv[type];
+		}
 	}
 
 	for (int i = 0; i < 6; i++)

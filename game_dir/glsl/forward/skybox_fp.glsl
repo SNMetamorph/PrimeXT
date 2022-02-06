@@ -27,15 +27,15 @@ uniform vec4		u_FogParams;
 varying vec4		var_Vertex;
 varying vec2		var_TexCoord;
 
-void main( void )
+void main()
 {
-	vec4 sky_color = colormap2D( u_ColorMap, var_TexCoord );
+	vec3 sky_color = colormap2D( u_ColorMap, var_TexCoord ).rgb;
 	vec3 eye = normalize( u_ViewOrigin - var_Vertex.xyz );
 	vec3 sun = normalize( -u_LightDir );
 		
 	float day_factor = max( sun.z, 0.0 ) + 0.1;
 	float dotv = max( -dot( eye, sun ), 0.0 );
-	vec4 sun_color = vec4( u_LightDiffuse * 3.0, 1.0 );
+	vec3 sun_color = vec3( u_LightDiffuse * 3.0);
 
 	float pow_factor = day_factor * 512.0;
 	float sun_factor = clamp( pow( dotv, 1536.0 ), 0.0, 1.0 );	// keep sun constant size
@@ -45,7 +45,7 @@ void main( void )
 #ifdef SKYBOX_DAYTIME
 	sky_color *= day_factor;
 #endif
-	vec4 diffuse = sky_color + sun_color * sun_factor;
+	vec3 diffuse = sky_color + sun_color * sun_factor;
 
 	if( bool( u_FogParams.w != 0.0 ))
 	{
@@ -53,5 +53,5 @@ void main( void )
 		diffuse.rgb = mix( u_FogParams.xyz, diffuse.rgb, fogFactor );
 	}
 
-	gl_FragColor = diffuse;
+	gl_FragColor = vec4(diffuse, 1.0);
 }
