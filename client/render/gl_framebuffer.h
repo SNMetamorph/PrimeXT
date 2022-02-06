@@ -20,17 +20,20 @@ GNU General Public License for more details.
 
 typedef enum
 {
-	FBO_COLOR = 0,			// only color texture is used
-	FBO_DEPTH,			// only depth texture is used
-	FBO_CUBE,				// only color texture as cubemap is side
-} FBO_TYPE;
+	FBO_COLOR = 0,	// only color texture is used
+	FBO_DEPTH,		// only depth texture is used
+	FBO_CUBE,		// only color texture as cubemap is side
+} FramebufferType;
 
-#define FBO_MAKEPOW		(1<<0)		// round buffer size to nearest pow
-#define FBO_NOTEXTURE	(1<<1)		// don't create texture on initialization
-#define FBO_FLOAT		(1<<2)		// use float texture
-#define FBO_RECTANGLE	(1<<3)		// use rectangle texture
-#define FBO_LINEAR		(1<<4)		// use linear filtering
-#define FBO_LUMINANCE	(1<<5)		// force to luminance texture
+typedef enum
+{
+	FBO_MAKEPOW = (1 << 0),		// round buffer size to nearest pow
+	FBO_NOTEXTURE = (1 << 1),   // don't create texture on initialization
+	FBO_FLOAT = (1 << 2),		// use float texture
+	FBO_RECTANGLE = (1 << 3),   // use rectangle texture
+	FBO_LINEAR = (1 << 4),		// use linear filtering
+	FBO_LUMINANCE = (1 << 5)	// force to luminance texture
+} FramebufferFlags;
 
 class CFrameBuffer
 {
@@ -38,17 +41,16 @@ public:
 	CFrameBuffer();
 	~CFrameBuffer();
 
-	bool Init( FBO_TYPE type, GLuint width, GLuint height, GLuint flags = 0 );
-	void Bind( GLuint texture = 0, GLuint side = 0 );
-	bool ValidateFBO( void );
-	void Free( void );
+	bool Init(FramebufferType type, GLuint width, GLuint height, GLuint flags = 0);
+	void Bind(GLuint texture = 0, GLuint side = 0);
+	bool ValidateFBO();
+	void Free();
 
-	unsigned int GetWidth( void ) const { return m_iFrameWidth; }
-	unsigned int GetHeight( void ) const { return m_iFrameHeight; }
-	int GetTexture( void ) const { return m_iTexture; }
-	bool Active( void ) const { return m_bAllowFBO; }
-protected:
-	static int	m_iBufferNum;	// single object for all instances
+	unsigned int GetWidth() const	{ return m_iFrameWidth; }
+	unsigned int GetHeight() const	{ return m_iFrameHeight; }
+	int GetTexture() const			{ return m_iTexture; }
+	bool Active() const				{ return m_bAllowFBO; }
+
 private:
 	GLuint		m_iFrameWidth;
 	GLuint		m_iFrameHeight;
@@ -59,6 +61,7 @@ private:
 	GLenum		m_iAttachment;	// attachment type
 	bool		m_bAllowFBO;	// FBO is valid
 	GLuint		m_iFlags;		// member FBO flags
+	static int	m_iBufferNum;	// single object for all instances
 };
 
 #endif//GL_FRAMEBUFFER_H
