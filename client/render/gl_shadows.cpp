@@ -26,16 +26,6 @@ GNU General Public License for more details.
 #include "gl_cvars.h"
 #include "pm_defs.h"
 
-static Vector light_sides[] =
-{
-Vector(  0.0f,   0.0f,  90.0f ),	// GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB 
-Vector(  0.0f, 180.0f, -90.0f ),	// GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB 
-Vector(  0.0f,  90.0f,   0.0f ),	// GL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB
-Vector(  0.0f, 270.0f, 180.0f ),	// GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB 
-Vector(-90.0f, 180.0f, -90.0f ),	// GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB
-Vector( 90.0f,   0.0f,  90.0f ),	// GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB
-};
-
 /*
 =============================================================
 
@@ -341,7 +331,7 @@ static void R_ShadowPassSetupViewCache( CDynLight *pl, int split = 0 )
 	}
 	else if( pl->type == LIGHT_OMNI )
 	{
-		RI->view.angles = light_sides[split]; // this is cube side of course
+		RI->view.angles = CL_GetCubemapSideViewangles(split); // this is cube side of course
 		RI->view.matrix = matrix4x4( RI->view.origin, RI->view.angles );
 		RI->view.frustum.InitProjection( RI->view.matrix, 0.1f, pl->radius, 90.0f, 90.0f );
 	}
@@ -353,10 +343,11 @@ static void R_ShadowPassSetupViewCache( CDynLight *pl, int split = 0 )
 
 	if( pl->type == LIGHT_OMNI )
 	{
+		Vector cubemapSideAngles = CL_GetCubemapSideViewangles(split);
 		RI->view.worldMatrix.CreateModelview();
-		RI->view.worldMatrix.ConcatRotate( -light_sides[split].z, 1, 0, 0 );
-		RI->view.worldMatrix.ConcatRotate( -light_sides[split].x, 0, 1, 0 );
-		RI->view.worldMatrix.ConcatRotate( -light_sides[split].y, 0, 0, 1 );
+		RI->view.worldMatrix.ConcatRotate( -cubemapSideAngles.z, 1, 0, 0 );
+		RI->view.worldMatrix.ConcatRotate( -cubemapSideAngles.x, 0, 1, 0 );
+		RI->view.worldMatrix.ConcatRotate( -cubemapSideAngles.y, 0, 0, 1 );
 		RI->view.worldMatrix.ConcatTranslate( -pl->origin.x, -pl->origin.y, -pl->origin.z );
 		RI->view.projectionMatrix = pl->projectionMatrix;
 	}
