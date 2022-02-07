@@ -25,6 +25,7 @@ GNU General Public License for more details.
 #include "gl_world.h"
 #include "gl_cvars.h"
 #include "gl_debug.h"
+#include "gl_viewport.h"
 
 void R_InitCubemaps()
 {
@@ -462,14 +463,19 @@ static void GL_ComputeCubemapViewBoxSize(mcubemap_t *cubemap)
 
 static void GL_SetupCubemapSideView(mcubemap_t *cubemap, ref_viewpass_t &rvp, int side)
 {
-	rvp.viewport[0] = rvp.viewport[1] = 0;
-	rvp.viewport[2] = rvp.viewport[3] = cubemap->size;
+	CViewport cubeSideViewport;
+	cubeSideViewport.SetX(0);
+	cubeSideViewport.SetY(0);
+	cubeSideViewport.SetWidth(cubemap->size);
+	cubeSideViewport.SetHeight(cubemap->size);
+	cubeSideViewport.WriteToArray(rvp.viewport);
+
 	rvp.vieworigin = cubemap->origin;
 	rvp.viewangles = CL_GetCubemapSideViewangles(side);
 	rvp.viewentity = 0;
 	rvp.fov_x = rvp.fov_y = 90.0f;
 	rvp.flags = RP_DRAW_WORLD;
-
+	
 	if (world->build_default_cubemap) {
 		SetBits(rvp.flags, RP_SKYVIEW);
 	}

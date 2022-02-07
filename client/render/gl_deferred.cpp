@@ -207,7 +207,7 @@ void GL_SetupDeferred( void )
 
 	GL_Cull( GL_FRONT );
 	pglColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-	pglViewport( 0, 0, RI->view.port[2], RI->view.port[3] );
+	pglViewport( 0, 0, RI->view.port.GetWidth(), RI->view.port.GetHeight() );
 }
 
 static void GL_DrawDeferred( word hProgram, int pass )

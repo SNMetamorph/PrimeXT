@@ -18,6 +18,8 @@ GNU General Public License for more details.
 class CViewport
 {
 public:
+	CViewport();
+	CViewport(const int *viewportArray);
 	CViewport(int x, int y, int w, int h);
 	inline int GetX() const { return m_iOffsetX; };
 	inline int GetY() const { return m_iOffsetY; };
@@ -29,13 +31,18 @@ public:
 	inline void SetWidth(int value) { m_iWidth = value; }
 	inline void SetHeight(int value) { m_iHeight = value; }
 
+	void SetAsCurrent() const;
+	void WriteToArray(int *viewportArray) const;
+	bool CompareWith(const int *viewportArray) const;
+	bool CompareWith(const CViewport &viewport) const;
+	
 	// for using class like array, with operator []
 	operator int *() { return &m_iOffsetX; } 
 	operator const int *() const { return &m_iOffsetX; }
 
 private:
-	int m_iOffsetX = 0;
-	int m_iOffsetY = 0;
-	int m_iWidth = 0;
-	int m_iHeight = 0;
+	int m_iOffsetX;
+	int m_iOffsetY;
+	int m_iWidth;
+	int m_iHeight;
 };

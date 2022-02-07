@@ -677,7 +677,7 @@ void R_RenderQuadPrimitive( CSolidEntry *entry )
 		GL_AlphaTest( GL_FALSE );
 }
 
-int R_AllocFrameBuffer( int viewport[4] )
+int R_AllocFrameBuffer(const CViewport &viewport)
 {
 	int i = tr.num_framebuffers;
 
@@ -699,7 +699,7 @@ int R_AllocFrameBuffer( int viewport[4] )
 	// create a depth-buffer
 	pglGenRenderbuffers( 1, &fbo->renderbuffer );
 	pglBindRenderbuffer( GL_RENDERBUFFER_EXT, fbo->renderbuffer );
-	pglRenderbufferStorage( GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, viewport[2], viewport[3] );
+	pglRenderbufferStorage( GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, viewport.GetWidth(), viewport.GetHeight() );
 	pglBindRenderbuffer( GL_RENDERBUFFER_EXT, 0 );
 
 	// create frame-buffer
@@ -1052,7 +1052,7 @@ GL_Setup3D
 */
 void GL_Setup3D( void )
 {
-	pglViewport( RI->glstate.viewport[0], RI->glstate.viewport[1], RI->glstate.viewport[2], RI->glstate.viewport[3] );
+	RI->glstate.viewport.SetAsCurrent();
 
 	pglMatrixMode( GL_PROJECTION );
 	GL_LoadMatrix( RI->glstate.projectionMatrix );

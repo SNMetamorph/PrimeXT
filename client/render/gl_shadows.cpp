@@ -313,8 +313,7 @@ R_ShadowPassSetupViewCache
 */
 static void R_ShadowPassSetupViewCache( CDynLight *pl, int split = 0 )
 {
-	memcpy( RI->glstate.viewport, RI->view.port, sizeof( RI->glstate.viewport ));
-
+	RI->glstate.viewport = RI->view.port;
 	RI->view.farClip = pl->radius;
 	RI->view.origin = pl->origin;
 

@@ -25,6 +25,7 @@ GNU General Public License for more details.
 #include "gl_framebuffer.h"
 #include "gl_cubemap.h"
 #include "gl_frustum.h"
+#include "gl_viewport.h"
 #include "gl_primitive.h"
 #include "gl_shader.h"
 #include "cl_dlight.h"
@@ -356,10 +357,9 @@ typedef struct
 	float		planedist;			// for sort translucent surfaces
 	float		lodScale;
 
-	int		port[4];				// cached view.port
-
-	CFrustum		frustum;				// view frustum
-	CFrustum		splitFrustum[MAX_SHADOWMAPS];
+	CViewport	port;				// cached view.port
+	CFrustum	frustum;			// view frustum
+	CFrustum	splitFrustum[MAX_SHADOWMAPS];
 	float		parallelSplitDistances[MAX_SHADOWMAPS];	// distances in camera space
 
 	matrix4x4		matrix;				// untransformed viewmatrix
@@ -402,8 +402,7 @@ typedef struct
 // to avoid to recompute it again
 typedef struct
 {
-	int		viewport[4];		// in OpenGL space
-
+	CViewport	viewport;		// in OpenGL space
 	GLfloat		modelviewMatrix[16];	// worldviewMatrix
 	GLfloat		projectionMatrix[16];	// projection matrix
 	GLfloat		modelviewProjectionMatrix[16];// send to engine
@@ -778,7 +777,7 @@ void GL_LoadMatrix(const matrix4x4 &source);
 void GL_LoadTexMatrix(const matrix4x4 &source);
 void GL_BindFrameBuffer(int buffer, int texture);
 void R_Speeds_Printf(const char *msg, ...);
-int R_AllocFrameBuffer(int viewport[4]);
+int R_AllocFrameBuffer(const CViewport &viewport);
 void GL_CheckVertexArrayBinding(void);
 void R_FreeFrameBuffer(int buffer);
 void GL_CleanupAllTextureUnits(void);

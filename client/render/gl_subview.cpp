@@ -42,9 +42,10 @@ Prepare view for mirroring
 texFlags_t R_SetupMirrorView( msurface_t *surf, ref_viewpass_t *rvp, matrix4x4 &viewmat)
 {
 	cl_entity_t	*ent = surf->info->parent;
-	matrix3x3		matAngles;
-	mplane_t		plane;
+	matrix3x3	matAngles;
+	mplane_t	plane;
 	gl_state_t	*glm;
+	CViewport	viewport;
 	float		d;
 
 	// setup mirror plane
@@ -102,33 +103,35 @@ texFlags_t R_SetupMirrorView( msurface_t *surf, ref_viewpass_t *rvp, matrix4x4 &
 	material_t *mat = R_TextureAnimation( surf )->material;
 
 	RI->view.pvspoint = origin;
-	rvp->viewport[0] = rvp->viewport[1] = 0;
+	viewport.SetX(0);
+	viewport.SetY(0);
 
 	if( FBitSet( surf->flags, SURF_REFLECT_PUDDLE ))
 	{
-		rvp->viewport[2] = 192;
-		rvp->viewport[3] = 192;
+		viewport.SetWidth(192);
+		viewport.SetHeight(192);
 	}
 	else
 	{
-		rvp->viewport[2] = RI->view.port[2];
-		rvp->viewport[3] = RI->view.port[3];
+		viewport.SetWidth(RI->view.port.GetWidth());
+		viewport.SetHeight(RI->view.port.GetHeight());
 	}
 
 	if( GL_Support( R_ARB_TEXTURE_NPOT_EXT ))
 	{
 		// allow screen size
-//		rvp->viewport[2] = bound( 96, rvp->viewport[2], 1024 );
-//		rvp->viewport[3] = bound( 72, rvp->viewport[3], 768 );
+		viewport.SetWidth(Q_max(96, viewport.GetWidth()));
+		viewport.SetHeight(Q_max(72, viewport.GetHeight()));
 	}
 	else
 	{
-		rvp->viewport[2] = NearestPOW( rvp->viewport[2], true );
-		rvp->viewport[3] = NearestPOW( rvp->viewport[3], true );
-//		rvp->viewport[2] = bound( 128, rvp->viewport[2], 1024 );
-//		rvp->viewport[3] = bound( 64, rvp->viewport[3], 512 );
+		int w = NearestPOW(viewport.GetWidth(), true);
+		int h = NearestPOW(viewport.GetHeight(), true);
+		viewport.SetWidth(Q_max(128, w));
+		viewport.SetHeight(Q_max(64, h));
 	}
 
+	viewport.WriteToArray(rvp->viewport);
 	if( FBitSet( mat->flags, BRUSH_LIQUID ))
 		SetBits( rvp->flags, RP_WATERPASS );
 	else if( FBitSet( surf->flags, SURF_REFLECT_PUDDLE ))
@@ -157,6 +160,7 @@ texFlags_t R_SetupPortalView(msurface_t *surf, ref_viewpass_t *rvp, cl_entity_t 
 	matrix4x4	surfaceMat, cameraMat, viewMat;
 	Vector		origin, angles;
 	mplane_t	plane;
+	CViewport	viewport;
 
 	if (!R_StaticEntity(ent))
 	{
@@ -203,21 +207,23 @@ texFlags_t R_SetupPortalView(msurface_t *surf, ref_viewpass_t *rvp, cl_entity_t 
 	RI->clipPlane = plane;
 	RI->view.pvspoint = camera->origin;
 
-	rvp->viewport[0] = rvp->viewport[1] = 0;
+	viewport.SetX(0);
+	viewport.SetY(0);
 	if (GL_Support(R_ARB_TEXTURE_NPOT_EXT))
 	{
 		// allow screen size
-		rvp->viewport[2] = bound(96, RI->view.port[2], 1024);
-		rvp->viewport[3] = bound(72, RI->view.port[3], 768);
+		viewport.SetWidth(bound(96, RI->view.port.GetWidth(), 1024));
+		viewport.SetHeight(bound(72, RI->view.port.GetHeight(), 768));
 	}
 	else
 	{
-		rvp->viewport[2] = NearestPOW(RI->view.port[2], true);
-		rvp->viewport[3] = NearestPOW(RI->view.port[3], true);
-		rvp->viewport[2] = bound(128, rvp->viewport[2], 1024);
-		rvp->viewport[3] = bound(64, rvp->viewport[3], 512);
+		int w = NearestPOW(RI->view.port.GetWidth(), true);
+		int h = NearestPOW(RI->view.port.GetHeight(), true);
+		viewport.SetWidth(bound(128, w, 1024));
+		viewport.SetHeight(bound(64, h, 512));
 	}
 
+	viewport.WriteToArray(rvp->viewport);
 	return static_cast<texFlags_t>(TF_SCREEN);
 }
 
@@ -239,7 +245,8 @@ texFlags_t R_SetupScreenView(msurface_t *surf, ref_viewpass_t *rvp, matrix4x4 &v
 {
 	cl_entity_t *ent = surf->info->parent;
 	Vector		origin, angles;
-	float		fov = 90;
+	float		fov = 90.f;
+	CViewport	viewport;
 
 	viewmat.Identity();
 	if (camera->player && UTIL_IsLocal(camera->curstate.number))
@@ -312,19 +319,23 @@ texFlags_t R_SetupScreenView(msurface_t *surf, ref_viewpass_t *rvp, matrix4x4 &v
 		if ((t->width == 64) && (t->height == 64))
 		{
 			// HACKHACK: for default texture
-			rvp->viewport[2] = rvp->viewport[3] = 512;
+			viewport.SetWidth(512);
+			viewport.SetHeight(512);
 		}
 		else
 		{
-			rvp->viewport[2] = bound(64, t->width * 2, 1024);
-			rvp->viewport[3] = bound(64, t->height * 2, 1024);
+			viewport.SetWidth(bound(64, t->width * 2, 1024));
+			viewport.SetHeight(bound(64, t->height * 2, 1024));
 		}
 	}
 	else 
-		rvp->viewport[2] = rvp->viewport[3] = 512;
+	{
+		viewport.SetWidth(512);
+		viewport.SetHeight(512);
+	}
 
 	// setup the screen FOV
-	if (rvp->viewport[2] == rvp->viewport[3])
+	if (viewport.GetWidth() == viewport.GetHeight())
 	{
 		rvp->fov_x = fov;
 		rvp->fov_y = fov;
@@ -332,9 +343,12 @@ texFlags_t R_SetupScreenView(msurface_t *surf, ref_viewpass_t *rvp, matrix4x4 &v
 	else
 	{
 		rvp->fov_x = fov;
-		rvp->fov_y = V_CalcFov(rvp->fov_x, rvp->viewport[2], rvp->viewport[3]);
+		rvp->fov_y = V_CalcFov(rvp->fov_x, viewport.GetWidth(), viewport.GetHeight());
 	}
-	rvp->viewport[0] = rvp->viewport[1] = 0;
+
+	viewport.SetX(0);
+	viewport.SetY(0);
+	viewport.WriteToArray(rvp->viewport);
 	rvp->viewangles[0] = anglemod(angles[0]);
 	rvp->viewangles[1] = anglemod(angles[1]);
 	rvp->viewangles[2] = anglemod(angles[2]);
@@ -356,20 +370,20 @@ R_AllocateSubviewTexture
 Allocate the screen texture and make copy
 ================
 */
-int R_AllocateSubviewTexture( int viewport[4], texFlags_t texFlags )
+int R_AllocateSubviewTexture(const CViewport &viewport, texFlags_t texFlags)
 {
 	int	i;
 
 	// first, search for available mirror texture
-	for( i = 0; i < tr.num_subview_used; i++ )
+	for ( i = 0; i < tr.num_subview_used; i++ )
 	{
 		if( tr.subviewTextures[i].texframe == tr.realframecount )
 			continue;	// already used for this frame
 
-		if( viewport[2] != RENDER_GET_PARM( PARM_TEX_WIDTH, tr.subviewTextures[i].texturenum ))
+		if( viewport.GetWidth() != RENDER_GET_PARM( PARM_TEX_WIDTH, tr.subviewTextures[i].texturenum ))
 			continue;	// width mismatched
 
-		if( viewport[3] != RENDER_GET_PARM( PARM_TEX_HEIGHT, tr.subviewTextures[i].texturenum ))
+		if( viewport.GetHeight() != RENDER_GET_PARM( PARM_TEX_HEIGHT, tr.subviewTextures[i].texturenum ))
 			continue;	// height mismatched
 
 		// screens don't want textures with 'clamp' modifier
@@ -390,7 +404,7 @@ int R_AllocateSubviewTexture( int viewport[4], texFlags_t texFlags )
 		}
 
 		// create new mirror texture
-		tr.subviewTextures[i].texturenum = CREATE_TEXTURE( va( "*subview%i", i ), viewport[2], viewport[3], NULL, texFlags ); 
+		tr.subviewTextures[i].texturenum = CREATE_TEXTURE( va( "*subview%i", i ), viewport.GetWidth(), viewport.GetHeight(), NULL, texFlags ); 
 		tr.subviewTextures[i].texframe = tr.realframecount; // now used
 		if( GL_Support( R_FRAMEBUFFER_OBJECT ))
 			tr.subviewTextures[i].framebuffer = R_AllocFrameBuffer( viewport );
@@ -404,7 +418,7 @@ int R_AllocateSubviewTexture( int viewport[4], texFlags_t texFlags )
 	else 
 	{
 		GL_Bind( GL_TEXTURE0, tr.subviewTextures[i].texturenum );
-		pglCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, viewport[0], viewport[1], viewport[2], viewport[3], 0 );
+		pglCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, viewport.GetX(), viewport.GetY(), viewport.GetWidth(), viewport.GetHeight(), 0 );
 	}
 
 	return (i+1);
@@ -585,7 +599,7 @@ e.g. for planar reflection,
 remote cameras etc
 ================
 */
-void R_RenderSubview( void )
+void R_RenderSubview()
 {
 	ref_instance_t	*prevRI;
 	unsigned int	oldFBO;
@@ -657,10 +671,10 @@ void R_RenderSubview( void )
 		else continue; // ???
 
 		oldFBO = glState.frameBuffer;
-
+		CViewport viewport = CViewport(rvp.viewport);
 		if( GL_Support( R_FRAMEBUFFER_OBJECT ))
 		{
-			if(( subview = R_AllocateSubviewTexture( rvp.viewport, texFlags )) == 0 )
+			if(( subview = R_AllocateSubviewTexture(viewport, texFlags )) == 0 )
 				continue;
 			R_CalcSubviewMatrix(rvp, surf, subview, viewmatrix, camera);
 		}
@@ -673,7 +687,7 @@ void R_RenderSubview( void )
 
 		if (!GL_Support(R_FRAMEBUFFER_OBJECT)) 
 		{
-			subview = R_AllocateSubviewTexture(rvp.viewport, texFlags);	
+			subview = R_AllocateSubviewTexture(viewport, texFlags);
 			R_CalcSubviewMatrix(rvp, surf, subview, viewmatrix, camera);
 		}
 

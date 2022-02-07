@@ -285,7 +285,7 @@ int CBasePostEffects::RenderExposureStorage()
 
 void CBasePostEffects :: SetNormalViewport( void )
 {
-	pglViewport( RI->glstate.viewport[0], RI->glstate.viewport[1], RI->glstate.viewport[2], RI->glstate.viewport[3] );
+	RI->glstate.viewport.SetAsCurrent();
 }
 
 void CBasePostEffects :: SetTargetViewport( void )

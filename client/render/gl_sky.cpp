@@ -395,10 +395,7 @@ void R_DrawSkyPortal(cl_entity_t *skyPortal)
 	RI->view.frustum.DisablePlane(FRUSTUM_FAR);
 	RI->view.frustum.DisablePlane(FRUSTUM_NEAR);
 	RI->view.pvspoint = skyPortal->curstate.origin;
-
-	for (int i = 0; i < ARRAYSIZE(RI->view.port); ++i) {
-		rvp.viewport[i] = RI->view.port[i];
-	}
+	RI->view.port.WriteToArray(rvp.viewport);
 
 	if (skyScale > 0.0f)
 	{
@@ -413,7 +410,7 @@ void R_DrawSkyPortal(cl_entity_t *skyPortal)
 	if (skyFov)
 	{
 		rvp.fov_x = skyFov;
-		rvp.fov_y = V_CalcFov(RI->view.fov_x, rvp.viewport[2], rvp.viewport[3]);
+		rvp.fov_y = V_CalcFov(RI->view.fov_x, RI->view.port.GetWidth(), RI->view.port.GetHeight());
 	}
 	else {
 		rvp.fov_x = RI->view.fov_x;

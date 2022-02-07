@@ -349,26 +349,25 @@ static void R_SetupViewCache( const ref_viewpass_t *rvp )
 	}
 
 	// viewport was changed, recompute
-	if( memcmp( RI->view.port, rvp->viewport, sizeof( RI->view.port )))
+	if (RI->view.port.CompareWith(rvp->viewport))
 	{
-		memcpy( RI->view.port, rvp->viewport, sizeof( RI->view.port ));
-
-		if( RP_NORMALPASS( ) && !FBitSet( RI->params, RP_DEFERREDLIGHT ))
+		RI->view.port = CViewport(rvp->viewport);
+		if (RP_NORMALPASS( ) && !FBitSet( RI->params, RP_DEFERREDLIGHT ))
 		{
-			int	x, x2, y, y2;
-
 			// set up viewport (main, playersetup)
-			x = floor( RI->view.port[0] * glState.width / glState.width );
-			x2 = ceil(( RI->view.port[0] + RI->view.port[2] ) * glState.width / glState.width );
-			y = floor( glState.height - RI->view.port[1] * glState.height / glState.height );
-			y2 = ceil( glState.height - ( RI->view.port[1] + RI->view.port[3] ) * glState.height / glState.height );
+			int x = floor(RI->view.port.GetX() * glState.width / glState.width);
+			int x2 = ceil((RI->view.port.GetX() + RI->view.port.GetWidth()) * glState.width / glState.width);
+			int y = floor(glState.height - RI->view.port.GetY() * glState.height / glState.height);
+			int y2 = ceil(glState.height - (RI->view.port.GetY() + RI->view.port.GetHeight()) * glState.height / glState.height);
 
-			RI->glstate.viewport[0] = x;
-			RI->glstate.viewport[1] = y2;
-			RI->glstate.viewport[2] = x2 - x;
-			RI->glstate.viewport[3] = y - y2;
+			RI->glstate.viewport.SetX(x);
+			RI->glstate.viewport.SetY(y2);
+			RI->glstate.viewport.SetWidth(x2 - x);
+			RI->glstate.viewport.SetHeight(y - y2);
 		}
-		else memcpy( RI->glstate.viewport, RI->view.port, sizeof( RI->glstate.viewport )); // additional passes
+		else {
+			RI->glstate.viewport = RI->view.port; // additional passes
+		}
 	}
 
 	// vieworigin was changed
@@ -718,7 +717,7 @@ shared our matrices with gl-machine
 */
 void R_SetupGLstate( void )
 {
-	pglViewport( RI->glstate.viewport[0], RI->glstate.viewport[1], RI->glstate.viewport[2], RI->glstate.viewport[3] );
+	RI->glstate.viewport.SetAsCurrent();
 
 	if( RP_NORMALPASS() && tr.sunlight != NULL && CVAR_TO_BOOL( r_pssm_show_split ))
 	{
@@ -835,11 +834,7 @@ void R_DrawParticles( qboolean trans )
 	if( FBitSet( RI->params, ( RP_ENVVIEW|RP_SKYVIEW )))
 		return;
 
-	rvp.viewport[0] = RI->view.port[0];
-	rvp.viewport[1] = RI->view.port[1];
-	rvp.viewport[2] = RI->view.port[2];
-	rvp.viewport[3] = RI->view.port[3];
-
+	RI->view.port.WriteToArray(rvp.viewport);
 	rvp.viewangles = RI->view.angles;
 	rvp.vieworigin = RI->view.origin;
 	rvp.fov_x = RI->view.fov_x;
