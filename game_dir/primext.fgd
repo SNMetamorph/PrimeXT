@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 6 December 2021)
+// PrimeXT FGD (last updated 8 Feb 2022)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -1701,8 +1701,8 @@
 	sequence(integer) : "Sequence" : 0
 	frame(integer) : "Frame"
 	colormap(string): "Colormap"
-	zhlt_shadowmode(string) : "Shadow (1 = medium quality)" : "1"
-	
+	zhlt_shadowmode(string) : "Lightmap shadow quality" : "1"
+	zhlt_modellightmap(string) : "Bake lightmap on model (0 - off, 1 - on)" : "0"
 	spawnflags(flags) =
 	[
 		1: "Solid" : 0
