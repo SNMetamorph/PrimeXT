@@ -1095,6 +1095,7 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 	mstudioseqdesc_t	*pseqdesc;
 	matrix3x4		bonematrix;
 	mstudiobone_t	*pbones;
+	bool has_boneweights = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
 	int		i;
 
 	static Vector	pos[MAXSTUDIOBONES];
@@ -1230,7 +1231,7 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 	mposetobone_t *m = m_pModelInstance->m_pModel->poseToBone;
 
 	// convert bones into compacted GLSL array
-	if( m != NULL )
+	if (has_boneweights)
 	{
 		for( int i = 0; i < m_pStudioHeader->numbones; i++ )
 		{
@@ -2217,6 +2218,7 @@ void CStudioModelRenderer :: AddStudioModelToDrawList( cl_entity_t *e, bool upda
 	if( RP_LOCALCLIENT( RI->currententity ) && !FBitSet( RI->params, RP_THIRDPERSON ))
 		m_pModelInstance->cached_frame = -1;
 
+	bool has_boneweights = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
 	m_pModelInstance->visframe = tr.realframecount; // visible	
 
 	if( m_pModelInstance->cached_frame != tr.realframecount )
@@ -2234,7 +2236,7 @@ void CStudioModelRenderer :: AddStudioModelToDrawList( cl_entity_t *e, bool upda
 				mposetobone_t *m = m_pModelInstance->m_pModel->poseToBone;
 
 				// convert bones into compacted GLSL array
-				if( m != NULL )
+				if (has_boneweights)
 				{
 					for( int i = 0; i < m_pStudioHeader->numbones; i++ )
 					{
@@ -2291,7 +2293,7 @@ void CStudioModelRenderer :: AddStudioModelToDrawList( cl_entity_t *e, bool upda
 			mposetobone_t *m = pweaponmodel->poseToBone;
 
 			// convert bones into compacted GLSL array
-			if( m != NULL )
+			if (has_boneweights)
 			{
 				for( int i = 0; i < m_pStudioHeader->numbones; i++ )
 				{
