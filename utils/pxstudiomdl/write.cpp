@@ -1059,6 +1059,11 @@ void WriteModel( void )
 			pData = (byte *)pweight;
 			ALIGN( pData );
 		}
+		else
+		{
+			pmodel[i].blendvertinfoindex = 0;
+			pmodel[i].blendnorminfoindex = 0;
+		}
 
 		// save group info
 		pvert = (Vector *)pData;
