@@ -245,15 +245,8 @@ void CJiggleBones::BuildJiggleTransformations( int boneIndex, float currenttime,
 					// clip to limit plane
 					data->tipPos = goalBasePosition + limitAlong.x * limitLeft + limitAlong.z * limitForward;
 
-					// pitch friction - rubbing along limit plane
-					Vector limitVel;
-					limitVel.y = DotProduct( limitUp, data->tipVel );
-					limitVel.z = DotProduct( limitForward, data->tipVel );
-
-					data->tipAccel -= jiggleInfo->pitchFriction * (limitVel.x * limitLeft + limitVel.z * limitForward);
-
-					// update velocity reaction to hitting constraint
-					data->tipVel = limitVel.x * limitLeft - jiggleInfo->pitchBounce * limitVel.y * limitUp + limitVel.z * limitForward;
+					// removed friction and velocity clipping against constraint - was causing simulation blowups
+					data->tipVel.Init();
 				}
 			}
 		}
@@ -298,9 +291,16 @@ void CJiggleBones::BuildJiggleTransformations( int boneIndex, float currenttime,
 		// Build bone matrix to align along current tip direction
 		//
 		Vector left = CrossProduct( goalUp, forward ).Normalize();
+		if (DotProduct(left, data->lastLeft) < 0.0f)
+		{
+			// The bone has rotated so far its on the other side of the up vector
+			// resulting in the cross product result flipping 180 degrees around the up
+			// vector.  Flip it back.
+			left = -left;
+		}
+		data->lastLeft = left;
 
 		Vector up = CrossProduct( forward, left );
-
 		boneMX.SetForward( left );
 		boneMX.SetRight( up );
 		boneMX.SetUp( forward );
