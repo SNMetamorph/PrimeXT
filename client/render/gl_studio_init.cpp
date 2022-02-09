@@ -1135,7 +1135,7 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 	Vector		*pstudionorms = (Vector *)((byte *)m_pStudioHeader + pSubModel->normindex);
 	bool		has_vertlight = ( lightmode == LIGHTSTATIC_VERTEX ) ? true : false;
 	bool		has_surflight = ( lightmode == LIGHTSTATIC_SURFACE ) ? true : false;
-	bool		has_boneweights = (m_pStudioHeader->flags & STUDIO_HAS_BONEWEIGHTS) != 0;
+	bool		has_boneweights = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
 	byte		*pvertbone = ((byte *)m_pStudioHeader + pSubModel->vertinfoindex);
 	byte		*pnormbone = ((byte *)m_pStudioHeader + pSubModel->norminfoindex);
 	mstudiomaterial_t	*pmaterial = (mstudiomaterial_t *)RI->currentmodel->materials;
@@ -1161,7 +1161,7 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 	if( m_iTBNState == TBNSTATE_GENERATE || use_fan_sequence )
 	{
 		// we need to build TBN in refrence pose to avoid seams
-		if( RI->currentmodel->poseToBone )
+		if (has_boneweights)
 		{
 			// compute weighted vertexes
 			for( int i = 0; i < pSubModel->numverts; i++ )
@@ -1305,7 +1305,7 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 				m_arrayxvert[m_nNumArrayVerts].lmcoord1[2] = 0.0f;
 				m_arrayxvert[m_nNumArrayVerts].lmcoord1[3] = 0.0f;
 
-				if (RI->currentmodel->poseToBone != NULL && has_boneweights)
+				if (has_boneweights)
 				{
 					mstudioboneweight_t	*pCurWeight = &pvertweight[ptricmds[0]];
 
@@ -1561,7 +1561,7 @@ void CStudioModelRenderer :: MeshCreateBuffer( vbomesh_t *pOut, const mstudiomes
 	mstudiomaterial_t	*pmaterial = (mstudiomaterial_t *)RI->currentmodel->materials + pskinref[pMesh->skinref];
 	mstudiobone_t	*pbones = (mstudiobone_t *)((byte *)m_pStudioHeader + m_pStudioHeader->boneindex);
 	bool		has_bumpmap = FBitSet( pmaterial->flags, STUDIO_NF_NORMALMAP ) ? true : false;
-	bool 		has_boneweights = ( RI->currentmodel->poseToBone != NULL ) ? true : false;
+	bool 		has_boneweights = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
 	bool		has_vertexlight = ( lightmode == LIGHTSTATIC_VERTEX ) ? true : false;
 	bool		has_lightmap = ( lightmode == LIGHTSTATIC_SURFACE ) ? true : false;
 	static uint	arrayelems[MAXARRAYVERTS*3];
@@ -1639,6 +1639,7 @@ mstudiocache_t *CStudioModelRenderer :: CreateStudioCache( void *srclight, int l
 {
 	float		start_time = Sys_DoubleTime();
 	bool		unique_model = (srclight == NULL);	// just for more readable code
+	bool 		has_boneweights = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
 	TmpModel_t	submodel[MAXSTUDIOMODELS];	// list of unique models
 	float		poseparams[MAXSTUDIOPOSEPARAM];
 	static matrix3x4	bones[MAXSTUDIOBONES];
@@ -1711,7 +1712,7 @@ mstudiocache_t *CStudioModelRenderer :: CreateStudioCache( void *srclight, int l
 		else bones[i] = bones[pbones[i].parent].ConcatTransforms( matrix3x4( pos[i], q[i] ));
 	}
 
-	if( RI->currentmodel->poseToBone != NULL )
+	if (has_boneweights)
 	{
 		// convert bones into worldtransform
 		for( i = 0; i < m_pStudioHeader->numbones; i++ )

@@ -995,7 +995,7 @@ void CStudioModelRenderer :: DecalCreateBuffer( DecalBuildInfo_t& build, studiod
 	short *pskinref = (short *)((byte *)m_pStudioHeader + m_pStudioHeader->skinindex);
 	pmaterial = &pmaterial[pskinref[pMesh->skinref]];
 
-	bool has_boneweights = ( RI->currentmodel->poseToBone != NULL ) ? true : false;
+	bool has_boneweights = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
 	bool has_vertexlight = ( build.m_pVertexLight ) ? true : false;
 	bool has_lightmap = false;
 	bool has_bumpmap = false;
@@ -1099,6 +1099,7 @@ void CStudioModelRenderer :: AddDecalToModel( DecalBuildInfo_t& buildInfo )
 	Vector *pstudioverts = (Vector *)((byte *)m_pStudioHeader + m_pSubModel->vertindex);
 	Vector *pstudionorms = (Vector *)((byte *)m_pStudioHeader + m_pSubModel->normindex);
 	byte *pvertbone = ((byte *)m_pStudioHeader + m_pSubModel->vertinfoindex);
+	bool has_boneweights = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
 	short *pskinref;
 	int i, numVerts;
 
@@ -1195,10 +1196,9 @@ void CStudioModelRenderer :: AddDecalToModel( DecalBuildInfo_t& buildInfo )
 				out->stcoord[0] = 0.0f;
 				out->stcoord[1] = 0.0f;
 
-				if( RI->currentmodel->poseToBone != NULL )
+				if (has_boneweights)
 				{
 					mstudioboneweight_t	*pCurWeight = &pvertweight[ptricmds[0]];
-
 					out->boneid[0] = pCurWeight->bone[0];
 					out->boneid[1] = pCurWeight->bone[1];
 					out->boneid[2] = pCurWeight->bone[2];
@@ -1364,6 +1364,7 @@ void CStudioModelRenderer :: StudioDecalShoot( const Vector &vecNormal, const Ve
 {
 	DecalBuildInfo_t buildInfo;
 	float flLocalScale = 1.0f;
+	bool hasBoneweights = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
 
 	if( !g_fRenderInitialized )
 		return;
@@ -1437,7 +1438,7 @@ void CStudioModelRenderer :: StudioDecalShoot( const Vector &vecNormal, const Ve
 	}
 
 	// setup worldtransform array
-	if( RI->currentmodel->poseToBone != NULL )
+	if (hasBoneweights)
 	{
 		for( int i = 0; i < m_pStudioHeader->numbones; i++ )
 			m_pworldtransform[i] = m_pModelInstance->m_pbones[i].ConcatTransforms( RI->currentmodel->poseToBone->posetobone[i] );
