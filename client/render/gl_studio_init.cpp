@@ -1135,6 +1135,7 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 	Vector		*pstudionorms = (Vector *)((byte *)m_pStudioHeader + pSubModel->normindex);
 	bool		has_vertlight = ( lightmode == LIGHTSTATIC_VERTEX ) ? true : false;
 	bool		has_surflight = ( lightmode == LIGHTSTATIC_SURFACE ) ? true : false;
+	bool		has_boneweights = (m_pStudioHeader->flags & STUDIO_HAS_BONEWEIGHTS) != 0;
 	byte		*pvertbone = ((byte *)m_pStudioHeader + pSubModel->vertinfoindex);
 	byte		*pnormbone = ((byte *)m_pStudioHeader + pSubModel->norminfoindex);
 	mstudiomaterial_t	*pmaterial = (mstudiomaterial_t *)RI->currentmodel->materials;
@@ -1304,7 +1305,7 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 				m_arrayxvert[m_nNumArrayVerts].lmcoord1[2] = 0.0f;
 				m_arrayxvert[m_nNumArrayVerts].lmcoord1[3] = 0.0f;
 
-				if( RI->currentmodel->poseToBone != NULL )
+				if (RI->currentmodel->poseToBone != NULL && has_boneweights)
 				{
 					mstudioboneweight_t	*pCurWeight = &pvertweight[ptricmds[0]];
 
@@ -1565,7 +1566,6 @@ void CStudioModelRenderer :: MeshCreateBuffer( vbomesh_t *pOut, const mstudiomes
 	bool		has_lightmap = ( lightmode == LIGHTSTATIC_SURFACE ) ? true : false;
 	static uint	arrayelems[MAXARRAYVERTS*3];
 	Vector		mins, maxs;
-	int		i;
 
 	pOut->skinref = pMesh->skinref;
 	pOut->parentbone = 0xFF;
@@ -1573,7 +1573,7 @@ void CStudioModelRenderer :: MeshCreateBuffer( vbomesh_t *pOut, const mstudiomes
 	ClearBounds( mins, maxs );
 
 	// we need to compute some things individually per mesh
-	for( i = 0; i < pMeshInfo->numvertices; i++ )
+	for (int i = 0; i < pMeshInfo->numvertices; i++)
 	{
 		svert_t	*vert = &m_arrayxvert[pMeshInfo->firstvertex + i];
 
@@ -1599,7 +1599,7 @@ void CStudioModelRenderer :: MeshCreateBuffer( vbomesh_t *pOut, const mstudiomes
 	}
 
 	// remap indices to local range
-	for( i = 0; i < pMeshInfo->numindices; i++ )
+	for (int i = 0; i < pMeshInfo->numindices; i++)
 		arrayelems[i] = m_arrayelems[pMeshInfo->firstindex + i] - pMeshInfo->firstvertex;
 
 	pOut->mins = mins;
