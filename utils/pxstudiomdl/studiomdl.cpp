@@ -5373,6 +5373,10 @@ void ParseScript( void )
 		{
 			Cmd_KeyValues( );
 		}
+		else if( !Q_stricmp(token, "$keepfreebones" ))
+		{
+			g_keep_free_bones = true;
+		}
 		else if( !Q_stricmp( token, "$collapsebones" ))
 		{
 			g_collapse_bones = true;

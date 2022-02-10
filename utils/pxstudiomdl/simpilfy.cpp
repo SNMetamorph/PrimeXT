@@ -458,8 +458,15 @@ void TagUsedBones( void )
 		// tag bonerefs as being used the union of the boneflags all their children
 		for( k = 0; k < MAXSTUDIOSRCBONES; k++ )
 		{
-			if( !pmodel->boneflags[k] )
-				continue;
+			if (!pmodel->boneflags[k])
+			{
+				if (g_keep_free_bones) {
+					SetBits(pmodel->boneflags[k], BONE_USED_RESERVED);
+				}
+				else {
+					continue;
+				}
+			}
 
 			// tag parent bones as used if child has been used
 			pmodel->boneref[k] |= pmodel->boneflags[k];

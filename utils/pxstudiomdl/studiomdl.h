@@ -49,6 +49,7 @@ EXTERN	Vector	bbox[2];
 EXTERN	Vector	cbox[2];
 EXTERN	bool	g_wrotebbox;
 EXTERN	bool	g_wrotecbox;
+EXTERN  bool	g_keep_free_bones;
 EXTERN	bool	g_collapse_bones;
 EXTERN	bool	g_collapse_bones_aggressive;
 EXTERN	bool	g_lockbonelengths;

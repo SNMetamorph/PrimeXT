@@ -232,18 +232,19 @@ typedef struct
 } studioseqhdr_t;
 
 // bone flags
-#define BONE_ALWAYS_PROCEDURAL	0x0001	// bone is always procedurally animated
+#define BONE_ALWAYS_PROCEDURAL	0x0001		// bone is always procedurally animated
 #define BONE_SCREEN_ALIGN_SPHERE	0x0002	// bone aligns to the screen, not constrained in motion.
 #define BONE_SCREEN_ALIGN_CYLINDER	0x0004	// bone aligns to the screen, constrained by it's own axis.
 #define BONE_JIGGLE_PROCEDURAL	0x0008
 #define BONE_FIXED_ALIGNMENT		0x0010	// bone can't spin 360 degrees, all interpolation is normalized around a fixed orientation
 
-#define BONE_USED_MASK		(BONE_USED_BY_HITBOX|BONE_USED_BY_ATTACHMENT|BONE_USED_BY_VERTEX|BONE_USED_BY_BONE_MERGE)
-#define BONE_USED_BY_ANYTHING		BONE_USED_MASK
-#define BONE_USED_BY_HITBOX		0x00000100// bone (or child) is used by a hit box
-#define BONE_USED_BY_ATTACHMENT	0x00000200// bone (or child) is used by an attachment point
-#define BONE_USED_BY_VERTEX		0x00000400// bone (or child) is used by the toplevel model via skinned vertex
+#define BONE_USED_BY_HITBOX		0x00000100	// bone (or child) is used by a hit box
+#define BONE_USED_BY_ATTACHMENT	0x00000200	// bone (or child) is used by an attachment point
+#define BONE_USED_BY_VERTEX		0x00000400	// bone (or child) is used by the toplevel model via skinned vertex
 #define BONE_USED_BY_BONE_MERGE	0x00000800
+#define BONE_USED_RESERVED		0x00001000	// bone reserved to keep it (because of $keepfreebones flag)
+#define BONE_USED_MASK		(BONE_USED_BY_HITBOX|BONE_USED_BY_ATTACHMENT|BONE_USED_BY_VERTEX|BONE_USED_BY_BONE_MERGE|BONE_USED_RESERVED)
+#define BONE_USED_BY_ANYTHING		BONE_USED_MASK
 
 // bones
 typedef struct 
