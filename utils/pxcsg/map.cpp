@@ -1058,7 +1058,7 @@ bool ParseMapEntity( CUtlArray<mapent_t> *entities, bool external = false )
 	if( !external && entities->Count() == 1 )
 	{
 		// let the map tell which version of the compiler it comes from, to help tracing compiler bugs.
-		Q_snprintf( str, sizeof( str ), "%s (%s)", COMPILERSTRING, __DATE__ );
+		Q_snprintf( str, sizeof( str ), "%s %s (%s)", COMPILERSTRING, VERSIONSTRING, __DATE__ );
 		SetKeyValue( (entity_t *)mapent, "_compiler", str ); // g-cont. don't pass this field into game dlls
 	}
 

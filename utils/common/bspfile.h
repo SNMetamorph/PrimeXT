@@ -10,9 +10,9 @@
 
 // comiple-time settings
 #define BSPVERSION			HLBSP_VERSION
-#define COMPILERSTRING		"^1P2ST ^3v0.98^7"
-#define TOOLNAME			"^1P2:Savior^7 tools"
-#define VERSIONSTRING		"^3v.0.98^7"
+#define COMPILERSTRING		"^2PrimeXT Tools"
+#define TOOLNAME			"^1PrimeXT ^7Tools"
+#define VERSIONSTRING		"^5v.0.90^7"
 
 // compile-time configuration like ZHLT and VHLT
 #define HLCSG_SKYFIXEDSTYLE		// P2:Savior used to differentiate sky light from other light sources
