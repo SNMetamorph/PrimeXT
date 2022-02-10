@@ -507,7 +507,6 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 		RenderAverageLuminance();
 	}
 
-	RenderSunShafts();			// 2D
 	RenderDOF();				// 2D
 	RenderNerveGasBlur();		// 2D
 	RenderUnderwaterBlur();		// 2D
@@ -518,9 +517,10 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	}
 
 	R_RenderDebugStudioList( true ); // 3D
+	RenderSunShafts();			// 2D
 	RenderMonochrome();			// 2D
 	R_ShowLightMaps();			// 2D
-
+	
 	if (hdr_rendering) {
 		R_RenderScreenQuad();
 	}
