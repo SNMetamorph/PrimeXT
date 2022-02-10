@@ -23,33 +23,39 @@ uniform vec3		u_LightDiffuse;
 
 varying vec2       		var_TexCoord;
 
+vec3 BlendSoftLight(const vec3 a, const vec3 b)
+{
+	vec3 c = 2.0 * a * b * ( 1.0 + a * ( 1.0 - b ) );
+	vec3 a_sqrt = sqrt( max(a, 0.0001) );
+	vec3 d = ( a + b * ( a_sqrt - a )) * 2.0 - a_sqrt;
+	return( length( b ) < 0.5 ) ? c : d;
+}
+
 void main( void )
 {
-	vec2 sunVec = saturate( u_LightOrigin.xy ) - var_TexCoord;
 	vec2 tc = var_TexCoord;
-
+	vec3 sunColor = u_LightDiffuse;
+	vec2 sunVec = saturate( u_LightOrigin.xy ) - tc;
 	float sunDist = saturate( u_LightOrigin.z ) * saturate( 1.0 - saturate( length( sunVec ) * 0.2 ));
 	sunVec *= 0.1 * u_LightOrigin.z;
 
 	vec4 accum = texture2D( u_ColorMap, tc );
 	float fShaftsMask = saturate( 1.00001 - accum.w );
 	float fBlend = accum.w * 0.85;	// shaft brightness
-
 	float weight_sum = 1.0;
+
 	for (float i = 1.0; i < 32.0; i++) {
 		vec2 offset = sunVec.xy * 0.25 * i;
-		float weight = 1.0 / max(length(offset), 0.00001);
+		float weight = 1.0 / max(length(offset), 0.0001);
 		accum += texture2D( u_ColorMap, tc + offset ).rgba * weight;
 		weight_sum += weight;	
 	}
-	accum /= weight_sum;
 
+	accum /= weight_sum;
  	accum *= 2.0 * vec4( sunDist, sunDist, sunDist, 1.0 );
 	
- 	vec3 cScreen = texture2D( u_ScreenMap, var_TexCoord ).rgb;      
-	vec3 sunColor = u_LightDiffuse;
-
-	vec3 outColor = cScreen + accum.rgb * fBlend * sunColor * max(1.0 - cScreen, 0.0);
-
+ 	vec3 cScreen = texture2D( u_ScreenMap, tc ).rgb;      
+	vec3 outColor = cScreen + accum.rgb * fBlend * sunColor * (1.0 - cScreen);
+	outColor = BlendSoftLight( outColor, sunColor * fShaftsMask * 0.5 + 0.5 );
 	gl_FragColor = vec4( outColor, 1.0 );
 }
