@@ -13,6 +13,7 @@
 #include "studio.h"
 #include "studiomdl.h"
 #include "filesystem.h"
+#include "app_info.h"
 
 int totalframes = 0;
 float totalseconds = 0;
@@ -1130,6 +1131,7 @@ void WriteModel( void )
 void WriteFile( void )
 {
 	int	i, j, total = 0;
+	char model_name[64];
 
 	pStart = (byte *)Mem_Alloc( FILEBUFFER );
 
@@ -1207,8 +1209,8 @@ void WriteFile( void )
 
 	phdr->ident = IDSTUDIOHEADER;
 	phdr->version = STUDIO_VERSION;
-	COM_FileBase( outname, phdr->name ); // g-cont. don't show real path on artist machine! palevo!
-	Q_strncat( phdr->name, " (written by Xash3D studiomdl)", sizeof( phdr->name ));	// write signature instead
+	COM_FileBase( outname, model_name ); // g-cont. don't show real path on artist machine! palevo!
+	Q_snprintf( phdr->name, sizeof(phdr->name), "%s (pxstudiomdl, %s)", model_name, __DATE__ );
 	VectorCopy( eyeposition, phdr->eyeposition );
 	VectorCopy( bbox[0], phdr->min ); 
 	VectorCopy( bbox[1], phdr->max ); 
