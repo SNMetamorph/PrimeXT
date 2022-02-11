@@ -35,7 +35,7 @@ GNU General Public License for more details.
 #define EVENT_CLIENT	5000		// less than this value it's a server-side studio events
 #define MAX_MODEL_MESHES	(MAXSTUDIOBODYPARTS * MAXSTUDIOMODELS)
 #define SHADE_LAMBERT	1.495f
-#define MAXARRAYVERTS	65536		// max vertices per studio submodel
+#define MAXARRAYVERTS	320000		// max vertices per studio submodel
 
 #define MAX_SEQBLENDS	8		// must be power of two
 #define MASK_SEQBLENDS	(MAX_SEQBLENDS - 1)
