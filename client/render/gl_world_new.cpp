@@ -775,8 +775,9 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 	bool shader_additive = false;
 	bool using_cubemaps = false;
 	bool fullbright = false;
+	bool cubemaps_available = (world->num_cubemaps > 0) && CVAR_TO_BOOL(r_cubemap);
 
-	if(( FBitSet( mat->flags, BRUSH_FULLBRIGHT ) || R_FullBright( ) || mirror ) && !FBitSet( mat->flags, BRUSH_LIQUID ))
+	if(( FBitSet( mat->flags, BRUSH_FULLBRIGHT ) || R_FullBright() || mirror ) && !FBitSet( mat->flags, BRUSH_LIQUID ))
 		fullbright = true;
 
 	if( e->curstate.rendermode == kRenderTransAdd )
@@ -872,7 +873,7 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 		else if( e->curstate.rendermode == kRenderTransColor || e->curstate.rendermode == kRenderTransTexture )
 			shader_translucent = true;
 	}
-	else if(( world->num_cubemaps > 0 ) && CVAR_TO_BOOL( r_cubemap ) && (mat->reflectScale > 0.0f) && !RP_CUBEPASS( ))
+	else if (cubemaps_available && (mat->reflectScale > 0.0f) && !RP_CUBEPASS( ))
 	{
 		if( !FBitSet( mat->flags, BRUSH_REFLECT ))
 		{
@@ -2299,11 +2300,6 @@ static void Mod_LoadWorld( model_t *mod, const byte *buf )
 		if( FBitSet( surf->flags, SURF_DRAWSKY ))
 			SetBits( world->features, WORLD_HAS_SKYBOX );
 
-		if( FBitSet( surf->flags, SURF_DRAWTURB ))
-		{
-			SetBits( surf->flags, SURF_REFLECT );
-		}
-
 		if( !Q_strncmp(tex->name, "movie", 5 ))
 		{
 			SetBits( world->features, WORLD_HAS_MOVIES );
@@ -2313,8 +2309,7 @@ static void Mod_LoadWorld( model_t *mod, const byte *buf )
 		if( !Q_strncmp(tex->name, "mirror", 6)
 			|| !Q_strncmp(tex->name, "reflect", 7)
 			|| !Q_strncmp(tex->name, "reflect1", 8)
-			|| !Q_strncmp(tex->name, "!reflect", 8)
-			|| !Q_strncmp(tex->name, "water", 5))
+			|| !Q_strncmp(tex->name, "!reflect", 8))
 		{
 			SetBits(world->features, WORLD_HAS_MIRRORS);
 			SetBits(surf->flags, SURF_REFLECT);
