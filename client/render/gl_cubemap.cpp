@@ -440,7 +440,7 @@ static void GL_ComputeCubemapViewBoxSize(mcubemap_t *cubemap)
 {
 	pmtrace_t pmtrace;
 	Vector vecStart, vecEnd;
-	const float distance = 4096.f; // why exact this distance?
+	const float distance = 65536.f;
 	static Vector env_dir[] =
 	{
 		Vector(1.0f,  0.0f,  0.0f),
