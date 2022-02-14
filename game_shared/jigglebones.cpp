@@ -37,16 +37,15 @@ JiggleData * CJiggleBones::GetJiggleData( int bone, float currenttime, const Vec
 void CJiggleBones::BuildJiggleTransformations( int boneIndex, float currenttime, const mstudiojigglebone_t *jiggleInfo, const matrix3x4 &goalMX, matrix3x4 &boneMX )
 {
 	Vector goalBasePosition = goalMX[3];
-
 	Vector goalForward = goalMX[2];
 	Vector goalUp = goalMX[1];
 	Vector goalLeft = goalMX[0];
-
-	// compute goal tip position
 	Vector goalTip = goalBasePosition + jiggleInfo->length * goalForward;
 
+	boneMX = goalMX;
 	JiggleData *data = GetJiggleData( boneIndex, currenttime, goalBasePosition, goalTip );
-	if( !data ) return;
+	if( !data ) 
+		return;
 
 	if( currenttime - data->lastUpdate > 0.5f )
 	{
@@ -176,15 +175,8 @@ void CJiggleBones::BuildJiggleTransformations( int boneIndex, float currenttime,
 					// clip to limit plane
 					data->tipPos = goalBasePosition + limitAlong.y * limitUp + limitAlong.z * limitForward;
 
-					// yaw friction - rubbing along limit plane
-					Vector limitVel;
-					limitVel.y = DotProduct( limitUp, data->tipVel );
-					limitVel.z = DotProduct( limitForward, data->tipVel );
-
-					data->tipAccel -= jiggleInfo->yawFriction * (limitVel.y * limitUp + limitVel.z * limitForward);
-
-					// update velocity reaction to hitting constraint
-					data->tipVel = -jiggleInfo->yawBounce * limitVel.x * limitLeft + limitVel.y * limitUp + limitVel.z * limitForward;
+					// removed friction and velocity clipping against constraint - was causing simulation blowups (MSB 12/9/2010)
+					data->tipVel.Init();
 
 					// update along vectors for use by pitch constraint
 					along = data->tipPos - goalBasePosition;
