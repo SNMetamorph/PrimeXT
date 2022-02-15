@@ -130,10 +130,11 @@ void main( void )
 #if defined (LIQUID_UNDERWATER)
 	fade = fadeExp = fadeExp2 = u_RenderColor.a;
 #else
-	fade = saturate(( fOwnDepth - fSampledDepth ) * 16.0 );
-	fadeExp = saturate(( fOwnDepth - fSampledDepth ) * ( u_RenderColor.a * 255.0 ));
-	fadeExp2 = saturate(( fOwnDepth - fSampledDepth ) * 32.0 );
-	fadeExp = 1.0 - saturate( exp2( -768.0 * u_RenderColor.a * ( fOwnDepth - fSampledDepth )));
+	float depthDelta = fOwnDepth - fSampledDepth;
+	fade = saturate(depthDelta * 16.0);
+	fadeExp = saturate(depthDelta * ( u_RenderColor.a * 255.0 ));
+	fadeExp2 = saturate(depthDelta * 32.0 );
+	fadeExp = 1.0 - saturate(exp2( -768.0 * u_RenderColor.a * depthDelta ));
 #endif
 #endif
 
@@ -223,7 +224,8 @@ void main( void )
 	vec3 worldNormal = normalize(tbnBasis * N);
 	vec3 reflectance = GetReflectionProbe( var_Position, u_ViewOrigin, worldNormal, smoothness );
 	float fresnel = GetFresnel( V, N, WATER_F0_VALUE, FRESNEL_FACTOR );
-	diffuse.rgb += reflectance * fresnel * u_ReflectScale;
+	diffuse.rgb = mix(diffuse.rgb, reflectance, fresnel);
+	// diffuse.rgb += reflectance * fresnel;// * u_ReflectScale; // may be this is more consistant than with mix()?
 #endif//defined( REFLECTION_CUBEMAP )
 
 #if defined( LIGHTMAP_DEBUG ) || defined( LIGHTVEC_DEBUG )
@@ -238,6 +240,7 @@ void main( void )
 #if defined( TRANSLUCENT )
 	vec3 screenmap = GetScreenColor( N, fadeExp2 );
 #if defined( LIQUID_SURFACE )
+	// mix between refracted light and own water color
 	screenmap = mix( screenmap, u_RenderColor.rgb * light, fadeExp );
 #if defined( PLANAR_REFLECTION )
 	diffuse.a = GetFresnel( saturate(dot(V, N)), WATER_F0_VALUE, FRESNEL_FACTOR );
@@ -245,14 +248,12 @@ void main( void )
 	diffuse.a = 1.0 - u_RenderColor.a;
 #endif
 #endif
+	// mix between water and diffuse + reflections
 	diffuse.rgb = mix( screenmap, diffuse.rgb, diffuse.a * fadeExp );
 #endif
 
 #if defined( APPLY_FOG_EXP )
 	float fogFactor = saturate( exp2( -u_FogParams.w * ( gl_FragCoord.z / gl_FragCoord.w )));
-#if defined( LIQUID_SURFACE ) && defined( TRANSLUCENT )
-	diffuse.rgb = mix( u_FogParams.xyz, diffuse.rgb, fogFactor * (1.0 - fade));
-#else
 	diffuse.rgb = mix( u_FogParams.xyz, diffuse.rgb, fogFactor );
 #endif
 #endif

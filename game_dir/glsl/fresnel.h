@@ -24,8 +24,8 @@ GNU General Public License for more details.
 
 float GetFresnel( float cosTheta, float F0, float power )
 {
-	// Schlick approximation
-	return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), power);
+	// Schlick approximation, use abs here for two-sided surfaces, like water
+	return F0 + (1.0 - F0) * pow(1.0 - abs(cosTheta), power);
 }
 
 float GetFresnel( const vec3 v, const vec3 n, float F0, float power )
