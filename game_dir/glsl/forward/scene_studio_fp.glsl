@@ -158,7 +158,7 @@ void main( void )
 #endif//LIGHTVEC_DEBUG
 
 #if defined( REFLECTION_CUBEMAP )
-	vec3 reflectance = GetReflectionProbe( var_Position, u_ViewOrigin, var_WorldNormal, glossmap.rgb, u_Smoothness );
+	vec3 reflectance = GetReflectionProbe( var_Position, u_ViewOrigin, var_WorldNormal, u_Smoothness );
 	albedo.rgb += var_DiffuseLight * reflectance * u_ReflectScale;
 #endif//defined( REFLECTION_CUBEMAP )
 

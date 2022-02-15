@@ -218,8 +218,9 @@ void main( void )
 #endif
 
 #if defined( REFLECTION_CUBEMAP )
-	vec3 reflectance = GetReflectionProbe( var_Position, u_ViewOrigin, var_WorldNormal, glossmap.rgb, smoothness );
-	diffuse.rgb += light * reflectance * u_ReflectScale;
+	vec3 reflectance = GetReflectionProbe( var_Position, u_ViewOrigin, var_WorldNormal, smoothness );
+	float fresnel = GetFresnel( V, N, WATER_F0_VALUE, FRESNEL_FACTOR );
+	diffuse.rgb += reflectance * fresnel * u_ReflectScale;
 #endif//defined( REFLECTION_CUBEMAP )
 
 #if defined( LIGHTMAP_DEBUG ) || defined( LIGHTVEC_DEBUG )
@@ -236,7 +237,7 @@ void main( void )
 #if defined( LIQUID_SURFACE )
 	screenmap = mix( screenmap, u_RenderColor.rgb * light, fadeExp );
 #if defined( PLANAR_REFLECTION )
-	diffuse.a = GetFresnel( saturate( dot( V, N )), u_ReflectScale, FRESNEL_FACTOR );
+	diffuse.a = GetFresnel( saturate(dot(V, N)), WATER_F0_VALUE, FRESNEL_FACTOR );
 #else
 	diffuse.a = 1.0 - u_RenderColor.a;
 #endif

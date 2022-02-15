@@ -35,9 +35,8 @@ vec3 CubemapBoxParallaxCorrected( const vec3 vReflVec, const vec3 vPosition, con
 	vec3 vBoxIntersectionMax = (vBoxExtentsMax - vPosition) / vReflVec;
 	vec3 vBoxIntersectionMin = (vBoxExtentsMin - vPosition) / vReflVec;
 	
-	vec3 vFurthestPlane;
-
 	// intersection test
+	vec3 vFurthestPlane;
 	vFurthestPlane.x = (vReflVec.x > 0.0) ? vBoxIntersectionMax.x : vBoxIntersectionMin.x;
 	vFurthestPlane.y = (vReflVec.y > 0.0) ? vBoxIntersectionMax.y : vBoxIntersectionMin.y;
 	vFurthestPlane.z = (vReflVec.z > 0.0) ? vBoxIntersectionMax.z : vBoxIntersectionMin.z;	
@@ -48,15 +47,7 @@ vec3 CubemapBoxParallaxCorrected( const vec3 vReflVec, const vec3 vPosition, con
 	return (vInterectionPos - vCubePos);
 }
 
-vec3 GetEnvmapFresnel( vec3 specCol0, float gloss, float fNdotE )
-{
-	const vec3 specCol90 = vec3( 1.0 );
-
-	// empirical approximation to the reduced gain at grazing angles for rough materials
-	return mix( specCol0, specCol90, pow( 1.0 - saturate( fNdotE ), 5.0 ) / ( 40.0 - 39.0 * gloss ));
-}
-
-vec3 GetReflectionProbe( const vec3 vPos, const vec3 vView, const vec3 nWorld, const vec3 glossmap, const float smoothness )
+vec3 GetReflectionProbe( const vec3 vPos, const vec3 vView, const vec3 nWorld, const float smoothness )
 {
 	vec3 I = normalize( vPos - vView ); // in world space
 	vec3 NW = normalize( nWorld );
@@ -66,10 +57,6 @@ vec3 GetReflectionProbe( const vec3 vPos, const vec3 vView, const vec3 nWorld, c
 	vec3 srcColor0 = textureCubeLod( u_EnvMap0, R1, u_CubeMipCount.x - smoothness * u_CubeMipCount.x ).rgb;
 	vec3 srcColor1 = textureCubeLod( u_EnvMap1, R2, u_CubeMipCount.y - smoothness * u_CubeMipCount.y ).rgb;
 	vec3 reflectance = mix( srcColor0, srcColor1, u_LerpFactor );
-
-#if defined( HAS_GLOSSMAP )
-	reflectance *= GetEnvmapFresnel( glossmap, smoothness, dot( -I, NW ));
-#endif
 	return reflectance;
 }
 

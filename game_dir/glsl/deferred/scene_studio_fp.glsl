@@ -81,7 +81,7 @@ void main( void )
 
 // multiply gloss intensity with reflection cube color
 #if defined( REFLECTION_CUBEMAP )
-	vec3 reflectance = GetReflectionProbe( var_Position, u_ViewOrigin.xyz, var_WorldMat[2], smooth.rgb, smooth.a );
+	vec3 reflectance = GetReflectionProbe( var_Position, u_ViewOrigin.xyz, var_WorldMat[2], smooth.a );
 	albedo.rgb += reflectance * u_ReflectScale;
 #endif
 	gl_FragData[0] = albedo;	// red, green, blue, alpha

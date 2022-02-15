@@ -182,7 +182,7 @@ static void Mod_LoadWorldMaterials( void )
 			if( IMAGE_EXISTS( bumpmap ))
 				mat->gl_normalmap_id = LOAD_TEXTURE( bumpmap, NULL, 0, TF_NORMALMAP );
 			else mat->gl_normalmap_id = tr.normalmapTexture; // blank bumpy
-                   	}
+        }
 
 		if( IMAGE_EXISTS( glossmap ))
 		{
@@ -242,8 +242,10 @@ static void Mod_LoadWorldMaterials( void )
 		if( !Q_strncmp( tx->name, "movie", 5 ))
 			SetBits( mat->flags, BRUSH_FULLBRIGHT );
 
-		if( tx->name[0] == '!' || !Q_strncmp( tx->name, "water", 5 ))
+		if (tx->name[0] == '!' || !Q_strncmp(tx->name, "water", 5))
 		{
+			mat->smoothness = 1.0f;
+			mat->reflectScale = 1.0f; // liquid surface should be smooth and reflective
 			SetBits( mat->flags, BRUSH_REFLECT|BRUSH_LIQUID );
 
 			if( tr.waterTextures[0] )
@@ -872,6 +874,13 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 			shader_translucent = true;
 		else if( e->curstate.rendermode == kRenderTransColor || e->curstate.rendermode == kRenderTransTexture )
 			shader_translucent = true;
+
+		// apply cubemap reflections for water
+		if (cubemaps_available)
+		{
+			GL_AddShaderDirective(options, "REFLECTION_CUBEMAP");
+			using_cubemaps = true;
+		}
 	}
 	else if (cubemaps_available && (mat->reflectScale > 0.0f) && !RP_CUBEPASS( ))
 	{

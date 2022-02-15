@@ -132,11 +132,11 @@ void main( void )
 #if defined( PLANAR_REFLECTION ) || defined( REFLECTION_CUBEMAP )
 #if defined( REFLECTION_CUBEMAP )
 	vec3 waveNormal = N * 0.02 * u_RefractScale; // puddles are always placed on floor so we skip rotation from tangentspace to worldspace
-	vec3 mirror = GetReflectionProbe( var_Position, u_ViewOrigin, PUDDLE_NORMAL + waveNormal, glossmap.rgb, 1.0 );
+	vec3 mirror = GetReflectionProbe( var_Position, u_ViewOrigin, PUDDLE_NORMAL + waveNormal, 1.0 );
 #elif defined( PLANAR_REFLECTION )
 	vec3 mirror = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, u_RefractScale ).rgb;
 #endif
-	float eta = GetFresnel( V, PUDDLE_NORMAL, FRESNEL_FACTOR, u_ReflectScale );
+	float eta = GetFresnel( V, PUDDLE_NORMAL, WATER_F0_VALUE, FRESNEL_FACTOR ) * u_ReflectScale;
 	diffuse.rgb = mix( diffuse.rgb, mirror.rgb, eta );
 #if defined( APPLY_COLORBLEND )
 	diffuse.rgb = mix( diffuse.rgb, vec3( 0.5 ), alpha );

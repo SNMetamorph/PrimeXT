@@ -120,8 +120,8 @@ void main( void )
 #if defined( REFLECTION_CUBEMAP )
 	normal.xyz *= 0.02;
 	vec3 waveNormal = normal.xyz * u_RefractScale * alpha;
-	vec3 mirror = GetReflectionProbe( var_Position, u_ViewOrigin, PUDDLE_NORMAL + waveNormal, smooth.rgb, 1.0 );
-	float eta = GetFresnel( V, PUDDLE_NORMAL, FRESNEL_FACTOR, u_ReflectScale );
+	vec3 mirror = GetReflectionProbe( var_Position, u_ViewOrigin, PUDDLE_NORMAL + waveNormal, 1.0 );
+	float eta = GetFresnel( V, PUDDLE_NORMAL, WATER_F0_VALUE, FRESNEL_FACTOR ) * u_ReflectScale;
 	diffuse.rgb = mix( diffuse.rgb, mirror.rgb, eta );
 #if defined( APPLY_COLORBLEND )
 	diffuse.rgb = mix( diffuse.rgb, vec3( 0.5 ), alpha );
