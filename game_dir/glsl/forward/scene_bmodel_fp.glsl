@@ -70,6 +70,7 @@ varying vec4		var_TexMirror;	// mirror coords
 #if defined( REFLECTION_CUBEMAP )
 varying vec3		var_WorldNormal;
 varying vec3		var_Position;
+varying mat3		var_MatrixTBN;
 #endif
 
 #if !defined( HAS_NORMALMAP )
@@ -218,7 +219,9 @@ void main( void )
 #endif
 
 #if defined( REFLECTION_CUBEMAP )
-	vec3 reflectance = GetReflectionProbe( var_Position, u_ViewOrigin, var_WorldNormal, smoothness );
+	mat3 tbnBasis = mat3(normalize(var_MatrixTBN[0]), normalize(var_MatrixTBN[1]), normalize(var_MatrixTBN[2]));
+	vec3 worldNormal = normalize(tbnBasis * N);
+	vec3 reflectance = GetReflectionProbe( var_Position, u_ViewOrigin, worldNormal, smoothness );
 	float fresnel = GetFresnel( V, N, WATER_F0_VALUE, FRESNEL_FACTOR );
 	diffuse.rgb += reflectance * fresnel * u_ReflectScale;
 #endif//defined( REFLECTION_CUBEMAP )

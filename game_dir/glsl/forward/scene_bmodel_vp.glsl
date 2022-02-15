@@ -45,6 +45,7 @@ varying vec4	var_TexMirror;	// mirror coords
 #if defined( REFLECTION_CUBEMAP )
 varying vec3	var_WorldNormal;
 varying vec3	var_Position;
+varying mat3	var_MatrixTBN;
 #endif
 
 #if !defined( HAS_NORMALMAP )
@@ -109,7 +110,8 @@ void main( void )
 #endif
 
 #if defined( REFLECTION_CUBEMAP )
-	var_Position = worldpos.xyz;
 	var_WorldNormal = N;
+	var_Position = worldpos.xyz;
+	var_MatrixTBN = tbn;
 #endif
 }
