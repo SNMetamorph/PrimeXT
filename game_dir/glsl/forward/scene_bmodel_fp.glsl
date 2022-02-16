@@ -109,12 +109,13 @@ void main( void )
 	vec3 N = normalmap2D( u_NormalMap, var_TexGlobal );
 #else
 	vec3 N = normalmap2D( u_NormalMap, vec_TexDiffuse );
-#endif
-#endif
+#endif // LIQUID_SURFACE
+#endif // APPLY_TERRAIN
 #else
 	vec3 N = normalize( var_Normal );
-#endif
-	float fade = 1.0, fadeExp = 1.0, fadeExp2 = 1.0;
+#endif // HAS_NORMALMAP
+
+	float waterBorderFactor = 1.0, waterAbsorbFactor = 1.0, waterRefractFactor = 1.0;
 
 #if defined( LIQUID_SURFACE )
 	vec_TexDiffuse.x += N.x * 4.0 * u_RefractScale;
@@ -128,17 +129,16 @@ void main( void )
 	fSampledDepth = RemapVal( fSampledDepth, Z_NEAR, u_zFar, 0.0, 1.0 );
 
 #if defined (LIQUID_UNDERWATER)
-	fade = fadeExp = fadeExp2 = u_RenderColor.a;
+	waterBorderFactor = waterAbsorbFactor = waterRefractFactor = u_RenderColor.a;
 #else
 	float depthDelta = fOwnDepth - fSampledDepth;
-	fade = saturate(depthDelta * 16.0);
-	fadeExp = saturate(depthDelta * ( u_RenderColor.a * 255.0 ));
-	fadeExp2 = saturate(depthDelta * 32.0 );
-	fadeExp = 1.0 - saturate(exp2( -768.0 * u_RenderColor.a * depthDelta ));
+	waterBorderFactor = 1.0 - saturate(exp2( -768.0 * depthDelta ));
+	waterRefractFactor = saturate( depthDelta * 32.0 );
+	waterAbsorbFactor = 1.0 - saturate(exp2( -768.0 * u_RenderColor.a * depthDelta ));
 #endif
 #endif
 
-	// compute the diffuse term
+// compute the diffuse term
 #if defined( PLANAR_REFLECTION )
 	vec4 diffuse = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, u_RefractScale );
 #elif defined( APPLY_TERRAIN )
@@ -219,43 +219,55 @@ void main( void )
 #endif
 #endif
 
-#if defined( REFLECTION_CUBEMAP )
-	mat3 tbnBasis = mat3(normalize(var_MatrixTBN[0]), normalize(var_MatrixTBN[1]), normalize(var_MatrixTBN[2]));
-	vec3 worldNormal = normalize(tbnBasis * N);
-	vec3 reflectance = GetReflectionProbe( var_Position, u_ViewOrigin, worldNormal, smoothness );
-	float fresnel = GetFresnel( V, N, WATER_F0_VALUE, FRESNEL_FACTOR );
-	diffuse.rgb = mix(diffuse.rgb, reflectance, fresnel);
-	// diffuse.rgb += reflectance * fresnel;// * u_ReflectScale; // may be this is more consistant than with mix()?
-#endif//defined( REFLECTION_CUBEMAP )
-
 #if defined( LIGHTMAP_DEBUG ) || defined( LIGHTVEC_DEBUG )
 	diffuse.rgb = light;
 #endif
-#endif// LIGHTING_FULLBRIGHT
+#endif // LIGHTING_FULLBRIGHT
 
 #if defined( HAS_LUMA )
 	diffuse.rgb += texture2D( u_GlowMap, vec_TexDiffuse ).rgb;
 #endif
 
+#if defined( REFLECTION_CUBEMAP )
+	mat3 tbnBasis = mat3(normalize(var_MatrixTBN[0]), normalize(var_MatrixTBN[1]), normalize(var_MatrixTBN[2]));
+	vec3 worldNormal = normalize(tbnBasis * N);
+	vec3 reflected = GetReflectionProbe( var_Position, u_ViewOrigin, worldNormal, smoothness );
+	float fresnel = GetFresnel( V, N, WATER_F0_VALUE, FRESNEL_FACTOR );
+#endif // REFLECTION_CUBEMAP
+
 #if defined( TRANSLUCENT )
-	vec3 screenmap = GetScreenColor( N, fadeExp2 );
-#if defined( LIQUID_SURFACE )
-	// mix between refracted light and own water color
-	screenmap = mix( screenmap, u_RenderColor.rgb * light, fadeExp );
+	vec3 screenmap = GetScreenColor( N, waterRefractFactor );
 #if defined( PLANAR_REFLECTION )
 	diffuse.a = GetFresnel( saturate(dot(V, N)), WATER_F0_VALUE, FRESNEL_FACTOR );
 #else
 	diffuse.a = 1.0 - u_RenderColor.a;
+#endif // PLANAR_REFLECTION
+
+#if defined( LIQUID_SURFACE )
+	vec3 waterColor = u_RenderColor.rgb;
+	vec3 borderSmooth = mix( screenmap, screenmap * waterColor, waterBorderFactor ); // smooth transition between water and ground
+	vec3 refracted = mix( borderSmooth, waterColor * light, waterAbsorbFactor ); // mix between refracted light and own water color
+#if defined( REFLECTION_CUBEMAP )
+	// blend refracted and reflected part together 
+	diffuse.rgb = refracted + reflected * fresnel * waterBorderFactor * u_ReflectScale; 
+#else
+	diffuse.rgb = refracted;
+#endif // REFLECTION_CUBEMAP
+#else
+	// for translucent non-liquid stuff (glass, etc.)
+	diffuse.rgb = mix( screenmap, diffuse.rgb, diffuse.a * u_RenderColor.a );
+#endif // LIQUID_SURFACE
+#else // !TRANSLUCENT
+
+#if defined( REFLECTION_CUBEMAP )
+	diffuse.rgb += reflected * fresnel * u_ReflectScale;
 #endif
-#endif
-	// mix between water and diffuse + reflections
-	diffuse.rgb = mix( screenmap, diffuse.rgb, diffuse.a * fadeExp );
-#endif
+
+#endif // TRANSLUCENT
 
 #if defined( APPLY_FOG_EXP )
 	float fogFactor = saturate( exp2( -u_FogParams.w * ( gl_FragCoord.z / gl_FragCoord.w )));
 	diffuse.rgb = mix( u_FogParams.xyz, diffuse.rgb, fogFactor );
-#endif
 #endif
 	// compute final color
 	gl_FragColor = diffuse;
