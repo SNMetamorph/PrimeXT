@@ -244,9 +244,11 @@ static void Mod_LoadWorldMaterials( void )
 
 		if (tx->name[0] == '!' || !Q_strncmp(tx->name, "water", 5))
 		{
+			// liquid surface should be smooth and reflective
+			SetBits(mat->flags, BRUSH_REFLECT | BRUSH_LIQUID);
 			mat->smoothness = 1.0f;
-			mat->reflectScale = 1.0f; // liquid surface should be smooth and reflective
-			SetBits( mat->flags, BRUSH_REFLECT|BRUSH_LIQUID );
+			mat->reflectScale = 1.0f; 
+			mat->refractScale = 2.5f;
 
 			if( tr.waterTextures[0] )
 				SetBits( mat->flags, BRUSH_HAS_BUMP );
@@ -254,10 +256,6 @@ static void Mod_LoadWorldMaterials( void )
 
 		if( !Q_strncmp( tx->name, "sky", 3 ))
 			SetBits( world->features, WORLD_HAS_SKYBOX );
-
-		// setup material constants
-		matdesc_t *desc = CL_FindMaterial( tx->name );
-		Mod_CopyMaterialDesc( mat, desc );
 
 		mat->gl_detailmap_id = desc->dt_texturenum;
 
@@ -866,6 +864,7 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 	if( FBitSet( mat->flags, BRUSH_LIQUID ))
 	{
 		GL_AddShaderDirective( options, "LIQUID_SURFACE" );
+		GL_AddShaderDirective( options, "APPLY_REFRACTION" );
 		if( tr.waterlevel >= 3 )
 			GL_AddShaderDirective( options, "LIQUID_UNDERWATER" );
 
