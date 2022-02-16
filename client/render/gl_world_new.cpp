@@ -106,7 +106,7 @@ copy params from description
 to real material struct
 ========================
 */
-static void Mod_CopyMaterialDesc( material_t *mat, matdesc_t *desc )
+static void Mod_CopyMaterialDesc( material_t *mat, const matdesc_t *desc )
 {
 	mat->smoothness = desc->smoothness;
 	mat->detailScale[0] = desc->detailScale[0];
@@ -144,6 +144,10 @@ static void Mod_LoadWorldMaterials( void )
 		// make cross-links for consistency
 		tx->material = mat;
 		mat->pSource = tx;
+
+		// setup material constants
+		matdesc_t *desc = CL_FindMaterial(tx->name);
+		Mod_CopyMaterialDesc(mat, desc);
 
 		// build material names
 		Q_snprintf( diffuse, sizeof( diffuse ), "textures/%s", tx->name );
@@ -249,7 +253,7 @@ static void Mod_LoadWorldMaterials( void )
 			mat->smoothness = 1.0f;
 			mat->reflectScale = 1.0f; 
 			mat->refractScale = 2.5f;
-
+			
 			if( tr.waterTextures[0] )
 				SetBits( mat->flags, BRUSH_HAS_BUMP );
 		}
