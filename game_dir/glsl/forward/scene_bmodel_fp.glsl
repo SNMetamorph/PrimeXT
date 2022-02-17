@@ -105,11 +105,7 @@ void main( void )
 #if defined( APPLY_TERRAIN )
 	vec3 N = TerrainApplyNormal( u_NormalMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 #else
-#if defined( LIQUID_SURFACE )
-	vec3 N = normalmap2D( u_NormalMap, var_TexGlobal );
-#else
 	vec3 N = normalmap2D( u_NormalMap, vec_TexDiffuse );
-#endif // LIQUID_SURFACE
 #endif // APPLY_TERRAIN
 #else
 	vec3 N = normalize( var_Normal );
@@ -118,8 +114,6 @@ void main( void )
 	float waterBorderFactor = 1.0, waterAbsorbFactor = 1.0, waterRefractFactor = 1.0;
 
 #if defined( LIQUID_SURFACE )
-	vec_TexDiffuse.x += N.x * 4.0 * u_RefractScale;
-	vec_TexDiffuse.y += N.y * 4.0 * u_RefractScale;
 	float fOwnDepth = gl_FragCoord.z;
 	fOwnDepth = linearizeDepth( u_zFar, fOwnDepth );
 	fOwnDepth = RemapVal( fOwnDepth, Z_NEAR, u_zFar, 0.0, 1.0 );
@@ -182,11 +176,7 @@ void main( void )
 #if defined( APPLY_TERRAIN )
 	glossmap = TerrainApplySpecular( u_GlossMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 #else
-#if defined( LIQUID_SURFACE )
-	glossmap = colormap2D( u_GlossMap, var_TexGlobal );
-#else
 	glossmap = colormap2D( u_GlossMap, vec_TexDiffuse );
-#endif
 #endif
 #endif//(HAS_GLOSSMAP && HAS_DELUXEMAP)
 
@@ -253,16 +243,14 @@ void main( void )
 #else
 	diffuse.rgb = refracted;
 #endif // REFLECTION_CUBEMAP
-#else
+#else // !LIQUID_SURFACE
 	// for translucent non-liquid stuff (glass, etc.)
 	diffuse.rgb = mix( screenmap, diffuse.rgb, diffuse.a * u_RenderColor.a );
 #endif // LIQUID_SURFACE
 #else // !TRANSLUCENT
-
 #if defined( REFLECTION_CUBEMAP )
 	diffuse.rgb += reflected * fresnel * u_ReflectScale;
 #endif
-
 #endif // TRANSLUCENT
 
 #if defined( APPLY_FOG_EXP )
