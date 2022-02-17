@@ -1364,8 +1364,7 @@ void CStudioModelRenderer :: StudioDecalShoot( const Vector &vecNormal, const Ve
 {
 	DecalBuildInfo_t buildInfo;
 	float flLocalScale = 1.0f;
-	bool hasBoneweights = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
-
+	
 	if( !g_fRenderInitialized )
 		return;
 
@@ -1378,7 +1377,8 @@ void CStudioModelRenderer :: StudioDecalShoot( const Vector &vecNormal, const Ve
 
 	// this sucker is state needed only when building decals
 	buildInfo.m_pTexInfo = DecalGroup::GetEntry( name, flags );
-	if( !buildInfo.m_pTexInfo ) return;
+	if( !buildInfo.m_pTexInfo ) 
+		return;
 	DecalGroupEntry *entry = (DecalGroupEntry *)buildInfo.m_pTexInfo;
 
 	// time to cache decal textures
@@ -1438,6 +1438,7 @@ void CStudioModelRenderer :: StudioDecalShoot( const Vector &vecNormal, const Ve
 	}
 
 	// setup worldtransform array
+	bool hasBoneweights = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
 	if (hasBoneweights)
 	{
 		for( int i = 0; i < m_pStudioHeader->numbones; i++ )
