@@ -209,10 +209,7 @@ void main( void )
 #endif
 #endif
 
-#if defined( LIGHTMAP_DEBUG ) || defined( LIGHTVEC_DEBUG )
-	diffuse.rgb = light;
-#endif
-#endif // LIGHTING_FULLBRIGHT
+#endif // !LIGHTING_FULLBRIGHT
 
 #if defined( HAS_LUMA )
 	diffuse.rgb += texture2D( u_GlowMap, vec_TexDiffuse ).rgb;
@@ -257,6 +254,11 @@ void main( void )
 	float fogFactor = saturate( exp2( -u_FogParams.w * ( gl_FragCoord.z / gl_FragCoord.w )));
 	diffuse.rgb = mix( u_FogParams.xyz, diffuse.rgb, fogFactor );
 #endif
+
+#if defined( LIGHTMAP_DEBUG ) || defined( LIGHTVEC_DEBUG )
+	diffuse.rgb = light;
+#endif
+
 	// compute final color
 	gl_FragColor = diffuse;
 }
