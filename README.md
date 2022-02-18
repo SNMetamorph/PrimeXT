@@ -6,7 +6,7 @@ We need interested people to work on this SDK with us! Main goals of this projec
 - Implementing HDR rendering pipeline<br>
 - Updating PhysX headers to modern SDK version<br>
 - Implementing particle engine, something like in Source Engine<br>
-- Cross-platform (now only Windows supported, unfortunately)<br>
+- Cross-platform (Android version in experimental stage)<br>
 - Writing actual documentation<br>
 - Code refactoring<br>
 
