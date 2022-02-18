@@ -1,11 +1,12 @@
 import React from 'react';
 import clsx from 'clsx';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './HomepageFeatures.module.css';
 
 const FeatureList = [
   {
     title: 'Open Source',
-    Svg: require('../../static/img/osi_standard_logo.png').default,
+    path: '/img/osi_standard_logo.png',
     description: (
       <>
         PrimeXT is open source project, this means everyone from community can take part in development. 
@@ -15,7 +16,7 @@ const FeatureList = [
   },
   {
     title: 'Most Functional Toolkit',
-    Svg: require('../../static/img/terminal_logo.png').default,
+    path: '/img/terminal_logo.png',
     description: (
       <>
         It provides a lot of features that other mods haven't. 
@@ -25,7 +26,7 @@ const FeatureList = [
   },
   {
     title: 'Crossplatform',
-    Svg: require('../../static/img/crossplatform_logo.png').default,
+    path: '/img/crossplatform_logo.png',
     description: (
       <>
         You can develop your mod not only for one specific platform.
@@ -35,11 +36,11 @@ const FeatureList = [
   },
 ];
 
-function Feature({Svg, title, description}) {
+function Feature({path, title, description}) {
   return (
     <div className={clsx('col col--4')}>
       <div className="text--center">
-        <Svg className={styles.featureSvg} alt={title} />
+        <img className={styles.featurePicture} src={useBaseUrl(path)} alt={title} />
       </div>
       <div className="text--center padding-horiz--md">
         <h3>{title}</h3>
