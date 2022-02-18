@@ -70,8 +70,6 @@ public class LauncherActivity extends AppCompatActivity {
 						.setCancelable(true)
 						.setNegativeButton(R.string.later, null)
 						.setPositiveButton(R.string.update, (dialog, which) -> startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse(getEngineDownloadUrl())))).show();
-			} else {
-				checkForUpdates();
 			}
 		} catch (PackageManager.NameNotFoundException e) {
 			new MaterialAlertDialogBuilder(LauncherActivity.this)
