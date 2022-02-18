@@ -495,7 +495,7 @@ void CStudioModelRenderer :: ClearInstanceData( bool create )
 
 void CStudioModelRenderer :: PrecacheStudioShaders( void )
 {
-	bool bone_weights = FBitSet( m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS ) ? true : false;
+	bool bone_weights = FBitSet( m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS ) != 0;
 	mstudiomaterial_t	*pmaterial = (mstudiomaterial_t *)RI->currentmodel->materials;
 
 	// this function is called when loading vertexlight cache, so we guessed what vertex light is active
@@ -510,7 +510,7 @@ void CStudioModelRenderer :: LoadStudioMaterials( void )
 	// first we need alloc copy of all the materials to prevent modify mstudiotexture_t
 	RI->currentmodel->materials = (mstudiomaterial_t *)Mem_Alloc( sizeof( mstudiomaterial_t ) * m_pStudioHeader->numtextures );
 
-	bool bone_weights = FBitSet( m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS ) ? true : false;
+	bool bone_weights = FBitSet( m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS ) != 0;
 	mstudiotexture_t	*ptexture = (mstudiotexture_t *)((byte *)m_pStudioHeader + m_pStudioHeader->textureindex);
 	char		diffuse[128], bumpmap[128], glossmap[128], glowmap[128], heightmap[128];
 	mstudiomaterial_t	*pmaterial = (mstudiomaterial_t *)RI->currentmodel->materials;

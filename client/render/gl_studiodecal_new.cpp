@@ -1438,8 +1438,8 @@ void CStudioModelRenderer :: StudioDecalShoot( const Vector &vecNormal, const Ve
 	}
 
 	// setup worldtransform array
-	bool hasBoneweights = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
-	if (hasBoneweights)
+	bool has_boneweights = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
+	if (has_boneweights)
 	{
 		for( int i = 0; i < m_pStudioHeader->numbones; i++ )
 			m_pworldtransform[i] = m_pModelInstance->m_pbones[i].ConcatTransforms( RI->currentmodel->poseToBone->posetobone[i] );

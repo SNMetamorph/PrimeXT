@@ -1095,8 +1095,6 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 	mstudioseqdesc_t	*pseqdesc;
 	matrix3x4		bonematrix;
 	mstudiobone_t	*pbones;
-	bool has_boneweights = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
-	int		i;
 
 	static Vector	pos[MAXSTUDIOBONES];
 	static Vector4D	q[MAXSTUDIOBONES];
@@ -1169,7 +1167,7 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 	}
 
 	// run blends from previous sequences
-	for( i = 0; i < MAX_SEQBLENDS; i++ )
+	for( int i = 0; i < MAX_SEQBLENDS; i++ )
 		BlendSequence( pos, q, &m_pModelInstance->m_seqblend[i] );
 
 	CIKContext auto_ik;
@@ -1191,7 +1189,7 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 		pIK->SolveDependencies( pos, q, m_pModelInstance->m_pbones, boneComputed );
 	}
 
-	for( i = 0; i < m_pStudioHeader->numbones; i++ ) 
+	for( int i = 0; i < m_pStudioHeader->numbones; i++ ) 
 	{
 		// animate all non-simulated bones
 		if( CalcProceduralBone( m_pStudioHeader, i, m_pModelInstance->m_pbones ))
@@ -1228,9 +1226,9 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 		}
 	}
 
-	mposetobone_t *m = m_pModelInstance->m_pModel->poseToBone;
-
 	// convert bones into compacted GLSL array
+	mposetobone_t *m = m_pModelInstance->m_pModel->poseToBone;
+	bool has_boneweights = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
 	if (has_boneweights)
 	{
 		for( int i = 0; i < m_pStudioHeader->numbones; i++ )
@@ -2034,7 +2032,7 @@ Select the program for mesh (diffuse\bump\debug)
 */
 word CStudioModelRenderer :: ChooseStudioProgram( studiohdr_t *phdr, mstudiomaterial_t *mat, bool lightpass )
 {
-	bool bone_weights = FBitSet( m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS ) ? true : false;
+	bool bone_weights = FBitSet( m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS ) != 0;
 	int lightmode = LIGHTSTATIC_NONE;
 
 	if( FBitSet( m_pModelInstance->info_flags, MF_SURFACE_LIGHTING ))
