@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.App" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="colorPrimary">#EBA454</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">#EBA454</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="android:colorBackground">#1D1E22</item>
+        <item name="colorOnBackground">#FFFFFF</item>
+        <item name="colorSurface">#222226</item>
+        <item name="colorOnSurface">#FFFFFF</item>
+        <item name="snackbarStyle">@style/Widget.App.Snackbar</item>
+        <item name="snackbarTextViewStyle">@style/Widget.App.Snackbar.TextView</item>
+    </style>
+</resources>
