@@ -190,7 +190,7 @@ jobs:
         uses: android-actions/setup-android@v2
 
       - name: Build
-        run: ./gradlew assembleDebug
+        run: chmod +x ./gradlew && ./gradlew assembleDebug
         working-directory: android
 
       - name: Update continious tag
