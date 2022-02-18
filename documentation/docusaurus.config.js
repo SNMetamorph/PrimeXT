@@ -43,7 +43,7 @@ const config = {
         title: 'PrimeXT Docs',
         logo: {
           alt: 'PrimeXT Logo',
-          src: 'img/logo.svg',
+          src: 'img/logo.png',
         },
         items: [
           {

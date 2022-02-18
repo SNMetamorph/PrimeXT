@@ -4,8 +4,8 @@ sidebar_position: 1
 
 # Введение / Introduction
 
-## Русский
-![Header](/img/intro/header.jpg)
+## На русском
+![Header](/img/intro/header.png)
 
 ### О проекте
 Современный SDK для движка Xash3D FWGS, для работы на современных платформах с поддержкой кроссплатформенности и улучшенной графикой/физикой, при этом сохраняя все присущие GoldSrc и Xash3D возможности и подходы к работе. 
@@ -42,7 +42,7 @@ sidebar_position: 1
 - Масштабная оптимизация рендеринга
 - Обновление PhysX SDK до современной версии
 - Реализация движка партиклей
-- Реализация поддержка ragdoll-физики
+- Реализация поддержки ragdoll-физики
 - Реализация транспорта
 - Улучшение интеллекта NPC
 - Добавление поддержки OpenAL Soft / Steam Audio
@@ -51,7 +51,7 @@ sidebar_position: 1
 ### Разработчики и соучастники
 - **SNMetamorph** - Ведущий разработчик
 - **Velaron** - Помощь в портировании на Linux
-- **СASPERX69X** - Тестирование и составление документации
+- **СASPERX69X** - Тестирование, составление документации, логотип
 - **ncuxonaT** - Помощь в разработке рендера
 - **Lev** - Помощь в разработке рендера
 - **g-cont** - Помощь в общей разработке
@@ -62,10 +62,10 @@ sidebar_position: 1
 
 При желании вы также можете принять участие в разработке PrimeXT: нам нужны тестировщики и программисты с знанием C++.
 
-![Footer](/img/intro/footer.jpg)
+![Footer](/img/intro/footer.png)
 
-## English
-![Header](/img/intro/header.jpg)
+## In English
+![Header](/img/intro/header.png)
 
 ### About project
 A modern SDK for the Xash3D FWGS engine, to work on modern platforms with cross-platform support and improved graphics/physics, while retaining all the features and approaches to work inherent in GoldSrc and Xash3D.
@@ -111,7 +111,7 @@ Based on XashXT, and therefore has all the functionality inherent in XashXT and 
 ### Developers and contributors
 - **SNMetamorph** - Lead developer
 - **Velaron** - Help with porting to Linux
-- **СASPERX69X** - Testing and documentation
+- **СASPERX69X** - Testing, documentation, logo
 - **ncuxonaT** - Help with renderer development
 - **Lev** - Help with renderer development
 - **g-cont** - Help with common development
@@ -120,6 +120,6 @@ Based on XashXT, and therefore has all the functionality inherent in XashXT and 
 - **ThomasvonWinkler** - Testing
 - **KorteZZ** - Testing
 
-If you wish, you can also take part in the development of PrimeXT: we need testers and programmers with knowledge of C ++. 
+If you wish, you can also take part in the development of PrimeXT: we need testers and programmers with knowledge of C++. 
 
-![Footer](/img/intro/footer.jpg)
+![Footer](/img/intro/footer.png)

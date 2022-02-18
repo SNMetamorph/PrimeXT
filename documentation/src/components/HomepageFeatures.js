@@ -4,32 +4,32 @@ import styles from './HomepageFeatures.module.css';
 
 const FeatureList = [
   {
-    title: 'Easy to Use',
-    Svg: require('../../static/img/undraw_docusaurus_mountain.svg').default,
+    title: 'Open Source',
+    Svg: require('../../static/img/osi_standard_logo.png').default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        PrimeXT is open source project, this means everyone from community can take part in development. 
+        Also it's free and available for all.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
-    Svg: require('../../static/img/undraw_docusaurus_tree.svg').default,
+    title: 'Most Functional Toolkit',
+    Svg: require('../../static/img/terminal_logo.png').default,
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        It provides a lot of features that other mods haven't. 
+        Like advanced graphics features, extended limits, new entities, rigid body physics. 
       </>
     ),
   },
   {
-    title: 'Powered by React',
-    Svg: require('../../static/img/undraw_docusaurus_react.svg').default,
+    title: 'Crossplatform',
+    Svg: require('../../static/img/crossplatform_logo.png').default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        You can develop your mod not only for one specific platform.
+        Now available Windows and Linux, in future we plans to support Android also.
       </>
     ),
   },
