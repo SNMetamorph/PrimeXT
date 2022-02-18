@@ -143,4 +143,72 @@ jobs:
           tag: continious
           overwrite: true
           prerelease: true
-          release_name: PrimeXT Continious Build
+
+  build-android:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        conf: [Debug]
+
+    env:
+      BUILD_TYPE: ${{ matrix.conf }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+
+      - name: Build
+        run: ./gradlew assembleDebug
+        working-directory: android
+
+      - name: Update continious tag
+        uses: richardsimko/update-tag@v1
+        with:
+            tag_name: continious
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+      - name: Prepare artifacts
+        run: |
+          mkdir publish/
+          mkdir publish/primext
+          mkdir publish/primext/bin
+          mkdir publish/primext/devkit
+          cp android/app/build/outputs/apk/debug/app-debug.apk publish/primext-debug.apk
+          cp -r game_dir/* publish/primext
+          cd publish && zip -r build.zip ./* && mv build.zip ../ && cd ..
+
+      - name: Create release
+        id: create_release
+        uses: ncipollo/release-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag: continious
+          name: Continious build
+          draft: false
+          prerelease: true
+          allowUpdates: true
+          removeArtifacts: false
+          replacesArtifacts: true
+          
+      - name: Upload artifacts
+        id: upload-artifacts
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./build.zip
+          asset_name: primext-android.zip
+          tag: continious
+          overwrite: true
+          prerelease: true
