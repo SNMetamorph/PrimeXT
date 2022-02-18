@@ -25,7 +25,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 public class LauncherActivity extends AppCompatActivity {
-	private static final int XASH_MIN_VERSION = 1710;
 	
 	@SuppressLint("SetTextI18n")
 	@Override
@@ -46,38 +45,5 @@ public class LauncherActivity extends AppCompatActivity {
 				.putExtra("argv", launchParameters.getText())
 				.putExtra("gamelibdir", getApplicationInfo().nativeLibraryDir)));
 
-		if (!BuildConfig.DEBUG) {
-			checkForEngine();
-		}
-	}
-
-	private String getEngineDownloadUrl() {
-		if (!Build.SUPPORTED_ABIS[0].contains("64")) {
-			return "https://github.com/FWGS/xash3d-fwgs/releases/download/continuous/xashdroid-32.apk";
-		} else {
-			return "https://github.com/FWGS/xash3d-fwgs/releases/download/continuous/xashdroid-64.apk";
-		}
-	}
-
-	private void checkForEngine() {
-		try {
-			PackageInfo info = getPackageManager().getPackageInfo("su.xash.engine", 0);
-
-			if (info.versionCode < XASH_MIN_VERSION) {
-				new MaterialAlertDialogBuilder(LauncherActivity.this)
-						.setTitle(R.string.update_required)
-						.setMessage(getString(R.string.update_available, "Xash3D FWGS"))
-						.setCancelable(true)
-						.setNegativeButton(R.string.later, null)
-						.setPositiveButton(R.string.update, (dialog, which) -> startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse(getEngineDownloadUrl())))).show();
-			}
-		} catch (PackageManager.NameNotFoundException e) {
-			new MaterialAlertDialogBuilder(LauncherActivity.this)
-					.setTitle(R.string.engine_not_found)
-					.setMessage(R.string.engine_info)
-					.setCancelable(true)
-					.setNegativeButton(R.string.later, null)
-					.setPositiveButton(R.string.update, (dialog, which) -> startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse(getEngineDownloadUrl())))).show();
-		}
 	}
 }
