@@ -16,8 +16,13 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs/intro">
-            Read PrimeXT Introduction
+            to="/docs/rus/intro">
+            🇷🇺 Читать вступление
+          </Link>
+          <Link
+            className="button button--secondary button--lg"
+            to="/docs/eng/intro">
+            🇬🇧 Read Intro
           </Link>
         </div>
       </div>

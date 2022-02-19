@@ -18,6 +18,8 @@
 
 .buttons {
   display: flex;
-  align-items: center;
+  gap: 10px;
   justify-content: center;
+  width: 60%;
+  margin: 0 auto;
 }
