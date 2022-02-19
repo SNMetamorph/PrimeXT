@@ -15,12 +15,12 @@
 // Platform specific types:
 //Design note: Its OK to use int for general loop variables and temps.
 
-typedef _int64			NxI64;
+typedef int64			NxI64;
 typedef signed int			NxI32;
 typedef signed short		NxI16;
 typedef signed char			NxI8;
 
-typedef unsigned _int64		NxU64;
+typedef unsigned int64		NxU64;
 typedef unsigned int		NxU32;
 typedef unsigned short		NxU16;
 typedef unsigned char		NxU8;
