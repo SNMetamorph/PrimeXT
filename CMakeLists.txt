@@ -72,11 +72,11 @@ if(BUILD_SERVER)
 	add_subdirectory(server)
 endif()
 
-if(BUILD_UTILS)
+if(BUILD_UTILS AND NOT ANDROID)
 	add_subdirectory(utils)
 endif()
 
-if(BUILD_GAME_LAUNCHER)
+if(BUILD_GAME_LAUNCHER AND NOT ANDROID)
 	add_subdirectory(game_launcher)
 endif()
 
