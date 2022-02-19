@@ -108,7 +108,9 @@ if(MSVC)
 endif()
 
 # set static compiler runtime
-set_compiler_runtime(${PROJECT_NAME} STATIC)
+if(APPLE OR WIN32 OR ${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+	set_compiler_runtime(${PROJECT_NAME} STATIC)
+endif()
 
 if(WIN32)
 	target_link_libraries(${PROJECT_NAME} user32.lib)
