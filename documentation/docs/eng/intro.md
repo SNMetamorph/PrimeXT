@@ -2,6 +2,8 @@
 sidebar_position: 1
 ---
 
+# Introduction
+
 ![Header](/img/intro/header.png)
 
 ### About project

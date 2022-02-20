@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Введение / Introduction
+# Введение
 
 ![Header](/img/intro/header.png)
 
