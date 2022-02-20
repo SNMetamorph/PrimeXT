@@ -15,9 +15,14 @@ function HomepageHeader() {
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.buttons}>
           <Link
-            className="button button--secondary button--lg"
-            to="/docs/intro">
-            Docusaurus Tutorial - 5min ⏱️
+            className={"button button--secondary button--lg " + styles.buttonIntro}
+            to="/docs/rus/intro">
+            🇷🇺 Читать вступление
+          </Link>
+          <Link
+            className={"button button--secondary button--lg " + styles.buttonIntro}
+            to="/docs/eng/intro">
+            🇬🇧 Read Intro
           </Link>
         </div>
       </div>
@@ -29,7 +34,7 @@ export default function Home() {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title={`Hello from ${siteConfig.title}`}
+      title={`Main Page`}
       description="Description will go into a meta tag in <head />">
       <HomepageHeader />
       <main>

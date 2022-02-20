@@ -32,6 +32,10 @@ const config = {
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
+        gtag: {
+          trackingID: 'G-NLS6RNCBDY',
+          anonymizeIP: false,
+        },
       }),
     ],
   ],
@@ -43,18 +47,18 @@ const config = {
         title: 'PrimeXT Docs',
         logo: {
           alt: 'PrimeXT Logo',
-          src: 'img/logo.svg',
+          src: 'img/logo.png',
         },
         items: [
           {
             type: 'doc',
-            docId: 'intro',
+            docId: 'eng/intro',
             position: 'left',
             label: 'Tutorial',
           },
           {to: '/blog', label: 'Blog', position: 'left'},
           {
-            href: 'https://github.com/facebook/docusaurus',
+            href: 'https://github.com/SNMetamorph/PrimeXT',
             label: 'GitHub',
             position: 'right',
           },
@@ -68,7 +72,7 @@ const config = {
             items: [
               {
                 label: 'Tutorial',
-                to: '/docs/intro',
+                to: '/docs/eng/intro',
               },
             ],
           },
