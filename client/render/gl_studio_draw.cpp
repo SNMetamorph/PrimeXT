@@ -1028,12 +1028,17 @@ bool CStudioModelRenderer :: CheckBoneCache( float f )
 	BoneCache_t *cache = &inst->bonecache;
 	cl_entity_t *e = RI->currententity;
 
-	if(( tr.time - m_pModelInstance->lighttimecheck ) > LIGHT_INTERP_UPDATE )
+	if(( tr.time - inst->lighttimecheck ) > LIGHT_INTERP_UPDATE )
 	{
 		// shuffle states
-		m_pModelInstance->oldlight = m_pModelInstance->newlight;
-		m_pModelInstance->lighttimecheck = tr.time;
-		m_pModelInstance->light_update = true;
+		inst->oldlight = inst->newlight;
+		inst->lighttimecheck = tr.time;
+		inst->light_update = true;
+	}
+
+	// can't use cache if jiggle bones enabled
+	if (inst->m_pJiggleBones) {
+		return false;
 	}
 
 	// no cache for local player
@@ -1041,7 +1046,7 @@ bool CStudioModelRenderer :: CheckBoneCache( float f )
 		return false;
 
 	bool pos_valid = (cache->transform == inst->m_protationmatrix) ? true : false;
-	bool param_valid = !memcmp( cache->poseparam, m_pModelInstance->m_poseparameter, sizeof( float ) * MAXSTUDIOPOSEPARAM );
+	bool param_valid = !memcmp( cache->poseparam, inst->m_poseparameter, sizeof( float ) * MAXSTUDIOPOSEPARAM );
 
 	// make sure what all cached values are unchanged
 	if( cache->frame == f && cache->sequence == e->curstate.sequence && pos_valid && !memcmp( cache->blending, e->curstate.blending, 2 )
@@ -1073,7 +1078,7 @@ bool CStudioModelRenderer :: CheckBoneCache( float f )
 	cache->transform = inst->m_protationmatrix;
 	memcpy( cache->blending, e->curstate.blending, 2 );
 	memcpy( cache->controller, e->curstate.controller, 4 );
-	memcpy( cache->poseparam, m_pModelInstance->m_poseparameter, sizeof( float ) * MAXSTUDIOPOSEPARAM );
+	memcpy( cache->poseparam, inst->m_poseparameter, sizeof( float ) * MAXSTUDIOPOSEPARAM );
 	cache->gaitsequence = e->curstate.gaitsequence;
 	cache->gaitframe = e->curstate.fuser1;
 
@@ -1113,7 +1118,8 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 	
 	StudioInterpolatePoseParams( e, dadt );
 
-	if( CheckBoneCache( f )) return; // using a cached bones no need transformations
+	if( CheckBoneCache( f )) 
+		return; // using a cached bones no need transformations
 
 	if( m_boneSetup.GetNumIKChains( ))
 	{
@@ -1207,22 +1213,35 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 			// compute desired bone orientation
 			matrix3x4 goalMX;
 
-			if( pbones[i].parent == -1 ) goalMX = m_pModelInstance->m_protationmatrix.ConcatTransforms( bonematrix );
-			else goalMX = m_pModelInstance->m_pbones[pbones[i].parent].ConcatTransforms( bonematrix );
+			if (pbones[i].parent == -1) {
+				goalMX = m_pModelInstance->m_protationmatrix.ConcatTransforms(bonematrix);
+			}
+			else {
+				goalMX = m_pModelInstance->m_pbones[pbones[i].parent].ConcatTransforms(bonematrix);
+			}
 
 			// get jiggle properties from QC data
 			mstudiojigglebone_t *jiggleInfo = (mstudiojigglebone_t *)((byte *)m_pStudioHeader + pboneinfo[i].procindex);
-			if( !m_pModelInstance->m_pJiggleBones ) m_pModelInstance->m_pJiggleBones = new CJiggleBones;
+			if (!m_pModelInstance->m_pJiggleBones) {
+				m_pModelInstance->m_pJiggleBones = new CJiggleBones;
+			}
 
 			// do jiggle physics
-			if( pboneinfo[i].proctype == STUDIO_PROC_JIGGLE )
-				m_pModelInstance->m_pJiggleBones->BuildJiggleTransformations( i, tr.time, jiggleInfo, goalMX, m_pModelInstance->m_pbones[i] );
-			else m_pModelInstance->m_pbones[i] = goalMX; // fallback
+			if (pboneinfo[i].proctype == STUDIO_PROC_JIGGLE) {
+				m_pModelInstance->m_pJiggleBones->BuildJiggleTransformations(i, tr.time, jiggleInfo, goalMX, m_pModelInstance->m_pbones[i]);
+			}
+			else {
+				m_pModelInstance->m_pbones[i] = goalMX; // fallback
+			}
 		}
 		else
 		{
-			if( pbones[i].parent == -1 ) m_pModelInstance->m_pbones[i] = m_pModelInstance->m_protationmatrix.ConcatTransforms( bonematrix );
-			else m_pModelInstance->m_pbones[i] = m_pModelInstance->m_pbones[pbones[i].parent].ConcatTransforms( bonematrix );
+			if (pbones[i].parent == -1) {
+				m_pModelInstance->m_pbones[i] = m_pModelInstance->m_protationmatrix.ConcatTransforms(bonematrix);
+			}
+			else {
+				m_pModelInstance->m_pbones[i] = m_pModelInstance->m_pbones[pbones[i].parent].ConcatTransforms(bonematrix);
+			}
 		}
 	}
 
