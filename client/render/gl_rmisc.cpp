@@ -28,7 +28,7 @@ GNU General Public License for more details.
 #include "gl_debug.h"
 #include "r_weather.h"
 
-#define DEFAULT_SMOOTHNESS	0.35f
+#define DEFAULT_SMOOTHNESS	0.0f
 #define FILTER_SIZE		2
 
 /*
@@ -353,7 +353,7 @@ matdesc_t *CL_FindMaterial( const char *name )
 		defmat.reflectScale = 0.0f;
 		defmat.refractScale = 0.0f;
 		defmat.reliefScale = 0.0f;
-		defmat.smoothness = DEFAULT_SMOOTHNESS; // same as glossExp 32.0
+		defmat.smoothness = DEFAULT_SMOOTHNESS; 
 		defmat.effects = COM_DefaultMatdef();
 	}
 
