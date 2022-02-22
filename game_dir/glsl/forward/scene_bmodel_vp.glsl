@@ -98,7 +98,7 @@ void main( void )
 	var_ViewDir = V * tbn;
 
 #if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
-	var_TangentViewDir = normalize((u_ViewOrigin - worldpos.xyz) * tbn);
+	var_TangentViewDir = (u_ViewOrigin - worldpos.xyz) * tbn;
 #endif
 
 #if !defined( HAS_NORMALMAP )

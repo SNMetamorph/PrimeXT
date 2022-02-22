@@ -126,11 +126,11 @@ void main( void )
 #endif
 
 #if defined( PARALLAX_SIMPLE )
-	//vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse, var_TangentViewDir);
-	vec_TexDiffuse = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse.xy, var_TangentViewDir);
-	//vec_TexDiffuse = ParallaxReliefMap(var_TexDiffuse, var_TangentViewDir);
+	//vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse, normalize(var_TangentViewDir));
+	vec_TexDiffuse = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse.xy, normalize(var_TangentViewDir));
+	//vec_TexDiffuse = ParallaxReliefMap(var_TexDiffuse, normalize(var_TangentViewDir));
 #elif defined( PARALLAX_OCCLUSION )
-	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse, var_TangentViewDir).xy;
+	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse, normalize(var_TangentViewDir)).xy;
 #endif
 
 // compute the normal first
@@ -215,7 +215,7 @@ void main( void )
 
 // parallax selfshadowing
 #if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
-	//shadow *= ParallaxSelfShadow(N, var_TangentLightDir, vec_TexDiffuse);
+	//shadow *= ParallaxSelfShadow(N, normalize(var_TangentLightDir), vec_TexDiffuse);
 #endif
 	if (shadow <= 0.0) 
 		discard; // fast reject
