@@ -17,6 +17,7 @@ GNU General Public License for more details.
 #include "mathlib.h"
 #include "texfetch.h"
 #include "lightmodel.h"
+#include "material.h"
 
 uniform sampler2D		u_ProjectMap;
 uniform sampler2D		u_ColorMap;
@@ -70,6 +71,7 @@ void main( void )
 	vec3 V = normalize( var_ViewVec );
 	vec3 L = vec3( 0.0 );
 	float atten = 1.0;
+	MaterialData mat;
 
 #if !defined( LIGHT_PROJ )
 	atten = LightAttenuation(var_LightVec, u_LightOrigin.w);
@@ -84,7 +86,8 @@ void main( void )
 	float spotDot = dot( normalize( u_LightDir.xyz ), L );
 	float fov = ( u_LightDir.w * FOV_MULT * ( M_PI / 180.0 ));
 	float spotCos = cos( fov + fov );
-	if( spotDot < spotCos ) discard;
+	if( spotDot < spotCos ) 
+		discard;
 #elif defined( LIGHT_OMNI )
 	L = normalize( var_LightVec );
 #elif defined( LIGHT_PROJ )
@@ -95,8 +98,7 @@ void main( void )
 
 #if defined( HAS_NORMALMAP )
 	vec3 N = normalmap2D( u_NormalMap, var_TexDiffuse );
-	// rotate normal to worldpsace
-	N = normalize( var_WorldMat * N );
+	N = normalize( var_WorldMat * N ); // rotate normal to worldspace
 #else
 	vec3 N = normalize( var_Normal );
 #endif
@@ -105,35 +107,40 @@ void main( void )
 
 #if defined( SIGNED_DISTANCE_FIELD )
 	diffuse.a *= smoothstep( SOFT_EDGE_MIN, SOFT_EDGE_MAX, diffuse.a ); 
-#endif//SIGNED_DISTANCE_FIELD
+#endif // SIGNED_DISTANCE_FIELD
 
 #if defined( HAS_DETAIL )
 	diffuse.rgb *= detailmap2D( u_DetailMap, var_TexDetail ).rgb * DETAIL_SCALE;
 #endif
-	float smoothness = u_Smoothness;
-	vec4 glossmap = vec4( 0.0 );
 
-	// compute the specular term
+// setup material params values
 #if defined( HAS_GLOSSMAP )
-	glossmap = colormap2D( u_GlossMap, var_TexDiffuse );
-#endif//HAS_GLOSSMAP
+	// get params from texture
+	mat = MaterialFetchTexture(colormap2D( u_GlossMap, var_TexDiffuse ));
+#else // !HAS_GLOSSMAP
+	// use default parameter values
+	mat.smoothness = u_Smoothness;
+	mat.metalness = 0.0;
+	mat.ambientOcclusion = 1.0;
+#endif // HAS_GLOSSMAP
 
-	vec3 light = vec3( 1.0 );
+	vec3 light = u_LightDiffuse * DLIGHT_SCALE;	// light color
 	float shadow = 1.0;
-
-	light = u_LightDiffuse * DLIGHT_SCALE;	// light color
 	float NdotL = saturate( dot( N, L ));
-	if( NdotL <= 0.0 ) discard; // fast reject
+	if ( NdotL <= 0.0 ) 
+		discard; // fast reject
 
 #if defined( LIGHT_SPOT )
 	// texture or procedural spotlight
 	light *= texture2DProj( u_ProjectMap, var_ProjCoord ).rgb;
 #if defined( APPLY_SHADOW )
-	if( NdotL > 0.0 ) shadow = ShadowSpot( var_ShadowCoord, u_ShadowParams.xy );
+	if( NdotL > 0.0 ) 
+		shadow = ShadowSpot( var_ShadowCoord, u_ShadowParams.xy );
 #endif
 #elif defined( LIGHT_OMNI )
 #if defined( APPLY_SHADOW )
-	if( NdotL > 0.0 ) shadow = ShadowOmni( -var_LightVec, u_ShadowParams );
+	if( NdotL > 0.0 ) 
+		shadow = ShadowOmni( -var_LightVec, u_ShadowParams );
 #endif
 #elif defined( LIGHT_PROJ )
 #if defined( APPLY_SHADOW )
@@ -150,7 +157,7 @@ void main( void )
  
 	vec3 albedo = diffuse.rgb;
 	light *= atten * shadow; // apply attenuation and shadowing
-	LightingData lighting = ComputeLighting(N, V, L, albedo, light, glossmap, smoothness);
+	LightingData lighting = ComputeLighting(N, V, L, albedo, light, mat);
 	diffuse.rgb = lighting.diffuse;
 	diffuse.rgb += lighting.specular;
 #if defined( LIGHT_PROJ )
