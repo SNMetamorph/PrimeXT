@@ -23,6 +23,7 @@ GNU General Public License for more details.
 #include "screen.h"
 #include "fresnel.h"
 #include "parallax.h"
+#include "material.h"
 
 // texture units
 #if defined( APPLY_TERRAIN )
@@ -86,7 +87,8 @@ void main( void )
 	vec3 light = vec3( 0.0 );
 	vec3 gloss = vec3( 0.0 );
 	vec2 vec_TexDiffuse = var_TexDiffuse;
-
+	MaterialData mat;
+	
 #if defined( APPLY_TERRAIN )
 	vec4 mask0, mask1, mask2, mask3;
 	TerrainReadMask( var_TexGlobal, mask0, mask1, mask2, mask3 );
@@ -103,13 +105,33 @@ void main( void )
 // compute the normal first
 #if defined( HAS_NORMALMAP )
 #if defined( APPLY_TERRAIN )
-	vec3 N = TerrainApplyNormal( u_NormalMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
+	vec3 N = TerrainMixNormal( u_NormalMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 #else
 	vec3 N = normalmap2D( u_NormalMap, vec_TexDiffuse );
 #endif // APPLY_TERRAIN
 #else
 	vec3 N = normalize( var_Normal );
 #endif // HAS_NORMALMAP
+
+// setup material params values
+#if defined( HAS_GLOSSMAP )
+#if defined( APPLY_TERRAIN )
+	vec4 glossmap = TerrainMixGlossmap( u_GlossMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
+#else
+	vec4 glossmap = colormap2D( u_GlossMap, vec_TexDiffuse );
+#endif
+	// get params from texture
+	mat = MaterialFetchTexture( glossmap );
+#else // !HAS_GLOSSMAP
+#if defined( APPLY_TERRAIN )
+	mat.smoothness = TerrainMixSmoothness( u_Smoothness, mask0, mask1, mask2, mask3 );
+#else
+	mat.smoothness = u_Smoothness;
+#endif
+	// default params 
+	mat.metalness = 0.0;
+	mat.ambientOcclusion = 1.0;
+#endif // HAS_GLOSSMAP
 
 	float waterBorderFactor = 1.0, waterAbsorbFactor = 1.0, waterRefractFactor = 1.0;
 
@@ -129,14 +151,14 @@ void main( void )
 	waterBorderFactor = 1.0 - saturate(exp2( -768.0 * depthDelta ));
 	waterRefractFactor = saturate( depthDelta * 32.0 );
 	waterAbsorbFactor = 1.0 - saturate(exp2( -768.0 * u_RenderColor.a * depthDelta ));
-#endif
-#endif
+#endif // LIQUID_UNDERWATER
+#endif // LIQUID_SURFACE
 
 // compute the diffuse term
 #if defined( PLANAR_REFLECTION )
 	vec4 diffuse = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, u_RefractScale );
 #elif defined( APPLY_TERRAIN )
-	vec4 diffuse = TerrainApplyDiffuse( u_ColorMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
+	vec4 diffuse = TerrainMixDiffuse( u_ColorMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 #else
 	vec4 diffuse = colormap2D( u_ColorMap, vec_TexDiffuse );
 #endif
@@ -164,33 +186,18 @@ void main( void )
 
 	// lighting the world polys
 #if !defined( LIGHTING_FULLBRIGHT )
-#if defined( APPLY_TERRAIN )
-	float smoothness = TerrainCalcSmoothness( u_Smoothness, mask0, mask1, mask2, mask3 );
-#else
-	float smoothness = u_Smoothness;
-#endif
-	vec4 glossmap = vec4( 0.0 );
-
-	// compute the specular term
-#if defined( HAS_GLOSSMAP ) && defined( HAS_DELUXEMAP )
-#if defined( APPLY_TERRAIN )
-	glossmap = TerrainApplySpecular( u_GlossMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
-#else
-	glossmap = colormap2D( u_GlossMap, vec_TexDiffuse );
-#endif
-#endif//(HAS_GLOSSMAP && HAS_DELUXEMAP)
-
+	
 #if defined( APPLY_STYLE0 )
-	ApplyLightStyle( var_TexLight0, N, V, glossmap.rgb, smoothness, light, gloss );
+	ApplyLightStyle( var_TexLight0, N, V, vec3(mat.smoothness), mat.smoothness, light, gloss );
 #endif
 #if defined( APPLY_STYLE1 )
-	ApplyLightStyle( var_TexLight1, N, V, glossmap.rgb, smoothness, light, gloss );
+	ApplyLightStyle( var_TexLight1, N, V, vec3(mat.smoothness), mat.smoothness, light, gloss );
 #endif
 #if defined( APPLY_STYLE2 )
-	ApplyLightStyle( var_TexLight2, N, V, glossmap.rgb, smoothness, light, gloss );
+	ApplyLightStyle( var_TexLight2, N, V, vec3(mat.smoothness), mat.smoothness, light, gloss );
 #endif
 #if defined( APPLY_STYLE3 )
-	ApplyLightStyle( var_TexLight3, N, V, glossmap.rgb, smoothness, light, gloss );
+	ApplyLightStyle( var_TexLight3, N, V, vec3(mat.smoothness), mat.smoothness, light, gloss );
 #endif
 #if defined( APPLY_STYLE0 ) || defined( APPLY_STYLE1 ) || defined( APPLY_STYLE2 ) || defined( APPLY_STYLE3 )
 	// convert values back to normal range and clamp it
@@ -218,8 +225,7 @@ void main( void )
 #if defined( REFLECTION_CUBEMAP )
 	mat3 tbnBasis = mat3(normalize(var_MatrixTBN[0]), normalize(var_MatrixTBN[1]), normalize(var_MatrixTBN[2]));
 	vec3 worldNormal = normalize(tbnBasis * N);
-	vec3 reflected = GetReflectionProbe( var_Position, u_ViewOrigin, worldNormal, smoothness );
-	float fresnel = GetFresnel( V, N, WATER_F0_VALUE, FRESNEL_FACTOR );
+	vec3 reflected = GetReflectionProbe( var_Position, u_ViewOrigin, worldNormal, mat.smoothness );
 #endif // REFLECTION_CUBEMAP
 
 #if defined( TRANSLUCENT )
@@ -236,17 +242,20 @@ void main( void )
 	vec3 refracted = mix( borderSmooth, waterColor * light, waterAbsorbFactor ); // mix between refracted light and own water color
 #if defined( REFLECTION_CUBEMAP )
 	// blend refracted and reflected part together 
+	float fresnel = GetFresnel( V, N, WATER_F0_VALUE, FRESNEL_FACTOR );
 	diffuse.rgb = refracted + reflected * fresnel * waterBorderFactor * u_ReflectScale; 
 #else
 	diffuse.rgb = refracted;
 #endif // REFLECTION_CUBEMAP
+
 #else // !LIQUID_SURFACE
 	// for translucent non-liquid stuff (glass, etc.)
 	diffuse.rgb = mix( screenmap, diffuse.rgb, diffuse.a * u_RenderColor.a );
 #endif // LIQUID_SURFACE
 #else // !TRANSLUCENT
 #if defined( REFLECTION_CUBEMAP )
-	diffuse.rgb += reflected * fresnel * u_ReflectScale;
+	float fresnel = GetFresnel( V, N, GENERIC_F0_VALUE, FRESNEL_FACTOR );
+	diffuse.rgb += reflected * fresnel * u_ReflectScale * mat.smoothness;
 #endif
 #endif // TRANSLUCENT
 
