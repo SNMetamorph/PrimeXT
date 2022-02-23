@@ -213,7 +213,7 @@ LightingData ComputeLighting(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColo
 	lighting.diffuse = albedo * lighting.diffuse;
 #else
 	float NdotL = saturate( dot( N, L ));
-	float specular = pow(max(dot(N, normalize(V + L)), 0.0), smoothness * smoothness * 256.0);
+	float specular = pow(max(dot(N, normalize(V + L)), 0.0), 32.0);
 	lighting.diffuse = lightColor * NdotL * albedo;
 	lighting.specular = lightColor * NdotL * smoothness * specular;
 #endif
