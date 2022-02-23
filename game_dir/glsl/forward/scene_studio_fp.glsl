@@ -190,7 +190,7 @@ void main( void )
 	vec3 worldNormal = normalize(tbnBasis * N);
 	vec3 reflected = GetReflectionProbe( var_Position, u_ViewOrigin, worldNormal, mat.smoothness );
 	float fresnel = GetFresnel( V, N, WATER_F0_VALUE, FRESNEL_FACTOR );
-	albedo.rgb += var_DiffuseLight * reflected * u_ReflectScale;
+	albedo.rgb += var_DiffuseLight * reflected * mat.smoothness * u_ReflectScale;
 #endif // REFLECTION_CUBEMAP
 
 #if defined( LIGHTMAP_DEBUG ) || defined( LIGHTVEC_DEBUG )
