@@ -1380,7 +1380,7 @@ static void Mod_ComputeFaceTBN( msurface_t *surf, mextrasurf_t *esrf )
 		}
 
 		v->tangent = directionnormals[0];
-		v->binormal = -directionnormals[1];
+		v->binormal = directionnormals[1];
 		v->normal = vertNormal;
 	}
 }

@@ -101,7 +101,7 @@ vec3 ParallaxOcclusionMap( const in vec2 texCoord, const in vec3 viewVec )
 	float bumpScale = 0.2 * u_ReliefParams.z;
 	float lod = ComputeLOD( texCoord );
 
-	vec2 delta = bumpScale * vec2(viewVec.x, -viewVec.y) / (viewVec.z * PARALLAX_STEPS);
+	vec2 delta = bumpScale * vec2(viewVec.x, viewVec.y) / (viewVec.z * PARALLAX_STEPS);
 	float NB0 = GetDepthMapSample(u_HeightMap, texCoord);
 	float height = 1.0 - step;
 	vec2 offset = texCoord + delta;
