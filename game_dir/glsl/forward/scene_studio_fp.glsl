@@ -187,7 +187,13 @@ void main( void )
 
 #if defined( REFLECTION_CUBEMAP )
 	mat3 tbnBasis = mat3(normalize(var_MatrixTBN[0]), normalize(var_MatrixTBN[1]), normalize(var_MatrixTBN[2]));
+#if defined( HAS_NORMALMAP )
+	// TBN generates only for models with normal maps (just optimization)
+	// because of that we can use TBN matrix only for this case
 	vec3 worldNormal = normalize(tbnBasis * N);
+#else
+	vec3 worldNormal = N;
+#endif
 	vec3 reflected = GetReflectionProbe( var_Position, u_ViewOrigin, worldNormal, mat.smoothness );
 	float fresnel = GetFresnel( V, N, WATER_F0_VALUE, FRESNEL_FACTOR );
 	albedo.rgb += var_DiffuseLight * reflected * mat.smoothness * u_ReflectScale;

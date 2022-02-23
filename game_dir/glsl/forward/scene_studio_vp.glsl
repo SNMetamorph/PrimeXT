@@ -176,6 +176,7 @@ void main( void )
 
 // NOTE: this mess is needed only for transparent models because
 // refraction and aberration are ready to work only in tangent space
+// doing this because TBN generates only for models with normal map
 #if defined( HAS_NORMALMAP )
 	// transform lightdir into tangent space
 	var_LightDir = srcL * tbn;
