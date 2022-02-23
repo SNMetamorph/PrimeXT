@@ -2759,6 +2759,7 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 	bool shader_translucent = false;
 	bool using_screenrect = false;
 	bool using_cubemaps = false;
+	bool has_normalmap = false;
 
 	if( mat->forwardScene.IsValid() && mat->lastRenderMode == RI->currententity->curstate.rendermode )
 		return mat->forwardScene.GetHandle(); // valid
@@ -2827,9 +2828,22 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 		// deluxemap required
 		if( !RP_CUBEPASS() && ( CVAR_TO_BOOL( cv_bump ) && FBitSet( world->features, WORLD_HAS_DELUXEMAP ) && FBitSet( mat->flags, STUDIO_NF_NORMALMAP )))
 		{
+			has_normalmap = true;
 			GL_AddShaderDirective( options, "HAS_NORMALMAP" );
 			GL_EncodeNormal( options, mat->gl_normalmap_id );
 			GL_AddShaderDirective( options, "COMPUTE_TBN" );
+		}
+
+		// parallax mapping
+		if (FBitSet(mat->flags, STUDIO_NF_HEIGHTMAP) && mat->reliefScale > 0.0f)
+		{
+			if (cv_parallax->value > 0.0f)
+			{
+				if (cv_parallax->value == 1.0f)
+					GL_AddShaderDirective(options, "PARALLAX_SIMPLE");
+				else if (cv_parallax->value >= 2.0f)
+					GL_AddShaderDirective(options, "PARALLAX_OCCLUSION");
+			}
 		}
 
 		// deluxemap required
@@ -2840,10 +2854,10 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 			GL_AddShaderDirective( options, "HAS_LUMA" );
 	}
 
-	if( mat->aberrationScale > 0.0f && Q_stristr( options, "HAS_NORMALMAP" ))
+	if (mat->aberrationScale > 0.0f && has_normalmap)
 		GL_AddShaderDirective( options, "APPLY_ABERRATION" );
 
-	if( mat->refractScale > 0.0f && Q_stristr( options, "HAS_NORMALMAP" ))
+	if (mat->refractScale > 0.0f && has_normalmap)
 		GL_AddShaderDirective( options, "APPLY_REFRACTION" );
 
 	if(( world->num_cubemaps > 0 ) && CVAR_TO_BOOL( r_cubemap ) && (mat->reflectScale > 0.0f) && !RP_CUBEPASS( ))
@@ -2954,6 +2968,18 @@ word CStudioModelRenderer :: ShaderLightForward( CDynLight *dl, mstudiomaterial_
 		GL_AddShaderDirective( options, "COMPUTE_TBN" );
 	}
 
+	// parallax mapping
+	if (FBitSet(mat->flags, STUDIO_NF_HEIGHTMAP) && mat->reliefScale > 0.0f)
+	{
+		if (cv_parallax->value > 0.0f)
+		{
+			if (cv_parallax->value == 1.0f)
+				GL_AddShaderDirective(options, "PARALLAX_SIMPLE");
+			else if (cv_parallax->value >= 2.0f)
+				GL_AddShaderDirective(options, "PARALLAX_OCCLUSION");
+		}
+	}
+
 	if( CVAR_TO_BOOL( cv_specular ) && FBitSet( mat->flags, STUDIO_NF_GLOSSMAP ))
 		GL_AddShaderDirective( options, "HAS_GLOSSMAP" );
 
@@ -3048,6 +3074,18 @@ word CStudioModelRenderer :: ShaderSceneDeferred( mstudiomaterial_t *mat, bool b
 		GL_AddShaderDirective( options, "HAS_NORMALMAP" );
 		GL_EncodeNormal( options, mat->gl_normalmap_id );
 		GL_AddShaderDirective( options, "COMPUTE_TBN" );
+	}
+
+	// parallax mapping
+	if (FBitSet(mat->flags, STUDIO_NF_HEIGHTMAP) && mat->reliefScale > 0.0f)
+	{
+		if (cv_parallax->value > 0.0f)
+		{
+			if (cv_parallax->value == 1.0f)
+				GL_AddShaderDirective(options, "PARALLAX_SIMPLE");
+			else if (cv_parallax->value >= 2.0f)
+				GL_AddShaderDirective(options, "PARALLAX_OCCLUSION");
+		}
 	}
 
 	if( !RP_CUBEPASS() && ( CVAR_TO_BOOL( cv_specular ) && FBitSet( mat->flags, STUDIO_NF_GLOSSMAP )))
@@ -3341,6 +3379,13 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force )
 		case UT_HEIGHTMAP:
 			u->SetValue( mat->gl_heightmap_id );
 			break;
+		case UT_RELIEFPARAMS:
+		{
+			float width = RENDER_GET_PARM(PARM_TEX_WIDTH, mat->gl_heightmap_id);
+			float height = RENDER_GET_PARM(PARM_TEX_HEIGHT, mat->gl_heightmap_id);
+			u->SetValue(width, height, mat->reliefScale, cv_shadow_offset->value);
+			break;
+		}
 		case UT_BSPPLANESMAP:
 			u->SetValue( tr.packed_planes_texture );
 			break;

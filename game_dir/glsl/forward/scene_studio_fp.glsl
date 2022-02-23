@@ -21,6 +21,7 @@ GNU General Public License for more details.
 #include "cubemap.h"
 #include "screen.h"
 #include "material.h"
+#include "parallax.h"
 
 uniform sampler2D	u_ColorMap;
 uniform sampler2D	u_NormalMap;
@@ -52,17 +53,34 @@ varying vec3	var_WorldNormal;
 varying vec3	var_Position;
 #endif
 
+#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
+varying vec3	var_TangentViewDir;
+#endif
+
 varying vec3	var_LightDir;
 varying vec3	var_ViewDir;
 varying vec3	var_Normal;
 
 void main( void )
 {
-	vec4 albedo = colormap2D( u_ColorMap, var_TexDiffuse );
+	vec4 albedo = vec4( 0.0 );
 	vec4 glossmap = vec4( 0.0 );
 	vec3 specular = vec3( 0.0 );
 	vec3 diffuse = vec3( 0.0 );
+	vec2 vec_TexDiffuse;
 	MaterialData mat;
+
+#if defined( PARALLAX_SIMPLE )
+	//vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse, normalize(var_TangentViewDir));
+	vec_TexDiffuse = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse, normalize(var_TangentViewDir));
+	//vec_TexDiffuse = ParallaxReliefMap(var_TexDiffuse, normalize(var_TangentViewDir));
+#elif defined( PARALLAX_OCCLUSION )
+	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse, normalize(var_TangentViewDir)).xy; 
+#else
+	vec_TexDiffuse = var_TexDiffuse;
+#endif
+
+	albedo = colormap2D( u_ColorMap, vec_TexDiffuse );
 
 #if defined( HAS_DETAIL )
 	albedo.rgb *= detailmap2D( u_DetailMap, var_TexDetail ).rgb * DETAIL_SCALE;
@@ -79,7 +97,7 @@ void main( void )
 #endif
 
 #if defined( HAS_NORMALMAP )
-	vec3 N = normalmap2D( u_NormalMap, var_TexDiffuse );
+	vec3 N = normalmap2D( u_NormalMap, vec_TexDiffuse );
 #else
 	vec3 N = normalize( var_Normal );
 #endif
@@ -92,7 +110,7 @@ void main( void )
 // setup material params values
 #if defined( HAS_GLOSSMAP )
 	// get params from texture
-	mat = MaterialFetchTexture(colormap2D( u_GlossMap, var_TexDiffuse ));
+	mat = MaterialFetchTexture(colormap2D( u_GlossMap, vec_TexDiffuse ));
 #else // !HAS_GLOSSMAP
 	// use default parameter values
 	mat.smoothness = u_Smoothness;
@@ -178,7 +196,7 @@ void main( void )
 #endif // LIGHTING_FULLBRIGHT
 
 #if defined( HAS_LUMA )
-	albedo.rgb += texture2D( u_GlowMap, var_TexDiffuse ).rgb;
+	albedo.rgb += texture2D( u_GlowMap, vec_TexDiffuse ).rgb;
 #endif
 
 #if defined( TRANSLUCENT )

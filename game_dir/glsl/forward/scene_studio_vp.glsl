@@ -70,6 +70,10 @@ varying vec3	var_WorldNormal;
 varying vec3	var_Position;
 #endif
 
+#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
+varying vec3	var_TangentViewDir;
+#endif
+
 void main( void )
 {
 	vec4 position = vec4( attr_Position, 1.0 );
@@ -164,6 +168,10 @@ void main( void )
 #endif
 #endif//LIGHTING_FULLBRIGHT 
 	var_TexDiffuse = attr_TexCoord0;
+
+#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
+	var_TangentViewDir = srcV * tbn;
+#endif
 
 // NOTE: this mess is needed only for transparent models because
 // refraction and aberration are ready to work only in tangent space

@@ -18,6 +18,7 @@ GNU General Public License for more details.
 #include "texfetch.h"
 #include "lightmodel.h"
 #include "material.h"
+#include "parallax.h"
 
 uniform sampler2D		u_ProjectMap;
 uniform sampler2D		u_ColorMap;
@@ -58,6 +59,10 @@ varying mat3		var_WorldMat;
 varying vec3		var_Normal;
 #endif
 
+#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
+varying vec3		var_TangentViewDir;
+#endif
+
 #if defined( LIGHT_SPOT )
 varying vec4		var_ProjCoord;
 #endif
@@ -70,6 +75,7 @@ void main( void )
 {
 	vec3 V = normalize( var_ViewVec );
 	vec3 L = vec3( 0.0 );
+	vec2 vec_TexDiffuse;
 	float atten = 1.0;
 	MaterialData mat;
 
@@ -77,6 +83,16 @@ void main( void )
 	atten = LightAttenuation(var_LightVec, u_LightOrigin.w);
 	if (atten <= 0.0) 
 		discard; // fast reject
+#endif
+
+#if defined( PARALLAX_SIMPLE )
+	//vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse, normalize(var_TangentViewDir));
+	vec_TexDiffuse = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse, normalize(var_TangentViewDir));
+	//vec_TexDiffuse = ParallaxReliefMap(var_TexDiffuse, normalize(var_TangentViewDir));
+#elif defined( PARALLAX_OCCLUSION )
+	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse, normalize(var_TangentViewDir)).xy; 
+#else
+	vec_TexDiffuse = var_TexDiffuse;
 #endif
 
 #if defined( LIGHT_SPOT )
@@ -97,13 +113,13 @@ void main( void )
 	if( bool( gl_FrontFacing )) L = -L, V = -V;
 
 #if defined( HAS_NORMALMAP )
-	vec3 N = normalmap2D( u_NormalMap, var_TexDiffuse );
+	vec3 N = normalmap2D( u_NormalMap, vec_TexDiffuse );
 	N = normalize( var_WorldMat * N ); // rotate normal to worldspace
 #else
 	vec3 N = normalize( var_Normal );
 #endif
 	// compute the diffuse term
-	vec4 diffuse = colormap2D( u_ColorMap, var_TexDiffuse );
+	vec4 diffuse = colormap2D( u_ColorMap, vec_TexDiffuse );
 
 #if defined( SIGNED_DISTANCE_FIELD )
 	diffuse.a *= smoothstep( SOFT_EDGE_MIN, SOFT_EDGE_MAX, diffuse.a ); 
@@ -116,7 +132,7 @@ void main( void )
 // setup material params values
 #if defined( HAS_GLOSSMAP )
 	// get params from texture
-	mat = MaterialFetchTexture(colormap2D( u_GlossMap, var_TexDiffuse ));
+	mat = MaterialFetchTexture(colormap2D( u_GlossMap, vec_TexDiffuse ));
 #else // !HAS_GLOSSMAP
 	// use default parameter values
 	mat.smoothness = u_Smoothness;
