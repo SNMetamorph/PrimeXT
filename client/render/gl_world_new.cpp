@@ -263,9 +263,6 @@ static void Mod_LoadWorldMaterials( void )
 
 		mat->gl_detailmap_id = desc->dt_texturenum;
 
-		if( mat->smoothness <= 0.0f )	// don't waste time
-			ClearBits( mat->flags, BRUSH_HAS_SPECULAR );
-
 		if( mat->gl_detailmap_id > 0 && mat->gl_detailmap_id != tr.grayTexture )
 			SetBits( mat->flags, BRUSH_HAS_DETAIL );
 
