@@ -51,6 +51,7 @@ varying vec3	var_TexLight3;
 #if defined( REFLECTION_CUBEMAP )
 varying vec3	var_WorldNormal;
 varying vec3	var_Position;
+varying mat3	var_MatrixTBN;
 #endif
 
 #if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
@@ -185,7 +186,9 @@ void main( void )
 #endif // LIGHTVEC_DEBUG
 
 #if defined( REFLECTION_CUBEMAP )
-	vec3 reflected = GetReflectionProbe( var_Position, u_ViewOrigin, var_WorldNormal, mat.smoothness );
+	mat3 tbnBasis = mat3(normalize(var_MatrixTBN[0]), normalize(var_MatrixTBN[1]), normalize(var_MatrixTBN[2]));
+	vec3 worldNormal = normalize(tbnBasis * N);
+	vec3 reflected = GetReflectionProbe( var_Position, u_ViewOrigin, worldNormal, mat.smoothness );
 	float fresnel = GetFresnel( V, N, WATER_F0_VALUE, FRESNEL_FACTOR );
 	albedo.rgb += var_DiffuseLight * reflected * u_ReflectScale;
 #endif // REFLECTION_CUBEMAP

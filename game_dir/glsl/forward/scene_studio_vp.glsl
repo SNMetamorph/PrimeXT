@@ -68,6 +68,7 @@ varying vec3	var_TexLight3;
 #if defined( REFLECTION_CUBEMAP )
 varying vec3	var_WorldNormal;
 varying vec3	var_Position;
+varying mat3	var_MatrixTBN;
 #endif
 
 #if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
@@ -194,5 +195,6 @@ void main( void )
 #if defined( REFLECTION_CUBEMAP )
 	var_Position = worldpos.xyz;
 	var_WorldNormal = srcN;
+	var_MatrixTBN = tbn;
 #endif//REFLECTION_CUBEMAP
 }
