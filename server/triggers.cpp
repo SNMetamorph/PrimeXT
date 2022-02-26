@@ -4579,7 +4579,7 @@ void CTriggerCamera::FollowTarget( void )
 		return;
 	}
 
-	Vector vecGoal = UTIL_VecToAngles( m_hTarget->GetLocalOrigin() - GetLocalOrigin() );
+	Vector vecGoal = UTIL_VecToAngles( m_hTarget->GetAbsOrigin() - GetLocalOrigin() );
 
 	Vector angles = GetLocalAngles();
 
