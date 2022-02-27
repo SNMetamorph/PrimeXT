@@ -16,11 +16,13 @@ GNU General Public License for more details.
 #include "const.h"
 #include "mathlib.h"
 #include "texfetch.h"
+#include "fog.h"
 
-uniform sampler2D		u_ColorMap;
-
+uniform sampler2D	u_ColorMap;
 uniform vec4		u_FogParams;
+uniform vec3		u_ViewOrigin;
 
+varying vec3		var_Position;
 varying vec2		var_TexDiffuse;
 varying vec3		var_FrontLight;
 varying vec3		var_BackLight;
@@ -46,8 +48,7 @@ void main( void )
 #endif//LIGHTING_FULLBRIGHT
 
 #if defined( APPLY_FOG_EXP )
-	float fogFactor = saturate( exp2( -u_FogParams.w * ( gl_FragCoord.z / gl_FragCoord.w )));
-	diffuse.rgb = mix( u_FogParams.xyz, diffuse.rgb, fogFactor );
+	diffuse.rgb = CalculateFog(diffuse.rgb, u_FogParams, length(u_ViewOrigin - var_Position));
 #endif
 	gl_FragColor = diffuse;
 }

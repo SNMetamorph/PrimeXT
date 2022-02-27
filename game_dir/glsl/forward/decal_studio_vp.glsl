@@ -44,14 +44,14 @@ uniform vec4	u_LightStyles;
 varying vec4	var_TexDiffuse;
 varying vec3	var_AmbientLight;
 varying vec3	var_DiffuseLight;
-varying vec3	var_Normal;
 
 varying vec3	var_LightDir;
 varying vec3	var_ViewDir;
+varying vec3	var_Normal;
+varying vec3	var_Position;
 
 #if defined( REFLECTION_CUBEMAP )
 varying vec3	var_WorldNormal;
-varying vec3	var_Position;
 #endif
 
 void main( void )
@@ -137,9 +137,9 @@ void main( void )
 	var_ViewDir = srcV;
 	var_Normal = srcN;
 #endif
+	var_Position = worldpos.xyz;
 
 #if defined( REFLECTION_CUBEMAP )
-	var_Position = worldpos.xyz;
 	var_WorldNormal = srcN;
 #endif//REFLECTION_CUBEMAP
 }

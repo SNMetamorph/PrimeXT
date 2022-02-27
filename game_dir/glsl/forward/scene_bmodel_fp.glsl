@@ -24,6 +24,7 @@ GNU General Public License for more details.
 #include "fresnel.h"
 #include "parallax.h"
 #include "material.h"
+#include "fog.h"
 
 // texture units
 #if defined( APPLY_TERRAIN )
@@ -63,6 +64,7 @@ varying vec3		var_TexLight3;
 varying vec2		var_TexDetail;
 varying vec2		var_TexGlobal;
 varying vec3		var_ViewDir;
+varying vec3		var_Position;
 
 #if defined( PLANAR_REFLECTION )
 varying vec4		var_TexMirror;	// mirror coords
@@ -70,7 +72,6 @@ varying vec4		var_TexMirror;	// mirror coords
 
 #if defined( REFLECTION_CUBEMAP )
 varying vec3		var_WorldNormal;
-varying vec3		var_Position;
 varying mat3		var_MatrixTBN;
 #endif
 
@@ -260,8 +261,7 @@ void main( void )
 #endif // TRANSLUCENT
 
 #if defined( APPLY_FOG_EXP )
-	float fogFactor = saturate( exp2( -u_FogParams.w * ( gl_FragCoord.z / gl_FragCoord.w )));
-	diffuse.rgb = mix( u_FogParams.xyz, diffuse.rgb, fogFactor );
+	diffuse.rgb = CalculateFog(diffuse.rgb, u_FogParams, length(u_ViewOrigin - var_Position));
 #endif
 
 #if defined( LIGHTMAP_DEBUG ) || defined( LIGHTVEC_DEBUG )

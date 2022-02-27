@@ -21,6 +21,7 @@ GNU General Public License for more details.
 #include "cubemap.h"
 #include "fresnel.h"
 #include "parallax.h"
+#include "fog.h"
 
 uniform sampler2D	u_DecalMap;
 uniform sampler2D	u_ColorMap;	// surface under decal
@@ -42,14 +43,14 @@ varying vec3	var_TexLight2;
 varying vec3	var_TexLight3;
 varying vec3	var_ViewDir;
 varying vec3	var_Normal;
+varying vec3	var_Position;
 
 #if defined( PLANAR_REFLECTION )
 varying vec4	var_TexMirror;	// mirror coords
 #endif
 
 #if defined( REFLECTION_CUBEMAP )
-varying mat3	var_WorldMat;
-varying vec3	var_Position;
+varying mat3	var_MatrixTBN;
 #endif
 
 void main( void )
@@ -144,10 +145,10 @@ void main( void )
 #endif
 
 #if defined( APPLY_FOG_EXP )
-	float fogFactor = saturate( exp2( -u_FogParams.w * ( gl_FragCoord.z / gl_FragCoord.w )));
 #if defined( APPLY_COLORBLEND )
-	diffuse.rgb = mix( u_FogParams.xyz, diffuse.rgb, fogFactor );
+	diffuse.rgb = CalculateFog(diffuse.rgb, u_FogParams, length(u_ViewOrigin - var_Position));
 #else
+	float fogFactor = saturate(exp2(-u_FogParams.w * (gl_FragCoord.z / gl_FragCoord.w)));
 	diffuse.a *= fogFactor; // modulate alpha
 #endif
 #endif

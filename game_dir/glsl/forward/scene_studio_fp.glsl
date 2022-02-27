@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #include "screen.h"
 #include "material.h"
 #include "parallax.h"
+#include "fog.h"
 
 uniform sampler2D	u_ColorMap;
 uniform sampler2D	u_NormalMap;
@@ -50,7 +51,6 @@ varying vec3	var_TexLight3;
 
 #if defined( REFLECTION_CUBEMAP )
 varying vec3	var_WorldNormal;
-varying vec3	var_Position;
 varying mat3	var_MatrixTBN;
 #endif
 
@@ -61,6 +61,7 @@ varying vec3	var_TangentViewDir;
 varying vec3	var_LightDir;
 varying vec3	var_ViewDir;
 varying vec3	var_Normal;
+varying vec3	var_Position;
 
 void main( void )
 {
@@ -213,8 +214,7 @@ void main( void )
 #endif
 
 #if defined( APPLY_FOG_EXP )
-	float fogFactor = saturate( exp2( -u_FogParams.w * ( gl_FragCoord.z / gl_FragCoord.w )));
-	albedo.rgb = mix( u_FogParams.xyz, albedo.rgb, fogFactor );
+	albedo.rgb = CalculateFog(albedo.rgb, u_FogParams, length(u_ViewOrigin - var_Position));
 #endif
 	// compute final color
 	gl_FragColor = albedo;

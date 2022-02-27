@@ -57,6 +57,7 @@ varying vec3	var_Normal;
 
 varying vec3	var_LightDir;
 varying vec3	var_ViewDir;
+varying vec3	var_Position;
 
 #if defined (SURFACE_LIGHTING)
 varying vec3	var_TexLight0;
@@ -67,7 +68,6 @@ varying vec3	var_TexLight3;
 
 #if defined( REFLECTION_CUBEMAP )
 varying vec3	var_WorldNormal;
-varying vec3	var_Position;
 varying mat3	var_MatrixTBN;
 #endif
 
@@ -187,15 +187,15 @@ void main( void )
 	var_ViewDir = srcV;
 	var_Normal = srcN;
 #endif
+	var_Position = worldpos.xyz;
 
 #if defined( HAS_CHROME )
 	CalcChrome( var_TexDiffuse, normalize( srcN ), u_ViewOrigin, vec3( boneMatrix[3] ), u_ViewRight );
 #endif
 	var_TexDetail = attr_TexCoord0.xy * u_DetailScale;
-
+	
 #if defined( REFLECTION_CUBEMAP )
-	var_Position = worldpos.xyz;
 	var_WorldNormal = srcN;
 	var_MatrixTBN = tbn;
-#endif//REFLECTION_CUBEMAP
+#endif // REFLECTION_CUBEMAP
 }
