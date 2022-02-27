@@ -415,13 +415,13 @@ static bool GL_TestSource( const char *szFilename, const char *szCacheName, CVir
 		// glsl file is newer.
 		if( iCompare > 0 )
 		{
-			Msg( "%s was changed, %s will be updated\n", szFilename, szCacheName );
+			// shader was changed, cache will be updated
 			cache_needs_update = true;
 		}
 	}
 	else
 	{
-		Msg( "%s will be created\n", szCacheName );
+		// shader cache will be created
 		cache_needs_update = true;
 	}
 
