@@ -148,7 +148,7 @@ void main( void )
 #if defined( APPLY_COLORBLEND )
 	diffuse.rgb = CalculateFog(diffuse.rgb, u_FogParams, length(u_ViewOrigin - var_Position));
 #else
-	float fogFactor = saturate(exp2(-u_FogParams.w * (gl_FragCoord.z / gl_FragCoord.w)));
+	float fogFactor = saturate(exp2(-u_FogParams.w * length(u_ViewOrigin - var_Position)));
 	diffuse.a *= fogFactor; // modulate alpha
 #endif
 #endif
