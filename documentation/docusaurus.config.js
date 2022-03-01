@@ -36,6 +36,10 @@ const config = {
           trackingID: 'G-NLS6RNCBDY',
           anonymizeIP: false,
         },
+        sitemap: {
+          changefreq: 'daily',
+          priority: 0.5,
+        },
       }),
     ],
   ],
