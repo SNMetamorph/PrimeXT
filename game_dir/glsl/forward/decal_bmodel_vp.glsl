@@ -36,14 +36,14 @@ varying vec3	var_TexLight2;
 varying vec3	var_TexLight3;
 varying vec3	var_ViewDir;
 varying vec3	var_Normal;
+varying vec3	var_Position;
 
 #if defined( PLANAR_REFLECTION )
 varying vec4	var_TexMirror;	// mirror coords
 #endif
 
 #if defined( REFLECTION_CUBEMAP )
-varying mat3	var_WorldMat;
-varying vec3	var_Position;
+varying mat3	var_MatrixTBN;
 #endif
 
 void main( void )
@@ -85,13 +85,13 @@ void main( void )
 	// transform viewdir into tangent space
 	var_ViewDir = V * tbn;
 	var_Normal = N * tbn;
+	var_Position = worldpos.xyz;
 
 #if defined( PLANAR_REFLECTION )
 	var_TexMirror = ( Mat4Texture( 0.5 ) * u_ReflectMatrix ) * worldpos;
 #endif
 
 #if defined( REFLECTION_CUBEMAP )
-	var_Position = worldpos.xyz;
-	var_WorldMat = tbn;
+	var_MatrixTBN = tbn;
 #endif
 }

@@ -74,7 +74,7 @@ void main( void )
 #if defined( APPLY_TERRAIN )
 	vec4 mask0, mask1, mask2, mask3;
 	TerrainReadMask( var_TexGlobal, mask0, mask1, mask2, mask3 );
-	albedo = TerrainApplyDiffuse( u_ColorMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
+	albedo = TerrainMixDiffuse( u_ColorMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 
 	// apply the detail texture
 #if defined( HAS_DETAIL )
@@ -82,7 +82,7 @@ void main( void )
 #endif
 
 #if defined( HAS_NORMALMAP )
-	normal.xyz = TerrainApplyNormal( u_NormalMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
+	normal.xyz = TerrainMixNormal( u_NormalMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 	normal.xyz = (( var_WorldMat * normal.xyz ) + 1.0 ) * 0.5;
 #else
 	normal.xyz = normalize( var_WorldMat[2] );
@@ -90,8 +90,8 @@ void main( void )
 #endif
 
 #if defined( HAS_GLOSSMAP )
-	smooth = TerrainApplySpecular( u_GlossMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
-	smooth.a = TerrainCalcSmoothness( u_Smoothness, mask0, mask1, mask2, mask3 );
+	smooth = TerrainMixGlossmap( u_GlossMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
+	smooth.a = TerrainMixSmoothness( u_Smoothness, mask0, mask1, mask2, mask3 );
 #endif
 
 #else	// !APPLY_TERRAIN

@@ -1028,12 +1028,17 @@ bool CStudioModelRenderer :: CheckBoneCache( float f )
 	BoneCache_t *cache = &inst->bonecache;
 	cl_entity_t *e = RI->currententity;
 
-	if(( tr.time - m_pModelInstance->lighttimecheck ) > LIGHT_INTERP_UPDATE )
+	if(( tr.time - inst->lighttimecheck ) > LIGHT_INTERP_UPDATE )
 	{
 		// shuffle states
-		m_pModelInstance->oldlight = m_pModelInstance->newlight;
-		m_pModelInstance->lighttimecheck = tr.time;
-		m_pModelInstance->light_update = true;
+		inst->oldlight = inst->newlight;
+		inst->lighttimecheck = tr.time;
+		inst->light_update = true;
+	}
+
+	// can't use cache if jiggle bones enabled
+	if (inst->m_pJiggleBones) {
+		return false;
 	}
 
 	// no cache for local player
@@ -1041,7 +1046,7 @@ bool CStudioModelRenderer :: CheckBoneCache( float f )
 		return false;
 
 	bool pos_valid = (cache->transform == inst->m_protationmatrix) ? true : false;
-	bool param_valid = !memcmp( cache->poseparam, m_pModelInstance->m_poseparameter, sizeof( float ) * MAXSTUDIOPOSEPARAM );
+	bool param_valid = !memcmp( cache->poseparam, inst->m_poseparameter, sizeof( float ) * MAXSTUDIOPOSEPARAM );
 
 	// make sure what all cached values are unchanged
 	if( cache->frame == f && cache->sequence == e->curstate.sequence && pos_valid && !memcmp( cache->blending, e->curstate.blending, 2 )
@@ -1073,7 +1078,7 @@ bool CStudioModelRenderer :: CheckBoneCache( float f )
 	cache->transform = inst->m_protationmatrix;
 	memcpy( cache->blending, e->curstate.blending, 2 );
 	memcpy( cache->controller, e->curstate.controller, 4 );
-	memcpy( cache->poseparam, m_pModelInstance->m_poseparameter, sizeof( float ) * MAXSTUDIOPOSEPARAM );
+	memcpy( cache->poseparam, inst->m_poseparameter, sizeof( float ) * MAXSTUDIOPOSEPARAM );
 	cache->gaitsequence = e->curstate.gaitsequence;
 	cache->gaitframe = e->curstate.fuser1;
 
@@ -1113,7 +1118,8 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 	
 	StudioInterpolatePoseParams( e, dadt );
 
-	if( CheckBoneCache( f )) return; // using a cached bones no need transformations
+	if( CheckBoneCache( f )) 
+		return; // using a cached bones no need transformations
 
 	if( m_boneSetup.GetNumIKChains( ))
 	{
@@ -1207,22 +1213,35 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 			// compute desired bone orientation
 			matrix3x4 goalMX;
 
-			if( pbones[i].parent == -1 ) goalMX = m_pModelInstance->m_protationmatrix.ConcatTransforms( bonematrix );
-			else goalMX = m_pModelInstance->m_pbones[pbones[i].parent].ConcatTransforms( bonematrix );
+			if (pbones[i].parent == -1) {
+				goalMX = m_pModelInstance->m_protationmatrix.ConcatTransforms(bonematrix);
+			}
+			else {
+				goalMX = m_pModelInstance->m_pbones[pbones[i].parent].ConcatTransforms(bonematrix);
+			}
 
 			// get jiggle properties from QC data
 			mstudiojigglebone_t *jiggleInfo = (mstudiojigglebone_t *)((byte *)m_pStudioHeader + pboneinfo[i].procindex);
-			if( !m_pModelInstance->m_pJiggleBones ) m_pModelInstance->m_pJiggleBones = new CJiggleBones;
+			if (!m_pModelInstance->m_pJiggleBones) {
+				m_pModelInstance->m_pJiggleBones = new CJiggleBones;
+			}
 
 			// do jiggle physics
-			if( pboneinfo[i].proctype == STUDIO_PROC_JIGGLE )
-				m_pModelInstance->m_pJiggleBones->BuildJiggleTransformations( i, tr.time, jiggleInfo, goalMX, m_pModelInstance->m_pbones[i] );
-			else m_pModelInstance->m_pbones[i] = goalMX; // fallback
+			if (pboneinfo[i].proctype == STUDIO_PROC_JIGGLE) {
+				m_pModelInstance->m_pJiggleBones->BuildJiggleTransformations(i, tr.time, jiggleInfo, goalMX, m_pModelInstance->m_pbones[i]);
+			}
+			else {
+				m_pModelInstance->m_pbones[i] = goalMX; // fallback
+			}
 		}
 		else
 		{
-			if( pbones[i].parent == -1 ) m_pModelInstance->m_pbones[i] = m_pModelInstance->m_protationmatrix.ConcatTransforms( bonematrix );
-			else m_pModelInstance->m_pbones[i] = m_pModelInstance->m_pbones[pbones[i].parent].ConcatTransforms( bonematrix );
+			if (pbones[i].parent == -1) {
+				m_pModelInstance->m_pbones[i] = m_pModelInstance->m_protationmatrix.ConcatTransforms(bonematrix);
+			}
+			else {
+				m_pModelInstance->m_pbones[i] = m_pModelInstance->m_pbones[pbones[i].parent].ConcatTransforms(bonematrix);
+			}
 		}
 	}
 
@@ -2740,6 +2759,7 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 	bool shader_translucent = false;
 	bool using_screenrect = false;
 	bool using_cubemaps = false;
+	bool has_normalmap = false;
 
 	if( mat->forwardScene.IsValid() && mat->lastRenderMode == RI->currententity->curstate.rendermode )
 		return mat->forwardScene.GetHandle(); // valid
@@ -2808,9 +2828,22 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 		// deluxemap required
 		if( !RP_CUBEPASS() && ( CVAR_TO_BOOL( cv_bump ) && FBitSet( world->features, WORLD_HAS_DELUXEMAP ) && FBitSet( mat->flags, STUDIO_NF_NORMALMAP )))
 		{
+			has_normalmap = true;
 			GL_AddShaderDirective( options, "HAS_NORMALMAP" );
 			GL_EncodeNormal( options, mat->gl_normalmap_id );
 			GL_AddShaderDirective( options, "COMPUTE_TBN" );
+		}
+
+		// parallax mapping
+		if (FBitSet(mat->flags, STUDIO_NF_HEIGHTMAP) && mat->reliefScale > 0.0f)
+		{
+			if (cv_parallax->value > 0.0f)
+			{
+				if (cv_parallax->value == 1.0f)
+					GL_AddShaderDirective(options, "PARALLAX_SIMPLE");
+				else if (cv_parallax->value >= 2.0f)
+					GL_AddShaderDirective(options, "PARALLAX_OCCLUSION");
+			}
 		}
 
 		// deluxemap required
@@ -2821,10 +2854,10 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 			GL_AddShaderDirective( options, "HAS_LUMA" );
 	}
 
-	if( mat->aberrationScale > 0.0f && Q_stristr( options, "HAS_NORMALMAP" ))
+	if (mat->aberrationScale > 0.0f && has_normalmap)
 		GL_AddShaderDirective( options, "APPLY_ABERRATION" );
 
-	if( mat->refractScale > 0.0f && Q_stristr( options, "HAS_NORMALMAP" ))
+	if (mat->refractScale > 0.0f && has_normalmap)
 		GL_AddShaderDirective( options, "APPLY_REFRACTION" );
 
 	if(( world->num_cubemaps > 0 ) && CVAR_TO_BOOL( r_cubemap ) && (mat->reflectScale > 0.0f) && !RP_CUBEPASS( ))
@@ -2935,6 +2968,18 @@ word CStudioModelRenderer :: ShaderLightForward( CDynLight *dl, mstudiomaterial_
 		GL_AddShaderDirective( options, "COMPUTE_TBN" );
 	}
 
+	// parallax mapping
+	if (FBitSet(mat->flags, STUDIO_NF_HEIGHTMAP) && mat->reliefScale > 0.0f)
+	{
+		if (cv_parallax->value > 0.0f)
+		{
+			if (cv_parallax->value == 1.0f)
+				GL_AddShaderDirective(options, "PARALLAX_SIMPLE");
+			else if (cv_parallax->value >= 2.0f)
+				GL_AddShaderDirective(options, "PARALLAX_OCCLUSION");
+		}
+	}
+
 	if( CVAR_TO_BOOL( cv_specular ) && FBitSet( mat->flags, STUDIO_NF_GLOSSMAP ))
 		GL_AddShaderDirective( options, "HAS_GLOSSMAP" );
 
@@ -3029,6 +3074,18 @@ word CStudioModelRenderer :: ShaderSceneDeferred( mstudiomaterial_t *mat, bool b
 		GL_AddShaderDirective( options, "HAS_NORMALMAP" );
 		GL_EncodeNormal( options, mat->gl_normalmap_id );
 		GL_AddShaderDirective( options, "COMPUTE_TBN" );
+	}
+
+	// parallax mapping
+	if (FBitSet(mat->flags, STUDIO_NF_HEIGHTMAP) && mat->reliefScale > 0.0f)
+	{
+		if (cv_parallax->value > 0.0f)
+		{
+			if (cv_parallax->value == 1.0f)
+				GL_AddShaderDirective(options, "PARALLAX_SIMPLE");
+			else if (cv_parallax->value >= 2.0f)
+				GL_AddShaderDirective(options, "PARALLAX_OCCLUSION");
+		}
 	}
 
 	if( !RP_CUBEPASS() && ( CVAR_TO_BOOL( cv_specular ) && FBitSet( mat->flags, STUDIO_NF_GLOSSMAP )))
@@ -3322,6 +3379,13 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force )
 		case UT_HEIGHTMAP:
 			u->SetValue( mat->gl_heightmap_id );
 			break;
+		case UT_RELIEFPARAMS:
+		{
+			float width = RENDER_GET_PARM(PARM_TEX_WIDTH, mat->gl_heightmap_id);
+			float height = RENDER_GET_PARM(PARM_TEX_HEIGHT, mat->gl_heightmap_id);
+			u->SetValue(width, height, mat->reliefScale, cv_shadow_offset->value);
+			break;
+		}
 		case UT_BSPPLANESMAP:
 			u->SetValue( tr.packed_planes_texture );
 			break;

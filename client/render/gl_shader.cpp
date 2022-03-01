@@ -415,13 +415,13 @@ static bool GL_TestSource( const char *szFilename, const char *szCacheName, CVir
 		// glsl file is newer.
 		if( iCompare > 0 )
 		{
-			Msg( "%s was changed, %s will be updated\n", szFilename, szCacheName );
+			// shader was changed, cache will be updated
 			cache_needs_update = true;
 		}
 	}
 	else
 	{
-		Msg( "%s will be created\n", szCacheName );
+		// shader cache will be created
 		cache_needs_update = true;
 	}
 
@@ -646,9 +646,9 @@ static void GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum s
 
 	if( !compiled )
 	{
+		ALERT(at_error, "^1GL_LoadGPUShader: ^7couldn't compile \"%s\" from file \"%s\"\n", name, filename);
 		if( developer_level ) Msg( "%s", GL_PrintShaderInfoLog( shaderHandle ));
 		if( developer_level ) Msg( "Shader options:%s\n", GL_PretifyListOptions( defines ));
-		ALERT(at_error, "^2GL_LoadGPUShader: ^7couldn't compile \"%s\" from file \"%s\"\n", name, filename);
 		return;
 	}
 

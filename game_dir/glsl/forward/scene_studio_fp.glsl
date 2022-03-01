@@ -20,6 +20,9 @@ GNU General Public License for more details.
 #include "deluxemap.h"	// directional lightmap routine
 #include "cubemap.h"
 #include "screen.h"
+#include "material.h"
+#include "parallax.h"
+#include "fog.h"
 
 uniform sampler2D	u_ColorMap;
 uniform sampler2D	u_NormalMap;
@@ -48,19 +51,38 @@ varying vec3	var_TexLight3;
 
 #if defined( REFLECTION_CUBEMAP )
 varying vec3	var_WorldNormal;
-varying vec3	var_Position;
+varying mat3	var_MatrixTBN;
+#endif
+
+#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
+varying vec3	var_TangentViewDir;
 #endif
 
 varying vec3	var_LightDir;
 varying vec3	var_ViewDir;
 varying vec3	var_Normal;
+varying vec3	var_Position;
 
 void main( void )
 {
-	vec4 albedo = colormap2D( u_ColorMap, var_TexDiffuse );
+	vec4 albedo = vec4( 0.0 );
 	vec4 glossmap = vec4( 0.0 );
 	vec3 specular = vec3( 0.0 );
 	vec3 diffuse = vec3( 0.0 );
+	vec2 vec_TexDiffuse;
+	MaterialData mat;
+
+#if defined( PARALLAX_SIMPLE )
+	//vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse, normalize(var_TangentViewDir));
+	vec_TexDiffuse = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse, normalize(var_TangentViewDir));
+	//vec_TexDiffuse = ParallaxReliefMap(var_TexDiffuse, normalize(var_TangentViewDir));
+#elif defined( PARALLAX_OCCLUSION )
+	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse, normalize(var_TangentViewDir)).xy; 
+#else
+	vec_TexDiffuse = var_TexDiffuse;
+#endif
+
+	albedo = colormap2D( u_ColorMap, vec_TexDiffuse );
 
 #if defined( HAS_DETAIL )
 	albedo.rgb *= detailmap2D( u_DetailMap, var_TexDetail ).rgb * DETAIL_SCALE;
@@ -77,7 +99,7 @@ void main( void )
 #endif
 
 #if defined( HAS_NORMALMAP )
-	vec3 N = normalmap2D( u_NormalMap, var_TexDiffuse );
+	vec3 N = normalmap2D( u_NormalMap, vec_TexDiffuse );
 #else
 	vec3 N = normalize( var_Normal );
 #endif
@@ -87,23 +109,30 @@ void main( void )
 #if !defined( LIGHTING_FULLBRIGHT )
 	vec3 L = normalize( var_LightDir );
 	vec3 V = normalize( var_ViewDir );
+// setup material params values
 #if defined( HAS_GLOSSMAP )
-	glossmap = colormap2D( u_GlossMap, var_TexDiffuse );
-#endif
+	// get params from texture
+	mat = MaterialFetchTexture(colormap2D( u_GlossMap, vec_TexDiffuse ));
+#else // !HAS_GLOSSMAP
+	// use default parameter values
+	mat.smoothness = u_Smoothness;
+	mat.metalness = 0.0;
+	mat.ambientOcclusion = 1.0;
+#endif // HAS_GLOSSMAP
 
 // lightmapped surfaces
 #if defined (SURFACE_LIGHTING)	
 #if defined( APPLY_STYLE0 )
-	ApplyLightStyle( var_TexLight0, N, V, glossmap.rgb, u_Smoothness, diffuse, specular );
+	ApplyLightStyle( var_TexLight0, N, V, vec3(mat.smoothness), mat.smoothness, diffuse, specular );
 #endif
 #if defined( APPLY_STYLE1 )
-	ApplyLightStyle( var_TexLight1, N, V, glossmap.rgb, u_Smoothness, diffuse, specular );
+	ApplyLightStyle( var_TexLight1, N, V, vec3(mat.smoothness), mat.smoothness, diffuse, specular );
 #endif
 #if defined( APPLY_STYLE2 )
-	ApplyLightStyle( var_TexLight2, N, V, glossmap.rgb, u_Smoothness, diffuse, specular );
+	ApplyLightStyle( var_TexLight2, N, V, vec3(mat.smoothness), mat.smoothness, diffuse, specular );
 #endif
 #if defined( APPLY_STYLE3 )
-	ApplyLightStyle( var_TexLight3, N, V, glossmap.rgb, u_Smoothness, diffuse, specular );
+	ApplyLightStyle( var_TexLight3, N, V, vec3(mat.smoothness), mat.smoothness, diffuse, specular );
 #endif
 #if defined( APPLY_STYLE0 ) || defined( APPLY_STYLE1 ) || defined( APPLY_STYLE2 ) || defined( APPLY_STYLE3 )
 	// convert values back to normal range and clamp it
@@ -111,10 +140,10 @@ void main( void )
 	specular = min(( specular * LIGHTMAP_SHIFT ), 1.0 );
 #endif
 // vertexlight surface
-#elif defined (VERTEX_LIGHTING)	
+#elif defined( VERTEX_LIGHTING )	
 #if defined( HAS_NORMALMAP )
 	float NdotB = ComputeStaticBump( L, N, u_AmbientFactor );
-	float factor = DiffuseBRDF( N, V, L, u_Smoothness, NdotB );
+	float factor = DiffuseBRDF( N, V, L, mat.smoothness, NdotB );
 	diffuse = (var_DiffuseLight * factor) + (var_AmbientLight);
 #else //!HAS_NORMALMAP
 	diffuse = var_AmbientLight + var_DiffuseLight;
@@ -125,7 +154,7 @@ void main( void )
 	float factor = u_LightShade.y;
 	float NdotL = (( dot( N, -L ) + ( SHADE_LAMBERT - 1.0 )) / SHADE_LAMBERT );
 	if( NdotL > 0.0 ) 
-		factor -= DiffuseBRDF( N, V, L, u_Smoothness, saturate( NdotL )) * u_LightShade.y;
+		factor -= DiffuseBRDF( N, V, L, mat.smoothness, saturate( NdotL )) * u_LightShade.y;
 	diffuse = (var_DiffuseLight * factor) + (var_AmbientLight);
 #else // !HAS_NORMALMAP
 	diffuse = var_AmbientLight + var_DiffuseLight;
@@ -137,38 +166,47 @@ void main( void )
 
 // compute the specular term
 #if defined( HAS_GLOSSMAP )
-#if defined (SURFACE_LIGHTING)
+#if defined( SURFACE_LIGHTING )
 	// gloss it's already computed in ApplyLightStyle
 	albedo.rgb *= saturate( 1.0 - GetLuminance( specular ));
 	albedo.rgb += specular;
-#else //!SURFACE_LIGHTING
+#else // !SURFACE_LIGHTING
 	float NdotL2 = saturate( dot( N, L ));
-	specular = SpecularBRDF( N, V, L, u_Smoothness, glossmap.rgb ) * NdotL2;
+	specular = SpecularBRDF( N, V, L, mat.smoothness, glossmap.rgb ) * NdotL2;
 	albedo.rgb *= saturate( 1.0 - GetLuminance( specular ));
 #if defined (VERTEX_LIGHTING)
 	albedo.rgb += var_DiffuseLight * specular;
 #else
 	albedo.rgb += var_DiffuseLight * specular * u_LightShade.y; // prevent parazite lighting
-#endif
+#endif // VERTEX_LIGHTING
 #endif // SURFACE_LIGHTING
 #endif // HAS_GLOSSMAP
 
 #if defined( LIGHTVEC_DEBUG ) && !defined (SURFACE_LIGHTING)
 	diffuse = ( normalize( N + L ) + 1.0 ) * 0.5;
-#endif//LIGHTVEC_DEBUG
+#endif // LIGHTVEC_DEBUG
 
 #if defined( REFLECTION_CUBEMAP )
-	vec3 reflectance = GetReflectionProbe( var_Position, u_ViewOrigin, var_WorldNormal, u_Smoothness );
-	albedo.rgb += var_DiffuseLight * reflectance * u_ReflectScale;
-#endif//defined( REFLECTION_CUBEMAP )
+	mat3 tbnBasis = mat3(normalize(var_MatrixTBN[0]), normalize(var_MatrixTBN[1]), normalize(var_MatrixTBN[2]));
+#if defined( HAS_NORMALMAP )
+	// TBN generates only for models with normal maps (just optimization)
+	// because of that we can use TBN matrix only for this case
+	vec3 worldNormal = normalize(tbnBasis * N);
+#else
+	vec3 worldNormal = N;
+#endif
+	vec3 reflected = GetReflectionProbe( var_Position, u_ViewOrigin, worldNormal, mat.smoothness );
+	float fresnel = GetFresnel( V, N, WATER_F0_VALUE, FRESNEL_FACTOR );
+	albedo.rgb += var_DiffuseLight * reflected * mat.smoothness * u_ReflectScale;
+#endif // REFLECTION_CUBEMAP
 
 #if defined( LIGHTMAP_DEBUG ) || defined( LIGHTVEC_DEBUG )
 	albedo.rgb = diffuse;
 #endif
-#endif// LIGHTING_FULLBRIGHT
+#endif // LIGHTING_FULLBRIGHT
 
 #if defined( HAS_LUMA )
-	albedo.rgb += texture2D( u_GlowMap, var_TexDiffuse ).rgb;
+	albedo.rgb += texture2D( u_GlowMap, vec_TexDiffuse ).rgb;
 #endif
 
 #if defined( TRANSLUCENT )
@@ -176,8 +214,7 @@ void main( void )
 #endif
 
 #if defined( APPLY_FOG_EXP )
-	float fogFactor = saturate( exp2( -u_FogParams.w * ( gl_FragCoord.z / gl_FragCoord.w )));
-	albedo.rgb = mix( u_FogParams.xyz, albedo.rgb, fogFactor );
+	albedo.rgb = CalculateFog(albedo.rgb, u_FogParams, length(u_ViewOrigin - var_Position));
 #endif
 	// compute final color
 	gl_FragColor = albedo;

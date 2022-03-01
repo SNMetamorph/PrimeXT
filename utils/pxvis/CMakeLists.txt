@@ -20,6 +20,13 @@ list(APPEND DIR_SOURCES
 	"winding.cpp"
 )
 
+# add version info
+if(MSVC)
+	list(APPEND DIR_SOURCES
+		"pxvis.rc"
+	)
+endif()
+
 add_executable(${PROJECT_NAME} ${DIR_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"."

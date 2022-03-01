@@ -16,6 +16,7 @@ GNU General Public License for more details.
 #include "const.h"
 #include "mathlib.h"
 #include "texfetch.h"
+#include "lightmodel.h"
 
 uniform sampler2D		u_ColorMap;
 uniform sampler2D		u_ProjectMap;

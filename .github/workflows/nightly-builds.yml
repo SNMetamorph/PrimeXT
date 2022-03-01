@@ -2,7 +2,7 @@ name: nightly-builds
 on: push
 jobs:
   build-win32:
-    runs-on: windows-latest
+    runs-on: windows-2019
 
     strategy:
       matrix:

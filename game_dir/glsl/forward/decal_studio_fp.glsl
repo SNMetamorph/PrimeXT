@@ -18,6 +18,7 @@ GNU General Public License for more details.
 #include "lightmodel.h"
 #include "texfetch.h"
 #include "parallax.h"
+#include "fog.h"
 
 uniform sampler2D	u_DecalMap;
 uniform sampler2D	u_ColorMap;
@@ -30,6 +31,7 @@ uniform float	u_DiffuseFactor;
 uniform float	u_AmbientFactor;
 uniform vec2	u_LightShade;
 uniform vec4	u_FogParams;
+uniform vec3	u_ViewOrigin;
 
 varying vec4	var_TexDiffuse;
 varying vec3	var_AmbientLight;
@@ -37,12 +39,12 @@ varying vec3	var_DiffuseLight;
 
 #if defined( REFLECTION_CUBEMAP )
 varying vec3	var_WorldNormal;
-varying vec3	var_Position;
 #endif
 
 varying vec3	var_LightDir;
 varying vec3	var_ViewDir;
 varying vec3	var_Normal;
+varying vec3	var_Position;
 
 void main( void )
 {
@@ -125,8 +127,7 @@ void main( void )
 #endif// LIGHTING_FULLBRIGHT
 
 #if defined( APPLY_FOG_EXP )
-	float fogFactor = saturate( exp2( -u_FogParams.w * ( gl_FragCoord.z / gl_FragCoord.w )));
-	diffuse.rgb = mix( u_FogParams.xyz, diffuse.rgb, fogFactor );
+	diffuse.rgb = CalculateFog(diffuse.rgb, u_FogParams, length(u_ViewOrigin - var_Position));
 #endif
 	gl_FragColor = diffuse;
 }

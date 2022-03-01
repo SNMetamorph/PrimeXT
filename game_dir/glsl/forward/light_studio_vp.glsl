@@ -40,6 +40,10 @@ varying mat3	var_WorldMat;
 varying vec3	var_Normal;
 #endif
 
+#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
+varying vec3	var_TangentViewDir;
+#endif
+
 #if defined( LIGHT_SPOT )
 varying vec4	var_ProjCoord;
 #endif
@@ -78,9 +82,14 @@ void main( void )
 #if defined( HAS_DETAIL )
 	var_TexDetail = attr_TexCoord0.xy * u_DetailScale;
 #endif
+
 	// these things are in worldspace and not a normalized
 	var_LightVec = ( u_LightOrigin.xyz - worldpos.xyz );
 	var_ViewVec = ( u_ViewOrigin.xyz - worldpos.xyz );
+
+#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
+	var_TangentViewDir = var_ViewVec * tbn;
+#endif
 
 #if defined( HAS_NORMALMAP )
 	var_WorldMat = tbn;

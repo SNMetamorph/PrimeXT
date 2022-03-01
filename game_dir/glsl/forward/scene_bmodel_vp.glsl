@@ -37,6 +37,7 @@ varying vec3	var_TexLight3;
 varying vec2	var_TexDetail;
 varying vec2	var_TexGlobal;
 varying vec3	var_ViewDir;
+varying vec3	var_Position;
 
 #if defined( PLANAR_REFLECTION )
 varying vec4	var_TexMirror;	// mirror coords
@@ -44,7 +45,6 @@ varying vec4	var_TexMirror;	// mirror coords
 
 #if defined( REFLECTION_CUBEMAP )
 varying vec3	var_WorldNormal;
-varying vec3	var_Position;
 varying mat3	var_MatrixTBN;
 #endif
 
@@ -72,6 +72,7 @@ void main( void )
 	var_TexDiffuse = ( attr_TexCoord0.xy + u_TexOffset );
 	var_TexDetail = var_TexDiffuse * u_DetailScale;
 	var_TexGlobal = attr_TexCoord0.zw;
+	var_Position = worldpos.xyz;
 
 	// setup lightstyles
 #if defined( APPLY_STYLE0 )
@@ -98,7 +99,7 @@ void main( void )
 	var_ViewDir = V * tbn;
 
 #if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
-	var_TangentViewDir = normalize((u_ViewOrigin - worldpos.xyz) * tbn);
+	var_TangentViewDir = (u_ViewOrigin - worldpos.xyz) * tbn;
 #endif
 
 #if !defined( HAS_NORMALMAP )
@@ -111,7 +112,6 @@ void main( void )
 
 #if defined( REFLECTION_CUBEMAP )
 	var_WorldNormal = N;
-	var_Position = worldpos.xyz;
 	var_MatrixTBN = tbn;
 #endif
 }

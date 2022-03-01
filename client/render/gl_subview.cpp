@@ -601,23 +601,33 @@ remote cameras etc
 */
 void R_RenderSubview()
 {
-	ref_instance_t	*prevRI;
-	unsigned int	oldFBO;
-	ref_viewpass_t	rvp;
-	matrix4x4		viewmatrix;
+	ref_instance_t *prevRI;
+	unsigned int oldFBO;
+	ref_viewpass_t rvp;
+	matrix4x4 viewmatrix;
+	bool has_mirrors = FBitSet(world->features, WORLD_HAS_MIRRORS);
+	bool has_screens = FBitSet(world->features, WORLD_HAS_SCREENS);
+	bool has_portals = FBitSet(world->features, WORLD_HAS_PORTALS);
+
+	// don't render subviews in overview mode
+	if (FBitSet(RI->params, RP_DRAW_OVERVIEW))
+		return;
+
+	// no mirrors, portals or screens anyway
+	if (!has_mirrors && !has_screens && !has_portals)
+		return;
+
+	// too deep...
+	if (glState.stack_position > (unsigned int)r_recursion_depth->value)
+		return; 
+
+	// nothing to render
+	if (!RI->frame.num_subview_faces)
+		return; 
 
 	// player is outside world. Don't draw subview for speedup reasons
-	if( R_CheckOutside( ))
+	if (R_CheckOutside())
 		return;
-
-	if( glState.stack_position > (unsigned int)r_recursion_depth->value )
-		return; // too deep...
-
-	if( FBitSet( RI->params, RP_DRAW_OVERVIEW ))
-		return;
-
-	if( !RI->frame.num_subview_faces )
-		return; // nothing to render
 
 	GL_DebugGroupPush(__FUNCTION__);
 	R_PushRefState(); // make refinst backup

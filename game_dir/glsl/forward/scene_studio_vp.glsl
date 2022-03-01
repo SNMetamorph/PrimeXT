@@ -57,6 +57,7 @@ varying vec3	var_Normal;
 
 varying vec3	var_LightDir;
 varying vec3	var_ViewDir;
+varying vec3	var_Position;
 
 #if defined (SURFACE_LIGHTING)
 varying vec3	var_TexLight0;
@@ -67,7 +68,11 @@ varying vec3	var_TexLight3;
 
 #if defined( REFLECTION_CUBEMAP )
 varying vec3	var_WorldNormal;
-varying vec3	var_Position;
+varying mat3	var_MatrixTBN;
+#endif
+
+#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
+varying vec3	var_TangentViewDir;
 #endif
 
 void main( void )
@@ -165,8 +170,13 @@ void main( void )
 #endif//LIGHTING_FULLBRIGHT 
 	var_TexDiffuse = attr_TexCoord0;
 
+#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
+	var_TangentViewDir = srcV * tbn;
+#endif
+
 // NOTE: this mess is needed only for transparent models because
 // refraction and aberration are ready to work only in tangent space
+// doing this because TBN generates only for models with normal map
 #if defined( HAS_NORMALMAP )
 	// transform lightdir into tangent space
 	var_LightDir = srcL * tbn;
@@ -177,14 +187,15 @@ void main( void )
 	var_ViewDir = srcV;
 	var_Normal = srcN;
 #endif
+	var_Position = worldpos.xyz;
 
 #if defined( HAS_CHROME )
 	CalcChrome( var_TexDiffuse, normalize( srcN ), u_ViewOrigin, vec3( boneMatrix[3] ), u_ViewRight );
 #endif
 	var_TexDetail = attr_TexCoord0.xy * u_DetailScale;
-
+	
 #if defined( REFLECTION_CUBEMAP )
-	var_Position = worldpos.xyz;
 	var_WorldNormal = srcN;
-#endif//REFLECTION_CUBEMAP
+	var_MatrixTBN = tbn;
+#endif // REFLECTION_CUBEMAP
 }

@@ -103,8 +103,8 @@ void main( void )
 #endif
 
 #if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
-	var_TangentViewDir = normalize((u_ViewOrigin.xyz - worldpos.xyz) * tbn);
-	var_TangentLightDir = normalize((u_LightOrigin.xyz - worldpos.xyz) * tbn);
+	var_TangentViewDir = (u_ViewOrigin.xyz - worldpos.xyz) * tbn;
+	var_TangentLightDir = (u_LightOrigin.xyz - worldpos.xyz) * tbn;
 #endif
 
 #if defined( PLANAR_REFLECTION )

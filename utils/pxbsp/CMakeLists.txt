@@ -28,6 +28,13 @@ list(APPEND DIR_SOURCES
 	"writebsp.cpp"
 )
 
+# add version info
+if(MSVC)
+	list(APPEND DIR_SOURCES
+		"pxbsp.rc"
+	)
+endif()
+
 add_executable(${PROJECT_NAME} ${DIR_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"."

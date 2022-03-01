@@ -653,9 +653,6 @@ void CStudioModelRenderer :: LoadStudioMaterials( void )
 		pmaterial->reliefScale = desc->reliefScale;
 		pmaterial->effects = desc->effects;
 
-		if( pmaterial->smoothness <= 0.0f ) // don't waste time
-			ClearBits( pmaterial->flags, STUDIO_NF_GLOSSMAP );
-
 		if( pmaterial->gl_detailmap_id > 0 && pmaterial->gl_detailmap_id != tr.grayTexture )
 			SetBits( pmaterial->flags, STUDIO_NF_HAS_DETAIL );
 

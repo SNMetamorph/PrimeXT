@@ -22,6 +22,13 @@ list(APPEND DIR_SOURCES
     "write.cpp"
 )
 
+# add version info
+if(MSVC)
+	list(APPEND DIR_SOURCES
+		"pxstudiomdl.rc"
+	)
+endif()
+
 add_executable(${PROJECT_NAME} ${DIR_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"."

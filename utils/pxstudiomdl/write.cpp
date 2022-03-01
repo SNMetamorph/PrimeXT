@@ -1023,7 +1023,9 @@ void WriteModel( void )
 					if( k < g_model[i]->vert[j].globalWeight.numbones )
 					{
 						pweight->bone[k] = g_model[i]->vert[j].globalWeight.bone[k];
-						pweight->weight[k] = g_model[i]->vert[j].globalWeight.weight[k] * 255;
+						pweight->weight[k] = static_cast<byte>(
+							round(g_model[i]->vert[j].globalWeight.weight[k] * 255.0)
+						);
 					}
 					else
 					{
@@ -1046,7 +1048,9 @@ void WriteModel( void )
 					if( k < g_model[i]->norm[normimap[j]].globalWeight.numbones )
 					{
 						pweight->bone[k] = g_model[i]->norm[normimap[j]].globalWeight.bone[k];
-						pweight->weight[k] = g_model[i]->norm[normimap[j]].globalWeight.weight[k] * 255;
+						pweight->weight[k] = static_cast<byte>(
+							round(g_model[i]->norm[normimap[j]].globalWeight.weight[k] * 255.0)
+						);
 					}
 					else
 					{

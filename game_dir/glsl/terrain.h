@@ -47,7 +47,7 @@ void TerrainReadMask( const vec2 tc, inout vec4 mask0, inout vec4 mask1, inout v
 #endif
 
 #if defined( GLSL_ALLOW_TEXTURE_ARRAY )
-vec4 TerrainApplyDiffuse( sampler2DArray tex, vec2 tc, vec4 mask0, vec4 mask1, vec4 mask2, vec4 mask3 )
+vec4 TerrainMixDiffuse( sampler2DArray tex, vec2 tc, vec4 mask0, vec4 mask1, vec4 mask2, vec4 mask3 )
 {
 	vec4 diffuse = vec4( 0.0 );
 #if TERRAIN_NUM_LAYERS >= 1
@@ -103,7 +103,7 @@ vec4 TerrainApplyDiffuse( sampler2DArray tex, vec2 tc, vec4 mask0, vec4 mask1, v
 #endif
 
 #if defined( GLSL_ALLOW_TEXTURE_ARRAY )
-vec3 TerrainApplyNormal( sampler2DArray tex, vec2 tc, vec4 mask0, vec4 mask1, vec4 mask2, vec4 mask3 )
+vec3 TerrainMixNormal( sampler2DArray tex, vec2 tc, vec4 mask0, vec4 mask1, vec4 mask2, vec4 mask3 )
 {
 	vec3 normal = vec3( 0.0 );
 #if TERRAIN_NUM_LAYERS >= 1
@@ -159,7 +159,7 @@ vec3 TerrainApplyNormal( sampler2DArray tex, vec2 tc, vec4 mask0, vec4 mask1, ve
 #endif
 
 #if defined ( APPLY_TERRAIN )
-float TerrainCalcSmoothness( const in float smoothness[TERRAIN_NUM_LAYERS], vec4 mask0, vec4 mask1, vec4 mask2, vec4 mask3 )
+float TerrainMixSmoothness( const in float smoothness[TERRAIN_NUM_LAYERS], vec4 mask0, vec4 mask1, vec4 mask2, vec4 mask3 )
 {
 	float	result = 0.0;
 
@@ -216,7 +216,7 @@ float TerrainCalcSmoothness( const in float smoothness[TERRAIN_NUM_LAYERS], vec4
 #endif
 
 #if defined( GLSL_ALLOW_TEXTURE_ARRAY )
-vec4 TerrainApplySpecular( sampler2DArray tex, vec2 tc, vec4 mask0, vec4 mask1, vec4 mask2, vec4 mask3 )
+vec4 TerrainMixGlossmap( sampler2DArray tex, vec2 tc, vec4 mask0, vec4 mask1, vec4 mask2, vec4 mask3 )
 {
 	vec4 gloss = vec4( 0.0 );
 #if TERRAIN_NUM_LAYERS >= 1

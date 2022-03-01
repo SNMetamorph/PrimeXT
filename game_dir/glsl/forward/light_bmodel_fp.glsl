@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "lightmodel.h"
 #include "terrain.h"
 #include "parallax.h"
+#include "material.h"
 
 // texture units
 #if defined( APPLY_TERRAIN )
@@ -93,12 +94,13 @@ varying vec3		var_TangentViewDir;
 varying vec3		var_TangentLightDir;
 #endif
 
-void main( void )
+void main()
 {
+	vec2 vec_TexDiffuse = var_TexDiffuse.xy; 
 	vec3 V = normalize( var_ViewVec );
 	vec3 L = vec3( 0.0 );
-	vec2 vec_TexDiffuse = var_TexDiffuse.xy; 
 	float atten = 1.0;
+	MaterialData mat;
 
 #if !defined( LIGHT_PROJ )
 	atten = LightAttenuation(var_LightVec, u_LightOrigin.w);
@@ -113,7 +115,8 @@ void main( void )
 	float spotDot = dot( normalize( u_LightDir.xyz ), L );
 	float fov = ( u_LightDir.w * FOV_MULT * ( M_PI / 180.0 ));
 	float spotCos = cos( fov + fov );
-	if( spotDot < spotCos ) discard;
+	if( spotDot < spotCos ) 
+		discard;
 #elif defined( LIGHT_OMNI )
 	L = normalize( var_LightVec );
 #elif defined( LIGHT_PROJ )
@@ -126,35 +129,56 @@ void main( void )
 #endif
 
 #if defined( PARALLAX_SIMPLE )
-	//vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse, var_TangentViewDir);
-	vec_TexDiffuse = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse.xy, var_TangentViewDir);
-	//vec_TexDiffuse = ParallaxReliefMap(var_TexDiffuse, var_TangentViewDir);
+	//vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse, normalize(var_TangentViewDir));
+	vec_TexDiffuse = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse.xy, normalize(var_TangentViewDir));
+	//vec_TexDiffuse = ParallaxReliefMap(var_TexDiffuse, normalize(var_TangentViewDir));
 #elif defined( PARALLAX_OCCLUSION )
-	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse, var_TangentViewDir).xy;
+	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse, normalize(var_TangentViewDir)).xy;
 #endif
 
 // compute the normal first
 #if defined( HAS_NORMALMAP )
 #if defined( APPLY_TERRAIN )
-	vec3 N = TerrainApplyNormal( u_NormalMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
+	vec3 N = TerrainMixNormal( u_NormalMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 #else
 	vec3 N = normalmap2D( u_NormalMap, vec_TexDiffuse );
 #endif
 #else
 	vec3 N = normalize( var_Normal );
 #endif
-	// compute the diffuse term
-#if defined( PLANAR_REFLECTION ) && !defined( LIQUID_UNDERWATER ) // HACKHACK
-	vec4 diffuse = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, u_RefractScale );
-#elif defined( APPLY_TERRAIN )
-	vec4 diffuse = TerrainApplyDiffuse( u_ColorMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
-#else
-	vec4 diffuse = colormap2D( u_ColorMap, vec_TexDiffuse );
-#endif
 
 #if defined( HAS_NORMALMAP )
 	// rotate normal to worldpsace
 	N = normalize( var_WorldMat * N );
+#endif
+
+// setup material params values
+#if defined( HAS_GLOSSMAP )
+#if defined( APPLY_TERRAIN )
+	vec4 glossmap = TerrainMixGlossmap( u_GlossMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
+#else
+	vec4 glossmap = colormap2D( u_GlossMap, vec_TexDiffuse );
+#endif
+	// get params from texture
+	mat = MaterialFetchTexture( glossmap );
+#else // !HAS_GLOSSMAP
+#if defined( APPLY_TERRAIN )
+	mat.smoothness = TerrainMixSmoothness( u_Smoothness, mask0, mask1, mask2, mask3 );
+#else
+	mat.smoothness = u_Smoothness;
+#endif
+	// default params 
+	mat.metalness = 0.0;
+	mat.ambientOcclusion = 1.0;
+#endif // HAS_GLOSSMAP
+
+// compute the diffuse term
+#if defined( PLANAR_REFLECTION ) && !defined( LIQUID_UNDERWATER ) // HACKHACK
+	vec4 diffuse = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, u_RefractScale );
+#elif defined( APPLY_TERRAIN )
+	vec4 diffuse = TerrainMixDiffuse( u_ColorMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
+#else
+	vec4 diffuse = colormap2D( u_ColorMap, vec_TexDiffuse );
 #endif
 
 #if defined( SIGNED_DISTANCE_FIELD )
@@ -168,39 +192,24 @@ void main( void )
 	diffuse.rgb *= detailmap2D( u_DetailMap, var_TexDetail ).rgb * DETAIL_SCALE;
 #endif
 #endif
-	// lighting the world polys
-#if defined( APPLY_TERRAIN )
-	float smoothness = TerrainCalcSmoothness( u_Smoothness, mask0, mask1, mask2, mask3 );
-#else
-	float smoothness = u_Smoothness;
-#endif
-	vec4 glossmap = vec4( 0.0 );
 
-	// compute the specular term
-#if defined( HAS_GLOSSMAP )
-#if defined( APPLY_TERRAIN )
-	glossmap = TerrainApplySpecular( u_GlossMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
-#else
-	glossmap = colormap2D( u_GlossMap, vec_TexDiffuse );
-#endif
-#endif//HAS_GLOSSMAP
-
-	vec3 light = vec3( 1.0 );
+	vec3 light = u_LightDiffuse * DLIGHT_SCALE;	// light color
 	float shadow = 1.0;
-
-	light = u_LightDiffuse * DLIGHT_SCALE;	// light color
 	float NdotL = saturate( dot( N, L ));
-	if( NdotL <= 0.0 ) discard; // fast reject
+	if ( NdotL <= 0.0 ) 
+		discard; // fast reject
 
 #if defined( LIGHT_SPOT )
 	// texture or procedural spotlight
 	light *= texture2DProj( u_ProjectMap, var_ProjCoord ).rgb;
 #if defined( APPLY_SHADOW )
-	if( NdotL > 0.0 ) shadow = ShadowSpot( var_ShadowCoord, u_ShadowParams.xy );
+	if( NdotL > 0.0 ) 
+		shadow = ShadowSpot( var_ShadowCoord, u_ShadowParams.xy );
 #endif
 #elif defined( LIGHT_OMNI )
 #if defined( APPLY_SHADOW )
-	if( NdotL > 0.0 ) shadow = ShadowOmni( -var_LightVec, u_ShadowParams );
+	if( NdotL > 0.0 ) 
+		shadow = ShadowOmni( -var_LightVec, u_ShadowParams );
 #endif
 #elif defined( LIGHT_PROJ )
 #if defined( APPLY_SHADOW )
@@ -215,14 +224,14 @@ void main( void )
 
 // parallax selfshadowing
 #if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
-	//shadow *= ParallaxSelfShadow(N, var_TangentLightDir, vec_TexDiffuse);
+	//shadow *= ParallaxSelfShadow(N, normalize(var_TangentLightDir), vec_TexDiffuse);
 #endif
 	if (shadow <= 0.0) 
 		discard; // fast reject
 
 	vec3 albedo = diffuse.rgb;
 	light *= atten * shadow; // apply attenuation and shadowing
-	LightingData lighting = ComputeLighting(N, V, L, albedo, light, glossmap, smoothness);
+	LightingData lighting = ComputeLighting(N, V, L, albedo, light, mat);
 	diffuse.rgb = lighting.diffuse;
 	diffuse.rgb += lighting.specular;
 #if defined( LIGHT_PROJ )

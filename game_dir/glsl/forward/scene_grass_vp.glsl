@@ -32,6 +32,7 @@ uniform float		u_RealTime;
 varying vec2		var_TexDiffuse;
 varying vec3		var_FrontLight;
 varying vec3		var_BackLight;
+varying vec3		var_Position;
 
 vec3 ApplyLightStyleGrass( float scale, float packedLight, float packedDelux, vec3 N )
 {
@@ -73,7 +74,8 @@ void main( void )
 	gl_Position = gl_ModelViewProjectionMatrix * worldpos;
 	var_TexDiffuse = GetTexCoordsForVertex( int( attr_Normal.w ));
 	gl_ClipVertex = gl_ModelViewMatrix * worldpos;
-
+	var_Position = worldpos.xyz;
+	
 #if !defined( LIGHTING_FULLBRIGHT )
 	vec3 N = GetNormalForVertex( int( attr_Normal.w ));
 	var_FrontLight = var_BackLight = vec3( 0.0 );

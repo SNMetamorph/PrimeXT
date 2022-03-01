@@ -17,6 +17,7 @@ GNU General Public License for more details.
 #define LIGHTMODEL_H
 
 #include "const.h"
+#include "material.h"
 
 #define FALL_LIGHTMODEL_BLINN		// default lightmodel Blinn\Phong
 
@@ -163,12 +164,12 @@ float SpecularAntialiasing(vec3 n, float roughness)
 #endif
 }
 
-LightingData ComputeLightingBRDF(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, vec4 materialInfo)
+LightingData ComputeLightingBRDF(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, MaterialData materialInfo)
 {
 	LightingData lighting;
-	float roughness = SmoothnessToRoughness(materialInfo.r);
-	float metalness = materialInfo.g;
-	float ambientOcclusion = materialInfo.b;
+	float roughness = SmoothnessToRoughness(materialInfo.smoothness);
+	float metalness = materialInfo.metalness;
+	float ambientOcclusion = materialInfo.ambientOcclusion;
 
 	vec3 F0 = mix(vec3(0.02), albedo, metalness);
 	L = normalize(L);
@@ -203,21 +204,18 @@ LightingData ComputeLightingBRDF(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 light
 	return lighting;
 }
 
-LightingData ComputeLighting(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, vec4 materialInfo, float smoothness)
+LightingData ComputeLighting(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, MaterialData materialInfo)
 {
-	float gloss = materialInfo.r;
-	float metalness = materialInfo.g;
-	float ambientOcclusion = materialInfo.b;
 	LightingData lighting;
-	
+	float smoothness = materialInfo.smoothness;
 #if defined( APPLY_PBS )
 	lighting = ComputeLightingBRDF(N, V, L, albedo, lightColor, materialInfo);
 	lighting.diffuse = albedo * lighting.diffuse;
 #else
 	float NdotL = saturate( dot( N, L ));
-	float specular = pow(max(dot(N, normalize(V + L)), 0.0), smoothness * smoothness * 256.0);
+	float specular = pow(max(dot(N, normalize(V + L)), 0.0), 32.0);
 	lighting.diffuse = lightColor * NdotL * albedo;
-	lighting.specular = lightColor * NdotL * gloss * specular;
+	lighting.specular = lightColor * NdotL * smoothness * specular;
 #endif
 	return lighting;
 }
