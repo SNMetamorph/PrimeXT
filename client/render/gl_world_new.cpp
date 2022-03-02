@@ -1377,7 +1377,7 @@ static void Mod_ComputeFaceTBN( msurface_t *surf, mextrasurf_t *esrf )
 		}
 
 		v->tangent = directionnormals[0];
-		v->binormal = directionnormals[1];
+		v->binormal = -directionnormals[1]; // makes TBN right-side coordinate system for accordance with deluxmap
 		v->normal = vertNormal;
 	}
 }

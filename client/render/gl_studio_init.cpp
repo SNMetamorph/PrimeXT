@@ -1517,8 +1517,9 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 				}
 				else
 				{
+					// make studiomodel TBN right-side coordinate system for accordance with TBN of bmodels
 					tVect = CrossProduct( sVect, normal );
-					sVect = CrossProduct( normal, tVect );
+					sVect = CrossProduct( tVect, normal );
 				}
 			}
 
