@@ -118,8 +118,10 @@ jobs:
 
       - name: Repackage binaries
         run: |
-          zip -r primext-windows-x86.zip Windows/*
-          tar -czvf primext-linux-i386.tar.gz Linux/*
+          cd Windows
+          zip -r ../primext-windows-x86.zip *
+          cd ../Linux
+          tar -czvf ../primext-linux-i386.tar.gz *
 
       - name: Remove old release
         uses: dev-drprasad/delete-tag-and-release@v0.2.0
