@@ -3667,6 +3667,7 @@ R_RenderShadowBrushList
 void R_RenderShadowBrushList( void )
 {
 	int			cached_matrix = -1;
+	material_t *cached_material = NULL;
 	qboolean	flush_buffer = false;
 	int			startv, endv;
 
@@ -3682,21 +3683,25 @@ void R_RenderShadowBrushList( void )
 	{
 		CSolidEntry *entry = &RI->frame.solid_faces[i];
 
-		if( entry->m_bDrawType != DRAWTYPE_SURFACE )
+		if (entry->m_bDrawType != DRAWTYPE_SURFACE)
 			continue;
 
 		msurface_t *surf = entry->m_pSurf;
 		mextrasurf_t *esurf = surf->info;
 		cl_entity_t *entity = RI->currententity = esurf->parent;
+		material_t *mat = surf->texinfo->texture->material;
 		RI->currentmodel = entity->model;
 		
-		if( !entry->m_hProgram ) 
+		if (!entry->m_hProgram)
 			continue;
 
-		if(( i == 0 ) || ( RI->currentshader != &glsl_programs[entry->m_hProgram] ))
+		if ((i == 0) || (RI->currentshader != &glsl_programs[entry->m_hProgram]))
 			flush_buffer = true;
 
-		if( cached_matrix != esurf->parent->hCachedMatrix )
+		if (cached_matrix != esurf->parent->hCachedMatrix)
+			flush_buffer = true;
+
+		if (cached_material != mat)
 			flush_buffer = true;
 
 		if( flush_buffer )
@@ -3716,6 +3721,7 @@ void R_RenderShadowBrushList( void )
 
 		// now cache values
 		cached_matrix = esurf->parent->hCachedMatrix;
+		cached_material = mat;
 
 		if( numTempElems == 0 ) // new chain has started, apply uniforms
 			R_SetSurfaceUniforms( entry->m_hProgram, entry->m_pSurf, ( i == 0 ));
