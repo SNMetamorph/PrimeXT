@@ -1,16 +1,13 @@
 name: nightly-builds
 on: push
 jobs:
-  build-win32:
+  build-windows:
     runs-on: windows-2019
-
     strategy:
       matrix:
         conf: [Debug]
-
     env:
       BUILD_TYPE: ${{ matrix.conf }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -46,37 +43,21 @@ jobs:
           mkdir publish\primext\devkit
           move build\${{env.BUILD_TYPE}}\* publish\
           move game_dir\* publish\primext
-          powershell Compress-Archive -Path publish\* build.zip
 
-      - name: Remove old release
-        uses: dev-drprasad/delete-tag-and-release@v0.2.0
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
         with:
-          delete_release: true
-          tag_name: continious
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: Upload new release
-        id: upload_new_release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./build.zip
-          asset_name: primext-win32.zip
-          tag: continious
-          overwrite: true
-          prerelease: true
-  
-  build-linux-i386:
+          name: Windows
+          path: |
+            publish/*
+
+  build-linux:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         conf: [Debug]
-
     env:
       BUILD_TYPE: ${{ matrix.conf }}
-    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -119,7 +100,26 @@ jobs:
           cp -r build/primext/* publish/primext/
           cp build/primext_run publish/
           cp -r game_dir/* publish/primext
-          cd publish && zip -r build.zip ./* && mv build.zip ../ && cd ..
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Linux
+          path: |
+            publish/*
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [build-windows, build-linux]
+    steps:
+      - name: Fetch artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Repackage binaries
+        run: |
+          zip -r primext-windows-x86.zip Windows/
+          tar -czvf primext-linux-i386.tar.gz Linux/
 
       - name: Remove old release
         uses: dev-drprasad/delete-tag-and-release@v0.2.0
@@ -128,14 +128,14 @@ jobs:
           tag_name: continious
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Upload new release
-        id: upload_new_release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./build.zip
-          asset_name: primext-linux-i386.zip
+          file_glob: true
+          file: primext-*
           tag: continious
           overwrite: true
           prerelease: true
+          release_name: PrimeXT Continious Build
