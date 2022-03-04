@@ -316,6 +316,7 @@ static void R_ShadowPassSetupViewCache( CDynLight *pl, int split = 0 )
 	RI->glstate.viewport = RI->view.port;
 	RI->view.farClip = pl->radius;
 	RI->view.origin = pl->origin;
+	RI->currentlight = pl;
 
 	// setup the screen FOV
 	RI->view.fov_x = pl->fov;
@@ -361,13 +362,11 @@ static void R_ShadowPassSetupViewCache( CDynLight *pl, int split = 0 )
 	RI->view.worldProjectionMatrix.CopyToArray( RI->glstate.modelviewProjectionMatrix );
 	RI->view.projectionMatrix.CopyToArray( RI->glstate.projectionMatrix );
 	RI->view.worldMatrix.CopyToArray( RI->glstate.modelviewMatrix );
-
-	RI->currentlight = pl;
-
+	
+	// TODO optimize it with caching last view leaf
+	RI->view.pvspoint = pl->origin;
+	ENGINE_SET_PVS( RI->view.pvspoint, REFPVS_RADIUS, RI->view.pvsarray, false, true ); 
 	R_MarkWorldVisibleFaces( worldmodel );
-
-	msurface_t	*surf;
-	mextrasurf_t	*esrf;
 
 	// add all studio models, mark visible bmodels
 	for (int i = 0; i < tr.num_draw_entities; i++)
@@ -399,8 +398,8 @@ static void R_ShadowPassSetupViewCache( CDynLight *pl, int split = 0 )
 
 		if( CHECKVISBIT( RI->view.visfaces, j ))
 		{
-			surf = worldmodel->surfaces + j;
-			esrf = surf->info;
+			msurface_t *surf = worldmodel->surfaces + j;
+			mextrasurf_t *esrf = surf->info;
 
 			// submodel faces already passed through this
 			// operation but world is not
