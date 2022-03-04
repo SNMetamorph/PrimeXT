@@ -38,13 +38,6 @@ jobs:
         # Execute the build.  You can specify a specific target with "--target <NAME>"
         run: cmake --build . --config $BUILD_TYPE
 
-      - name: Update continious tag
-        uses: richardsimko/update-tag@v1
-        with:
-            tag_name: continious
-        env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
       - name: Prepare artifacts
         run: |
           mkdir publish\
@@ -55,22 +48,16 @@ jobs:
           move game_dir\* publish\primext
           powershell Compress-Archive -Path publish\* build.zip
 
-      - name: Create release
-        id: create_release
-        uses: ncipollo/release-action@v1
+      - name: Remove old release
+        uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        with:
+          delete_release: true
+          tag_name: continious
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag: continious
-          name: Continious build
-          draft: false
-          prerelease: true
-          allowUpdates: true
-          removeArtifacts: false
-          replacesArtifacts: true
           
-      - name: Upload artifacts
-        id: upload-artifacts
+      - name: Upload new release
+        id: upload_new_release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -122,14 +109,7 @@ jobs:
         shell: bash
         # Execute the build.  You can specify a specific target with "--target <NAME>"
         run: cmake --build . --config $BUILD_TYPE
-
-      - name: Update continious tag
-        uses: richardsimko/update-tag@v1
-        with:
-            tag_name: continious
-        env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
+ 
       - name: Prepare artifacts
         run: |
           mkdir publish/
@@ -141,22 +121,16 @@ jobs:
           cp -r game_dir/* publish/primext
           cd publish && zip -r build.zip ./* && mv build.zip ../ && cd ..
 
-      - name: Create release
-        id: create_release
-        uses: ncipollo/release-action@v1
+      - name: Remove old release
+        uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        with:
+          delete_release: true
+          tag_name: continious
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag: continious
-          name: Continious build
-          draft: false
-          prerelease: true
-          allowUpdates: true
-          removeArtifacts: false
-          replacesArtifacts: true
           
-      - name: Upload artifacts
-        id: upload-artifacts
+      - name: Upload new release
+        id: upload_new_release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
