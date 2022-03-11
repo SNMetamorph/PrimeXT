@@ -177,7 +177,7 @@ void R_InitializeConVars()
 	r_sun_allowed = CVAR_REGISTER("r_sun_allowed", "0", FCVAR_ARCHIVE);
 	r_sun_daytime = CVAR_REGISTER("r_sun_daytime", "12", FCVAR_CLIENTDLL);
 	r_shadowmap_size = CVAR_REGISTER("gl_shadowmap_size", "1024", FCVAR_ARCHIVE);
-	r_occlusion_culling = CVAR_REGISTER("r_occlusion_culling", "1", FCVAR_ARCHIVE);
+	r_occlusion_culling = CVAR_REGISTER("r_occlusion_culling", "0", FCVAR_ARCHIVE);
 	r_show_lightprobes = CVAR_REGISTER("r_show_lightprobes", "0", FCVAR_ARCHIVE);
 	r_show_cubemaps = CVAR_REGISTER("r_show_cubemaps", "0", FCVAR_ARCHIVE);
 	r_show_viewleaf = CVAR_REGISTER("r_show_viewleaf", "0", FCVAR_ARCHIVE);
