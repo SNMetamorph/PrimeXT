@@ -110,7 +110,7 @@ void CStudioModelRenderer :: Init( void )
 	m_pCvarHiModels		= IEngineStudio.GetCvar( "cl_himodels" );
 	m_pCvarDrawViewModel	= IEngineStudio.GetCvar( "r_drawviewmodel" );
 	m_pCvarHand		= CVAR_REGISTER( "cl_righthand", "0", FCVAR_ARCHIVE );
-	m_pCvarViewmodelFov		= CVAR_REGISTER( "cl_viewmodel_fov", "60", FCVAR_ARCHIVE );
+	m_pCvarViewmodelFov		= CVAR_REGISTER( "cl_viewmodel_fov", "90", FCVAR_ARCHIVE );
 	m_pCvarCompatible		= CVAR_REGISTER( "r_studio_compatible", "1", FCVAR_ARCHIVE );
 	m_pCvarLodScale		= CVAR_REGISTER( "cl_lod_scale", "5.0", FCVAR_ARCHIVE );
 	m_pCvarLodBias		= CVAR_REGISTER( "cl_lod_bias", "0", FCVAR_ARCHIVE );
