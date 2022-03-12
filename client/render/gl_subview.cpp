@@ -193,7 +193,7 @@ texFlags_t R_SetupPortalView(msurface_t *surf, ref_viewpass_t *rvp, cl_entity_t 
 
 	rvp->viewangles[0] = anglemod(angles[0]);
 	rvp->viewangles[1] = anglemod(angles[1]);
-	rvp->viewangles[2] = -anglemod(angles[2]);
+	rvp->viewangles[2] = anglemod(angles[2]); 
 	
 	rvp->vieworigin = origin;
 	rvp->fov_x = RI->view.fov_x;
