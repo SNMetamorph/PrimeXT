@@ -1,0 +1,60 @@
+// materials specification
+
+"default"
+{
+	"impact_decal"	"shot"
+	"impact_parts"	"test_impact" "test_smoke"
+	"impact_sound"	"debris/concrete1.wav" "debris/concrete2.wav" "debris/concrete3.wav" "debris/concrete4.wav"
+	"step_sound"	"materials/pstep_1.wav" "materials/pstep_2.wav" "materials/pstep_3.wav" "materials/pstep_4.wav" "materials/pstep_5.wav" "materials/pstep_6.wav"
+}
+
+"metal"
+{
+	"impact_decal"	"shot_metal"
+	"impact_parts"	"metal_flash" "metal_spark" 
+	"impact_sound"	"debris/impact_metal01.wav" "debris/impact_metal02.wav" "debris/impact_metal03.wav" "debris/impact_metal04.wav"
+	"step_sound"	"player/steps_metal01.wav" "player/steps_metal02.wav" "player/steps_metal03.wav" "player/steps_metal04.wav" "player/steps_metal05.wav" "player/steps_metal06.wav" "player/steps_metal07.wav" "player/steps_metal08.wav"
+	"detailmap"	"gfx/detail/det_metal"
+}
+
+"wood"
+{
+	"impact_decal"	"shot_wood"
+	"impact_parts"	"wood_gibs" "test_impact"
+	"impact_sound"	"debris/wood1.wav" "debris/wood2.wav" "debris/wood3.wav"
+	"step_sound"	"steklo/glass_step_0.wav" "steklo/glass_step_1.wav" "steklo/glass_step_2.wav" "steklo/glass_step_3.wav"
+	"detailmap"	"gfx/detail/det_wood"
+}
+
+"glass"
+{
+	"impact_decal"	"shot_glass"
+	"impact_parts"	"glass_gibs"
+	"impact_sound"	"debris/impact_glass01.wav" "debris/impact_glass02.wav" "debris/impact_glass03.wav" "debris/impact_glass04.wav" "debris/impact_glass05.wav" "debris/impact_glass06.wav" "debris/impact_glass07.wav"
+	"step_sound"	"player/pl_grass1.wav" "player/pl_grass2.wav" "player/pl_grass3.wav" "player/pl_grass4.wav"
+}
+
+"kafel"
+{
+	"impact_decal"	"shot_tile"
+	"impact_parts"	"tile_gibs"
+	"impact_sound"	"debris/impact_kafel01.wav" "debris/impact_kafel02.wav" "debris/impact_kafel03.wav" "debris/impact_kafel04.wav" 
+	"step_sound"	"player/pl_grass1.wav" "player/pl_grass2.wav" "player/pl_grass3.wav" "player/pl_grass4.wav"
+	"detailmap"	"gfx/detail/det_plitka"
+}
+
+"grass"
+{
+	"impact_decal"	"shot"
+	"impact_parts"	"dirt_gibs" "test_impact" "test_smoke"
+	"impact_sound"	"debris/concrete1.wav" "debris/concrete2.wav" "debris/concrete3.wav" "debris/concrete4.wav"
+	"step_sound"	"player/pl_grass1.wav" "player/pl_grass2.wav" "player/pl_grass3.wav" "player/pl_grass4.wav"
+}
+
+"shlak"
+{
+	"impact_decal"	"shot"
+	"impact_parts"	"dirt_gibs" "test_impact" "test_smoke"
+	"impact_sound"	"debris/concrete1.wav" "debris/concrete2.wav" "debris/concrete3.wav" "debris/concrete4.wav"
+	"step_sound"	"player/pl_slosh1.wav" "player/pl_slosh2.wav" "player/pl_slosh3.wav" "player/pl_slosh4.wav"
+}

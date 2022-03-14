@@ -1,0 +1,33 @@
+"particles" "100"
+"maintype" "smokesource"
+
+{
+  "name" "smokesource"
+  "spraytype" "smoke"
+  "sprayrate" "4"
+  "sprayforce" "20"
+  "sprayyaw" "190..350"
+  "spraypitch" "0..-60"
+  "lifetime" "50"
+}
+
+{
+  "name" "smoke"
+  "gravity" "0"
+  "sprite" "sprites/ballsmoke.spr"
+  "startalpha" "0"
+  "endalpha" "1"
+  "startgreen" "0.3"
+  "startred" "0.27"
+  "startblue" "0.24"
+  "endgreen" "0"
+  "endred" "0"
+  "endblue" "0"
+  "lifetime" "10"
+  "startsize" "0"
+  "endsize" "150"
+  "startframe" "0..9"
+  "framerate" "0"
+  "startangle" "0..360"
+  "angledelta" "50..-50"
+}

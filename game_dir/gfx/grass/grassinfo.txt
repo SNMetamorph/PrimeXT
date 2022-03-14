@@ -1,0 +1,3 @@
+devgrass		gfx/grass/devgrass1.tga	3.5	0.6	1.8	5
+devgrass		gfx/grass/devgrass2.tga	3.0	0.6	1.5	8
+devgrass		gfx/grass/devgrass3.tga	4.0	0.6	1.7	90

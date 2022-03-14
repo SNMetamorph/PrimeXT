@@ -1,0 +1,12 @@
+// run a user script file if present
+exec autoexec.cfg
+
+//
+// set console color
+//
+con_color "255 255 255"
+
+//
+// stuff command line statements (must be last)
+//
+stuffcmds

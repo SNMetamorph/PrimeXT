@@ -1,0 +1,161 @@
+scorch
+{
+	scorch1		96	96	0.2
+      scorch2		88	88	0.2
+      scorch3		84	84	0.2
+}
+
+scorch1
+{
+	scorch1		100	100	0.2
+}
+
+scorch2
+{
+	scorch2		100	100	0.2
+}
+
+shot
+{
+	shot		6	6	0.5
+	shot1		6	6	0.5
+	shot2		6	6	0.5
+	shot3		6	6	0.5
+}
+
+shot_metal
+{
+	shot_metal1	4.5	4.5	0.5
+	shot_metal2	4.5	4.5	0.5
+	shot_metal3	4.5	4.5	0.5
+	shot_metal4	4.5	4.5	0.5
+}
+
+shot_wood
+{
+	shot_wood	3	3	0.5
+}
+
+shot_glass
+{
+	shot_glass1	4.5	4.5	0.5
+	shot_glass2	4.5	4.5	0.5
+	shot_glass3	4.5	4.5	0.5
+}
+
+shot_tile
+{
+	shot_tile1	5.5	4.5	0.5
+	shot_tile2	5.5	4.5	0.5
+}
+
+knife1
+{
+	knife1	       7	7	0.5
+}
+
+knife2
+{
+	knife2	       7	7	0.5
+}
+
+
+
+brains
+{
+	brains		40	40	0.2
+}
+
+redblood
+yellowblood
+{
+	blood1		40	40	0.2
+	blood2		40	40	0.2
+	blood3		40	40	0.2
+	blood4		40	40	0.2
+	blood6		40	40	0.2
+	blood7		40	40	0.2
+
+	blood1		28	28	0.2
+	blood2		28	28	0.2
+	blood3		28	28	0.2
+	blood4		28	28	0.2
+	blood6		28	28	0.2
+	blood7		28	28	0.2
+}
+
+bodyhurt_red
+{
+	hurt		28	28	0.2
+	hurt2		28	28	0.2
+}
+
+bodyhurt_yellow
+{
+	hurt		28	28	0.2
+	hurt2		28	28	0.2
+}
+
+// ENVIRONMENT DECALS
+
+hands
+{
+	hands		24	24	0.2
+}
+
+
+bloodofdead1
+{
+	blood1		40	40	0.2
+}
+
+bloodofdead2
+{
+	blood2		40	40	0.2
+}
+
+bloodofdead3
+{
+	blood3		40	40	0.2
+}
+
+bloodofdead4
+{
+	blood4		80	80	0.2
+}
+
+bloodofdead5
+{
+	blood5		40	40	0.2
+}
+
+bloodofdead6
+{
+	blood6		40	40	0.2
+}
+
+bloodofdead7
+{
+	blood7		40	40	0.2
+}
+
+
+bloodhands
+{
+	hands	40	40	0.3125
+}
+
+bloodstains
+{
+	bloodstains	64	64	0.375
+}
+
+bloodbigsplat1
+{
+	bloodbigsplat	64	64	0.25
+}
+
+bloodbigsplat2
+{
+	bloodbigsplat2	64	64	0.25
+}

@@ -4,10 +4,12 @@
 basedir		"valve"
 gamedir		"primext"
 title		"PrimeXT"
-startmap	"grass_test2"
-trainmap	"freeman"
+startmap	"env_cubemap"
+trainmap	"env_sky"
 version		0.8
 size		116339527
+noskills 	"1"
+render_picbutton_text "1"
 url_info	"https://github.com/SNMetamorph/PrimeXT"
 type		"Toolkit"
 dllpath		"bin"

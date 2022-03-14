@@ -1,0 +1,33 @@
+"particles" "100"
+"maintype" "smokesource"
+
+{
+  "name" "smokesource"
+  "spraytype" "smoke"
+  "sprayrate" "20"
+  "lifetime" "50"
+  "spraypitch" "-50..-70"
+  "sprayyaw" "265..275"
+  "sprayforce" "40"
+}
+
+{
+  "name" "smoke"
+  "gravity" "0"
+  "sprite" "sprites/added/steam.spr"
+  "startalpha" "0.3"
+  "startgreen" "0.4"
+  "startred" "0.36"
+  "startblue" "0.32"
+  "endgreen" "0"
+  "endred" "0"
+  "endblue" "0"
+  "endalpha" "0.6"
+  "lifetime" "2"
+  "startsize" "1"
+  "endsize" "30"
+  "startframe" "0..10"
+  "framerate" "10"
+  "startangle" "0..360"
+  "angledelta" "100..-100"
+}
