@@ -781,7 +781,7 @@ void CWorld :: Precache( void )
 	if ( pev->speed > 0 )
 		CVAR_SET_FLOAT( "sv_zmax", pev->speed );
 	else
-		CVAR_SET_FLOAT( "sv_zmax", 4096 );
+		CVAR_SET_FLOAT( "sv_zmax", 46341.f );
 
 	// g-cont. moved here to right restore global WaveHeight on save\restore level
 	CVAR_SET_FLOAT( "sv_wateramp", pev->scale );
