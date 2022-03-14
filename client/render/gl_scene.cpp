@@ -561,3 +561,13 @@ qboolean R_AddEntity( struct cl_entity_s *clent, int entityType )
 
 	return true;
 }
+
+bool R_FullBright()
+{
+	if (CVAR_TO_BOOL(r_fullbright))
+		return true;
+	if (worldmodel && !worldmodel->lightdata)
+		return true;
+	else
+		return false;
+}

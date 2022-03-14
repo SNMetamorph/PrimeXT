@@ -91,7 +91,6 @@ GNU General Public License for more details.
 #define R_OpaqueEntity( e )	(( (e)->curstate.rendermode == kRenderNormal ) || ( (e)->curstate.rendermode == kRenderTransAlpha ))
 #define R_ModelOpaque( rm )	(( rm == kRenderNormal ) || ( rm == kRenderTransAlpha ))
 #define R_StaticEntity( e )	( (e)->origin == g_vecZero && (e)->angles == g_vecZero )
-#define R_FullBright()	( CVAR_TO_BOOL( r_fullbright ) || !worldmodel->lightdata )
 #define RP_OUTSIDE( leaf )	(((( leaf ) - worldmodel->leafs ) - 1 ) == -1 )
 #define R_WaterEntity( m )	( FBitSet( m->flags, BIT( 2 )))
 
@@ -955,6 +954,7 @@ void R_RenderSubview( void );
 //
 void R_CheckChanges( void );
 void R_InitDefaultLights( void );
+bool R_FullBright();
 
 //
 // gl_sky.cpp
