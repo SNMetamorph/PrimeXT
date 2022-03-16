@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include "vector.h"
 
 #define MAX_TOKEN_CHARS	1024
 
