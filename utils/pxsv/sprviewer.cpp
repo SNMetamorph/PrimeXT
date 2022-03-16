@@ -28,6 +28,7 @@
 #include "app_info.h"
 #include "stringlib.h"
 #include "SpriteModel.h"
+#include "build.h"
 
 SPRViewer *g_SPRViewer = 0;
 char g_appTitle[] = APP_TITLE_STR;
@@ -793,6 +794,11 @@ int main( int argc, char *argv[] )
 	// make sure, we start in the right directory
 	//
 	mx_setcwd (mx::getApplicationPath ());
+
+#if XASH_WIN32 == 1
+	// HOTFIX hide console window
+	ShowWindow(GetConsoleWindow(), SW_HIDE);
+#endif
 
 	char cmdline[1024] = "";
 	if (argc > 1)
