@@ -7,7 +7,7 @@ add_subdirectory(pxbsp)
 add_subdirectory(pxcsg)
 add_subdirectory(pxrad)
 add_subdirectory(pxvis)
-#add_subdirectory(pxsv)
+add_subdirectory(pxsv)
 #add_subdirectory(pxmakefont)
 #add_subdirectory(pxmakewad)
 #add_subdirectory(pxmaketex)
@@ -28,7 +28,7 @@ if(MSVC)
 		RUNTIME_OUTPUT_DIRECTORY_RELEASE ${DIR_UTILS_OUTPUT}
     )
 else()
-    set_target_properties(pxstudiomdl pxmv pxbsp pxcsg pxrad pxvis PROPERTIES 
+    set_target_properties(pxstudiomdl pxmv pxbsp pxcsg pxrad pxvis pxsv PROPERTIES 
         ARCHIVE_OUTPUT_DIRECTORY ${DIR_UTILS_OUTPUT}
         LIBRARY_OUTPUT_DIRECTORY ${DIR_UTILS_OUTPUT}
         RUNTIME_OUTPUT_DIRECTORY ${DIR_UTILS_OUTPUT}

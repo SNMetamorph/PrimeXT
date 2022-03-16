@@ -25,11 +25,12 @@
 #include "GlWindow.h"
 #include "pakviewer.h"
 #include "FileAssociation.h"
+#include "app_info.h"
 #include "stringlib.h"
 #include "SpriteModel.h"
 
 SPRViewer *g_SPRViewer = 0;
-char g_appTitle[] = "Half_life Sprite Viewer v0.1 beta";
+char g_appTitle[] = APP_TITLE_STR;
 static char recentFiles[8][256] = { "", "", "", "", "", "", "", "" };
 extern bool bUseWeaponOrigin;
 bool g_bStopPlaying = false;

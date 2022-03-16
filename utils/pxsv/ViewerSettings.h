@@ -19,7 +19,8 @@
 #define INCLUDED_VIEWERSETTINGS
 
 #include <basetypes.h>
-#include <mathlib.h>
+#include "vector.h"
+#include "mathlib.h"
 
 typedef struct
 {

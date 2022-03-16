@@ -11,6 +11,7 @@
 #ifndef INCLUDED_SPRITEMODEL
 #define INCLUDED_SPRITEMODEL
 
+#include "vector.h"
 #include "mathlib.h"
 
 /*
@@ -23,40 +24,7 @@ Alias models are position independent, so the cache manager can move them.
 */
 
 #include "sprite.h"
-
-typedef struct mspriteframe_s
-{
-	int		width;
-	int		height;
-	float		up, down, left, right;
-	int		gl_texturenum;
-} mspriteframe_t;
-
-typedef struct
-{
-	int		numframes;
-	float		*intervals;
-	mspriteframe_t	*frames[1];
-} mspritegroup_t;
-
-typedef struct
-{
-	frametype_t	type;
-	mspriteframe_t	*frameptr;
-} mspriteframedesc_t;
-
-typedef struct
-{
-	short		type;
-	short		texFormat;
-	int		maxwidth;
-	int		maxheight;
-	int		numframes;
-	int		radius;
-	int		facecull;
-	int		synctype;
-	mspriteframedesc_t	frames[1];
-} msprite_t;
+#include "com_model.h"
 
 class SpriteModel
 {

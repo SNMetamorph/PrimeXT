@@ -427,7 +427,7 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 	for( i = 0; i < m_pspritehdr->numframes; i++ )
 	{
 		frametype_t frametype = pframetype->type;
-		psprite->frames[i].type = frametype;
+		psprite->frames[i].type = static_cast<spriteframetype_t>(frametype);
 
 		switch( frametype )
 		{

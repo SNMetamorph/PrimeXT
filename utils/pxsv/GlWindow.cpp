@@ -20,12 +20,14 @@
 #include <mxTga.h>
 #include <mxPcx.h>
 #include <mxBmp.h>
+
 #include <gl.h>
 #include <GL/glu.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <stringlib.h>
+#include "stringlib.h"
+#include "vector.h"
 #include "ViewerSettings.h"
 #include "GlWindow.h"
 #include "SpriteModel.h"
