@@ -206,6 +206,7 @@ static bool ValidateSprite( const char *path )
 	byte	buffer[256];
 	dsprite_t	*phdr;
 	FILE	*fp;
+	int remainBytes = 0;
 
 	if( !path ) return false;
 
@@ -213,10 +214,11 @@ static bool ValidateSprite( const char *path )
 	if(( fp = fopen( path, "rb" )) == NULL )
 		return false;
 
-	fread( buffer, sizeof( buffer ), 1, fp );
-	fclose( fp );
+	fread(buffer, sizeof( buffer ), 1, fp);
+	remainBytes = ftell(fp);
+	fclose(fp);
 
-	if( ftell( fp ) < sizeof( dsprite_t ))
+	if (remainBytes < sizeof(dsprite_t))
 		return false;
 
 	// skip invalid signature
