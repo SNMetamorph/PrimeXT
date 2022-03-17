@@ -21,6 +21,7 @@ GNU General Public License for more details.
 #include "cubemap.h"
 #include "fresnel.h"
 #include "parallax.h"
+#include "material.h"
 #include "fog.h"
 
 uniform sampler2D	u_DecalMap;
@@ -55,15 +56,14 @@ varying mat3	var_MatrixTBN;
 
 void main( void )
 {
-	vec3 light = vec3( 0.0 );
-	vec3 gloss = vec3( 0.0 );
-
+	MaterialData mat;
+	LightingData lighting;
+	
 #if defined( ALPHA_TEST )
 	if( colormap2D( u_ColorMap, var_TexDiffuse.zw ).a <= BMODEL_ALPHA_THRESHOLD )
 		discard;
 #endif
 	vec3 V = normalize( var_ViewDir );
-	vec4 glossmap = vec4( 0.0 );
 	vec2 vecTexCoord = var_TexDiffuse.xy;
 
 #if defined( PARALLAX_SIMPLE )
@@ -73,14 +73,15 @@ void main( void )
 #elif defined( PARALLAX_OCCLUSION )
 	vecTexCoord = ParallaxOcclusionMap(var_TexDiffuse.xy, var_TangentViewDir).xy; 
 #endif
-	vec4 diffuse = decalmap2D( u_DecalMap, vecTexCoord );
+	vec4 albedo = decalmap2D( u_DecalMap, vecTexCoord );
+	vec4 result = albedo;
 
 #if defined( APPLY_COLORBLEND )
-	float alpha = (( diffuse.r * 2.0 ) + ( diffuse.g * 2.0 ) + ( diffuse.b * 2.0 )) / 3.0;
+	float alpha = (( result.r * 2.0 ) + ( result.g * 2.0 ) + ( result.b * 2.0 )) / 3.0;
 #endif
 
 #if defined( DECAL_PUDDLE )
-	diffuse = vec4( 0.19, 0.16, 0.11, 1.0 ); // replace with puddle color
+	result = vec4( 0.19, 0.16, 0.11, 1.0 ); // replace with puddle color
 #endif
 
 #if defined( HAS_NORMALMAP )
@@ -103,32 +104,39 @@ void main( void )
 	vec3 N = normalize( var_Normal );
 #endif
 
-#if defined( HAS_GLOSSMAP ) && defined( HAS_DELUXEMAP )
-	glossmap = colormap2D( u_GlossMap, vecTexCoord );
-#endif
+// setup material params values
+#if defined( HAS_GLOSSMAP )
+	// get params from texture
+	mat = MaterialFetchTexture(colormap2D( u_GlossMap, vecTexCoord ));
+#else // !HAS_GLOSSMAP
+	// use default parameter values
+	mat.smoothness = u_Smoothness;
+	mat.metalness = 0.0;
+	mat.ambientOcclusion = 1.0;
+#endif // HAS_GLOSSMAP
 
 #if defined( APPLY_STYLE0 )
-	ApplyLightStyle( var_TexLight0, N, V, glossmap.rgb, u_Smoothness, light, gloss );
+	ApplyLightStyle( var_TexLight0, N, V, albedo, mat, lighting );
 #endif
 #if defined( APPLY_STYLE1 )
-	ApplyLightStyle( var_TexLight1, N, V, glossmap.rgb, u_Smoothness, light, gloss );
+	ApplyLightStyle( var_TexLight1, N, V, albedo, mat, lighting );
 #endif
 #if defined( APPLY_STYLE2 )
-	ApplyLightStyle( var_TexLight2, N, V, glossmap.rgb, u_Smoothness, light, gloss );
+	ApplyLightStyle( var_TexLight2, N, V, albedo, mat, lighting );
 #endif
 #if defined( APPLY_STYLE3 )
-	ApplyLightStyle( var_TexLight3, N, V, glossmap.rgb, u_Smoothness, light, gloss );
+	ApplyLightStyle( var_TexLight3, N, V, albedo, mat, lighting );
 #endif
 #if defined( APPLY_STYLE0 ) || defined( APPLY_STYLE1 ) || defined( APPLY_STYLE2 ) || defined( APPLY_STYLE3 )
-	// convert values back to normal range and clamp it
-	light = min(( light * LIGHTMAP_SHIFT ), 1.0 );
-	gloss = min(( gloss * LIGHTMAP_SHIFT ), 1.0 );
+	// convert values back to normal range and clamp it (should be only for LDR-lightmaps)
+	lighting.diffuse = min(( lighting.diffuse * LIGHTMAP_SHIFT ), 1.0 );
+	lighting.specular = min(( lighting.specular * LIGHTMAP_SHIFT ), 1.0 );
 #endif
 
 #if !defined( APPLY_COLORBLEND )
-	diffuse.rgb *= light;
+	result.rgb *= lighting.diffuse; // apply diffuse lighting
 #endif // APPLY_COLORBLEND
-	diffuse.rgb += gloss;
+	result.rgb += lighting.specular; // apply specular lighting
 
 #if defined( PLANAR_REFLECTION ) || defined( REFLECTION_CUBEMAP )
 #if defined( REFLECTION_CUBEMAP )
@@ -138,19 +146,19 @@ void main( void )
 	vec3 mirror = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, u_RefractScale ).rgb;
 #endif
 	float eta = GetFresnel( V, PUDDLE_NORMAL, WATER_F0_VALUE, FRESNEL_FACTOR ) * u_ReflectScale;
-	diffuse.rgb = mix( diffuse.rgb, mirror.rgb, eta );
+	result.rgb = mix( result.rgb, mirror.rgb, eta );
 #if defined( APPLY_COLORBLEND )
-	diffuse.rgb = mix( diffuse.rgb, vec3( 0.5 ), alpha );
+	result.rgb = mix( result.rgb, vec3( 0.5 ), alpha );
 #endif
 #endif
 
 #if defined( APPLY_FOG_EXP )
 #if defined( APPLY_COLORBLEND )
-	diffuse.rgb = CalculateFog(diffuse.rgb, u_FogParams, length(u_ViewOrigin - var_Position));
+	result.rgb = CalculateFog(result.rgb, u_FogParams, length(u_ViewOrigin - var_Position));
 #else
 	float fogFactor = saturate(exp2(-u_FogParams.w * length(u_ViewOrigin - var_Position)));
-	diffuse.a *= fogFactor; // modulate alpha
+	result.a *= fogFactor; // modulate alpha
 #endif
 #endif
-	gl_FragColor = diffuse;
+	gl_FragColor = result;
 }

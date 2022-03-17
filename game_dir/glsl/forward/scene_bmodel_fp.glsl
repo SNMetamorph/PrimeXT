@@ -85,11 +85,12 @@ varying vec3	var_TangentViewDir;
 
 void main( void )
 {
-	vec3 light = vec3( 0.0 );
-	vec3 gloss = vec3( 0.0 );
+	vec4 albedo = vec4( 0.0 );
+	vec4 result = vec4( 0.0 );
 	vec2 vec_TexDiffuse = var_TexDiffuse;
 	MaterialData mat;
-	
+	LightingData lighting;
+
 #if defined( APPLY_TERRAIN )
 	vec4 mask0, mask1, mask2, mask3;
 	TerrainReadMask( var_TexGlobal, mask0, mask1, mask2, mask3 );
@@ -155,33 +156,34 @@ void main( void )
 #endif // LIQUID_UNDERWATER
 #endif // LIQUID_SURFACE
 
-// compute the diffuse term
+// compute the result term
 #if defined( PLANAR_REFLECTION )
-	vec4 diffuse = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, u_RefractScale );
+	albedo = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, u_RefractScale );
 #elif defined( APPLY_TERRAIN )
-	vec4 diffuse = TerrainMixDiffuse( u_ColorMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
+	albedo = TerrainMixDiffuse( u_ColorMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 #else
-	vec4 diffuse = colormap2D( u_ColorMap, vec_TexDiffuse );
+	albedo = colormap2D( u_ColorMap, vec_TexDiffuse );
 #endif
+	result = albedo;
 
 #if defined( HAS_DETAIL )
 #if defined( APPLY_TERRAIN )
-	diffuse.rgb *= detailmap2D( u_DetailMap, var_TexGlobal ).rgb * DETAIL_SCALE;
+	result.rgb *= detailmap2D( u_DetailMap, var_TexGlobal ).rgb * DETAIL_SCALE;
 #else
-	diffuse.rgb *= detailmap2D( u_DetailMap, var_TexDetail ).rgb * DETAIL_SCALE;
+	result.rgb *= detailmap2D( u_DetailMap, var_TexDetail ).rgb * DETAIL_SCALE;
 #endif
 #endif
 
 #if !defined( LIQUID_SURFACE )
-	diffuse.rgb *= u_RenderColor.rgb;
+	result.rgb *= u_RenderColor.rgb;
 #endif
 
 #if defined( SIGNED_DISTANCE_FIELD )
-	diffuse.a *= smoothstep( SOFT_EDGE_MIN, SOFT_EDGE_MAX, diffuse.a ); 
+	result.a *= smoothstep( SOFT_EDGE_MIN, SOFT_EDGE_MAX, result.a ); 
 #endif
 
 #if !defined( ALPHA_GLASS ) && defined( TRANSLUCENT )
-	diffuse.a *= (u_RenderColor.a);
+	result.a *= (u_RenderColor.a);
 #endif
 	vec3 V = normalize( var_ViewDir );
 
@@ -189,38 +191,35 @@ void main( void )
 #if !defined( LIGHTING_FULLBRIGHT )
 	
 #if defined( APPLY_STYLE0 )
-	ApplyLightStyle( var_TexLight0, N, V, vec3(mat.smoothness), mat.smoothness, light, gloss );
+	ApplyLightStyle( var_TexLight0, N, V, albedo, mat, lighting );
 #endif
 #if defined( APPLY_STYLE1 )
-	ApplyLightStyle( var_TexLight1, N, V, vec3(mat.smoothness), mat.smoothness, light, gloss );
+	ApplyLightStyle( var_TexLight1, N, V, albedo, mat, lighting );
 #endif
 #if defined( APPLY_STYLE2 )
-	ApplyLightStyle( var_TexLight2, N, V, vec3(mat.smoothness), mat.smoothness, light, gloss );
+	ApplyLightStyle( var_TexLight2, N, V, albedo, mat, lighting );
 #endif
 #if defined( APPLY_STYLE3 )
-	ApplyLightStyle( var_TexLight3, N, V, vec3(mat.smoothness), mat.smoothness, light, gloss );
+	ApplyLightStyle( var_TexLight3, N, V, albedo, mat, lighting );
 #endif
 #if defined( APPLY_STYLE0 ) || defined( APPLY_STYLE1 ) || defined( APPLY_STYLE2 ) || defined( APPLY_STYLE3 )
 	// convert values back to normal range and clamp it
-	light = min(( light * LIGHTMAP_SHIFT ), 1.0 );
-	gloss = min(( gloss * LIGHTMAP_SHIFT ), 1.0 );
+	lighting.diffuse = min(( lighting.diffuse * LIGHTMAP_SHIFT ), 1.0 );
+	lighting.specular = min(( lighting.specular * LIGHTMAP_SHIFT ), 1.0 );
 #endif
 
 #if defined( LIGHTVEC_DEBUG )
-	light = normalize(( light + 1.0 ) * 0.5 ); // convert range to [0..1]
+	lighting.diffuse = normalize(( lighting.diffuse + 1.0 ) * 0.5 ); // convert range to [0..1]
 #else
-	diffuse.rgb *= light;
-
-#if defined( HAS_GLOSSMAP )
-	diffuse.rgb *= saturate( 1.0 - GetLuminance( gloss ));
-	diffuse.rgb += gloss;
-#endif
+	// apply diffuse & specular lighting
+	result.rgb *= lighting.diffuse;
+	result.rgb += lighting.specular;
 #endif
 
 #endif // !LIGHTING_FULLBRIGHT
 
 #if defined( HAS_LUMA )
-	diffuse.rgb += texture2D( u_GlowMap, vec_TexDiffuse ).rgb;
+	result.rgb += texture2D( u_GlowMap, vec_TexDiffuse ).rgb;
 #endif
 
 #if defined( REFLECTION_CUBEMAP )
@@ -232,42 +231,42 @@ void main( void )
 #if defined( TRANSLUCENT )
 	vec3 screenmap = GetScreenColor( N, waterRefractFactor );
 #if defined( PLANAR_REFLECTION )
-	diffuse.a = GetFresnel( saturate(dot(V, N)), WATER_F0_VALUE, FRESNEL_FACTOR );
+	result.a = GetFresnel( saturate(dot(V, N)), WATER_F0_VALUE, FRESNEL_FACTOR );
 #else
-	diffuse.a = 1.0 - u_RenderColor.a;
+	result.a = 1.0 - u_RenderColor.a;
 #endif // PLANAR_REFLECTION
 
 #if defined( LIQUID_SURFACE )
 	vec3 waterColor = u_RenderColor.rgb;
 	vec3 borderSmooth = mix( screenmap, screenmap * waterColor, waterBorderFactor ); // smooth transition between water and ground
-	vec3 refracted = mix( borderSmooth, waterColor * light, waterAbsorbFactor ); // mix between refracted light and own water color
+	vec3 refracted = mix( borderSmooth, waterColor * lighting.diffuse, waterAbsorbFactor ); // mix between refracted light and own water color
 #if defined( REFLECTION_CUBEMAP )
 	// blend refracted and reflected part together 
 	float fresnel = GetFresnel( V, N, WATER_F0_VALUE, FRESNEL_FACTOR );
-	diffuse.rgb = refracted + reflected * fresnel * waterBorderFactor * u_ReflectScale; 
+	result.rgb = refracted + reflected * fresnel * waterBorderFactor * u_ReflectScale; 
 #else
-	diffuse.rgb = refracted;
+	result.rgb = refracted;
 #endif // REFLECTION_CUBEMAP
 
 #else // !LIQUID_SURFACE
 	// for translucent non-liquid stuff (glass, etc.)
-	diffuse.rgb = mix( screenmap, diffuse.rgb, diffuse.a * u_RenderColor.a );
+	result.rgb = mix( screenmap, result.rgb, result.a * u_RenderColor.a );
 #endif // LIQUID_SURFACE
 #else // !TRANSLUCENT
 #if defined( REFLECTION_CUBEMAP )
 	float fresnel = GetFresnel( V, N, GENERIC_F0_VALUE, FRESNEL_FACTOR );
-	diffuse.rgb += reflected * fresnel * u_ReflectScale * mat.smoothness;
+	result.rgb += reflected * fresnel * u_ReflectScale * mat.smoothness;
 #endif
 #endif // TRANSLUCENT
 
 #if defined( APPLY_FOG_EXP )
-	diffuse.rgb = CalculateFog(diffuse.rgb, u_FogParams, length(u_ViewOrigin - var_Position));
+	result.rgb = CalculateFog(result.rgb, u_FogParams, length(u_ViewOrigin - var_Position));
 #endif
 
 #if defined( LIGHTMAP_DEBUG ) || defined( LIGHTVEC_DEBUG )
-	diffuse.rgb = light;
+	result.rgb = lighting.diffuse;
 #endif
 
 	// compute final color
-	gl_FragColor = diffuse;
+	gl_FragColor = result;
 }

@@ -18,6 +18,7 @@ GNU General Public License for more details.
 #include "lightmodel.h"
 #include "texfetch.h"
 #include "parallax.h"
+#include "material.h"
 #include "fog.h"
 
 uniform sampler2D	u_DecalMap;
@@ -48,9 +49,13 @@ varying vec3	var_Position;
 
 void main( void )
 {
+	MaterialData mat;
+	LightingData lighting;
 	vec2 vecTexCoord = var_TexDiffuse.xy;
 	vec3 V = normalize( var_ViewDir );
-	if( bool( gl_FrontFacing )) V = -V;
+	if( bool( gl_FrontFacing )) {
+		V = -V;
+	}
 
 #if defined( PARALLAX_SIMPLE )
 	float offset = texture2D( u_HeightMap, vecTexCoord ).r * 0.04 - 0.02;
@@ -64,13 +69,14 @@ void main( void )
 	if( colormap2D( u_ColorMap, var_TexDiffuse.zw ).a <= STUDIO_ALPHA_THRESHOLD )
 		discard;
 #endif
-	vec4 diffuse = decalmap2D( u_DecalMap, vecTexCoord );
+	vec4 albedo = decalmap2D( u_DecalMap, vecTexCoord );
+	vec4 result = albedo;
 
 	// decal fading on monster corpses
 #if defined( APPLY_COLORBLEND )
-	diffuse.rgb = mix( vec3( 0.5 ), diffuse.rgb, u_RenderAlpha );
+	result.rgb = mix( vec3( 0.5 ), result.rgb, u_RenderAlpha );
 #else
-	diffuse.a *= u_RenderAlpha;
+	result.a *= u_RenderAlpha;
 #endif
 
 #if defined( HAS_NORMALMAP )
@@ -81,53 +87,49 @@ void main( void )
 	// two side materials support
 	if( bool( gl_FrontFacing )) N = -N;
 
+// setup material params values
+#if defined( HAS_GLOSSMAP )
+	// get params from texture
+	mat = MaterialFetchTexture(colormap2D( u_GlossMap, vecTexCoord ));
+#else // !HAS_GLOSSMAP
+	// use default parameter values
+	mat.smoothness = u_Smoothness;
+	mat.metalness = 0.0;
+	mat.ambientOcclusion = 1.0;
+#endif // HAS_GLOSSMAP
+
 #if !defined( LIGHTING_FULLBRIGHT )
-	vec3 specular = vec3( 0.0 );
-	vec4 glossmap = vec4( 0.0 );
-	vec3 light = vec3( 1.0 );
+	lighting.specular = vec3( 0.0 );
+	lighting.diffuse = vec3( 1.0 );
 
 	vec3 L = normalize( var_LightDir );
 #if defined( LIGHTVEC_DEBUG )
-	light = ( normalize( N + L ) + 1.0 ) * 0.5;
-#else //!LIGHTVEC_DEBUG
+	lighting.diffuse = ( normalize( N + L ) + 1.0 ) * 0.5;
+#else // !LIGHTVEC_DEBUG
 #if defined( HAS_NORMALMAP )
-#if defined (VERTEX_LIGHTING)
-	float NdotB = ComputeStaticBump( L, N, u_AmbientFactor );
-	float factor = DiffuseBRDF( N, V, L, u_Smoothness, NdotB );
-	light = (var_DiffuseLight * factor) + (var_AmbientLight);
+#if defined( VERTEX_LIGHTING )
+	lighting = ComputeLighting( N, V, L, albedo.rgb, var_DiffuseLight, mat );
+	lighting.diffuse += var_AmbientLight;
 #else
-	float factor = u_LightShade.y;
-	float NdotL = (( dot( N, -L ) + ( SHADE_LAMBERT - 1.0 )) / SHADE_LAMBERT );
-	if( NdotL > 0.0 ) factor -= DiffuseBRDF( N, V, L, u_Smoothness, saturate( NdotL )) * u_LightShade.y;
-	light = (var_DiffuseLight * factor) + (var_AmbientLight);
+	lighting = ComputeLighting( N, V, L, albedo.rgb, var_DiffuseLight, mat );
+	lighting.specular *= u_LightShade.y;
+	lighting.diffuse *= u_LightShade.y;
+	lighting.diffuse += var_AmbientLight;
 #endif
-#else //!HAS_NORMALMAP
-	light = var_AmbientLight + var_DiffuseLight;
-#endif//HAS_NORMALMAP
-#endif//LIGHTVEC_DEBUG
-
-	diffuse.rgb *= light;
-
-// compute the specular term
-#if defined( HAS_GLOSSMAP )
-	float NdotL2 = saturate( dot( N, L ));
-	glossmap = colormap2D( u_GlossMap, vecTexCoord );
-	specular = SpecularBRDF( N, V, L, u_Smoothness, glossmap.rgb ) * NdotL2;
-	diffuse.rgb *= saturate( 1.0 - GetLuminance( specular ));
-#if defined (VERTEX_LIGHTING)
-	diffuse.rgb += var_DiffuseLight * specular;
-#else
-	diffuse.rgb += var_DiffuseLight * specular * u_LightShade.y; // prevent parazite lighting
-#endif
-#endif// HAS_GLOSSMAP
+#else // !HAS_NORMALMAP
+	lighting.diffuse = var_AmbientLight + var_DiffuseLight;
+#endif // HAS_NORMALMAP
+#endif // LIGHTVEC_DEBUG
+	result.rgb *= lighting.diffuse; // apply diffuse/ambient lighting
+	result.rgb += lighting.specular; // apply specular lighting
 
 #if defined( LIGHTMAP_DEBUG ) || defined( LIGHTVEC_DEBUG )
-	diffuse.rgb = light;
+	result.rgb = lighting.diffuse;
 #endif
-#endif// LIGHTING_FULLBRIGHT
+#endif // LIGHTING_FULLBRIGHT
 
 #if defined( APPLY_FOG_EXP )
-	diffuse.rgb = CalculateFog(diffuse.rgb, u_FogParams, length(u_ViewOrigin - var_Position));
+	result.rgb = CalculateFog(result.rgb, u_FogParams, length(u_ViewOrigin - var_Position));
 #endif
-	gl_FragColor = diffuse;
+	gl_FragColor = result;
 }

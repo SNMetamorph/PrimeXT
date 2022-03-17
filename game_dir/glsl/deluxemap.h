@@ -17,6 +17,8 @@ GNU General Public License for more details.
 #define DELUXEMAP_H
 
 #include "texfetch.h"
+#include "lightmodel.h"
+#include "material.h"
 
 uniform sampler2D		u_LightMap;
 uniform sampler2D		u_DeluxeMap;
@@ -24,33 +26,35 @@ uniform float		u_AmbientFactor;
 uniform float		u_DiffuseFactor;
 uniform float		u_LightGamma;
 
-void ApplyLightStyle( const vec3 lminfo, const vec3 N, const vec3 V, const vec3 glossmap, float smoothness, inout vec3 light, inout vec3 gloss )
+void ApplyLightStyle( const vec3 lminfo, const vec3 N, const vec3 V, const vec4 albedo, const MaterialData mat, inout LightingData lighting )
 {
+	const float lightstyleMult = lminfo.z;
 	vec4 lmsrc = lightmap2D( u_LightMap, lminfo.xy, u_LightGamma );
-	vec3 lightmap = lmsrc.rgb * LIGHT_SCALE;
-
+	vec3 lightmap = lmsrc.rgb * lightstyleMult;
+	
 #if defined( HAS_DELUXEMAP )
 	vec3 deluxmap = deluxemap2D( u_DeluxeMap, lminfo.xy );
 	vec3 L = normalize( deluxmap );
-	float NdotL = saturate( dot( N, L ));
-	float NdotB = ComputeStaticBump( L, N, u_AmbientFactor );
 
-#if defined( HAS_NORMALMAP )
-	lightmap *= DiffuseBRDF( N, V, L, smoothness, NdotB );
+#if defined( APPLY_PBS )
+	// ideally, this should be done in pxrad, but it's not and we should do it here :)
+	float flatLightFactor = max(dot(L, vec3(0.0, 0.0, 1.0)), 0.025);
+	lightmap /= flatLightFactor;
 #endif
-#endif
-
-#if defined( HAS_DELUXEMAP ) && defined( LIGHTVEC_DEBUG )
-	light += ( N + deluxmap ) * lminfo.z;
+	LightingData lighting2 = ComputeLighting(N, V, L, albedo.rgb, lightmap, mat);
+	
+#if defined( LIGHTVEC_DEBUG )
+	lighting.diffuse += (N + deluxmap) * lightstyleMult;
 #else
-	light += (lightmap) * lminfo.z;
+	lighting.diffuse += lighting2.diffuse; // diffuse lighting
+	lighting.specular += lighting2.specular; // specular lighting
 #endif
 
-#if defined( HAS_DELUXEMAP ) && defined( HAS_GLOSSMAP )
-	float scaleD = smoothstep( length( lightmap * 4.0 ), 0.0, u_DiffuseFactor );
-	vec3 specular = SpecularBRDF( N, V, L, smoothness, glossmap ) * lightmap * lminfo.z * lmsrc.a * NdotL;
-	gloss += specular;
-#endif
+#else // !HAS_DELUXEMAP
+	// fallback for old maps without deluxedata
+	lighting.diffuse += lightmap; 
+	return;
+#endif // HAS_DELUXEMAP
 }
 
-#endif//DELUXEMAP_H
+#endif // DELUXEMAP_H

@@ -97,11 +97,10 @@ void main( void )
 	if( shadow <= 0.0 ) discard; // fast reject
 
 	vec3 albedo = diffuse.rgb;
-	float factor = DiffuseBRDF( N, V, L, glossmap.a, NdotL );
-	diffuse.rgb *= light.rgb * factor * atten * shadow;
+	diffuse.rgb *= light.rgb * atten * shadow;
 #if defined( HAS_GLOSSMAP )
-	vec3 gloss = SpecularBRDF( N, V, L, glossmap.a, glossmap.rgb ) * light * NdotL * atten;
-	diffuse.rgb += gloss * shadow;
+	//vec3 gloss = SpecularBRDF( N, V, L, glossmap.a, glossmap.rgb ) * light * NdotL * atten;
+	diffuse.rgb += shadow; // * gloss;
 #endif
 	gl_FragColor = vec4( diffuse, 1.0 );
 }

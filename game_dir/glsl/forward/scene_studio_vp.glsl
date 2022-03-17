@@ -158,10 +158,7 @@ void main( void )
 	vec3 L = normalize( srcL );
 	vec3 V = normalize( srcV );
 #if !defined( HAS_NORMALMAP )
-	float factor = u_LightShade.y;
-	float NdotL = (( dot( N, -L ) + ( SHADE_LAMBERT - 1.0 )) / SHADE_LAMBERT );
-	if( NdotL > 0.0 ) factor -= DiffuseBRDF( N, V, L, u_Smoothness, saturate( NdotL )) * u_LightShade.y;
-	var_DiffuseLight = u_LightDiffuse * factor * LIGHT_SCALE;
+	var_DiffuseLight = u_LightDiffuse * u_LightShade.y * LIGHT_SCALE;
 #else
 	var_DiffuseLight = u_LightDiffuse * LIGHT_SCALE;
 #endif

@@ -19,8 +19,6 @@ GNU General Public License for more details.
 #include "const.h"
 #include "material.h"
 
-#define FALL_LIGHTMODEL_BLINN		// default lightmodel Blinn\Phong
-
 struct LightingData
 {
 	vec3 diffuse;
@@ -47,65 +45,6 @@ float LightAttenuation(vec3 lightVec, float radius)
 float SmoothnessToRoughness(float smoothness)
 {
 	return (1.0 - smoothness) * (1.0 - smoothness);
-}
-
-float DiffuseBRDF( vec3 N, vec3 V, vec3 L, float Gloss, float NdotL )
-{
-#if defined( APPLY_PBS )
-	// TODO: Share computations with Specular BRDF
-	float roughness = SmoothnessToRoughness( min( Gloss, 1.0 ));
-	float VdotH = saturate( dot( V, normalize( V + L )));
-	float NdotV = max( abs( dot( N, V )) + 1e-9, 0.1 );
-	
-	// Burley BRDF with renormalization to conserve energy
-	float energyBias = 0.5 * roughness;
-	float energyFactor = mix( 1.0, 1.0 / 1.51, roughness );
-	float fd90 = energyBias + 2.0 * VdotH * VdotH * roughness;
-	float scatterL = mix( 1.0, fd90, pow( 1.0 - NdotL, 5.0 ));
-	float scatterV = mix( 1.0, fd90, pow( 1.0 - NdotV, 5.0 ));
-
-	return scatterL * scatterV * energyFactor * NdotL;
-#else
-	return NdotL;
-#endif
-}
-
-vec3 SpecularBRDF( vec3 N, vec3 V, vec3 L, float m, vec3 f0, float NormalizationFactor )
-{
-	vec3 H = normalize( V + L );
-	float m2 = m * m;
-
-	// GGX NDF
-	float NdotH = saturate( dot( N, H ));
-	float spec = ( NdotH * m2 - NdotH ) * NdotH + 1.0;
-	spec = m2 / ( spec * spec ) * NormalizationFactor;
-
-	// Correlated Smith Visibility Term (including Cook-Torrance denominator)
-	float NdotL = saturate( dot( N, L ));
-	float NdotV = abs( dot( N, V )) + 1e-9;
-	float Gv = NdotL * sqrt(( -NdotV * m2 + NdotV ) * NdotV + m2 );
-	float Gl = NdotV * sqrt(( -NdotL * m2 + NdotL ) * NdotL + m2 );
-	spec *= 0.5 / ( Gv + Gl );
-
-	// Fresnel (Schlick approximation)
-	float f90 = saturate( dot( f0, vec3( 0.33333 )) / 0.02 );  // Assume micro-occlusion when reflectance is below 2%
-	vec3 fresnel = mix( f0, vec3( f90 ), pow( 1.0 - saturate( dot( L, H )), 5.0 ));
-
-	return fresnel * spec * 0.5;
-}
-
-vec3 SpecularBRDF( vec3 N, vec3 V, vec3 L, float Gloss, vec3 SpecCol )
-{
-#if defined( APPLY_PBS )
-	float m = max( SmoothnessToRoughness( Gloss ), 0.001 );  // Prevent highlights from getting too tiny without area lights
-	return SpecularBRDF( N, V, L, m, SpecCol, 1.0 );
-#else
-#if defined( FALL_LIGHTMODEL_BLINN )
-	return SpecCol * pow( max( dot( N, normalize( V + L )), 0.0 ), ( Gloss * Gloss ) * 256.0 ); // Blinn
-#else
-	return SpecCol * pow( max( dot( reflect( -L, N ), V ), 0.0 ), ( Gloss * Gloss ) * 256.0 ); // Phong
-#endif
-#endif
 }
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
@@ -219,4 +158,4 @@ LightingData ComputeLighting(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColo
 	return lighting;
 }
 
-#endif//LIGHTMODEL_H
+#endif // LIGHTMODEL_H
