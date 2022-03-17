@@ -24,13 +24,15 @@ GNU General Public License for more details.
 
 float GetFresnel( float cosTheta, float F0, float power )
 {
-	// Schlick approximation, use abs here for two-sided surfaces, like water
-	return F0 + (1.0 - F0) * pow(1.0 - abs(cosTheta), power);
+	// Schlick approximation
+	return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), power);
 }
 
 float GetFresnel( const vec3 v, const vec3 n, float F0, float power )
 {
-	return GetFresnel(dot(v, n), F0, power);
+	// solution for disabling fresnel underwater
+	float cosTheta = dot(v, n);
+	return mix(0.0, GetFresnel(cosTheta, F0, power), step(0.0, cosTheta));
 }
 
 #endif//FRESNEL_H
