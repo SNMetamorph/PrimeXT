@@ -36,11 +36,9 @@ void ApplyLightStyle( const vec3 lminfo, const vec3 N, const vec3 V, const vec4 
 	vec3 deluxmap = deluxemap2D( u_DeluxeMap, lminfo.xy );
 	vec3 L = normalize( deluxmap );
 
-#if defined( APPLY_PBS )
 	// ideally, this should be done in pxrad, but it's not and we should do it here :)
 	float flatLightFactor = max(dot(L, vec3(0.0, 0.0, 1.0)), 0.025);
 	lightmap /= flatLightFactor;
-#endif
 	LightingData lighting2 = ComputeLighting(N, V, L, albedo.rgb, lightmap, mat);
 	
 #if defined( LIGHTVEC_DEBUG )
