@@ -1,0 +1,3 @@
+[submodule "external/vgui"]
+	path = external/vgui
+	url = https://github.com/FWGS/vgui-dev.git
