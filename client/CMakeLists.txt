@@ -70,6 +70,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"../public"
 )
 
+if(ENABLE_VGUI_SUPPORT)
+	target_include_directories(${PROJECT_NAME} PRIVATE
+		"${CMAKE_SOURCE_DIR}/external/vgui/include"
+	)
+endif()
+
 if(HAVE_TGMATH_H)
 	target_compile_definitions(${PROJECT_NAME} PRIVATE HAVE_TGMATH_H=1)
 endif()
@@ -109,6 +115,15 @@ endif()
 
 # set static compiler runtime
 set_compiler_runtime(${PROJECT_NAME} STATIC)
+
+if(ENABLE_VGUI_SUPPORT)
+	find_library(LIBRARY_VGUI
+		NAMES vgui
+		HINTS "${CMAKE_SOURCE_DIR}/external/vgui/lib"
+		PATH_SUFFIXES win32_vc6
+	)
+	target_link_libraries(${PROJECT_NAME} "${LIBRARY_VGUI}")
+endif()
 
 if(WIN32)
 	target_link_libraries(${PROJECT_NAME} user32.lib)
