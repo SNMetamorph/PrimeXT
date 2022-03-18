@@ -19,7 +19,7 @@ set(DIR_UTILS_OUTPUT
 
 message(STATUS "Utility binaries output directory: ${DIR_UTILS_OUTPUT}")
 if(MSVC)
-    set_target_properties(pxstudiomdl pxmv pxbsp pxcsg pxrad pxvis PROPERTIES 
+    set_target_properties(pxstudiomdl pxmv pxbsp pxcsg pxrad pxvis pxsv PROPERTIES 
 		ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${DIR_UTILS_OUTPUT} 
 		ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${DIR_UTILS_OUTPUT}
 		LIBRARY_OUTPUT_DIRECTORY_DEBUG ${DIR_UTILS_OUTPUT}
