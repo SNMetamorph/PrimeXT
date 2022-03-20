@@ -226,9 +226,9 @@ SPRViewer :: SPRViewer() : mxWindow( 0, 0, 0, 0, 0, g_appTitle, mxWindow::Normal
 
 SPRViewer::~SPRViewer ()
 {
-	g_viewerSettings.showMaximized = isMaximized();
-	saveRecentFiles ();
-	SaveViewerSettings ();
+	//g_viewerSettings.showMaximized = isMaximized();
+	//saveRecentFiles ();
+	//SaveViewerSettings ();
 }
 
 void SPRViewer :: checkboxSet( int id, bool bState )
@@ -353,7 +353,7 @@ SPRViewer::handleEvent (mxEvent *event)
 		break;
 		case IDC_FILE_SAVEMODEL:
 		{
-			char *ptr = (char *) mxGetSaveFileName (this, g_viewerSettings.spritePath, "*.spr", g_viewerSettings.spritePath);
+			char *ptr = (char *) mxGetSaveFileName (this, g_viewerSettings.spritePath, "*.spr");
 			if (!ptr)
 				break;
 
@@ -631,10 +631,10 @@ SPRViewer::handleEvent (mxEvent *event)
 				tbStop->setLabel ("Play");
 				g_bStopPlaying = true;
 				g_nCurrFrame = g_spriteModel.setFrame( -1 );
-				leFrame->setLabel ("%d", g_nCurrFrame);
-				bPrevFrame->setEnabled (true);
-				leFrame->setEnabled (true);
-				bNextFrame->setEnabled (true);
+				leFrame->setLabel( va("%d", g_nCurrFrame) );
+				bPrevFrame->setEnabled(true);
+				leFrame->setEnabled(true);
+				bNextFrame->setEnabled(true);
 			}
 			else
 			{
@@ -653,7 +653,7 @@ SPRViewer::handleEvent (mxEvent *event)
 		case IDC_PREVFRAME:
 		{
 			g_nCurrFrame = g_spriteModel.setFrame( g_nCurrFrame - 1 );
-			leFrame->setLabel ("%d", g_nCurrFrame);
+			leFrame->setLabel( va("%d", g_nCurrFrame) );
 			g_bEndOfSequence = false;
 		}
 		break;
@@ -669,7 +669,7 @@ SPRViewer::handleEvent (mxEvent *event)
 		case IDC_NEXTFRAME:
 		{
 			g_nCurrFrame = g_spriteModel.setFrame( g_nCurrFrame + 1 );
-			leFrame->setLabel( "%d", g_nCurrFrame );
+			leFrame->setLabel( va("%d", g_nCurrFrame) );
 			g_bEndOfSequence = false;
 		}
 		break;
@@ -811,7 +811,8 @@ int main( int argc, char *argv[] )
 		}
 	}
 
-	LoadViewerSettings();
+	// TODO use json config file instead registry
+	//LoadViewerSettings();
 
 	mx::init (argc, argv);
 
@@ -820,8 +821,9 @@ int main( int argc, char *argv[] )
 	g_SPRViewer->setBounds (20, 20, 640, 540);
 	g_SPRViewer->setVisible (true);
 
-	if( g_viewerSettings.showMaximized )
-		g_SPRViewer->Maximize();
+	// TODO implement for other platforms
+	//if( g_viewerSettings.showMaximized )
+	//	g_SPRViewer->Maximize();
 
 	if (Q_stristr (cmdline, ".spr"))
 	{

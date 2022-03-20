@@ -188,10 +188,10 @@ MDLViewer::~MDLViewer ()
 	// grab some params in case that hasn't updates
 	if( d_cpl )
 		g_viewerSettings.editStep = d_cpl->getEditStep();
-	g_viewerSettings.showMaximized = isMaximized();
+	//g_viewerSettings.showMaximized = isMaximized();
 
-	saveRecentFiles ();
-	SaveViewerSettings ();
+	//saveRecentFiles ();
+	//SaveViewerSettings ();
 	g_studioModel.FreeModel ();
 #ifdef WIN32
 	DeleteFile ("midump.txt");
@@ -251,7 +251,7 @@ MDLViewer::handleEvent (mxEvent *event)
 
 		case IDC_FILE_SAVEMODEL:
 		{
-			char *ptr = (char *) mxGetSaveFileName (this, g_viewerSettings.modelPath, "*.mdl", g_viewerSettings.modelPath);
+			char *ptr = (char *) mxGetSaveFileName (this, g_viewerSettings.modelPath, "*.mdl");
 			if (!ptr)
 				break;
 
@@ -676,7 +676,8 @@ int main( int argc, char *argv[] )
 		return 0;
 	}
 
-	LoadViewerSettings();
+	// TODO use json config file instead registry
+	//LoadViewerSettings();
 
 	//mx::setDisplayMode (0, 0, 0);
 	mx::init (argc, argv);
@@ -685,8 +686,9 @@ int main( int argc, char *argv[] )
 	g_MDLViewer->setBounds (20, 20, 640, 540);
 	g_MDLViewer->setVisible (true);
 
-	if( g_viewerSettings.showMaximized )
-		g_MDLViewer->Maximize();
+	// TODO implement for other platforms
+	//if( g_viewerSettings.showMaximized )
+	//	g_MDLViewer->Maximize();
 
 	if (Q_stristr (cmdline, ".mdl"))
 	{

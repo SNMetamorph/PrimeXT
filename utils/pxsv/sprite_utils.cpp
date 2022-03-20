@@ -477,7 +477,7 @@ void SpriteModel :: FreeSprite( void )
 	{
 		if( !mxMessageBox( g_GlWindow, "Sprite has changes. Do you wish to save them?", g_appTitle, MX_MB_YESNO | MX_MB_QUESTION ))
 		{
-			char *ptr = (char *)mxGetSaveFileName( g_GlWindow , g_viewerSettings.spritePath, "*.spr", g_viewerSettings.spritePath );
+			char *ptr = (char *)mxGetSaveFileName( g_GlWindow , g_viewerSettings.spritePath, "*.spr" );
 			if( ptr )
 			{
 				char filename[256];

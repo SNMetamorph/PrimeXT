@@ -80,6 +80,7 @@ public:
 	void drawFloor( int texture = 0 );
 	const matrix4x4& GetModelview( void ) const { return m_modelview; } 
 	void setControlPanel( ControlPanel *panel ) { d_cpl = panel; }
+	mxImage *readBmpFromBuffer(const byte *buffer, size_t size);
 
 	// ACCESSORS
 	matrix3x3	vectors;	// muzzleflashes uses this

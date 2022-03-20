@@ -243,7 +243,7 @@ void StudioModel :: FreeModel( void )
 	{
 		if( !mxMessageBox( g_GlWindow, "Model has changes. Do you wish to save them?", APP_TITLE_STR, MX_MB_YESNO | MX_MB_QUESTION ))
 		{
-			char *ptr = (char *)mxGetSaveFileName( g_GlWindow , g_viewerSettings.modelPath, "*.mdl", g_viewerSettings.modelPath );
+			char *ptr = (char *)mxGetSaveFileName( g_GlWindow, g_viewerSettings.modelPath, "*.mdl" );
 			if( ptr )
 			{
 				char filename[256];

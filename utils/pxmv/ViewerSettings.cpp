@@ -74,17 +74,21 @@ void InitViewerSettings( void )
 
 bool InitRegistry( void )
 {
-	return mx::regCreateKey( HKEY_CURRENT_USER, "Software\\XashXT Group\\Paranoia 2 ModelViewer" );
+	// TODO use json config file instead registry
+	//return mx::regCreateKey( HKEY_CURRENT_USER, "Software\\XashXT Group\\Paranoia 2 ModelViewer" );
+	return false;
 }
 
 bool SaveString( const char *pKey, char *pValue )
 {
-	return mx::regSetValue( HKEY_CURRENT_USER, "Software\\XashXT Group\\Paranoia 2 ModelViewer", pKey, pValue );
+	//return mx::regSetValue( HKEY_CURRENT_USER, "Software\\XashXT Group\\Paranoia 2 ModelViewer", pKey, pValue );
+	return false;
 }
 
 bool LoadString( const char *pKey, char *pValue )
 {
-	return mx::regGetValue( HKEY_CURRENT_USER, "Software\\XashXT Group\\Paranoia 2 ModelViewer", pKey, pValue );
+	//return mx::regGetValue( HKEY_CURRENT_USER, "Software\\XashXT Group\\Paranoia 2 ModelViewer", pKey, pValue );
+	return false;
 }
 
 void SaveVector4D( const char *pName, float *pValue )

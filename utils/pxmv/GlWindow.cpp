@@ -772,7 +772,7 @@ int GlWindow :: loadTextureBuffer( const byte *buffer, size_t size, int name )
 
 	mxImage *image = NULL;
 
-	image = mxBmpReadBuffer( buffer, size );
+	image = readBmpFromBuffer( buffer, size );
 
 	return loadTextureImage( image, name );
 }
@@ -796,4 +796,184 @@ void GlWindow :: dumpViewport( const char *filename )
 
 		delete image;
 	}
+}
+
+mxImage *GlWindow::readBmpFromBuffer(const byte * buffer, size_t size)
+{
+	int i;
+	mxBitmapFileHeader bmfh;
+	mxBitmapInfoHeader bmih;
+	mxBitmapRGBQuad rgrgbPalette[256];
+	int columns, column, rows, row, bpp = 1;
+	int cbBmpBits, padSize = 0, bps = 0;
+	const byte *bufstart, *bufend;
+	byte *pbBmpBits;
+	byte *pb, *pbHold;
+	int cbPalBytes = 0;
+	int biTrueWidth;
+	mxImage *image = 0;
+
+	// Buffer exists?
+	if (!buffer || size <= 0)
+		return 0;
+
+	bufstart = buffer;
+	bufend = bufstart + size;
+
+	// Read file header
+	memcpy(&bmfh, buffer, sizeof bmfh);
+	buffer += sizeof(bmfh);
+
+	// Bogus file header check
+	if (!(bmfh.bfReserved1 == 0 && bmfh.bfReserved2 == 0))
+		goto GetOut;
+
+	// Read info header
+	memcpy(&bmih, buffer, sizeof bmih);
+	buffer += sizeof(bmih);
+
+	// Bogus info header check
+	if (!(bmih.biSize == sizeof bmih && bmih.biPlanes == 1))
+		goto GetOut;
+
+	if (memcmp((void *)&bmfh.bfType, "BM", 2))
+		goto GetOut;
+
+	// Bogus bit depth?
+	if (bmih.biBitCount < 8)
+		goto GetOut;
+
+	// Bogus compression?  Only non-compressed supported.
+	if (bmih.biCompression != 0) //BI_RGB)
+		goto GetOut;
+
+	if (bmih.biBitCount == 8)
+	{
+		// Figure out how many entires are actually in the table
+		if (bmih.biClrUsed == 0)
+		{
+			cbPalBytes = (1 << bmih.biBitCount) * sizeof(mxBitmapRGBQuad);
+			bmih.biClrUsed = 256;
+		}
+		else
+		{
+			cbPalBytes = bmih.biClrUsed * sizeof(mxBitmapRGBQuad);
+		}
+
+		// Read palette (bmih.biClrUsed entries)
+		memcpy(rgrgbPalette, buffer, cbPalBytes);
+		buffer += cbPalBytes;
+	}
+
+	image = new mxImage();
+	if (!image) goto GetOut;
+
+	if (!image->create(bmih.biWidth, abs(bmih.biHeight), bmih.biBitCount))
+	{
+		delete image;
+		goto GetOut;
+	}
+
+	if (bmih.biBitCount <= 8)
+	{
+		pb = (byte *)image->palette;
+
+		// Copy over used entries
+		for (i = 0; i < (int)bmih.biClrUsed; i++)
+		{
+			*pb++ = rgrgbPalette[i].rgbRed;
+			*pb++ = rgrgbPalette[i].rgbGreen;
+			*pb++ = rgrgbPalette[i].rgbBlue;
+		}
+
+		// Fill in unused entires will 0,0,0
+		for (i = bmih.biClrUsed; i < 256; i++)
+		{
+			*pb++ = 0;
+			*pb++ = 0;
+			*pb++ = 0;
+		}
+	}
+	else
+	{
+		if (bmih.biBitCount == 24)
+			bpp = 3;
+		else if (bmih.biBitCount == 32)
+			bpp = 4;
+	}
+
+	// Read bitmap bits (remainder of file)
+	cbBmpBits = bmfh.bfSize - (buffer - bufstart);
+
+	pbHold = pb = (byte *)malloc(cbBmpBits * sizeof(byte));
+	if (pb == 0)
+	{
+		delete image;
+		goto GetOut;
+	}
+
+	memcpy(pb, buffer, cbBmpBits);
+	buffer += cbBmpBits;
+
+	// data is actually stored with the width being rounded up to a multiple of 4
+	biTrueWidth = (bmih.biWidth + 3) & ~3;
+	bps = bmih.biWidth * (bmih.biBitCount >> 3);
+
+	columns = bmih.biWidth;
+	rows = abs(bmih.biHeight);
+
+	switch (bmih.biBitCount)
+	{
+		case 8:
+		case 24:
+			padSize = (4 - (bps % 4)) % 4;
+			break;
+	}
+
+	for (row = rows - 1; row >= 0; row--)
+	{
+		pbBmpBits = (byte *)image->data + (row * columns * bpp);
+
+		for (column = 0; column < columns; column++)
+		{
+			byte	red, green, blue, alpha;
+			int	palIndex;
+
+			switch (bmih.biBitCount)
+			{
+				case 8:
+					palIndex = *pb++;
+					*pbBmpBits++ = palIndex;
+					break;
+				case 24:
+					blue = *pb++;
+					green = *pb++;
+					red = *pb++;
+					*pbBmpBits++ = red;
+					*pbBmpBits++ = green;
+					*pbBmpBits++ = blue;
+					break;
+				case 32:
+					blue = *pb++;
+					green = *pb++;
+					red = *pb++;
+					alpha = *pb++;
+					*pbBmpBits++ = red;
+					*pbBmpBits++ = green;
+					*pbBmpBits++ = blue;
+					*pbBmpBits++ = alpha;
+					break;
+				default:
+					free(pbHold);
+					delete image;
+					goto GetOut;
+			}
+		}
+
+		pb += padSize;	// actual only for 4-bit bmps
+	}
+
+	free(pbHold);
+GetOut:
+	return image;
 }

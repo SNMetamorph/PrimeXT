@@ -208,7 +208,7 @@ ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0,
 		cPoseParameter[i]->setEnabled( false );
 
 		slPoseParameter[i] = new mxSlider (wControls, x + 186, y2, 140, 18, IDC_POSEPARAMETER_SCALE+i);
-		slPoseParameter[i]->setRange (0.0, 1.0, 1000);
+		slPoseParameter[i]->setRange (0.0, 1.0);
 		mxToolTip::add (slPoseParameter[i], "Parameter");
 		slPoseParameter[i]->setEnabled( false );
 
@@ -327,7 +327,7 @@ ControlPanel::handleEvent (mxEvent *event)
 		{
 			int value = slTransparency->getValue ();
 			g_viewerSettings.transparency = (float) value / 100.0f; 
-			lOpacityValue->setLabel( "Opacity: %d%%", value ); 
+			lOpacityValue->setLabel( va("Opacity: %d%%", value) ); 
 		}
 		break;
 
@@ -421,7 +421,7 @@ ControlPanel::handleEvent (mxEvent *event)
 				tbStop->setLabel ("Play");
 				g_bStopPlaying = true;
 				g_nCurrFrame = g_studioModel.SetFrame (-1);
-				leFrame->setLabel ("%d", g_nCurrFrame);
+				leFrame->setLabel (va("%d", g_nCurrFrame));
 				bPrevFrame->setEnabled (true);
 				leFrame->setEnabled (true);
 				bNextFrame->setEnabled (true);
@@ -443,7 +443,7 @@ ControlPanel::handleEvent (mxEvent *event)
 		case IDC_PREVFRAME:
 		{
 			g_nCurrFrame = g_studioModel.SetFrame (g_nCurrFrame - 1);
-			leFrame->setLabel ("%d", g_nCurrFrame);
+			leFrame->setLabel (va("%d", g_nCurrFrame));
 			g_bEndOfSequence = false;
 		}
 		break;
@@ -459,7 +459,7 @@ ControlPanel::handleEvent (mxEvent *event)
 		case IDC_NEXTFRAME:
 		{
 			g_nCurrFrame = g_studioModel.SetFrame (g_nCurrFrame + 1);
-			leFrame->setLabel ("%d", g_nCurrFrame);
+			leFrame->setLabel (va("%d", g_nCurrFrame));
 			g_bEndOfSequence = false;
 		}
 		break;
@@ -480,7 +480,7 @@ ControlPanel::handleEvent (mxEvent *event)
 			if (index >= 0)
 			{
 				int body = setSubmodel (index);
-				BodyPartLabel->setLabel( "Body %d", body );
+				BodyPartLabel->setLabel( va("Body %d", body) );
 			}
 		}
 		break;
@@ -523,7 +523,7 @@ ControlPanel::handleEvent (mxEvent *event)
 				if (hdr)
 				{
 					mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + index;
-					lTexSize->setLabel ("Texture (size: %d x %d)", ptexture->width, ptexture->height);
+					lTexSize->setLabel ( va("Texture (size: %d x %d)", ptexture->width, ptexture->height) );
 					cbChrome->setChecked ((ptexture->flags & STUDIO_NF_CHROME) == STUDIO_NF_CHROME);
 					cbAdditive->setChecked ((ptexture->flags & STUDIO_NF_ADDITIVE) == STUDIO_NF_ADDITIVE);
 					cbTransparent->setChecked ((ptexture->flags & STUDIO_NF_MASKED) == STUDIO_NF_MASKED);
@@ -818,7 +818,7 @@ ControlPanel::handleEvent (mxEvent *event)
 		case IDC_TEXTURESCALE:
 		{
 			g_viewerSettings.textureScale =  1.0f + (float) ((mxSlider *) event->widget)->getValue () * 4.0f / 100.0f;
-			lTexScale->setLabel( "Scale Texture View (%.fx)", g_viewerSettings.textureScale );
+			lTexScale->setLabel( va("Scale Texture View (%.fx)", g_viewerSettings.textureScale) );
 			d_GlWindow->redraw ();
 		}
 		break;
@@ -1071,9 +1071,9 @@ ControlPanel::handleEvent (mxEvent *event)
 				float flMin, flMax;
 				if (g_studioModel.GetPoseParameterRange( poseparam, &flMin, &flMax ))
 				{
-					slPoseParameter[index]->setRange( flMin, flMax, 1000 );
+					slPoseParameter[index]->setRange( flMin, flMax );
 					slPoseParameter[index]->setValue( g_studioModel.GetPoseParameter( poseparam ) );
-					lePoseParameter[index]->setLabel( "%.1f", g_studioModel.GetPoseParameter( poseparam ) );
+					lePoseParameter[index]->setLabel( va("%.1f", g_studioModel.GetPoseParameter( poseparam )) );
 				}
 			}
 			else if (event->action >= IDC_POSEPARAMETER_SCALE && event->action < IDC_POSEPARAMETER_SCALE + NUM_POSEPARAMETERS)
@@ -1082,7 +1082,7 @@ ControlPanel::handleEvent (mxEvent *event)
 				int poseparam = cPoseParameter[index]->getSelectedIndex();
 
 				setBlend( poseparam, ((mxSlider *) event->widget)->getValue() );
-				lePoseParameter[index]->setLabel( "%.1f", ((mxSlider *) event->widget)->getValue() );
+				lePoseParameter[index]->setLabel( va("%.1f", ((mxSlider *) event->widget)->getValue()) );
 
 				// move also sliders with same poseparams
 				for( int i = 0; i < NUM_POSEPARAMETERS; i++ )
@@ -1363,7 +1363,7 @@ ControlPanel::updatePoseParameters( )
 			if (fabs( temp - value ) > 0.1)
 			{
 				slPoseParameter[i]->setValue( value );
-				lePoseParameter[i]->setLabel( "%.1f", value );
+				lePoseParameter[i]->setLabel( va("%.1f", value) );
 			}
 		}
 	}
@@ -1457,9 +1457,9 @@ ControlPanel::initSequences ()
 			cPoseParameter[i]->setEnabled( true );
 
 			slPoseParameter[i]->setEnabled( true );
-			slPoseParameter[i]->setRange( flMin, flMax, 1000 );
+			slPoseParameter[i]->setRange( flMin, flMax );
 			mxToolTip::add (slPoseParameter[i], g_boneSetup.pPoseParameter(i)->name );
-			lePoseParameter[i]->setLabel( "%.1f", 0.0 );
+			lePoseParameter[i]->setLabel( va("%.1f", 0.0) );
 			lePoseParameter[i]->setEnabled( true );
 		}
 		else
