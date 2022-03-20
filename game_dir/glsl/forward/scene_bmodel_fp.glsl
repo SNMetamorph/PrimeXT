@@ -232,8 +232,6 @@ void main( void )
 	vec3 screenmap = GetScreenColor( N, waterRefractFactor );
 #if defined( PLANAR_REFLECTION )
 	result.a = GetFresnel( saturate(dot(V, N)), WATER_F0_VALUE, FRESNEL_FACTOR );
-#else
-	result.a = 1.0 - u_RenderColor.a;
 #endif // PLANAR_REFLECTION
 
 #if defined( LIQUID_SURFACE )
