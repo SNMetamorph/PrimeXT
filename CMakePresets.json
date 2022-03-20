@@ -35,11 +35,11 @@
       "name": "windows-x64-debug",
       "displayName": "Windows x64 Debug",
       "description": " ",
-      "generator": "Ninja",
+      "generator": "Visual Studio 16 2019",
       "binaryDir": "${sourceDir}/build",
       "architecture": {
         "value": "x64",
-        "strategy": "external"
+        "strategy": "set"
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
@@ -50,11 +50,11 @@
       "name": "windows-x64",
       "displayName": "Windows x64 Release",
       "description": " ",
-      "generator": "Ninja",
+      "generator": "Visual Studio 16 2019",
       "binaryDir": "${sourceDir}/build",
       "architecture": {
         "value": "x64",
-        "strategy": "external"
+        "strategy": "set"
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
