@@ -35,7 +35,8 @@ endif()
 add_executable(${PROJECT_NAME} ${DIR_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"."
-	"${CMAKE_SOURCE_DIR}/external/mxtk"
+	"${CMAKE_SOURCE_DIR}/external/mxtk/include"
+	"${CMAKE_SOURCE_DIR}/external/mxtk/include/mx"
 	"../../game_shared" # should be first because mathlib.h also locates in ../common
 	"../../engine"
 	"../../common"
@@ -81,13 +82,17 @@ find_library(LIBRARY_MXTK
 	HINTS "${CMAKE_SOURCE_DIR}/external/mxtk"
 )
 
+# add mxtk library depedency
+target_link_libraries(${PROJECT_NAME} PRIVATE
+	mxtk
+)
+
 if(MSVC)
 	target_link_libraries(${PROJECT_NAME} PRIVATE
 		"comctl32"
 		"opengl32"
 		"glu32"
 		"winmm"
-		"${LIBRARY_MXTK}"
 	)
 else()
 endif()

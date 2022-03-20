@@ -17,6 +17,8 @@ set(DIR_UTILS_OUTPUT
 	${CMAKE_BINARY_DIR}/$<CONFIG>/${GAMEDIR}/devkit/
 )
 
+add_subdirectory("${CMAKE_SOURCE_DIR}/external/mxtk" mxtk)
+
 message(STATUS "Utility binaries output directory: ${DIR_UTILS_OUTPUT}")
 if(MSVC)
     set_target_properties(pxstudiomdl pxmv pxbsp pxcsg pxrad pxvis pxsv PROPERTIES 
