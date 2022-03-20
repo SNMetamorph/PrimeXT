@@ -2114,7 +2114,11 @@ void CStudioModelRenderer :: AddMeshToDrawList( studiohdr_t *phdr, vbomesh_t *me
 	if( cache_from_model )
 		mat = &RI->currentmodel->materials[pskinref[mesh->skinref]];
 	else mat = &m_pModelInstance->materials[pskinref[mesh->skinref]]; // NOTE: use local copy for right cache shadernums
-	bool solid = ( R_OpaqueEntity( RI->currententity ) && !FBitSet( mat->flags, STUDIO_NF_ADDITIVE )) ? true : false;
+
+	bool flagAdditive = FBitSet(mat->flags, STUDIO_NF_ADDITIVE);
+	bool flagMasked = FBitSet(mat->flags, STUDIO_NF_MASKED);
+	bool texTransparent = flagAdditive || flagMasked;
+	bool solid = (R_OpaqueEntity( RI->currententity ) && !texTransparent) ? true : false;
 
 	// goes into regular arrays
 	if( FBitSet( RI->params, RP_SHADOWVIEW ))
@@ -2872,8 +2876,11 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 	// mixed mode: solid & transparent controlled by alpha-channel
 	if( FBitSet( mat->flags, STUDIO_NF_ADDITIVE ) && RI->currententity->curstate.rendermode != kRenderGlow )
 	{
-		if( FBitSet( mat->flags, STUDIO_NF_HAS_ALPHA ))
-			GL_AddShaderDirective( options, "ALPHA_GLASS" );
+		shader_translucent = true;
+	}
+
+	if (FBitSet(mat->flags, STUDIO_NF_HAS_ALPHA)) {
+		GL_AddShaderDirective(options, "ALPHA_GLASS");
 		shader_translucent = true;
 	}
 
