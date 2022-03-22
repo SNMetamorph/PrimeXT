@@ -106,7 +106,7 @@ void DecalGroupEntry :: PreloadTextures( void )
 		gl_specular_id = LOAD_TEXTURE( path, NULL, 0, TF_CLAMP );
 	else gl_specular_id = tr.blackTexture;
 
-	Q_snprintf( path, sizeof( path ), "gfx/decals/%s_height", name );
+	Q_snprintf( path, sizeof( path ), "gfx/decals/%s_hmap", name );
 	if( IMAGE_EXISTS( path ))
 		gl_heightmap_id = LOAD_TEXTURE( path, NULL, 0, TF_CLAMP );
 	else gl_heightmap_id = tr.whiteTexture;
