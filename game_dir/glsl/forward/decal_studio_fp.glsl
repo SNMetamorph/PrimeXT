@@ -58,11 +58,11 @@ void main( void )
 	}
 
 #if defined( PARALLAX_SIMPLE )
-	float offset = texture2D( u_HeightMap, vecTexCoord ).r * 0.04 - 0.02;
-	vecTexCoord = ( offset * V.xy + vecTexCoord );
+	//vecTexCoord = ParallaxMapSimple(var_TexDiffuse.xy, V);
+	//vecTexCoord = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse.xy, V);
+	vecTexCoord = ParallaxReliefMap(var_TexDiffuse.xy, V);
 #elif defined( PARALLAX_OCCLUSION )
-	vec3 srcV = vec3( V.x, V.y, -V.z );
-	vecTexCoord = ParallaxOcclusionMap( var_TexDiffuse.xy, srcV ).xy;
+	vecTexCoord = ParallaxOcclusionMap(var_TexDiffuse.xy, V).xy;
 #endif
 
 #if defined( ALPHA_TEST )
@@ -100,7 +100,7 @@ void main( void )
 
 #if !defined( LIGHTING_FULLBRIGHT )
 	lighting.specular = vec3( 0.0 );
-	lighting.diffuse = vec3( 1.0 );
+	lighting.diffuse = vec3( 0.0 );
 
 	vec3 L = normalize( var_LightDir );
 #if defined( LIGHTVEC_DEBUG )
