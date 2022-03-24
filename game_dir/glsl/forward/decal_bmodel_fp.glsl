@@ -65,13 +65,12 @@ void main( void )
 #endif
 	vec3 V = normalize( var_ViewDir );
 	vec2 vecTexCoord = var_TexDiffuse.xy;
-
 #if defined( PARALLAX_SIMPLE )
-	//vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse.xy, var_TangentViewDir);
-	vecTexCoord = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse.xy, var_TangentViewDir);
-	//vec_TexDiffuse = ParallaxReliefMap(var_TexDiffuse.xy, var_TangentViewDir);
+	//vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse.xy, V);
+	vecTexCoord = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse.xy, V);
+	//vec_TexDiffuse = ParallaxReliefMap(var_TexDiffuse.xy, V);
 #elif defined( PARALLAX_OCCLUSION )
-	vecTexCoord = ParallaxOcclusionMap(var_TexDiffuse.xy, var_TangentViewDir).xy; 
+	vecTexCoord = ParallaxOcclusionMap(var_TexDiffuse.xy, V).xy; 
 #endif
 	vec4 albedo = decalmap2D( u_DecalMap, vecTexCoord );
 	vec4 result = albedo;
