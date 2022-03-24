@@ -835,12 +835,12 @@ word CStudioModelRenderer :: ShaderDecalForward( studiodecal_t *pDecal, bool ver
 	Q_strncpy( glname, "forward/decal_studio", sizeof( glname ));
 	memset( options, 0, sizeof( options ));
 
-	mstudiomaterial_t *mat = (mstudiomaterial_t *)RI->currentmodel->materials;
 	const DecalGroupEntry *texinfo = pDecal->texinfo;
 	vbomesh_t *pMesh = pDecal->modelmesh;
-
 	short *pskinref = (short *)((byte *)m_pStudioHeader + m_pStudioHeader->skinindex);
-	mat = &mat[pskinref[pMesh->skinref]];
+	mstudiomaterial_t *mat = &RI->currentmodel->materials[pskinref[pMesh->skinref]];
+	bool hasNormalmap = texinfo->gl_normalmap_id != tr.normalmapTexture;
+	bool hasHeightmap = texinfo->gl_heightmap_id != tr.whiteTexture;
 
 	if( tr.fogEnabled )
 		GL_AddShaderDirective( options, "APPLY_FOG_EXP" );
@@ -850,54 +850,52 @@ word CStudioModelRenderer :: ShaderDecalForward( studiodecal_t *pDecal, bool ver
 		// GL_DST_COLOR, GL_SRC_COLOR
 		GL_AddShaderDirective( options, "APPLY_COLORBLEND" );
 	}
-	else
+
+	if (hasHeightmap && texinfo->matdesc->reliefScale > 0.0f)
 	{
-		if( texinfo->gl_heightmap_id != tr.whiteTexture && texinfo->matdesc->reliefScale > 0.0f )
-		{
-			if( cv_parallax->value == 1.0f )
-				GL_AddShaderDirective( options, "PARALLAX_SIMPLE" );
-			else if( cv_parallax->value >= 2.0f )
-				GL_AddShaderDirective( options, "PARALLAX_OCCLUSION" );
-		}
+		if( cv_parallax->value == 1.0f )
+			GL_AddShaderDirective( options, "PARALLAX_SIMPLE" );
+		else if( cv_parallax->value >= 2.0f )
+			GL_AddShaderDirective( options, "PARALLAX_OCCLUSION" );
 	}
 
-	if( !texinfo->opaque || FBitSet( mat->flags, STUDIO_NF_FULLBRIGHT ) || R_FullBright( ))
+	if (!texinfo->opaque || FBitSet(mat->flags, STUDIO_NF_FULLBRIGHT) || R_FullBright())
 	{
 		GL_AddShaderDirective( options, "LIGHTING_FULLBRIGHT" );
 	}
 	else
 	{
-		if( CVAR_TO_BOOL( cv_brdf ))
-			GL_AddShaderDirective( options, "APPLY_PBS" );
-
-		if( vertex_lighting )
-			GL_AddShaderDirective( options, "VERTEX_LIGHTING" );
-		else if( FBitSet( mat->flags, STUDIO_NF_FLATSHADE ))
-			GL_AddShaderDirective( options, "LIGHTING_FLATSHADE" );
-
-		// debug visualization
-		if( r_lightmap->value > 0.0f && r_lightmap->value <= 2.0f )
-		{
-			if( r_lightmap->value == 1.0f && worldmodel->lightdata )
-				GL_AddShaderDirective( options, "LIGHTMAP_DEBUG" );
-			else if( r_lightmap->value == 2.0f && FBitSet( world->features, WORLD_HAS_DELUXEMAP ))
-				GL_AddShaderDirective( options, "LIGHTVEC_DEBUG" );
-		}
-
-		if( texinfo->gl_heightmap_id != tr.whiteTexture || texinfo->gl_normalmap_id != tr.normalmapTexture )
-			GL_AddShaderDirective( options, "COMPUTE_TBN" );
- 
-		// deluxemap required
-		if( CVAR_TO_BOOL( cv_bump ) && FBitSet( world->features, WORLD_HAS_DELUXEMAP ) && texinfo->gl_normalmap_id != tr.normalmapTexture )
-		{
-			GL_AddShaderDirective( options, "HAS_NORMALMAP" );
-			GL_EncodeNormal( options, mat->gl_normalmap_id );
-		}
-
-		// deluxemap required
-		if( CVAR_TO_BOOL( cv_specular ) && FBitSet( world->features, WORLD_HAS_DELUXEMAP ) && texinfo->gl_specular_id != tr.blackTexture )
-			GL_AddShaderDirective( options, "HAS_GLOSSMAP" );
+		if (vertex_lighting)
+			GL_AddShaderDirective(options, "VERTEX_LIGHTING");
+		else if (FBitSet(mat->flags, STUDIO_NF_FLATSHADE))
+			GL_AddShaderDirective(options, "LIGHTING_FLATSHADE");
 	}
+
+	if (CVAR_TO_BOOL(cv_brdf))
+		GL_AddShaderDirective(options, "APPLY_PBS");
+
+	// debug visualization
+	if( r_lightmap->value > 0.0f && r_lightmap->value <= 2.0f )
+	{
+		if( r_lightmap->value == 1.0f && worldmodel->lightdata )
+			GL_AddShaderDirective( options, "LIGHTMAP_DEBUG" );
+		else if( r_lightmap->value == 2.0f && FBitSet( world->features, WORLD_HAS_DELUXEMAP ))
+			GL_AddShaderDirective( options, "LIGHTVEC_DEBUG" );
+	}
+
+	if (hasHeightmap || hasNormalmap)
+		GL_AddShaderDirective( options, "COMPUTE_TBN" );
+ 
+	// deluxemap required
+	if( CVAR_TO_BOOL( cv_bump ) && FBitSet( world->features, WORLD_HAS_DELUXEMAP ) && hasNormalmap)
+	{
+		GL_AddShaderDirective( options, "HAS_NORMALMAP" );
+		GL_EncodeNormal( options, mat->gl_normalmap_id );
+	}
+
+	// deluxemap required
+	if( CVAR_TO_BOOL( cv_specular ) && FBitSet( world->features, WORLD_HAS_DELUXEMAP ) && texinfo->gl_specular_id != tr.blackTexture )
+		GL_AddShaderDirective( options, "HAS_GLOSSMAP" );
 
 	if( m_pStudioHeader->numbones == 1 )
 		GL_AddShaderDirective( options, "MAXSTUDIOBONES 1" );
@@ -969,7 +967,7 @@ void CStudioModelRenderer :: ComputeDecalTBN( DecalBuildInfo_t& build )
 			tVect += triTVect[vertToTriMap[vertID][triID]];
 		}
 
-		Vector tmpVect = CrossProduct( sVect, tVect );
+		Vector tmpVect = CrossProduct( tVect, sVect );
 		bool leftHanded = DotProduct( tmpVect, normal ) < 0.0f;
 
 		if( !leftHanded )
