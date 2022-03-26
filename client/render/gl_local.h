@@ -1018,6 +1018,7 @@ bool GL_Init(void);
 void GL_MapChanged(void);
 void GL_Shutdown(void);
 bool GL_Support(int r_ext);
+bool GL_SupportExtension(const char *name);
 void R_VidInit(void);
 
 #endif//GL_LOCAL_H
