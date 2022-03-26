@@ -472,12 +472,20 @@ bool GL_Support( int r_ext )
 	return false;		
 }
 
+bool GL_SupportExtension(const char *name)
+{
+	if (name && name[0] && !Q_strstr(glConfig.extensions_string, name))
+		return true;
+	else
+		return false;
+}
+
 /*
 =================
 GL_CheckExtension
 =================
 */
-void GL_CheckExtension( const char *name, const dllfunc_t *funcs, const char *cvarname, int r_ext, bool cvar_from_engine = false )
+static void GL_CheckExtension( const char *name, const dllfunc_t *funcs, const char *cvarname, int r_ext, bool cvar_from_engine = false )
 {
 	const dllfunc_t	*func;
 	cvar_t		*parm;
@@ -501,7 +509,7 @@ void GL_CheckExtension( const char *name, const dllfunc_t *funcs, const char *cv
 
 		if( !CVAR_TO_BOOL( parm ) || ( !CVAR_TO_BOOL( gl_extensions ) && r_ext != R_OPENGL_110 ))
 		{
-			ALERT( at_aiconsole, "- disabled\n" );
+			ALERT( at_aiconsole, "- ^3disabled\n" );
 			GL_SetExtension( r_ext, false );
 			return; // nothing to process at
 		}
@@ -522,7 +530,8 @@ void GL_CheckExtension( const char *name, const dllfunc_t *funcs, const char *cv
 
 	if( GL_Support( r_ext ))
 		ALERT( at_aiconsole, "- ^2enabled\n" );
-	else ALERT( at_aiconsole, "- ^1failed\n" );
+	else 
+		ALERT( at_aiconsole, "- ^1failed\n" );
 }
 
 static void GL_InitExtensions( void )
