@@ -1256,6 +1256,7 @@ EXTERN void ( APIENTRY *pglCompressedTexSubImage1DARB)(GLenum target, GLint leve
 
 EXTERN GLhandleARB (APIENTRY *pglCreateShader)(GLenum shaderType);
 EXTERN void (APIENTRY *pglAttachShader)(GLuint program, GLuint shader);
+EXTERN void (APIENTRY *pglDetachShader)(GLuint program, GLuint shader);
 EXTERN void (APIENTRY *pglCompileShader)(GLuint shader);
 EXTERN void (APIENTRY *pglGetShaderSource)(GLuint shader, GLsizei bufSize, GLsizei *length, GLcharARB *source);
 EXTERN void (APIENTRY *pglShaderSource)(GLuint shader, GLsizei count, const GLcharARB *const *string, const GLint *length);

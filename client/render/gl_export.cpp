@@ -168,6 +168,7 @@ static dllfunc_t opengl_200funcs[] =
 {
 { "glCreateShader"				, (void **)&pglCreateShader },
 { "glAttachShader"				, (void **)&pglAttachShader },
+{ "glDetachShader"				, (void **)&pglDetachShader },
 { "glCompileShader"				, (void **)&pglCompileShader },
 { "glShaderSource"				, (void **)&pglShaderSource },
 { "glGetShaderSource"			, (void **)&pglGetShaderSource },
