@@ -42,7 +42,6 @@ list(APPEND CLDLL_SOURCES
 	"input.cpp"
 	"input_xash3d.cpp"
 	"input_mouse.cpp"
-	"input_goldsource.cpp"
 	"menu.cpp"
 	"message.cpp"
 	"motd.cpp"
