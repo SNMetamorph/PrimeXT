@@ -1,5 +1,9 @@
 name: nightly-builds
-on: push
+
+on:
+  push:
+    branches: [master]
+
 jobs:
   build-windows:
     runs-on: windows-2019
