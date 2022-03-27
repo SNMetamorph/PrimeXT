@@ -605,7 +605,7 @@ static bool GL_ProcessShader( const char *filename, GLenum shaderType, CVirtualF
 	return true;
 }
 
-static void GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum shaderType, const char *defines = NULL )
+static bool GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum shaderType, const char *defines = NULL )
 {
 	char		filename[256];
 	GLhandleARB	shaderHandle;
@@ -623,13 +623,13 @@ static void GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum s
 		Q_snprintf( filename, sizeof( filename ), "glsl/%s_fp.glsl", name );
 		break;
 	default:
-		ALERT( at_error, "GL_LoadGPUShader: unknown shader type %p\n", shaderType );
-		return;
+		ALERT( at_error, "^1GL_LoadGPUShader: ^7unknown shader type %p\n", shaderType );
+		return false;
 	}
 
 	// load includes, add some directives
 	if( !GL_ProcessShader( filename, shaderType, &source, defines ))
-		return;
+		return false;
 
 	GLcharARB *buffer = (GLcharARB *)source.GetBuffer();
 	int bufferSize = source.GetSize();
@@ -649,7 +649,7 @@ static void GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum s
 		ALERT(at_error, "^1GL_LoadGPUShader: ^7couldn't compile \"%s\" from file \"%s\"\n", name, filename);
 		if( developer_level ) Msg( "%s", GL_PrintShaderInfoLog( shaderHandle ));
 		if( developer_level ) Msg( "Shader options:%s\n", GL_PretifyListOptions( defines ));
-		return;
+		return false;
 	}
 
 	if( shaderType == GL_VERTEX_SHADER_ARB )
@@ -657,11 +657,10 @@ static void GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum s
 	else 
 		shader->status |= SHADER_FRAGMENT_COMPILED;
 
-	// attach shader to program
-	pglAttachShader(shader->handle, shaderHandle);
-
-	// delete shader, no longer needed
-	pglDeleteShader(shaderHandle);
+	
+	pglAttachShader(shader->handle, shaderHandle); // attach shader to program
+	pglDeleteShader(shaderHandle); // delete shader, no longer needed
+	return true;
 }
 
 static bool GL_LoadGPUBinaryShader( glsl_program_t *shader, const char *vpname, const char *fpname, uint checksum )
@@ -1110,6 +1109,8 @@ static glsl_program_t *GL_CreateUberShader( GLint slot, const char *glname, cons
 
 	// alloc new shader
 	glsl_program_t *shader = &glsl_programs[slot];
+	bool vertexShaderError = false;
+	bool fragmentShaderError = false;
 
 	shader->handle = pglCreateProgram();
 	if( !shader->handle ) 
@@ -1123,18 +1124,25 @@ static glsl_program_t *GL_CreateUberShader( GLint slot, const char *glname, cons
 
 	if( !GL_LoadGPUBinaryShader( shader, vpname, fpname, checksum ))
 	{
-		if( vpname ) GL_LoadGPUShader( shader, vpname, GL_VERTEX_SHADER_ARB, options );
-		else SetBits( shader->status, SHADER_VERTEX_COMPILED );
-		if( fpname ) GL_LoadGPUShader( shader, fpname, GL_FRAGMENT_SHADER_ARB, options );
-		else SetBits( shader->status, SHADER_FRAGMENT_COMPILED );
+		if (vpname)
+			vertexShaderError = GL_LoadGPUShader(shader, vpname, GL_VERTEX_SHADER_ARB, options);
+		else 
+			SetBits( shader->status, SHADER_VERTEX_COMPILED );
+
+		if (fpname)
+			fragmentShaderError = GL_LoadGPUShader(shader, fpname, GL_FRAGMENT_SHADER_ARB, options);
+		else
+			SetBits(shader->status, SHADER_FRAGMENT_COMPILED);
 
 		if( vpname && FBitSet( shader->status, SHADER_VERTEX_COMPILED ))
 			GL_SetDefaultVertexAttribs( shader );
 
-		GL_LinkProgram( shader );
-
-		if( FBitSet( shader->status, SHADER_PROGRAM_LINKED ))
-			GL_SaveGPUBinaryShader( shader, checksum );
+		if (!vertexShaderError && !fragmentShaderError)
+		{
+			GL_LinkProgram(shader);
+			if (FBitSet(shader->status, SHADER_PROGRAM_LINKED))
+				GL_SaveGPUBinaryShader(shader, checksum);
+		}
 	}
 
 	// dynamic ubershaders has the identically name of fragment and vertex program
