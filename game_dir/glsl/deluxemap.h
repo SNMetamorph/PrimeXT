@@ -28,7 +28,7 @@ uniform float		u_LightGamma;
 
 void ApplyLightStyle( const vec3 lminfo, const vec3 N, const vec3 V, const vec4 albedo, in MaterialData mat, inout LightingData lighting )
 {
-	const float lightstyleMult = lminfo.z;
+	float lightstyleMult = lminfo.z;
 	vec4 lmsrc = lightmap2D( u_LightMap, lminfo.xy, u_LightGamma );
 	vec3 lightmap = lmsrc.rgb * lightstyleMult;
 	
