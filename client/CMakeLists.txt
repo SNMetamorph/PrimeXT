@@ -5,24 +5,7 @@ include(CheckIncludeFile)
 include(CompilerRuntime)
 check_include_file("tgmath.h" HAVE_TGMATH_H)
 
-# find and add source files
-file(GLOB CLDLL_SOURCES "render/*.cpp")
-list(APPEND CLDLL_SOURCES
-	"../game_shared/bone_setup.cpp"
-	"../game_shared/common.cpp"
-	"../game_shared/ikcontext.cpp"
-	"../game_shared/jigglebones.cpp"
-	"../game_shared/material.cpp"
-	"../game_shared/mathlib.cpp"
-	"../game_shared/matrix.cpp"
-	"../game_shared/meshdesc.cpp"
-	"../game_shared/playermove.cpp"
-	"../game_shared/procbones.cpp"
-	"../game_shared/stringlib.cpp"
-	"../game_shared/virtualfs.cpp"
-	"../game_shared/trace.cpp"
-)
-
+# client source files
 list(APPEND CLDLL_SOURCES
 	"ammo.cpp"
 	"ammo_secondary.cpp"
@@ -56,17 +39,47 @@ list(APPEND CLDLL_SOURCES
 	"r_view.cpp"
 )
 
+# shared source files
+list(APPEND CLDLL_SOURCES
+	"${CMAKE_SOURCE_DIR}/game_shared/bone_setup.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/common.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/ikcontext.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/jigglebones.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/material.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/mathlib.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/matrix.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/meshdesc.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/playermove.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/procbones.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/stringlib.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/virtualfs.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/trace.cpp"
+)
+
+# render source files
+file(GLOB RENDER_SOURCES "render/*.cpp")
+
+# ImGui source files
+list(APPEND IMGUI_SOURCES
+	"${CMAKE_SOURCE_DIR}/external/imgui/imgui.cpp"
+	"${CMAKE_SOURCE_DIR}/external/imgui/imgui_demo.cpp"
+	"${CMAKE_SOURCE_DIR}/external/imgui/imgui_draw.cpp"
+	"${CMAKE_SOURCE_DIR}/external/imgui/imgui_tables.cpp"
+	"${CMAKE_SOURCE_DIR}/external/imgui/imgui_widgets.cpp"
+)
+
+list(APPEND CLDLL_SOURCES ${RENDER_SOURCES})
+list(APPEND CLDLL_SOURCES ${IMGUI_SOURCES})
 add_library(${PROJECT_NAME} SHARED ${CLDLL_SOURCES})
+
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"."
 	"render/"
-	"../dlls"
-	"../dlls/wpn_shared"
 	"../common"
 	"../engine"
-	"../pm_shared"
 	"../game_shared"
 	"../public"
+	"${CMAKE_SOURCE_DIR}/external/imgui"
 )
 
 if(ENABLE_VGUI_SUPPORT)
@@ -121,11 +134,11 @@ if(ENABLE_VGUI_SUPPORT)
 		HINTS "${CMAKE_SOURCE_DIR}/external/vgui/lib"
 		PATH_SUFFIXES win32_vc6
 	)
-	target_link_libraries(${PROJECT_NAME} "${LIBRARY_VGUI}")
+	target_link_libraries(${PROJECT_NAME} PRIVATE "${LIBRARY_VGUI}")
 endif()
 
 if(WIN32)
-	target_link_libraries(${PROJECT_NAME} user32.lib)
+	target_link_libraries(${PROJECT_NAME} PRIVATE user32.lib)
 endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
