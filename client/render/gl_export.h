@@ -1305,7 +1305,7 @@ EXTERN void ( APIENTRY *pglProgramParameteri)(GLuint program, GLenum pname, GLin
 EXTERN void ( APIENTRY *pglTexImage3D)( GLenum target, GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const void *pixels );
 EXTERN void ( APIENTRY *pglTexSubImage3D)( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void *pixels );
 EXTERN void ( APIENTRY *pglCopyTexSubImage3D)( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height );
-EXTERN void ( APIENTRY *pglBlendEquationEXT)(GLenum);
+EXTERN void ( APIENTRY *pglBlendEquation)(GLenum);
 EXTERN void ( APIENTRY *pglStencilOpSeparate)(GLenum, GLenum, GLenum, GLenum);
 EXTERN void ( APIENTRY *pglStencilFuncSeparate)(GLenum, GLenum, GLint, GLuint);
 EXTERN void ( APIENTRY *pglActiveStencilFaceEXT)(GLenum);

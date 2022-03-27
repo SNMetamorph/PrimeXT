@@ -27,6 +27,7 @@ GNU General Public License for more details.
 #include "gl_occlusion.h"
 #include "gl_cvars.h"
 #include "gl_debug.h"
+#include "gl_imgui.h"
 #include "r_weather.h"
 
 #define MAX_RESERVED_UNIFORMS		22	// while MAX_LIGHTSTYLES 64
@@ -184,6 +185,7 @@ static dllfunc_t opengl_200funcs[] =
 { "glGetActiveUniform"			, (void **)&pglGetActiveUniform },
 { "glGetUniformLocation"		, (void **)&pglGetUniformLocation },
 { "glGetProgramiv"              , (void **)&pglGetProgramiv },
+{ "glBlendEquation"             , (void **)&pglBlendEquation },
 { NULL, NULL }
 };
 
@@ -1025,6 +1027,7 @@ bool GL_Init( void )
 	CL_InitMaterials();
 	GL_SetDefaultState();
 	GL_InitRandomTable();
+	GL_InitImGui();
 
 	pglPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
 	pglPixelStorei( GL_PACK_ALIGNMENT, 1 );
@@ -1075,6 +1078,7 @@ void GL_Shutdown( void )
 	R_GrassShutdown();
 	GL_FreeGPUShaders();
 	GL_FreeDrawbuffers();
+	GL_TerminateImGui();
 
 	// now all extensions are disabled
 	memset( glConfig.extension, 0, sizeof( glConfig.extension[0] ) * R_EXTCOUNT );

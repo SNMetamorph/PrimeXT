@@ -33,6 +33,7 @@ GNU General Public License for more details.
 #include "gl_shader.h"
 #include "gl_cvars.h"
 #include "gl_debug.h"
+#include "gl_imgui.h"
 #include "screenfade.h"
 #include "shake.h"
 
@@ -195,8 +196,6 @@ static void R_RenderScreenQuad()
 	GL_Bind(GL_TEXTURE0, tr.screen_temp_fbo->colortarget[0]);
 	RenderFSQ(glState.width, glState.height);
 	GL_Bind(GL_TEXTURE0, 0);
-	GL_Setup3D();
-	GL_Blend(GL_TRUE);
 	GL_DebugGroupPop();
 }
 
@@ -525,6 +524,12 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 		R_RenderScreenQuad();
 	}
 
+	GL_CleanupDrawState();
+	GL_RenderFrameImGui();
+
+	// restore state for correct rendering other stuff
+	GL_Setup3D();
+	GL_Blend(GL_TRUE);
 	GL_CleanupDrawState();
 	R_PopRefState();
 
