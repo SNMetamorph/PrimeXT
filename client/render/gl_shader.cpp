@@ -1109,8 +1109,8 @@ static glsl_program_t *GL_CreateUberShader( GLint slot, const char *glname, cons
 
 	// alloc new shader
 	glsl_program_t *shader = &glsl_programs[slot];
-	bool vertexShaderError = false;
-	bool fragmentShaderError = false;
+	bool vertexShaderCompiled = true;
+	bool fragmentShaderCompiled = true;
 
 	shader->handle = pglCreateProgram();
 	if( !shader->handle ) 
@@ -1125,19 +1125,19 @@ static glsl_program_t *GL_CreateUberShader( GLint slot, const char *glname, cons
 	if( !GL_LoadGPUBinaryShader( shader, vpname, fpname, checksum ))
 	{
 		if (vpname)
-			vertexShaderError = GL_LoadGPUShader(shader, vpname, GL_VERTEX_SHADER_ARB, options);
+			vertexShaderCompiled = GL_LoadGPUShader(shader, vpname, GL_VERTEX_SHADER_ARB, options);
 		else 
 			SetBits( shader->status, SHADER_VERTEX_COMPILED );
 
 		if (fpname)
-			fragmentShaderError = GL_LoadGPUShader(shader, fpname, GL_FRAGMENT_SHADER_ARB, options);
+			fragmentShaderCompiled = GL_LoadGPUShader(shader, fpname, GL_FRAGMENT_SHADER_ARB, options);
 		else
 			SetBits(shader->status, SHADER_FRAGMENT_COMPILED);
 
 		if( vpname && FBitSet( shader->status, SHADER_VERTEX_COMPILED ))
 			GL_SetDefaultVertexAttribs( shader );
 
-		if (!vertexShaderError && !fragmentShaderError)
+		if (vertexShaderCompiled && fragmentShaderCompiled)
 		{
 			GL_LinkProgram(shader);
 			if (FBitSet(shader->status, SHADER_PROGRAM_LINKED))
