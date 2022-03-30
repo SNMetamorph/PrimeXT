@@ -149,8 +149,6 @@ void LoadFloat( const char *pName, float *fValue )
 
 int LoadViewerSettings( void )
 {
-	InitViewerSettings ();
-
 	LoadVector4D( "Background Color", g_viewerSettings.bgColor );
 	LoadVector4D( "Light Color", g_viewerSettings.lColor );
 	LoadVector4D( "Ground Color", g_viewerSettings.gColor );

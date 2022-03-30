@@ -371,7 +371,7 @@ PAKViewer::OnPlaySound ()
 int
 PAKViewer::OnExtract ()
 {
-	char *ptr = (char *) mxGetSaveFileName (this, "", "*.*");
+	char *ptr = (char *) mxGetSaveFileName (this, "", "All Files (*.*)");
 	if (ptr)
 	{
 		if (!pak_ExtractFile (d_pakFile, d_currLumpName, ptr))

@@ -299,7 +299,7 @@ SPRViewer::handleEvent (mxEvent *event)
 	{
 		case IDC_FILE_LOADMODEL:
 		{
-			const char *ptr = mxGetOpenFileName (this, 0, "*.spr");
+			const char *ptr = mxGetOpenFileName (this, 0, "GoldSrc Sprite (*.spr)");
 			if (ptr)
 			{
 				if (!loadSprite (ptr ))
@@ -353,7 +353,7 @@ SPRViewer::handleEvent (mxEvent *event)
 		break;
 		case IDC_FILE_SAVEMODEL:
 		{
-			char *ptr = (char *) mxGetSaveFileName (this, g_viewerSettings.spritePath, "*.spr");
+			char *ptr = (char *) mxGetSaveFileName (this, g_viewerSettings.spritePath, "GoldSrc Sprite (*.spr)");
 			if (!ptr)
 				break;
 
@@ -379,7 +379,7 @@ SPRViewer::handleEvent (mxEvent *event)
 		case IDC_FILE_LOADBACKGROUNDTEX:
 		case IDC_FILE_LOADGROUNDTEX:
 		{
-			const char *ptr = mxGetOpenFileName (this, 0, "*.bmp;*.tga;*.pcx");
+			const char *ptr = mxGetOpenFileName (this, 0, "Windows Bitmap (*.bmp);;Truevision TGA (*.tga);;PCExchange (*.pcx)");
 			if (ptr)
 			{
 				int name = TEXTURE_UNUSED;
@@ -411,7 +411,7 @@ SPRViewer::handleEvent (mxEvent *event)
 		break;
 		case IDC_FILE_OPENPAKFILE:
 		{
-			const char *ptr = mxGetOpenFileName (this, "\\Quake\\id1\\", "*.pak");
+			const char *ptr = mxGetOpenFileName (this, "\\Quake\\id1\\", "GoldSrc Package File (*.pak)");
 			if (ptr)
 			{
 				int i;
@@ -529,7 +529,7 @@ SPRViewer::handleEvent (mxEvent *event)
 #ifdef WIN32
 		case IDC_OPTIONS_MAKESCREENSHOT:
 		{
-			char *ptr = (char *)mxGetSaveFileName (this, 0, "*.bmp");
+			char *ptr = (char *)mxGetSaveFileName (this, 0, "Windows Bitmap (*.bmp)");
 			if (ptr)
 			{
 				if( !strstr( ptr, ".bmp" ))
@@ -811,6 +811,7 @@ int main( int argc, char *argv[] )
 		}
 	}
 
+	InitViewerSettings();
 	// TODO use json config file instead registry
 	//LoadViewerSettings();
 
