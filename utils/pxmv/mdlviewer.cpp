@@ -214,7 +214,7 @@ MDLViewer::handleEvent (mxEvent *event)
 		{
 		case IDC_FILE_LOADMODEL:
 		{
-			const char *ptr = mxGetOpenFileName (this, 0, "*.mdl");
+			const char *ptr = mxGetOpenFileName (this, 0, "GoldSrc Models (*.mdl)");
 			if (ptr)
 			{
 				int i;
@@ -251,7 +251,7 @@ MDLViewer::handleEvent (mxEvent *event)
 
 		case IDC_FILE_SAVEMODEL:
 		{
-			char *ptr = (char *) mxGetSaveFileName (this, g_viewerSettings.modelPath, "*.mdl");
+			char *ptr = (char *) mxGetSaveFileName (this, g_viewerSettings.modelPath, "GoldSrc Model (*.mdl)");
 			if (!ptr)
 				break;
 
@@ -278,7 +278,7 @@ MDLViewer::handleEvent (mxEvent *event)
 		case IDC_FILE_LOADBACKGROUNDTEX:
 		case IDC_FILE_LOADGROUNDTEX:
 		{
-			const char *ptr = mxGetOpenFileName (this, 0, "*.bmp;*.tga;*.pcx");
+			const char *ptr = mxGetOpenFileName (this, 0, "Windows Bitmap (*.bmp);;Truevision TGA (*.tga);;PCExchange (*.pcx)");
 			if (ptr)
 			{
 				int name = TEXTURE_UNUSED;
@@ -311,7 +311,7 @@ MDLViewer::handleEvent (mxEvent *event)
 
 		case IDC_FILE_OPENPAKFILE:
 		{
-			const char *ptr = mxGetOpenFileName (this, "\\sierra\\half-life\\valve", "*.pak");
+			const char *ptr = mxGetOpenFileName (this, "\\sierra\\half-life\\valve", "GoldSrc Package File (*.pak)");
 			if (ptr)
 			{
 				int i;

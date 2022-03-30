@@ -103,7 +103,7 @@ FileAssociation::handleEvent (mxEvent *event)
 
 	case IDC_CHOOSEPROGRAM:
 	{
-		const char *ptr = mxGetOpenFileName (this, 0, "*.exe");
+		const char *ptr = mxGetOpenFileName (this, 0, "Executable File (*.exe)");
 		if (ptr)
 		{
 			leProgram->setLabel (ptr);
