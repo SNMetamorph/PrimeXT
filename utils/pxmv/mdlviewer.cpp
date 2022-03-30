@@ -430,7 +430,7 @@ MDLViewer::handleEvent (mxEvent *event)
 
 		case IDC_OPTIONS_MAKESCREENSHOT:
 		{
-			char *ptr = (char *)mxGetSaveFileName( this, "", "*.bmp" );
+			char *ptr = (char *)mxGetSaveFileName( this, "", "Windows Bitmap (*.bmp)" );
 			if( ptr )
 			{
 				if( !strstr( ptr, ".bmp" ))
@@ -676,6 +676,7 @@ int main( int argc, char *argv[] )
 		return 0;
 	}
 
+	InitViewerSettings();
 	// TODO use json config file instead registry
 	//LoadViewerSettings();
 
