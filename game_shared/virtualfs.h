@@ -20,24 +20,35 @@ public:
 	size_t Read( void *out, size_t size );
 	size_t Write( const void *in, size_t size );
 	size_t Insert( const void *in, size_t size );
-	size_t Print( const char *message );
-	size_t IPrint( const char *message );
-	size_t Printf( const char *fmt, ... );
-	size_t IPrintf( const char *fmt, ... );
-	size_t VPrintf( const char *fmt, va_list ap );
-	size_t IVPrintf( const char *fmt, va_list ap );
-	char *GetBuffer( void ) { return (char *)m_pBuffer; };
-	size_t GetSize( void ) { return m_iLength; };
-	size_t Tell( void ) { return m_iOffset; }
-	bool Eof( void ) { return (m_iOffset == m_iLength) ? true : false; }
-	int Seek( size_t offset, int whence );
-	int Gets( char *string, size_t size );
-	int Getc( void );
+	int Seek(size_t offset, int whence);
+	int Gets(char *string, size_t size);
+	int Getc();
+
+	inline char *GetBuffer()	{ return (char *)m_CurrentState.m_pBuffer; };
+	inline size_t GetSize()		{ return m_CurrentState.m_iLength; };
+	inline size_t Tell()		{ return m_CurrentState.m_iOffset; };
+	inline bool Eof()			{ return (m_CurrentState.m_iOffset == m_CurrentState.m_iLength) ? true : false; };
+	inline void SaveState()		{ m_SavedState = m_CurrentState; };
+	inline void RestoreState()	{ m_CurrentState = m_SavedState; };
+
+	size_t Print(const char *message);
+	size_t IPrint(const char *message);
+	size_t Printf(const char *fmt, ...);
+	size_t IPrintf(const char *fmt, ...);
+	size_t VPrintf(const char *fmt, va_list ap);
+	size_t IVPrintf(const char *fmt, va_list ap);
+
 private:
-	byte	*m_pBuffer;	// file buffer
-	size_t	m_iBuffSize;	// real buffer size
-	size_t	m_iOffset;	// buffer position
-	size_t	m_iLength;	// buffer current size
+	struct State 
+	{
+		byte	*m_pBuffer;		// file buffer
+		size_t	m_iBuffSize;	// real buffer size
+		size_t	m_iOffset;		// buffer position
+		size_t	m_iLength;		// buffer current size
+	};
+
+	State m_CurrentState;
+	State m_SavedState;
 };
 
 #endif//VIRTUALFS_H

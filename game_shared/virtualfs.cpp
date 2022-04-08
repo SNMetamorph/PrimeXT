@@ -7,54 +7,57 @@
 
 CVirtualFS :: CVirtualFS()
 {
-	m_iBuffSize = FS_MEM_BLOCK; // can be resized later
-	m_pBuffer = new byte[m_iBuffSize];
-	memset( m_pBuffer, 0, m_iBuffSize );
-	m_iLength = m_iOffset = 0;
+	CVirtualFS::State &state = m_CurrentState;
+	state.m_iBuffSize = FS_MEM_BLOCK; // can be resized later
+	state.m_pBuffer = new byte[state.m_iBuffSize];
+	memset(state.m_pBuffer, 0, state.m_iBuffSize );
+	state.m_iLength = state.m_iOffset = 0;
 }
 
 CVirtualFS :: CVirtualFS( const byte *file, size_t size )
 {
+	CVirtualFS::State &state = m_CurrentState;
 	if( !file || size <= 0 )
 	{
-		m_iBuffSize = m_iOffset = m_iLength = 0;
-		m_pBuffer = NULL;
+		state.m_iBuffSize = state.m_iOffset = state.m_iLength = 0;
+		state.m_pBuffer = NULL;
 		return;
-          }
+    }
 
-	m_iLength = m_iBuffSize = size;
-	m_pBuffer = new byte[m_iBuffSize];	
-	memcpy( m_pBuffer, file, m_iBuffSize );
-	m_iOffset = 0;
+	state.m_iLength = state.m_iBuffSize = size;
+	state.m_pBuffer = new byte[state.m_iBuffSize];
+	memcpy(state.m_pBuffer, file, state.m_iBuffSize );
+	state.m_iOffset = 0;
 }
 
 CVirtualFS :: ~CVirtualFS()
 {
-	delete [] m_pBuffer;
+	delete [] m_CurrentState.m_pBuffer;
 }
 
 size_t CVirtualFS :: Read( void *out, size_t size )
 {
-	if( !m_pBuffer || !out || size <= 0 )
+	CVirtualFS::State &state = m_CurrentState;
+	if( !state.m_pBuffer || !out || size <= 0 )
 		return 0;
 
 	// check for enough room
-	if( m_iOffset >= m_iLength )
+	if (state.m_iOffset >= state.m_iLength )
 		return 0; // hit EOF
 
 	size_t read_size = 0;
 
-	if( m_iOffset + size <= m_iLength )
+	if(state.m_iOffset + size <= state.m_iLength )
 	{
-		memcpy( out, m_pBuffer + m_iOffset, size );
-		m_iOffset += size;
+		memcpy( out, state.m_pBuffer + state.m_iOffset, size );
+		state.m_iOffset += size;
 		read_size = size;
 	}
 	else
 	{
-		int reduced_size = m_iLength - m_iOffset;
-		memcpy( out, m_pBuffer + m_iOffset, reduced_size );
-		m_iOffset += reduced_size;
+		int reduced_size = state.m_iLength - state.m_iOffset;
+		memcpy( out, state.m_pBuffer + state.m_iOffset, reduced_size );
+		state.m_iOffset += reduced_size;
 		read_size = reduced_size;
 	}
 
@@ -63,65 +66,69 @@ size_t CVirtualFS :: Read( void *out, size_t size )
 
 size_t CVirtualFS :: Write( const void *in, size_t size )
 {
-	if( !m_pBuffer ) return -1;
+	CVirtualFS::State &state = m_CurrentState;
+	if( !state.m_pBuffer ) 
+		return -1;
 
-	if( m_iOffset + size >= m_iBuffSize )
+	if ( state.m_iOffset + size >= state.m_iBuffSize )
 	{
-		size_t newsize = m_iOffset + size + FS_MEM_BLOCK;
+		size_t newsize = state.m_iOffset + size + FS_MEM_BLOCK;
 
-		if( m_iBuffSize < newsize )
+		if ( state.m_iBuffSize < newsize )
 		{
 			// reallocate buffer now
-			m_pBuffer = (byte *)realloc( m_pBuffer, newsize );
-			memset( m_pBuffer + m_iBuffSize, 0, newsize - m_iBuffSize );
-			m_iBuffSize = newsize; // update buffsize
+			state.m_pBuffer = (byte *)realloc(state.m_pBuffer, newsize );
+			memset(state.m_pBuffer + state.m_iBuffSize, 0, newsize - state.m_iBuffSize );
+			state.m_iBuffSize = newsize; // update buffsize
 		}
 	}
 
 	// write into buffer
-	memcpy( m_pBuffer + m_iOffset, in, size );
-	m_iOffset += size;
+	memcpy(state.m_pBuffer + state.m_iOffset, in, size );
+	state.m_iOffset += size;
 
-	if( m_iOffset > m_iLength ) 
-		m_iLength = m_iOffset;
+	if(state.m_iOffset > state.m_iLength )
+		state.m_iLength = state.m_iOffset;
 
-	return m_iLength;
+	return state.m_iLength;
 }
 
 size_t CVirtualFS :: Insert( const void *in, size_t size )
 {
-	if( !m_pBuffer ) return -1;
+	CVirtualFS::State &state = m_CurrentState;
+	if( !state.m_pBuffer ) 
+		return -1;
 
-	if( m_iLength + size >= m_iBuffSize )
+	if(state.m_iLength + size >= state.m_iBuffSize )
 	{
-		size_t newsize = m_iLength + size + FS_MEM_BLOCK;
+		size_t newsize = state.m_iLength + size + FS_MEM_BLOCK;
 
-		if( m_iBuffSize < newsize )
+		if(state.m_iBuffSize < newsize )
 		{
 			// reallocate buffer now
-			m_pBuffer = (byte *)realloc( m_pBuffer, newsize );
-			memset( m_pBuffer + m_iBuffSize, 0, newsize - m_iBuffSize );
-			m_iBuffSize = newsize; // update buffsize
+			state.m_pBuffer = (byte *)realloc(state.m_pBuffer, newsize );
+			memset(state.m_pBuffer + state.m_iBuffSize, 0, newsize - state.m_iBuffSize );
+			state.m_iBuffSize = newsize; // update buffsize
 		}
 	}
 
 	// backup right part
-	size_t rp_size = m_iLength - m_iOffset;
+	size_t rp_size = state.m_iLength - state.m_iOffset;
 	byte *backup = new byte[rp_size];
-	memcpy( backup, m_pBuffer + m_iOffset, rp_size );
+	memcpy( backup, state.m_pBuffer + state.m_iOffset, rp_size );
 
 	// insert into buffer
-	memcpy( m_pBuffer + m_iOffset, in, size );
-	m_iOffset += size;
+	memcpy(state.m_pBuffer + state.m_iOffset, in, size);
+	state.m_iOffset += size;
 
 	// write right part buffer
-	memcpy( m_pBuffer + m_iOffset, backup, rp_size );
+	memcpy(state.m_pBuffer + state.m_iOffset, backup, rp_size);
 	delete [] backup;
 
-	if(( m_iOffset + rp_size ) > m_iLength ) 
-		m_iLength = m_iOffset + rp_size;
+	if((state.m_iOffset + rp_size ) > state.m_iLength )
+		state.m_iLength = state.m_iOffset + rp_size;
 
-	return m_iLength;
+	return state.m_iLength;
 }
 
 size_t CVirtualFS :: Print( const char *message )
@@ -241,25 +248,26 @@ int CVirtualFS :: Gets( char *string, size_t size )
 
 int CVirtualFS :: Seek( size_t offset, int whence )
 {
+	CVirtualFS::State &state = m_CurrentState;
 	// Compute the file offset
 	switch( whence )
 	{
 	case SEEK_CUR:
-		offset += m_iOffset;
+		offset += state.m_iOffset;
 		break;
 	case SEEK_SET:
 		break;
 	case SEEK_END:
-		offset += m_iLength;
+		offset += state.m_iLength;
 		break;
 	default: 
 		return -1;
 	}
 
-	if(( offset < 0 ) || ( offset > m_iLength ))
+	if(( offset < 0 ) || ( offset > state.m_iLength ))
 		return -1;
 
-	m_iOffset = offset;
+	state.m_iOffset = offset;
 
 	return 0;
 }
