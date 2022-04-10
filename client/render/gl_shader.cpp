@@ -509,19 +509,50 @@ static bool GL_LoadSource( const char *filename, CVirtualFS *file )
 	return true;
 }
 
-static void GL_ParseFile( const char *filename, CVirtualFS *file, CVirtualFS *out )
+static int GL_GetFileLineCount(CVirtualFS *file)
+{
+	int ret;
+	int lineCount = 0;
+	char stringBuffer[4];
+
+	file->SaveState();
+	file->Seek(0, SEEK_SET);
+	do
+	{
+		ret = file->Gets(stringBuffer, sizeof(stringBuffer) - 1);
+		lineCount += 1;
+	} while (ret != EOF);
+	file->RestoreState();
+	return lineCount;
+}
+
+static void GL_ParseFile(glsl_program_t *program, const char *filename, int line, CVirtualFS *inputFile, CVirtualFS *out, glsl_prog_include *parent)
 {
 	char	*pfile, token[256];
 	int	ret, fileline = 1;
-	char	line[2048];
+	static char lineString[2048];
 
-//	out->Printf( "#file %s\n", filename );	// OpenGL doesn't support #file :-(
-	out->Printf( "#line 0\n" );
+	glsl_prog_include f;
+	glsl_prog_include *nextParent;
+	f.line = line;
+	f.name = filename;
+	f.lineCount = GL_GetFileLineCount(inputFile);
+
+	if (parent) 
+	{
+		parent->siblings.push_back(f);
+		nextParent = &parent->siblings.back();
+	}
+	else 
+	{
+		program->sourceUnits.push_back(f);
+		nextParent = &program->sourceUnits.back();
+	}
 
 	do
 	{
-		ret = file->Gets( line, sizeof( line ));
-		pfile = line;
+		ret = inputFile->Gets(lineString, sizeof(lineString));
+		pfile = lineString;
 
 		// NOTE: if first keyword it's not an '#include' just ignore it
 		pfile = COM_ParseFile( pfile, token );
@@ -536,71 +567,162 @@ static void GL_ParseFile( const char *filename, CVirtualFS *file, CVirtualFS *ou
 			{
 				fileline++;
 				continue;
-                              }
-			GL_ParseFile( incname, &incfile, out );
-//			out->Printf( "#file %s\n", filename );	// OpenGL doesn't support #file :-(
-			out->Printf( "#line %i\n", fileline );
+            }
+			GL_ParseFile(program, incname, fileline, &incfile, out, nextParent);
 		}
-		else out->Printf( "%s\n", line );
+		else {
+			out->Printf("%s\n", lineString);
+		}
 		fileline++;
 	} while( ret != EOF );
 
 	GL_PopFileStack();
 }
 
-static bool GL_ProcessShader( const char *filename, GLenum shaderType, CVirtualFS *out, const char *defines = NULL )
+static void GL_RebaseHeadersHierarchy(glsl_program_t *program, glsl_prog_include &node, int headerLineCount, int level = 0)
 {
-	CVirtualFS file;
+	if (node.siblings.empty()) {
+		return;
+	}
+
+	// iterate through other nodes
+	for (glsl_prog_include &sibling : node.siblings) {
+		GL_RebaseHeadersHierarchy(program, sibling, headerLineCount, level + 1);
+	}
+
+	// do rebase
+	glsl_prog_include &siblingFront = node.siblings.front();
+	glsl_prog_include &siblingBack = node.siblings.back();
+	siblingFront.rebasedLine = siblingFront.line;
+
+	// compensate ubershader header length for root node siblings
+	if (level < 1) {
+		siblingFront.rebasedLine += headerLineCount;
+	}
+
+	for (int i = 1; i < node.siblings.size(); ++i)
+	{
+		glsl_prog_include &n1 = node.siblings[i - 1];
+		glsl_prog_include &n2 = node.siblings[i];
+		int diff = (n2.line - n1.line) - 1;
+		n2.rebasedLine = n1.rebasedLine + n1.lineCount + diff;
+	}
+	int headersLineCount = (siblingBack.rebasedLine + siblingBack.lineCount) - siblingFront.rebasedLine;
+	node.lineCount = (node.lineCount - node.siblings.size()) + headersLineCount;
+}
+
+static int GL_GetSourceUnitIndex(glsl_program_t *program, const char *filename)
+{
+	for (int i = 0; i < program->sourceUnits.size(); ++i)
+	{
+		if (program->sourceUnits[i].name.compare(filename) == 0) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+static int GL_ParseErrorSourceLine(const char *errorLog)
+{
+	// TODO test it with other GPUs and drivers, because PROBABLY format may be different
+	int lineNumber = 0;
+	if (sscanf(errorLog, "0(%d)", &lineNumber) != 1) {
+		ALERT(at_warning, "GL_ParseErrorLine: failed to parse error line from shader compiling log\n");
+	}
+	return lineNumber;
+}
+
+static int GL_TraceShaderErrorFile(glsl_program_t *program, int sourceLine, int unitIndex, std::string &fileName)
+{
+	int line = sourceLine;
+	glsl_prog_include *header = &program->sourceUnits[unitIndex];
+	glsl_prog_include *siblingLast = &header->siblings.back();
+	int headersEndLine = siblingLast->rebasedLine + siblingLast->lineCount;
+	if (line > headersEndLine) // check is error happened in source file itself
+	{
+		line = (line - headersEndLine) + siblingLast->line + 1;
+	}
+	else 
+	{
+		// search error line among headers
+		while (!header->siblings.empty())
+		{
+			for (int i = 0; i < header->siblings.size(); ++i)
+			{
+				glsl_prog_include &sibling = header->siblings[i];
+				int rangeStart = sibling.rebasedLine;
+				int rangeEnd = sibling.rebasedLine + sibling.lineCount;
+
+				if (line >= rangeStart && line <= rangeEnd)
+				{
+					header = &sibling;
+					line = (line - sibling.rebasedLine) + 1;
+					break;
+				}
+			}
+			break; // line not found in any of the headers
+		}
+	}
+	
+	fileName = header->name;
+	return line;
+}
+
+static bool GL_ProcessShader( glsl_program_t *program, const char *filename, GLenum shaderType, CVirtualFS *outputFile, const char *defines = NULL )
+{
+	CVirtualFS inputFile;
 
 	file_stack_pos = 0;
 
-	if( !GL_LoadSource( filename, &file ))
+	if( !GL_LoadSource( filename, &inputFile ))
 		return false;
 
 	// add internal defines
-	out->Printf( "#version 120\n" ); // OpenGL 2.1 required (because 'flat' modifier support only starts from this version)
-	out->Printf( "#ifndef M_PI\n#define M_PI 3.14159265358979323846\n#endif\n" );
-	out->Printf( "#ifndef M_PI2\n#define M_PI2 6.28318530717958647692\n#endif\n" );
+	outputFile->Printf("#version 120\n"); // OpenGL 2.1 required (because 'flat' modifier support only starts from this version)
+	outputFile->Printf("#ifndef M_PI\n#define M_PI 3.14159265358979323846\n#endif\n");
+	outputFile->Printf("#ifndef M_PI2\n#define M_PI2 6.28318530717958647692\n#endif\n");
 
 	if (shaderType == GL_FRAGMENT_SHADER_ARB) {
-		out->Printf("#define GLSL_SHADER_FRAGMENT\n");
+		outputFile->Printf("#define GLSL_SHADER_FRAGMENT\n");
 	}
 	else if (shaderType == GL_VERTEX_SHADER_ARB) {
-		out->Printf("#define GLSL_SHADER_VERTEX\n");
+		outputFile->Printf("#define GLSL_SHADER_VERTEX\n");
 	}
 
 	if( GL_Support( R_EXT_GPU_SHADER4 ))
 	{
-		out->Printf( "#extension GL_EXT_gpu_shader4 : require\n" ); // support bitwise ops
-		out->Printf( "#define GLSL_gpu_shader4\n" );
+		outputFile->Printf("#extension GL_EXT_gpu_shader4 : require\n"); // support bitwise ops
+		outputFile->Printf("#define GLSL_gpu_shader4\n");
 		if( GL_Support( R_TEXTURE_ARRAY_EXT ))
-			out->Printf( "#define GLSL_ALLOW_TEXTURE_ARRAY\n" );
+			outputFile->Printf("#define GLSL_ALLOW_TEXTURE_ARRAY\n");
 	}
 	else if( GL_Support( R_TEXTURE_ARRAY_EXT ))
 	{
-		out->Printf( "#extension GL_EXT_texture_array : require\n" ); // support texture arrays
-		out->Printf( "#define GLSL_ALLOW_TEXTURE_ARRAY\n" );
+		outputFile->Printf("#extension GL_EXT_texture_array : require\n"); // support texture arrays
+		outputFile->Printf("#define GLSL_ALLOW_TEXTURE_ARRAY\n");
 	}
 
 	if( GL_Support( R_TEXTURE_2D_RECT_EXT ))
 	{
-		out->Printf( "#extension GL_ARB_texture_rectangle : enable\n" ); // support texture rectangle
+		outputFile->Printf("#extension GL_ARB_texture_rectangle : enable\n"); // support texture rectangle
 	}
 
-	if( defines ) out->Print( defines );
+	if( defines ) outputFile->Print( defines );
 
 	// user may override this constants
-	out->Printf( "#ifndef MAXSTUDIOBONES\n#define MAXSTUDIOBONES %i\n#endif\n", glConfig.max_skinning_bones );
-	out->Printf( "#ifndef MAX_SHADOWMAPS\n#define MAX_SHADOWMAPS %i\n#endif\n", MAX_SHADOWMAPS );
-	out->Printf( "#ifndef NUM_SHADOW_SPLITS\n#define NUM_SHADOW_SPLITS %i\n#endif\n", NUM_SHADOW_SPLITS );
-	out->Printf( "#ifndef LIGHT_SAMPLES\n#define LIGHT_SAMPLES %i\n#endif\n", LIGHT_SAMPLES );
-	out->Printf( "#ifndef MAX_LIGHTSTYLES\n#define MAX_LIGHTSTYLES %i\n#endif\n", MAX_LIGHTSTYLES );
-	out->Printf( "#ifndef MAXLIGHTMAPS\n#define MAXLIGHTMAPS %i\n#endif\n", MAXLIGHTMAPS );
-	out->Printf( "#ifndef MAXDYNLIGHTS\n#define MAXDYNLIGHTS %i\n#endif\n", (int)cv_deferred_maxlights->value );
-	out->Printf( "#ifndef GRASS_ANIM_DIST\n#define GRASS_ANIM_DIST %f\n#endif\n", GRASS_ANIM_DIST );
+	outputFile->Printf("#ifndef MAXSTUDIOBONES\n#define MAXSTUDIOBONES %i\n#endif\n", glConfig.max_skinning_bones);
+	outputFile->Printf("#ifndef MAX_SHADOWMAPS\n#define MAX_SHADOWMAPS %i\n#endif\n", MAX_SHADOWMAPS);
+	outputFile->Printf("#ifndef NUM_SHADOW_SPLITS\n#define NUM_SHADOW_SPLITS %i\n#endif\n", NUM_SHADOW_SPLITS);
+	outputFile->Printf("#ifndef LIGHT_SAMPLES\n#define LIGHT_SAMPLES %i\n#endif\n", LIGHT_SAMPLES);
+	outputFile->Printf("#ifndef MAX_LIGHTSTYLES\n#define MAX_LIGHTSTYLES %i\n#endif\n", MAX_LIGHTSTYLES);
+	outputFile->Printf("#ifndef MAXLIGHTMAPS\n#define MAXLIGHTMAPS %i\n#endif\n", MAXLIGHTMAPS);
+	outputFile->Printf("#ifndef MAXDYNLIGHTS\n#define MAXDYNLIGHTS %i\n#endif\n", (int)cv_deferred_maxlights->value);
+	outputFile->Printf("#ifndef GRASS_ANIM_DIST\n#define GRASS_ANIM_DIST %f\n#endif\n", GRASS_ANIM_DIST);
 
-	GL_ParseFile( filename, &file, out );
-	out->Write( "", 1 ); // terminator
+	int headerLines = GL_GetFileLineCount(outputFile) - 1;
+	GL_ParseFile(program, filename, 0, &inputFile, outputFile, nullptr);
+ 	outputFile->Write("", 1); // terminator
+	GL_RebaseHeadersHierarchy(program, program->sourceUnits.back(), headerLines);
 
 	return true;
 }
@@ -611,6 +733,7 @@ static bool GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum s
 	GLhandleARB	shaderHandle;
 	CVirtualFS	source;
 	GLint		compiled;
+	std::string errorFile;
 
 	ASSERT( shader != NULL );
 
@@ -628,7 +751,7 @@ static bool GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum s
 	}
 
 	// load includes, add some directives
-	if( !GL_ProcessShader( filename, shaderType, &source, defines ))
+	if (!GL_ProcessShader(shader, filename, shaderType, &source, defines))
 		return false;
 
 	GLcharARB *buffer = (GLcharARB *)source.GetBuffer();
@@ -646,9 +769,15 @@ static bool GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum s
 
 	if( !compiled )
 	{
+		const char *shaderLog = GL_PrintShaderInfoLog(shaderHandle);
+		int unitIndex = GL_GetSourceUnitIndex(shader, filename);
+		int sourceLine = GL_ParseErrorSourceLine(shaderLog);
+		int errorLine = GL_TraceShaderErrorFile(shader, sourceLine, unitIndex, errorFile);
+
 		ALERT(at_error, "^1GL_LoadGPUShader: ^7couldn't compile \"%s\" from file \"%s\"\n", name, filename);
-		if( developer_level ) Msg( "%s", GL_PrintShaderInfoLog( shaderHandle ));
-		if( developer_level ) Msg( "Shader options:%s\n", GL_PretifyListOptions( defines ));
+		if (developer_level) Msg("%s", shaderLog);
+		if (developer_level) Msg("Shader options:%s\n", GL_PretifyListOptions(defines));
+		if (developer_level) Msg("Source file: %s at line %d\n", errorFile.c_str(), errorLine);
 		return false;
 	}
 
@@ -657,7 +786,6 @@ static bool GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum s
 	else 
 		shader->status |= SHADER_FRAGMENT_COMPILED;
 
-	
 	pglAttachShader(shader->handle, shaderHandle); // attach shader to program
 	pglDeleteShader(shaderHandle); // delete shader, no longer needed
 	return true;
@@ -1429,7 +1557,10 @@ void GL_InitGPUShaders()
 {
 	char options[MAX_OPTIONS_LENGTH];
 
-	memset( &glsl_programs, 0, sizeof( glsl_programs ));
+	// reinitialize all shader program structures
+	for (int i = 0; i < MAX_GLSL_PROGRAMS; ++i) {
+		glsl_programs[i] = {};
+	}
 	num_glsl_programs = 1; // entry #0 isn't used
 
 	if( !GL_Support( R_SHADER_GLSL100_EXT ))

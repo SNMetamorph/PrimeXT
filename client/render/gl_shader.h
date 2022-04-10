@@ -18,6 +18,8 @@ GNU General Public License for more details.
 #define GL_SHADER_H
 #include "custom.h"
 #include "gl_export.h"
+#include <vector>
+#include <string>
 
 #define MAX_OPTIONS_LENGTH		512
 #define MAX_GLSL_PROGRAMS		4096
@@ -250,19 +252,51 @@ public:
 	int GetSizeInBytes( void );
 };
 
+struct glsl_prog_include
+{
+	glsl_prog_include() { 
+		line = 0;
+		rebasedLine = 0;
+		lineCount = 0;
+		name.clear();
+		siblings.clear();
+	};
+	std::string name;
+	int line;
+	int rebasedLine;
+	int lineCount;
+	std::vector<glsl_prog_include> siblings;
+};
+
 typedef struct glsl_prog_s
 {
+	glsl_prog_s()
+	{
+		memset(name, 0, sizeof(name));
+		memset(options, 0, sizeof(options));
+		memset(vp_name, 0, sizeof(vp_name));
+		memset(fp_name, 0, sizeof(fp_name));
+		initialized = false;
+		handle = 0;
+		status = 0;
+		attribs = 0;
+		numUniforms = 0;
+		uniforms = nullptr;
+		nextHash = nullptr;
+		sourceUnits = {};
+	};
 	char		name[64];
 	char		options[MAX_OPTIONS_LENGTH];	// UberShader preprocess agrs
 	char		vp_name[64];
 	char		fp_name[64];
-	bool initialized;
+	bool		initialized;
 	GLhandleARB	handle;
-	unsigned short	status;
-	struct glsl_prog_s	*nextHash;
-	unsigned short	attribs;
-	uniform_t		*uniforms;
-	int		numUniforms;
+	int			status;
+	int			attribs;
+	uniform_t	*uniforms;
+	int			numUniforms;
+	std::vector<glsl_prog_include> sourceUnits;
+	struct glsl_prog_s *nextHash;
 } glsl_program_t;
 
 extern glsl_program_t	glsl_programs[MAX_GLSL_PROGRAMS];
