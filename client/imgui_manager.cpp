@@ -93,19 +93,36 @@ void CImGuiManager::HandleKeyInput(bool keyDown, int keyNumber)
     else if (keyNumber == K_WIN) {
         io.KeySuper = keyDown;
     }
-    else if (keyNumber == K_MOUSE1) {
-        m_MouseButtonsState.left = keyDown;
-        return;
-    }
-    else if (keyNumber == K_MOUSE2) {
-        m_MouseButtonsState.right = keyDown;
-        return;
-    }
-    else if (keyNumber == K_MOUSE3) {
-        m_MouseButtonsState.middle = keyDown;
+    else if (HandleMouseInput(keyDown, keyNumber)) {
         return;
     }
     io.AddKeyEvent(m_KeysMapping[keyNumber], keyDown);
+}
+
+bool CImGuiManager::HandleMouseInput(bool keyDown, int keyNumber)
+{
+    ImGuiIO &io = ImGui::GetIO();
+    if (keyNumber == K_MOUSE1) {
+        m_MouseButtonsState.left = keyDown;
+        return true;
+    }
+    else if (keyNumber == K_MOUSE2) {
+        m_MouseButtonsState.right = keyDown;
+        return true;
+    }
+    else if (keyNumber == K_MOUSE3) {
+        m_MouseButtonsState.middle = keyDown;
+        return true;
+    }
+    else if (keyNumber == K_MWHEELDOWN && keyDown) {
+        io.MouseWheel -= 1;
+        return true;
+    }
+    else if (keyNumber == K_MWHEELUP && keyDown) {
+        io.MouseWheel += 1;
+        return true;
+    }
+    return false;
 }
 
 void CImGuiManager::SetupKeyboardMapping()

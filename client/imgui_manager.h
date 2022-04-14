@@ -28,6 +28,7 @@ private:
     void ApplyStyles();
     void UpdateMouse();
     void HandleKeyInput(bool keyDown, int keyNumber);
+    bool HandleMouseInput(bool keyDown, int keyNumber);
     void SetupKeyboardMapping();
     
     MouseButtonsState m_MouseButtonsState;
