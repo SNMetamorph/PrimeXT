@@ -33,7 +33,7 @@ GNU General Public License for more details.
 #include "gl_shader.h"
 #include "gl_cvars.h"
 #include "gl_debug.h"
-#include "gl_imgui.h"
+#include "imgui_manager.h"
 #include "screenfade.h"
 #include "shake.h"
 
@@ -525,7 +525,7 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	}
 
 	GL_CleanupDrawState();
-	GL_RenderFrameImGui();
+	g_ImGuiManager.NewFrame();
 
 	// restore state for correct rendering other stuff
 	GL_Setup3D();
