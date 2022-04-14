@@ -15,6 +15,10 @@
 #ifndef ENTITY_STATE_H
 #define ENTITY_STATE_H
 
+#include "const.h"
+#include "color24.h"
+#include "vector.h"
+
 // For entityType below
 #define ENTITY_NORMAL		(1<<0)
 #define ENTITY_BEAM			(1<<1)

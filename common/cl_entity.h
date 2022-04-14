@@ -16,6 +16,9 @@
 #ifndef CL_ENTITY_H
 #define CL_ENTITY_H
 
+#include "const.h"
+#include "vector.h"
+
 typedef struct efrag_s
 {
 	struct mleaf_s	*leaf;
