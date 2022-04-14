@@ -26,6 +26,7 @@
 #include "entity_state.h"
 #include "cdll_exp.h"
 #include "tri.h"
+#include "imgui_manager.h"
 
 int developer_level;
 int g_iXashEngineBuildNumber;
@@ -283,9 +284,9 @@ extern "C" void DLLEXPORT HUD_Frame( double time )
 	gEngfuncs.VGui_ViewportPaintBackground( VGUI_GetRect( ));
 }
 
-extern "C" int DLLEXPORT HUD_Key_Event( int eventcode, int keynum, const char *pszCurrentBinding )
+extern "C" int DLLEXPORT HUD_Key_Event( int down, int keynum, const char *pszCurrentBinding )
 {
-	return 1;
+	return g_ImGuiManager.KeyInput(down != 0, keynum, pszCurrentBinding) ? 1 : 0;
 }
 
 extern "C" void DLLEXPORT HUD_PostRunCmd( struct local_state_s*, local_state_s *, struct usercmd_s*, int, double, unsigned int )

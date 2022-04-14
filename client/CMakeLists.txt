@@ -37,6 +37,7 @@ list(APPEND CLDLL_SOURCES
 	"train.cpp"
 	"utils.cpp"
 	"r_view.cpp"
+	"imgui_manager.cpp"
 )
 
 # shared source files
