@@ -304,7 +304,7 @@ void ImGui_ImplOpenGL3_NewFrame()
     // Setup display size (every frame to accommodate for window resizing)
     io.DisplaySize = ImVec2(glState.width, glState.height);
     io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
-    io.DeltaTime = (tr.frametime > 0.0f) ? Q_max(tr.frametime, 1.0f / 20.0f) : (1.f / CVAR_GET_FLOAT("fps_max"));
+    io.DeltaTime = (tr.frametime > 0.0f) ? Q_min(tr.frametime, 1.0f / 20.0f) : (1.f / CVAR_GET_FLOAT("fps_max"));
 }
 
 static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData *draw_data, int fb_width, int fb_height, GLuint vertex_array_object)
