@@ -18,8 +18,9 @@ void CImGuiManager::Initialize()
     ImGuiIO &io = ImGui::GetIO();
     io.IniFilename = NULL;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    io.Fonts->AddFontDefault();
-    ImGui::StyleColorsDark();
+
+    LoadFonts();
+    ApplyStyles();
     SetupKeyboardMapping();
     ImGui_ImplOpenGL3_Init(nullptr);
 }
@@ -32,6 +33,7 @@ void CImGuiManager::Terminate()
 void CImGuiManager::NewFrame()
 {
     ImGui_ImplOpenGL3_NewFrame();
+    UpdateMouse();
     ImGui::NewFrame();
 
     bool show_demo_window = true;
@@ -48,8 +50,37 @@ void CImGuiManager::NewFrame()
 */
 bool CImGuiManager::KeyInput(bool keyDown, int keyNumber, const char *bindName)
 {
-    ImGuiIO &io = ImGui::GetIO();
+    HandleKeyInput(keyDown, keyNumber);
+    return false;
+}
 
+void CImGuiManager::LoadFonts()
+{
+    ImGuiIO &io = ImGui::GetIO();
+    io.Fonts->AddFontDefault();
+}
+
+void CImGuiManager::ApplyStyles()
+{
+    ImGuiIO &io = ImGui::GetIO();
+    ImGui::StyleColorsDark();
+}
+
+void CImGuiManager::UpdateMouse()
+{
+    int mx, my;
+    ImGuiIO &io = ImGui::GetIO();
+    gEngfuncs.GetMousePosition(&mx, &my);
+
+    io.MouseDown[0] = m_MouseButtonsState.left;
+    io.MouseDown[1] = m_MouseButtonsState.right;
+    io.MouseDown[2] = m_MouseButtonsState.middle;
+    io.MousePos = ImVec2((float)mx, (float)my);
+}
+
+void CImGuiManager::HandleKeyInput(bool keyDown, int keyNumber)
+{
+    ImGuiIO &io = ImGui::GetIO();
     if (keyNumber == K_SHIFT) {
         io.KeyShift = keyDown;
     }
@@ -62,9 +93,19 @@ bool CImGuiManager::KeyInput(bool keyDown, int keyNumber, const char *bindName)
     else if (keyNumber == K_WIN) {
         io.KeySuper = keyDown;
     }
-
+    else if (keyNumber == K_MOUSE1) {
+        m_MouseButtonsState.left = keyDown;
+        return;
+    }
+    else if (keyNumber == K_MOUSE2) {
+        m_MouseButtonsState.right = keyDown;
+        return;
+    }
+    else if (keyNumber == K_MOUSE3) {
+        m_MouseButtonsState.middle = keyDown;
+        return;
+    }
     io.AddKeyEvent(m_KeysMapping[keyNumber], keyDown);
-    return false;
 }
 
 void CImGuiManager::SetupKeyboardMapping()
@@ -127,7 +168,7 @@ void CImGuiManager::SetupKeyboardMapping()
         m_KeysMapping.insert({ 'a' + i, ImGuiKey_A + i });
     }
 
-    // create mapping for keyboard numbers
+    // keyboard numbers
     m_KeysMapping.insert({ '0', ImGuiKey_0 });
     for (int i = 0; i < 9; ++i) {
         m_KeysMapping.insert({ '1' + i, ImGuiKey_1 + i });
