@@ -3,6 +3,8 @@
 #include "imgui.h"
 #include "keydefs.h"
 #include "utils.h"
+#include <VGUI_Scheme.h>
+#include <VGUI_App.h>
 
 CImGuiManager &g_ImGuiManager = CImGuiManager::GetInstance();
 
@@ -83,16 +85,16 @@ void CImGuiManager::UpdateMouseState()
     io.MousePos = ImVec2((float)mx, (float)my);
 
     if (m_WindowSystem.CursorRequired()) {
-        io.MouseDrawCursor = true;
-        //vgui::App::getInstance()->setCursorOveride(
-        //    vgui::App::getInstance()->getScheme()->getCursor(vgui::Scheme::scu_arrow)
-        //);
+        //io.MouseDrawCursor = true;
+        vgui::App::getInstance()->setCursorOveride(
+            vgui::App::getInstance()->getScheme()->getCursor(vgui::Scheme::scu_arrow)
+        );
     }
     else {
-        io.MouseDrawCursor = false;
-        //vgui::App::getInstance()->setCursorOveride(
-        //    vgui::App::getInstance()->getScheme()->getCursor(vgui::Scheme::scu_none)
-        //);
+        //io.MouseDrawCursor = false;
+        vgui::App::getInstance()->setCursorOveride(
+            vgui::App::getInstance()->getScheme()->getCursor(vgui::Scheme::scu_none)
+        );
     }
 }
 
