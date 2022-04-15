@@ -53,7 +53,9 @@ void CImGuiManager::NewFrame()
 */
 bool CImGuiManager::KeyInput(bool keyDown, int keyNumber, const char *bindName)
 {
-    HandleKeyInput(keyDown, keyNumber);
+    if (m_WindowSystem.CursorRequired()) {
+        HandleKeyInput(keyDown, keyNumber);
+    }
     return m_WindowSystem.KeyInput(keyDown, keyNumber, bindName);
 }
 
