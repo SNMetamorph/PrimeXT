@@ -146,9 +146,8 @@ so the HUD can reinitialize itself.
 int DLLEXPORT HUD_VidInit( void )
 {
 	gHUD.VidInit();
-
 	R_VidInit();
-
+	g_ImGuiManager.VidInitialize();
 	return 1;
 }
 
