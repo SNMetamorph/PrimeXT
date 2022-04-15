@@ -37,7 +37,10 @@ list(APPEND CLDLL_SOURCES
 	"train.cpp"
 	"utils.cpp"
 	"r_view.cpp"
-	"imgui_manager.cpp"
+	"ui/imgui_manager.cpp"
+	"ui/imgui_window_system.cpp"
+	"ui/ui_main.cpp"
+	"ui/ui_demo_window.cpp"
 )
 
 # shared source files
@@ -76,6 +79,7 @@ add_library(${PROJECT_NAME} SHARED ${CLDLL_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"."
 	"render/"
+	"ui/"
 	"../common"
 	"../engine"
 	"../game_shared"
