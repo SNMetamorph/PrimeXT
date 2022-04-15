@@ -23,23 +23,26 @@ void CImGuiManager::Initialize()
     ApplyStyles();
     SetupKeyboardMapping();
     ImGui_ImplOpenGL3_Init(nullptr);
+    m_WindowSystem.Initialize();
+}
+
+void CImGuiManager::VidInitialize()
+{
+    m_WindowSystem.VidInitialize();
 }
 
 void CImGuiManager::Terminate()
 {
+    m_WindowSystem.Terminate();
     ImGui_ImplOpenGL3_Shutdown();
 }
 
 void CImGuiManager::NewFrame()
 {
     ImGui_ImplOpenGL3_NewFrame();
-    UpdateMouse();
+    UpdateMouseState();
     ImGui::NewFrame();
-
-    bool show_demo_window = true;
-    if (show_demo_window)
-        ImGui::ShowDemoWindow(&show_demo_window);
-
+    m_WindowSystem.NewFrame();
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
@@ -51,7 +54,7 @@ void CImGuiManager::NewFrame()
 bool CImGuiManager::KeyInput(bool keyDown, int keyNumber, const char *bindName)
 {
     HandleKeyInput(keyDown, keyNumber);
-    return false;
+    return m_WindowSystem.KeyInput(keyDown, keyNumber, bindName);
 }
 
 void CImGuiManager::LoadFonts()
@@ -66,7 +69,7 @@ void CImGuiManager::ApplyStyles()
     ImGui::StyleColorsDark();
 }
 
-void CImGuiManager::UpdateMouse()
+void CImGuiManager::UpdateMouseState()
 {
     int mx, my;
     ImGuiIO &io = ImGui::GetIO();
@@ -76,6 +79,19 @@ void CImGuiManager::UpdateMouse()
     io.MouseDown[1] = m_MouseButtonsState.right;
     io.MouseDown[2] = m_MouseButtonsState.middle;
     io.MousePos = ImVec2((float)mx, (float)my);
+
+    if (m_WindowSystem.CursorRequired()) {
+        io.MouseDrawCursor = true;
+        //vgui::App::getInstance()->setCursorOveride(
+        //    vgui::App::getInstance()->getScheme()->getCursor(vgui::Scheme::scu_arrow)
+        //);
+    }
+    else {
+        io.MouseDrawCursor = false;
+        //vgui::App::getInstance()->setCursorOveride(
+        //    vgui::App::getInstance()->getScheme()->getCursor(vgui::Scheme::scu_none)
+        //);
+    }
 }
 
 void CImGuiManager::HandleKeyInput(bool keyDown, int keyNumber)

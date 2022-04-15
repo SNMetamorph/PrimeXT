@@ -1,4 +1,5 @@
 #pragma once
+#include "imgui_window_system.h"
 #include <map>
 
 class CImGuiManager
@@ -7,10 +8,12 @@ public:
     static CImGuiManager &GetInstance();
 
     void Initialize();
+    void VidInitialize();
     void Terminate();
     void NewFrame();
     bool KeyInput(bool keyDown, int keyNumber, const char *bindName);
 
+    CImGuiWindowSystem m_WindowSystem;
 private:
     struct MouseButtonsState
     {
@@ -26,7 +29,7 @@ private:
 
     void LoadFonts();
     void ApplyStyles();
-    void UpdateMouse();
+    void UpdateMouseState();
     void HandleKeyInput(bool keyDown, int keyNumber);
     bool HandleMouseInput(bool keyDown, int keyNumber);
     void SetupKeyboardMapping();
