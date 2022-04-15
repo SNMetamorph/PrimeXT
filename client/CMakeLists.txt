@@ -134,12 +134,17 @@ endif()
 set_compiler_runtime(${PROJECT_NAME} STATIC)
 
 if(ENABLE_VGUI_SUPPORT)
-	find_library(LIBRARY_VGUI
-		NAMES vgui
-		HINTS "${CMAKE_SOURCE_DIR}/external/vgui/lib"
-		PATH_SUFFIXES win32_vc6
-	)
-	target_link_libraries(${PROJECT_NAME} PRIVATE "${LIBRARY_VGUI}")
+	if(MSVC)
+		find_library(LIBRARY_VGUI
+			NAMES vgui
+			HINTS "${CMAKE_SOURCE_DIR}/external/vgui/lib"
+			PATH_SUFFIXES win32_vc6
+		)
+		target_link_libraries(${PROJECT_NAME} PRIVATE "${LIBRARY_VGUI}")
+	else()
+		target_link_directories(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/external/vgui/lib")
+		target_link_libraries(${PROJECT_NAME} PRIVATE :vgui.so)
+	endif()
 endif()
 
 if(WIN32)
