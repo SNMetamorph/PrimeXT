@@ -626,12 +626,34 @@ static int GL_ParseErrorSourceLine(const char *errorLog)
 {
 	// TODO test it with other GPUs and drivers, because PROBABLY format may be different
 	int lineNumber = 0;
-	if (sscanf(errorLog, "0(%d)", &lineNumber) != 1) {
-		if (sscanf(errorLog, "ERROR: 0:%d", &lineNumber) != 1) {
-			ALERT(at_warning, "GL_ParseErrorLine: failed to parse error line from shader compiling log\n");
+	int lineStart = 0;
+	int lineEnd = 0;
+	const char *currChar = errorLog;
+	std::string lineBuffer;
+
+	while (true)
+	{
+		if (currChar[0] == '\n' || currChar[0] == '\0') 
+		{
+			lineBuffer.assign(errorLog + lineStart, lineEnd - lineStart);
+			if (sscanf(lineBuffer.c_str(), "0(%d)", &lineNumber) == 1 ||
+				sscanf(lineBuffer.c_str(), "ERROR: 0:%d", &lineNumber) == 1) 
+			{
+				return lineNumber;
+			}
+			lineStart = lineEnd + 1;
 		}
+
+		if (currChar[0] == '\0') {
+			break;
+		}
+
+		currChar++;
+		lineEnd++;
 	}
-	return lineNumber;
+
+	ALERT(at_warning, "GL_ParseErrorSourceLine: failed to parse error line from shader compiling log\n");
+	return 0;
 }
 
 static int GL_TraceShaderErrorFile(glsl_program_t *program, int sourceLine, int unitIndex, std::string &fileName)
