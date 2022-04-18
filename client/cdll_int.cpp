@@ -26,11 +26,13 @@
 #include "entity_state.h"
 #include "cdll_exp.h"
 #include "tri.h"
+#include "mobility_int.h"
 #include "imgui_manager.h"
 
 int developer_level;
 int g_iXashEngineBuildNumber;
 cl_enginefunc_t gEngfuncs;
+mobile_engfuncs_t gMobileAPI;
 render_api_t gRenderfuncs;
 CHud gHUD;
 
@@ -217,6 +219,23 @@ Called at start and end of demos to restore to "non"HUD state.
 extern "C" void DLLEXPORT HUD_Reset( void )
 {
 	gHUD.VidInit();
+}
+
+/*
+========================
+HUD_MobilityInterface
+========================
+*/
+extern "C" int DLLEXPORT HUD_MobilityInterface(mobile_engfuncs_t *mobileapi)
+{
+	if (mobileapi->version != MOBILITY_API_VERSION)
+	{
+		gEngfuncs.Con_Printf("Client Error: Mobile API version mismatch. Got: %i, want: %i\n",
+			mobileapi->version, MOBILITY_API_VERSION);
+		return 1;
+	}
+	gMobileAPI = *mobileapi;
+	return 0;
 }
 
 #ifdef _WIN32
