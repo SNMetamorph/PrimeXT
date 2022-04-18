@@ -47,7 +47,7 @@ vec4 fetchNode( float number )
 	return texture2DRect( u_BspNodesMap, ivec2( x, y ));
 }
 
-float traceRay( const in vec3 p0, const in vec3 p1, float nodenum = 0.0 )
+float traceRay( const in vec3 p0, const in vec3 p1, float nodenum )
 {
 #if defined( GLSL_gpu_shader4 )
 	vec3	stack_p1[MAX_STACK_DEPTH];
@@ -185,7 +185,7 @@ bool BoundsIntersect( const vec3 mins1, const vec3 maxs1, const vec3 mins2, cons
 
 float traceRay2( const in vec3 p0, const in vec3 p1 )
 {
-	float frac = traceRay( p0, p1 );
+	float frac = traceRay( p0, p1, 0.0 );
 
 	if( bool( u_NumVisibleModels <= 0 ))
 		return frac;
