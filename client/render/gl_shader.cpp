@@ -627,7 +627,9 @@ static int GL_ParseErrorSourceLine(const char *errorLog)
 	// TODO test it with other GPUs and drivers, because PROBABLY format may be different
 	int lineNumber = 0;
 	if (sscanf(errorLog, "0(%d)", &lineNumber) != 1) {
-		ALERT(at_warning, "GL_ParseErrorLine: failed to parse error line from shader compiling log\n");
+		if (sscanf(errorLog, "ERROR: 0:%d", &lineNumber) != 1) {
+			ALERT(at_warning, "GL_ParseErrorLine: failed to parse error line from shader compiling log\n");
+		}
 	}
 	return lineNumber;
 }
