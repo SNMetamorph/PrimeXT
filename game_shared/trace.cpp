@@ -103,9 +103,16 @@ void TraceMesh :: SetupTrace( const Vector &start, const Vector &mins, const Vec
 		m_vecSrcEnd[i] = end[i] + offset[i];
 	}
 
-	// HACKHACK: shrink bbox a bit...
-	if( mins != maxs )
-		ExpandBounds( lmins, lmaxs, -(1.0f/8.0f));
+	if (mins != maxs) 
+	{
+		// HACKHACK: shrink bbox a bit...
+		ExpandBounds(lmins, lmaxs, -(1.0f / 8.0f));
+	}
+	else
+	{
+		// just reset offsets
+		memset(m_vecOffsets, 0, sizeof(m_vecOffsets));
+	}
 
 	halfwidth = lmaxs[0];
 	halfheight = lmaxs[2];
