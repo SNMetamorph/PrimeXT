@@ -147,6 +147,8 @@ void CImGuiManager::SetupConfig()
     io.IniFilename = NULL;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+    io.SetClipboardTextFn = CImGuiManager::SetClipboardText;
+    io.GetClipboardTextFn = CImGuiManager::GetClipboardText;
     gMobileAPI.pfnSetTextInputCallback(CImGuiManager::TextInputCallback);
 }
 
@@ -220,6 +222,22 @@ void CImGuiManager::SetupKeyboardMapping()
     for (int i = 0; i < 12; ++i) {
         m_KeysMapping.insert({ K_F1 + i, ImGuiKey_F1 + i });
     }
+}
+
+const char *CImGuiManager::GetClipboardText(void *userData)
+{
+    static std::string textBuffer;
+    int textLength = gMobileAPI.pfnGetClipboardText(nullptr, 0) + 1;
+    if (textBuffer.size() < textLength) {
+        textBuffer.assign(textLength, '\0');
+    }
+    gMobileAPI.pfnGetClipboardText((char *)textBuffer.data(), textBuffer.size());
+    return textBuffer.c_str();
+}
+
+void CImGuiManager::SetClipboardText(void *userData, const char *text)
+{
+    gMobileAPI.pfnSetClipboardText(text);
 }
 
 void CImGuiManager::TextInputCallback(const char *text)

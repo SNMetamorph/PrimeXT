@@ -34,6 +34,8 @@ private:
     bool HandleMouseInput(bool keyDown, int keyNumber);
     void SetupConfig();
     void SetupKeyboardMapping();
+    static const char *GetClipboardText(void *userData);
+    static void SetClipboardText(void *userData, const char *text);
     
     MouseButtonsState m_MouseButtonsState;
     std::map<int, int> m_KeysMapping;
