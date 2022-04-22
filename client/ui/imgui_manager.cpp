@@ -102,8 +102,6 @@ void CImGuiManager::UpdateCursorState()
     }
 }
 
-}
-
 void CImGuiManager::HandleKeyInput(bool keyDown, int keyNumber)
 {
     ImGuiIO &io = ImGui::GetIO();

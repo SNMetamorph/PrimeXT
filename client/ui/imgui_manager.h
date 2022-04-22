@@ -39,7 +39,8 @@ private:
     void SetupCursorMapping();
     static const char *GetClipboardText(void *userData);
     static void SetClipboardText(void *userData, const char *text);
-    
+    static void TextInputCallback(const char *text);
+
     MouseButtonsState m_MouseButtonsState;
     std::map<int, int> m_KeysMapping;
     std::map<int, cursor_type_t> m_CursorMapping;
