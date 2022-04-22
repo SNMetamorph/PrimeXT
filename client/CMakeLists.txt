@@ -41,6 +41,7 @@ list(APPEND CLDLL_SOURCES
 	"ui/imgui_window_system.cpp"
 	"ui/ui_main.cpp"
 	"ui/ui_demo_window.cpp"
+	"ui/ui_material_editor.cpp"
 )
 
 # shared source files
