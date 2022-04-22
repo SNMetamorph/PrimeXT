@@ -3,8 +3,7 @@
 #include "imgui.h"
 #include "keydefs.h"
 #include "utils.h"
-#include <VGUI_Scheme.h>
-#include <VGUI_App.h>
+#include "enginecallback.h"
 
 CImGuiManager &g_ImGuiManager = CImGuiManager::GetInstance();
 
@@ -17,10 +16,7 @@ CImGuiManager &CImGuiManager::GetInstance()
 void CImGuiManager::Initialize()
 {
     ImGui::CreateContext();
-    ImGuiIO &io = ImGui::GetIO();
-    io.IniFilename = NULL;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-
+    SetupConfig();
     LoadFonts();
     ApplyStyles();
     SetupKeyboardMapping();
@@ -145,6 +141,15 @@ bool CImGuiManager::HandleMouseInput(bool keyDown, int keyNumber)
     return false;
 }
 
+void CImGuiManager::SetupConfig()
+{
+    ImGuiIO &io = ImGui::GetIO();
+    io.IniFilename = NULL;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+    gMobileAPI.pfnSetTextInputCallback(CImGuiManager::TextInputCallback);
+}
+
 void CImGuiManager::SetupKeyboardMapping()
 {
     m_KeysMapping.insert({ K_TAB, ImGuiKey_Tab });
@@ -215,4 +220,10 @@ void CImGuiManager::SetupKeyboardMapping()
     for (int i = 0; i < 12; ++i) {
         m_KeysMapping.insert({ K_F1 + i, ImGuiKey_F1 + i });
     }
+}
+
+void CImGuiManager::TextInputCallback(const char *text)
+{
+    ImGuiIO &io = ImGui::GetIO();
+    io.AddInputCharactersUTF8(text);
 }

@@ -32,6 +32,7 @@ private:
     void UpdateMouseState();
     void HandleKeyInput(bool keyDown, int keyNumber);
     bool HandleMouseInput(bool keyDown, int keyNumber);
+    void SetupConfig();
     void SetupKeyboardMapping();
     
     MouseButtonsState m_MouseButtonsState;
