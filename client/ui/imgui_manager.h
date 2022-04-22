@@ -1,5 +1,6 @@
 #pragma once
 #include "imgui_window_system.h"
+#include "cursor_type.h"
 #include <map>
 
 class CImGuiManager
@@ -30,14 +31,17 @@ private:
     void LoadFonts();
     void ApplyStyles();
     void UpdateMouseState();
+    void UpdateCursorState();
     void HandleKeyInput(bool keyDown, int keyNumber);
     bool HandleMouseInput(bool keyDown, int keyNumber);
     void SetupConfig();
     void SetupKeyboardMapping();
+    void SetupCursorMapping();
     static const char *GetClipboardText(void *userData);
     static void SetClipboardText(void *userData, const char *text);
     
     MouseButtonsState m_MouseButtonsState;
     std::map<int, int> m_KeysMapping;
+    std::map<int, cursor_type_t> m_CursorMapping;
 };
 extern CImGuiManager &g_ImGuiManager;

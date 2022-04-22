@@ -20,6 +20,7 @@ void CImGuiManager::Initialize()
     LoadFonts();
     ApplyStyles();
     SetupKeyboardMapping();
+    SetupCursorMapping();
     ImGui_ImplOpenGL3_Init(nullptr);
     m_WindowSystem.Initialize();
 }
@@ -79,19 +80,28 @@ void CImGuiManager::UpdateMouseState()
     io.MouseDown[1] = m_MouseButtonsState.right;
     io.MouseDown[2] = m_MouseButtonsState.middle;
     io.MousePos = ImVec2((float)mx, (float)my);
+    UpdateCursorState();
+}
 
-    if (m_WindowSystem.CursorRequired()) {
-        //io.MouseDrawCursor = true;
-        vgui::App::getInstance()->setCursorOveride(
-            vgui::App::getInstance()->getScheme()->getCursor(vgui::Scheme::scu_arrow)
-        );
+void CImGuiManager::UpdateCursorState()
+{
+    ImGuiIO &io = ImGui::GetIO();
+    if (m_WindowSystem.CursorRequired()) 
+    {
+        if (io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange) {
+            gMobileAPI.pfnSetCursorType(CursorType_Arrow);
+        }
+        else
+        {
+            ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
+            gMobileAPI.pfnSetCursorType(m_CursorMapping[imgui_cursor]);
+        }
     }
     else {
-        //io.MouseDrawCursor = false;
-        vgui::App::getInstance()->setCursorOveride(
-            vgui::App::getInstance()->getScheme()->getCursor(vgui::Scheme::scu_none)
-        );
+        gMobileAPI.pfnSetCursorType(CursorType_None);
     }
+}
+
 }
 
 void CImGuiManager::HandleKeyInput(bool keyDown, int keyNumber)
@@ -222,6 +232,20 @@ void CImGuiManager::SetupKeyboardMapping()
     for (int i = 0; i < 12; ++i) {
         m_KeysMapping.insert({ K_F1 + i, ImGuiKey_F1 + i });
     }
+}
+
+void CImGuiManager::SetupCursorMapping()
+{
+    gMobileAPI.pfnSupressActivityVGUI(true);
+    m_CursorMapping.insert({ ImGuiMouseCursor_Arrow, CursorType_Arrow });
+    m_CursorMapping.insert({ ImGuiMouseCursor_TextInput, CursorType_Ibeam });
+    m_CursorMapping.insert({ ImGuiMouseCursor_ResizeAll,  CursorType_SizeAll });
+    m_CursorMapping.insert({ ImGuiMouseCursor_ResizeNS, CursorType_SizeNs });
+    m_CursorMapping.insert({ ImGuiMouseCursor_ResizeEW, CursorType_SizeWe });
+    m_CursorMapping.insert({ ImGuiMouseCursor_ResizeNESW, CursorType_SizeNeSw });
+    m_CursorMapping.insert({ ImGuiMouseCursor_ResizeNWSE, CursorType_SizeNwSe });
+    m_CursorMapping.insert({ ImGuiMouseCursor_Hand, CursorType_Hand });
+    m_CursorMapping.insert({ ImGuiMouseCursor_NotAllowed, CursorType_No });
 }
 
 const char *CImGuiManager::GetClipboardText(void *userData)
