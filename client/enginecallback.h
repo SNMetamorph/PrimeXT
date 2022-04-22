@@ -20,8 +20,10 @@ GNU General Public License for more details.
 #include "com_model.h"
 #include "event_api.h"
 #include "pm_defs.h"
+#include "mobility_int.h"
 
 extern cl_enginefunc_t gEngfuncs;
+extern mobile_engfuncs_t gMobileAPI;
 extern render_api_t gRenderfuncs;
 
 #define GET_CLIENT_TIME	(*gEngfuncs.GetClientTime)

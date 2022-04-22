@@ -20,6 +20,9 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
+#include "cursor_type.h"
+#include "key_modifiers.h"
+
 #define MOBILITY_API_VERSION 2
 #define MOBILITY_CLIENT_EXPORT "HUD_MobilityInterface"
 
@@ -39,6 +42,8 @@ extern "C" {
 // flags for COM_ParseFileSafe
 #define PFILE_IGNOREBRACKET (1<<0)
 #define PFILE_HANDLECOLON   (1<<1)
+
+typedef void (*pfnTextInputCallback_t)(const char *text);
 
 typedef struct mobile_engfuncs_s
 {
@@ -84,7 +89,14 @@ typedef struct mobile_engfuncs_s
 
 	// COM_ParseFile but with buffer size limit, len reports written size or -1 on overflow
 	char* (*pfnParseFile)( char *data, char *buf, const int size, unsigned int flags, int *len );
-	// To be continued...
+
+	// Functions provided for making possible implementing custom GUI on client side
+	int (*pfnGetClipboardText)( char *buffer, int bufferSize );
+	void (*pfnSetClipboardText)( const char *text );
+	void (*pfnSupressActivityVGUI)( int enable );
+	void (*pfnSetCursorType)( cursor_type_t cursorType );
+	key_modifier_t (*pfnGetKeyModifiers)( void );
+	void (*pfnSetTextInputCallback)( pfnTextInputCallback_t callback );
 } mobile_engfuncs_t;
 
 // function exported from client
