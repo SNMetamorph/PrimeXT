@@ -40,6 +40,7 @@ void CImGuiManager::NewFrame()
 {
     ImGui_ImplOpenGL3_NewFrame();
     UpdateMouseState();
+    UpdateKeyModifiers();
     ImGui::NewFrame();
     m_WindowSystem.NewFrame();
     ImGui::Render();
@@ -102,25 +103,22 @@ void CImGuiManager::UpdateCursorState()
     }
 }
 
+void CImGuiManager::UpdateKeyModifiers()
+{
+    ImGuiIO &io = ImGui::GetIO();
+    key_modifier_t modFlags = gMobileAPI.pfnGetKeyModifiers();
+    io.KeyShift = modFlags & (KeyModifier_LeftShift | KeyModifier_RightShift);
+    io.KeyCtrl = modFlags & (KeyModifier_LeftCtrl | KeyModifier_RightCtrl);
+    io.KeyAlt = modFlags & (KeyModifier_LeftAlt | KeyModifier_RightAlt);
+    io.KeySuper = modFlags & (KeyModifier_LeftSuper | KeyModifier_RightSuper);
+}
+
 void CImGuiManager::HandleKeyInput(bool keyDown, int keyNumber)
 {
     ImGuiIO &io = ImGui::GetIO();
-    if (keyNumber == K_SHIFT) {
-        io.KeyShift = keyDown;
+    if (!HandleMouseInput(keyDown, keyNumber)) {
+        io.AddKeyEvent(m_KeysMapping[keyNumber], keyDown);
     }
-    else if (keyNumber == K_CTRL) {
-        io.KeyCtrl = keyDown;
-    }
-    else if (keyNumber == K_ALT) {
-        io.KeyAlt = keyDown;
-    }
-    else if (keyNumber == K_WIN) {
-        io.KeySuper = keyDown;
-    }
-    else if (HandleMouseInput(keyDown, keyNumber)) {
-        return;
-    }
-    io.AddKeyEvent(m_KeysMapping[keyNumber], keyDown);
 }
 
 bool CImGuiManager::HandleMouseInput(bool keyDown, int keyNumber)
