@@ -867,12 +867,12 @@ NxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int model
 		else bonetransform[i] = bonetransform[pbone[i].parent].ConcatTransforms(bonematrix);
 	}
 
-	int body = 0;
+	int colliderBodygroup = pev->body;
 	int totalVertSize = 0;
 	for (int i = 0; i < phdr->numbodyparts; i++)
 	{
 		mstudiobodyparts_t *pbodypart = (mstudiobodyparts_t *)((byte *)phdr + phdr->bodypartindex) + i;
-		int index = (body / pbodypart->base) % pbodypart->nummodels;
+		int index = (colliderBodygroup / pbodypart->base) % pbodypart->nummodels;
 		mstudiomodel_t *psubmodel = (mstudiomodel_t *)((byte *)phdr + pbodypart->modelindex) + index;
 		totalVertSize += psubmodel->numverts;
 	}
@@ -886,7 +886,7 @@ NxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int model
 	{
 		int i;
 		mstudiobodyparts_t *pbodypart = (mstudiobodyparts_t *)((byte *)phdr + phdr->bodypartindex) + k;
-		int index = (body / pbodypart->base) % pbodypart->nummodels;
+		int index = (colliderBodygroup / pbodypart->base) % pbodypart->nummodels;
 		mstudiomodel_t *psubmodel = (mstudiomodel_t *)((byte *)phdr + pbodypart->modelindex) + index;
 		Vector *pstudioverts = (Vector *)((byte *)phdr + psubmodel->vertindex);
 		Vector *m_verts = new Vector[psubmodel->numverts];
