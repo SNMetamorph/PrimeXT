@@ -37,6 +37,7 @@ list(APPEND CLDLL_SOURCES
 	"train.cpp"
 	"utils.cpp"
 	"r_view.cpp"
+	"ui/vgui_support_int.cpp"
 	"ui/imgui_manager.cpp"
 	"ui/imgui_window_system.cpp"
 	"ui/ui_main.cpp"
