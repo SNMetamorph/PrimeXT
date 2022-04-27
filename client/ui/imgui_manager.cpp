@@ -4,6 +4,7 @@
 #include "keydefs.h"
 #include "utils.h"
 #include "enginecallback.h"
+#include "vgui_support_int.h"
 
 CImGuiManager &g_ImGuiManager = CImGuiManager::GetInstance();
 
@@ -90,23 +91,23 @@ void CImGuiManager::UpdateCursorState()
     if (m_WindowSystem.CursorRequired()) 
     {
         if (io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange) {
-            gMobileAPI.pfnSetCursorType(CursorType_Arrow);
+            g_VguiApiFuncs->CursorSelect(dc_arrow);
         }
         else
         {
             ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
-            gMobileAPI.pfnSetCursorType(m_CursorMapping[imgui_cursor]);
+            g_VguiApiFuncs->CursorSelect(m_CursorMapping[imgui_cursor]);
         }
     }
     else {
-        gMobileAPI.pfnSetCursorType(CursorType_None);
+        g_VguiApiFuncs->CursorSelect(dc_none);
     }
 }
 
 void CImGuiManager::UpdateKeyModifiers()
 {
     ImGuiIO &io = ImGui::GetIO();
-    key_modifier_t modFlags = gMobileAPI.pfnGetKeyModifiers();
+    key_modifier_t modFlags = g_VguiApiFuncs->GetKeyModifiers();
     io.KeyShift = modFlags & (KeyModifier_LeftShift | KeyModifier_RightShift);
     io.KeyCtrl = modFlags & (KeyModifier_LeftCtrl | KeyModifier_RightCtrl);
     io.KeyAlt = modFlags & (KeyModifier_LeftAlt | KeyModifier_RightAlt);
@@ -155,7 +156,6 @@ void CImGuiManager::SetupConfig()
     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
     io.SetClipboardTextFn = CImGuiManager::SetClipboardText;
     io.GetClipboardTextFn = CImGuiManager::GetClipboardText;
-    gMobileAPI.pfnSetTextInputCallback(CImGuiManager::TextInputCallback);
 }
 
 void CImGuiManager::SetupKeyboardMapping()
@@ -232,32 +232,31 @@ void CImGuiManager::SetupKeyboardMapping()
 
 void CImGuiManager::SetupCursorMapping()
 {
-    gMobileAPI.pfnSupressActivityVGUI(true);
-    m_CursorMapping.insert({ ImGuiMouseCursor_Arrow, CursorType_Arrow });
-    m_CursorMapping.insert({ ImGuiMouseCursor_TextInput, CursorType_Ibeam });
-    m_CursorMapping.insert({ ImGuiMouseCursor_ResizeAll,  CursorType_SizeAll });
-    m_CursorMapping.insert({ ImGuiMouseCursor_ResizeNS, CursorType_SizeNs });
-    m_CursorMapping.insert({ ImGuiMouseCursor_ResizeEW, CursorType_SizeWe });
-    m_CursorMapping.insert({ ImGuiMouseCursor_ResizeNESW, CursorType_SizeNeSw });
-    m_CursorMapping.insert({ ImGuiMouseCursor_ResizeNWSE, CursorType_SizeNwSe });
-    m_CursorMapping.insert({ ImGuiMouseCursor_Hand, CursorType_Hand });
-    m_CursorMapping.insert({ ImGuiMouseCursor_NotAllowed, CursorType_No });
+    m_CursorMapping.insert({ ImGuiMouseCursor_Arrow, dc_arrow });
+    m_CursorMapping.insert({ ImGuiMouseCursor_TextInput, dc_ibeam });
+    m_CursorMapping.insert({ ImGuiMouseCursor_ResizeAll,  dc_sizeall });
+    m_CursorMapping.insert({ ImGuiMouseCursor_ResizeNS, dc_sizens });
+    m_CursorMapping.insert({ ImGuiMouseCursor_ResizeEW, dc_sizewe });
+    m_CursorMapping.insert({ ImGuiMouseCursor_ResizeNESW, dc_sizenesw });
+    m_CursorMapping.insert({ ImGuiMouseCursor_ResizeNWSE, dc_sizenwse });
+    m_CursorMapping.insert({ ImGuiMouseCursor_Hand, dc_hand });
+    m_CursorMapping.insert({ ImGuiMouseCursor_NotAllowed, dc_no });
 }
 
 const char *CImGuiManager::GetClipboardText(void *userData)
 {
     static std::string textBuffer;
-    int textLength = gMobileAPI.pfnGetClipboardText(nullptr, 0) + 1;
+    int textLength = g_VguiApiFuncs->GetClipboardText(nullptr, 0) + 1;
     if (textBuffer.size() < textLength) {
         textBuffer.assign(textLength, '\0');
     }
-    gMobileAPI.pfnGetClipboardText((char *)textBuffer.data(), textBuffer.size());
+    g_VguiApiFuncs->GetClipboardText((char *)textBuffer.data(), textBuffer.size());
     return textBuffer.c_str();
 }
 
 void CImGuiManager::SetClipboardText(void *userData, const char *text)
 {
-    gMobileAPI.pfnSetClipboardText(text);
+    g_VguiApiFuncs->SetClipboardText(text);
 }
 
 void CImGuiManager::TextInputCallback(const char *text)
