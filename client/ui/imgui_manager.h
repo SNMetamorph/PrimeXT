@@ -15,7 +15,6 @@ public:
     bool KeyInput(bool keyDown, int keyNumber, const char *bindName);
     static void TextInputCallback(const char *text);
 
-    CImGuiWindowSystem m_WindowSystem;
 private:
     struct MouseButtonsState
     {
@@ -45,5 +44,6 @@ private:
     MouseButtonsState m_MouseButtonsState;
     std::map<int, int> m_KeysMapping;
     std::map<int, VGUI_DefaultCursor> m_CursorMapping;
+    CImGuiWindowSystem m_WindowSystem;
 };
 extern CImGuiManager &g_ImGuiManager;

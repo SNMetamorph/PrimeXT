@@ -37,12 +37,6 @@ list(APPEND CLDLL_SOURCES
 	"train.cpp"
 	"utils.cpp"
 	"r_view.cpp"
-	"ui/vgui_support_int.cpp"
-	"ui/imgui_manager.cpp"
-	"ui/imgui_window_system.cpp"
-	"ui/ui_main.cpp"
-	"ui/ui_demo_window.cpp"
-	"ui/ui_material_editor.cpp"
 )
 
 # shared source files
@@ -66,16 +60,24 @@ list(APPEND CLDLL_SOURCES
 file(GLOB RENDER_SOURCES "render/*.cpp")
 
 # ImGui source files
-list(APPEND IMGUI_SOURCES
-	"${CMAKE_SOURCE_DIR}/external/imgui/imgui.cpp"
-	"${CMAKE_SOURCE_DIR}/external/imgui/imgui_demo.cpp"
-	"${CMAKE_SOURCE_DIR}/external/imgui/imgui_draw.cpp"
-	"${CMAKE_SOURCE_DIR}/external/imgui/imgui_tables.cpp"
-	"${CMAKE_SOURCE_DIR}/external/imgui/imgui_widgets.cpp"
-)
+if(NOT ENABLE_VGUI_COMPATIBILITY)
+	list(APPEND IMGUI_SOURCES
+		"ui/vgui_support_int.cpp"
+		"ui/imgui_manager.cpp"
+		"ui/imgui_window_system.cpp"
+		"ui/ui_main.cpp"
+		"ui/ui_demo_window.cpp"
+		"ui/ui_material_editor.cpp"
+		"${CMAKE_SOURCE_DIR}/external/imgui/imgui.cpp"
+		"${CMAKE_SOURCE_DIR}/external/imgui/imgui_demo.cpp"
+		"${CMAKE_SOURCE_DIR}/external/imgui/imgui_draw.cpp"
+		"${CMAKE_SOURCE_DIR}/external/imgui/imgui_tables.cpp"
+		"${CMAKE_SOURCE_DIR}/external/imgui/imgui_widgets.cpp"
+	)
+	list(APPEND CLDLL_SOURCES ${IMGUI_SOURCES})
+endif()
 
 list(APPEND CLDLL_SOURCES ${RENDER_SOURCES})
-list(APPEND CLDLL_SOURCES ${IMGUI_SOURCES})
 add_library(${PROJECT_NAME} SHARED ${CLDLL_SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -89,7 +91,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"${CMAKE_SOURCE_DIR}/external/imgui"
 )
 
-if(ENABLE_VGUI_SUPPORT)
+if(ENABLE_VGUI_COMPATIBILITY)
 	target_include_directories(${PROJECT_NAME} PRIVATE
 		"${CMAKE_SOURCE_DIR}/external/vgui/include"
 	)
@@ -135,7 +137,8 @@ endif()
 # set static compiler runtime
 set_compiler_runtime(${PROJECT_NAME} STATIC)
 
-if(ENABLE_VGUI_SUPPORT)
+# linking vgui library if needed
+if(ENABLE_VGUI_COMPATIBILITY)
 	if(MSVC)
 		find_library(LIBRARY_VGUI
 			NAMES vgui

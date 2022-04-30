@@ -4,7 +4,6 @@
 
 vguiapi_t *g_VguiApiFuncs;
 
-#ifndef PXT_ENABLE_VGUI_COMPATIBILITY
 // interface functions stubs
 static void VGUI_Startup(int w, int h) {}
 static void VGUI_Shutdown() {}
@@ -26,4 +25,3 @@ extern "C" void DLLEXPORT InitVGUISupportAPI(vguiapi_t *api)
 	api->Key = VGUI_Key;
 	api->TextInput = CImGuiManager::TextInputCallback;
 }
-#endif
