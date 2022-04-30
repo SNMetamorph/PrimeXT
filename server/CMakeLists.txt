@@ -179,6 +179,7 @@ else()
 endif()
 
 if(MSVC)
+	target_compile_options(${PROJECT_NAME} PRIVATE /MP) # multi-process compilation
 	# debug mode compiler flags
 	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:/Od>) # disable optimizing at all
 	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:/ZI>) # enable "Edit and Continue" MSVC feature
