@@ -5012,7 +5012,12 @@ void Load_ProceduralBones( void )
 	{
 		while( GetLineInput( )) 
 		{
-			sscanf( line, "%s", cmd, &option );
+			int args = sscanf(line, "%s %d", cmd, &option);
+			if (args != 2) 
+			{
+				MsgDev(D_ERROR, "failed line parsing in %s\n", filename);
+				return;
+			}
 			if( !Q_stricmp( cmd, "version" )) 
 			{
 				if( option != 1 ) 
