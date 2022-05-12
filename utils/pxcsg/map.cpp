@@ -436,6 +436,12 @@ static void SetupSideParams( mapent_t *mapent, brush_t *brush, side_t *side )
 	if( BoolForKey( (entity_t *)mapent, "zhlt_invisible" ) && side->contents != CONTENTS_ORIGIN )
 		SetBits( side->flags, FSIDE_NODRAW );
 
+	// disable lightmapping for brushes with special flag and for textures "black"
+	if (BoolForKey((entity_t *)mapent, "zhlt_nolightmap") || !Q_strnicmp(side->name, "black", 5))
+	{
+		SetBits(side->flags, FSIDE_NOLIGHTMAP);
+	}
+
 	const int shadow = IntForKey( (entity_t *)mapent, "_shadow" );
 
 	if( IntForKey( (entity_t *)mapent, "_dirt" ) == -1 )
