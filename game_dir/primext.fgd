@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 8 Feb 2022)
+// PrimeXT FGD (last updated 7 May 2022)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -1265,6 +1265,89 @@
 	scale(integer) : "Cutoff Angle (0 for omnidirect)" : 60
 	rendermode(integer) : "Texture (only for spotlight)" : 0
     message(string) : "Media file (only for spotlight)"
+	style(Choices) : "Appearance" : 0 =
+	[
+		0 : "Normal"
+		10: "Fluorescent flicker"
+		2 : "Slow, strong pulse"
+		11: "Slow pulse, noblack"
+		5 : "Gentle pulse"
+		1 : "Flicker A"
+		6 : "Flicker B"
+		3 : "Candle A"
+		7 : "Candle B"
+		8 : "Candle C"
+		4 : "Fast strobe"
+		9 : "Slow strobe"
+		12: "Underwater"
+	]
+	pattern(string) : "Custom Appearance"
+	m_iTurnOnStyle(Choices) : "TurnOnStyle" : 0 =
+	[
+		0 : "Normal"
+		10: "Fluorescent flicker"
+		2 : "Slow, strong pulse"
+		11: "Slow pulse, noblack"
+		5 : "Gentle pulse"
+		1 : "Flicker A"
+		6 : "Flicker B"
+		3 : "Candle A"
+		7 : "Candle B"
+		8 : "Candle C"
+		4 : "Fast strobe"
+		9 : "Slow strobe"
+		12: "Underwater"
+	]
+	m_iTurnOnTime(integer): "TurnOffTime"
+	m_iTurnOffStyle(Choices) : "TurnOffStyle" : 0 =
+	[
+		0 : "Normal"
+		10: "Fluorescent flicker"
+		2 : "Slow, strong pulse"
+		11: "Slow pulse, noblack"
+		5 : "Gentle pulse"
+		1 : "Flicker A"
+		6 : "Flicker B"
+		3 : "Candle A"
+		7 : "Candle B"
+		8 : "Candle C"
+		4 : "Fast strobe"
+		9 : "Slow strobe"
+		12: "Underwater"
+	]
+	m_iTurnOffTime(integer): "TurnOffTime"
+	m_iOnStyle(Choices) : "OnStyle" : 0 =
+	[
+		0 : "Normal"
+		10: "Fluorescent flicker"
+		2 : "Slow, strong pulse"
+		11: "Slow pulse, noblack"
+		5 : "Gentle pulse"
+		1 : "Flicker A"
+		6 : "Flicker B"
+		3 : "Candle A"
+		7 : "Candle B"
+		8 : "Candle C"
+		4 : "Fast strobe"
+		9 : "Slow strobe"
+		12: "Underwater"
+	]
+	m_iOffStyle(Choices) : "OffStyle" : 0 =
+	[
+		0 : "Normal"
+		10: "Fluorescent flicker"
+		2 : "Slow, strong pulse"
+		11: "Slow pulse, noblack"
+		5 : "Gentle pulse"
+		1 : "Flicker A"
+		6 : "Flicker B"
+		3 : "Candle A"
+		7 : "Candle B"
+		8 : "Candle C"
+		4 : "Fast strobe"
+		9 : "Slow strobe"
+		12: "Underwater"
+	]
 	spawnflags(flags) =
 	[
 		1: "Start Off" : 0
@@ -1573,7 +1656,7 @@
 @PointClass base(Targetname, Angles) iconsprite("sprites/fgd/env_sky.spr") size(-16 -16 -16, 16 16 16) = env_sky : "3D Skybox"
 [
 	fov(integer) : "Field of View"
-	scale(string) : "Scale (default 1:16)" : "16"
+	scale(string) : "Scale" : "16"
 	spawnflags(flags) =
 	[
 		1: "Start Off" : 0
