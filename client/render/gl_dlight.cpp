@@ -212,7 +212,7 @@ void R_AnimateLight( void )
 			tr.lightstyle[i] = value * 22.0f * scale;
 			continue;
 		}
-		else if( !ls->interp || !CVAR_TO_BOOL( r_lightstyle_lerping ))
+		else if( !ls->interp )
 		{
 			tr.lightstyle[i] = ls->map[flight%ls->length] * 22.0f * scale;
 			continue;
