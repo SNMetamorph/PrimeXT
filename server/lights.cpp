@@ -39,11 +39,13 @@ public:
 	virtual STATE GetState( void ) { return m_iState; };
 
 	string_t	GetStyle( void ) { return m_iszCurrentStyle; };
-	void	SetStyle( int iszPattern );
+	void	SetStyle( string_t iszPattern );
 	void	SetCorrectStyle( void );
 
 private:
-	STATE	m_iState;		// current state
+	bool CustomStyleUsed();
+
+	STATE m_iState;		// current state
 	int	m_iOnStyle;	// style to use while on
 	int	m_iOffStyle;	// style to use while off
 	int	m_iTurnOnStyle;	// style to use while turning on
@@ -123,13 +125,13 @@ void CLight :: KeyValue( KeyValueData* pkvd)
 	}
 	else
 	{
-		CPointEntity::KeyValue( pkvd );
+		BaseClass::KeyValue( pkvd );
 	}
 }
 
-void CLight :: SetStyle ( int iszPattern )
+void CLight :: SetStyle ( string_t iszPattern )
 {
-	if (m_iStyle < 32) // if it's using a global style, don't change it
+	if (!CustomStyleUsed()) // if it's using a global style, don't change it
 		return;
 
 	m_iszCurrentStyle = iszPattern;
@@ -139,7 +141,7 @@ void CLight :: SetStyle ( int iszPattern )
 // regardless of what's been set by trigger_lightstyle ents, set the style I think I need
 void CLight :: SetCorrectStyle ( void )
 {
-	if (m_iStyle >= 32)
+	if (CustomStyleUsed())
 	{
 		switch (m_iState)
 		{
@@ -175,6 +177,11 @@ void CLight :: SetCorrectStyle ( void )
 	{
 		m_iszCurrentStyle = GetStdLightStyle( m_iStyle );
 	}
+}
+
+bool CLight::CustomStyleUsed()
+{
+	return m_iStyle >= 32;
 }
 
 void CLight :: Think( void )
@@ -219,7 +226,7 @@ void CLight :: Spawn( void )
 
 void CLight :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	if (m_iStyle >= 32)
+	if (CustomStyleUsed())
 	{
 		if ( !ShouldToggle( useType ))
 			return;
@@ -540,5 +547,301 @@ void CTriggerLightstyle::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE
 				}
 			}
 		}
+	}
+}
+
+// buz: dynamic light entity
+#define SF_DYNLIGHT_STARTOFF		1
+#define SF_DYNLIGHT_NOSHADOW		2
+#define SF_DYNLIGHT_NOBUMP		4
+#define SF_DYNLIGHT_FLARE		8
+
+class CDynamicLight : public CPointEntity
+{
+	DECLARE_CLASS(CDynamicLight, CPointEntity);
+public:
+	void Spawn();
+	void Precache();
+	void KeyValue(KeyValueData *pkvd);
+	STATE GetState(void);
+	void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
+	void SetStyle(string_t iszPattern);
+	void UpdatePVSPoint(void);
+	void UpdateState();
+	void Activate();
+	void Deactivate();
+	void EXPORT CineThink(void);
+	void EXPORT PVSThink(void);
+
+private:
+	bool CustomStyleUsed();
+	void UpdateStyle();
+
+	int	m_iOnStyle;			// style to use while on
+	int	m_iOffStyle;		// style to use while off
+	int	m_iTurnOnStyle;		// style to use while turning on
+	int	m_iTurnOffStyle;	// style to use while turning off
+	int	m_iTurnOnTime;		// time taken to turn on
+	int	m_iTurnOffTime;		// time taken to turn off
+	string_t m_iszCurrentStyle;	// current style string
+	float m_flBrightness = 2.0f;
+};
+
+LINK_ENTITY_TO_CLASS(env_dynlight, CDynamicLight);
+
+
+void CDynamicLight::Spawn()
+{
+	pev->solid = SOLID_NOT;
+	pev->movetype = MOVETYPE_NONE;
+
+	Precache();
+	UpdateState();
+
+	if (pev->sequence)
+		pev->renderfx = kRenderFxCinemaLight;	// dynamic light with avi-texture
+	else
+		pev->renderfx = kRenderFxDynamicLight;	// dynamic light
+
+	SET_MODEL(ENT(pev), "sprites/null.spr"); // should be visible to send to client
+
+	pev->renderamt = pev->renderamt / 8;
+
+	// spotlight
+	if (pev->scale)
+	{
+		// create second PVS point
+		pev->enemy = Create("info_target", pev->origin, g_vecZero, edict())->edict();
+		SET_MODEL(pev->enemy, "sprites/null.spr"); // allow to collect visibility info
+		UTIL_SetSize(VARS(pev->enemy), Vector(-8, -8, -8), Vector(8, 8, 8));
+
+		// to prevent disapperaing from PVS (renderamt is premultiplied by 0.125)
+		UTIL_SetSize(pev, Vector(-pev->renderamt, -pev->renderamt, -pev->renderamt), Vector(pev->renderamt, pev->renderamt, pev->renderamt));
+	}
+	else
+	{
+		// to prevent disapperaing from PVS (renderamt is premultiplied by 0.125)
+		UTIL_SetSize(pev, Vector(-pev->renderamt * 4, -pev->renderamt * 4, -pev->renderamt * 4), Vector(pev->renderamt * 4, pev->renderamt * 4, pev->renderamt * 4));
+	}
+
+	if (pev->spawnflags & SF_DYNLIGHT_NOSHADOW)
+		pev->effects |= EF_NOSHADOW;
+	if (pev->spawnflags & SF_DYNLIGHT_NOBUMP)
+		pev->effects |= EF_NOBUMP;
+	if (pev->spawnflags & SF_DYNLIGHT_FLARE)
+		pev->effects |= EF_LENSFLARE;
+
+	if (pev->spawnflags & SF_DYNLIGHT_STARTOFF)
+	{
+		pev->effects |= EF_NODRAW;
+	}
+	else if (pev->sequence)
+	{
+		SetThink(&CDynamicLight::CineThink);
+		SetNextThink(0.1f);
+	}
+	else if (pev->scale)
+	{
+		SetThink(&CDynamicLight::PVSThink);
+		SetNextThink(0.1f);
+	}
+}
+
+void CDynamicLight::Precache()
+{
+	PRECACHE_MODEL("sprites/null.spr");
+
+	if (!FStringNull(pev->message))
+	{
+		const char *ext = UTIL_FileExtension(STRING(pev->message));
+
+		if (!Q_stricmp(ext, "avi"))
+		{
+			// 0 if movie not found
+			pev->sequence = UTIL_PrecacheMovie(pev->message);
+		}
+	}
+}
+
+void CDynamicLight::KeyValue(KeyValueData *pkvd)
+{
+	if (FStrEq(pkvd->szKeyName, "brightness"))
+	{
+		m_flBrightness = Q_atof(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+		UpdateState();
+	}
+	else if (FStrEq(pkvd->szKeyName, "m_iOnStyle"))
+	{
+		m_iOnStyle = Q_atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "m_iOffStyle"))
+	{
+		m_iOffStyle = Q_atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "m_iTurnOnStyle"))
+	{
+		m_iTurnOnStyle = Q_atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "m_iTurnOffStyle"))
+	{
+		m_iTurnOffStyle = Q_atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "m_iTurnOnTime"))
+	{
+		m_iTurnOnTime = Q_atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "m_iTurnOffTime"))
+	{
+		m_iTurnOffTime = Q_atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else BaseClass::KeyValue(pkvd);
+}
+
+STATE CDynamicLight::GetState(void)
+{
+	if (pev->effects & EF_NODRAW)
+		return STATE_OFF;
+	else
+		return STATE_ON;
+}
+
+void CDynamicLight::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
+{
+	if (useType == USE_ON)
+		pev->effects &= ~EF_NODRAW;
+	else if (useType == USE_OFF)
+		pev->effects |= EF_NODRAW;
+	else if (useType == USE_TOGGLE)
+	{
+		if (pev->effects & EF_NODRAW)
+			pev->effects &= ~EF_NODRAW;
+		else pev->effects |= EF_NODRAW;
+	}
+
+	if (pev->effects & EF_NODRAW)
+	{
+		DontThink();
+	}
+	else if (pev->sequence)
+	{
+		SetThink(&CDynamicLight::CineThink);
+		SetNextThink(0.1f);
+	}
+	else if (pev->scale)
+	{
+		SetThink(&CDynamicLight::PVSThink);
+		SetNextThink(0.1f);
+	}
+}
+
+void CDynamicLight::SetStyle(string_t iszPattern)
+{
+	// if it's using a global style, don't change it
+	if (!CustomStyleUsed()) 
+		return;
+
+	m_iszCurrentStyle = iszPattern;
+	LIGHT_STYLE(m_iStyle, (char *)STRING(iszPattern));
+}
+
+void CDynamicLight::UpdatePVSPoint(void)
+{
+	TraceResult tr;
+	Vector forward;
+
+	UTIL_MakeVectorsPrivate(pev->angles, forward, NULL, NULL);
+	Vector vecSrc = pev->origin + forward * 8.0f;
+	Vector vecEnd = vecSrc + forward * (pev->renderamt * 8.0f);
+	UTIL_TraceLine(vecSrc, vecEnd, ignore_monsters, edict(), &tr);
+
+	// this is our second PVS point
+	CBaseEntity *pVisHelper = CBaseEntity::Instance(pev->enemy);
+	if (pVisHelper) UTIL_SetOrigin(pVisHelper, tr.vecEndPos + tr.vecPlaneNormal * 8.0f);
+}
+
+void CDynamicLight::UpdateState()
+{
+	UpdateStyle();
+	pev->framerate = m_flBrightness;
+	pev->skin = m_iStyle & 0x3F; // store lightstyle index in first 6 bits
+}
+
+void CDynamicLight::Activate()
+{
+	pev->effects &= ~EF_NODRAW;
+}
+
+void CDynamicLight::Deactivate()
+{
+	pev->effects |= EF_NODRAW;
+}
+
+void EXPORT CDynamicLight::CineThink(void)
+{
+	UpdatePVSPoint();
+	UpdateState();
+
+	// update as 30 frames per second
+	pev->fuser2 += CIN_FRAMETIME;
+	SetNextThink(CIN_FRAMETIME);
+}
+
+void EXPORT CDynamicLight::PVSThink(void)
+{
+	UpdatePVSPoint();
+	UpdateState();
+
+	// static light should be updated in case
+	// moving platform under them
+	SetNextThink(m_hParent.Get() ? 0.01f : 0.1f);
+}
+
+bool CDynamicLight::CustomStyleUsed()
+{
+	return m_iStyle >= 32;
+}
+
+void CDynamicLight::UpdateStyle()
+{
+	if (CustomStyleUsed())
+	{
+		switch (GetState())
+		{
+			case STATE_ON:
+				if (m_iOnStyle)
+					SetStyle(GetStdLightStyle(m_iOnStyle));
+				else
+					SetStyle(MAKE_STRING("m"));
+				break;
+			case STATE_OFF:
+				if (m_iOffStyle)
+					SetStyle(GetStdLightStyle(m_iOffStyle));
+				else
+					SetStyle(MAKE_STRING("a"));
+				break;
+			case STATE_TURN_ON:
+				if (m_iTurnOnStyle)
+					SetStyle(GetStdLightStyle(m_iTurnOnStyle));
+				else
+					SetStyle(MAKE_STRING("a"));
+				break;
+			case STATE_TURN_OFF:
+				if (m_iTurnOffStyle)
+					SetStyle(GetStdLightStyle(m_iTurnOffStyle));
+				else
+					SetStyle(MAKE_STRING("m"));
+				break;
+		}
+	}
+	else
+	{
+		m_iszCurrentStyle = GetStdLightStyle(m_iStyle);
 	}
 }
