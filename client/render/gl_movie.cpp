@@ -23,15 +23,11 @@ GNU General Public License for more details.
 
 int R_PrecacheCinematic( const char *cinname )
 {
-	int load_sound = 0;
-
 	if( !cinname || !*cinname )
 		return -1;
 
 	if( *cinname == '*' )
 	{
-		if( g_iXashEngineBuildNumber >= 4256 )
-			load_sound = 1;
 		cinname++;
 	}
 
@@ -71,8 +67,8 @@ int R_PrecacheCinematic( const char *cinname )
 		FREE_CINEMATIC( tr.cinematics[i].state );
 	}
 
-	ALERT( at_console, "Loading cinematic %s [%s]\n", cinname, load_sound ? "sound" : "muted" );
-	tr.cinematics[i].state = OPEN_CINEMATIC( tr.cinematics[i].name, load_sound );
+	ALERT( at_console, "Loading cinematic %s [%s]\n", cinname, "sound" );
+	tr.cinematics[i].state = OPEN_CINEMATIC( tr.cinematics[i].name, true );
 
 	// grab info about movie
 	if( tr.cinematics[i].state != NULL )
@@ -201,9 +197,6 @@ void R_UpdateCinematic( const msurface_t *surf )
 
 void R_UpdateCinSound( cl_entity_t *e )
 {
-	if( g_iXashEngineBuildNumber < 4256 )
-		return; // too old for this feature
-
 	if( !e->curstate.body || !FBitSet( e->curstate.iuser1, CF_MOVIE_SOUND ))
 		return; // just disabled
 
