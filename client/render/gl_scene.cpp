@@ -485,11 +485,13 @@ static bool R_HandleLightEntity(cl_entity_t *ent)
 	R_SetupLightParams(dlight, origin, angles, radius, fov, type, flags);
 	R_SetupLightTexture(dlight, tex);
 
-	dlight->color[0] = (ent->curstate.rendercolor.r / 255.f) * brightness;
-	dlight->color[1] = (ent->curstate.rendercolor.g / 255.f) * brightness;
-	dlight->color[2] = (ent->curstate.rendercolor.b / 255.f) * brightness;
+	dlight->lightstyleIndex = ent->curstate.skin & 0x3F;
+	float lightstyleMult = tr.lightstyle[dlight->lightstyleIndex] / 550.f;
+	dlight->color[0] = (ent->curstate.rendercolor.r / 255.f) * brightness * lightstyleMult;
+	dlight->color[1] = (ent->curstate.rendercolor.g / 255.f) * brightness * lightstyleMult;
+	dlight->color[2] = (ent->curstate.rendercolor.b / 255.f) * brightness * lightstyleMult;
 	dlight->die = tr.time + 0.05f;
-
+	
 	return true; // no reason to drawing this entity
 }
 /*

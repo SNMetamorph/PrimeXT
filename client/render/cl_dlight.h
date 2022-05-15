@@ -41,8 +41,9 @@ public:
 	Vector		color;				// ignored for spotlights, they have a texture
 	float		die;				// stop lighting after this time
 	float		decay;				// drop this each second
-	int		key;
-	int		type;				// light type
+	int			key;
+	int			type;				// light type
+	int			lightstyleIndex;
 	bool		update;				// light needs update
 
 	matrix4x4		viewMatrix;

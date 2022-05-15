@@ -610,7 +610,7 @@ typedef struct
 	float		farclip;			// max viewable distance
 	float		gravity;			// particles used
 
-	float		lightstyle[MAX_LIGHTSTYLES];	// value 0 - 65536
+	float		lightstyle[MAX_LIGHTSTYLES]; // value in range [0.0; 550.0]
 	gl_movie_t	cinematics[MAX_MOVIES];	// precached cinematics
 
 	movevars_t	*movevars;
