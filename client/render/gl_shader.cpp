@@ -702,7 +702,7 @@ static bool GL_ProcessShader( glsl_program_t *program, const char *filename, GLe
 		return false;
 
 	// add internal defines
-	outputFile->Printf("#version 120\n"); // OpenGL 2.1 required (because 'flat' modifier support only starts from this version)
+	outputFile->Printf("#version 130\n"); // OpenGL 3.0 required (because bit operations support needed)
 	outputFile->Printf("#ifndef M_PI\n#define M_PI 3.14159265358979323846\n#endif\n");
 	outputFile->Printf("#ifndef M_PI2\n#define M_PI2 6.28318530717958647692\n#endif\n");
 
