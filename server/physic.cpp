@@ -354,9 +354,6 @@ int Server_GetPhysicsInterface( int iVersion, server_physics_api_t *pfuncsFromEn
 		return FALSE;
 	}
 
-	if( g_iXashEngineBuildNumber < 4140 )
-		return FALSE;
-
 	size_t iExportSize = sizeof( server_physics_api_t );
 	size_t iImportSize = sizeof( physics_interface_t );
 

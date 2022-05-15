@@ -132,7 +132,7 @@ int GetEntityAPI( DLL_FUNCTIONS *pFunctionTable, int interfaceVersion )
 		return FALSE;
 	}
 
-	if( !CVAR_GET_POINTER( "host_gameloaded" ) || g_iXashEngineBuildNumber < 4140 )
+	if( !CVAR_GET_POINTER( "host_gameloaded" ) )
 		return FALSE; // not a Xash3D
 
 	memcpy( pFunctionTable, &gFunctionTable, sizeof( DLL_FUNCTIONS ) );
@@ -148,7 +148,7 @@ int GetEntityAPI2( DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion )
 		return FALSE;
 	}
 
-	if( !CVAR_GET_POINTER( "host_gameloaded" ) || g_iXashEngineBuildNumber < 4140 )
+	if( !CVAR_GET_POINTER( "host_gameloaded" ) )
 	{
 		// Tell engine what version we had, so it can figure out who is out of date.
 		*interfaceVersion = INTERFACE_VERSION;
@@ -167,7 +167,7 @@ int GetNewDLLFunctions( NEW_DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion
 		return FALSE;
 	}
 
-	if( !CVAR_GET_POINTER( "host_gameloaded" ) || g_iXashEngineBuildNumber < 4140 )
+	if( !CVAR_GET_POINTER( "host_gameloaded" ) )
 	{
 		// Tell engine what version we had, so it can figure out who is out of date.
 		*interfaceVersion = NEW_DLL_FUNCTIONS_VERSION;
