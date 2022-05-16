@@ -256,7 +256,6 @@ static bool Mod_AllocateCubemap(mcubemap_t *cubemap)
 		}
 
 		cubemap->texture = CREATE_TEXTURE(cubemap->name, cubemap->size, cubemap->size, NULL, flags);
-		cubemap->numMips = RENDER_GET_PARM(PARM_TEX_MIPCOUNT, cubemap->texture); // NOTE: old DDS cubemaps has no mip-levels
 	}
 
 	cubemap->framebuffer.Init(FBO_CUBE, cubemap->size, cubemap->size, FBO_NOTEXTURE);
@@ -505,6 +504,13 @@ static void GL_RenderCubemap(mcubemap_t *cubemap)
 			GL_RenderCubemapSide(cubemap, i);
 			R_ResetRefState();
 		}
+
+		// enable trilinear filtering and generate mip-maps
+		pglBindTexture(GL_TEXTURE_CUBE_MAP_ARB, cubemap->texture);
+		pglTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		pglGenerateMipmap(GL_TEXTURE_CUBE_MAP_ARB);
+		pglBindTexture(GL_TEXTURE_CUBE_MAP_ARB, 0);
+		cubemap->numMips = 1 + floor(log2(cubemap->size));
 		cubemap->valid = true;
 	}
 	else {
