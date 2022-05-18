@@ -600,7 +600,7 @@ bool CFrameBuffer::ValidateFBO(void)
 	}
 }
 
-void CFrameBuffer::Bind(GLuint texture, GLuint side)
+void CFrameBuffer::Bind(GLuint texture, GLuint side, GLuint mipLevel)
 {
 	if (!m_bAllowFBO) return;
 
@@ -621,7 +621,7 @@ void CFrameBuffer::Bind(GLuint texture, GLuint side)
 		if (target == GL_TEXTURE_CUBE_MAP_ARB)
 			target = GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + side;
 
-		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, m_iAttachment, target, texnum, 0);
+		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, m_iAttachment, target, texnum, mipLevel);
 	}
 
 	ValidateFBO();

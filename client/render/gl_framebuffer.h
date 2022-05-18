@@ -42,7 +42,7 @@ public:
 	~CFrameBuffer();
 
 	bool Init(FramebufferType type, GLuint width, GLuint height, GLuint flags = 0);
-	void Bind(GLuint texture = 0, GLuint side = 0);
+	void Bind(GLuint texture = 0, GLuint side = 0, GLuint mipLevel = 0);
 	bool ValidateFBO();
 	void Free();
 
