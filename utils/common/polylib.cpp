@@ -108,6 +108,10 @@ void RemoveColinearPointsEpsilon( winding_t *w, vec_t epsilon )
 	vec3_t	v1, v2;
 	vec_t	*p1, *p2, *p3;
 
+	if (w && w->numpoints <= 3) {
+		return;
+	}
+
 	for( int i = 0; w && i < w->numpoints; i++ )
 	{
 		p1 = w->p[(i+w->numpoints-1) % w->numpoints];
