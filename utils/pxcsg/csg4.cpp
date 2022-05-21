@@ -436,7 +436,7 @@ static void CSGBrush( int brushnum, int threadnum = -1 )
 							// this splitplane forms an edge
 							winding_t	*fw, *bw;
 
-							ClipWindingEpsilon( f->w, f2->plane->normal, f2->plane->dist, g_csgepsilon, &fw, &bw );
+							ClipWindingEpsilon( f->w, f2->plane->normal, f2->plane->dist, g_csgepsilon, &fw, &bw, true );
 
 							if( fw )
 							{
