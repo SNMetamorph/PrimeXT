@@ -417,7 +417,7 @@ void ClipWindingEpsilon( winding_t *in, const vec3_t normal, vec_t dist, vec_t e
 		vec_t testDist;
 		vec3_t testNormal;
 		WindingPlane(in, testNormal, &testDist);
-		if (DotProduct(testNormal, normal) > 0.0f)
+		if (DotProduct(testNormal, normal) > 0.0)
 			*front = CopyWinding( in );
 		else 
 			*back = CopyWinding( in );
@@ -567,17 +567,13 @@ void DivideWindingEpsilon( winding_t *in, vec3_t normal, vec_t dist, vec_t epsil
 		}
 		else
 		{
-			vec_t sum = 0.0;
-			for( i = 0; i < in->numpoints; i++)
-			{
-				dot = DotProduct( in->p[i], normal );
-				dot -= dist;
-				sum += dot;
-			}
-
-			if( sum > NORMAL_EPSILON )
-				*front = in;
-			else *back = in;
+			vec_t testDist;
+			vec3_t testNormal;
+			WindingPlane(in, testNormal, &testDist);
+			if (DotProduct(testNormal, normal) > 0.0)
+				*front = CopyWinding(in);
+			else
+				*back = CopyWinding(in);
 		}
 		return;
 	}
