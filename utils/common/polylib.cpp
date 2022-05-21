@@ -411,19 +411,16 @@ void ClipWindingEpsilon( winding_t *in, const vec3_t normal, vec_t dist, vec_t e
 
 	*front = *back = NULL;
 
-	if( keepon && !counts[SIDE_FRONT] && !counts[SIDE_BACK] )
+	// if coplanar, put on the front side if the normals match
+	if (keepon && !counts[SIDE_FRONT] && !counts[SIDE_BACK])
 	{
-		vec_t sum = 0.0;
-		for( i = 0; i < in->numpoints; i++)
-		{
-			dot = DotProduct( in->p[i], normal );
-			dot -= dist;
-			sum += dot;
-		}
-
-		if( sum > NORMAL_EPSILON )
+		vec_t testDist;
+		vec3_t testNormal;
+		WindingPlane(in, testNormal, &testDist);
+		if (DotProduct(testNormal, normal) > 0.0f)
 			*front = CopyWinding( in );
-		else *back = CopyWinding( in );
+		else 
+			*back = CopyWinding( in );
 		return;
 	}
 
