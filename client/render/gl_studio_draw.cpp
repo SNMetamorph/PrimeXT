@@ -2870,7 +2870,7 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 		using_cubemaps = true;
 	}
 
-	if( tr.fogEnabled )
+	if (tr.fogEnabled && !RP_CUBEPASS())
 		GL_AddShaderDirective( options, "APPLY_FOG_EXP" );
 
 	// mixed mode: solid & transparent controlled by alpha-channel

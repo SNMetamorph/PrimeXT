@@ -1256,7 +1256,7 @@ static word R_GrassShaderSceneForward( msurface_t *s, grass_t *g )
 
 	GL_AddShaderDirective( options, "APPLY_FADE_DIST" );
 
-	if( tr.fogEnabled )
+	if (tr.fogEnabled && !RP_CUBEPASS())
 		GL_AddShaderDirective( options, "APPLY_FOG_EXP" );
 
 	word shaderNum = GL_FindUberShader( glname, options );

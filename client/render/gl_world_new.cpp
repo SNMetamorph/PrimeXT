@@ -909,7 +909,7 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 	if( mat->aberrationScale > 0.0f && Q_stristr( options, "HAS_NORMALMAP" ))
 		GL_AddShaderDirective( options, "APPLY_ABERRATION" );
 
-	if( tr.fogEnabled )
+	if (tr.fogEnabled && !RP_CUBEPASS())
 		GL_AddShaderDirective( options, "APPLY_FOG_EXP" );
 
 	word shaderNum = GL_FindUberShader( glname, options );

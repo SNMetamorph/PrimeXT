@@ -842,7 +842,7 @@ word CStudioModelRenderer :: ShaderDecalForward( studiodecal_t *pDecal, bool ver
 	bool hasNormalmap = texinfo->gl_normalmap_id != tr.normalmapTexture;
 	bool hasHeightmap = texinfo->gl_heightmap_id != tr.whiteTexture;
 
-	if( tr.fogEnabled )
+	if (tr.fogEnabled && !RP_CUBEPASS())
 		GL_AddShaderDirective( options, "APPLY_FOG_EXP" );
 
 	if( !texinfo->opaque )

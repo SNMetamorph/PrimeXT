@@ -411,7 +411,7 @@ static word R_ShaderDecalForward( brushdecal_t *decal )
 			GL_AddShaderDirective( options, "REFLECTION_CUBEMAP" );		 
 	}
 
-	if( tr.fogEnabled )
+	if (tr.fogEnabled && !RP_CUBEPASS())
 		GL_AddShaderDirective( options, "APPLY_FOG_EXP" );
 
 	word shaderNum = GL_FindUberShader( glname, options );
