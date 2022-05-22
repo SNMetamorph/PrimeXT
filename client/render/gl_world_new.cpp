@@ -876,7 +876,7 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 			shader_translucent = true;
 
 		// apply cubemap reflections for water
-		if (cubemaps_available)
+		if (cubemaps_available && !RP_CUBEPASS())
 		{
 			GL_AddShaderDirective(options, "REFLECTION_CUBEMAP");
 			using_cubemaps = true;

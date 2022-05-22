@@ -407,7 +407,8 @@ static word R_ShaderDecalForward( brushdecal_t *decal )
 	{
 		if( CVAR_TO_BOOL( cv_realtime_puddles ) && CVAR_TO_BOOL( r_allow_mirrors ))
 			GL_AddShaderDirective( options, "PLANAR_REFLECTION" );
-		else GL_AddShaderDirective( options, "REFLECTION_CUBEMAP" );		 
+		else if (!RP_CUBEPASS())
+			GL_AddShaderDirective( options, "REFLECTION_CUBEMAP" );		 
 	}
 
 	if( tr.fogEnabled )
@@ -486,7 +487,7 @@ static word R_ShaderDecalDeferred( brushdecal_t *decal )
 	if( FBitSet( mat->flags, BRUSH_TRANSPARENT ))
 		GL_AddShaderDirective( options, "ALPHA_TEST" );
 
-	if( FBitSet( decal->flags, FDECAL_PUDDLE ))
+	if( FBitSet( decal->flags, FDECAL_PUDDLE ) && !RP_CUBEPASS( ))
 		GL_AddShaderDirective( options, "REFLECTION_CUBEMAP" );		 
 
 	word shaderNum = GL_FindUberShader( glname, options );
