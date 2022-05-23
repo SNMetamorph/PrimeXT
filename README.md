@@ -15,12 +15,16 @@ We need interested people to work on this SDK with us! Main goals of this projec
 - Updating PhysX headers to modern SDK version
 - Implementing particle engine, something like in Source Engine
 - Cross-platform (now Windows and Linux supported, Android in plans)
-- Writing actual documentation, translating it to English
+- Writing actual documentation, translating it to English (in process)
 - Code refactoring
 
 Full list of project goals you can see on documetation site, it's available [here](https://snmetamorph.github.io/PrimeXT/), but now it's still in progress. 
 Therefore, you can tell suggestion about what should be documented at first.  
 You can discuss with community members and ask questions in our [Discord](https://discord.gg/BxQUMUescJ) server.
+
+## Installation
+Testing builds available for everybody. Detailed installation guide you can read on our documentation site: available on [english](https://snmetamorph.github.io/PrimeXT/docs/eng/installation) and [russian](https://snmetamorph.github.io/PrimeXT/docs/rus/installation).
+
 ## Building
 > NOTE: Never download sources from GitHub manually, because it doesn't include external depedencies, you SHOULD use Git clone instead.
 1) Install [Git](https://git-scm.com/download/win) for cloning project
