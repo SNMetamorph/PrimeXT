@@ -29,8 +29,19 @@ You can discuss with community members and ask questions in our [Discord](https:
 git clone --recursive https://github.com/SNMetamorph/PrimeXT.git
 cd PrimeXT
 ```
+Next steps will be vary according to your development environment and tools.
+### Windows (using Visual Studio)
 3) Open cloned repository directory as CMake folder with Visual Studio (project tested with VS2019, but more later version will works also)<br>
 4) Select desired build configuration, usually it's `x86-Debug`
-4) In `Build` menu select `Build solution`, or you can use `Ctrl+Shift+B` hotkey instead
-5) Wait until everything will built
+5) In `Build` menu select `Build solution`, or you can use `Ctrl+Shift+B` hotkey instead. Wait for completion.
 6) Compiled binaries locates in `build\x\bin` and `build\x\devkit`, where `x` is your build configuration name
+### Linux (using CMake)
+3) Install some build depedencies: `sudo apt-get install gcc-multilib g++-multilib cmake`
+4) Prepare build environment and configure project
+```
+cmake -E make_directory ./build
+cd build
+cmake .. -DBUILD_UTILS=OFF -DENABLE_PHYSX=OFF
+```
+5) Build project: `cmake --build . --config Debug`
+6) Compiled binaries will be located in `build` and `build\primext\bin` directories
