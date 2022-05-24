@@ -964,8 +964,7 @@ void R_RenderScene( const ref_viewpass_t *rvp, RefParams params )
 	R_DrawParticles( false );
 	R_RenderDebugStudioList( false );
 
-	if(( err = pglGetError( )) != GL_NO_ERROR )
-		ALERT( at_error, "OpenGL: error %x while render solid objects\n", err );
+	GL_CheckForErrors();
 
 	// restore right depthrange here
 	GL_DepthRange( gldepthmin, gldepthmax );
@@ -975,8 +974,7 @@ void R_RenderScene( const ref_viewpass_t *rvp, RefParams params )
 	R_DrawWeather();
 	HUD_DrawTransparentTriangles();
 
-	if(( err = pglGetError( )) != GL_NO_ERROR )
-		ALERT( at_error, "OpenGL: error %x while render trans objects\n", err );
+	GL_CheckForErrors();
 
 	GL_BindShader( NULL );
 	R_ResetGLstate();
@@ -1015,8 +1013,7 @@ void R_RenderDeferredScene( const ref_viewpass_t *rvp, RefParams params )
 	GL_CleanupDrawState();
 	GL_ResetGBuffer();
 
-	if(( err = pglGetError( )) != GL_NO_ERROR )
-		ALERT( at_error, "OpenGL: error %x while render solid objects\n", err );
+	GL_CheckForErrors();
 
 	GL_DrawDeferredPass();
 	R_ResetGLstate();

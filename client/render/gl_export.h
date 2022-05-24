@@ -221,6 +221,7 @@ typedef unsigned int GLhandleARB;
 #define GL_STACK_OVERFLOW			0x0503
 #define GL_STACK_UNDERFLOW			0x0504
 #define GL_OUT_OF_MEMORY			0x0505
+#define GL_INVALID_FRAMEBUFFER_OPERATION  0x0506
 
 #define GL_DITHER				0x0BD0
 #define GL_RGB				0x1907

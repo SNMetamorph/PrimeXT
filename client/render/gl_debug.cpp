@@ -53,6 +53,37 @@ void GL_DebugGroupPop()
 	}
 }
 
+static const char *GL_GetErrorString(int errorCode)
+{
+	switch (errorCode)
+	{
+		case GL_STACK_OVERFLOW:
+			return "GL_STACK_OVERFLOW";
+		case GL_STACK_UNDERFLOW:
+			return "GL_STACK_UNDERFLOW";
+		case GL_INVALID_ENUM:
+			return "GL_INVALID_ENUM";
+		case GL_INVALID_VALUE:
+			return "GL_INVALID_VALUE";
+		case GL_INVALID_OPERATION:
+			return "GL_INVALID_OPERATION";
+		case GL_OUT_OF_MEMORY:
+			return "GL_OUT_OF_MEMORY";
+		case GL_INVALID_FRAMEBUFFER_OPERATION:
+			return "GL_INVALID_FRAMEBUFFER_OPERATION";
+		default:
+			return "UNKNOWN ERROR";
+	}
+}
+
+void GL_CheckForErrorsInternal(const char *filename, int line)
+{
+	for (int code = pglGetError(); code != GL_NO_ERROR; code = pglGetError())
+	{
+		ALERT(at_error, "%s (at %s:%i)\n", GL_GetErrorString(code), filename, line);
+	}
+}
+
 void DBG_PrintVertexVBOSizes( void )
 {
 	if( developer_level < at_aiconsole )
