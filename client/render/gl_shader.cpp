@@ -1564,6 +1564,7 @@ void GL_ReloadShader(word shaderNum)
 		shader->status = 0;
 		shader->nextHash = nullptr;
 		shader->attribs = 0;
+		shader->sourceUnits.clear();
 		GL_FindShader(shader->name, shader->vp_name, shader->fp_name, shader->options);
 	}
 }
