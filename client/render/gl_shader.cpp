@@ -488,7 +488,7 @@ static bool GL_LoadSource( const char *filename, CVirtualFS *file )
 {
 	if( GL_CheckFileStack( filename ))
 	{
-		ALERT( at_error, "recursive include for %s\n", filename );
+		ALERT( at_error, "^1GL_LoadSource: ^7recursive include for shader file \"%s\"\n", filename );
 		return false;
 	}
 
@@ -496,7 +496,7 @@ static bool GL_LoadSource( const char *filename, CVirtualFS *file )
 	char *source = (char *)gEngfuncs.COM_LoadFile((char *)filename, 5, &size );
 	if( !source )
 	{
-		ALERT( at_error, "couldn't load %s\n", filename );
+		ALERT( at_error, "^1GL_LoadSource: ^7couldn't load shader file \"%s\"\n", filename );
 		return false;
 	}
 
