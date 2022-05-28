@@ -659,32 +659,32 @@ static int GL_ParseErrorSourceLine(const char *errorLog)
 static int GL_TraceShaderErrorFile(glsl_program_t *program, int sourceLine, int unitIndex, std::string &fileName)
 {
 	int line = sourceLine;
+	bool searchStopFlag = false;
 	glsl_prog_include *header = &program->sourceUnits[unitIndex];
-	glsl_prog_include *siblingLast = &header->siblings.back();
-	int headersEndLine = siblingLast->rebasedLine + siblingLast->lineCount;
-	if (line > headersEndLine) // check is error happened in source file itself
-	{
-		line = (line - headersEndLine) + siblingLast->line + 1;
-	}
-	else 
-	{
-		// search error line among headers
-		while (!header->siblings.empty())
-		{
-			for (int i = 0; i < header->siblings.size(); ++i)
-			{
-				glsl_prog_include &sibling = header->siblings[i];
-				int rangeStart = sibling.rebasedLine;
-				int rangeEnd = sibling.rebasedLine + sibling.lineCount;
 
-				if (line >= rangeStart && line <= rangeEnd)
-				{
-					header = &sibling;
-					line = (line - sibling.rebasedLine) + 1;
-					break;
-				}
+	// search error line among headers
+	while (!header->siblings.empty() && !searchStopFlag)
+	{
+		for (int i = 0; i < header->siblings.size(); ++i)
+		{
+			glsl_prog_include &sibling = header->siblings[i];
+			int rangeStart = sibling.rebasedLine;
+			int rangeEnd = sibling.rebasedLine + sibling.lineCount;
+
+			if (line >= rangeStart && line <= rangeEnd)
+			{
+				header = &sibling;
+				line = (line - sibling.rebasedLine) + 1;
+				break;
 			}
-			break; // line not found in any of the headers
+			else if ((i + 1) == header->siblings.size()) 
+			{
+				// line not found in any of the sibling headers, therefore it located in parent header
+				glsl_prog_include *siblingLast = &header->siblings.back();
+				int headersEndLine = siblingLast->rebasedLine + siblingLast->lineCount;
+				line = (line - headersEndLine) + siblingLast->line + 1;
+				searchStopFlag = true;
+			}
 		}
 	}
 	
