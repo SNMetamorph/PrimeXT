@@ -805,6 +805,7 @@ void CL_FindTwoNearestCubeMapForSurface( const Vector &pos, const msurface_t *su
 Vector CL_GetCubemapSideViewangles(int side);
 void CL_BuildCubemaps_f( void );
 void R_InitCubemaps();
+void R_InitCubemapShaders();
 void Mod_LoadCubemaps(const byte *base, const dlump_t *l);
 void Mod_FreeCubemaps();
 

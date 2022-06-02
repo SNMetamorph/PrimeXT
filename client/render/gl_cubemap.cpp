@@ -26,10 +26,18 @@ GNU General Public License for more details.
 #include "gl_cvars.h"
 #include "gl_debug.h"
 #include "gl_viewport.h"
+#include "gl_unit_cube.h"
+
+static word g_shaderFilterSpecularIBL;
 
 void R_InitCubemaps()
 {
 	gEngfuncs.pfnAddCommand("buildcubemaps", CL_BuildCubemaps_f);
+}
+
+void R_InitCubemapShaders()
+{
+	g_shaderFilterSpecularIBL = GL_FindShader("common/ibl_filter_specular", "common/ibl_filter_specular", "common/ibl_filter_specular");
 }
 
 /*
@@ -435,6 +443,41 @@ static void GL_CreateStubCubemap(mcubemap_t *cubemap)
 	cubemap->size = 4;
 }
 
+static void GL_CreateCubemapSpecularIBL(mcubemap_t *cubemap, int resolution)
+{
+	int flags = TF_CUBEMAP;
+	if (!cubemap->textureSpecularIBL)
+	{
+		if (GL_Support(R_SEAMLESS_CUBEMAP)) {
+			SetBits(flags, TF_BORDER);	// seamless cubemaps have support for border
+		}
+		else {
+			SetBits(flags, TF_CLAMP); // default method
+		}
+
+		// set FP16 format for cubemaps (it's important for PBR and reflections)
+		SetBits(flags, TF_ARB_16BIT);
+		SetBits(flags, TF_ARB_FLOAT);
+		cubemap->textureSpecularIBL = CREATE_TEXTURE(va("%s_ibl_specular", cubemap->name), resolution, resolution, NULL, flags);
+	}
+
+	// allocate GPU memory for texture, enable trilinear filtering and generate mip-maps
+	pglBindTexture(GL_TEXTURE_CUBE_MAP_ARB, cubemap->textureSpecularIBL);
+	for (int i = 0; i < 6; ++i) {
+		pglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + i, 0, GL_RGB16F, resolution, resolution, 0, GL_RGB, GL_FLOAT, nullptr);
+	}
+	pglTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	pglTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	pglTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	pglTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	pglTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	pglGenerateMipmap(GL_TEXTURE_CUBE_MAP_ARB);
+	pglBindTexture(GL_TEXTURE_CUBE_MAP_ARB, 0);
+
+	cubemap->fboSpecularIBL.Init(FBO_CUBE, resolution, resolution, FBO_NOTEXTURE);
+	cubemap->fboSpecularIBL.ValidateFBO();
+}
+
 static void GL_ComputeCubemapViewBoxSize(mcubemap_t *cubemap)
 {
 	pmtrace_t pmtrace;
@@ -480,6 +523,58 @@ static void GL_SetupCubemapSideView(mcubemap_t *cubemap, ref_viewpass_t &rvp, in
 	}
 	else {
 		SetBits(rvp.flags, RP_ENVVIEW);
+	}
+}
+
+static void GL_FilterCubemapSpecularIBL(mcubemap_t *cubemap, int resolution)
+{
+	GLfloat matrixBuffer[16];
+	matrix4x4 projectionMatrix;
+	const int mipLevelCount = 1 + floor(log2(resolution));
+	GL_BindShader(&glsl_programs[g_shaderFilterSpecularIBL]);
+	projectionMatrix.CreateProjection(90.0f, 90.0f, 0.1, 10.0);
+
+	for (int mipLevel = 0; mipLevel < mipLevelCount; ++mipLevel)
+	{
+		int width = resolution * pow(0.5, mipLevel);
+		int height = resolution * pow(0.5, mipLevel);
+		float roughness = mipLevel / static_cast<float>(mipLevelCount - 1);
+		pglViewport(0, 0, width, height);
+
+		for (int i = 0; i < 6; ++i)
+		{	
+			matrix4x4 modelViewMatrix;
+			cubemap->fboSpecularIBL.Bind(cubemap->textureSpecularIBL, i, mipLevel);
+			COpenGLUnitCube::GetInstance().CreateModelViewMatrix(
+				modelViewMatrix, CL_GetCubemapSideViewangles(i)
+			);
+
+			for (int j = 0; j < RI->currentshader->numUniforms; j++)
+			{
+				uniform_t *u = &RI->currentshader->uniforms[j];
+				switch (u->type)
+				{
+					case UT_ENVMAP0:
+						u->SetValue(cubemap->texture);
+						break;
+					case UT_SCREENWIDTH: // size of source cubemap
+						u->SetValue((float)cubemap->size);
+						break;
+					case UT_SMOOTHNESS: // roughness
+						u->SetValue(roughness);
+						break;
+					case UT_MODELMATRIX:
+						modelViewMatrix.CopyToArray(matrixBuffer);
+						u->SetValue(&matrixBuffer[0]);
+						break;
+					case UT_REFLECTMATRIX:
+						projectionMatrix.CopyToArray(matrixBuffer);
+						u->SetValue(&matrixBuffer[0]);
+						break;
+				}
+			}
+			COpenGLUnitCube::GetInstance().Draw();
+		}
 	}
 }
 
@@ -562,6 +657,15 @@ void GL_LoadAndRebuildCubemaps(RefParams refParams)
 		if (cubemapFirst != cubemapSecond) {
 			GL_RenderCubemap(cubemapSecond);
 		}
+	}
+
+	// perform IBL specular-term filtering
+	for (int i = 0; i < world->num_cubemaps; i++)
+	{
+		const int resolution = 128;
+		mcubemap_t *cm = &world->cubemaps[i];
+		GL_CreateCubemapSpecularIBL(cm, resolution);
+		GL_FilterCubemapSpecularIBL(cm, resolution);
 	}
 
 	// we reached the end of list

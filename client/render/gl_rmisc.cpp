@@ -26,6 +26,7 @@ GNU General Public License for more details.
 #include "gl_shader.h"
 #include "gl_cvars.h"
 #include "gl_debug.h"
+#include "gl_unit_cube.h"
 #include "r_weather.h"
 
 #define DEFAULT_SMOOTHNESS	0.0f
@@ -1272,7 +1273,9 @@ void R_VidInit( void )
 	glState.defWidth = 256;
 	glState.defHeight = 192;
 
+	COpenGLUnitCube::GetInstance().Initialize();
 	R_InitCommonTextures();
+	R_InitCubemapShaders();
 	GL_VidInitDrawBuffers();
 	if (CVAR_TO_BOOL(gl_hdr)) {
 		GL_VidInitTempScreenFBO();

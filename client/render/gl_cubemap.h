@@ -15,10 +15,12 @@ typedef struct mcubemap_s
 {
 	char			name[64];
 	int				texture;
+	int				textureSpecularIBL;
+	CFrameBuffer	fboSpecularIBL;
 	CFrameBuffer	framebuffer;
 	vec3_t			mins, maxs;
 	vec3_t			origin;
 	bool			valid;
-	short			size;
-	byte			numMips;
+	int				size;
+	int				numMips;
 } mcubemap_t;
