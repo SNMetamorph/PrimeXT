@@ -24,9 +24,9 @@ COpenGLUnitCube &COpenGLUnitCube::GetInstance()
 
 void COpenGLUnitCube::Initialize()
 {
-    // initialize (if necessary)
-    if (!m_iCubeVAO)
+    if (m_iCubeVAO) {
         return;
+    }
 
     float vertices[] = {
         // back face
@@ -100,4 +100,14 @@ void COpenGLUnitCube::Draw()
     pglBindVertexArray(m_iCubeVAO);
     pglDrawArrays(GL_TRIANGLES, 0, 36);
     pglBindVertexArray(0);
+}
+
+void COpenGLUnitCube::CreateModelViewMatrix(matrix4x4 &modelViewMatrix, const vec3_t &angles)
+{
+    const vec3_t origin = vec3_t(0.f, 0.f, 0.f);
+    modelViewMatrix.CreateModelview();
+    modelViewMatrix.ConcatRotate(-angles[2], 1, 0, 0);
+    modelViewMatrix.ConcatRotate(-angles[0], 0, 1, 0);
+    modelViewMatrix.ConcatRotate(-angles[1], 0, 0, 1);
+    modelViewMatrix.ConcatTranslate(-origin.x, -origin.y, -origin.z);
 }

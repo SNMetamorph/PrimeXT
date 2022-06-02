@@ -15,6 +15,7 @@ GNU General Public License for more details.
 
 #pragma once
 #include "gl_export.h"
+#include "matrix.h"
 
 class COpenGLUnitCube
 {
@@ -22,6 +23,7 @@ public:
 	static COpenGLUnitCube &GetInstance();
 	void Initialize();
 	void Draw();
+	void CreateModelViewMatrix(matrix4x4 &modelViewMatrix, const vec3_t &angles);
 
 private:
 	COpenGLUnitCube() {};
