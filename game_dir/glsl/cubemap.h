@@ -47,17 +47,21 @@ vec3 CubemapBoxParallaxCorrected( const vec3 vReflVec, const vec3 vPosition, con
 	return (vInterectionPos - vCubePos);
 }
 
-vec3 GetReflectionProbe( const vec3 vPos, const vec3 vView, const vec3 nWorld, const float smoothness )
+vec3 CubemapProbeInternal( const vec3 vPos, const vec3 vView, const vec3 nWorld, const float smoothness, samplerCube cubemap0, samplerCube cubemap1 )
 {
 	vec3 I = normalize( vPos - vView ); // in world space
 	vec3 NW = normalize( nWorld );
 	vec3 wRef = normalize( reflect( I, NW ));
 	vec3 R1 = CubemapBoxParallaxCorrected( wRef, vPos, u_CubeOrigin[0], u_BoxMins[0], u_BoxMaxs[0] );
 	vec3 R2 = CubemapBoxParallaxCorrected( wRef, vPos, u_CubeOrigin[1], u_BoxMins[1], u_BoxMaxs[1] );
-	vec3 srcColor0 = textureCubeLod( u_EnvMap0, R1, u_CubeMipCount.x - smoothness * u_CubeMipCount.x ).rgb;
-	vec3 srcColor1 = textureCubeLod( u_EnvMap1, R2, u_CubeMipCount.y - smoothness * u_CubeMipCount.y ).rgb;
+	vec3 srcColor0 = textureCubeLod( cubemap0, R1, u_CubeMipCount.x - smoothness * u_CubeMipCount.x ).rgb;
+	vec3 srcColor1 = textureCubeLod( cubemap1, R2, u_CubeMipCount.y - smoothness * u_CubeMipCount.y ).rgb;
 	vec3 reflectance = mix( srcColor0, srcColor1, u_LerpFactor );
 	return reflectance;
 }
 
+vec3 CubemapReflectionProbe( const vec3 vPos, const vec3 vView, const vec3 nWorld, const float smoothness )
+{
+	return CubemapProbeInternal(vPos, vView, nWorld, smoothness, u_EnvMap0, u_EnvMap1);
+}
 #endif//CUBEMAP_H

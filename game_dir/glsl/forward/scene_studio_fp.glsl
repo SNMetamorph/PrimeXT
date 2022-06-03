@@ -175,7 +175,7 @@ void main( void )
 #else
 	vec3 worldNormal = N;
 #endif
-	vec3 reflected = GetReflectionProbe( var_Position, u_ViewOrigin, worldNormal, mat.smoothness );
+	vec3 reflected = CubemapReflectionProbe( var_Position, u_ViewOrigin, worldNormal, mat.smoothness );
 	float fresnel = GetFresnel( V, N, WATER_F0_VALUE, FRESNEL_FACTOR );
 	result.rgb += reflected * mat.smoothness * u_ReflectScale;
 #endif // REFLECTION_CUBEMAP

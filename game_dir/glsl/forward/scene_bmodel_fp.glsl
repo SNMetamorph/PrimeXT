@@ -225,7 +225,7 @@ void main( void )
 #if defined( REFLECTION_CUBEMAP )
 	mat3 tbnBasis = mat3(normalize(var_MatrixTBN[0]), normalize(var_MatrixTBN[1]), normalize(var_MatrixTBN[2]));
 	vec3 worldNormal = normalize(tbnBasis * N);
-	vec3 reflected = GetReflectionProbe( var_Position, u_ViewOrigin, worldNormal, mat.smoothness );
+	vec3 reflected = CubemapReflectionProbe( var_Position, u_ViewOrigin, worldNormal, mat.smoothness );
 #endif // REFLECTION_CUBEMAP
 
 #if defined( TRANSLUCENT )
