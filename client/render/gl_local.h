@@ -95,7 +95,7 @@ GNU General Public License for more details.
 #define R_WaterEntity( m )	( FBitSet( m->flags, BIT( 2 )))
 
 #define ScreenCopyRequired( x )	((x) && FBitSet( (x)->status, SHADER_USE_SCREENCOPY ))
-#define IsReflectShader( x )		((x) && FBitSet( (x)->status, SHADER_USE_CUBEMAPS ))
+#define ShaderUseCubemaps( x )	((x) && FBitSet( (x)->status, SHADER_USE_CUBEMAPS ))
 
 // refparams
 enum RefParams

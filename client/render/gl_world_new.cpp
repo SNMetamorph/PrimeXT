@@ -3399,7 +3399,7 @@ void R_RenderDeferredBrushList( void )
 		if( cached_material != mat )
 			flush_buffer = true;
 
-		if( IsReflectShader( RI->currentshader ) && ( cached_cubemap[0] != es->cubemap[0] || cached_cubemap[1] != es->cubemap[1] ))
+		if( ShaderUseCubemaps( RI->currentshader ) && ( cached_cubemap[0] != es->cubemap[0] || cached_cubemap[1] != es->cubemap[1] ))
 			flush_buffer = true;
 
 		if( flush_buffer )
@@ -3528,7 +3528,7 @@ void R_RenderSolidBrushList( void )
 		if( cached_mirror != es->subtexture[glState.stack_position] )
 			flush_buffer = true;
 
-		if( IsReflectShader( RI->currentshader ) && ( cached_cubemap[0] != es->cubemap[0] || cached_cubemap[1] != es->cubemap[1] ))
+		if( ShaderUseCubemaps( RI->currentshader ) && ( cached_cubemap[0] != es->cubemap[0] || cached_cubemap[1] != es->cubemap[1] ))
 			flush_buffer = true;
 
 		if( flush_buffer )
