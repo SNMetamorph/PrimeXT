@@ -709,7 +709,7 @@ void Mod_LoadCubemaps(const byte *base, const dlump_t *l)
 	}
 
 	world->num_cubemaps = count;
-	world->loading_cubemaps = (count > 0) ? true : false;
+	world->loading_cubemaps = true;
 
 	// makes an default cubemap from skybox
 	if (FBitSet(world->features, WORLD_HAS_SKYBOX) && world->loading_cubemaps)
