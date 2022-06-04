@@ -508,7 +508,7 @@ typedef struct
 	int		depthTexture;	// stub
 	int		depthCubemap;	// stub
 	int		normalsFitting;	// best fit normals
-
+	int		brdfApproxTexture; // BRDF look-up table texture for PBR lighting
 	int		defaultProjTexture;	// fallback for missed textures
 	int		flashlightTexture;	// flashlight projection texture
 	int		spotlightTexture[8];// reserve for eight textures

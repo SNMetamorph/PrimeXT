@@ -963,8 +963,11 @@ static void GL_InitTextures( void )
 	if( GL_Support( R_EXT_GPU_SHADER4 ))
 		tr.depthCubemap = CREATE_TEXTURE( "depthCube", 8, 8, NULL, TF_SHADOW_CUBEMAP ); 
 
+	// BRDF look-up table
+	tr.brdfApproxTexture = LOAD_TEXTURE("gfx/brdf_approx.dds", NULL, 0, TF_KEEP_SOURCE | TF_CLAMP);
+
 	// best fit normals
-	tr.normalsFitting = LOAD_TEXTURE( "gfx/NormalsFitting.dds", NULL, 0, TF_KEEP_SOURCE|TF_CLAMP|TF_NEAREST );
+	tr.normalsFitting = LOAD_TEXTURE( "gfx/normalsfitting.dds", NULL, 0, TF_KEEP_SOURCE|TF_CLAMP|TF_NEAREST );
 	if( !tr.normalsFitting ) tr.normalsFitting = tr.whiteTexture; // fallback
 
 	// load water animation
