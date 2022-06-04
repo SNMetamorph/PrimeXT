@@ -660,9 +660,12 @@ void GL_LoadAndRebuildCubemaps(RefParams refParams)
 	}
 
 	// perform IBL specular-term filtering
+	GL_DepthTest(GL_FALSE);
+	const int resolution = 128;
+	GL_CreateCubemapSpecularIBL(&world->defaultCubemap, resolution);
+	GL_FilterCubemapSpecularIBL(&world->defaultCubemap, resolution);
 	for (int i = 0; i < world->num_cubemaps; i++)
 	{
-		const int resolution = 128;
 		mcubemap_t *cm = &world->cubemaps[i];
 		GL_CreateCubemapSpecularIBL(cm, resolution);
 		GL_FilterCubemapSpecularIBL(cm, resolution);
