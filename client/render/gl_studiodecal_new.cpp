@@ -1599,14 +1599,39 @@ void CStudioModelRenderer :: SetDecalUniforms( studiodecal_t *pDecal )
 			break;
 		case UT_ENVMAP0:
 		case UT_ENVMAP:
-			if( inst->cubemap[0] != NULL )
-				u->SetValue( inst->cubemap[0]->texture );
-			else u->SetValue( tr.whiteCubeTexture );
+			if (!RP_CUBEPASS() && inst->cubemap[0] != NULL) {
+				u->SetValue(inst->cubemap[0]->texture);
+			}
+			else {
+				u->SetValue(world->defaultCubemap.texture);
+			}
 			break;
 		case UT_ENVMAP1:
-			if( inst->cubemap[1] != NULL )
-				u->SetValue( inst->cubemap[1]->texture );
-			else u->SetValue( tr.whiteCubeTexture );
+			if (!RP_CUBEPASS() && inst->cubemap[1] != NULL) {
+				u->SetValue(inst->cubemap[1]->texture);
+			}
+			else {
+				u->SetValue(world->defaultCubemap.texture);
+			}
+			break;
+		case UT_SPECULARMAPIBL0:
+			if (!RP_CUBEPASS() && inst->cubemap[0] != NULL) {
+				u->SetValue(inst->cubemap[0]->textureSpecularIBL);
+			}
+			else {
+				u->SetValue(world->defaultCubemap.textureSpecularIBL);
+			}
+			break;
+		case UT_SPECULARMAPIBL1:
+			if (!RP_CUBEPASS() && inst->cubemap[1] != NULL) {
+				u->SetValue(inst->cubemap[1]->textureSpecularIBL);
+			}
+			else {
+				u->SetValue(world->defaultCubemap.textureSpecularIBL);
+			}
+			break;
+		case UT_BRDFAPPROXMAP:
+			u->SetValue(tr.brdfApproxTexture);
 			break;
 		case UT_BSPPLANESMAP:
 			u->SetValue( tr.packed_planes_texture );

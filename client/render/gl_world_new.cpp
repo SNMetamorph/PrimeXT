@@ -801,8 +801,11 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 			GL_AddShaderDirective( options, va( "APPLY_STYLE%i", i ));
 		}
 
-		if( CVAR_TO_BOOL( cv_brdf ))
-			GL_AddShaderDirective( options, "APPLY_PBS" );
+		if (CVAR_TO_BOOL(cv_brdf))
+		{
+			GL_AddShaderDirective(options, "APPLY_PBS");
+			using_cubemaps = true;
+		}
 
 		// NOTE: deluxemap and normalmap are separate because some modes may using
 		// normalmap directly e.g. for mirror distorsion
@@ -2876,14 +2879,39 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 			break;
 		case UT_ENVMAP0:
 		case UT_ENVMAP:
-			if( es->cubemap[0] != NULL )
-				u->SetValue( es->cubemap[0]->texture );
-			else u->SetValue( tr.whiteCubeTexture );
+			if (!RP_CUBEPASS() && es->cubemap[0] != NULL) {
+				u->SetValue(es->cubemap[0]->texture);
+			}
+			else {
+				u->SetValue(world->defaultCubemap.texture);
+			}
 			break;
 		case UT_ENVMAP1:
-			if( es->cubemap[1] != NULL )
-				u->SetValue( es->cubemap[1]->texture );
-			else u->SetValue( tr.whiteCubeTexture );
+			if (!RP_CUBEPASS() && es->cubemap[1] != NULL) {
+				u->SetValue(es->cubemap[1]->texture);
+			}
+			else {
+				u->SetValue(world->defaultCubemap.texture);
+			}
+			break;
+		case UT_SPECULARMAPIBL0:
+			if (!RP_CUBEPASS() && es->cubemap[0] != NULL) {
+				u->SetValue(es->cubemap[0]->textureSpecularIBL);
+			}
+			else {
+				u->SetValue(world->defaultCubemap.textureSpecularIBL);
+			}
+			break;
+		case UT_SPECULARMAPIBL1:
+			if (!RP_CUBEPASS() && es->cubemap[1] != NULL) {
+				u->SetValue(es->cubemap[1]->textureSpecularIBL);
+			}
+			else {
+				u->SetValue(world->defaultCubemap.textureSpecularIBL);
+			}
+			break;
+		case UT_BRDFAPPROXMAP:
+			u->SetValue(tr.brdfApproxTexture);
 			break;
 		case UT_GLOWMAP:
 			u->SetValue( mat->gl_glowmap_id );

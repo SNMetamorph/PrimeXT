@@ -2796,8 +2796,11 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 	}
 	else
 	{
-		if( CVAR_TO_BOOL( cv_brdf ))
-			GL_AddShaderDirective( options, "APPLY_PBS" );
+		if (CVAR_TO_BOOL(cv_brdf))
+		{
+			GL_AddShaderDirective(options, "APPLY_PBS");
+			using_cubemaps = true;
+		}
 
 		if( lightmode == LIGHTSTATIC_VERTEX )
 			GL_AddShaderDirective( options, "VERTEX_LIGHTING" );
@@ -3371,14 +3374,39 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force )
 			break;
 		case UT_ENVMAP0:
 		case UT_ENVMAP:
-			if( inst->cubemap[0] != NULL )
-				u->SetValue( inst->cubemap[0]->texture );
-			else u->SetValue( tr.whiteCubeTexture );
+			if (!RP_CUBEPASS() && inst->cubemap[0] != NULL) {
+				u->SetValue(inst->cubemap[0]->texture);
+			}
+			else {
+				u->SetValue(world->defaultCubemap.texture);
+			}
 			break;
 		case UT_ENVMAP1:
-			if( inst->cubemap[1] != NULL )
-				u->SetValue( inst->cubemap[1]->texture );
-			else u->SetValue( tr.whiteCubeTexture );
+			if (!RP_CUBEPASS() && inst->cubemap[1] != NULL) {
+				u->SetValue(inst->cubemap[1]->texture);
+			}
+			else {
+				u->SetValue(world->defaultCubemap.texture);
+			}
+			break;
+		case UT_SPECULARMAPIBL0:
+			if (!RP_CUBEPASS() && inst->cubemap[0] != NULL) {
+				u->SetValue(inst->cubemap[0]->textureSpecularIBL);
+			}
+			else {
+				u->SetValue(world->defaultCubemap.textureSpecularIBL);
+			}
+			break;
+		case UT_SPECULARMAPIBL1:
+			if (!RP_CUBEPASS() && inst->cubemap[1] != NULL) {
+				u->SetValue(inst->cubemap[1]->textureSpecularIBL);
+			}
+			else {
+				u->SetValue(world->defaultCubemap.textureSpecularIBL);
+			}
+			break;
+		case UT_BRDFAPPROXMAP:
+			u->SetValue(tr.brdfApproxTexture);
 			break;
 		case UT_GLOWMAP:
 			u->SetValue( mat->gl_glowmap_id );

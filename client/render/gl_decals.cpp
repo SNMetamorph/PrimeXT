@@ -1389,14 +1389,40 @@ void R_SetDecalUniforms( brushdecal_t *decal )
 			break;
 		case UT_ENVMAP0:
 		case UT_ENVMAP:
-			if( es->cubemap[0] != NULL )
-				u->SetValue( es->cubemap[0]->texture );
-			else u->SetValue( tr.whiteCubeTexture );
+			if (!RP_CUBEPASS() && es->cubemap[0] != NULL)
+			{
+				u->SetValue(es->cubemap[0]->texture);
+			}
+			else {
+				u->SetValue(world->defaultCubemap.texture);
+			}
 			break;
 		case UT_ENVMAP1:
-			if( es->cubemap[1] != NULL )
-				u->SetValue( es->cubemap[1]->texture );
-			else u->SetValue( tr.whiteCubeTexture );
+			if (!RP_CUBEPASS() && es->cubemap[1] != NULL) {
+				u->SetValue(es->cubemap[1]->texture);
+			}
+			else {
+				u->SetValue(world->defaultCubemap.texture);
+			}
+			break;
+		case UT_SPECULARMAPIBL0:
+			if (!RP_CUBEPASS() && es->cubemap[0] != NULL) {
+				u->SetValue(es->cubemap[0]->textureSpecularIBL);
+			}
+			else {
+				u->SetValue(world->defaultCubemap.textureSpecularIBL);
+			}
+			break;
+		case UT_SPECULARMAPIBL1:
+			if (!RP_CUBEPASS() && es->cubemap[1] != NULL) {
+				u->SetValue(es->cubemap[1]->textureSpecularIBL);
+			}
+			else {
+				u->SetValue(world->defaultCubemap.textureSpecularIBL);
+			}
+			break;
+		case UT_BRDFAPPROXMAP:
+			u->SetValue(tr.brdfApproxTexture);
 			break;
 		case UT_FITNORMALMAP:
 			u->SetValue( tr.normalsFitting );

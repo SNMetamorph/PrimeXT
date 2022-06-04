@@ -237,6 +237,8 @@ static uniformTable_t glsl_uniformTable[] =
 { "u_EnvMap0",		UT_ENVMAP0,		UFL_TEXTURE_UNIT },
 { "u_EnvMap1",		UT_ENVMAP1,		UFL_TEXTURE_UNIT },
 { "u_EnvMap",		UT_ENVMAP,		UFL_TEXTURE_UNIT },
+{ "u_SpecularMapIBL0",	UT_SPECULARMAPIBL0,	UFL_TEXTURE_UNIT },
+{ "u_SpecularMapIBL1",	UT_SPECULARMAPIBL1,	UFL_TEXTURE_UNIT },
 { "u_BRDFApproxMap",	UT_BRDFAPPROXMAP,	UFL_TEXTURE_UNIT },
 { "u_GlowMap",		UT_GLOWMAP,		UFL_TEXTURE_UNIT },
 { "u_HeightMap",		UT_HEIGHTMAP,		UFL_TEXTURE_UNIT },
