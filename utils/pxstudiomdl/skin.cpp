@@ -365,18 +365,25 @@ void TextureCoordRanges( s_mesh_t *pmesh, s_texture_t *ptexture )
 
 void ResetTextureCoordRanges( s_mesh_t *pmesh, s_texture_t *ptexture  )
 {
-	int	i, j;
-
 	// adjust top, left edge
-	for( i = 0; i < pmesh->numtris; i++ )
+	for (int i = 0; i < pmesh->numtris; i++)
 	{
-		for( j = 0; j < 3; j++ )
+		for (int j = 0; j < 3; j++)
 		{
 			pmesh->triangle[i][j].s -= ptexture->min_s;
 
 			// quake wants t inverted
-			pmesh->triangle[i][j].t = (ptexture->max_t - ptexture->min_t) - (pmesh->triangle[i][j].t - ptexture->min_t);
-			if( store_uv_coords ) pmesh->triangle[i][j].v = -pmesh->triangle[i][j].v;
+			if (!clip_texcoords)
+			{
+				pmesh->triangle[i][j].t = (ptexture->max_t - ptexture->min_t) - (pmesh->triangle[i][j].t - ptexture->min_t);
+			}
+			else
+			{
+				pmesh->triangle[i][j].t = (ptexture->max_t + 1 - ptexture->min_t) - (pmesh->triangle[i][j].t - ptexture->min_t);
+			}
+			if (store_uv_coords) {
+				pmesh->triangle[i][j].v = -pmesh->triangle[i][j].v;
+			}
 		}
 	}
 }
