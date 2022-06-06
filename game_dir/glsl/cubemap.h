@@ -20,6 +20,8 @@ GNU General Public License for more details.
 
 uniform samplerCube		u_EnvMap0;
 uniform samplerCube		u_EnvMap1;
+uniform samplerCube		u_SpecularMapIBL0;
+uniform samplerCube 	u_SpecularMapIBL1;
 
 uniform vec3		u_BoxMins[2];
 uniform vec3		u_BoxMaxs[2];
@@ -64,4 +66,10 @@ vec3 CubemapReflectionProbe( const vec3 vPos, const vec3 vView, const vec3 nWorl
 {
 	return CubemapProbeInternal(vPos, vView, nWorld, smoothness, u_EnvMap0, u_EnvMap1);
 }
+
+vec3 CubemapSpecularIBLProbe( const vec3 vPos, const vec3 vView, const vec3 nWorld, const float smoothness )
+{
+	return CubemapProbeInternal(vPos, vView, nWorld, smoothness, u_SpecularMapIBL0, u_SpecularMapIBL1);
+}
+
 #endif//CUBEMAP_H
