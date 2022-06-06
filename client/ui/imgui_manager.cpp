@@ -39,6 +39,7 @@ void CImGuiManager::Terminate()
 
 void CImGuiManager::NewFrame()
 {
+    CheckVguiApiPresence();
     ImGui_ImplOpenGL3_NewFrame();
     UpdateMouseState();
     UpdateKeyModifiers();
@@ -241,6 +242,13 @@ void CImGuiManager::SetupCursorMapping()
     m_CursorMapping.insert({ ImGuiMouseCursor_ResizeNWSE, dc_sizenwse });
     m_CursorMapping.insert({ ImGuiMouseCursor_Hand, dc_hand });
     m_CursorMapping.insert({ ImGuiMouseCursor_NotAllowed, dc_no });
+}
+
+void CImGuiManager::CheckVguiApiPresence()
+{
+    if (!g_VguiApiFuncs) {
+        HOST_ERROR("VGUI API interface not available! Make sure that you use last version of Xash3D FWGS engine.\n");
+    }
 }
 
 const char *CImGuiManager::GetClipboardText(void *userData)

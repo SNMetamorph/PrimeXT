@@ -38,6 +38,7 @@ private:
     void SetupConfig();
     void SetupKeyboardMapping();
     void SetupCursorMapping();
+    void CheckVguiApiPresence();
     static const char *GetClipboardText(void *userData);
     static void SetClipboardText(void *userData, const char *text);
 

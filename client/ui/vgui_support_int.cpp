@@ -2,7 +2,7 @@
 #include "exportdef.h"
 #include "imgui_manager.h"
 
-vguiapi_t *g_VguiApiFuncs;
+vguiapi_t *g_VguiApiFuncs = nullptr;
 
 // interface functions stubs
 static void VGUI_Startup(int w, int h) {}
