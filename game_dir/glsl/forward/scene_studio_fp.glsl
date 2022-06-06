@@ -49,7 +49,7 @@ varying vec3	var_TexLight2;
 varying vec3	var_TexLight3;
 #endif
 
-#if defined( REFLECTION_CUBEMAP )
+#if defined( REFLECTION_CUBEMAP ) || defined( APPLY_PBS )
 varying vec3	var_WorldNormal;
 varying mat3	var_MatrixTBN;
 #endif
@@ -120,8 +120,18 @@ void main( void )
 	mat.ambientOcclusion = 1.0;
 #endif // HAS_GLOSSMAP
 
-#if defined( SURFACE_LIGHTING )
-// lightmapped surfaces
+#if defined( REFLECTION_CUBEMAP ) || defined( APPLY_PBS )
+	mat3 tbnBasis = mat3(normalize(var_MatrixTBN[0]), normalize(var_MatrixTBN[1]), normalize(var_MatrixTBN[2]));
+#if defined( HAS_NORMALMAP )
+	// TBN generates only for models with normal maps (just optimization)
+	// because of that we can use TBN matrix only for this case
+	vec3 worldNormal = normalize(tbnBasis * N);
+#else
+	vec3 worldNormal = N;
+#endif
+#endif
+
+#if defined( SURFACE_LIGHTING ) // lightmap lighting
 #if defined( APPLY_STYLE0 )
 	ApplyLightStyle( var_TexLight0, N, V, albedo, mat, lighting );
 #endif
@@ -139,16 +149,19 @@ void main( void )
 	lighting.diffuse = min(( lighting.diffuse * LIGHTMAP_SHIFT ), 1.0 );
 	lighting.specular = min(( lighting.specular * LIGHTMAP_SHIFT ), 1.0 );
 #endif
-#elif defined( VERTEX_LIGHTING )
-// vertexlight surface
+#else // !SURFACE_LIGHTING
+#if defined( LIGHTING_FALLBACK ) || !defined( APPLY_PBS )
+#if defined( VERTEX_LIGHTING ) 
+// vertex lighting
 #if defined( HAS_NORMALMAP )
 	lighting = ComputeLighting( N, V, L, albedo.rgb, var_DiffuseLight, mat );
 	lighting.diffuse += var_AmbientLight;
 #else // !HAS_NORMALMAP
 	lighting.diffuse = var_AmbientLight + var_DiffuseLight;
 #endif
-#else
-// studiomodel entities, players, NPCs, etc.
+///
+#else 
+// virtual light source
 #if defined( HAS_NORMALMAP )
 	lighting = ComputeLighting( N, V, L, albedo.rgb, var_DiffuseLight, mat );
 	lighting.specular *= u_LightShade.y;
@@ -157,8 +170,17 @@ void main( void )
 #else // !HAS_NORMALMAP
 	lighting.diffuse = var_AmbientLight + var_DiffuseLight;
 #endif
-#endif // SURFACE_LIGHTING
+///
+#endif
+#else // !LIGHTING_FALLBACK
+// sampling specular IBL and light probes
+	vec3 prefilteredColor = CubemapSpecularIBLProbe( var_Position, u_ViewOrigin, worldNormal, mat.smoothness );
+	lighting.specular = ComputeSpecularIBL( N, V, albedo.rgb, prefilteredColor, mat ) * mat.ambientOcclusion;
+	lighting.diffuse = ComputeIndirectDiffuse( N, V, albedo.rgb, var_AmbientLight, mat ) * mat.ambientOcclusion;
+///
+#endif
 
+#endif // SURFACE_LIGHTING
 	result.rgb *= lighting.diffuse; // apply diffuse/ambient lighting
 	result.rgb += lighting.specular; // apply specular lighting
 
@@ -167,14 +189,6 @@ void main( void )
 #endif // LIGHTVEC_DEBUG
 
 #if defined( REFLECTION_CUBEMAP )
-	mat3 tbnBasis = mat3(normalize(var_MatrixTBN[0]), normalize(var_MatrixTBN[1]), normalize(var_MatrixTBN[2]));
-#if defined( HAS_NORMALMAP )
-	// TBN generates only for models with normal maps (just optimization)
-	// because of that we can use TBN matrix only for this case
-	vec3 worldNormal = normalize(tbnBasis * N);
-#else
-	vec3 worldNormal = N;
-#endif
 	vec3 reflected = CubemapReflectionProbe( var_Position, u_ViewOrigin, worldNormal, mat.smoothness );
 	float fresnel = GetFresnel( V, N, WATER_F0_VALUE, FRESNEL_FACTOR );
 	result.rgb += reflected * mat.smoothness * u_ReflectScale;

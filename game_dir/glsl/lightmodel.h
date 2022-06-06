@@ -19,6 +19,8 @@ GNU General Public License for more details.
 #include "const.h"
 #include "material.h"
 
+uniform sampler2D u_BRDFApproxMap;
+
 struct LightingData
 {
 	vec3 diffuse;
@@ -86,6 +88,11 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
+// ----------------------------------------------------------------------------
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}  
 
 // Source: Y. Tokuyoshi, A. Kaplanyan "Improved Geometric Specular Antialiasing"
 float SpecularAntialiasing(vec3 n, float roughness)
@@ -101,6 +108,23 @@ float SpecularAntialiasing(vec3 n, float roughness)
 #else
 	return roughness;
 #endif
+}
+
+vec3 ComputeSpecularIBL(vec3 N, vec3 V, vec3 albedo, vec3 prefilteredSample, MaterialData mat)
+{
+	vec3 F0 = mix(vec3(0.02), albedo, mat.metalness);
+	vec2 brdf = texture2D(u_BRDFApproxMap, vec2(max(dot(N, V), 0.0), SmoothnessToRoughness(mat.smoothness))).rg;
+	return prefilteredSample * (F0 * brdf.x + brdf.y);
+}
+
+vec3 ComputeIndirectDiffuse(vec3 N, vec3 V, vec3 albedo, vec3 irradiance, MaterialData mat)
+{
+	vec3 F0 = mix(vec3(0.02), albedo, mat.metalness);
+	vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, SmoothnessToRoughness(mat.smoothness));
+    vec3 kS = F;
+    vec3 kD = 1.0 - kS;
+    kD *= 1.0 - mat.metalness;	  
+    return kD * irradiance;
 }
 
 LightingData ComputeLightingBRDF(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColor, MaterialData materialInfo)

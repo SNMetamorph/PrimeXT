@@ -66,7 +66,7 @@ varying vec3	var_TexLight2;
 varying vec3	var_TexLight3;
 #endif
 
-#if defined( REFLECTION_CUBEMAP )
+#if defined( REFLECTION_CUBEMAP ) || defined( APPLY_PBS )
 varying vec3	var_WorldNormal;
 varying mat3	var_MatrixTBN;
 #endif
@@ -87,17 +87,41 @@ void main( void )
 
 	// compute TBN
 	mat3 tbn = ComputeTBN( boneMatrix );
-
 	vec3 srcV = ( u_ViewOrigin - worldpos.xyz );
 	vec3 srcL = u_LightDir;
 	vec3 srcN = tbn[2];
 
 	var_AmbientLight = vec3( 0.0 );
 	var_DiffuseLight = vec3( 0.0 );
+	var_TexDiffuse = attr_TexCoord0;
 
-// compute studio vertex lighting
+// compute studio lighting
 #if !defined( LIGHTING_FULLBRIGHT )
-#if defined (VERTEX_LIGHTING)
+#if defined( SURFACE_LIGHTING ) 
+	// lightmap lighting
+#if defined( APPLY_STYLE0 )
+	var_TexLight0.xy = attr_TexCoord1.xy;
+	var_TexLight0.z = u_LightStyleValues[int( attr_LightStyles[0] )];
+#endif
+
+#if defined( APPLY_STYLE1 )
+	var_TexLight1.xy = attr_TexCoord1.zw;
+	var_TexLight1.z = u_LightStyleValues[int( attr_LightStyles[1] )];
+#endif
+
+#if defined( APPLY_STYLE2 )
+	var_TexLight2.xy = attr_TexCoord2.xy;
+	var_TexLight2.z = u_LightStyleValues[int( attr_LightStyles[2] )];
+#endif
+
+#if defined( APPLY_STYLE3 )
+	var_TexLight3.xy = attr_TexCoord2.zw;
+	var_TexLight3.z = u_LightStyleValues[int( attr_LightStyles[3] )];
+#endif
+#else 
+#if defined( LIGHTING_FALLBACK ) || !defined ( APPLY_PBS )
+#if defined( VERTEX_LIGHTING )
+	// vertex lighting
 	vec3 lightmap = vec3( 0.0 );
 	vec3 deluxmap = vec3( 0.0 );
 	float gammaIndex;
@@ -132,40 +156,24 @@ void main( void )
 	// apply gamma-correction for vertex lighting
 	var_DiffuseLight = pow(var_DiffuseLight, vec3(1.0 / u_LightGamma));
 	var_DiffuseLight *= LIGHT_SCALE;
-
-#elif defined (SURFACE_LIGHTING)
-#if defined( APPLY_STYLE0 )
-	var_TexLight0.xy = attr_TexCoord1.xy;
-	var_TexLight0.z = u_LightStyleValues[int( attr_LightStyles[0] )];
-#endif
-
-#if defined( APPLY_STYLE1 )
-	var_TexLight1.xy = attr_TexCoord1.zw;
-	var_TexLight1.z = u_LightStyleValues[int( attr_LightStyles[1] )];
-#endif
-
-#if defined( APPLY_STYLE2 )
-	var_TexLight2.xy = attr_TexCoord2.xy;
-	var_TexLight2.z = u_LightStyleValues[int( attr_LightStyles[2] )];
-#endif
-
-#if defined( APPLY_STYLE3 )
-	var_TexLight3.xy = attr_TexCoord2.zw;
-	var_TexLight3.z = u_LightStyleValues[int( attr_LightStyles[3] )];
-#endif
-#else
+#else 
+	// virtual light source
 	vec3 N = normalize( srcN );
 	vec3 L = normalize( srcL );
 	vec3 V = normalize( srcV );
-#if !defined( HAS_NORMALMAP )
-	var_DiffuseLight = u_LightDiffuse * u_LightShade.y * LIGHT_SCALE;
-#else
+#if defined( HAS_NORMALMAP )
 	var_DiffuseLight = u_LightDiffuse * LIGHT_SCALE;
+#else
+	var_DiffuseLight = u_LightDiffuse * u_LightShade.y * LIGHT_SCALE;
 #endif
 	var_AmbientLight = AmbientLight( srcN ) * u_LightShade.x;
-#endif
-#endif//LIGHTING_FULLBRIGHT 
-	var_TexDiffuse = attr_TexCoord0;
+#endif // VERTEX_LIGHTING
+#else
+	// sampling light probes
+	var_AmbientLight = AmbientLight( srcN ) * u_LightShade.x;
+#endif // LIGHTING_FALLBACK
+#endif // SURFACE_LIGHTING
+#endif // !LIGHTING_FULLBRIGHT 
 
 #if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
 	var_TangentViewDir = srcV * tbn;
@@ -179,7 +187,8 @@ void main( void )
 	var_LightDir = srcL * tbn;
 	var_ViewDir = srcV * tbn;
 	var_Normal = srcN * tbn;
-#else	// leave in worldspace
+#else
+	// leave in worldspace
 	var_LightDir = srcL;
 	var_ViewDir = srcV;
 	var_Normal = srcN;
