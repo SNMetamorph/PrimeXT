@@ -23,6 +23,7 @@ struct MaterialData
 	float smoothness;
 	float metalness;
 	float ambientOcclusion;
+	float specularIntensity;
 };
 
 MaterialData MaterialFetchTexture(vec4 texel)
@@ -31,6 +32,7 @@ MaterialData MaterialFetchTexture(vec4 texel)
 	result.smoothness = texel.r;
 	result.metalness = texel.g;
 	result.ambientOcclusion = texel.b;
+	result.specularIntensity = texel.a;
 	return result;
 }
 

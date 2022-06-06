@@ -133,6 +133,7 @@ void main( void )
 	// default params 
 	mat.metalness = 0.0;
 	mat.ambientOcclusion = 1.0;
+	mat.specularIntensity = 1.0;
 #endif // HAS_GLOSSMAP
 
 	float waterBorderFactor = 1.0, waterAbsorbFactor = 1.0, waterRefractFactor = 1.0;

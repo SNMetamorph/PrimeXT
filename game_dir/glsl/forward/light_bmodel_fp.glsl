@@ -170,6 +170,7 @@ void main()
 	// default params 
 	mat.metalness = 0.0;
 	mat.ambientOcclusion = 1.0;
+	mat.specularIntensity = 1.0;
 #endif // HAS_GLOSSMAP
 
 // compute the diffuse term

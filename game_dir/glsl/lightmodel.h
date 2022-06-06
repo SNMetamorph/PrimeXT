@@ -114,7 +114,7 @@ vec3 ComputeSpecularIBL(vec3 N, vec3 V, vec3 albedo, vec3 prefilteredSample, Mat
 {
 	vec3 F0 = mix(vec3(0.02), albedo, mat.metalness);
 	vec2 brdf = texture2D(u_BRDFApproxMap, vec2(max(dot(N, V), 0.0), SmoothnessToRoughness(mat.smoothness))).rg;
-	return prefilteredSample * (F0 * brdf.x + brdf.y);
+	return prefilteredSample * (F0 * brdf.x + brdf.y) * mat.specularIntensity;
 }
 
 vec3 ComputeIndirectDiffuse(vec3 N, vec3 V, vec3 albedo, vec3 irradiance, MaterialData mat)
@@ -163,7 +163,7 @@ LightingData ComputeLightingBRDF(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 light
 	float NdotL = max(dot(N, L), 0.0);        
 
 	lighting.diffuse = (kD * albedo / M_PI) * lightColor * NdotL;
-	lighting.specular = kS * specular * lightColor * NdotL;
+	lighting.specular = kS * specular * lightColor * materialInfo.specularIntensity * NdotL;
 	return lighting;
 }
 

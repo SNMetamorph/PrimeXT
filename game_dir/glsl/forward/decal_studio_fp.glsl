@@ -96,6 +96,7 @@ void main( void )
 	mat.smoothness = u_Smoothness;
 	mat.metalness = 0.0;
 	mat.ambientOcclusion = 1.0;
+	mat.specularIntensity = 1.0;
 #endif // HAS_GLOSSMAP
 
 #if !defined( LIGHTING_FULLBRIGHT )
