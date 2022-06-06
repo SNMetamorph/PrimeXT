@@ -122,7 +122,7 @@ vec3 normalmap2D( sampler2D tex, const vec2 uv )
 
 vec3 normalmap2DLod( sampler2D tex, const vec2 uv, float lod )
 {
-	vec4 normalmap = texture2DLod( tex, uv, lod );
+	vec4 normalmap = textureLod( tex, uv, lod );
 	vec3 N;
 
 #if defined( NORMAL_AG_PARABOLOID )
@@ -206,10 +206,10 @@ vec4 textureBicubic(sampler2D sampler, vec2 texCoords, float LOD, vec2 texSize)
     
     offset *= pixelSize.xxyy;
     
-    vec4 sample0 = texture2DLod(sampler, offset.xz, LOD);
-    vec4 sample1 = texture2DLod(sampler, offset.yz, LOD);
-    vec4 sample2 = texture2DLod(sampler, offset.xw, LOD);
-    vec4 sample3 = texture2DLod(sampler, offset.yw, LOD);
+    vec4 sample0 = textureLod(sampler, offset.xz, LOD);
+    vec4 sample1 = textureLod(sampler, offset.yz, LOD);
+    vec4 sample2 = textureLod(sampler, offset.xw, LOD);
+    vec4 sample3 = textureLod(sampler, offset.yw, LOD);
 
     float sx = s.x / (s.x + s.y);
     float sy = s.z / (s.z + s.w);
