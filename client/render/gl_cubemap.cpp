@@ -439,13 +439,15 @@ static void GL_CreateStubCubemap(mcubemap_t *cubemap)
 	Q_snprintf(cubemap->name, sizeof(cubemap->name), "*whiteCube");
 	cubemap->origin = (worldmodel->mins + worldmodel->maxs) * 0.5f;
 	cubemap->texture = tr.whiteCubeTexture;
+	cubemap->textureSpecularIBL = tr.blackCubeTexture;
 	cubemap->valid = true;
 	cubemap->size = 4;
 }
 
-static void GL_CreateCubemapSpecularIBL(mcubemap_t *cubemap, int resolution)
+static void GL_CreateCubemapSpecularIBL(mcubemap_t *cubemap)
 {
 	int flags = TF_CUBEMAP;
+	const int resolution = 128;
 	if (!cubemap->textureSpecularIBL)
 	{
 		if (GL_Support(R_SEAMLESS_CUBEMAP)) {
@@ -526,10 +528,11 @@ static void GL_SetupCubemapSideView(mcubemap_t *cubemap, ref_viewpass_t &rvp, in
 	}
 }
 
-static void GL_FilterCubemapSpecularIBL(mcubemap_t *cubemap, int resolution)
+static void GL_FilterCubemapSpecularIBL(mcubemap_t *cubemap)
 {
 	GLfloat matrixBuffer[16];
 	matrix4x4 projectionMatrix;
+	const int resolution = cubemap->fboSpecularIBL.GetWidth();
 	const int mipLevelCount = 1 + floor(log2(resolution));
 	GL_BindShader(&glsl_programs[g_shaderFilterSpecularIBL]);
 	projectionMatrix.CreateProjection(90.0f, 90.0f, 0.1, 10.0);
@@ -638,6 +641,8 @@ void GL_LoadAndRebuildCubemaps(RefParams refParams)
 	if (world->build_default_cubemap)
 	{
 		GL_RenderCubemap(&world->defaultCubemap);
+		GL_CreateCubemapSpecularIBL(&world->defaultCubemap);
+		GL_FilterCubemapSpecularIBL(&world->defaultCubemap);
 		world->build_default_cubemap = false; // done
 	}
 
@@ -661,14 +666,11 @@ void GL_LoadAndRebuildCubemaps(RefParams refParams)
 
 	// perform IBL specular-term filtering
 	GL_DepthTest(GL_FALSE);
-	const int resolution = 128;
-	GL_CreateCubemapSpecularIBL(&world->defaultCubemap, resolution);
-	GL_FilterCubemapSpecularIBL(&world->defaultCubemap, resolution);
 	for (int i = 0; i < world->num_cubemaps; i++)
 	{
 		mcubemap_t *cm = &world->cubemaps[i];
-		GL_CreateCubemapSpecularIBL(cm, resolution);
-		GL_FilterCubemapSpecularIBL(cm, resolution);
+		GL_CreateCubemapSpecularIBL(cm);
+		GL_FilterCubemapSpecularIBL(cm);
 	}
 
 	// we reached the end of list
