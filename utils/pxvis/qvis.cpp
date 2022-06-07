@@ -12,6 +12,7 @@
 
 #include "qvis.h"
 #include "threads.h"
+#include "app_info.h"
 
 int	g_numportals;
 int	g_portalleafs;
@@ -534,7 +535,7 @@ show compiler settings like ZHLT
 */
 static void PrintVisSettings( void )
 {
-	Msg( "\nCurrent p2vis settings\n" );
+	Msg( "\nCurrent %s settings\n", APP_ABBREVIATION );
 	Msg( "Name                 |  Setting  |  Default\n" );
 	Msg( "---------------------|-----------|-------------------------\n" );
 	Msg( "developer             [ %7d ] [ %7d ]\n", GetDeveloperLevel(), DEFAULT_DEVELOPER );
@@ -553,7 +554,7 @@ show compiler usage like ZHLT
 */
 static void PrintVisUsage( void )
 {
-	Msg( "\n-= p2vis Options =-\n\n" );
+	Msg( "\n-= %s Options =-\n\n", APP_ABBREVIATION );
 	Msg( "    -dev #         : compile with developer message (1 - 4). default is %d\n", DEFAULT_DEVELOPER );
 	Msg( "    -threads #     : manually specify the number of threads to run\n" );
  	Msg( "    -fast          : only do first quick pass on vis calculations\n" );
