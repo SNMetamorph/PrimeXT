@@ -893,18 +893,36 @@ static void R_InitVSDCTCubemap( void )
 R_InitWhiteCubemap
 ==================
 */
-static void R_InitWhiteCubemap( void )
+static void R_InitWhiteCubemap()
 {
-	byte	dataCM[4*4*6*4];
 	int	size = 4;
-
+	byte dataCM[4 * 4 * 6 *4];
+	
 	if( !GL_Support( R_TEXTURECUBEMAP_EXT ))
 		return;
 
-	// white cubemap - just stub for pointlights
-	memset( dataCM, 0xFF, sizeof( dataCM ));
+	// white cubemap used as stub for pointlights
+	memset(dataCM, 0xFF, sizeof(dataCM));
+	tr.whiteCubeTexture = CREATE_TEXTURE("*whiteCube", size, size, dataCM, TF_NOMIPMAP | TF_CUBEMAP | TF_CLAMP); 
+}
 
-	tr.whiteCubeTexture = CREATE_TEXTURE( "*whiteCube", size, size, dataCM, TF_NOMIPMAP|TF_CUBEMAP|TF_CLAMP ); 
+
+/*
+==================
+R_InitBlackCubemap
+==================
+*/
+static void R_InitBlackCubemap()
+{
+	int	size = 4;
+	byte dataCM[4 * 4 * 6 * 4];
+	
+	if (!GL_Support(R_TEXTURECUBEMAP_EXT))
+		return;
+
+	// black cubemap used as stub for specular IBL on maps without cubemaps
+	memset(dataCM, 0x00, sizeof(dataCM));
+	tr.blackCubeTexture = CREATE_TEXTURE("*blackCube", size, size, dataCM, TF_NOMIPMAP | TF_CUBEMAP | TF_CLAMP);
 }
 
 /*
@@ -955,9 +973,8 @@ static void GL_InitTextures( void )
 	tr.depthTexture = CREATE_TEXTURE( "*depth", 8, 8, NULL, TF_SHADOW ); 
 
 	R_InitWhiteCubemap();
-
+	R_InitBlackCubemap();
 	R_InitBlankBumpTexture();
-
 	R_InitVSDCTCubemap();
 
 	if( GL_Support( R_EXT_GPU_SHADER4 ))

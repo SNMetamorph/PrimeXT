@@ -505,6 +505,7 @@ typedef struct
 	int		deluxemapTexture;	// default deluxemap
 	int		vsdctCubeTexture;	// Virtual Shadow Depth Cubemap Texture
 	int		whiteCubeTexture;	// stub
+	int		blackCubeTexture;	// stub
 	int		depthTexture;	// stub
 	int		depthCubemap;	// stub
 	int		normalsFitting;	// best fit normals
