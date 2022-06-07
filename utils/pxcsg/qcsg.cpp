@@ -9,6 +9,7 @@
 ****/
 
 #include "csg.h"
+#include "app_info.h"
 
 // default compiler settings
 #define DEFAULT_ONLYENTS		false
@@ -611,7 +612,7 @@ show compiler settings like ZHLT
 */
 static void PrintCsgSettings( void )
 {
-	Msg( "\nCurrent p2csg settings\n" );
+	Msg( "\nCurrent %s settings\n", APP_ABBREVIATION );
 	Msg( "Name                 |  Setting  |  Default\n" );
 	Msg( "---------------------|-----------|-------------------------\n" );
 	Msg( "developer             [ %7d ] [ %7d ]\n", GetDeveloperLevel(), DEFAULT_DEVELOPER );
@@ -632,7 +633,7 @@ show compiler usage like ZHLT
 */
 static void PrintCsgUsage( void )
 {
-	Msg( "\n-= p2csg Options =-\n\n" );
+	Msg( "\n-= %s Options =-\n\n", APP_ABBREVIATION );
 	Msg( "    -dev #           : compile with developer message (1 - 4). default is %d\n", DEFAULT_DEVELOPER );
 	Msg( "    -threads #       : manually specify the number of threads to run\n" );
 	Msg( "    -noclip          : don't create clipping hulls\n" );
