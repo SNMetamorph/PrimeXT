@@ -11,6 +11,7 @@
 // qrad.c
 
 #include "qrad.h"
+#include "app_info.h"
 
 /*
 NOTES
@@ -2426,7 +2427,7 @@ static void PrintRadSettings( void )
 	char	buf1[1024];
 	char	buf2[1024];
 
-	Msg( "\nCurrent p2rad settings\n" );
+	Msg( "\nCurrent %s settings\n", APP_ABBREVIATION );
 	Msg( "Name                 |  Setting  |  Default\n" );
 	Msg( "---------------------|-----------|-------------------------\n" );
 	Msg( "developer             [ %7d ] [ %7d ]\n", GetDeveloperLevel(), DEFAULT_DEVELOPER );
@@ -2473,7 +2474,7 @@ show compiler usage like ZHLT
 */
 static void PrintRadUsage( void )
 {
-	Msg( "\n-= p2rad Options =-\n\n" );
+	Msg( "\n-= %s Options =-\n\n", APP_ABBREVIATION );
 	Msg( "    -dev #         : compile with developer message (1 - 4). default is %d\n", DEFAULT_DEVELOPER );
 	Msg( "    -threads #     : manually specify the number of threads to run\n" );
  	Msg( "    -extra         : improve lighting quality with lightmap filtering\n" );
