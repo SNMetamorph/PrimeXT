@@ -110,50 +110,13 @@ jobs:
           path: |
             publish/*
 
-  release:
-    name: release-builds
-    runs-on: ubuntu-latest
-    needs: [build-windows, build-linux]
-    if: ${{ github.ref == 'refs/heads/master' }}
-    steps:
-      - name: Fetch artifacts
-        uses: actions/download-artifact@v2
-
-      - name: Repackage binaries
-        run: |
-          cd Windows
-          zip -r ../primext-windows-x86.zip *
-          cd ../Linux
-          tar -czvf ../primext-linux-i386.tar.gz *
-
-      - name: Remove old release
-        uses: dev-drprasad/delete-tag-and-release@v0.2.0
-        with:
-          delete_release: true
-          tag_name: continious
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload new release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file_glob: true
-          file: primext-*
-          tag: continious
-          overwrite: true
-          prerelease: true
-
   build-android:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         conf: [Debug]
-
     env:
       BUILD_TYPE: ${{ matrix.conf }}
-    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -171,13 +134,6 @@ jobs:
         run: chmod +x ./gradlew && ./gradlew assembleDebug
         working-directory: android
 
-      - name: Update continious tag
-        uses: richardsimko/update-tag@v1
-        with:
-            tag_name: continious
-        env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
       - name: Prepare artifacts
         run: |
           mkdir publish/
@@ -186,29 +142,46 @@ jobs:
           mkdir publish/primext/devkit
           cp android/app/build/outputs/apk/debug/app-debug.apk publish/primext-debug.apk
           cp -r game_dir/* publish/primext
-          cd publish && zip -r build.zip ./* && mv build.zip ../ && cd ..
 
-      - name: Create release
-        id: create_release
-        uses: ncipollo/release-action@v1
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Android
+          path: |
+            publish/*
+
+  release:
+    name: release-builds
+    runs-on: ubuntu-latest
+    needs: [build-windows, build-linux, build-android]
+    if: ${{ github.ref == 'refs/heads/master' }}
+    steps:
+      - name: Fetch artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Repackage binaries
+        run: |
+          cd Windows
+          zip -r ../primext-windows-x86.zip *
+          cd ../Linux
+          tar -czvf ../primext-linux-i386.tar.gz *
+          cd ../Android
+          zip -r ../primext-android.zip *
+
+      - name: Remove old release
+        uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        with:
+          delete_release: true
+          tag_name: continious
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag: continious
-          name: Continious build
-          draft: false
-          prerelease: true
-          allowUpdates: true
-          removeArtifacts: false
-          replacesArtifacts: true
-          
-      - name: Upload artifacts
-        id: upload-artifacts
+
+      - name: Upload new release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./build.zip
-          asset_name: primext-android.zip
+          file_glob: true
+          file: primext-*
           tag: continious
           overwrite: true
           prerelease: true
