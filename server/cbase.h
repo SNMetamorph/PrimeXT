@@ -287,7 +287,7 @@ public:
 
 	const char*	GetDebugName()
 	{
-		if( this == NULL || pev == NULL )
+		if( this == nullptr || pev == nullptr)
 			return "null";
 
 		if( pev->targetname != NULL_STRING ) 
@@ -464,7 +464,7 @@ public:
 			(this->*m_pfnTouch)( pOther );
 
 		// forward the blocked event to our parent, if any.
-		if( m_hParent != NULL && !m_isChaining )
+		if( m_hParent != nullptr && !m_isChaining )
 			m_hParent->Touch( pOther );
 	}
 
@@ -474,7 +474,7 @@ public:
 			(this->*m_pfnBlocked)( pOther );
 
 		// forward the blocked event to our parent, if any.
-		if( m_hParent != NULL )
+		if( m_hParent != nullptr )
 			m_hParent->Blocked( pOther );
 	}
 
@@ -502,11 +502,11 @@ public:
 	void SUB_FadeOut ( void );
 	void SUB_CallUseToggle( void ) { this->Use( this, this, USE_TOGGLE, 0 ); }
 	int ShouldToggle( USE_TYPE useType, BOOL currentState );
-	void FireBullets( ULONG cShots, Vector vecSrc, Vector vecDirShooting,	Vector vecSpread, float flDistance, int iBulletType, int iTracerFreq = 4, int iDamage = 0, entvars_t *pevAttacker = NULL );
+	void FireBullets( ULONG cShots, Vector vecSrc, Vector vecDirShooting,	Vector vecSpread, float flDistance, int iBulletType, int iTracerFreq = 4, int iDamage = 0, entvars_t *pevAttacker = nullptr);
 	void Teleport( const Vector *newPosition, const Vector *newAngles, const Vector *newVelocity );
 	void GetVectors( Vector *pForward, Vector *pRight, Vector *pUp ) const;
 
-	virtual CBaseEntity *Respawn( void ) { return NULL; }
+	virtual CBaseEntity *Respawn( void ) { return nullptr; }
 
 	void	SUB_UseTargets( CBaseEntity *pActivator, USE_TYPE useType, float value, string_t m_iszAltTarget = NULL_STRING );
 	// Do the bounding boxes of these two intersect?
@@ -595,7 +595,7 @@ public:
 	CBaseEntity *GetGroundEntity( void ) { return Instance( pev->groundentity ); }
 	void SetGroundEntity( CBaseEntity *pGround )
 	{
-		if( pGround != NULL )
+		if( pGround != nullptr )
 		{
 			pev->groundentity = ENT( pGround->pev );
 			pev->flags |= FL_ONGROUND;
@@ -605,7 +605,7 @@ public:
 
 	void SetGroundEntity( edict_t *pentGround )
 	{
-		if( pentGround != NULL )
+		if( pentGround != nullptr )
 		{
 			pev->groundentity = pentGround;
 			pev->flags |= FL_ONGROUND;
@@ -615,7 +615,7 @@ public:
 
 	void SetGroundEntity( entvars_t *pevGround )
 	{
-		if( pevGround != NULL )
+		if( pevGround != nullptr )
 		{
 			pev->groundentity = ENT( pevGround );
 			pev->flags |= FL_ONGROUND;
@@ -625,7 +625,7 @@ public:
 
 	void ClearGroundEntity( void )
 	{
-		pev->groundentity = NULL;
+		pev->groundentity = nullptr;
 		pev->flags &= ~FL_ONGROUND;
 	}
 
@@ -669,7 +669,7 @@ public:
 
 	void MakeTempParent( CBaseEntity *pParent )
 	{
-		if(( m_hParent != NULL ) || FBitSet( m_iFlags, MF_TEMP_PARENT ))
+		if(( m_hParent != nullptr ) || FBitSet( m_iFlags, MF_TEMP_PARENT ))
 			return;
 
 		SetBits( m_iFlags, MF_TEMP_PARENT );
@@ -700,7 +700,7 @@ public:
 	// used by monsters that are created by the MonsterMaker
 	virtual	void UpdateOwner( void ) { return; };
 
-	static CBaseEntity *Create( char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner = NULL );
+	static CBaseEntity *Create( char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner = nullptr );
 
 	virtual BOOL FBecomeProne( void ) {return FALSE;};
 	edict_t *edict() { return ENT( pev ); };
