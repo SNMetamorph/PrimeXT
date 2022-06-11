@@ -126,7 +126,8 @@ void CL_FindTwoNearestCubeMap( const Vector &pos, mcubemap_t **result1, mcubemap
 {
 	if( !result1 || !result2 )
 		return;
-
+#if 0
+	// faster, but not reliable
 	float maxDist1 = 999999.0f;
 	float maxDist2 = 999999.0f;
 	*result1 = *result2 = NULL;
@@ -147,6 +148,27 @@ void CL_FindTwoNearestCubeMap( const Vector &pos, mcubemap_t **result1, mcubemap
 			maxDist2 = dist;
 		}
 	}
+#else
+	// slower 2x, but reliable
+	float distances[2] = { 999999.f, 999999.f };
+	mcubemap_t **results[2] = { result1, result2 };
+	for (int j = 0; j < 2; ++j)
+	{
+		for (int i = 0; i < world->num_cubemaps; i++)
+		{
+			mcubemap_t *check = &world->cubemaps[i];
+			float dist = (check->origin - pos).LengthSqr();
+			if (dist < distances[j])
+			{
+				if (j < 1 || check != *results[j - 1])
+				{
+					*results[j] = check;
+					distances[j] = dist;
+				}
+			}
+		}
+	}
+#endif
 
 	if( !*result1 )
 	{

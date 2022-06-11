@@ -3585,6 +3585,9 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force )
 			break;
 		case UT_LERPFACTOR:
 			u->SetValue( inst->lerpFactor );
+#if 0
+			ALERT(at_console, "lerp %f, c1 %d, c2 %d\n", inst->lerpFactor, inst->cubemap[0]->texture, inst->cubemap[1]->texture);
+#endif
 			break;
 		case UT_REFRACTSCALE:
 			u->SetValue( bound( 0.0f, mat->refractScale, 1.0f ));
