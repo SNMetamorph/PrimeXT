@@ -166,11 +166,11 @@ void main( void )
 #else
 	var_DiffuseLight = u_LightDiffuse * u_LightShade.y * LIGHT_SCALE;
 #endif
-	var_AmbientLight = AmbientLight( srcN ) * u_LightShade.x;
+	var_AmbientLight = SampleAmbientCube( srcN ) * u_LightShade.x;
 #endif // VERTEX_LIGHTING
 #else
 	// sampling light probes
-	var_AmbientLight = AmbientLight( srcN ) * u_LightShade.x;
+	var_AmbientLight = SampleAmbientCube( srcN ) * u_LightShade.x;
 #endif // LIGHTING_FALLBACK
 #endif // SURFACE_LIGHTING
 #endif // !LIGHTING_FULLBRIGHT 

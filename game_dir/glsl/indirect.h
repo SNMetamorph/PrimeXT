@@ -20,7 +20,7 @@ GNU General Public License for more details.
 
 uniform vec3	u_AmbientCube[6];
 
-vec3 AmbientLight( const in vec3 worldN )
+vec3 SampleAmbientCube( const in vec3 worldN )
 {
 	vec3 normSqr = sqr( worldN );
 	int side_x = ( worldN.x < 0.0 ) ? 1 : 0;
@@ -29,7 +29,7 @@ vec3 AmbientLight( const in vec3 worldN )
 	return normSqr.x * u_AmbientCube[side_x] + normSqr.y * u_AmbientCube[side_y+2] + normSqr.z * u_AmbientCube[side_z+4];
 }
 
-vec3 AmbientLight( const vec4 parm0, const vec4 parm1, const vec3 worldN )
+vec3 SampleAmbientCube( const vec4 parm0, const vec4 parm1, const vec3 worldN )
 {
 	vec3 normSqr = sqr( worldN );
 	vec3 linearColor = vec3( 0.0 );

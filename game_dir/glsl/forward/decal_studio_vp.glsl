@@ -117,7 +117,7 @@ void main( void )
 #else
 	var_DiffuseLight = u_LightDiffuse * LIGHT_SCALE;
 #endif
-	var_AmbientLight = AmbientLight( srcN ) * u_LightShade.x;
+	var_AmbientLight = SampleAmbientCube( srcN ) * u_LightShade.x;
 #endif
 #endif//LIGHTING_FULLBRIGHT 
 	var_TexDiffuse = attr_TexCoord0;
