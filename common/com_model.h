@@ -21,6 +21,7 @@ GNU General Public License for more details.
 #include "lightlimits.h"
 #include "const.h"
 #include "vector.h"
+#include "basetypes.h"
 
 /*
 ==============================================================================
@@ -386,13 +387,13 @@ typedef struct cache_user_s
 typedef struct model_s
 {
 	char		name[64];		// model name
-	qboolean		needload;		// bmodels and sprites don't cache normally
+	qboolean	needload;		// bmodels and sprites don't cache normally
 
 	// shared modelinfo
-	modtype_t		type;		// model type
-	int		numframes;	// sprite's framecount
-	byte		*mempool;		// private mempool (was synctype)
-	int		flags;		// hl compatibility
+	modtype_t	type;		// model type
+	int			numframes;	// sprite's framecount
+	poolhandle_t mempool;	// private mempool (was synctype)
+	int			flags;		// hl compatibility
 
 //
 // volume occupied by the model
