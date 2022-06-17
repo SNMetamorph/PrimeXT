@@ -140,7 +140,11 @@ typedef struct playermove_s
 	int		watertype;
 	int		oldwaterlevel;
 
-	char		sztexturename[252];	// cutoff four bytes for a new variable (see below)
+#if XASH_64BIT
+	char		sztexturename[248];	// cutoff 8 bytes for a new variable (see below)
+#else
+	char		sztexturename[252];	// cutoff 4 bytes for a new variable (see below)
+#endif
 	matdef_t	*pMaterial;	// pointer to a material
 	char		chtexturetype;
 
