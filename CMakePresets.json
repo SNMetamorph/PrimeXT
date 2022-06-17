@@ -2,60 +2,69 @@
   "version": 2,
   "configurePresets": [
     {
-      "name": "windows-x86-debug",
+      "name": "Windows-Common-Base",
+      "displayName": "Windows Common Base Preset",
+      "description": " ",
+      "hidden": true,
+      "generator": "Visual Studio 16 2019",
+      "binaryDir": "${sourceDir}/build",
+      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
+    },
+    {
+      "name": "Windows-x86-Base",
+      "displayName": "Windows x86 Base Preset",
+      "description": " ",
+      "inherits": [ "Windows-Common-Base" ],
+      "hidden": true,
+      "architecture": {
+        "value": "win32",
+        "strategy": "set"
+      }
+    },
+    {
+      "name": "Windows-x86-Debug",
       "displayName": "Windows x86 Debug",
       "description": " ",
-      "generator": "Visual Studio 16 2019",
-      "binaryDir": "${sourceDir}/build",
-      "architecture": {
-        "value": "win32",
-        "strategy": "set"
-      },
+      "inherits": [ "Windows-x86-Base" ],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
-      },
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
+      }
     },
     {
-      "name": "windows-x86",
+      "name": "Windows-x86-Release",
       "displayName": "Windows x86 Release",
       "description": " ",
-      "generator": "Visual Studio 16 2019",
-      "binaryDir": "${sourceDir}/build",
-      "architecture": {
-        "value": "win32",
-        "strategy": "set"
-      },
+      "inherits": [ "Windows-x86-Base" ],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
-      },
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
+      }
     },
     {
-      "name": "windows-x64-debug",
-      "displayName": "Windows x64 Debug",
+      "name": "Windows-x64-Base",
+      "displayName": "Windows x64 Base Preset",
       "description": " ",
-      "generator": "Visual Studio 16 2019",
-      "binaryDir": "${sourceDir}/build",
+      "inherits": [ "Windows-Common-Base" ],
+      "hidden": true,
       "architecture": {
         "value": "x64",
         "strategy": "set"
-      },
+      }
+    },
+    {
+      "name": "Windows-x64-Debug",
+      "displayName": "Windows x64 Debug",
+      "description": " ",
+      "inherits": [ "Windows-x64-Base" ],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       },
       "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
     },
     {
-      "name": "windows-x64",
+      "name": "Windows-x64-Release",
       "displayName": "Windows x64 Release",
       "description": " ",
-      "generator": "Visual Studio 16 2019",
-      "binaryDir": "${sourceDir}/build",
-      "architecture": {
-        "value": "x64",
-        "strategy": "set"
-      },
+      "inherits": [ "Windows-x64-Base" ],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       },
