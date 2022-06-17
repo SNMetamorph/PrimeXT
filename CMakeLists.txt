@@ -44,6 +44,9 @@ if(NOT BUILD_SERVER AND NOT BUILD_CLIENT)
 	message(FATAL_ERROR "Nothing to build, check build configuration!")
 endif()
 
+# multithreaded build flag for MSVC
+add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>) 
+
 # these should be BEFORE any add_library/add_executable calls
 if(NOT MSVC)
 	#add_compile_options(-Wempty-body) # GCC/Clang flag
