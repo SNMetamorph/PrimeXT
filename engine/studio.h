@@ -20,6 +20,7 @@
 #include "color24.h"
 #include "lightlimits.h"
 #include "mathlib.h"
+#include <stdint.h>
 
 /*
 ==============================================================================
@@ -396,20 +397,17 @@ typedef struct
 	int		hitboxindex;
 } mstudiohitboxset_t;
 
-#ifndef CACHE_USER
-#define CACHE_USER
-typedef struct cache_user_s
+typedef struct studio_cache_user_s
 {
-	void		*data;		// extradata
-} cache_user_t;
-#endif
+	int32_t		data;		// extradata
+} studio_cache_user_t;
 
 // demand loaded sequence groups
 typedef struct
 {
 	char		label[MAXSTUDIONAME];	// textual name
 	char		name[64];		// file name
-	cache_user_t	cache;		// cache index pointer
+	studio_cache_user_t	cache;		// cache index pointer
 	int		data;		// hack for group 0
 } mstudioseqgroup_t;
 
