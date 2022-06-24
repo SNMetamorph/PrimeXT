@@ -71,22 +71,17 @@ void CBasePostEffects :: InitScreenColor( void )
 	int tex_flags = 0;
 	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
 
-	if (tr.screen_color)
-	{
-		FREE_TEXTURE(tr.screen_color);
-		tr.screen_color = 0;
-	}
-
 	if (hdr_rendering)
 		tex_flags = TF_COLORBUFFER | TF_HAS_ALPHA | TF_ARB_16BIT | TF_ARB_FLOAT;
 	else
 		tex_flags = TF_COLORBUFFER;
 
+	FREE_TEXTURE(tr.screen_color);
 	tr.screen_color = CREATE_TEXTURE( "*screencolor", glState.width, glState.height, NULL, tex_flags);
 	if (hdr_rendering)
 	{
-		if (!tr.screencopy_fbo)
-			tr.screencopy_fbo = GL_AllocDrawbuffer("*screencopy_fbo", glState.width, glState.height, 1);
+		GL_FreeDrawbuffer(tr.screencopy_fbo);
+		tr.screencopy_fbo = GL_AllocDrawbuffer("*screencopy_fbo", glState.width, glState.height, 1);
 
 		GL_AttachColorTextureToFBO(tr.screencopy_fbo, tr.screen_color, 0);
 		GL_CheckFBOStatus(tr.screencopy_fbo);
@@ -96,18 +91,11 @@ void CBasePostEffects :: InitScreenColor( void )
 void CBasePostEffects :: InitScreenDepth( void )
 {
 	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
-	if (tr.screen_depth)
-	{
-		FREE_TEXTURE(tr.screen_depth);
-		tr.screen_depth = 0;
-	}
 
+	FREE_TEXTURE(tr.screen_depth);
 	tr.screen_depth = CREATE_TEXTURE( "*screendepth", glState.width, glState.height, NULL, TF_DEPTHBUFFER ); 
 	if (hdr_rendering)
 	{
-		if (!tr.screencopy_fbo)
-			tr.screencopy_fbo = GL_AllocDrawbuffer("*screencopy_fbo", glState.width, glState.height, 1);
-
 		GL_AttachDepthTextureToFBO(tr.screencopy_fbo, tr.screen_depth, 0);
 		GL_CheckFBOStatus(tr.screencopy_fbo);
 	}
@@ -180,7 +168,7 @@ void CBasePostEffects::PrintLuminanceValue()
 	char valueString[32];
 	int	width = RENDER_GET_PARM(PARM_TEX_WIDTH, avg_luminance_texture);
 	int	height = RENDER_GET_PARM(PARM_TEX_HEIGHT, avg_luminance_texture);
-	const int mipCount = ARRAYSIZE(avg_luminance_fbo);
+	const int mipCount = GL_TextureMipCount(width, height);
 
 	pglBindFramebuffer(GL_READ_FRAMEBUFFER, avg_luminance_fbo[0]->id);
 	pglReadPixels(width / 2, height / 2, 1, 1, GL_GREEN, GL_FLOAT, &luminance);
@@ -201,7 +189,7 @@ void CBasePostEffects::RenderAverageLuminance()
 
 	// downscale luminance to other mips
 	GL_BindShader(&glsl_programs[luminanceDownscaleShader]);
-	const int mipCount = ARRAYSIZE(avg_luminance_fbo);
+	const int mipCount = GL_TextureMipCount(baseLevel->width, baseLevel->height);
 	for (int a = 2, i = 1; i < mipCount; ++i, a *= 2)
 	{
 		gl_drawbuffer_t *fbo = avg_luminance_fbo[i];
@@ -242,10 +230,11 @@ void CBasePostEffects::RenderAverageLuminance()
 
 int CBasePostEffects::RenderExposureStorage()
 {
-	const float mipCount = static_cast<float>(ARRAYSIZE(avg_luminance_fbo));
 	static int fboIndex = 0;
 	const int sourceIndex = fboIndex % 2;
 	const int destIndex = (fboIndex + 1) % 2;
+	gl_drawbuffer_t *fbo = avg_luminance_fbo[0];
+	const float mipCount = static_cast<float>(GL_TextureMipCount(fbo->width, fbo->height));
 
 	GL_DebugGroupPush(__FUNCTION__);
 	GL_BindShader(&glsl_programs[exposureGenShader]);
@@ -300,9 +289,9 @@ void CBasePostEffects :: InitDepthOfField( void )
  
 void CBasePostEffects::InitAutoExposure()
 {
-	const int texWidth = 1280;
-	const int texHeight = 720;
-	const int mipCount = ARRAYSIZE(avg_luminance_fbo);
+	const int texWidth = Q_min(1280, glState.width);
+	const int texHeight = Q_min(720, glState.height);
+	const int mipCount = GL_TextureMipCount(texWidth, texHeight);
 
 	// make this textures TF_LUMINANCE for using just one color channel
 	FREE_TEXTURE(avg_luminance_texture);
@@ -314,9 +303,8 @@ void CBasePostEffects::InitAutoExposure()
 
 	for (int i = 0; i < mipCount; ++i)
 	{
-		if (!avg_luminance_fbo[i]) {
-			avg_luminance_fbo[i] = GL_AllocDrawbuffer("*screen_avg_luminance_fbo", texWidth, texHeight, 1);
-		}
+		GL_FreeDrawbuffer(avg_luminance_fbo[i]);
+		avg_luminance_fbo[i] = GL_AllocDrawbuffer("*screen_avg_luminance_fbo", texWidth, texHeight, 1);
 		GL_AttachColorTextureToFBO(avg_luminance_fbo[i], avg_luminance_texture, 0, 0, i);
 		GL_CheckFBOStatus(avg_luminance_fbo[i]);
 	}
@@ -324,10 +312,9 @@ void CBasePostEffects::InitAutoExposure()
 	for (int i = 0; i < 2; ++i) 
 	{
 		FREE_TEXTURE(exposure_storage_texture[i]);
+		GL_FreeDrawbuffer(exposure_storage_fbo[i]);
 		exposure_storage_texture[i] = CREATE_TEXTURE(va("*exposure_storage%d", i), 1, 1, NULL, TF_ARB_16BIT | TF_ARB_FLOAT);
-		if (!exposure_storage_fbo[i]) {
-			exposure_storage_fbo[i] = GL_AllocDrawbuffer("*exposure_storage_fbo", 1, 1, 1);
-		}
+		exposure_storage_fbo[i] = GL_AllocDrawbuffer("*exposure_storage_fbo", 1, 1, 1);
 		GL_AttachColorTextureToFBO(exposure_storage_fbo[i], exposure_storage_texture[i], 0);
 		GL_CheckFBOStatus(exposure_storage_fbo[i]);
 	}
@@ -366,6 +353,7 @@ bool CBasePostEffects :: ProcessDepthOfField( void )
 	float depthValue = 0.0f;
 
 	// get current depth value
+	// TODO refactor it to get rid of glReadPixels, because it's slow as fuck
 	pglReadPixels( glState.width >> 1, glState.height >> 1, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depthValue );
 	depthValue = -zFar * zNear / ( depthValue * ( zFar - zNear ) - zFar ); // linearize it
 	float holdTime = bound( 0.01f, r_dof_hold_time->value, 0.5f );
