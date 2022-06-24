@@ -392,6 +392,29 @@ void GL_CheckFBOStatus(gl_drawbuffer_t *fbo)
 	HOST_ERROR("GL_CheckFBOStatus: %s for '%s'\n", string, fbo->name);
 }
 
+
+/*
+==================
+GL_FreeDrawbuffer
+==================
+*/
+void GL_FreeDrawbuffer(gl_drawbuffer_t *fbo)
+{
+	if (fbo)
+	{
+		if (fbo->id) {
+			pglDeleteFramebuffers(1, &fbo->id);
+		}
+		fbo->id = 0;
+		fbo->width = 0;
+		fbo->height = 0;
+		fbo->depth = 0;
+		fbo->depthtarget = 0;
+		fbo->name[0] = '\0'; // important to set this, see according logic in GL_AllocDrawbuffer
+		memset(fbo->colortarget, 0, sizeof(fbo->colortarget));
+	}
+}
+
 /*
 ==================
 GL_FreeDrawbuffers
