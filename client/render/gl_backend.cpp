@@ -1111,3 +1111,8 @@ void CompressNormalizedVector( char outVec[3], const Vector &inVec )
 	outVec[1] = FloatToChar( vNorm.y );
 	outVec[2] = FloatToChar( vNorm.z );
 }
+
+int GL_TextureMipCount(int width, int height)
+{
+	return 1 + floor(log2(Q_max(width, height)));
+}

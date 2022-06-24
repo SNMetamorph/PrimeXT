@@ -773,6 +773,7 @@ int R_GetSpriteTexture(const model_t *m_pSpriteModel, int frame);
 void GL_BindDrawbuffer(gl_drawbuffer_t *framebuffer);
 void GL_DepthRange(GLfloat depthmin, GLfloat depthmax);
 void R_RenderQuadPrimitive(CSolidEntry *entry);
+int GL_TextureMipCount(int width, int height);
 void GL_LoadMatrix(const matrix4x4 &source);
 void GL_LoadTexMatrix(const matrix4x4 &source);
 void GL_BindFrameBuffer(int buffer, int texture);
