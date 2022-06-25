@@ -354,6 +354,9 @@ bool CBasePostEffects :: ProcessDepthOfField( void )
 
 	// get current depth value
 	// TODO refactor it to get rid of glReadPixels, because it's slow as fuck
+	// 1. do trace from camera to point along view direction
+	// 2. convert collision point coordinates to view space
+	// 3. compute depth value using formula (z - near) / (far - near) (in this case we don't need linearization)
 	pglReadPixels( glState.width >> 1, glState.height >> 1, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depthValue );
 	depthValue = -zFar * zNear / ( depthValue * ( zFar - zNear ) - zFar ); // linearize it
 	float holdTime = bound( 0.01f, r_dof_hold_time->value, 0.5f );
