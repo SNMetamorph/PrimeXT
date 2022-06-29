@@ -24,29 +24,41 @@ uniform float 		u_RefractScale; // bloom scale
 
 varying vec2		var_TexCoord;
 
-void main( void )
+vec4 SampleScreenTexture(float offsetX, float offsetY)
 {
-	//gaussian 3x3
+	vec2 texelSize = u_ScreenSizeInv;
+	vec2 coordOffset = vec2(offsetX, offsetY) * texelSize;
+	vec2 texCoords = clamp(var_TexCoord + coordOffset, u_TexCoordClamp.xy, u_TexCoordClamp.zw);
+	return texture2DLod(u_ScreenMap, texCoords, u_MipLod);
+}
+
+void main()
+{
+	// gaussian 3x3, sum of weights should be equal 1.0
+	// weights and samples distribution scheme:
+	// 0.0625   0.125   0.0625  |  6   4   5
+	// 0.125    0.25    0.125   |  2   0   1
+	// 0.0625   0.125   0.0625  |  7   3   8
 	float weight[3];
 	weight[0] = 0.25;
 	weight[1] = 0.125;
 	weight[2] = 0.0625;	
 			
-	vec4 tex_sample[9];
-	tex_sample[0] = texture2DLod(u_ScreenMap, clamp(var_TexCoord ,u_TexCoordClamp.xy , u_TexCoordClamp.zw), u_MipLod);
-	tex_sample[1] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(u_ScreenSizeInv.x, 0.0) ,u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
-	tex_sample[2] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(-u_ScreenSizeInv.x, 0.0) ,u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
-	tex_sample[3] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(0.0, -u_ScreenSizeInv.y) ,u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
-	tex_sample[4] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(0.0, u_ScreenSizeInv.y) ,u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);		
-	tex_sample[5] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(u_ScreenSizeInv.x, u_ScreenSizeInv.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
-	tex_sample[6] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(-u_ScreenSizeInv.x, u_ScreenSizeInv.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
-	tex_sample[7] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(-u_ScreenSizeInv.x, -u_ScreenSizeInv.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
-	tex_sample[8] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(u_ScreenSizeInv.x, -u_ScreenSizeInv.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);	
-	
+	vec4 texSamples[9];
+	texSamples[0] = SampleScreenTexture(0.0, 0.0);
+	texSamples[1] = SampleScreenTexture(1.0, 0.0);
+	texSamples[2] = SampleScreenTexture(-1.0, 0.0);
+	texSamples[3] = SampleScreenTexture(0.0, -1.0);
+	texSamples[4] = SampleScreenTexture(0.0, 1.0);
+	texSamples[5] = SampleScreenTexture(1.0, 1.0);
+	texSamples[6] = SampleScreenTexture(-1.0, 1.0);
+	texSamples[7] = SampleScreenTexture(-1.0, -1.0);
+	texSamples[8] = SampleScreenTexture(1.0, -1.0);
+
 	vec4 outputColor;
-	outputColor = weight[0] * tex_sample[0];
-	outputColor += weight[1] * (tex_sample[1] + tex_sample[2] + tex_sample[3] + tex_sample[4]);
-	outputColor += weight[2] * (tex_sample[5] + tex_sample[6] + tex_sample[7] + tex_sample[8]);	
+	outputColor = weight[0] * texSamples[0];
+	outputColor += weight[1] * (texSamples[1] + texSamples[2] + texSamples[3] + texSamples[4]);
+	outputColor += weight[2] * (texSamples[5] + texSamples[6] + texSamples[7] + texSamples[8]);	
 	
 	if (u_BloomFirstPass > 0) 
 	{
