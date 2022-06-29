@@ -27,11 +27,15 @@ macro (set_compiler_runtime TARGET_NAME)
 	endif()
 
 	if (MSVC)
-		# Set compiler options.
 		if (ARG_STATIC)
-			set_target_properties(${PROJECT_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+			target_compile_options(${TARGET_NAME} PRIVATE $<$<CONFIG:DEBUG>:/MTd>)
+			target_compile_options(${TARGET_NAME} PRIVATE $<$<NOT:$<CONFIG:DEBUG>>:/MT>)
+			# doesn't work for some strange reason
+			# set_target_properties(${TARGET_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 		elseif (ARG_DYNAMIC)
-			set_target_properties(${PROJECT_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+			target_compile_options(${TARGET_NAME} PRIVATE $<$<CONFIG:DEBUG>:/MDd>)
+			target_compile_options(${TARGET_NAME} PRIVATE $<$<NOT:$<CONFIG:DEBUG>>:/MD>)
+			# set_target_properties(${TARGET_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 		else ()
 			# Should never happen, but if more combinations are needed, this will cover edge cases.
 			message (FATAL_ERROR "set_compiler_runtime(): unknown runtime type selected")
