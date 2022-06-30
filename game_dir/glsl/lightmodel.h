@@ -25,6 +25,7 @@ struct LightingData
 {
 	vec3 diffuse;
 	vec3 specular;
+	vec3 kD;
 };
 
 // used for spot/omni lights
@@ -161,9 +162,9 @@ LightingData ComputeLightingBRDF(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 light
 
 	// scale light by NdotL
 	float NdotL = max(dot(N, L), 0.0);        
-
-	lighting.diffuse = (kD * albedo / M_PI) * lightColor * NdotL;
-	lighting.specular = kS * specular * lightColor * materialInfo.specularIntensity * NdotL;
+	lighting.kD = kD;
+	lighting.diffuse = lightColor * NdotL;
+	lighting.specular = specular * lightColor * materialInfo.specularIntensity * NdotL;
 	return lighting;
 }
 
@@ -176,6 +177,7 @@ LightingData ComputeLighting(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 lightColo
 #else
 	float NdotL = saturate( dot( N, L ));
 	float specular = pow(max(dot(N, normalize(V + L)), 0.0), 32.0);
+	lighting.kD = vec3(0.0);
 	lighting.diffuse = lightColor * NdotL;
 	lighting.specular = lightColor * NdotL * smoothness * specular;
 #endif

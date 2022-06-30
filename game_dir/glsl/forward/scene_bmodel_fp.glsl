@@ -190,7 +190,8 @@ void main( void )
 
 	// lighting the world polys
 #if !defined( LIGHTING_FULLBRIGHT )
-	
+	lighting.diffuse = vec3(0.0);
+	lighting.specular = vec3(0.0);
 #if defined( APPLY_STYLE0 )
 	ApplyLightStyle( var_TexLight0, N, V, albedo, mat, lighting );
 #endif
@@ -213,7 +214,11 @@ void main( void )
 	lighting.diffuse = normalize(( lighting.diffuse + 1.0 ) * 0.5 ); // convert range to [0..1]
 #else
 	// apply diffuse & specular lighting
+#if defined( APPLY_PBS )
+	result.rgb = (lighting.kD * result.rgb / M_PI) * lighting.diffuse;
+#else
 	result.rgb *= lighting.diffuse;
+#endif
 	result.rgb += lighting.specular;
 #endif
 

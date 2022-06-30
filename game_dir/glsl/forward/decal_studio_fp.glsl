@@ -121,7 +121,11 @@ void main( void )
 	lighting.diffuse = var_AmbientLight + var_DiffuseLight;
 #endif // HAS_NORMALMAP
 #endif // LIGHTVEC_DEBUG
+#if defined( APPLY_PBS )
+	result.rgb = (lighting.kD * result.rgb / M_PI) * lighting.diffuse;
+#else
 	result.rgb *= lighting.diffuse; // apply diffuse/ambient lighting
+#endif
 	result.rgb += lighting.specular; // apply specular lighting
 
 #if defined( LIGHTMAP_DEBUG ) || defined( LIGHTVEC_DEBUG )

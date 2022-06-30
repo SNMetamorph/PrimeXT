@@ -134,7 +134,11 @@ void main( void )
 #endif
 
 #if !defined( APPLY_COLORBLEND )
+#if defined( APPLY_PBS )
+	result.rgb = (lighting.kD * result.rgb / M_PI) * lighting.diffuse;
+#else
 	result.rgb *= lighting.diffuse; // apply diffuse lighting
+#endif
 #endif // APPLY_COLORBLEND
 	result.rgb += lighting.specular; // apply specular lighting
 

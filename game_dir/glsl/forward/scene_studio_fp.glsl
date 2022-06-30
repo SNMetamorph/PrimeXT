@@ -182,7 +182,12 @@ void main( void )
 #endif
 
 #endif // SURFACE_LIGHTING
+
+#if defined( APPLY_PBS )
+	result.rgb = (lighting.kD * result.rgb / M_PI) * lighting.diffuse;
+#else
 	result.rgb *= lighting.diffuse; // apply diffuse/ambient lighting
+#endif
 	result.rgb += lighting.specular; // apply specular lighting
 
 #if defined( LIGHTVEC_DEBUG ) && !defined (SURFACE_LIGHTING)

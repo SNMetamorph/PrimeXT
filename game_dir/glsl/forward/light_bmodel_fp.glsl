@@ -233,7 +233,13 @@ void main()
 	vec3 albedo = diffuse.rgb;
 	light *= atten * shadow; // apply attenuation and shadowing
 	LightingData lighting = ComputeLighting(N, V, L, albedo, light, mat);
+
+#if defined( APPLY_PBS )
+	diffuse.rgb = (lighting.kD * albedo / M_PI) * lighting.diffuse;
+#else
 	diffuse.rgb = lighting.diffuse * albedo;
+#endif
+
 	diffuse.rgb += lighting.specular;
 #if defined( LIGHT_PROJ )
 	diffuse.rgb += (albedo * u_LightDiffuse * u_AmbientFactor); // what is this?
