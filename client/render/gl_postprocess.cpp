@@ -292,6 +292,7 @@ void CBasePostEffects::InitAutoExposure()
 	const int texWidth = Q_min(1280, glState.width);
 	const int texHeight = Q_min(720, glState.height);
 	const int mipCount = GL_TextureMipCount(texWidth, texHeight);
+	const vec3_t colorBlack = vec3_t(0.0f, 0.0f, 0.0f);
 
 	// make this textures TF_LUMINANCE for using just one color channel
 	FREE_TEXTURE(avg_luminance_texture);
@@ -314,6 +315,9 @@ void CBasePostEffects::InitAutoExposure()
 		FREE_TEXTURE(exposure_storage_texture[i]);
 		GL_FreeDrawbuffer(exposure_storage_fbo[i]);
 		exposure_storage_texture[i] = CREATE_TEXTURE(va("*exposure_storage%d", i), 1, 1, NULL, TF_ARB_16BIT | TF_ARB_FLOAT);
+		GL_Bind(GL_TEXTURE0, exposure_storage_texture[i]);
+		pglTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGB, GL_FLOAT, &colorBlack.x);
+		GL_Bind(GL_TEXTURE0, 0);
 		exposure_storage_fbo[i] = GL_AllocDrawbuffer("*exposure_storage_fbo", 1, 1, 1);
 		GL_AttachColorTextureToFBO(exposure_storage_fbo[i], exposure_storage_texture[i], 0);
 		GL_CheckFBOStatus(exposure_storage_fbo[i]);
