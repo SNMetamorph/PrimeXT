@@ -151,9 +151,9 @@ void main( void )
 	waterBorderFactor = waterAbsorbFactor = waterRefractFactor = u_RenderColor.a;
 #else
 	float depthDelta = fOwnDepth - fSampledDepth;
-	waterBorderFactor = 1.0 - saturate(exp2( -768.0 * depthDelta ));
-	waterRefractFactor = saturate( depthDelta * 32.0 );
-	waterAbsorbFactor = 1.0 - saturate(exp2( -768.0 * u_RenderColor.a * depthDelta ));
+	waterBorderFactor = 1.0 - saturate(exp2( -768.0 * 50.0 * depthDelta ));
+	waterRefractFactor = 1.0 - saturate(exp2( -768.0 * 5.0 * depthDelta ));
+	waterAbsorbFactor = 1.0 - saturate(exp2( -768.0 * 25.0 * u_RenderColor.a * depthDelta ));
 #endif // LIQUID_UNDERWATER
 #endif // LIQUID_SURFACE
 
