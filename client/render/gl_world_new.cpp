@@ -3147,8 +3147,6 @@ R_RenderDynLightList
 */
 void R_BuildFaceListForLight( CDynLight *pl, bool solid )
 {
-	int	i;
-
 	RI->currententity = GET_ENTITY( 0 );
 	RI->currentmodel = RI->currententity->model;
 	RI->frame.light_faces.Purge();
@@ -3158,7 +3156,7 @@ void R_BuildFaceListForLight( CDynLight *pl, bool solid )
 	if( solid )
 	{
 		// only visible polys passed through the light list
-		for( i = 0; i < RI->frame.solid_faces.Count(); i++ )
+		for( int i = 0; i < RI->frame.solid_faces.Count(); i++ )
 		{
 			CSolidEntry *entry = &RI->frame.solid_faces[i];
 
@@ -3166,8 +3164,10 @@ void R_BuildFaceListForLight( CDynLight *pl, bool solid )
 				continue;
 
 			mextrasurf_t *es = entry->m_pSurf->info;
-			gl_state_t *glm = GL_GetCache( es->parent->hCachedMatrix );
+			if (entry->m_pSurf->flags & SURF_DRAWTURB)
+				continue; // skip all func_water surfaces
 
+			gl_state_t *glm = GL_GetCache( es->parent->hCachedMatrix );
 			RI->currententity = es->parent;
 			RI->currentmodel = RI->currententity->model;
 
@@ -3190,7 +3190,7 @@ void R_BuildFaceListForLight( CDynLight *pl, bool solid )
 	else
 	{
 		// only visible polys passed through the light list
-		for( i = 0; i < RI->frame.trans_list.Count(); i++ )
+		for( int i = 0; i < RI->frame.trans_list.Count(); i++ )
 		{
 			CTransEntry *entry = &RI->frame.trans_list[i];
 
@@ -3198,8 +3198,10 @@ void R_BuildFaceListForLight( CDynLight *pl, bool solid )
 				continue;
 
 			mextrasurf_t *es = entry->m_pSurf->info;
-			gl_state_t *glm = GL_GetCache( es->parent->hCachedMatrix );
+			if (entry->m_pSurf->flags & SURF_DRAWTURB)
+				continue; // skip all func_water surfaces
 
+			gl_state_t *glm = GL_GetCache( es->parent->hCachedMatrix );
 			RI->currententity = es->parent;
 			RI->currentmodel = RI->currententity->model;
 
