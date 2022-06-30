@@ -145,7 +145,7 @@ and whenever the vid_mode is changed
 so the HUD can reinitialize itself.
 ==========================
 */
-int DLLEXPORT HUD_VidInit( void )
+extern "C" int DLLEXPORT HUD_VidInit( void )
 {
 	gHUD.VidInit();
 	R_VidInit();
