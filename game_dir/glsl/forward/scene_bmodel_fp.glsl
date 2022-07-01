@@ -151,9 +151,10 @@ void main( void )
 	waterBorderFactor = waterAbsorbFactor = waterRefractFactor = u_RenderColor.a;
 #else
 	float depthDelta = fOwnDepth - fSampledDepth;
+	float waterAbsorbScale = clamp(u_RenderColor.a - (1.0 / 255.0), 0.0, 1.0) * 50.0;
 	waterBorderFactor = 1.0 - saturate(exp2( -768.0 * 100.0 * depthDelta ));
 	waterRefractFactor = 1.0 - saturate(exp2( -768.0 * 5.0 * depthDelta ));
-	waterAbsorbFactor = 1.0 - saturate(exp2( -768.0 * 25.0 * u_RenderColor.a * depthDelta ));
+	waterAbsorbFactor = 1.0 - saturate(exp2( -768.0 * waterAbsorbScale * depthDelta ));
 #endif // LIQUID_UNDERWATER
 #endif // LIQUID_SURFACE
 
@@ -243,7 +244,7 @@ void main( void )
 #if defined( LIQUID_SURFACE )
 	vec3 waterColor = u_RenderColor.rgb;
 	vec3 borderSmooth = mix( screenmap, screenmap * waterColor, waterBorderFactor ); // smooth transition between water and ground
-	vec3 refracted = mix( borderSmooth, waterColor * lighting.diffuse, waterAbsorbFactor ); // mix between refracted light and own water color
+	vec3 refracted = mix( borderSmooth, lighting.diffuse * waterColor, waterAbsorbFactor ); // mix between refracted light and own water color
 #if defined( REFLECTION_CUBEMAP )
 	// blend refracted and reflected part together 
 	float fresnel = GetFresnel( V, N, WATER_F0_VALUE, FRESNEL_FACTOR );
