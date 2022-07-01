@@ -3019,9 +3019,12 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 					r = g = b = 1.0f;
 				}
 
-				if( e->curstate.rendermode != kRenderTransAlpha )
-					a = Q_max( e->curstate.renderamt / 255.0f, 0.25f );
-				else a = 1.0f;
+				if (e->curstate.rendermode != kRenderTransAlpha) {
+					a = e->curstate.renderamt / 255.0f;
+				}
+				else {
+					a = 1.0f;
+				}
 			}
 			u->SetValue( r, g, b, a );
 			break;
