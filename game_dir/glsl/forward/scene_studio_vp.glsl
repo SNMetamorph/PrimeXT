@@ -161,11 +161,8 @@ void main( void )
 	vec3 N = normalize( srcN );
 	vec3 L = normalize( srcL );
 	vec3 V = normalize( srcV );
-#if defined( HAS_NORMALMAP )
+
 	var_DiffuseLight = u_LightDiffuse * LIGHT_SCALE;
-#else
-	var_DiffuseLight = u_LightDiffuse * u_LightShade.y * LIGHT_SCALE;
-#endif
 	var_AmbientLight = SampleAmbientCube( srcN ) * u_LightShade.x;
 #endif // VERTEX_LIGHTING
 #else

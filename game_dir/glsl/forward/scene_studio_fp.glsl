@@ -154,23 +154,15 @@ void main( void )
 #if defined( LIGHTING_FALLBACK ) || !defined( APPLY_PBS )
 #if defined( VERTEX_LIGHTING ) 
 // vertex lighting
-#if defined( HAS_NORMALMAP )
-	lighting = ComputeLighting( N, V, L, albedo.rgb, var_DiffuseLight, mat );
-	lighting.diffuse += var_AmbientLight;
-#else // !HAS_NORMALMAP
-	lighting.diffuse = var_AmbientLight + var_DiffuseLight;
-#endif
+lighting = ComputeLighting( N, V, L, albedo.rgb, var_DiffuseLight, mat );
+lighting.diffuse += var_AmbientLight;
 ///
 #else 
 // virtual light source
-#if defined( HAS_NORMALMAP )
-	lighting = ComputeLighting( N, V, L, albedo.rgb, var_DiffuseLight, mat );
-	lighting.specular *= u_LightShade.y;
-	lighting.diffuse *= u_LightShade.y;
-	lighting.diffuse += var_AmbientLight;
-#else // !HAS_NORMALMAP
-	lighting.diffuse = var_AmbientLight + var_DiffuseLight;
-#endif
+lighting = ComputeLighting( N, V, L, albedo.rgb, var_DiffuseLight, mat );
+lighting.specular *= u_LightShade.y;
+lighting.diffuse *= u_LightShade.y;
+lighting.diffuse += var_AmbientLight;
 ///
 #endif
 #else // !LIGHTING_FALLBACK
