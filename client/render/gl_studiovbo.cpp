@@ -1275,8 +1275,7 @@ unsigned int CStudioModelRenderer :: ComputeAttribFlags( int numbones, bool has_
 
 	if( has_vertexlight )
 	{
-		if( has_bumpmap )
-			SetBits( defaultAttribs, FATTR_LIGHT_VECS );
+		SetBits( defaultAttribs, FATTR_LIGHT_VECS );
 		SetBits( defaultAttribs, FATTR_LIGHT_COLOR );
 	}
 
@@ -1298,9 +1297,7 @@ unsigned int CStudioModelRenderer :: SelectMeshLoader( int numbones, bool has_bu
 	else if( numbones <= 1 && has_vertexlight )
 	{
 		// special case for single bone vertex lighting
-		if( has_bumpmap )
-			return MESHLOADER_VLIGHTBUMP;
-		return MESHLOADER_VLIGHT;
+		return MESHLOADER_VLIGHTBUMP;
 	}
 	else if( !has_boneweights && !has_vertexlight && !has_lightmap )
 	{
