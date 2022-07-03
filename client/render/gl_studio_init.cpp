@@ -405,7 +405,8 @@ void CStudioModelRenderer :: UpdateInstanceMaterials( void )
 	{
 		m_pModelInstance->materials[i].forwardScene.Invalidate();
 		m_pModelInstance->materials[i].forwardLightSpot.Invalidate();
-		m_pModelInstance->materials[i].forwardLightOmni.Invalidate();
+		m_pModelInstance->materials[i].forwardLightOmni[0].Invalidate();
+		m_pModelInstance->materials[i].forwardLightOmni[1].Invalidate();
 		m_pModelInstance->materials[i].forwardLightProj.Invalidate();
 	}
 }

@@ -322,14 +322,14 @@ typedef struct mextrasurf_s
 // shader cache
 	shader_t		forwardScene[2];	// two for mirrors
 	shader_t		forwardLightSpot;
-	shader_t		forwardLightOmni;
+	shader_t		forwardLightOmni[2]; // first for w/ shadows, second for w/o shadows
 	shader_t		forwardLightProj;
 	shader_t		deferredScene;
 	shader_t		deferredLight;
 	shader_t		forwardDepth;
 
 	struct brushdecal_s	*pdecals;		// linked decals
-	int		reserved[22];	// just for future expansions or mod-makers
+	int		reserved[21];	// just for future expansions or mod-makers
 } mextrasurf_t;
 
 typedef struct msurface_s

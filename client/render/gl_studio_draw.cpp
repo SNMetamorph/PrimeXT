@@ -2921,21 +2921,25 @@ word CStudioModelRenderer :: ShaderLightForward( CDynLight *dl, mstudiomaterial_
 {
 	char glname[64];
 	char options[MAX_OPTIONS_LENGTH];
+	int lightOmniType = !FBitSet(dl->flags, DLF_NOSHADOWS) ? 0 : 1;
 
 	switch( dl->type )
 	{
-	case LIGHT_SPOT:
-		if( mat->forwardLightSpot.IsValid( ))
-			return mat->forwardLightSpot.GetHandle(); // valid
-		break;
-	case LIGHT_OMNI:
-		if( mat->forwardLightOmni.IsValid( ))
-			return mat->forwardLightOmni.GetHandle(); // valid
-		break;
-	case LIGHT_DIRECTIONAL:
-		if( mat->forwardLightProj.IsValid( ))
-			return mat->forwardLightProj.GetHandle(); // valid
-		break;
+		case LIGHT_SPOT:
+			if (mat->forwardLightSpot.IsValid()) {
+				return mat->forwardLightSpot.GetHandle(); // valid
+			}
+			break;
+		case LIGHT_OMNI:
+			if (mat->forwardLightOmni[lightOmniType].IsValid()) {
+				return mat->forwardLightOmni[lightOmniType].GetHandle(); // valid
+			}
+			break;
+		case LIGHT_DIRECTIONAL:
+			if (mat->forwardLightProj.IsValid()) {
+				return mat->forwardLightProj.GetHandle(); // valid
+			}
+			break;
 	}
 
 	Q_strncpy( glname, "forward/light_studio", sizeof( glname ));
@@ -3034,7 +3038,7 @@ word CStudioModelRenderer :: ShaderLightForward( CDynLight *dl, mstudiomaterial_
 		ClearBits( mat->flags, STUDIO_NF_NODLIGHT );
 		break;
 	case LIGHT_OMNI:
-		mat->forwardLightOmni.SetShader( shaderNum );
+		mat->forwardLightOmni[lightOmniType].SetShader( shaderNum );
 		ClearBits( mat->flags, STUDIO_NF_NODLIGHT );
 		break;
 	case LIGHT_DIRECTIONAL:
