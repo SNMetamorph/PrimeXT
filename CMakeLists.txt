@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 2.8.12)
 
-project(primext)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
 if(NOT ${CMAKE_VERSION} VERSION_LESS "3.15.0")
@@ -17,7 +16,7 @@ if(${CMAKE_VERSION} VERSION_LESS "3.0.2")
 	endmacro()
 endif()
 
-# Project Options
+project(primext)
 option(BUILD_CLIENT "Build client library" ON)
 option(BUILD_SERVER "Build server library" ON)
 option(BUILD_UTILS "Build developer utilities (map/models compilers, etc.)" ON)
