@@ -1789,11 +1789,11 @@ Mod_InitBSPTreeTexture
 */
 void Mod_InitBSPModelsTexture( void )
 {
-	cl_entity_t	*visible_ents[MAX_VISIBLE_ENTS];
+	gl_state_t *glm;
 	Vector		absmin, absmax;
 	static double	lastupdate;
-	gl_state_t	*glm;
-
+	static cl_entity_t *visible_ents[MAX_VISIBLE_ENTS];
+	
 	if( !CVAR_TO_BOOL( cv_deferred_tracebmodels ))
 		return;
 
