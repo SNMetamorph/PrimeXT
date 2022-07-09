@@ -485,22 +485,8 @@ rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize 
 		return NULL; 
 
 	buf_p = (byte *)buffer;
-	bhdr.id[0] = *buf_p++;
-	bhdr.id[1] = *buf_p++;		// move pointer
-	bhdr.fileSize = *(long *)buf_p;	buf_p += 4;
-	bhdr.reserved0 = *(long *)buf_p;	buf_p += 4;
-	bhdr.bitmapDataOffset = *(long *)buf_p;	buf_p += 4;
-	bhdr.bitmapHeaderSize = *(long *)buf_p;	buf_p += 4;
-	bhdr.width = *(long *)buf_p;		buf_p += 4;
-	bhdr.height = *(long *)buf_p;		buf_p += 4;
-	bhdr.planes = *(short *)buf_p;	buf_p += 2;
-	bhdr.bitsPerPixel = *(short *)buf_p;	buf_p += 2;
-	bhdr.compression = *(long *)buf_p;	buf_p += 4;
-	bhdr.bitmapDataSize = *(long *)buf_p;	buf_p += 4;
-	bhdr.hRes = *(long *)buf_p;		buf_p += 4;
-	bhdr.vRes = *(long *)buf_p;		buf_p += 4;
-	bhdr.colors = *(long *)buf_p;		buf_p += 4;
-	bhdr.importantColors = *(long *)buf_p;	buf_p += 4;
+	memcpy(&bhdr, buf_p, sizeof(bmp_t));
+	buf_p += 14 + bhdr.bitmapHeaderSize;
 
 	// bogus file header check
 	if( bhdr.reserved0 != 0 ) return NULL;
@@ -512,9 +498,9 @@ rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize 
 		return NULL;
 	} 
 
-	if( bhdr.bitmapHeaderSize != 0x28 )
+	if (bhdr.bitmapHeaderSize != 40 && bhdr.bitmapHeaderSize != 108 && bhdr.bitmapHeaderSize != 124)
 	{
-		MsgDev( D_ERROR, "Image_LoadBMP: invalid header size %i\n", bhdr.bitmapHeaderSize );
+		MsgDev(D_ERROR, "Image_LoadBMP: invalid header size (%i)\n", bhdr.bitmapHeaderSize);
 		return NULL;
 	}
 
@@ -523,7 +509,7 @@ rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize 
 	{
 		// Sweet Half-Life issues. splash.bmp have bogus filesize
 		MsgDev( D_WARN, "Image_LoadBMP: %s have incorrect file size %i should be %i\n", name, filesize, bhdr.fileSize );
-          }
+    }
           
 	// bogus compression?  Only non-compressed supported.
 	if( bhdr.compression != BI_RGB ) 
