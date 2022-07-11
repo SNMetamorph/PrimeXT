@@ -63,7 +63,7 @@ wedge_t		*wedge_hash[NUM_HASH];
 static vec3_t	h_min, h_scale;
 static int	h_numslots[3];
 
-static void InitHash( void )
+void InitTjuncHash( void )
 {
 	vec3_t	size;
 	vec_t	volume;
@@ -534,7 +534,7 @@ void tjunc( node_t *headnode, bool worldmodel )
 	
 	MsgDev( D_REPORT, "---- tjunc ----\n");
 	start = I_FloatTime ();
-	InitHash();
+	InitTjuncHash();
 	
 	maxwedges = maxwverts = 0;
 	tjunc_count_r( headnode );

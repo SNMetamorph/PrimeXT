@@ -146,7 +146,7 @@ typedef struct hashvert_s
 static face_t	*g_edgefaces[MAX_MAP_EDGES][2];
 static hashvert_t	hvertex[MAX_MAP_VERTS];
 static hashvert_t	*hashverts[MAX_HASH];
-static int	firstmodeledge = 1;
+int	firstmodeledge = 1;
 static int	h_numslots[3];
 static hashvert_t	*hvert_p;
 static vec3_t	h_scale;
