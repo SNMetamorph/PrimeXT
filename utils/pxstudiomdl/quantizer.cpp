@@ -13,7 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include <windows.h>
+#include "port.h"
 #include "cmdlib.h"
 #include "mathlib.h"
 #include "stringlib.h"

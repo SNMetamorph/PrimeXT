@@ -18,7 +18,8 @@
 #include "threads.h"
 #include "bspfile.h"
 #include "shaders.h"
-#include <windows.h>
+#include "port.h"
+
 #include "utlarray.h"
 
 #ifndef DOUBLEVEC_T

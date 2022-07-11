@@ -8,8 +8,7 @@
 *
 ****/
 
-#include <windows.h>
-#include <io.h>
+#include "port.h"
 #include <fcntl.h>
 #include "cmdlib.h"
 #include "mathlib.h"

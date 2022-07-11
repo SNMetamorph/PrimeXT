@@ -22,13 +22,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // scriplib.c
 
+#include "port.h"
 #include "cmdlib.h"
 #include "mathlib.h"
 #include "scriplib.h"
 #include "stringlib.h"
 #include "filesystem.h"
 #include <stdarg.h>
-#include <windows.h>
 
 /*
 =============================================================================
