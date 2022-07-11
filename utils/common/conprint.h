@@ -29,5 +29,6 @@ void Sys_InitLogAppend( const char *logname );
 void Sys_CloseLog( void );
 void Sys_PrintLog( const char *pMsg );
 void Sys_IgnoreLog( bool ignore );
+void Sys_Sleep( unsigned int msec );
 
 #endif//CONRPINT_H

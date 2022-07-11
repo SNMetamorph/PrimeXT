@@ -193,8 +193,12 @@ SinCos
 */
 void SinCos( float radians, float *sine, float *cosine )
 {
+#if XASH_LINUX && !XASH_ANDROID
+	sincosf(radians, sine, cosine);
+#else
 	*sine = sinf(radians);
 	*cosine = cosf(radians);
+#endif
 }
 
 /*
@@ -395,9 +399,9 @@ fast box on planeside test
 =================
 */
 int SignbitsForPlane( const vec3_t normal )
-{	
-	int i, bits;
-	for (bits = 0, i = 0; i < 3; i++)
+{
+	int bits = 0;
+	for (int i = 0; i < 3; i++)
 	{
 		if (normal[i] < 0.0f)
 			bits |= 1 << i;

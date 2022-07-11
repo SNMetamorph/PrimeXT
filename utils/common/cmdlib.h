@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #define CMDLIB_H
 
 #include <basetypes.h>
+#include <cstddef>
 #include "conprint.h"
 
 // bit routines
