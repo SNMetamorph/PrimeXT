@@ -17,8 +17,7 @@
 #include "polylib.h"
 #include "stringlib.h"
 #include "filesystem.h"
-
-#include <windows.h>
+#include "port.h"
 
 #ifndef DOUBLEVEC_T
 #error you must add -dDOUBLEVEC_T to the project!
@@ -192,7 +191,7 @@ void MergeTreeFaces( tree_t *tree );
 
 // surfaces.c
 
-extern	int		firstmodeledge;
+extern int firstmodeledge;
 
 void SubdivideFaces (surface_t *surfhead);
 int GetEdge (vec3_t p1, vec3_t p2, face_t *f);
