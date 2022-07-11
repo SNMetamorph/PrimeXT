@@ -19,6 +19,12 @@ GNU General Public License for more details.
 
 #include "build.h"
 
+#if defined __i386__ &&  defined __GNUC__
+#define GAME_EXPORT __attribute__((force_align_arg_pointer))
+#else
+#define GAME_EXPORT
+#endif
+
 #if !XASH_WIN32
 	#if XASH_APPLE
 		#include <sys/syslimits.h>
@@ -58,6 +64,7 @@ GNU General Public License for more details.
 		#define O_BINARY    0
 		#define O_TEXT      0
 		#define _mkdir( x ) mkdir( x, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH )
+		#define tell( a ) lseek(a, 0, SEEK_CUR)
 		#define LoadLibrary( x ) dlopen( x, RTLD_NOW )
 		#define GetProcAddress( x, y ) dlsym( x, y )
 		#define FreeLibrary( x ) dlclose( x )
@@ -69,7 +76,10 @@ GNU General Public License for more details.
 	#endif
 
 	typedef void* HANDLE;
+	typedef void* HMODULE;
 	typedef void* HINSTANCE;
+
+	typedef char* LPSTR;
 
 	typedef struct tagPOINT
 	{
@@ -95,6 +105,7 @@ GNU General Public License for more details.
 	#define NOIME
 	#define NOMINMAX
 	#include <windows.h>
+	#include <io.h>
 
 	#define OS_LIB_PREFIX ""
 	#define OS_LIB_EXT "dll"
@@ -108,5 +119,17 @@ GNU General Public License for more details.
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+
+#if !defined MAX_PATH
+#define MAX_PATH 4096 // 4k ought to be enough for anybody
+#endif
+
+#if __cplusplus >= 2011L
+#define COMPILE_TIME_ASSERT static_assert
+#endif
+
+#ifndef MAX_PATH
+#define MAX_PATH PATH_MAX
+#endif
 
 #endif // PORT_H

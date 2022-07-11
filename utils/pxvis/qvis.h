@@ -10,13 +10,12 @@
 
 // vis.h
 
+#include "port.h"
 #include "cmdlib.h"
 #include "mathlib.h"
 #include "bspfile.h"
 #include "stringlib.h"
 #include "filesystem.h"
-
-#include <windows.h>
 
 #define DEFAULT_FASTVIS	false
 #define DEFAULT_TESTLEVEL	2

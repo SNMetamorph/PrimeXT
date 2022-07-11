@@ -14,15 +14,13 @@ GNU General Public License for more details.
 */
 
 #include "conprint.h"
-#include <windows.h>
-#include <direct.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <io.h>
 #include "cmdlib.h"
 #include "stringlib.h"
 #include "filesystem.h"
 #include "wfile.h"
+#include "port.h"
 
 #ifdef ALLOW_WADS_IN_PACKS
 long FS_Tell( file_t *file );
