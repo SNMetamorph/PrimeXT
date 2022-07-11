@@ -41,6 +41,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"../common"
 	"../../public"
 	"../../common"
+	"../../game_shared"
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
