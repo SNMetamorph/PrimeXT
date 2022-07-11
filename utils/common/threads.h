@@ -10,16 +10,18 @@
 
 extern int g_numthreads;
 
-#define MAX_THREADS		16
+#define MAX_THREADS		128
 
 typedef void (*pfnThreadWork)( int current, int threadnum );
 typedef void (*pfnRunThreads)( int threadnum );
 
 int GetThreadWork( void );
 void ThreadSetDefault( void );
+
 void RunThreadsOnIndividual( int workcnt, bool showpacifier, pfnThreadWork func );
 void RunThreadsOnIncremental( int workcnt, bool showpacifier, pfnRunThreads func );
 void RunThreadsOn( int workcnt, bool showpacifier, pfnRunThreads func );
+
 bool ThreadLocked( void );
 void ThreadLock( void );
 void ThreadUnlock( void );

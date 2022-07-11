@@ -76,7 +76,7 @@ BRUSH MODELS
 .bsp contain level static geometry with including PVS and lightning info
 ==============================================================================
 */
-#include "..\..\common\bspfile.h"
+#include "../../common/bspfile.h"
 
 // header
 #define Q1BSP_VERSION		29	// quake1 regular version (beta is 28)

@@ -11,13 +11,17 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "build.h"
 #include "cmdlib.h"
 #include "mathlib.h"
 #include "bspfile.h"
 #include "scriplib.h"
 #include "filesystem.h"
 #include "stringlib.h"
+
+#if XASH_WIN32
 #include <io.h>
+#endif
 
 //=============================================================================
 bool		g_found_extradata = false;

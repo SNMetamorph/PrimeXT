@@ -14,15 +14,19 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include <windows.h>
 #include <stdio.h>
-#include <basetypes.h>
+#include <time.h>
+#include <stdarg.h>
+#include "port.h"
+#include "basetypes.h"
 #include "stringlib.h"
 #include "conprint.h"
+#include "mathlib.h"
 
 #define IsColorString( p )		( p && *( p ) == '^' && *(( p ) + 1) && *(( p ) + 1) >= '0' && *(( p ) + 1 ) <= '9' )
 #define ColorIndex( c )		((( c ) - '0' ) & 7 )
 
+#if XASH_WIN32
 static unsigned short g_color_table[8] =
 {
 FOREGROUND_INTENSITY,				// black
@@ -34,6 +38,9 @@ FOREGROUND_GREEN|FOREGROUND_BLUE|FOREGROUND_INTENSITY,	// cyan
 FOREGROUND_RED|FOREGROUND_BLUE|FOREGROUND_INTENSITY,	// magenta
 FOREGROUND_RED|FOREGROUND_GREEN|FOREGROUND_BLUE,		// default color (white)
 };
+#endif
+
+#define COLORIZE_CONSOLE
 
 static int devloper_level = DEFAULT_DEVELOPER;
 static bool ignore_log = false;
@@ -87,8 +94,75 @@ void Sys_PrintLog( const char *pMsg )
 	if( !pMsg || ignore_log )
 		return;
 
-	if( !logfile ) return;
-	fprintf( logfile, "%s", pMsg );
+	time_t		crt_time;
+	const struct tm	*crt_tm;
+	char logtime[32] = "";
+	static char lastchar;
+
+	time( &crt_time );
+	crt_tm = localtime( &crt_time );
+
+#if XASH_ANDROID
+	__android_log_print( ANDROID_LOG_DEBUG, "Xash", "%s", pMsg );
+#endif
+
+	if( !lastchar || lastchar == '\n')
+		strftime( logtime, sizeof( logtime ), "[%H:%M:%S] ", crt_tm ); //short time
+
+#ifdef COLORIZE_CONSOLE
+	{
+		char colored[4096];
+		const char *msg = pMsg;
+		int len = 0;
+		while( *msg && ( len < 4090 ) )
+		{
+			static char q3ToAnsi[ 8 ] =
+			{
+				'0', // COLOR_BLACK
+				'1', // COLOR_RED
+				'2', // COLOR_GREEN
+				'3', // COLOR_YELLOW
+				'4', // COLOR_BLUE
+				'6', // COLOR_CYAN
+				'5', // COLOR_MAGENTA
+				0 // COLOR_WHITE
+			};
+
+			if( IsColorString( msg ) )
+			{
+				int color;
+
+				msg++;
+				color = q3ToAnsi[ *msg++ % 8 ];
+				colored[len++] = '\033';
+				colored[len++] = '[';
+				if( color )
+				{
+					colored[len++] = '3';
+					colored[len++] = color;
+				}
+				else
+					colored[len++] = '0';
+				colored[len++] = 'm';
+			}
+			else
+				colored[len++] = *msg++;
+		}
+		colored[len] = 0;
+		printf( "\033[34m%s\033[0m%s\033[0m", logtime, colored );
+	}
+#elif !XASH_ANDROID
+	printf( "%s %s", logtime, pMsg );
+	fflush( stdout );
+#endif
+	lastchar = pMsg[strlen(pMsg)-1];
+	if( !logfile )
+		return;
+
+	if( !lastchar || lastchar == '\n')
+		strftime( logtime, sizeof( logtime ), "[%Y:%m:%d|%H:%M:%S]", crt_tm ); //full time
+
+	fprintf( logfile, "%s %s", logtime, pMsg );
 	fflush( logfile );
 }
 
@@ -101,6 +175,7 @@ print into win32 console
 */
 void Sys_Print( const char *pMsg )
 {
+#if XASH_WIN32
 	char tmpBuf[8192];
 	HANDLE hOut = GetStdHandle( STD_OUTPUT_HANDLE );
 	unsigned long cbWritten;
@@ -146,6 +221,9 @@ void Sys_Print( const char *pMsg )
 		Sys_PrintLog( tmpBuf );
 		pTemp = tmpBuf;
 	}
+#else
+	Sys_PrintLog( pMsg );
+#endif
 }
 
 /*
@@ -201,22 +279,31 @@ void MsgDev( int level, const char *pMsg, ... )
 	}
 }
 
+
 void MsgAnim( int level, const char *pMsg, ... )
 {
+	int j;
 	va_list	argptr;
 	char	text[1024];
-	char	empty[1024];
-	int		j;
-
-	if( devloper_level < level ) return;
+	
+	if( devloper_level < level ) 
+		return;
 
 	va_start( argptr, pMsg );
 	Q_vsnprintf( text, sizeof( text ), pMsg, argptr );
 	va_end( argptr );
 
+#if XASH_POSIX
+	Sys_Print("\033[5m");
+	Sys_Print(text);
+	Sys_Print( "^7\n" );
+#elif XASH_WIN32
+	char	empty[1024];
+
 	// fill clear string
-	for( j = 0; j < Q_strlen( text ); j++ )
+	for (j = 0; j < Q_strlen(text); j++) {
 		empty[j] = ' ';
+	}
 	empty[j] = '\r';
 	empty[j+1] = '\0';
 
@@ -228,5 +315,29 @@ void MsgAnim( int level, const char *pMsg, ... )
 		else Sys_Print( empty );
 		Sleep( 150 );
 	}
-	Msg( "^7\n" );
+#else
+#error "Implement me!"
+#endif
+}
+
+/*
+================
+Sys_Sleep
+
+freeze application for some time
+================
+*/
+void Sys_Sleep( unsigned int msec )
+{
+	if( !msec )
+		return;
+
+	msec = Q_min( msec, 1000 );
+#if XASH_WIN32
+        Sleep( msec );
+#elif XASH_POSIX
+        usleep( msec * 1000 );
+#else
+#error "Implement me!"
+#endif
 }

@@ -3,9 +3,10 @@
 //		         stringlib.cpp - safety string routines 
 //=======================================================================
 
-#include <windows.h>
+#include <stdarg.h>
+#include <ctype.h>
+#include "port.h"
 #include "stringlib.h"
-#include <direct.h>
 #include "cmdlib.h"
 #include "mathlib.h"
 
@@ -287,17 +288,21 @@ int Q_vsnprintf( char *buffer, size_t buffersize, const char *format, va_list ar
 {
 	size_t	result;
 
+#ifdef _MSC_VER
 	__try
+#endif
 	{
-		result = _vsnprintf( buffer, buffersize, format, args );
+		result = vsnprintf( buffer, buffersize, format, args );
 	}
 
 	// to prevent crash while output
+#ifdef _MSC_VER
 	__except( EXCEPTION_EXECUTE_HANDLER )
 	{
 		Q_strncpy( buffer, "^1sprintf throw exception^7\n", buffersize );
 		result = buffersize;
 	}
+#endif
 
 	if( result < 0 || result >= buffersize )
 	{

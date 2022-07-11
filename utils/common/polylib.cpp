@@ -30,7 +30,7 @@ winding_t	*AllocWinding( int numpoints )
 {
 	if( numpoints > MAX_POINTS_ON_WINDING )
 		COM_FatalError( "AllocWinding: MAX_POINTS_ON_WINDING limit exceeded\n", numpoints );
-	return (winding_t *)Mem_Alloc( (int)((winding_t *)0)->p[numpoints], C_WINDING );
+	return (winding_t *)Mem_Alloc( (size_t)((winding_t *)0)->p[numpoints], C_WINDING );
 }
 
 /*
@@ -56,7 +56,7 @@ CopyWinding
 winding_t	*CopyWinding( const winding_t *w )
 {
 	winding_t	*c = AllocWinding( w->numpoints );
-	memcpy( c, w, (int)((winding_t *)0)->p[w->numpoints] );
+	memcpy( c, w, (size_t)((winding_t *)0)->p[w->numpoints] );
 
 	return c;
 }
@@ -837,7 +837,7 @@ winding_t *TryMergeWindingEpsilon( winding_t *w1, winding_t *w2, const vec3_t pl
 	}
 
 	if( edge1 < 0 || edge2 < 0 )
-		return false; // no collinear edge
+		return NULL; // no collinear edge
 
 	//
 	// check slope of connected lines

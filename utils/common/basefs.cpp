@@ -13,8 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include <windows.h>
-#include <io.h>
+#include "port.h"
 #include <fcntl.h>
 #include "cmdlib.h"
 #include "mathlib.h"
@@ -172,7 +171,7 @@ pack_t *FS_LoadPackPAK( const char *packfile, int *error )
 	pack_t		*pack;
 	dpackfile_t	*info;
 
-	packhandle = open( packfile, O_RDONLY|O_BINARY );
+	packhandle = open(packfile, O_RDONLY | O_BINARY, 0666);
 
 	if( packhandle < 0 )
 	{
@@ -578,10 +577,10 @@ FS_Init
 */
 void FS_Init( const char *source )
 {
-	char	workdir[_MAX_PATH];
-	char	mapdir[_MAX_PATH];
-	char	hullfile[_MAX_PATH];
-	char	mapfile[_MAX_PATH];
+	char	workdir[MAX_PATH];
+	char	mapdir[MAX_PATH];
+	char	hullfile[MAX_PATH];
+	char	mapfile[MAX_PATH];
 	char	*pathend;
 
 	fs_searchpaths = NULL;
@@ -612,8 +611,8 @@ void FS_Init( const char *source )
 
 	MsgDev( D_REPORT, "workdir: %s\n", fs_rootdir );
 
-	Q_snprintf( hullfile, sizeof( hullfile ), "%s\\hulls.txt", fs_rootdir );
-	FS_AddGameDirectory( va( "%s\\", fs_rootdir ), 0 );
+	Q_snprintf( hullfile, sizeof( hullfile ), "%s/hulls.txt", fs_rootdir );
+	FS_AddGameDirectory( va( "%s/", fs_rootdir ), 0 );
 	FS_ReadGameInfo( fs_rootdir );
 
 	MsgDev( D_REPORT, "gamedir: %s, basedir %s, falldir %s\n", fs_gamedir, fs_basedir, fs_falldir );
@@ -621,7 +620,7 @@ void FS_Init( const char *source )
 	COM_FileBase( source, mapfile );
 
 	if( !Q_strcmp( fs_rootdir, "" ))
-		Q_strncpy( fs_rootdir, "..\\", sizeof( fs_rootdir ));
+		Q_strncpy( fs_rootdir, "../", sizeof( fs_rootdir ));
 
 	MsgDev( D_INFO, "rootdir %s\n", fs_rootdir );	// for debug
 	MsgDev( D_INFO, "source: %s.map\n\n", mapfile );	// for debug
@@ -943,11 +942,13 @@ Open a file. The syntax is the same as fopen
 file_t *FS_Open( const char *filepath, const char *mode, bool gamedironly )
 {
 	// some stupid mappers used leading '/' or '\' in path to models or sounds
+#if XASH_WIN32 // schizophrenia
 	if( filepath[0] == '/' || filepath[0] == '\\' )
 		filepath++;
 
 	if( filepath[0] == '/' || filepath[0] == '\\' )
 		filepath++;
+#endif
 
 	// if the file is opened in "write", "append", or "read/write" mode
 	if( mode[0] == 'w' || mode[0] == 'a'|| mode[0] == 'e' || Q_strchr( mode, '+' ))
@@ -1384,8 +1385,8 @@ search_t *FS_Search( const char *pattern, int caseinsensitive, int gamedironly )
 	slash = Q_strrchr( pattern, '/' );
 	backslash = Q_strrchr( pattern, '\\' );
 	colon = Q_strrchr( pattern, ':' );
-	separator = max( slash, backslash );
-	separator = max( separator, colon );
+	separator = Q_max( slash, backslash );
+	separator = Q_max( separator, colon );
 	basepathlength = separator ? (separator + 1 - pattern) : 0;
 	basepath = (char *)Mem_Alloc( basepathlength + 1, C_FILESYSTEM );
 	if( basepathlength ) memcpy( basepath, pattern, basepathlength );
