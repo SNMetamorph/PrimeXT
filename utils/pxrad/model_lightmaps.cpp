@@ -10,7 +10,7 @@
 
 #include "qrad.h"
 #include "model_trace.h"
-#include "..\..\engine\studio.h"
+#include "../../engine/studio.h"
 
 #ifdef HLRAD_LIGHTMAPMODELS
 

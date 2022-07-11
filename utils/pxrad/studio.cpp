@@ -11,7 +11,7 @@
 // studio.c
 
 #include "qrad.h"
-#include "..\..\engine\studio.h"
+#include "../../engine/studio.h"
 #include "model_trace.h"
 #include "imagelib.h"
 
