@@ -13,8 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "cmdlib.h"
 #include "mathlib.h"
+#include "cmdlib.h"
 #include "stringlib.h"
 #include "studio.h"
 #include "studiomdl.h"
