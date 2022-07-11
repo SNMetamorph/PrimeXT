@@ -13,12 +13,16 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "conprint.h"
+#ifdef WIN32
 #include <windows.h>
 #include <direct.h>
+#include <io.h>
+#endif
+
+#include <stdarg.h>
+#include "conprint.h"
 #include <fcntl.h>
 #include <stdio.h>
-#include <io.h>
 #include "cmdlib.h"
 #include "stringlib.h"
 #include "filesystem.h"

@@ -32,8 +32,8 @@
 #define HLRAD_AMBIENTCUBES		// leaf ambient lighting
 #define HLRAD_COMPUTE_VISLIGHTMATRIX	// XashNT experiments
 #define HLRAD_EXTERNAL_TEXTURES	// allow to loading external textures
-#define HLRAD_SHRINK_MEMORY		// TESTTEST
 #define HLRAD_RAYTRACE		// TESTTEST
+//#define HLRAD_SHRINK_MEMORY		// TESTTEST
 #endif
 
 // Paranoia compatible
@@ -76,7 +76,7 @@ BRUSH MODELS
 .bsp contain level static geometry with including PVS and lightning info
 ==============================================================================
 */
-#include "..\..\common\bspfile.h"
+#include "../../common/bspfile.h"
 
 // header
 #define Q1BSP_VERSION		29	// quake1 regular version (beta is 28)

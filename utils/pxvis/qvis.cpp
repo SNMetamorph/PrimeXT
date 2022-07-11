@@ -193,7 +193,7 @@ LeafFlow
 Builds the entire visibility list for a leaf
 ===============
 */
-static void LeafFlow( int leafnum )
+void LeafFlow( int leafnum )
 {
 	byte	compressed[MAX_MAP_LEAFS/8];
 	byte	outbuffer2[MAX_MAP_LEAFS/8];

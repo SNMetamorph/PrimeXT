@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 project(pxbsp)
-include(CompilerRuntime)
+
+if(MSVC)
+	include(CompilerRuntime)
+endif()
 
 # find and add source files
 list(APPEND DIR_SOURCES
@@ -78,7 +81,9 @@ if(MSVC)
 endif()
 
 # set static compiler runtime
+if(MSVC)
 set_compiler_runtime(${PROJECT_NAME} STATIC)
+endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)

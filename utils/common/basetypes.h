@@ -19,6 +19,8 @@ GNU General Public License for more details.
 #define BASETYPES_H
 
 //#define HLFX_BUILD
+#include <stdint.h>
+#include <cstddef>
 
 #ifdef _WIN32
 #pragma warning( disable : 4244 )	// MIPS
@@ -32,14 +34,16 @@ typedef unsigned long	dword;
 typedef unsigned int	uint;
 typedef unsigned long	ulong;
 
-typedef unsigned char	uint8;
-typedef signed char		int8;
-typedef __int16		int16;
-typedef unsigned __int16	uint16;
-typedef __int32		int32;
-typedef unsigned __int32	uint32;
-typedef __int64		int64;
-typedef unsigned __int64	uint64;
+typedef uint8_t		uint8;
+typedef int8_t		int8;
+typedef int16_t		int16;
+typedef uint16_t	uint16;
+typedef int32_t		int32;
+typedef uint32_t	uint32;
+typedef int64_t		int64;
+typedef uint64_t	uint64;
+
+typedef int64 longtime_t;
 
 #undef true
 #undef false
@@ -54,7 +58,7 @@ typedef int qboolean;
 // never return, so any conditions that leeds to them being called are
 // guaranteed to be false in the following code
 #define NO_RETURN __declspec( noreturn )
-#define ALIGN16   __declspec(align(16))
+#define ALIGN16   alignas(16) //__declspec(align(16))
 
 // a simple string implementation
 #define MAX_STRING		256

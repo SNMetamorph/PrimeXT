@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 project(pxrad)
-include(CompilerRuntime)
+
+if(MSVC)
+	include(CompilerRuntime)
+endif()
 
 # find and add source files
 list(APPEND DIR_SOURCES
@@ -50,7 +53,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"../common"
 	"../../public"
 	"../../common"
-	"${CMAKE_SOURCE_DIR}/external/squish"
+	"../../game_shared"
+	"${CMAKE_SOURCE_DIR}/../external/squish"
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
@@ -89,13 +93,15 @@ if(MSVC)
 endif()
 
 # add squish library depedency
-add_subdirectory("${CMAKE_SOURCE_DIR}/external/squish" squish)
+add_subdirectory("${CMAKE_SOURCE_DIR}/../external/squish" squish)
 target_link_libraries(${PROJECT_NAME} PRIVATE
 	squish
 )
 
 # set static compiler runtime
-set_compiler_runtime(${PROJECT_NAME} STATIC)
+if(MSVC)
+	set_compiler_runtime(${PROJECT_NAME} STATIC)
+endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)

@@ -14,13 +14,13 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include <windows.h>
 #include <stdio.h>
 #include <basetypes.h>
-#include "stringlib.h"
-#include "conprint.h"
 #include <math.h>
 #include <cmdlib.h>
+#include "port.h"
+#include "stringlib.h"
+#include "conprint.h"
 
 #define GAMMA		( 2.2f )		// Valve Software gamma
 #define INVGAMMA		( 1.0f / 2.2f )	// back to 1.0

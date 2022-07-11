@@ -15,6 +15,7 @@
 
 #include <math.h>
 #include <float.h>
+#include "port.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -140,7 +141,13 @@ typedef half	hvec3_t[3];
 #define VectorMA(a, scale, b, c) ((c)[0] = (a)[0] + (scale) * (b)[0],(c)[1] = (a)[1] + (scale) * (b)[1],(c)[2] = (a)[2] + (scale) * (b)[2])
 #define VectorMAM( scale1, b1, scale2, b2, c ) ((c)[0] = (scale1) * (b1)[0] + (scale2) * (b2)[0],(c)[1] = (scale1) * (b1)[1] + (scale2) * (b2)[1],(c)[2] = (scale1) * (b1)[2] + (scale2) * (b2)[2])
 #define VectorIsNull( v ) ((v)[0] == 0.0 && (v)[1] == 0.0 && (v)[2] == 0.0)
+
+#ifdef WIN32
 #define VectorIsFinite( v ) ( _finite( (v)[0] ) && _finite( (v)[1] ) && _finite((v)[2] ))
+#else
+#define VectorIsFinite( v ) ( finite( (v)[0] ) && finite( (v)[1] ) && finite((v)[2] ))
+#endif
+
 #define PlaneDist(point,plane) ((plane)->type < 3 ? (point)[(plane)->type] : DotProduct((point), (plane)->normal))
 #define PlaneDiff(point,plane) (((plane)->type < 3 ? (point)[(plane)->type] : DotProduct((point), (plane)->normal)) - (plane)->dist)
 #define PlaneDist2(point,plane) (DotProduct((point), (plane)->normal))

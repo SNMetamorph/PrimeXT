@@ -13,13 +13,51 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include <windows.h>
+#include "port.h"
 #include "cmdlib.h"
 #include "mathlib.h"
 #include "stringlib.h"
 #include "scriplib.h"
 #include "filesystem.h"
 #include "imagelib.h"
+
+#ifndef _WIN32
+#define MAKEWORD( a, b )                        ((short int)(((unsigned char)(a))|(((short int)((unsigned char)(b)))<<8)))
+#define BI_RGB 0
+
+#pragma pack(push, 1)
+typedef struct tagBITMAPFILEHEADER {
+  int16  bfType;
+  uint32 bfSize;
+  int16  bfReserved1;
+  int16  bfReserved2;
+  uint32 bfOffBits;
+} BITMAPFILEHEADER, *PBITMAPFILEHEADER;
+
+typedef struct tagBITMAPINFOHEADER {
+  uint32 biSize;
+  int32  biWidth;
+  int32  biHeight;
+  int16  biPlanes;
+  int16  biBitCount;
+  uint32 biCompression;
+  uint32 biSizeImage;
+  int32  biXPelsPerMeter;
+  int32  biYPelsPerMeter;
+  uint32 biClrUsed;
+  uint32 biClrImportant;
+} BITMAPINFOHEADER, *PBITMAPINFOHEADER;
+
+typedef struct tagRGBQUAD {
+  uint8 rgbBlue;
+  uint8 rgbGreen;
+  uint8 rgbRed;
+  uint8 rgbReserved;
+} RGBQUAD;
+#pragma pack(pop)
+
+#endif
+
 
 /*
 =================
@@ -381,14 +419,14 @@ rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize 
 	if( bhdr.compression != BI_RGB ) 
 	{
 		MsgDev( D_ERROR, "Image_LoadBMP: only uncompressed BMP files supported (%s)\n", name );
-		return false;
+		return NULL;
 	}
 
 	columns = bhdr.width;
 	rows = abs( bhdr.height );
 
 	if( !Image_ValidSize( name, columns, rows ))
-		return false;          
+		return NULL;
 
 	pic = Image_Alloc( columns, rows, ( bhdr.bitsPerPixel == 4 || bhdr.bitsPerPixel == 8 ));
 

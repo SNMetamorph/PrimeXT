@@ -12,7 +12,7 @@
 
 #include "qrad.h"
 #include "raytracer.h"
-#include "..\..\engine\studio.h"
+#include "../../engine/studio.h"
 #include "model_trace.h"
 
 #ifdef HLRAD_RAYTRACE

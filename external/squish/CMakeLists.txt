@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 project(squish)
-include(CompilerRuntime)
+
+if(MSVC)
+	include(CompilerRuntime)
+endif()
 
 add_library(${PROJECT_NAME} STATIC
 	"alpha.cpp"
@@ -52,7 +55,9 @@ if(MSVC)
 endif()
 
 # set static compiler runtime
-set_compiler_runtime(${PROJECT_NAME} STATIC)
+if(MSVC)
+	set_compiler_runtime(${PROJECT_NAME} STATIC)
+endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)

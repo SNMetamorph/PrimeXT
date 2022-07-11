@@ -15,11 +15,10 @@ GNU General Public License for more details.
 
 #define STB_DXT_IMPLEMENTATION
 
-#include "conprint.h"
-#include <windows.h>
 #include <math.h>
 #include <assert.h>
-#include <io.h>
+#include "conprint.h"
+#include "port.h"
 #include "cmdlib.h"
 #include "stringlib.h"
 #include "imagelib.h"

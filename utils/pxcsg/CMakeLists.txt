@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 project(pxcsg)
-include(CompilerRuntime)
+
+if(MSVC)
+	include(CompilerRuntime)
+endif()
 
 # find and add source files
 list(APPEND DIR_SOURCES
@@ -41,6 +44,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"../common"
 	"../../public"
 	"../../common"
+	"../../game_shared"
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
@@ -79,7 +83,9 @@ if(MSVC)
 endif()
 
 # set static compiler runtime
-set_compiler_runtime(${PROJECT_NAME} STATIC)
+if(MSVC)
+	set_compiler_runtime(${PROJECT_NAME} STATIC)
+endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)

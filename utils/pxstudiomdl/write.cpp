@@ -2,11 +2,10 @@
 #pragma warning( disable : 4237 )
 #pragma warning( disable : 4305 )
 
-#include <io.h>
+#include "port.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#include <windows.h>
 #include "cmdlib.h"
 #include "mathlib.h"
 #include "stringlib.h"

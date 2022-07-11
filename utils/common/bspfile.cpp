@@ -17,7 +17,10 @@
 #include "scriplib.h"
 #include "filesystem.h"
 #include "stringlib.h"
+
+#ifdef WIN32
 #include <io.h>
+#endif
 
 //=============================================================================
 bool		g_found_extradata = false;
