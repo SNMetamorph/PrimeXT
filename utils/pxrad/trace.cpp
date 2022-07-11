@@ -12,7 +12,7 @@
 
 #include "qrad.h"
 #include "alias.h"
-#include "..\..\engine\studio.h"
+#include "../../engine/studio.h"
 #include "model_trace.h"
 
 typedef struct moveclip_s

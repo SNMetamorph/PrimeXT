@@ -50,6 +50,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"../common"
 	"../../public"
 	"../../common"
+	"../../game_shared"
 	"${CMAKE_SOURCE_DIR}/external/squish"
 )
 

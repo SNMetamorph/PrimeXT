@@ -1672,7 +1672,7 @@ void MakePatches( void )
 // =====================================================================================
 //  patch_sorter
 // =====================================================================================
-static int CDECL patch_sorter( const void *p1, const void *p2 )
+static int patch_sorter( const void *p1, const void *p2 )
 {
 	patch_t	*patch1 = (patch_t *)p1;
 	patch_t	*patch2 = (patch_t *)p2;
@@ -2672,9 +2672,8 @@ int main( int argc, char **argv )
 
 	// Set the required global lights filename
 	// try looking in the directory we were run from
-	GetModuleFileName( NULL, global_lights, sizeof( global_lights ));
-	COM_ExtractFilePath( global_lights, global_lights );
-	Q_strncat( global_lights, "\\lights.rad", sizeof( global_lights ));
+	Q_getwd( global_lights, sizeof( global_lights ) );
+	Q_strncat( global_lights, "/lights.rad", sizeof( global_lights ));
 
 	// Set the optional level specific lights filename
 	COM_FileBase( source, str );
