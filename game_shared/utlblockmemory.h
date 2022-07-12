@@ -242,10 +242,7 @@ void CUtlBlockMemory<T,I>::ChangeSize( int nBlocks )
 		assert( m_pMemory );
 	}
 
-	if ( !m_pMemory )
-	{
-		COM_FatalError( "CUtlBlockMemory overflow!\n" );
-	}
+	assert( m_pMemory );
 
 	// allocate new blocks if growing
 	int nBlockSize = NumElementsInBlock();
