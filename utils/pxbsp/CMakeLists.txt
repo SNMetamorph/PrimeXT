@@ -80,6 +80,13 @@ endif()
 # set static compiler runtime
 set_compiler_runtime(${PROJECT_NAME} STATIC)
 
+if(NOT MSVC)
+	# add pthread library depedency
+	target_link_libraries(${PROJECT_NAME} PRIVATE
+		pthread
+	)
+endif()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)
 
