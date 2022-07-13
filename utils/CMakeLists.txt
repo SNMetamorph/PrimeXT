@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 project(utils)
+include(CompilerRuntime)
+
 add_subdirectory(pxstudiomdl)
 add_subdirectory(pxmv)
 add_subdirectory(pxbsp)
@@ -17,7 +19,9 @@ set(DIR_UTILS_OUTPUT
 	${CMAKE_BINARY_DIR}/$<CONFIG>/${GAMEDIR}/devkit/
 )
 
+# add mxtk library (used by pxmv and pxsv)
 add_subdirectory("${CMAKE_SOURCE_DIR}/external/mxtk" mxtk)
+set_compiler_runtime(mxtk STATIC)
 
 message(STATUS "Utility binaries output directory: ${DIR_UTILS_OUTPUT}")
 if(MSVC)
