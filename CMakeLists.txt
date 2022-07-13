@@ -39,10 +39,6 @@ else()
 	message(STATUS "Building for 32-bit")
 endif()
 
-if(NOT BUILD_SERVER AND NOT BUILD_CLIENT)
-	message(FATAL_ERROR "Nothing to build, check build configuration!")
-endif()
-
 # multithreaded build flag for MSVC
 add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>) 
 
