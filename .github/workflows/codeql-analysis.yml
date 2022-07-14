@@ -23,7 +23,7 @@ on:
 jobs:
   analyze:
     name: Analyze
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       actions: read
       contents: read
@@ -52,17 +52,24 @@ jobs:
         # Prefix the list here with "+" to use these queries and those in the config file.
         # queries: ./path/to/local/query, your-org/your-repo/queries@main
 
+    - name: Install dependencies
+      run: |
+        sudo dpkg --add-architecture i386
+        sudo apt-get update
+        sudo apt-get install gcc-multilib g++-multilib cmake
+        sudo apt-get install qtbase5-dev:i386
+
     - name: Configure CMake
       # Note the current convention is to use the -S and -B options here to specify source
       # and build directories, but this is only available with CMake 3.13 and higher.
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
       run: |
        cmake -E make_directory ./build
-       cmake -S . -B ./build -DBUILD_UTILS=OFF -DENABLE_PHYSX=OFF
+       cmake -S . -B ./build -DENABLE_PHYSX=OFF
 
     - name: Build
       # Execute the build.  You can specify a specific target with "--target <NAME>"
-      run: cmake --build ./build --config Debug
+      run: cmake --build ./build --config Debug --parallel 32
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
