@@ -40,6 +40,12 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 	PXBSP_COMPILING=1 # to avoid header hell because of another mathlib implementation
 )
 
+# pxvis compile-time settings
+target_compile_definitions(${PROJECT_NAME} PRIVATE 
+	HLVIS_SORT_PORTALS=1	# sort portals before flow
+	HLVIS_MERGE_PORTALS=1	# merge visibility between portals
+)
+
 if(NOT MSVC)
 	target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions) # GCC/Clang flag
 	target_compile_options(${PROJECT_NAME} PRIVATE -Wno-write-strings) # GCC/Clang flag
