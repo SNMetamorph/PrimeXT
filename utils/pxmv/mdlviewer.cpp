@@ -546,6 +546,8 @@ MDLViewer::handleEvent (mxEvent *event)
 			if( g_viewerSettings.numModelPathes > 0 )
 				d_cpl->loadModel( LoadNextModel( ));
 			break;
+#if XASH_WIN32
+		// TODO handle F5 hotkey on Linux too
 		case VK_F5:
 		{
 			bool oldUseWeaponOrigin = bUseWeaponOrigin;
@@ -553,6 +555,7 @@ MDLViewer::handleEvent (mxEvent *event)
 			bUseWeaponOrigin = oldUseWeaponOrigin;
 			break;
 		}
+#endif
 		case 'g':
 		case 0xEF:
 			g_viewerSettings.showGround = !g_viewerSettings.showGround;
@@ -653,7 +656,7 @@ int main( int argc, char *argv[] )
 	mx_setcwd (mx::getApplicationPath ());
 	atexit( Sys_CloseLog );
 
-#if XASH_WIN32 == 1
+#if XASH_WIN32
 	// HOTFIX hide console window
 	ShowWindow(GetConsoleWindow(), SW_HIDE);
 #endif
@@ -672,7 +675,6 @@ int main( int argc, char *argv[] )
 	if( IsAliasModel( cmdline ))
 	{
 		// TODO print message q1 alias models deprecated
-		WinExec (cmdline, SW_SHOW);
 		return 0;
 	}
 

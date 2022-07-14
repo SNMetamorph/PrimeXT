@@ -30,6 +30,7 @@
 
 #include "matrix.h"
 #include "conprint.h"
+#include "basetypes.h"
 
 enum // texture names
 {

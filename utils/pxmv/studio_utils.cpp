@@ -17,7 +17,7 @@
 #include <gl.h>
 #include <GL/glu.h>
 #include "StudioModel.h"
-#include "GLWindow.h"
+#include "GlWindow.h"
 #include "ViewerSettings.h"
 #include "ControlPanel.h"
 #include "activity.h"
@@ -603,8 +603,8 @@ void StudioModel::PaletteHueReplace( byte *palSrc, int newHue, int start, int en
 		g = palSrc[i*3+1];
 		b = palSrc[i*3+2];
 		
-		maxcol = max( max( r, g ), b ) / 255.0f;
-		mincol = min( min( r, g ), b ) / 255.0f;
+		maxcol = Q_max( Q_max( r, g ), b ) / 255.0f;
+		mincol = Q_min( Q_min( r, g ), b ) / 255.0f;
 
 		if( maxcol == 0 ) continue;
 		
