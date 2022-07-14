@@ -16,14 +16,19 @@
 // web:            http://www.swissquake.ch/chumbalum-soft/
 //
 #include "ViewerSettings.h"
+#include "SpriteModel.h"
+#include "stringlib.h"
+#include "filesystem.h"
+#include "build.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <mx.h>
 #include <time.h>
-#include "SpriteModel.h"
-#include "stringlib.h"
+
+#if XASH_WIN32
 #include <io.h>
+#endif
 
 ViewerSettings g_viewerSettings;
 
@@ -243,7 +248,7 @@ static void AddPathToList( const char *path )
 	if( g_viewerSettings.numSpritePathes >= 2048 )
 		return; // too many strings
 
-	Q_snprintf( spritePath, sizeof( spritePath ), "%s\\%s", g_viewerSettings.oldSpritePath, path );
+	Q_snprintf( spritePath, sizeof( spritePath ), "%s/%s", g_viewerSettings.oldSpritePath, path );
 
 	if( !ValidateSprite( spritePath ))
 		return;
@@ -275,32 +280,28 @@ static void SortPathList( void )
 
 void ListDirectory( void )
 {
+	stringlist_t list;
 	char spritePath[256];
-	struct _finddata_t	n_file;
-	long hFile;
 
 	COM_ExtractFilePath( g_viewerSettings.spritePath, spritePath );
-
 	if( !Q_stricmp( spritePath, g_viewerSettings.oldSpritePath ))
 		return;	// not changed
 
 	Q_strncpy( g_viewerSettings.oldSpritePath, spritePath, sizeof( g_viewerSettings.oldSpritePath ));
-	Q_strncat( spritePath, "\\*.spr", sizeof( spritePath ));
+	Q_strncat( spritePath, "/*.spr", sizeof( spritePath ));
 	g_viewerSettings.numSpritePathes = 0;
 
-	// ask for the directory listing handle
-	hFile = _findfirst( spritePath, &n_file );
-	if( hFile == -1 ) return; // how this possible?
+	stringlistinit( &list );
+	listdirectory( &list, spritePath, true );
 
-	// start a new chain with the the first name
-	AddPathToList( n_file.name );
+	if (list.numstrings < 1)
+		return;
 
-	// iterate through the directory
-	while( _findnext( hFile, &n_file ) == 0 )
-		AddPathToList( n_file.name );
-	_findclose( hFile );
-
+	for (int i = 0; i < list.numstrings; i++) {
+			AddPathToList(list.strings[i]);
+	}
 	SortPathList();
+	stringlistfreecontents( &list );
 }
 
 const char *LoadNextSprite( void )

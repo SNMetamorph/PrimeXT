@@ -5,10 +5,14 @@ include(CompilerRuntime)
 
 # find and add source files
 list(APPEND DIR_SOURCES
-	"../../game_shared/common.cpp"
+	#"../../game_shared/common.cpp"
 	"../../game_shared/mathlib.cpp"
 	"../../game_shared/matrix.cpp"
 	"../../game_shared/stringlib.cpp"
+	"../common/conprint.cpp"
+	"../common/cmdlib.cpp"
+	"../common/filesystem.cpp"
+	"../common/zone.cpp"
 	"FileAssociation.cpp"
     "GlWindow.cpp"
 	"ViewerSettings.cpp"
@@ -38,9 +42,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"../common"
 )
 
-#target_compile_definitions(${PROJECT_NAME} PRIVATE 
-#	IGNORE_SEARCH_IN_WADS=1 
-#)
+target_compile_definitions(${PROJECT_NAME} PRIVATE 
+	IGNORE_SEARCH_IN_WADS=1 
+)
 
 if(NOT MSVC)
 	target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions) # GCC/Clang flag

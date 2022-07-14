@@ -17,7 +17,7 @@
 #include <gl.h>
 #include <GL/glu.h>
 #include "SpriteModel.h"
-#include "GLWindow.h"
+#include "GlWindow.h"
 #include "ViewerSettings.h"
 #include "stringlib.h" 
 
@@ -38,7 +38,7 @@ void SpriteModel :: centerView( bool reset )
 	float dx = max[0] - min[0];
 	float dy = max[1] - min[1];
 	float dz = max[2] - min[2];
-	float d = max( dx, max( dy, dz ));
+	float d = Q_max( dx, Q_max( dy, dz ));
 
 	if( reset )
 	{
@@ -57,7 +57,7 @@ void SpriteModel :: centerView( bool reset )
 	g_viewerSettings.rot[1] = -90.0f;
 	g_viewerSettings.rot[2] = 0.0f;
 
-	g_viewerSettings.movementScale = max( 1.0f, d * 0.01f );
+	g_viewerSettings.movementScale = Q_max( 1.0f, d * 0.01f );
 	m_yaw = 90.0;
 }
 
