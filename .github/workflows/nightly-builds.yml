@@ -53,7 +53,7 @@ jobs:
             publish/*
 
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         conf: [Debug]
@@ -75,6 +75,7 @@ jobs:
           sudo dpkg --add-architecture i386
           sudo apt-get update
           sudo apt-get install gcc-multilib g++-multilib cmake
+          sudo apt-get install qtbase5-dev:i386
 
       - name: Configure CMake
         # Use a bash shell so we can use the same syntax for environment variable
@@ -84,13 +85,13 @@ jobs:
         # Note the current convention is to use the -S and -B options here to specify source
         # and build directories, but this is only available with CMake 3.13 and higher.
         # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-        run: cmake $GITHUB_WORKSPACE -DCMAKE_C_FLAGS="-m32" -DCMAKE_CXX_FLAGS="-m32" -DBUILD_UTILS=OFF -DENABLE_PHYSX=OFF
+        run: cmake $GITHUB_WORKSPACE -DCMAKE_C_FLAGS="-m32" -DCMAKE_CXX_FLAGS="-m32" -DENABLE_PHYSX=OFF
 
       - name: Build
         working-directory: ${{github.workspace}}/build
         shell: bash
         # Execute the build.  You can specify a specific target with "--target <NAME>"
-        run: cmake --build . --config $BUILD_TYPE
+        run: cmake --build . --config $BUILD_TYPE --parallel 32
  
       - name: Prepare artifacts
         run: |
