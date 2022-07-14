@@ -6,7 +6,7 @@ include(CompilerRuntime)
 # find and add source files
 list(APPEND DIR_SOURCES
 	"../../game_shared/bone_setup.cpp"
-	"../../game_shared/common.cpp"
+	#"../../game_shared/common.cpp"
 	"../../game_shared/ikcontext.cpp"
 	"../../game_shared/jigglebones.cpp"
 	"../../game_shared/mathlib.cpp"
@@ -14,6 +14,9 @@ list(APPEND DIR_SOURCES
 	"../../game_shared/procbones.cpp"
 	"../../game_shared/stringlib.cpp"
 	"../common/conprint.cpp"
+	"../common/filesystem.cpp"
+	"../common/cmdlib.cpp"
+	"../common/zone.cpp"
 	"ControlPanel.cpp"
 	"FileAssociation.cpp"
     "GlWindow.cpp"
@@ -75,12 +78,6 @@ if(MSVC)
 	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release>:/Ob1>) # disable force function inlining, to prevent segfault in release mode
 	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release>:/O1>) # enable optimizing to minimize size
 endif()
-
-# TODO make mxtk crossplatform, also compile it instead using pre-made .lib
-find_library(LIBRARY_MXTK
-	NAMES mxtk
-	HINTS "${CMAKE_SOURCE_DIR}/external/mxtk"
-)
 
 # add mxtk library depedency
 target_link_libraries(${PROJECT_NAME} PRIVATE

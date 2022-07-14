@@ -18,6 +18,7 @@
 #include "ViewerSettings.h"
 #include "ControlPanel.h"
 #include "GlWindow.h"
+#include "cmdlib.h"
 
 typedef struct sortedmesh_s
 {
@@ -67,18 +68,14 @@ static float hullcolor[8][3] =
 // Purpose: Keeps a global clock to autoplay sequences to run from
 //			Also deals with speedScale changes
 //-----------------------------------------------------------------------------
-float GetAutoPlayTime( void )
+float GetAutoPlayTime()
 {
-	static int g_prevTicks;
-	static float g_time;
+	static double prevTime;
+	static float g_time = 0.0f;
 
-	int ticks = GetTickCount();
-	// limit delta so that float time doesn't overflow
-	if (g_prevTicks == 0)
-		g_prevTicks = ticks;
-
-	g_time += ( (ticks - g_prevTicks) / 1000.0f ) * g_viewerSettings.speedScale;
-	g_prevTicks = ticks;
+	double currentTime = I_FloatTime();
+	g_time += (currentTime - prevTime) * g_viewerSettings.speedScale;
+	prevTime = currentTime;
 
 	return g_time;
 }
@@ -86,19 +83,15 @@ float GetAutoPlayTime( void )
 //-----------------------------------------------------------------------------
 // Purpose: Keeps a global clock for "realtime" overlays to run from
 //-----------------------------------------------------------------------------
-float GetRealtimeTime( void )
+float GetRealtimeTime()
 {
 	// renamed static's so debugger doesn't get confused and show the wrong one
-	static int g_prevTicksRT;
-	static float g_timeRT;
+	static double g_prevRealtime;
+	static float g_timeRT = 0.0f;
 
-	int ticks = GetTickCount();
-	// limit delta so that float time doesn't overflow
-	if (g_prevTicksRT == 0)
-		g_prevTicksRT = ticks;
-
-	g_timeRT += ( (ticks - g_prevTicksRT) / 1000.0f );
-	g_prevTicksRT = ticks;
+	double currentTime = I_FloatTime();
+	g_timeRT += currentTime - g_prevRealtime;
+	g_prevRealtime = currentTime;
 
 	return g_timeRT;
 }
@@ -135,7 +128,7 @@ void StudioModel :: centerView( bool reset )
 	float dx = max[0] - min[0];
 	float dy = max[1] - min[1];
 	float dz = max[2] - min[2];
-	float d = max( dx, max( dy, dz ));
+	float d = Q_max( dx, Q_max( dy, dz ));
 
 	if( reset )
 	{
@@ -1606,8 +1599,8 @@ void StudioModel::DrawUVMapPoints()
 							glColor3f( 1.0f, 0.0f, 0.0f ); 
 						else glColor3f( 1.0f, 1.0f, 1.0f ); 
 
-						x = max( 0.0f, min( x, tex_w ));
-						y = max( 0.0f, min( y, tex_h ));
+						x = Q_max( 0.0f, Q_min( x, tex_w ));
+						y = Q_max( 0.0f, Q_min( y, tex_h ));
 					}
 					else
 					{

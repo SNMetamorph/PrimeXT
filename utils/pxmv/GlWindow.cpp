@@ -33,6 +33,7 @@
 #include "stringlib.h"
 #include "mdlviewer.h"
 #include "app_info.h"
+#include "build.h"
 #include "muzzle1.h"
 #include "muzzle2.h"
 #include "muzzle3.h"
@@ -86,7 +87,7 @@ int GlWindow :: handleEvent( mxEvent *event )
 		// clamp to 100fps
 		if( dt >= 0.0 && dt < 0.01 )
 		{
-			Sleep( Q_max( 10 - dt * 1000.0, 0 ) );
+			Sys_Sleep( Q_max( 10 - dt * 1000.0, 0 ) );
 			return 1;
 		}
 #endif
@@ -133,11 +134,14 @@ int GlWindow :: handleEvent( mxEvent *event )
 		oldly = g_viewerSettings.gLightVec[1];
 		oldx = event->x;
 		oldy = event->y;
-
-		// HACKHACK: reset focus to main window to catch hot-keys again
-		if( g_MDLViewer ) SetFocus( (HWND) g_MDLViewer->getHandle ());
 		g_viewerSettings.pause = true;
 
+#if XASH_WIN32
+		// HACKHACK: reset focus to main window to catch hot-keys again
+		if( g_MDLViewer ) {
+			SetFocus( (HWND) g_MDLViewer->getHandle ());
+		}
+#endif
 		return 1;
 	}
 	break;

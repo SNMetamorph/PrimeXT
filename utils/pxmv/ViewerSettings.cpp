@@ -23,8 +23,12 @@
 #include <time.h>
 #include "StudioModel.h"
 #include "stringlib.h"
-#include <io.h>
 #include "conprint.h"
+#include "filesystem.h"
+
+#if XASH_WIN32
+#include <io.h>
+#endif
 
 ViewerSettings g_viewerSettings;
 
@@ -281,7 +285,7 @@ static void AddPathToList( const char *path )
 	if( g_viewerSettings.numModelPathes >= 2048 )
 		return; // too many strings
 
-	Q_snprintf( modelPath, sizeof( modelPath ), "%s\\%s", g_viewerSettings.oldModelPath, path );
+	Q_snprintf( modelPath, sizeof( modelPath ), "%s/%s", g_viewerSettings.oldModelPath, path );
 
 	if( !ValidateModel( modelPath ))
 		return;
@@ -313,32 +317,28 @@ static void SortPathList( void )
 
 void ListDirectory( void )
 {
+	stringlist_t list;
 	char modelPath[256];
-	struct _finddata_t	n_file;
-	long hFile;
-
+	
 	COM_ExtractFilePath( g_viewerSettings.modelPath, modelPath );
-
 	if( !Q_stricmp( modelPath, g_viewerSettings.oldModelPath ))
 		return;	// not changed
 
 	Q_strncpy( g_viewerSettings.oldModelPath, modelPath, sizeof( g_viewerSettings.oldModelPath ));
-	Q_strncat( modelPath, "\\*.mdl", sizeof( modelPath ));
+	Q_strncat( modelPath, "/*.mdl", sizeof( modelPath ));
 	g_viewerSettings.numModelPathes = 0;
 
-	// ask for the directory listing handle
-	hFile = _findfirst( modelPath, &n_file );
-	if( hFile == -1 ) return; // how this possible?
+	stringlistinit( &list );
+	listdirectory( &list, modelPath, true );
 
-	// start a new chain with the the first name
-	AddPathToList( n_file.name );
+	if (list.numstrings < 1)
+		return;
 
-	// iterate through the directory
-	while( _findnext( hFile, &n_file ) == 0 )
-		AddPathToList( n_file.name );
-	_findclose( hFile );
-
+	for (int i = 0; i < list.numstrings; i++) {
+		AddPathToList(list.strings[i]);
+	}
 	SortPathList();
+	stringlistfreecontents( &list );
 }
 
 const char *LoadNextModel( void )
