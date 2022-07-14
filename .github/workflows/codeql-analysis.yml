@@ -57,7 +57,7 @@ jobs:
         sudo dpkg --add-architecture i386
         sudo apt-get update
         sudo apt-get install gcc-multilib g++-multilib cmake
-        sudo apt-get install qtbase5-dev:i386
+        sudo apt-get install qtbase5-dev
 
     - name: Configure CMake
       # Note the current convention is to use the -S and -B options here to specify source
