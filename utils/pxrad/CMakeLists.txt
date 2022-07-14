@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 project(pxrad)
+set(COMPATIBILITY_TYPE "p2" CACHE STRING "Compatibility type of pxrad (available values: 'p2', 'p1', 'goldsrc')")
 include(CompilerRuntime)
 
 # find and add source files
@@ -57,9 +58,45 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
 	IGNORE_SEARCH_IN_WADS=1
 	ALLOW_WADS_IN_PACKS=1
-	HLRAD_PSAVIOR=1
 	PXBSP_COMPILING=1 # to avoid header hell because of another mathlib implementation
 )
+
+# pxrad compile-time settings
+target_compile_definitions(${PROJECT_NAME} PRIVATE 
+	HLRAD_COMPRESS_TRANSFERS=1	# saves 80% memory
+	HLRAD_RIGHTROUND=1			# when you go down, when you go down-down!
+	HLRAD_TestLine_EDGE_FIX=1	# remove shadow artifacts in some cases
+)
+
+if(COMPATIBILITY_TYPE STREQUAL "p2")
+	target_compile_definitions(${PROJECT_NAME} PRIVATE 
+		HLRAD_PSAVIOR=1
+		HLRAD_REFLECTIVITY=1
+		HLRAD_DELUXEMAPPING=1			# store deluxe vectors for bump-mapping
+		#HLRAD_SHADOWMAPPING=0			# store shadow intensity for bump-mapping
+		HLRAD_VERTEXLIGHTING=1 			# vertex lighting for static models
+		HLRAD_LIGHTMAPMODELS=1			# calculate lightmaps on the models
+		HLRAD_AMBIENTCUBES=1			# leaf ambient lighting
+		HLRAD_COMPUTE_VISLIGHTMATRIX=1 	# compute vislight matrix
+		HLRAD_EXTERNAL_TEXTURES=1		# allow to loading external textures
+		#HLRAD_SHRINK_MEMORY=0			# TESTTEST
+		HLRAD_RAYTRACE=1				# TESTTEST
+	)
+elseif(COMPATIBILITY_TYPE STREQUAL "p1")
+	target_compile_definitions(${PROJECT_NAME} PRIVATE 
+		HLRAD_PARANOIA=1
+		HLRAD_PARANOIA_BUMP=1			# compute Paranoia-style bump (three lightstyles)
+		HLRAD_DELUXEMAPPING=1			# store deluxe vectors for bump-mapping
+		HLRAD_VERTEXLIGHTING=1			# vertex lighting for static models
+	)
+elseif(COMPATIBILITY_TYPE STREQUAL "goldsrc")
+	target_compile_definitions(${PROJECT_NAME} PRIVATE 
+		HLRAD_GOLDSRC=1
+		HLRAD_REFLECTIVITY=1
+		HLRAD_VERTEXLIGHTING=1			# vertex lighting for static models
+		HLRAD_AMBIENTCUBES=1			# leaf ambient lighting
+	)
+endif()
 
 if(NOT MSVC)
 	target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions) # GCC/Clang flag

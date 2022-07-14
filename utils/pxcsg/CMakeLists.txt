@@ -51,6 +51,11 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 	PXBSP_COMPILING=1 # hack to avoid header hell
 )
 
+# pxcsg compile-time settings
+target_compile_definitions(${PROJECT_NAME} PRIVATE 
+	HLCSG_SKYFIXEDSTYLE=1	# P2:Savior used to differentiate sky light from other light sources
+)
+
 if(NOT MSVC)
 	target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions) # GCC/Clang flag
 	target_compile_options(${PROJECT_NAME} PRIVATE -Wno-write-strings) # GCC/Clang flag

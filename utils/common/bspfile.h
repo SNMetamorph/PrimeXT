@@ -14,47 +14,11 @@
 #define TOOLNAME			"^1PrimeXT ^7Tools"
 #define VERSIONSTRING		"^5v.0.90^7"
 
-// compile-time configuration like ZHLT and VHLT
-#define HLCSG_SKYFIXEDSTYLE		// P2:Savior used to differentiate sky light from other light sources
-#define HLVIS_SORT_PORTALS		// sort portals before flow
-#define HLVIS_MERGE_PORTALS		// merge visibility between portals
-#define HLRAD_COMPRESS_TRANSFERS	// saves 80% memory
-#define HLRAD_RIGHTROUND		// when you go down, when you go down-down!
-#define HLRAD_TestLine_EDGE_FIX	// remove shadow artifacts in some cases
-
-// P2:Savior
-#ifdef HLRAD_PSAVIOR
-#define HLRAD_REFLECTIVITY
-#define HLRAD_DELUXEMAPPING		// store deluxe vectors for bump-mapping
-//#define HLRAD_SHADOWMAPPING		// store shadow intensity for bump-mapping
-#define HLRAD_VERTEXLIGHTING		// vertex lighting for static models
-#define HLRAD_LIGHTMAPMODELS		// calculate lightmaps on the models
-#define HLRAD_AMBIENTCUBES		// leaf ambient lighting
-#define HLRAD_COMPUTE_VISLIGHTMATRIX	// XashNT experiments
-#define HLRAD_EXTERNAL_TEXTURES	// allow to loading external textures
-#define HLRAD_SHRINK_MEMORY		// TESTTEST
-#define HLRAD_RAYTRACE		// TESTTEST
-#endif
-
-// Paranoia compatible
-#ifdef HLRAD_PARANOIA
-#define HLRAD_PARANOIA_BUMP		// compute Paranoia-style bump (three lightstyles)
-#define HLRAD_DELUXEMAPPING		// store deluxe vectors for bump-mapping
-#define HLRAD_VERTEXLIGHTING		// vertex lighting for static models
-#endif
-
-// GoldSrc compatible
-#ifdef HLRAD_GOLDSRC
-#define HLRAD_REFLECTIVITY
-#define HLRAD_VERTEXLIGHTING		// vertex lighting for static models
-#define HLRAD_AMBIENTCUBES		// leaf ambient lighting
-#endif
-
 // epsilon values (critical stuff)
-#define NORMAL_EPSILON   		1e-5
+#define NORMAL_EPSILON   	1e-5
 #define DIR_EPSILON			1e-4
-#define DIST_EPSILON       		4e-2
-#define EQUAL_EPSILON    		4e-3
+#define DIST_EPSILON       	4e-2
+#define EQUAL_EPSILON    	4e-3
 #define ON_EPSILON			4e-2
 #define POINT_EPSILON		(ON_EPSILON * 0.5)
 #define CSGCHOP_EPSILON		ON_EPSILON
