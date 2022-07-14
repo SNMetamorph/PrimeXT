@@ -76,6 +76,7 @@ public:
 	void setRenderMode (int mode);
 	void setOrientType (int mode);
 	void setFrameInfo (int startFrame, int endFrame);
+	void setPerspectiveProjectionMatrix( float fov_y );
 	// ACCESSORS
 	int getRenderMode () const { return g_viewerSettings.renderMode; }
 	int getCurrFrame () const { return d_currFrame; }

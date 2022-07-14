@@ -17,7 +17,7 @@
 #include <gl.h>
 #include <GL/glu.h>
 #include "SpriteModel.h"
-#include "GLWindow.h"
+#include "GlWindow.h"
 #include "ViewerSettings.h"
 #include "stringlib.h" 
 

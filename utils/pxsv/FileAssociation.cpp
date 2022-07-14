@@ -16,16 +16,13 @@
 // web:            http://www.swissquake.ch/chumbalum-soft/
 //
 #include "FileAssociation.h"
+#include "stringlib.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <mx.h>
 
-
-
 FileAssociation *g_FileAssociation = 0;
-
-
 
 FileAssociation::FileAssociation ()
 : mxWindow (0, 100, 100, 400, 210, "File Associations", mxWindow::Dialog)
@@ -253,9 +250,10 @@ FileAssociation::saveAssociations ()
 int
 FileAssociation::getMode (char *extension)
 {
+	Q_strnlwr(extension, extension, Q_strlen(extension));
 	for (int i = 0; i < 16; i++)
 	{
-		if (!strcmp (d_associations[i].extension, _strlwr (extension)))
+		if (!strcmp (d_associations[i].extension, extension))
 			return d_associations[i].association;
 	}
 
@@ -267,9 +265,10 @@ FileAssociation::getMode (char *extension)
 char *
 FileAssociation::getProgram (char *extension)
 {
+	Q_strnlwr(extension, extension, Q_strlen(extension));
 	for (int i = 0; i < 16; i++)
 	{
-		if (!strcmp (d_associations[i].extension, _strlwr (extension)))
+		if (!strcmp (d_associations[i].extension, extension))
 			return d_associations[i].program;
 	}
 

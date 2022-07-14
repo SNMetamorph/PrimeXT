@@ -279,6 +279,8 @@ SPRViewer::handleEvent (mxEvent *event)
 			if( g_viewerSettings.numSpritePathes > 0 )
 				loadSprite( LoadNextSprite( ));
 			break;
+#if XASH_WIN32
+		// TODO handle F5 hotkey on Linux too
 		case VK_F5:
 		{
 			bool oldUseWeaponOrigin = bUseWeaponOrigin;
@@ -286,8 +288,9 @@ SPRViewer::handleEvent (mxEvent *event)
 			bUseWeaponOrigin = oldUseWeaponOrigin;
 			break;
 		}
+#endif
 		case 'v':
-		case 'ì':
+		case 0xEC: // Ð¼ in cp1251
 			bUseWeaponOrigin = !mb->isChecked( IDC_OPTIONS_WEAPONORIGIN );
 			mb->setChecked( IDC_OPTIONS_WEAPONORIGIN, bUseWeaponOrigin );
 			break;

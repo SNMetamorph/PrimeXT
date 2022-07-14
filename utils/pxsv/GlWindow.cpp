@@ -26,6 +26,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "build.h"
+#include "cmdlib.h"
 #include "stringlib.h"
 #include "vector.h"
 #include "ViewerSettings.h"
@@ -84,11 +86,13 @@ int GlWindow::handleEvent (mxEvent *event)
 		oldtz = g_viewerSettings.trans[2];
 		oldx = event->x;
 		oldy = event->y;
-
-		// HACKHACK: reset focus to main window to catch hot-keys again
-		if( g_SPRViewer ) SetFocus( (HWND) g_SPRViewer->getHandle ());
 		g_viewerSettings.pause = true;
 
+#if XASH_WIN32
+		// HACKHACK: reset focus to main window to catch hot-keys again
+		if( g_SPRViewer ) 
+			SetFocus( (HWND) g_SPRViewer->getHandle ());
+#endif
 		break;
 
 	case mxEvent::MouseDrag:
@@ -121,7 +125,7 @@ int GlWindow::handleEvent (mxEvent *event)
 		// clamp to 100fps
 		if( dt >= 0.0 && dt < 0.01 )
 		{
-			Sleep( max( 10 - dt * 1000.0, 0 ) );
+			Sys_Sleep( Q_max( 10 - dt * 1000.0, 0 ) );
 			return 1;
 		}
 #endif
@@ -309,9 +313,7 @@ void GlWindow::draw ()
 		glPopMatrix ();
 	}
 
-	glMatrixMode (GL_PROJECTION);
-	glLoadIdentity ();
-	gluPerspective (65.0f, (GLfloat) w () / (GLfloat) h (), 0.1f, 131072.0f );
+	setPerspectiveProjectionMatrix(65.0f);
 
 	glMatrixMode (GL_MODELVIEW);
 	glPushMatrix ();
@@ -534,4 +536,26 @@ void GlWindow::setFrameInfo (int startFrame, int endFrame)
 	}
 
 	d_pol = 0;
+}
+
+void GlWindow::setPerspectiveProjectionMatrix( float fov_y )
+{
+	GLfloat	dest[16];
+	matrix4x4 projMatrix;
+	GLdouble xMin, xMax, yMin, yMax, zNear, zFar;
+	float aspect = (float)w() / h();
+
+	zFar = 131072.0f;	// don't cull giantic models (e.g. skybox models)
+	zNear = 0.1f;
+
+	yMax = zNear * tan( fov_y * M_PI / 360.0 );
+	yMin = -yMax;
+
+	xMin = yMin * aspect;
+	xMax = yMax * aspect;
+
+	projMatrix.CreateProjection( xMax, xMin, yMax, yMin, zNear, zFar );
+	projMatrix.CopyToArray(dest);
+	glMatrixMode( GL_PROJECTION );
+	glLoadMatrixf( dest );
 }
