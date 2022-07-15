@@ -94,8 +94,10 @@ if(MSVC)
 else()
 endif()
 
-# set static compiler runtime
-set_compiler_runtime(${PROJECT_NAME} STATIC)
+if(WIN32)
+	# so, we can't use static linking on Linux because of Qt
+	set_compiler_runtime(${PROJECT_NAME} STATIC)
+endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)
