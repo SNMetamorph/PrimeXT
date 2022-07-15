@@ -40,10 +40,10 @@ macro (set_compiler_runtime TARGET_NAME)
 			message (FATAL_ERROR "set_compiler_runtime(): unknown runtime type selected")
 		endif ()
 	else ()
-		# TODO implement this properly for other compilers, not only for GCC
+		# this should be tested on something other instead GCC
 		if (ARG_STATIC)
-			target_compile_options(${TARGET_NAME} PRIVATE -static-libstdc++ -static)
-			target_compile_options(${TARGET_NAME} PRIVATE -static-libstdc++ -static)
+			target_link_options(${TARGET_NAME} PRIVATE -static-libstdc++ -static-libgcc -static)
+			target_link_options(${TARGET_NAME} PRIVATE -static-libstdc++ -static-libgcc -static)
 		else ()
 			message (AUTHOR_WARNING "set_compiler_runtime(): desired runtime config is not STATIC, skipping")
 		endif ()
