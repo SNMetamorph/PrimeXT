@@ -27,24 +27,22 @@
 #include	"client.h"
 #include	"game.h"
 #include	"gamerules.h"
+#include	"build.h"
 
 // Holds engine functionality callbacks
 enginefuncs_t g_engfuncs;
 globalvars_t  *gpGlobals;
 server_physics_api_t g_physfuncs;
-#ifdef _WIN32
+
+#if XASH_WIN32
 #define GIVEFNPTRSTODLL_CALLDECL WINAPI
-BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-	return TRUE;
-}
 #else
 #define GIVEFNPTRSTODLL_CALLDECL
 #endif
 
 extern "C" 
 {
-	void DLLEXPORT GiveFnptrsToDll(enginefuncs_t *pengfuncsFromEngine, globalvars_t *pGlobals)
+	void DLLEXPORT GIVEFNPTRSTODLL_CALLDECL GiveFnptrsToDll(enginefuncs_t *pengfuncsFromEngine, globalvars_t *pGlobals)
 	{
 		memcpy(&g_engfuncs, pengfuncsFromEngine, sizeof(enginefuncs_t));
 		g_iXashEngineBuildNumber = (int)CVAR_GET_FLOAT("build"); // 0 for old builds or GoldSrc
@@ -124,6 +122,13 @@ NEW_DLL_FUNCTIONS gNewDLLFunctions =
 	GameDLLShutdown,		// pfnGameShutdown
 	ShouldCollide,		// pfnShouldCollide
 };
+
+#if XASH_WIN32
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+	return TRUE;
+}
+#endif
 
 int GetEntityAPI( DLL_FUNCTIONS *pFunctionTable, int interfaceVersion )
 {
