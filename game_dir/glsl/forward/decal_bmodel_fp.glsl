@@ -58,6 +58,8 @@ void main( void )
 {
 	MaterialData mat;
 	LightingData lighting;
+	lighting.diffuse = vec3(0.0);
+	lighting.specular = vec3(0.0);
 	
 #if defined( ALPHA_TEST )
 	if( colormap2D( u_ColorMap, var_TexDiffuse.zw ).a <= BMODEL_ALPHA_THRESHOLD )
