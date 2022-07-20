@@ -255,6 +255,26 @@ typedef struct enginefuncs_s
 	qboolean	(*pfnVoice_SetClientListening)(int iReceiver, int iSender, qboolean bListen);
 
 	const char *(*pfnGetPlayerAuthId)		( edict_t *e );
+
+	void *(*pfnSequenceGet)				(const char *fileName, const char *entryName);
+	void *(*pfnSequencePickSentence)		(const char *groupName, int pickMethod, int *picked);
+	int			(*pfnGetFileSize)						(const char *filename);
+	unsigned int (*pfnGetApproxWavePlayLen)				(const char *filepath);
+	int			(*pfnIsCareerMatch)						(void);
+	int			(*pfnGetLocalizedStringLength)			(const char *label);
+	void		(*pfnRegisterTutorMessageShown)			(int mid);
+	int			(*pfnGetTimesTutorMessageShown)			(int mid);
+	void		(*pfnProcessTutorMessageDecayBuffer)	(int *buffer, int bufferLength);
+	void		(*pfnConstructTutorMessageDecayBuffer)	(int *buffer, int bufferLength);
+	void		(*pfnResetTutorMessageDecayData)		(void);
+
+	// three useable funcs
+	void	(*pfnQueryClientCvarValue)(const edict_t *player, const char *cvarName);
+	void	(*pfnQueryClientCvarValue2)(const edict_t *player, const char *cvarName, int requestID);
+	int	(*pfnCheckParm)(char *parm, char **ppnext);
+
+	// added in 8279
+	edict_t *(*pfnPEntityOfEntIndexAllEntities)(int iEntIndex);
 } enginefuncs_t;
 // ONLY ADD NEW FUNCTIONS TO THE END OF THIS STRUCT.  INTERFACE VERSION IS FROZEN AT 138
 	
