@@ -24,10 +24,18 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 )
 
 if(NOT MSVC)
+	include(CheckCCompilerFlag)
+
 	target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions) # GCC/Clang flag
 	target_compile_options(${PROJECT_NAME} PRIVATE -Wno-write-strings) # GCC/Clang flag
 	target_compile_options(${PROJECT_NAME} PRIVATE -fvisibility=hidden) # GCC/Clang flag
-	target_compile_options(${PROJECT_NAME} PRIVATE -msse2) # enabled SSE2 for build (squish uses it)
+	CHECK_C_COMPILER_FLAG(-msse2 USE_SSE)
+
+	if( USE_SSE )
+		target_compile_options(${PROJECT_NAME} PRIVATE -msse2) # enabled SSE2
+		target_compile_definitions(${PROJECT_NAME} PRIVATE SQUISH_USE_SSE=2)
+	endif()
+
 	target_compile_definitions(${PROJECT_NAME} PRIVATE _LINUX=1 LINUX=1) # It seems enough for all non-Win32 systems
 	target_compile_definitions(${PROJECT_NAME} PRIVATE stricmp=strcasecmp strnicmp=strncasecmp)
 	if(NOT MINGW)
