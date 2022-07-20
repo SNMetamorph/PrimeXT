@@ -251,7 +251,7 @@ void R_AddSkyBoxSurface( msurface_t *fa )
 	}
 }
 
-static void GL_DrawSkySide( int skyside )
+void GL_DrawSkySide( int skyside )
 {
 	pglBegin( GL_QUADS );
 		MakeSkyVec( RI->view.skyMins[0][skyside], RI->view.skyMins[1][skyside], skyside );
@@ -261,7 +261,7 @@ static void GL_DrawSkySide( int skyside )
 	pglEnd();
 }
 
-static void GL_DrawSkySide( word hProgram, int skyside )
+void GL_DrawSkySide( word hProgram, int skyside )
 {
 	if( hProgram <= 0 )
 	{

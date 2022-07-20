@@ -30,6 +30,8 @@ GNU General Public License for more details.
 #include "r_weather.h"
 #include "tri.h"
 
+#include "gl_postprocess.h"
+
 ref_globals_t	tr;
 ref_instance_t	*RI = NULL;
 ref_stats_t	r_stats;
@@ -40,6 +42,9 @@ model_t		*worldmodel = NULL;
 float		gldepthmin, gldepthmax;
 int		sunSize[MAX_SHADOWMAPS] = { 1024, 1024, 1024, 1024 };
 bool g_fRenderInitialized = false;
+
+// The effect that requires velocity generation updates this variable to the current frame
+int visVelocityFrame = 0;
 
 bool R_SkyIsVisible( void )
 {
@@ -323,7 +328,7 @@ R_SetupViewCache
 check for changes and build visibility
 ===============
 */
-static void R_SetupViewCache( const ref_viewpass_t *rvp )
+ void R_SetupViewCache( const ref_viewpass_t *rvp )
 {
 	const ref_overview_t *ov = GET_OVERVIEW_PARMS();
 	model_t *model = worldmodel;
@@ -928,6 +933,52 @@ void R_RenderTransList( void )
 	GL_DebugGroupPop();
 }
 
+// used on R_RenderVelocityMap.
+extern CBasePostEffects	post;
+void R_RenderVelocityBrushList();
+void GL_DrawSkySide( int skyside );
+
+/**
+ * @brief Velocity Map to effects like Motion Blur
+ * 
+ */
+void R_RenderVelocityMap()
+{
+	// Check is velocity map needed
+	if (visVelocityFrame != tr.realframecount) {
+		return;
+	}
+
+	pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, post.motion_blur_fbo->id);
+
+	GL_DebugGroupPush(__FUNCTION__);
+	GL_Blend( GL_FALSE );
+
+	GL_BindShader( &glsl_programs[post.velocityShader] );
+	BEGIN_SHADER_UNIFORMS(RI->currentshader);
+	USE_SHADER_UNIFORM(UT_PREVMODELVIEWPROJECT, post.prev_model_view_project);
+	END_SHADER_UNIFORMS();
+
+	// draw simple skybox
+	for (int i = 0; i < 6; i++)
+	{
+		if( RI->view.skyMins[0][i] >= RI->view.skyMaxs[0][i] || RI->view.skyMins[1][i] >= RI->view.skyMaxs[1][i] )
+			continue;
+
+		GL_DrawSkySide( i );
+	}
+
+	R_RenderVelocityBrushList();
+	GL_BindShader( &glsl_programs[post.studioVelocityShader] );
+	g_StudioRenderer.RenderRawStudioList();
+	GL_DebugGroupPop();
+
+	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
+	
+	// Copy old MVP
+	RI->view.worldProjectionMatrix.CopyToArray( post.prev_model_view_project );
+}
+
 /*
 ===============
 R_RenderScene
@@ -963,6 +1014,8 @@ void R_RenderScene( const ref_viewpass_t *rvp, RefParams params )
 	R_RenderSurfOcclusionList();
 	R_DrawParticles( false );
 	R_RenderDebugStudioList( false );
+
+	R_RenderVelocityMap();
 
 	GL_CheckForErrors();
 
@@ -1006,8 +1059,10 @@ void R_RenderDeferredScene( const ref_viewpass_t *rvp, RefParams params )
 	R_DrawSkyBox();
 	R_RenderDeferredBrushList();
 	R_RenderDeferredStudioList();
+
 	R_PushRefState();
 	RI->params = params;
+
 	R_DrawViewModel();
 	R_PopRefState();
 	GL_CleanupDrawState();

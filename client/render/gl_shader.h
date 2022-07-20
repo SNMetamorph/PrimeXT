@@ -36,6 +36,22 @@ GNU General Public License for more details.
 #define SHADER_STATUS_OK		( SHADER_PROGRAM_LINKED|SHADER_VERTEX_COMPILED|SHADER_FRAGMENT_COMPILED )
 #define CheckShader( shader )		( shader && shader->status == SHADER_STATUS_OK )
 
+#define BEGIN_SHADER_UNIFORMS(shader) for( int i = 0; i < shader->numUniforms; i++ ) \
+	{ \
+		uniform_t *u = &shader->uniforms[i]; \
+		switch( u->type ) \
+		{
+
+#define USE_SHADER_UNIFORM(type, ...) case type: \
+			u->SetValue( __VA_ARGS__ ); \
+			break;
+
+#define END_SHADER_UNIFORMS() default: \
+			ALERT( at_error, "%s: unhandled uniform %s\n", RI->currentshader->name, u->name ); \
+			break; \
+		} \
+	}
+
 enum
 {
 	ATTR_INDEX_POSITION = 0,
@@ -114,6 +130,7 @@ typedef enum
 	UT_MODELMATRIX,
 	UT_REFLECTMATRIX,
 	UT_BONESARRAY,
+	UT_PREVBONESARRAY,
 	UT_BONEQUATERNION,
 	UT_BONEPOSITION,
 	UT_SCREENSIZEINV,
@@ -171,6 +188,8 @@ typedef enum
 	UT_LIGHTSCALE,
 	UT_LIGHTTHRESHOLD,
 	UT_NUMVISIBLEMODELS,
+	UT_TEXVELOCITY,
+	UT_PREVMODELVIEWPROJECT,
 	UT_UNDEFINED,
 } uniformType_t;
 

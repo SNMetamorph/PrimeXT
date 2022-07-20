@@ -518,6 +518,7 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	R_RenderDebugStudioList( true ); // 3D
 	RenderSunShafts();			// 2D
 	RenderMonochrome();			// 2D
+	RenderMotionBlur();     // 2D
 	R_ShowLightMaps();			// 2D
 	
 	if (hdr_rendering) {
@@ -540,7 +541,6 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	GL_DebugGroupPop();
 	tr.params_changed = false;
 	tr.realframecount++;
-
 }
 
 /*

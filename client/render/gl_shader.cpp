@@ -254,6 +254,7 @@ static uniformTable_t glsl_uniformTable[] =
 { "u_ModelMatrix",		UT_MODELMATRIX,		0 },
 { "u_ReflectMatrix",	UT_REFLECTMATRIX,		0 },
 { "u_BonesArray",		UT_BONESARRAY,		0 },	
+{ "u_PrevBonesArray",		UT_PREVBONESARRAY,		0 },	
 { "u_BoneQuaternion",	UT_BONEQUATERNION,		0 },
 { "u_BonePosition",		UT_BONEPOSITION,		0 },
 { "u_ScreenSizeInv",	UT_SCREENSIZEINV,		UFL_GLOBAL_PARM },
@@ -311,6 +312,8 @@ static uniformTable_t glsl_uniformTable[] =
 { "u_LightScale",		UT_LIGHTSCALE,		UFL_GLOBAL_PARM },
 { "u_LightThreshold",	UT_LIGHTTHRESHOLD,		UFL_GLOBAL_PARM },
 { "u_NumVisibleModels",	UT_NUMVISIBLEMODELS,	UFL_GLOBAL_PARM },
+{ "u_TexVelocity",	UT_TEXVELOCITY,	UFL_TEXTURE_UNIT },
+{ "u_PrevModelViewProjectionMatrix",	UT_PREVMODELVIEWPROJECT,	UFL_GLOBAL_PARM },
 { "u_Undefined",		UT_UNDEFINED,		0 },
 };
 

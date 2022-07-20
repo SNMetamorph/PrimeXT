@@ -21,6 +21,9 @@ public:
 	word	luminanceDownscaleShader;
 	word	blurMipShader;
 	word	bloomShader;
+	word	motionBlurShader;
+	word  velocityShader;
+	word  studioVelocityShader;
 
 	int	target_rgb[2];
 	float	grayScaleFactor;
@@ -49,14 +52,22 @@ public:
 	Vector	m_vecSunLightColor;
 	Vector	m_vecSunPosition;
 
+	// motion blur
+	gl_drawbuffer_t *motion_blur_fbo;
+	int motion_blur_texture;
+
+	GLfloat		prev_model_view_project[16];
+
 	void InitializeTextures();
 	void InitializeShaders();
 
+	void RequestVelocityMap();
 	void RequestScreenColor();
 	void RequestScreenDepth();
 	void RequestTargetCopy(int slot);
 	bool ProcessDepthOfField();
 	bool ProcessSunShafts();
+	bool ProcessMotionBlur();
 	void SetNormalViewport();
 	void SetTargetViewport();
 	bool Begin();
@@ -72,4 +83,5 @@ private:
 	void InitTargetColor(int slot);
 	void InitDepthOfField();
 	void InitAutoExposure();
+	void InitMotionBlur();
 };
