@@ -48,6 +48,7 @@ extern cvar_t *gl_hdr;
 extern cvar_t *r_tonemap;
 extern cvar_t *r_bloom;
 extern cvar_t *r_bloom_scale;
+extern cvar_t *r_motionblur;
 extern cvar_t *r_dof;
 extern cvar_t *r_dof_hold_time;
 extern cvar_t *r_dof_change_time;

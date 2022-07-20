@@ -383,6 +383,8 @@ private:
 		matrix3x4			m_pwpnbones[MAXSTUDIOBONES];
 		Vector4D			m_glstudiobones[MAXSTUDIOBONES*3];	// GLSL-friendly compacted matrix4x3
 		Vector4D			m_glweaponbones[MAXSTUDIOBONES*3];	// GLSL-friendly compacted matrix4x3
+		// Optimization ?
+		Vector4D			m_glprevbones[MAXSTUDIOBONES*3];	// GLSL-friendly compacted matrix4x3
 
 		// GLSL cached arrays
 		Vector4D			m_studioquat[MAXSTUDIOBONES];
@@ -466,6 +468,7 @@ private:
 	void UpdateInstanceMaterials( void );
 	void ClearInstanceData( bool create );
 
+	void DrawRawSingleMesh( CSolidEntry *entry, bool force );
 	// set uniforms data for specified shader
 	void DrawSingleMesh( CSolidEntry *mesh, bool force );
 
@@ -620,6 +623,8 @@ public:
 	void	RenderDeferredStudioList( void );
 
 	void	RenderSolidStudioList( void );
+
+	void RenderRawStudioList( void );
 
 	void	RenderShadowStudioList( void );
 

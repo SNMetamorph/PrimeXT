@@ -3507,6 +3507,92 @@ void R_RenderDeferredBrushList( void )
 R_RenderSolidBrushList
 ================
 */
+void R_RenderVelocityBrushList()
+{
+  int			cached_matrix = -1;
+	material_t *cached_material = NULL;
+	qboolean	flush_buffer = false;
+	int			startv, endv;
+
+	if( !RI->frame.solid_faces.Count() )
+		return;
+
+	GL_DebugGroupPush(__FUNCTION__);
+	pglBindVertexArray( world->vertex_array_object );
+	numTempElems = 0;
+
+	for( int i = 0; i < RI->frame.solid_faces.Count(); i++ )
+	{
+		CSolidEntry *entry = &RI->frame.solid_faces[i];
+
+		if (entry->m_bDrawType != DRAWTYPE_SURFACE)
+			continue;
+
+		msurface_t *surf = entry->m_pSurf;
+		mextrasurf_t *esurf = surf->info;
+		cl_entity_t *entity = RI->currententity = esurf->parent;
+		RI->currentmodel = entity->model;
+		
+		if (!entry->m_hProgram)
+		  continue;
+
+		if (cached_matrix != esurf->parent->hCachedMatrix)
+			flush_buffer = true;
+
+		if( flush_buffer )
+		{
+			if( numTempElems )
+			{
+				gl_state_t *glm = GL_GetCache( entity->hCachedMatrix );
+				//BEGIN_SHADER_UNIFORMS(RI->currentshader);
+				// USE_SHADER_UNIFORM(UT_PREVMODELVIEWPROJECT, post.prev_model_view_project);
+				//USE_SHADER_UNIFORM(UT_MODELMATRIX, &glm->modelMatrix[0] );
+				//END_SHADER_UNIFORMS();
+
+				pglDrawRangeElementsEXT( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
+				r_stats.c_total_tris += (numTempElems / 3);
+				r_stats.num_flushes++;
+				numTempElems = 0;
+			}
+
+			flush_buffer = false;
+			startv = MAX_MAP_ELEMS;
+			endv = 0;
+		}
+
+		// now cache values
+		cached_matrix = esurf->parent->hCachedMatrix;
+		// cached_material = mat;
+
+		//if( numTempElems == 0 ) // new chain has started, apply uniforms
+		//	R_SetSurfaceUniforms( entry->m_hProgram, entry->m_pSurf, ( i == 0 ));
+
+		startv = Q_min( startv, esurf->firstvertex );
+		endv = Q_max( esurf->firstvertex + esurf->numverts, endv );
+
+		R_DrawSurface( esurf );
+}
+
+	if( numTempElems )
+	{
+		pglDrawRangeElementsEXT( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
+		r_stats.c_total_tris += (numTempElems / 3);
+		r_stats.num_flushes++;
+		startv = MAX_MAP_ELEMS;
+		numTempElems = 0;
+		endv = 0;
+	}
+
+	// R_RenderShadowGrassOnList();
+	GL_CleanupDrawState();
+	GL_DebugGroupPop();
+}
+
+/*
+================
+R_RenderSolidBrushList
+================
+*/
 void R_RenderSolidBrushList( void )
 {
 	cl_entity_t	*cached_entity = NULL;

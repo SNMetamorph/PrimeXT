@@ -31,6 +31,8 @@ GNU General Public License for more details.
 #include "gl_world.h"
 #include "gl_cvars.h"
 
+#include "gl_postprocess.h"
+
 #define LIGHT_INTERP_UPDATE	0.1f
 #define LIGHT_INTERP_FACTOR	(1.0f / LIGHT_INTERP_UPDATE)
 
@@ -3193,6 +3195,31 @@ word CStudioModelRenderer :: ShaderSceneDepth( mstudiomaterial_t *mat, bool bone
 	return shaderNum;
 }
 
+extern CBasePostEffects	post;
+void CStudioModelRenderer :: DrawRawSingleMesh( CSolidEntry *entry, bool force )
+{
+	vbomesh_t *pMesh = entry->m_pMesh;
+
+	cl_entity_t *e = RI->currententity = entry->m_pParentEntity;
+	ModelInstance_t *inst = m_pModelInstance = &m_ModelInstances[e->modelhandle];
+
+	bool isWeaponModel = entry->m_pRenderModel == IEngineStudio.GetModelByIndex( e->curstate.weaponmodel );
+	int numBones = Q_min( m_pStudioHeader->numbones, glConfig.max_skinning_bones );
+
+	BEGIN_SHADER_UNIFORMS(RI->currentshader);
+	USE_SHADER_UNIFORM(UT_PREVMODELVIEWPROJECT, post.prev_model_view_project);
+	USE_SHADER_UNIFORM(UT_MODELMATRIX, &inst->m_glmatrix[0]);
+	USE_SHADER_UNIFORM(UT_VIEWORIGIN, RI->view.origin.x, RI->view.origin.y, RI->view.origin.z);
+	USE_SHADER_UNIFORM(UT_BONESARRAY, isWeaponModel ? &inst->m_glweaponbones[0][0] : &inst->m_glstudiobones[0][0], numBones * 3);
+	USE_SHADER_UNIFORM(UT_PREVBONESARRAY, &inst->m_glprevbones[0][0], numBones * 3);
+	END_SHADER_UNIFORMS();
+
+	// just draw mesh and out
+	DrawMeshFromBuffer( pMesh );
+
+	memcpy(inst->m_glprevbones, isWeaponModel ? inst->m_glweaponbones : inst->m_glstudiobones, sizeof(Vector4D) * numBones * 3);
+}
+
 void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force )
 {
 	bool	cache_has_changed = false;
@@ -3658,6 +3685,33 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force )
 	DrawMeshFromBuffer( pMesh );
 }
 
+void CStudioModelRenderer :: RenderRawStudioList( void )
+{
+	if( !RI->frame.solid_meshes.Count() )
+		return;
+
+	GL_DepthMask( GL_TRUE );
+
+	RI->currententity = NULL;
+	RI->currentmodel = NULL;
+	m_pCurrentMaterial = NULL;
+
+	int i;
+	for( i = 0; i < RI->frame.solid_meshes.Count(); i++ )
+	{
+		CSolidEntry *entry = &RI->frame.solid_meshes[i];
+		if( entry->m_bDrawType != DRAWTYPE_MESH )
+			continue;
+		if( m_iDrawModelType == DRAWSTUDIO_NORMAL )
+		{
+			GL_DepthRange( gldepthmin, gldepthmax );
+			GL_ClipPlane( true );
+		}
+
+		DrawRawSingleMesh( entry, ( i == 0 ));
+	}
+}
+
 void CStudioModelRenderer :: RenderSolidStudioList( void )
 {
 	if( !RI->frame.solid_meshes.Count() )
@@ -3694,6 +3748,14 @@ void CStudioModelRenderer :: RenderSolidStudioList( void )
 			GL_ClipPlane( true );
 		}
 
+	//  GL_BindShader( &glsl_programs[post.studioVelocityShader] );
+
+	//BEGIN_SHADER_UNIFORMS(RI->currentshader);
+	//USE_SHADER_UNIFORM(UT_PREVMODELVIEWPROJECT, post.prev_model_view_project);
+	//END_SHADER_UNIFORMS();
+
+//DrawRawSingleMesh( entry, ( i == 0 ));
+//	GL_BindShader( NULL );
 		DrawSingleMesh( entry, ( i == 0 ));
 	}
 

@@ -978,6 +978,7 @@ void RenderUnderwaterBlur();
 void RenderNerveGasBlur();
 void RenderMonochrome();
 void RenderSunShafts();
+void RenderMotionBlur();
 void RenderBloom();
 void RenderTonemap();
 void RenderFSQ(int wide, int tall);

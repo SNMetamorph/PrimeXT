@@ -12,8 +12,10 @@
 #include "gl_world.h"
 #include "gl_cvars.h"
 #include "gl_debug.h"
+#include "gl_studio.h"
 
-static CBasePostEffects	post;
+CBasePostEffects	post;
+
 void V_RenderPostEffect(word hProgram);
 
 void CBasePostEffects::InitializeTextures()
@@ -23,6 +25,7 @@ void CBasePostEffects::InitializeTextures()
 	InitTargetColor(0);
 	InitDepthOfField();
 	InitAutoExposure();
+	InitMotionBlur();
 }
 
 void CBasePostEffects::InitializeShaders()
@@ -46,10 +49,13 @@ void CBasePostEffects::InitializeShaders()
 
 	// prepare sunshafts
 	genSunShafts = GL_FindShader("postfx/genshafts", "postfx/generic", "postfx/genshafts");
+drawSunShafts = GL_FindShader("postfx/drawshafts", "postfx/generic", "postfx/drawshafts");
 
-	// render sunshafts
-	drawSunShafts = GL_FindShader("postfx/drawshafts", "postfx/generic", "postfx/drawshafts");
-
+	// render motion blur
+	motionBlurShader = GL_FindShader("postfx/motionblur", "postfx/generic", "postfx/motionblur");
+	velocityShader = GL_FindShader("postfx/vertex", "postfx/vertex", "postfx/vertex");
+	studioVelocityShader = GL_FindShader("forward/velocity_studio", "forward/velocity_studio", "postfx/vertex");
+	
 	// tonemapping
 	if (CVAR_TO_BOOL(r_show_luminance)) {
 		GL_SetShaderDirective(options, "DEBUG_LUMINANCE");
@@ -119,6 +125,14 @@ void CBasePostEffects :: InitTargetColor( int slot )
 		tex_flags = TF_IMAGE;
 
 	target_rgb[slot] = CREATE_TEXTURE(va( "*target%i", slot ), TARGET_SIZE, TARGET_SIZE, NULL, tex_flags);
+}
+
+extern CStudioModelRenderer g_StudioRenderer;
+extern void R_SetupViewCache( const ref_viewpass_t *rvp );
+void DrawVelocityMap();
+void CBasePostEffects :: RequestVelocityMap( void )
+{
+	DrawVelocityMap();
 }
 
 void CBasePostEffects :: RequestScreenColor( void )
@@ -284,7 +298,6 @@ void CBasePostEffects :: SetTargetViewport( void )
 
 void CBasePostEffects :: InitDepthOfField( void )
 {
-
 }
  
 void CBasePostEffects::InitAutoExposure()
@@ -322,6 +335,18 @@ void CBasePostEffects::InitAutoExposure()
 		GL_AttachColorTextureToFBO(exposure_storage_fbo[i], exposure_storage_texture[i], 0);
 		GL_CheckFBOStatus(exposure_storage_fbo[i]);
 	}
+}
+
+void CBasePostEffects::InitMotionBlur()
+{
+	FREE_TEXTURE(motion_blur_texture);
+	GL_FreeDrawbuffer(motion_blur_fbo);
+	motion_blur_fbo = GL_AllocDrawbuffer("*motion_blur_fbo", glState.width, glState.height, 0);
+	motion_blur_texture = CREATE_TEXTURE( "*motion_blur", glState.width, glState.height, NULL, TF_COLORBUFFER | TF_SCREEN | TF_NOCOMPARE ); 
+	GL_AttachColorTextureToFBO(motion_blur_fbo, motion_blur_texture, 0, 0, 0);
+	GL_CheckFBOStatus(motion_blur_fbo);
+
+	pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, post.motion_blur_fbo->id);
 }
 
 bool CBasePostEffects :: ProcessDepthOfField( void )
@@ -467,6 +492,8 @@ void InitPostEffects()
 	r_tonemap = CVAR_REGISTER("r_tonemap", "1", FCVAR_ARCHIVE);
 	r_bloom = CVAR_REGISTER("r_bloom", "1", FCVAR_ARCHIVE);
 	r_bloom_scale = CVAR_REGISTER("r_bloom_scale", "0.7", FCVAR_ARCHIVE);
+	r_motionblur = CVAR_REGISTER("r_motionblur", "1", FCVAR_ARCHIVE);
+
 	memset( &post, 0, sizeof( post ));
 	post.InitializeShaders();
 }
@@ -641,6 +668,16 @@ void V_RenderPostEffect( word hProgram )
 		case UT_FOGPARAMS:
 			u->SetValue( tr.fogColor[0], tr.fogColor[1], tr.fogColor[2], tr.fogDensity );
 			break;
+		case UT_TEXVELOCITY:
+			// u->SetValue( tr.skyboxTextures );
+			u->SetValue( post.motion_blur_texture );
+			break;
+		case UT_PREVMODELVIEWPROJECT:
+			u->SetValue( post.prev_model_view_project );
+			break;
+		case UT_MODELVIEWPROJECT:
+			u->SetValue( RI->glstate.modelviewProjectionMatrix );
+			break;
 		default:
 			ALERT( at_error, "%s: unhandled uniform %s\n", RI->currentshader->name, u->name );
 			break;
@@ -757,6 +794,24 @@ void RenderSunShafts( void )
 	// back to normal size
 	post.SetNormalViewport();
 	V_RenderPostEffect( post.drawSunShafts );
+	post.End();
+	GL_DebugGroupPop();
+}
+
+extern int visVelocityFrame;
+void RenderMotionBlur( void )
+{
+	if (!CVAR_TO_BOOL(r_motionblur))
+		return;
+
+	// The first frame of mblur will work without a texture, but then it will be created. I want RP to control such moments.
+	visVelocityFrame = tr.realframecount + 1;
+
+	if( !post.Begin()) return;
+
+	GL_DebugGroupPush(__FUNCTION__);
+	post.RequestScreenColor();
+	V_RenderPostEffect( post.motionBlurShader );
 	post.End();
 	GL_DebugGroupPop();
 }
