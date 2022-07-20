@@ -96,7 +96,9 @@ endif()
 
 if(WIN32)
 	# so, we can't use static linking on Linux because of Qt
-	set_compiler_runtime(${PROJECT_NAME} STATIC)
+	if(ENABLE_STATIC_LINKING)
+		set_compiler_runtime(${PROJECT_NAME} STATIC)
+	endif()
 endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
