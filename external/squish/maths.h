@@ -26,8 +26,6 @@
 #ifndef SQUISH_MATHS_H
 #define SQUISH_MATHS_H
 
-#define SQUISH_USE_SSE 2
-
 #include <cmath>
 #include <algorithm>
 #include "config.h"
