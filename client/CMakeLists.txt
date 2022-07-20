@@ -135,7 +135,9 @@ if(MSVC)
 endif()
 
 # set static compiler runtime
-set_compiler_runtime(${PROJECT_NAME} STATIC)
+if(ENABLE_STATIC_LINKING)
+	set_compiler_runtime(${PROJECT_NAME} STATIC)
+endif()
 
 # linking vgui library if needed
 if(ENABLE_VGUI_COMPATIBILITY)
