@@ -8,7 +8,7 @@
 
 Modern SDK for Xash3D engine, with extended physics (using PhysX), improved graphics (dynamic lighting with shadows, HDR, cubemap/screen-space reflections, PBR support, parallax-mapping, bloom, color correction, SSAO, etc). 
 Based on XashXT and Spirit Of Half-Life and includes all features and entities from it.  
-At this time, project in primal state: it somehow works, but there is a lot of thing to fix/implement next.  
+At this time, project in primal state: it somehow works, but there is a lot of things to fix/implement next.  
 We need interested people to work on this SDK with us! Main goals of this project is:
 - Optimizing world rendering as much as possible
 - Implementing HDR rendering pipeline
@@ -23,7 +23,7 @@ Therefore, you can tell suggestion about what should be documented at first.
 You can discuss with community members and ask questions in our [Discord](https://discord.gg/BxQUMUescJ) server.
 
 ## Installation
-Testing builds available for everybody. Detailed installation guide you can read on our documentation site: available on [english](https://snmetamorph.github.io/PrimeXT/docs/eng/installation) and [russian](https://snmetamorph.github.io/PrimeXT/docs/rus/installation).
+Detailed installation guide you can read on our documentation site: available on [english](https://snmetamorph.github.io/PrimeXT/docs/eng/installation) and [russian](https://snmetamorph.github.io/PrimeXT/docs/rus/installation).
 
 ## Building
 > NOTE: Never download sources from GitHub manually, because it doesn't include external depedencies, you SHOULD use Git clone instead.
@@ -35,17 +35,24 @@ cd PrimeXT
 ```
 Next steps will be vary according to your development environment and tools.
 ### Windows (using Visual Studio)
-3) Open cloned repository directory as CMake folder with Visual Studio (project tested with VS2019, but more later version will works also)<br>
-4) Select desired build configuration, usually it's `x86-Debug`
+3) Open cloned repository directory as CMake folder with Visual Studio (project tested with VS2019, but more later version will works also)  
+4) Select desired build configuration, highly recommended to use `x86-Debug`
 5) In `Build` menu select `Build solution`, or you can use `Ctrl+Shift+B` hotkey instead. Wait for completion.
 6) Compiled binaries locates in `build\x\bin` and `build\x\devkit`, where `x` is your build configuration name
 ### Linux (using CMake)
-3) Install some build depedencies: `sudo apt-get install gcc-multilib g++-multilib cmake`
+Tested on Ubuntu 18.04 and Ubuntu 22.04. Probably it'll work on Debian too.  
+3) Install build depedencies
+```
+sudo dpkg --add-architecture i386
+sudo apt-get update
+sudo apt-get install gcc-multilib g++-multilib cmake
+sudo apt-get install qtbase5-dev:i386
+```
 4) Prepare build environment and configure project
 ```
 cmake -E make_directory ./build
 cd build
-cmake .. -DBUILD_UTILS=OFF -DENABLE_PHYSX=OFF
+cmake .. -DCMAKE_C_FLAGS="-m32" -DCMAKE_CXX_FLAGS="-m32" -DENABLE_PHYSX=OFF
 ```
 5) Build project: `cmake --build . --config Debug`
 6) Compiled binaries will be located in `build` and `build\primext\bin` directories
