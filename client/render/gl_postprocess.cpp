@@ -129,11 +129,6 @@ void CBasePostEffects :: InitTargetColor( int slot )
 
 extern CStudioModelRenderer g_StudioRenderer;
 extern void R_SetupViewCache( const ref_viewpass_t *rvp );
-void DrawVelocityMap();
-void CBasePostEffects :: RequestVelocityMap( void )
-{
-	DrawVelocityMap();
-}
 
 void CBasePostEffects :: RequestScreenColor( void )
 {
@@ -674,9 +669,6 @@ void V_RenderPostEffect( word hProgram )
 			break;
 		case UT_PREVMODELVIEWPROJECT:
 			u->SetValue( post.prev_model_view_project );
-			break;
-		case UT_MODELVIEWPROJECT:
-			u->SetValue( RI->glstate.modelviewProjectionMatrix );
 			break;
 		default:
 			ALERT( at_error, "%s: unhandled uniform %s\n", RI->currentshader->name, u->name );

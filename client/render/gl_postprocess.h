@@ -61,7 +61,6 @@ public:
 	void InitializeTextures();
 	void InitializeShaders();
 
-	void RequestVelocityMap();
 	void RequestScreenColor();
 	void RequestScreenDepth();
 	void RequestTargetCopy(int slot);
