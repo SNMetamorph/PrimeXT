@@ -44,6 +44,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
 	HLVIS_SORT_PORTALS=1	# sort portals before flow
 	#HLVIS_MERGE_PORTALS=1	# merge visibility between portals
+	#HLVIS_ENABLE_CHECK_STACK=1 # enables CheckStack() call
 )
 
 if(NOT MSVC)

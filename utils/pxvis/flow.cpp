@@ -17,7 +17,6 @@ int	c_vistest, c_mighttest;
 int	c_mightseeupdate;
 int	active;
 
-#ifdef _DEBUG
 void CheckStack( leaf_t *leaf, threaddata_t *thread )
 {
 	pstack_t	*p, *p2;
@@ -34,7 +33,6 @@ void CheckStack( leaf_t *leaf, threaddata_t *thread )
 		}
 	}
 }
-#endif
 
 /*
 ==============
@@ -193,7 +191,7 @@ inline static void RecursiveLeafFlow( int leafnum, threaddata_t *thread, pstack_
 	leaf = &g_leafs[leafnum];
 	c_chains++;
 
-#ifdef _DEBUG
+#ifdef HLVIS_ENABLE_CHECK_STACK
 	CheckStack( leaf, thread );
 #endif	
 	// mark the leaf as visible
