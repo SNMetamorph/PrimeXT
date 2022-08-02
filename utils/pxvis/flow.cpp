@@ -17,21 +17,28 @@ int	c_vistest, c_mighttest;
 int	c_mightseeupdate;
 int	active;
 
-void CheckStack( leaf_t *leaf, threaddata_t *thread )
+static bool CheckStack(int leafnum, leaf_t *leaf, threaddata_t *thread)
 {
-	pstack_t	*p, *p2;
-
-	for( p = thread->pstack_head.next; p != NULL; p = p->next )
+	pstack_t *p, *p2;
+	bool recursionStatus = false;
+	for (p = thread->pstack_head.next; p != NULL; p = p->next)
 	{
-		if( p->leaf == leaf )
-			COM_FatalError( "CheckStack: leaf recursion\n" );
-
-		for( p2 = thread->pstack_head.next; p2 != p; p2 = p2->next )
+		if (p->leaf == leaf)
 		{
-			if( p2->leaf == p->leaf )
-				COM_FatalError( "CheckStack: late leaf recursion\n" );
+			Msg("\n^3Warning:^7 CheckStack: recursion on leaf %d\n", leafnum);
+			recursionStatus = true;
+		}
+
+		for (p2 = thread->pstack_head.next; p2 != p; p2 = p2->next)
+		{
+			if (p2->leaf == p->leaf)
+			{
+				Msg("\n^3Warning:^7 CheckStack: late recursion on leaf %d\n", leafnum);
+				recursionStatus = true;
+			}
 		}
 	}
+	return recursionStatus;
 }
 
 /*
@@ -192,7 +199,11 @@ inline static void RecursiveLeafFlow( int leafnum, threaddata_t *thread, pstack_
 	c_chains++;
 
 #ifdef HLVIS_ENABLE_CHECK_STACK
-	CheckStack( leaf, thread );
+	if (CheckStack(leafnum, leaf, thread)) 
+	{
+		COM_FatalError("Stopping because of leaf recursion");
+		return;
+	}
 #endif	
 	// mark the leaf as visible
 	if( !CHECKVISBIT( thread->leafvis, leafnum ))
@@ -557,7 +568,7 @@ BasePortalVis
 */
 void BasePortalVis( int threadnum )
 {
-	byte	portalsee[MAX_MAP_PORTALS*2];
+	byte portalsee[MAX_MAP_PORTALS*2];
 	int	i, j, k, c_leafsee;
 	vec3_t	backnormal, dist;
 	portal_t	*tp, *p;
@@ -594,7 +605,7 @@ void BasePortalVis( int threadnum )
 			for( k = 0; k < w->numpoints; k++ )
 			{
 				d = DotProduct( w->p[k], p->plane.normal ) - p->plane.dist;
-				if( d > -VIS_EPSILON )
+				if( d > VIS_EPSILON )
 					break;
 			}
 
@@ -606,7 +617,7 @@ void BasePortalVis( int threadnum )
 			for( k = 0; k < w->numpoints; k++ )
 			{
 				d = DotProduct( w->p[k], tp->plane.normal ) - tp->plane.dist;
-				if( d < VIS_EPSILON )
+				if( d < -VIS_EPSILON )
 					break;
 			}
 
