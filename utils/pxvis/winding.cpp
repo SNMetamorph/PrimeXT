@@ -11,6 +11,7 @@
 // winding.c
 
 #include "qvis.h"
+#include <stdint.h>
 
 void pw( winding_t *w )
 {
@@ -28,7 +29,7 @@ winding_t	*AllocWinding( int numpoints )
 	if( numpoints > MAX_POINTS_ON_WINDING )
 		COM_FatalError( "AllocWinding: MAX_POINTS_ON_WINDING limit exceeded\n" );
 
-	return (winding_t *)Mem_Alloc( (int)((winding_t *)0)->p[numpoints], C_WINDING );
+	return (winding_t *)Mem_Alloc( (ptrdiff_t)((winding_t *)0)->p[numpoints], C_WINDING );
 }
 
 /*
