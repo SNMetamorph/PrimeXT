@@ -9,6 +9,7 @@
 ****/
 
 #include "csg.h"
+#include <string>
 #include <unordered_map>
 
 #define FWAD_USED		BIT( 0 )
