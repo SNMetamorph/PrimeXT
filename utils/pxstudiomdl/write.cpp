@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <stdint.h>
 #include "cmdlib.h"
 #include "mathlib.h"
 #include "stringlib.h"
@@ -25,7 +26,7 @@ studiohdr_t *phdr = NULL;
 studiohdr2_t *phdr2 = NULL;
 studioseqhdr_t *pseqhdr;
 
-#define ALIGN( a )		a = (byte *)((int)((byte *)a + 3) & ~ 3)
+#define ALIGN( a )		a = (byte *)((ptrdiff_t)((byte *)a + 3) & ~ 3)
 #define FILEBUFFER		(48 * 1024 * 1024)	// 48 Mb for now
 #define TRUNCNAME		"ValveBiped."
 
@@ -940,7 +941,7 @@ void WriteModel( void )
 	mstudioboneweight_t	*pweight;
 	mstudiomesh_t	*pmesh;
 	s_trianglevert_t	*psrctri;
-	int		cur;
+	ptrdiff_t	cur;
 	int		total_tris = 0;
 	int		total_strips = 0;
 
@@ -962,7 +963,7 @@ void WriteModel( void )
 	}
 	ALIGN( pData );
 
-	cur = (int)pData;
+	cur = (ptrdiff_t)pData;
 	for( i = 0; i < g_nummodels; i++ ) 
 	{
 		static CUtlArray<int> normmap;
@@ -1090,7 +1091,7 @@ void WriteModel( void )
 			VectorCopy( g_model[i]->norm[normimap[j]].org, pnorm[j] );
 		}
 		Msg( "vertices   %7d bytes (%d vertices, %d normals)\n", pData - cur, g_model[i]->vert.Count(), g_model[i]->norm.Count() );
-		cur = (int)pData;
+		cur = (ptrdiff_t)pData;
 
 		// save mesh info
 		pmesh = (mstudiomesh_t *)pData;
@@ -1127,7 +1128,7 @@ void WriteModel( void )
 			total_strips += numcommandnodes;
 		}
 		Msg( "mesh       %7d bytes (%d tris, %d strips)\n", pData - cur, total_tris, total_strips );
-		cur = (int)pData;
+		cur = (ptrdiff_t)pData;
 	}	
 }
 
