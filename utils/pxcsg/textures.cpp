@@ -9,6 +9,7 @@
 ****/
 
 #include "csg.h"
+#include <unordered_map>
 
 #define FWAD_USED		BIT( 0 )
 #define FWAD_INCLUDE	BIT( 1 )
@@ -33,6 +34,7 @@ static mipentry_t	g_miptex[MAX_MAP_TEXTURES];
 static int	g_nummiptex;
 static wadentry_t	g_wadlist[MAX_TEXFILES];
 static int	g_wadcount;
+static std::unordered_map<int, std::string> g_hashToMiptexName;
 char		g_pszWadInclude[MAX_TEXFILES][64];
 int		g_nWadInclude;
 
@@ -229,6 +231,30 @@ void TEX_FreeTextures( void )
 	}
 }
 
+int TEX_AddMiptexNameToHashTable(const char *name)
+{
+	uint32_t hash, i;
+	size_t len = strlen(name);
+	
+	for (hash = i = 0; i < len; ++i)
+	{
+		hash += (uint8_t)(name[i]);
+		hash += (hash << 10);
+		hash ^= (hash >> 6);
+	}
+	hash += (hash << 3);
+	hash ^= (hash >> 11);
+	hash += (hash << 15);
+
+	g_hashToMiptexName.insert({ (int)hash, name });
+	return (int)hash;
+}
+
+const char *TEX_GetMiptexNameByHash(int hash)
+{
+	return g_hashToMiptexName[hash].c_str();
+}
+
 /*
 =================
 lump_sorters
@@ -381,12 +407,10 @@ void WriteMiptex( void )
 	// Sleazy Hack 104 Pt 2 - After sorting the miptex array, reset the texinfos to point to the right miptexs
 	for( i = 0; i < g_numtexinfo; i++, tx++ )
 	{
-		char	*miptex_name = (char *)tx->miptex;
-
+		const char *miptex_name = TEX_GetMiptexNameByHash(tx->miptex); //(char *)tx->miptex;
 		tx->miptex = TEX_FindMiptex( miptex_name );
-
 		// free up the originally strdup()'ed miptex_name
-		free( miptex_name );
+		//free( miptex_name );
 	}
 
 	int	totaldatasize = sizeof( int ) + ( sizeof( int ) * g_nummiptex );
@@ -636,7 +660,7 @@ int TexinfoForSide( plane_t *plane, side_t *s, const vec3_t origin )
 	for( i = 0; i < g_numtexinfo; i++, tc++ )
 	{
 		// Sleazy hack 104, Pt 3 - Use strcmp on names to avoid dups
-		if( Q_stricmp( (char *)tc->miptex, s->name ))
+		if (Q_stricmp(TEX_GetMiptexNameByHash(tc->miptex), s->name)) // if( Q_stricmp( (char *)tc->miptex, s->name ))
 			continue;
 
 		if( tc->flags != tx.flags )
@@ -665,7 +689,7 @@ skip:;
 	// Very Sleazy Hack 104 - since the tx.miptex index will be bogus after we sort the miptex array later
 	// Put the string name of the miptex in this "index" until after we are done sorting it in WriteMiptex().
 	// g-cont. do it only for unique elements, but i can't use copysting here because it may call ThreadLock again
-	tx.miptex = (int)strdup( s->name );
+	tx.miptex = TEX_AddMiptexNameToHashTable(s->name); //(int)strdup( s->name );
 
 	*tc = tx;
 	g_numtexinfo++;
