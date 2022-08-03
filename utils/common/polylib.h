@@ -8,6 +8,7 @@
 *
 ****/
 
+#include <stdint.h>
 
 typedef struct
 {
@@ -15,7 +16,7 @@ typedef struct
 	vec3_t	p[4];		// variable sized
 } winding_t;
 
-#define WindingSize( w )		(( w ) ? ((int)((winding_t *)0)->p[(w)->numpoints]) : 0)
+#define WindingSize( w )		(( w ) ? ((ptrdiff_t)((winding_t *)0)->p[(w)->numpoints]) : 0)
 #define MAX_POINTS_ON_WINDING		128
 #define EDGE_LENGTH			0.2
 

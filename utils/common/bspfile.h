@@ -41,6 +41,7 @@ BRUSH MODELS
 ==============================================================================
 */
 #include "../../common/bspfile.h"
+#include <stdint.h>
 
 // header
 #define Q1BSP_VERSION		29	// quake1 regular version (beta is 28)
@@ -194,7 +195,7 @@ void MakeAxial( float normal[3] );
 int SnapNormal( vec3_t normal );
 
 //===============
-#define STRUCT_FROM_LINK( l, t, m )	((t *)((byte *)l - (int)&(((t *)0)->m)))
+#define STRUCT_FROM_LINK( l, t, m )	((t *)((byte *)l - (ptrdiff_t)&(((t *)0)->m)))
 #define ENTITY_FROM_AREA( l )		STRUCT_FROM_LINK( l, entity_t, area )
 #define TFACE_FROM_AREA( l )		STRUCT_FROM_LINK( l, tface_t, area )
 
