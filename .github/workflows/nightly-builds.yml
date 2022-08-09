@@ -110,6 +110,46 @@ jobs:
           path: |
             publish/*
 
+  build-android:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        conf: [Debug]
+    env:
+      BUILD_TYPE: ${{ matrix.conf }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+
+      - name: Build
+        run: chmod +x ./gradlew && ./gradlew assembleDebug
+        working-directory: android
+
+      - name: Prepare artifacts
+        run: |
+          mkdir publish/
+          mkdir publish/primext
+          mkdir publish/primext/bin
+          mkdir publish/primext/devkit
+          cp android/app/build/outputs/apk/debug/app-debug.apk publish/primext-debug.apk
+          cp -r game_dir/* publish/primext
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Android
+          path: |
+            publish/*
+
   release:
     name: release-builds
     runs-on: ubuntu-latest
@@ -125,6 +165,8 @@ jobs:
           zip -r ../primext-windows-x86.zip *
           cd ../Linux
           tar -czvf ../primext-linux-i386.tar.gz *
+          #cd ../Android
+          #zip -r ../primext-android.zip *
 
       - name: Remove old release
         uses: dev-drprasad/delete-tag-and-release@v0.2.0
@@ -143,4 +185,3 @@ jobs:
           tag: continious
           overwrite: true
           prerelease: true
-          release_name: PrimeXT Continious Build

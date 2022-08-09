@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PrimeXT</string>
+    <string name="launch">LAUNCH</string>
+    <string name="launch_parameters">COMMAND-LINE ARGUMENTS</string>
+    <string name="checking_for_updates">Checking for updates...</string>
+    <string name="engine_not_found">Xash3D FWGS not installed</string>
+    <string name="engine_info">Xash3D FWGS beta is required to run PrimeXT.</string>
+    <string name="update">UPDATE</string>
+    <string name="install">INSTALL</string>
+    <string name="exit">EXIT</string>
+    <string name="donate">DONATE</string>
+    <string name="update_check_error">Error checking for updates.</string>
+    <string name="later">LATER</string>
+</resources>

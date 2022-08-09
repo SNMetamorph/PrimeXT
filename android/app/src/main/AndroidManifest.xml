@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+	package="su.xash.primext"
+	android:versionCode="1"
+	android:versionName="1.0">
+
+	<uses-permission android:name="android.permission.INTERNET" />
+	
+	<application
+		android:label="@string/app_name"
+		android:icon="@mipmap/ic_launcher"
+		android:roundIcon="@mipmap/ic_launcher"
+		android:supportsRtl="true"
+		android:theme="@style/Theme.App"
+		android:requestLegacyExternalStorage="true">
+		<activity
+			android:name=".LauncherActivity"
+			android:label="@string/app_name"
+			android:exported="true">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
+		<receiver android:name=".InstallReceiver"
+			android:exported="false">
+			<intent-filter android:priority="100">
+				<category android:name="android.intent.category.DEFAULT" />
+				<action android:name="android.intent.action.PACKAGE_ADDED"	/>
+				<action android:name="android.intent.action.PACKAGE_CHANGED" />
+				<action android:name="android.intent.action.PACKAGE_DATA_CLEARED" />
+				<action android:name="android.intent.action.PACKAGE_REMOVED" />
+				<action android:name="android.intent.action.PACKAGE_REPLACED" />
+				<data android:scheme="package" />
+			</intent-filter>
+		</receiver>
+	</application>
+</manifest>
