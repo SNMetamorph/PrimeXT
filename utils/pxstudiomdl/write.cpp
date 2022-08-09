@@ -115,7 +115,7 @@ void CopyStringTruncate( char *out, const char *in, size_t outsize )
 	}
 	else if( insize > ( outsize - 1 ))
 	{
-		MsgDev( D_WARN, "%s is too long (limit is %i symbols). string will be truncated\n", in, outsize );
+		MsgDev( D_WARN, "%s is too long (limit is %u symbols). string will be truncated\n", in, outsize );
 	}
 
 	Q_strncpy( out, in, outsize ); // this may cause problems...

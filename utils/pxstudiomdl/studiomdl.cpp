@@ -4767,7 +4767,7 @@ bool Grab_AimAtBones( void )
 			if( IsEnd( line )) 
 				return false;
 
-			if( sscanf( line, "%1024s %f %f %f", cmd, &vector[0], &vector[1], &vector[2] ) != 4 )
+			if( sscanf( line, "%1023s %f %f %f", cmd, &vector[0], &vector[1], &vector[2] ) != 4 )
 			{
 				bool allSpace = true;
 
