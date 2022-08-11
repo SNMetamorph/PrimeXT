@@ -38,6 +38,7 @@
 #include "weaponinfo.h"
 #include "usercmd.h"
 #include "netadr.h"
+#include <locale>
 
 extern DLL_GLOBAL ULONG		g_ulModelIndexPlayer;
 extern DLL_GLOBAL BOOL		g_fGameOver;
@@ -215,7 +216,7 @@ void Host_Say( edict_t *pEntity, int teamonly )
 	entvars_t *pev = &pEntity->v;
 	CBasePlayer* player = GetClassPtr((CBasePlayer *)pev);
 
-	//Not yet.
+	// Not yet.
 	if ( player->m_flNextChatTime > gpGlobals->time )
 		 return;
 
@@ -245,26 +246,26 @@ void Host_Say( edict_t *pEntity, int teamonly )
 		p = szTemp;
 	}
 
-// remove quotes if present
+	// remove quotes if present
 	if (*p == '"')
 	{
 		p++;
 		p[strlen(p)-1] = 0;
 	}
 
-// make sure the text has content
-	for ( pc = p; pc != NULL && *pc != 0; pc++ )
+	// make sure the text has content
+	for (pc = p; pc != NULL && *pc != 0; pc++)
 	{
-		if ( !isspace( *pc ) )
+		if (!std::isspace(*pc, std::locale("en_US.UTF8")))
 		{
 			pc = NULL;	// we've found an alphanumeric character,  so text is valid
 			break;
 		}
 	}
-	if ( pc != NULL )
+	if (pc != NULL)
 		return;  // no character found, so say nothing
 
-// turn on color set 2  (color on,  no sound)
+	// turn on color set 2  (color on,  no sound)
 	if ( teamonly )
 		sprintf( text, "%c(TEAM) %s: ", 2, STRING( pEntity->v.netname ) );
 	else
