@@ -106,7 +106,6 @@ void Sys_PrintLog( const char *pMsg )
 	__android_log_print( ANDROID_LOG_DEBUG, "Xash", "%s", pMsg );
 #endif
 
-	lastchar = pMsg[strlen(pMsg)-1];
 	if( !logfile )
 		return;
 
@@ -115,6 +114,7 @@ void Sys_PrintLog( const char *pMsg )
 
 	fprintf( logfile, "%s %s", logtime, pMsg );
 	fflush( logfile );
+	lastchar = pMsg[strlen(pMsg) - 1];
 }
 
 /*
