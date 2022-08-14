@@ -1186,7 +1186,13 @@ void MapSourcesToGlobalBonetable( void )
 			if( k == -1 )
 			{
 				int m = panim->localBone[j].parent;
-				while( m != -1 && ( k = findGlobalBone( panim->localBone[m].name )) == -1 )
+				if (j == m)
+				{
+					COM_FatalError("Invalid bone hierarchy in \"%s.smd\" animation\n", panim->filename);
+					return;
+				}
+
+				while (m != -1 && (k = findGlobalBone(panim->localBone[m].name)) == -1)
 				{
 					m = panim->localBone[m].parent;
 				}
