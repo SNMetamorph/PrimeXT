@@ -367,14 +367,13 @@ void SequencePrecache( void *pmodel, const char *pSequenceName )
 	}
 }
 
-void CalcGaitFrame( void *pmodel, int &gaitsequence, float &flGaitFrame, float flGaitMovement )
+void CalcGaitFrame( void *pmodel, int &gaitsequence, float &flGaitFrame, float flGaitMovement, int numframes )
 {
 	studiohdr_t *pstudiohdr;
+	mstudioseqdesc_t* pseqdesc;
 
 	if( !( pstudiohdr = (studiohdr_t *)pmodel ))
 		return;	
-
-	mstudioseqdesc_t *pseqdesc;
 
 	if( gaitsequence < 0 || gaitsequence >= pstudiohdr->numseq ) 
 		gaitsequence = 0;
@@ -383,12 +382,12 @@ void CalcGaitFrame( void *pmodel, int &gaitsequence, float &flGaitFrame, float f
 
 	// calc gait frame
 	if( pseqdesc->linearmovement[0] > 0.0f )
-		flGaitFrame += (flGaitMovement / pseqdesc->linearmovement[0]) * pseqdesc->numframes;
+		flGaitFrame += (flGaitMovement / pseqdesc->linearmovement[0]) * numframes;
 	else flGaitFrame += pseqdesc->fps * gpGlobals->frametime;
 
 	// do modulo
-	flGaitFrame = fmod( flGaitFrame, (float)pseqdesc->numframes ); 
-	while( flGaitFrame < 0.0 ) flGaitFrame += pseqdesc->numframes;
+	flGaitFrame = fmod( flGaitFrame, (float)numframes);
+	while( flGaitFrame < 0.0 ) flGaitFrame += numframes;
 }
 
 void GetSequenceInfo( void *pmodel, int sequence, float *pflFrameRate, float *pflGroundSpeed )

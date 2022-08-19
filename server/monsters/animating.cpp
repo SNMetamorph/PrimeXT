@@ -169,7 +169,8 @@ float CBaseAnimating :: StudioGaitFrameAdvance( void )
 	if( pev->angles[YAW] < -0.0f )
 		pev->angles[YAW] += 360.0f;
 
-	CalcGaitFrame( GetModelPtr(), pev->gaitsequence, pev->fuser1, m_flGaitMovement );
+	int localMaxFrame = GetBoneSetup()->LocalMaxFrame(pev->gaitsequence);
+	CalcGaitFrame(GetModelPtr(), pev->gaitsequence, pev->fuser1, m_flGaitMovement, localMaxFrame);
 
 	return m_flGaitMovement;
 }
