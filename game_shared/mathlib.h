@@ -109,6 +109,25 @@ _forceinline T Lerp( float flPercent, T const &A, T const &B )
 	return A + (B - A) * flPercent;
 }
 
+inline float LoopingLerp(float flPercent, float flFrom, float flTo)
+{
+	if (fabs(flTo - flFrom) >= 0.5f)
+	{
+		if (flFrom < flTo)
+			flFrom += 1.0f;
+		else
+			flTo += 1.0f;
+	}
+
+	float s = flTo * flPercent + flFrom * (1.0f - flPercent);
+
+	s = s - (int)(s);
+	if (s < 0.0f)
+		s = s + 1.0f;
+
+	return s;
+}
+
 int PlaneTypeForNormal( const Vector &normal );
 int SignbitsForPlane( const Vector &normal );
 int NearestPOW( int value, bool roundDown );
