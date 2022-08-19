@@ -198,7 +198,8 @@ private:
 	void StudioMergeBones( matrix3x4 &transform, matrix3x4 bones[], matrix3x4 cached_bones[], model_t *pModel, model_t *pParentModel );
 
 	// Determine interpolation fraction
-	float StudioEstimateInterpolant( void );
+	float StudioEstimateInterpolant();
+	float StudioEstimateGaitInterpolant();
 
 	// Determine current gaitframe for rendering
 	float StudioEstimateGaitFrame ( mstudioseqdesc_t *pseqdesc );

@@ -472,17 +472,28 @@ StudioEstimateFrame
 */
 float CStudioModelRenderer :: StudioEstimateGaitFrame( mstudioseqdesc_t *pseqdesc )
 {
+	double f;
 	cl_entity_t *e = RI->currententity;
 	int numframes = m_boneSetup.LocalMaxFrame( e->curstate.gaitsequence );
-	double dfdt = 0, f = 0;
+	float t = StudioEstimateGaitInterpolant();
+	float currGaitFrame = e->curstate.fuser1;
+	static float lastGaitFrame = 0.0f;
+	static float prevGaitFrame = 0.0f;
 
-	// FIXME: gaitinterp is broken
-	if( !m_fShootDecal && tr.time >= RI->currententity->curstate.animtime )
-		dfdt = (tr.time - RI->currententity->curstate.animtime) * tr.frametime;
+	if (numframes > 1)
+	{
+		if (fabsf(currGaitFrame - lastGaitFrame) > 0.001) {
+			prevGaitFrame = lastGaitFrame;
+		}
 
-	if( numframes > 1 )
-		f = RI->currententity->curstate.fuser1;
-	f += dfdt;
+		float normCurrFrame = currGaitFrame / (float)numframes;
+		float normPrevFrame = prevGaitFrame / (float)numframes;
+		f = LoopingLerp(t, normPrevFrame, normCurrFrame) * numframes;
+		lastGaitFrame = currGaitFrame;
+	}
+	else {
+		f = 0.0;
+	}
 
 	if( pseqdesc->flags & STUDIO_LOOPING ) 
 	{
@@ -539,6 +550,26 @@ float CStudioModelRenderer :: StudioEstimateInterpolant( void )
 	}
 
 	return dadt;
+}
+
+float CStudioModelRenderer::StudioEstimateGaitInterpolant()
+{
+	cl_entity_t *e = RI->currententity;
+	double updateInteval = 0.1;	// monster think interval
+	float dadt = 1.0f;
+
+	if (e->player)
+	{
+		float updateRate = atof(gEngfuncs.PlayerInfo_ValueForKey(e->index, "cl_updaterate"));
+		if (updateRate != 0.0)
+			updateInteval = 1.0 / updateRate;
+
+		if (gEngfuncs.GetMaxClients() == 1 || updateRate == 0.0) {
+			updateInteval = 1.0f; // in listen server entity state update happens every frame
+		}
+	}
+	
+	return Q_max(0.0f, Q_min((gEngfuncs.GetClientTime() - e->curstate.msg_time) / updateInteval, 1.0f));
 }
 
 /*
