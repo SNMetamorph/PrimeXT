@@ -105,7 +105,7 @@ float CBaseAnimating :: StudioGaitFrameAdvance( void )
 
 	m_flGaitMovement = pev->velocity.Length() * delta;
 
-	if( pev->velocity.x == 0.0f && pev->velocity.y == 0.0f )
+	if( pev->velocity.Length2D() < 0.1f )
 	{
 		float flYawDiff = pev->angles[YAW] - m_flGaitYaw;
 		flYawDiff = flYawDiff - (int)(flYawDiff / 360) * 360;
