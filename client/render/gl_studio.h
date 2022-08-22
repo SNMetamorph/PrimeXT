@@ -199,7 +199,6 @@ private:
 
 	// Determine interpolation fraction
 	float StudioEstimateInterpolant();
-	float StudioEstimateGaitInterpolant();
 
 	// Determine current gaitframe for rendering
 	float StudioEstimateGaitFrame ( mstudioseqdesc_t *pseqdesc );

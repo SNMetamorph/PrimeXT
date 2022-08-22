@@ -475,7 +475,7 @@ float CStudioModelRenderer :: StudioEstimateGaitFrame( mstudioseqdesc_t *pseqdes
 	double f;
 	cl_entity_t *e = RI->currententity;
 	int numframes = m_boneSetup.LocalMaxFrame( e->curstate.gaitsequence );
-	float t = StudioEstimateGaitInterpolant();
+	float t = StudioEstimateInterpolant();
 	float currGaitFrame = e->curstate.fuser1;
 	static float lastGaitFrame = 0.0f;
 	static float prevGaitFrame = 0.0f;
@@ -529,47 +529,31 @@ StudioEstimateInterpolant
 
 ====================
 */
-float CStudioModelRenderer :: StudioEstimateInterpolant( void )
+float CStudioModelRenderer :: StudioEstimateInterpolant()
 {
 	cl_entity_t *e = RI->currententity;
-	double rate = 0.1;	// monster think
-	float dadt = 1.0f;
-
-	if( e->player )
-	{
-		rate = atof( gEngfuncs.PlayerInfo_ValueForKey( e->index, "cl_updaterate" ));
-		if( rate != 0.0 ) rate = 1.0 / rate;
-		if( gEngfuncs.GetMaxClients() == 1 )
-			rate = 1.0f; // it's single player and has unlimited update rate
-	}
-
-	if( !m_fShootDecal && ( e->curstate.animtime >= e->latched.prevanimtime + 0.01f ))
-	{
-		dadt = (tr.time - e->curstate.animtime) / (e->player) ? 0.01f : 0.1f; // think interval
-		if( dadt > 1.0f ) dadt = 1.0f;
-	}
-
-	return dadt;
-}
-
-float CStudioModelRenderer::StudioEstimateGaitInterpolant()
-{
-	cl_entity_t *e = RI->currententity;
-	double updateInteval = 0.1;	// monster think interval
+	double interval = 0.1;	// monster think interval
 	float dadt = 1.0f;
 
 	if (e->player)
 	{
 		float updateRate = atof(gEngfuncs.PlayerInfo_ValueForKey(e->index, "cl_updaterate"));
-		if (updateRate != 0.0)
-			updateInteval = 1.0 / updateRate;
+		if (updateRate > 0.0f)
+			interval = 1.0f / updateRate;
 
-		if (gEngfuncs.GetMaxClients() == 1 || updateRate == 0.0) {
-			updateInteval = 1.0f; // in listen server entity state update happens every frame
+		if (gEngfuncs.GetMaxClients() == 1 || updateRate < 1.0f) {
+			interval = 1.0f; // in listen server entity state update happens every frame
 		}
 	}
-	
-	return Q_max(0.0f, Q_min((gEngfuncs.GetClientTime() - e->curstate.msg_time) / updateInteval, 1.0f));
+
+
+	if (!m_fShootDecal && (e->curstate.animtime >= e->latched.prevanimtime + 0.01f))
+	{
+		dadt = (tr.time - e->curstate.animtime) / interval;
+		dadt = bound(0.0f, dadt, 1.0f);
+	}
+
+	return dadt;
 }
 
 /*
@@ -614,10 +598,6 @@ StudioInterpolateControllers
 */
 void CStudioModelRenderer :: StudioInterpolateControllers( cl_entity_t *e, float dadt )
 {
-	// buz: хак, позволяющий не интерполировать контроллеры для стационарного пулемета
-	if( RI->currententity->curstate.renderfx == 51 )
-		dadt = 1.0f;
-
 	mstudiobonecontroller_t *pbonecontroller = (mstudiobonecontroller_t *)((byte *)m_pStudioHeader + m_pStudioHeader->bonecontrollerindex);
 
 	// interpolate controllers
