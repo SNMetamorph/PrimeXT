@@ -262,6 +262,8 @@ private:
 
 	void StudioDrawAttachments( bool bCustomFov );
 
+	void StudioDrawBodyPartsBBox();
+
 	// intermediate structure. Used only for build unique submodels
 	struct TmpModel_t
 	{

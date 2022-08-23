@@ -1344,7 +1344,7 @@ void CStudioModelRenderer :: StudioMergeBones( matrix3x4 &transform, matrix3x4 b
 		{
 			// initialize bonematrix
 			bonematrix = matrix3x4( pos[i], q[i] );
-			if( pchildbones[i].parent == -1 ) bones[i] = transform.ConcatTransforms( bonematrix );
+			if( pchildbones[i].parent == -1 ) bones[i] = transform.ConcatTransforms( bonematrix ); 
 			else bones[i] = bones[pchildbones[i].parent].ConcatTransforms( bonematrix );
 		}
 	}
@@ -1963,6 +1963,74 @@ void CStudioModelRenderer :: StudioDrawAttachments( bool bCustomFov )
 	pglEnable( GL_DEPTH_TEST );
 }
 
+void CStudioModelRenderer::StudioDrawBodyPartsBBox()
+{
+	mbodypart_s* bodyparts;
+
+	if (m_pModelInstance->m_FlCache != NULL)
+		bodyparts = m_pModelInstance->m_FlCache->bodyparts;
+	else if (m_pModelInstance->m_VlCache != NULL)
+		bodyparts = m_pModelInstance->m_VlCache->bodyparts;
+	else
+		bodyparts = RI->currentmodel->studiocache->bodyparts;
+
+	if (!bodyparts) {
+		HOST_ERROR("%s missed cache\n", RI->currententity->model->name);
+		return;
+	}
+
+	for (int i = 0; i < m_pStudioHeader->numbodyparts; ++i)
+	{
+		mbodypart_t* pBodyPart = &bodyparts[i];
+		int index = RI->currententity->curstate.body / pBodyPart->base;
+		index = index % pBodyPart->nummodels;
+
+		msubmodel_t* pSubModel = pBodyPart->models[index];
+		if (!pSubModel) 
+			continue; // blank submodel, just ignore
+
+		for (int j = 0; j < pSubModel->nummesh; j++)
+		{
+			Vector mins, maxs;
+			Vector p[8], tmp;
+			vbomesh_t *mesh = &pSubModel->meshes[j];
+			
+			TransformAABB(m_pModelInstance->m_pbones[mesh->parentbone], mesh->mins, mesh->maxs, mins, maxs);
+			ExpandBounds(mins, maxs, 0.5f);
+
+			// compute a full bounding box
+			for (int k = 0; k < 8; k++)
+			{
+				p[k][0] = (k & 1) ? mins[0] : maxs[0];
+				p[k][1] = (k & 2) ? mins[1] : maxs[1];
+				p[k][2] = (k & 4) ? mins[2] : maxs[2];
+			}
+
+			GL_Bind(GL_TEXTURE0, tr.whiteTexture);
+			gEngfuncs.pTriAPI->Color4f(0.2f, 1.0f, 0.2f, 1.0f);
+			gEngfuncs.pTriAPI->RenderMode(kRenderTransColor);
+			gEngfuncs.pTriAPI->Begin(TRI_LINES);
+
+			for (int k = 0; k < 6; k++)
+			{
+				tmp = g_vecZero;
+				tmp[k % 3] = (k < 3) ? 1.0f : -1.0f;
+				
+				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][0]]);
+				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][1]]);
+				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][1]]);
+				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][2]]);
+				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][2]]);
+				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][3]]);
+				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][3]]);
+				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][0]]);
+			}
+
+			gEngfuncs.pTriAPI->End();
+		}
+	}
+}
+
 void CStudioModelRenderer :: StudioDrawDebug( cl_entity_t *e )
 {
 	matrix4x4 projMatrix, worldViewProjMatrix;
@@ -2001,7 +2069,7 @@ void CStudioModelRenderer :: StudioDrawDebug( cl_entity_t *e )
 		StudioDrawBones();
 		break;
 	case 3:
-		StudioDrawHulls ();
+		StudioDrawHulls();
 		break;
 	case 4:
 		gEngfuncs.pTriAPI->RenderMode( kRenderTransAdd );
@@ -2013,6 +2081,9 @@ void CStudioModelRenderer :: StudioDrawDebug( cl_entity_t *e )
 		break;
 	case 6:
 		StudioDrawAttachments( bCustomFov );
+		break;
+	case 7:
+		StudioDrawBodyPartsBBox();
 		break;
 	}
 
