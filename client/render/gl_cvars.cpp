@@ -103,6 +103,7 @@ cvar_t *r_showlightmaps;
 cvar_t *r_recursion_depth;
 cvar_t *r_shadowmap_size;
 cvar_t *r_pssm_show_split;
+cvar_t *r_renderplayershadow;
 cvar_t *v_sunshafts;
 cvar_t *v_glows;
 cvar_t *v_posteffects;
@@ -176,6 +177,7 @@ void R_InitializeConVars()
 	r_sunshadows = CVAR_REGISTER("gl_sun_shadows", "1", FCVAR_ARCHIVE);
 	r_sun_allowed = CVAR_REGISTER("r_sun_allowed", "0", FCVAR_ARCHIVE);
 	r_sun_daytime = CVAR_REGISTER("r_sun_daytime", "12", FCVAR_CLIENTDLL);
+	r_renderplayershadow = CVAR_REGISTER("r_renderplayershadow", "1", FCVAR_ARCHIVE);
 	r_shadowmap_size = CVAR_REGISTER("gl_shadowmap_size", "1024", FCVAR_ARCHIVE);
 	r_occlusion_culling = CVAR_REGISTER("r_occlusion_culling", "0", FCVAR_ARCHIVE);
 	r_show_lightprobes = CVAR_REGISTER("r_show_lightprobes", "0", FCVAR_ARCHIVE);

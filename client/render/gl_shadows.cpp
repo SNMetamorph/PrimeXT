@@ -369,6 +369,7 @@ static void R_ShadowPassSetupViewCache( CDynLight *pl, int split = 0 )
 	R_MarkWorldVisibleFaces( worldmodel );
 
 	// add all studio models, mark visible bmodels
+	int localPlayerIndex = gEngfuncs.GetLocalPlayer()->index;
 	for (int i = 0; i < tr.num_draw_entities; i++)
 	{
 		RI->currententity = tr.draw_entities[i];
@@ -377,6 +378,13 @@ static void R_ShadowPassSetupViewCache( CDynLight *pl, int split = 0 )
 		// skip entities with disabled shadow casting
 		if (RI->currententity->curstate.effects & EF_NOSHADOW)
 			continue;
+
+		// disable rendering shadows for local player
+		if (!CVAR_TO_BOOL(r_renderplayershadow)) 
+		{
+			if (RI->currententity->index == localPlayerIndex)
+				continue;
+		}
 
 		switch( RI->currentmodel->type )
 		{

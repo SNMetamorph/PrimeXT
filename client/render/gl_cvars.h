@@ -107,6 +107,7 @@ extern cvar_t *r_showlightmaps;
 extern cvar_t *r_recursion_depth;
 extern cvar_t *r_shadowmap_size;
 extern cvar_t *r_pssm_show_split;
+extern cvar_t *r_renderplayershadow;
 extern cvar_t *v_sunshafts;
 extern cvar_t *v_glows;
 extern cvar_t *v_posteffects;
