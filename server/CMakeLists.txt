@@ -148,12 +148,11 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"monsters"
 	"physics"
 	"wpn_shared"
-	"../phys_shared"
-	"../common"
-	"../engine"
-	"../pm_shared"
-	"../game_shared"
-	"../public"
+	"${CMAKE_SOURCE_DIR}/external/novodex"
+	"${CMAKE_SOURCE_DIR}/common"
+	"${CMAKE_SOURCE_DIR}/engine"
+	"${CMAKE_SOURCE_DIR}/game_shared"
+	"${CMAKE_SOURCE_DIR}/public"
 )
 
 if(HAVE_TGMATH_H)
