@@ -12,7 +12,7 @@ const config = {
   baseUrl: '/PrimeXT/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/favicon.ico?v=2',
   organizationName: 'SNMetamorph', // Usually your GitHub org/user name.
   projectName: 'PrimeXT', // Usually your repo name.
 
