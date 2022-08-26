@@ -56,8 +56,7 @@ cvar_t	v_ipitch_level	= { "v_ipitch_level", "0.3", 0, 0.3 };
 //==========================
 void V_ThirdPerson( void )
 {
-	if( gEngfuncs.GetMaxClients() == 1 )
-		gHUD.m_iCameraMode = 1;
+	gHUD.m_iCameraMode = 1;
 }
 
 //==========================
