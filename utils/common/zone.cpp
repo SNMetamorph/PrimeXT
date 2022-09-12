@@ -107,57 +107,29 @@ void *Mem_Alloc( size_t size, unsigned int target )
 
 void *Mem_Realloc( void *ptr, size_t size, unsigned int target )
 {
+	void		*mem;
 	memhdr_t	*memhdr = NULL;
 
-	if( size <= 0 ) return ptr; // no need to reallocate
-
-#ifdef ZONE_DEBUG
-	void	*mem;
+	if( size <= 0 ) 
+		return ptr; // no need to reallocate
 
 	if( ptr )
 	{
 		memhdr = (memhdr_t *)((byte *)ptr - sizeof( memhdr_t ));
-		if( size == memhdr->size ) return ptr;
+		if( size == memhdr->size ) 
+			return ptr;
 	}
 
 	mem = Mem_Alloc( size, target );
 
 	if( ptr ) // first allocate?
 	{
-		size_t	newsize = memhdr->size < size ? memhdr->size : size; // upper data can be trucnated!
+		size_t newsize = memhdr->size < size ? memhdr->size : size; // upper data can be trucnated!
 		memcpy( mem, ptr, newsize );
 		Mem_Free( ptr, target ); // free unused old block
 	}
 
 	return mem;
-#else // use original realloc
-	byte *mem;
-
-	if( ptr == NULL )
-	{
-		mem = (byte*)Mem_Alloc( size, target );
-	}
-	else
-	{
-		mem = (byte*)realloc( (byte*)ptr-sizeof(memhdr_t), sizeof( memhdr_t )+size );
-		if( mem == NULL )
-			COM_FatalError( "out of memory!\n" );
-
-		memhdr = (memhdr_t*)mem;
-
-		size_t old_size = memhdr->size;
-		mem += sizeof(memhdr_t);
-
-		int clearsize = size - old_size;
-		if( clearsize > 0 )
-			memset( mem+old_size, 0, clearsize );
-
-		memhdr->size = size;
-	}
-
-	return mem;
-#endif
-
 }
 
 void Mem_Free( void *ptr, unsigned int target )
