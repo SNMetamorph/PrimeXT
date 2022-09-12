@@ -499,21 +499,20 @@ const char *COM_FileExtension( const char *in )
 COM_DefaultExtension
 ==================
 */
-void COM_DefaultExtension( char *path, const char *extension )
+void COM_DefaultExtension(char *path, const char *extension)
 {
-	const char *src;
-
 	// if path doesn't have a .EXT, append extension
 	// (extension should include the .)
-	src = path + Q_strlen( path ) - 1;
-
-	while( *src != '/' && src != path )
+	const char *src = path + Q_strlen(path) - 1;
+	while (*src != '/' && *src != '\\' && src != path)
 	{
 		// it has an extension
-		if( *src == '.' ) return;                 
+		if (*src == '.') {
+			MsgDev(D_WARN, "COM_DefaultExtension: found dot symbol in file name (%s)\n", path);
+		}
 		src--;
 	}
-	Q_strcat( path, extension );
+	Q_strcat(path, extension);
 }
 
 /*
