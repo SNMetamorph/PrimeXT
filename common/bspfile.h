@@ -66,26 +66,26 @@ BRUSH MODELS
 
 #define VERTEXNORMAL_CONE_INNER_ANGLE	DEG2RAD( 7.275 )
 
-#define MAX_MAP_MODELS		1024		// can be increased up to 2048 if needed
-#define MAX_MAP_ENTITIES		4096		// can be increased up to 32768 if needed
-#define MAX_MAP_ENTSTRING		0x200000		// 2 mB should be enough
-#define MAX_MAP_PLANES		65536		// can be increased without problems
-#define MAX_MAP_NODES		32767		// because negative shorts are leafnums
+#define MAX_MAP_MODELS			8192		// default limit is 1024
+#define MAX_MAP_ENTITIES		32768		// can be increased up to 32768 if needed
+#define MAX_MAP_ENTSTRING		0x200000	// 2 mB should be enough
+#define MAX_MAP_PLANES			65536		// can be increased without problems
+#define MAX_MAP_NODES			32767		// because negative shorts are leafnums
 #define MAX_MAP_CLIPNODES		32767		// because negative shorts are contents
-#define MAX_MAP_CLIPNODES32		262144		// can be increased but not needed
-#define MAX_MAP_LEAFS		32768		// signed short limit (GoldSrc have internal limit at 8192)
-#define MAX_MAP_VERTS		65535		// unsigned short limit
-#define MAX_MAP_FACES		65535		// unsigned short limit
-#define MAX_MAP_MARKSURFACES		65535		// unsigned short limit
-#define MAX_MAP_TEXINFO		32768		// because signed short
+#define MAX_MAP_CLIPNODES32		1048576		// can be increased but not needed
+#define MAX_MAP_LEAFS			32768		// signed short limit (GoldSrc have internal limit at 8192)
+#define MAX_MAP_VERTS			65535		// unsigned short limit
+#define MAX_MAP_FACES			65535		// unsigned short limit
+#define MAX_MAP_MARKSURFACES	65535		// unsigned short limit
+#define MAX_MAP_TEXINFO			32768		// because signed short
 #define MAX_MAP_FACEINFO		8192		// can be increased but not needs
-#define MAX_MAP_EDGES		0x100000		// can be increased but not needed
-#define MAX_MAP_SURFEDGES		0x200000		// can be increased but not needed
-#define MAX_MAP_TEXTURES		2048		// can be increased but not needed
-#define MAX_MAP_MIPTEX		0x2000000		// 32 Mb internal textures data
-#define MAX_MAP_LIGHTING		0x4000000		// 64 Mb lightmap raw data (can contain deluxemaps)
-#define MAX_MAP_VISIBILITY		0x2000000		// 32 Mb visdata
-#define MAX_MAP_VISLIGHTDATA		0x4000000		// 64 Mb for lights visibility
+#define MAX_MAP_EDGES			0x100000	// can be increased but not needed
+#define MAX_MAP_SURFEDGES		0x200000	// can be increased but not needed
+#define MAX_MAP_TEXTURES		8192		// can be increased but not needed
+#define MAX_MAP_MIPTEX			0x2000000	// 32 Mb internal textures data
+#define MAX_MAP_LIGHTING		0x7a12000	// 120 Mb lightmap raw data (can contain deluxemaps)
+#define MAX_MAP_VISIBILITY		0x2000000	// 32 Mb visdata
+#define MAX_MAP_VISLIGHTDATA	0x4000000	// 64 Mb for lights visibility
 #define MAX_MAP_CUBEMAPS		1024
 #define MAX_MAP_LEAFLIGHTS		0x40000		// can be increased
 #define MAX_MAP_WORLDLIGHTS		65535		// including a light surfaces too
