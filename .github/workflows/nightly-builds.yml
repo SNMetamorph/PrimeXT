@@ -34,7 +34,7 @@ jobs:
         working-directory: ${{github.workspace}}/build
         shell: bash
         # Execute the build.  You can specify a specific target with "--target <NAME>"
-        run: cmake --build . --config $BUILD_TYPE --parallel 24
+        run: cmake --build . --config $BUILD_TYPE --parallel 8
 
       - name: Prepare artifacts
         run: |
@@ -91,7 +91,7 @@ jobs:
         working-directory: ${{github.workspace}}/build
         shell: bash
         # Execute the build.  You can specify a specific target with "--target <NAME>"
-        run: cmake --build . --config $BUILD_TYPE --parallel 32
+        run: cmake --build . --config $BUILD_TYPE --parallel 8
  
       - name: Prepare artifacts
         run: |
@@ -162,11 +162,11 @@ jobs:
       - name: Repackage binaries
         run: |
           cd Windows
-          zip -r ../primext-windows-x86.zip *
+          zip -r ../PrimeXT-Windows-x86.zip *
           cd ../Linux
-          tar -czvf ../primext-linux-i386.tar.gz *
+          tar -czvf ../PrimeXT-Linux-i386.tar.gz *
           #cd ../Android
-          #zip -r ../primext-android.zip *
+          #zip -r ../PrimeXT-Android.zip *
 
       - name: Remove old release
         uses: dev-drprasad/delete-tag-and-release@v0.2.0
@@ -181,7 +181,8 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
-          file: primext-*
+          file: PrimeXT-*
           tag: continious
           overwrite: true
           prerelease: true
+          release_name: PrimeXT Continious Build
