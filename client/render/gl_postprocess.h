@@ -12,7 +12,7 @@ class CBasePostEffects
 public:
 	word	blurShader[2];		// e.g. underwater blur	
 	word	dofShader;		// iron sight with dof
-	word	monoShader;		// monochrome effect
+	word	postprocessingShader;		// monochrome effect
 	word	genSunShafts;		// sunshafts effect
 	word	drawSunShafts;		// sunshafts effect
 	word	tonemapShader;
@@ -22,8 +22,15 @@ public:
 	word	blurMipShader;
 	word	bloomShader;
 
-	int	target_rgb[2];
-	float	grayScaleFactor;
+	int		target_rgb[2];
+	float	brightnessFactor;
+	float	saturationFactor;
+	float	contrastFactor;
+	float	redLevelFactor;
+	float	greenLevelFactor;
+	float	blueLevelFactor;
+	float	vignetteScale;
+	float	filmGrainScale;
 	float	blurFactor[2];
 	bool	m_bUseTarget;
 

@@ -976,7 +976,7 @@ void InitPostprocessShaders();
 void RenderDOF();
 void RenderUnderwaterBlur();
 void RenderNerveGasBlur();
-void RenderMonochrome();
+void RenderPostprocessing();
 void RenderSunShafts();
 void RenderBloom();
 void RenderTonemap();

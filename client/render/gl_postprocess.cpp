@@ -30,8 +30,8 @@ void CBasePostEffects::InitializeShaders()
 	char options[MAX_OPTIONS_LENGTH];
 	memset(options, 0, sizeof(options));
 
-	// monochrome effect
-	monoShader = GL_FindShader("postfx/monochrome", "postfx/generic", "postfx/monochrome");
+	// postprocessing
+	postprocessingShader = GL_FindShader("postfx/postprocessing", "postfx/generic", "postfx/postprocessing");
 
 	// gaussian blur for X
 	GL_SetShaderDirective(options, "BLUR_X");
@@ -463,7 +463,15 @@ void InitPostEffects()
 {
 	v_posteffects = CVAR_REGISTER( "gl_posteffects", "1", FCVAR_ARCHIVE );
 	v_sunshafts = CVAR_REGISTER( "gl_sunshafts", "1", FCVAR_ARCHIVE );
-	v_grayscale = CVAR_REGISTER( "gl_grayscale", "0", 0 );
+	r_postfx_enable = CVAR_REGISTER("r_postfx_enable", "1.0", 0);
+	r_postfx_brightness = CVAR_REGISTER("r_postfx_brightness", "0.0", 0);
+	r_postfx_saturation = CVAR_REGISTER("r_postfx_saturation", "1.0", 0);
+	r_postfx_contrast = CVAR_REGISTER("r_postfx_contrast", "1.0", 0);
+	r_postfx_redlevel = CVAR_REGISTER("r_postfx_redlevel", "1.0", 0);
+	r_postfx_greenlevel = CVAR_REGISTER("r_postfx_greenlevel", "1.0", 0);
+	r_postfx_bluelevel = CVAR_REGISTER("r_postfx_bluelevel", "1.0", 0);
+	r_postfx_vignettescale = CVAR_REGISTER("r_postfx_vignettescale", "0.0", 0);
+	r_postfx_filmgrainscale = CVAR_REGISTER("r_postfx_filmgrainscale", "0.0", 0);
 	r_tonemap = CVAR_REGISTER("r_tonemap", "1", FCVAR_ARCHIVE);
 	r_bloom = CVAR_REGISTER("r_bloom", "1", FCVAR_ARCHIVE);
 	r_bloom_scale = CVAR_REGISTER("r_bloom_scale", "0.7", FCVAR_ARCHIVE);
@@ -479,21 +487,6 @@ void InitPostTextures()
 void InitPostprocessShaders()
 {
 	post.InitializeShaders();
-}
-
-static float GetGrayscaleFactor( void )
-{
-	float grayscale = v_grayscale->value;
-	float deadTime = 0.0f; // FIXME STUB gHUD.m_flDeadTime
-	if (deadTime)
-	{
-		float fact = (tr.time - deadTime) / DEAD_GRAYSCALE_TIME;
-
-		fact = Q_min( fact, 1.0f );
-		grayscale = Q_max( fact, grayscale );
-	}
-
-	return grayscale;
 }
 
 // rectangle version
@@ -587,8 +580,23 @@ void V_RenderPostEffect( word hProgram )
 		case UT_COLORMAP:
 			u->SetValue( post.target_rgb[0] );
 			break;
-		case UT_GRAYSCALE:
-			u->SetValue( post.grayScaleFactor );
+		case UT_BRIGHTNESS:
+			u->SetValue(post.brightnessFactor);
+			break;
+		case UT_SATURATION:
+			u->SetValue(post.saturationFactor);
+			break;
+		case UT_CONTRAST:
+			u->SetValue(post.contrastFactor);
+			break;
+		case UT_COLORLEVELS:
+			u->SetValue(post.redLevelFactor, post.greenLevelFactor, post.blueLevelFactor);
+			break;
+		case UT_VIGNETTESCALE:
+			u->SetValue(post.vignetteScale);
+			break;
+		case UT_FILMGRAINSCALE:
+			u->SetValue(post.filmGrainScale);
 			break;
 		case UT_BLURFACTOR:
 			u->SetValue( post.blurFactor[0], post.blurFactor[1] );
@@ -673,17 +681,23 @@ void RenderBlur( float blurX, float blurY )
 	post.End();
 }
 
-void RenderMonochrome( void )
+void RenderPostprocessing( void )
 {
-	post.grayScaleFactor = GetGrayscaleFactor();
-	if( post.grayScaleFactor <= 0.0f ) return;
+	if (!post.Begin() || !CVAR_TO_BOOL(r_postfx_enable))
+		return;
 
-	if( !post.Begin( )) return;
+	post.brightnessFactor = r_postfx_brightness->value;
+	post.saturationFactor = r_postfx_saturation->value;
+	post.contrastFactor = r_postfx_contrast->value;
+	post.redLevelFactor = r_postfx_redlevel->value;
+	post.greenLevelFactor = r_postfx_greenlevel->value;
+	post.blueLevelFactor = r_postfx_bluelevel->value;
+	post.vignetteScale = r_postfx_vignettescale->value;
+	post.filmGrainScale = r_postfx_filmgrainscale->value;
 
-	// apply monochromatic
 	GL_DebugGroupPush(__FUNCTION__);
 	post.RequestScreenColor();
-	V_RenderPostEffect( post.monoShader );
+	V_RenderPostEffect( post.postprocessingShader );
 	post.End();
 	GL_DebugGroupPop();
 }
