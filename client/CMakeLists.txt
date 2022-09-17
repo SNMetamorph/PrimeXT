@@ -68,6 +68,7 @@ if(NOT ENABLE_VGUI_COMPATIBILITY)
 		"ui/ui_main.cpp"
 		"ui/ui_demo_window.cpp"
 		"ui/ui_material_editor.cpp"
+		"ui/ui_postfx_menu.cpp"
 		"${CMAKE_SOURCE_DIR}/external/imgui/imgui.cpp"
 		"${CMAKE_SOURCE_DIR}/external/imgui/imgui_demo.cpp"
 		"${CMAKE_SOURCE_DIR}/external/imgui/imgui_draw.cpp"
