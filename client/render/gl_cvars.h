@@ -111,6 +111,14 @@ extern cvar_t *r_renderplayershadow;
 extern cvar_t *v_sunshafts;
 extern cvar_t *v_glows;
 extern cvar_t *v_posteffects;
-extern cvar_t *v_grayscale;
+extern cvar_t *r_postfx_enable;
+extern cvar_t *r_postfx_brightness;
+extern cvar_t *r_postfx_saturation;
+extern cvar_t *r_postfx_contrast;
+extern cvar_t *r_postfx_redlevel;
+extern cvar_t *r_postfx_greenlevel;
+extern cvar_t *r_postfx_bluelevel;
+extern cvar_t *r_postfx_vignettescale;
+extern cvar_t *r_postfx_filmgrainscale;
 
 #endif//R_CVARS_H

@@ -107,7 +107,15 @@ cvar_t *r_renderplayershadow;
 cvar_t *v_sunshafts;
 cvar_t *v_glows;
 cvar_t *v_posteffects;
-cvar_t *v_grayscale;
+cvar_t *r_postfx_enable;
+cvar_t *r_postfx_brightness;
+cvar_t *r_postfx_saturation;
+cvar_t *r_postfx_contrast;
+cvar_t *r_postfx_redlevel;
+cvar_t *r_postfx_greenlevel;
+cvar_t *r_postfx_bluelevel;
+cvar_t *r_postfx_vignettescale;
+cvar_t *r_postfx_filmgrainscale;
 
 void R_InitializeConVars()
 {
