@@ -54,6 +54,9 @@ void CImGuiPostFxMenu::Draw()
     if (ImGui::SliderFloat("Film Grain Scale", &m_ParametersCache.filmGrainScale, 0.0f, 1.0f)) {
         StoreParameters();
     };
+    if (ImGui::Button("Reset")) {
+        ResetParameters();
+    }
     ImGui::End();
 }
 
@@ -97,6 +100,19 @@ void CImGuiPostFxMenu::StoreParameters()
     r_postfx_bluelevel->value = m_ParametersCache.blueLevel;
     r_postfx_vignettescale->value = m_ParametersCache.vignetteScale;
     r_postfx_filmgrainscale->value = m_ParametersCache.filmGrainScale;
+}
+
+void CImGuiPostFxMenu::ResetParameters()
+{
+    m_ParametersCache.brightness = 0.0f;
+    m_ParametersCache.saturation = 1.0f;
+    m_ParametersCache.contrast = 1.0f;
+    m_ParametersCache.redLevel = 1.0f;
+    m_ParametersCache.greenLevel = 1.0f;
+    m_ParametersCache.blueLevel = 1.0f;
+    m_ParametersCache.vignetteScale = 0.0f;
+    m_ParametersCache.filmGrainScale = 0.0f;
+    StoreParameters();
 }
 
 void CImGuiPostFxMenu::ShowMaterialEditor()

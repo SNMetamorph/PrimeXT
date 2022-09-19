@@ -29,6 +29,7 @@ private:
     
     void LoadParameters();
     void StoreParameters();
+    void ResetParameters();
 
     static void ShowMaterialEditor();
     static bool m_Visible;
