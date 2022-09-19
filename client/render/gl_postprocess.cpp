@@ -681,21 +681,38 @@ void RenderBlur( float blurX, float blurY )
 	post.End();
 }
 
-void RenderPostprocessing( void )
+void RenderPostprocessing()
 {
-	if (!post.Begin() || !CVAR_TO_BOOL(r_postfx_enable))
+	// we are in cubemap rendering mode
+	if (!RP_NORMALPASS())
 		return;
 
-	post.brightnessFactor = r_postfx_brightness->value;
-	post.saturationFactor = r_postfx_saturation->value;
-	post.contrastFactor = r_postfx_contrast->value;
-	post.redLevelFactor = r_postfx_redlevel->value;
-	post.greenLevelFactor = r_postfx_greenlevel->value;
-	post.blueLevelFactor = r_postfx_bluelevel->value;
-	post.vignetteScale = r_postfx_vignettescale->value;
-	post.filmGrainScale = r_postfx_filmgrainscale->value;
+	if (CVAR_TO_BOOL(r_postfx_enable))
+	{
+		post.brightnessFactor = r_postfx_brightness->value;
+		post.saturationFactor = r_postfx_saturation->value;
+		post.contrastFactor = r_postfx_contrast->value;
+		post.redLevelFactor = r_postfx_redlevel->value;
+		post.greenLevelFactor = r_postfx_greenlevel->value;
+		post.blueLevelFactor = r_postfx_bluelevel->value;
+		post.vignetteScale = r_postfx_vignettescale->value;
+		post.filmGrainScale = r_postfx_filmgrainscale->value;
+	}
+	else
+	{
+		// use default values
+		post.brightnessFactor = 0.0f;
+		post.saturationFactor = 1.0f;
+		post.contrastFactor = 1.0f;
+		post.redLevelFactor = 1.0f;
+		post.greenLevelFactor = 1.0f;
+		post.blueLevelFactor = 1.0f;
+		post.vignetteScale = 0.0f;
+		post.filmGrainScale = 0.0f;
+	}
 
 	GL_DebugGroupPush(__FUNCTION__);
+	GL_Setup2D();
 	post.RequestScreenColor();
 	V_RenderPostEffect( post.postprocessingShader );
 	post.End();

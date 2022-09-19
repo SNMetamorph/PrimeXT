@@ -73,5 +73,6 @@ void main()
 	color = AdjustContrast(color);
 	color = ApplyFilmGrain(color);
 	color = ApplyVignette(color);
+	color = ConvertLinearToSRGB(color); // gamma-correction
 	gl_FragColor = vec4(color, 1.0);
 }

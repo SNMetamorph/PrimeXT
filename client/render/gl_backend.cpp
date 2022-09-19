@@ -512,7 +512,7 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	if (hdr_rendering)
 	{
 		RenderBloom();
-		RenderTonemap();		// should be last step!!!
+		RenderTonemap();		// should be last step in HDR pipeline!!!
 	}
 
 	R_RenderDebugStudioList( true ); // 3D

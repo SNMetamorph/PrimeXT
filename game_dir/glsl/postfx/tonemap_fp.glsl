@@ -19,6 +19,7 @@ GNU General Public License for more details.
 uniform sampler2D	u_ScreenMap;
 uniform sampler2D   u_ColorMap;
 varying vec2	    var_TexCoord;
+
 vec3 ColorGradient(float t)
 {
     float red = smoothstep(0.33, 0.66, t);
@@ -73,7 +74,6 @@ void main()
 #else
     float exposure = texture2D(u_ColorMap, vec2(0.5)).r;
 	outputColor = TonemapMGS5(source * exposure); // tone compression with exposure
-    outputColor = ConvertLinearToSRGB(outputColor); // gamma-correction
 #endif
     gl_FragColor = vec4(outputColor, 1.0);
 }
