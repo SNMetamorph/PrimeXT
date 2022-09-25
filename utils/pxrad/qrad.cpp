@@ -67,6 +67,7 @@ bool		g_extra = DEFAULT_EXTRAMODE;
 bool		g_nomodelshadow = false;
 bool		g_lightbalance = false;
 bool		g_onlylights = false;
+bool		g_hdr_mode = true;
 float		g_smoothing_threshold;		// cosine of smoothing angle(in radians)
 char		source[MAX_PATH] = "";
 uint		g_gammamode = DEFAULT_GAMMAMODE;
@@ -2486,7 +2487,7 @@ show compiler usage like ZHLT
 */
 static void PrintRadUsage( void )
 {
-	Msg( "\n-= %s Options =-\n\n", APP_ABBREVIATION );
+	Msg( "\n-= %s options =-\n\n", APP_ABBREVIATION );
 	Msg( "    -dev #         : compile with developer message (1 - 4). default is %d\n", DEFAULT_DEVELOPER );
 	Msg( "    -threads #     : manually specify the number of threads to run\n" );
  	Msg( "    -extra         : improve lighting quality with lightmap filtering\n" );

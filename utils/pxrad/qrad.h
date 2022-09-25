@@ -379,6 +379,7 @@ extern bool		g_drawsample;
 extern bool		g_wadtextures;
 extern bool		g_dirtmapping;
 extern bool		g_onlylights;
+extern bool		g_hdr_mode;
 extern int		g_numdlights;
 extern uint		g_gammamode;
 extern vec_t		g_gamma;

@@ -3720,32 +3720,37 @@ void FinalLightFace( int facenum, int threadnum )
 	fl = &g_facelight[facenum];
 	tx = &g_texinfo[f->texinfo];
 
-	if( FBitSet( g_texinfo[f->texinfo].flags, TEX_SPECIAL ))
+	if (FBitSet(g_texinfo[f->texinfo].flags, TEX_SPECIAL))
 		return; // non-lit texture
 
-	for( lightstyles = 0; lightstyles < MAXLIGHTMAPS; lightstyles++ )
+	for (lightstyles = 0; lightstyles < MAXLIGHTMAPS; lightstyles++)
 	{
 		if( f->styles[lightstyles] == 255 )
 			break;
 	}
 
-	if( !lightstyles ) return;
+	if (!lightstyles) 
+		return;
 
 	LightMatrixFromTexMatrix( tx, lmvecs );
 
 	minlight = FloatForKey( g_face_entity[facenum], "_minlight" );
-	if( minlight < 1.0 ) minlight *= 128.0f; // GoldSrc
-	else minlight *= 0.5f; // Quake
+	if (minlight < 1.0) 
+		minlight *= 128.0f; // GoldSrc
+	else 
+		minlight *= 0.5f; // Quake
 
-	if( g_lightbalance )
+	if (g_lightbalance)
 		minlight *= g_direct_scale;
-	if( g_numbounce > 0 ) minlight = 0.0f; // ignore for radiosity
 
-	for( k = 0; k < lightstyles; k++ )
+	if (g_numbounce > 0) 
+		minlight = 0.0f; // ignore for radiosity
+
+	for (k = 0; k < lightstyles; k++)
 	{
 		samp = fl->samples;
 
-		for( j = 0; j < fl->numsamples; j++, samp++ )
+		for (j = 0; j < fl->numsamples; j++, samp++)
 		{
 #ifdef HLRAD_DELUXEMAPPING
 			const vec3_t	&facenormal = GetPlaneFromFace( f )->normal;
@@ -3755,9 +3760,9 @@ void FinalLightFace( int facenum, int threadnum )
 			int		side;
 			vec3_t		v;
 
-			VectorCopy( samp->normal, directionnormals[2] );
+			VectorCopy(samp->normal, directionnormals[2]);
 
-			for( side = 0; side < 2; side++ )
+			for (side = 0; side < 2; side++)
 			{
 				CrossProduct( facenormal, lmvecs[!side], texdirections[side] );
 				VectorNormalize( texdirections[side] );
@@ -3765,7 +3770,7 @@ void FinalLightFace( int facenum, int threadnum )
 					VectorNegate( texdirections[side], texdirections[side] );
 			}
 
-			for( side = 0; side < 2; side++ )
+			for (side = 0; side < 2; side++)
 			{
 				vec_t	dot = DotProduct( texdirections[side], samp->normal );
 				VectorMA( texdirections[side], -dot, samp->normal, directionnormals[side] );
@@ -3784,20 +3789,22 @@ void FinalLightFace( int facenum, int threadnum )
 			lb[1] = Q_max( lb[1], minlight );
 			lb[2] = Q_max( lb[2], minlight );
 
-			// clip from the top
-			if( lb[0] > g_maxlight || lb[1] > g_maxlight || lb[2] > g_maxlight )
+			if (!g_hdr_mode)
 			{
-				// find max value and scale the whole color down;
-				float	max = VectorMax( lb );
+				// clip from the top
+				if (lb[0] > g_maxlight || lb[1] > g_maxlight || lb[2] > g_maxlight)
+				{
+					// find max value and scale the whole color down;
+					float max = VectorMax(lb);
+					for (i = 0; i < 3; i++)
+						lb[i] = (lb[i] * g_maxlight) / max;
+				}
 
-				for( i = 0; i < 3; i++ )
-					lb[i] = ( lb[i] * g_maxlight ) / max;
+				// do gamma adjust
+				lb[0] = (float)pow(lb[0] / 256.0f, g_gamma) * 256.0f;
+				lb[1] = (float)pow(lb[1] / 256.0f, g_gamma) * 256.0f;
+				lb[2] = (float)pow(lb[2] / 256.0f, g_gamma) * 256.0f;
 			}
-
-			// do gamma adjust
-			lb[0] = (float)pow( lb[0] / 256.0f, g_gamma ) * 256.0f;
-			lb[1] = (float)pow( lb[1] / 256.0f, g_gamma ) * 256.0f;
-			lb[2] = (float)pow( lb[2] / 256.0f, g_gamma ) * 256.0f;
 
 #ifdef HLRAD_RIGHTROUND	// when you go down, when you go down down!
 			g_dlightdata[f->lightofs + k * fl->numsamples * 3 + j * 3 + 0] = Q_rint( lb[0] );

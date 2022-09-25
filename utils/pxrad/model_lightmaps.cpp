@@ -1067,10 +1067,13 @@ void FinalModelLightFace( int indexnum, int threadnum )
 					lb[i] = ( lb[i] * g_maxlight ) / max;
 			}
 
-			// do gamma adjust
-			lb[0] = (float)pow( lb[0] / 256.0f, g_gamma ) * 256.0f;
-			lb[1] = (float)pow( lb[1] / 256.0f, g_gamma ) * 256.0f;
-			lb[2] = (float)pow( lb[2] / 256.0f, g_gamma ) * 256.0f;
+			if (!g_hdr_mode)
+			{
+				// do gamma adjust
+				lb[0] = (float)pow(lb[0] / 256.0f, g_gamma) * 256.0f;
+				lb[1] = (float)pow(lb[1] / 256.0f, g_gamma) * 256.0f;
+				lb[2] = (float)pow(lb[2] / 256.0f, g_gamma) * 256.0f;
+			}
 
 #ifdef HLRAD_RIGHTROUND	// when you go down, when you go down down!
 			g_dlightdata[f->lightofs + k * fl->numsamples * 3 + j * 3 + 0] = Q_rint( lb[0] );

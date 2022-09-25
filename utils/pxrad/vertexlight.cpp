@@ -530,10 +530,13 @@ void FinalLightVertex( int modelnum, int threadnum = -1 )
 					lb[j] = ( lb[j] * g_maxlight ) / max;
 			}
 
-			// do gamma adjust
-			lb[0] = (float)pow( lb[0] / 256.0f, g_gamma ) * 256.0f;
-			lb[1] = (float)pow( lb[1] / 256.0f, g_gamma ) * 256.0f;
-			lb[2] = (float)pow( lb[2] / 256.0f, g_gamma ) * 256.0f;
+			if (!g_hdr_mode)
+			{
+				// do gamma adjust
+				lb[0] = (float)pow(lb[0] / 256.0f, g_gamma) * 256.0f;
+				lb[1] = (float)pow(lb[1] / 256.0f, g_gamma) * 256.0f;
+				lb[2] = (float)pow(lb[2] / 256.0f, g_gamma) * 256.0f;
+			}
 #ifdef HLRAD_RIGHTROUND
 			dvl->light[k].r = Q_rint( lb[0] );
 			dvl->light[k].g = Q_rint( lb[1] );
