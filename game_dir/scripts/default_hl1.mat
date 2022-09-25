@@ -1,0 +1,1602 @@
+"DUCT_FLR01"
+{
+	"material" "metal"
+}
+"DUCT_FLR01A"
+{
+	"material" "metal"
+}
+"DUCT_FLR02A"
+{
+	"material" "metal"
+}
+"DUCT_VNT"
+{
+	"material" "metal"
+}
+"DUCT_VNT2"
+{
+	"material" "metal"
+}
+"DUCT_WALL01"
+{
+	"material" "metal"
+}
+"DUCT_WALL02"
+{
+	"material" "metal"
+}
+"DUCT_WALL03"
+{
+	"material" "metal"
+}
+"DUCT_WALL04"
+{
+	"material" "metal"
+}
+"SILO2_COR"
+{
+	"material" "metal"
+}
+"OUT_GRVL1"
+{
+	"material" "dirt"
+}
+"OUT_GRVL2"
+{
+	"material" "dirt"
+}
+"OUT_GRVL2B"
+{
+	"material" "dirt"
+}
+"OUT_GRVL3"
+{
+	"material" "dirt"
+}
+"OUT_MUD1"
+{
+	"material" "dirt"
+}
+"OUT_RK1"
+{
+	"material" "dirt"
+}
+"OUT_RK2"
+{
+	"material" "dirt"
+}
+"OUT_RK3"
+{
+	"material" "dirt"
+}
+"OUT_RK4"
+{
+	"material" "dirt"
+}
+"OUT_SND1"
+{
+	"material" "dirt"
+}
+"OUT_SND2"
+{
+	"material" "dirt"
+}
+"OUT_SND2B"
+{
+	"material" "dirt"
+}
+"OUT_SND2C"
+{
+	"material" "dirt"
+}
+"OUT_WLK"
+{
+	"material" "dirt"
+}
+"OUT_DIRT1"
+{
+	"material" "dirt"
+}
+"OUT_DIRT2"
+{
+	"material" "dirt"
+}
+"GENERIC48"
+{
+	"material" "dirt"
+}
+"GENERIC49"
+{
+	"material" "dirt"
+}
+"GENERIC51"
+{
+	"material" "dirt"
+}
+"GENERIC52"
+{
+	"material" "dirt"
+}
+"GENERIC93"
+{
+	"material" "dirt"
+}
+"OUT_PAVE2"
+{
+	"material" "dirt"
+}
+"OUT_SNBAG"
+{
+	"material" "dirt"
+}
+"OUT_SNBAG2"
+{
+	"material" "dirt"
+}
+"OUT_SNBAGB"
+{
+	"material" "dirt"
+}
+"OUT_SNBAGC"
+{
+	"material" "dirt"
+}
+"OUT_TNT2"
+{
+	"material" "dirt"
+}
+"OUT_TNT1"
+{
+	"material" "dirt"
+}
+"OUT_TNT1B"
+{
+	"material" "dirt"
+}
+"OUT_TNT1C"
+{
+	"material" "dirt"
+}
+"OUT_TNT3"
+{
+	"material" "dirt"
+}
+"OUT_TNT3B"
+{
+	"material" "dirt"
+}
+"OUT_NET1"
+{
+	"material" "dirt"
+}
+"OUT_NET1B"
+{
+	"material" "dirt"
+}
+"FROSTSEWFLR"
+{
+	"material" "dirt"
+}
+"OUT_GRSS1"
+{
+	"material" "grass"
+}
+"OUT_GRND2B"
+{
+	"material" "grass"
+}
+"OUT_GRND3"
+{
+	"material" "grass"
+}
+"GENERIC109"
+{
+	"material" "default"
+}
+"GENERIC015C"
+{
+	"material" "default"
+}
+"GENERIC015D"
+{
+	"material" "default"
+}
+"GENERIC015E"
+{
+	"material" "default"
+}
+"GENERIC015F"
+{
+	"material" "default"
+}
+"GENERIC015G"
+{
+	"material" "default"
+}
+"GENERIC015H"
+{
+	"material" "default"
+}
+"GENERIC015I"
+{
+	"material" "default"
+}
+"GENERIC015"
+{
+	"material" "default"
+}
+"GENERIC015A"
+{
+	"material" "default"
+}
+"GENERIC015B"
+{
+	"material" "default"
+}
+"BABTECH_FLR02"
+{
+	"material" "default"
+}
+"CRETE2_FLR03"
+{
+	"material" "default"
+}
+"CRETE2_FLR03A"
+{
+	"material" "default"
+}
+"CRETE2_FLR03B"
+{
+	"material" "default"
+}
+"CRETE2_FLR03C"
+{
+	"material" "default"
+}
+"ELEV1_FLR"
+{
+	"material" "default"
+}
+"ELEV2_FLR"
+{
+	"material" "default"
+}
+"ELEV_FLR"
+{
+	"material" "default"
+}
+"GRATE1"
+{
+	"material" "default"
+}
+"GRATE2"
+{
+	"material" "default"
+}
+"GRATE2A"
+{
+	"material" "default"
+}
+"GRATE3A"
+{
+	"material" "default"
+}
+"GRID1"
+{
+	"material" "default"
+}
+"GRID2"
+{
+	"material" "default"
+}
+"TNNL_FLR12"
+{
+	"material" "default"
+}
+"TNNL_FLR12A"
+{
+	"material" "default"
+}
+"TNNL_FLR1A"
+{
+	"material" "default"
+}
+"LAB1_STAIR2A"
+{
+	"material" "default"
+}
+"FROSTFLOOR"
+{
+	"material" "default"
+}
+"GRATE4A"
+{
+	"material" "default"
+}
+"GRATE3B"
+{
+	"material" "default"
+}
+"GRATESTEP1"
+{
+	"material" "default"
+}
+"GRATESTEP2"
+{
+	"material" "default"
+}
+"GRATESTEP3"
+{
+	"material" "default"
+}
+"GRID1"
+{
+	"material" "default"
+}
+"GRID2"
+{
+	"material" "default"
+}
+"GENERIC015V"
+{
+	"material" "default"
+}
+
+"TNNL_FLR6"
+{
+	"material" "metal"
+}
+"TNNL_FLR6B"
+{
+	"material" "metal"
+}
+"C1A1_FLR1"
+{
+	"material" "metal"
+}
+"BABFL"
+{
+	"material" "metal"
+}
+"C2A3TURBINE1"
+{
+	"material" "metal"
+}
+"C2A3TURBINE2"
+{
+	"material" "metal"
+}
+"C2A3TURBINE3"
+{
+	"material" "metal"
+}
+"C2A3TURBINE4"
+{
+	"material" "metal"
+}
+"SILO2_P2"
+{
+	"material" "metal"
+}
+"SILO2_P2B"
+{
+	"material" "metal"
+}
+"SILO2_P3"
+{
+	"material" "metal"
+}
+"SILO2_P4"
+{
+	"material" "metal"
+}
+"SILO2_PAN2"
+{
+	"material" "metal"
+}
+"SILO2_W1"
+{
+	"material" "metal"
+}
+"SILO2_W1A"
+{
+	"material" "metal"
+}
+"SILO2_WALL1"
+{
+	"material" "metal"
+}
+"SILO2_W2"
+{
+	"material" "metal"
+}
+"BABTECH_C5"
+{
+	"material" "metal"
+}
+"LAB3_FLR2A"
+{
+	"material" "metal"
+}
+"LAB3_FLR2B"
+{
+	"material" "metal"
+}
+"FIFTIES_CMP3"
+{
+	"material" "metal"
+}
+"LAB1_STAIR2B"
+{
+	"material" "metal"
+}
+"OUT_QUNST11"
+{
+	"material" "metal"
+}
+"FREEZER_FLR1"
+{
+	"material" "metal"
+}
+"GENERIC015N"
+{
+	"material" "metal"
+}
+"GENERIC015P"
+{
+	"material" "metal"
+}
+"GENERIC015R"
+{
+	"material" "metal"
+}
+"GENERIC0150"
+{
+	"material" "metal"
+}
+"GENERIC015S"
+{
+	"material" "metal"
+}
+"GENERIC015T"
+{
+	"material" "metal"
+}
+"GENERIC015U"
+{
+	"material" "metal"
+}
+"GENERIC015V"
+{
+	"material" "metal"
+}
+"GENERIC015V2"
+{
+	"material" "metal"
+}
+"C1A4_DOME3"
+{
+	"material" "metal"
+}
+
+"GENERIC_114"
+{
+	"material" "shlak"
+}
+
+"WATERBLUE"
+{
+	"material" "shlak"
+}
+
+"WATERGREEN"
+{
+	"material" "shlak"
+}
+
+"TOXICGRN"
+{
+	"material" "shlak"
+}
+
+"FLUID1A"
+{
+	"material" "shlak"
+}
+
+"FLUID1B"
+{
+	"material" "shlak"
+}
+
+"FLUID2"
+{
+	"material" "shlak"
+}
+
+"FLUID3"
+{
+	"material" "shlak"
+}
+
+"FLUID4"
+{
+	"material" "shlak"
+}
+
+"WATERSILO"
+{
+	"material" "shlak"
+}
+
+"WATERSILO2"
+{
+	"material" "shlak"
+}
+
+"WATERF"
+{
+	"material" "shlak"
+}
+
+"FLUID1A"
+{
+	"material" "shlak"
+}
+
+"FIFT_BLOODFLR"
+{
+	"material" "kafel"
+}
+
+"FIFT_BLOODFLRA"
+{
+	"material" "kafel"
+}
+
+"FIFTIES_F01"
+{
+	"material" "kafel"
+}
+
+"FIFTIES_F02"
+{
+	"material" "kafel"
+}
+
+"FIFTIES_F03"
+{
+	"material" "kafel"
+}
+
+"FIFTIES_F03B"
+{
+	"material" "kafel"
+}
+
+"FIFTIES_FLR01"
+{
+	"material" "kafel"
+}
+
+"FIFTIES_FLR02"
+{
+	"material" "kafel"
+}
+
+"FIFTIES_FLR02B"
+{
+	"material" "kafel"
+}
+
+"FIFTIES_FLR02C"
+{
+	"material" "kafel"
+}
+"FIFTIES_FLR03"
+{
+	"material" "kafel"
+}
+"FIFTIES_FLR03B"
+{
+	"material" "kafel"
+}
+"FIFTIES_FLR5"
+{
+	"material" "kafel"
+}
+"LAB1_BLUXFLR1"
+{
+	"material" "kafel"
+}
+"LAB1_BLUXFLR1B"
+{
+	"material" "kafel"
+}
+"LAB1_BLUX1"
+{
+	"material" "kafel"
+}
+"LAB1_BLUX1B"
+{
+	"material" "kafel"
+}
+"LAB1_C4003"
+{
+	"material" "kafel"
+}
+"LAB1_C4A001"
+{
+	"material" "kafel"
+}
+"LAB1_C4B002"
+{
+	"material" "kafel"
+}
+"LAB1_C4D2"
+{
+	"material" "kafel"
+}
+"LAB1_CAB2"
+{
+	"material" "kafel"
+}
+"LAB1_FLOOR2A"
+{
+	"material" "kafel"
+}
+"LAB1_FLOOR2B"
+{
+	"material" "kafel"
+}
+"LAB1_FLOOR3"
+{
+	"material" "kafel"
+}
+"LAB1_FLOOR4"
+{
+	"material" "kafel"
+}
+"LAB1_FLOOR5"
+{
+	"material" "kafel"
+}
+"LAB1_FLOOR6"
+{
+	"material" "kafel"
+}
+"LAB1_FLOOR10"
+{
+	"material" "kafel"
+}
+"LAB1_FLR3"
+{
+	"material" "kafel"
+}
+"LAB1_FLR4"
+{
+	"material" "kafel"
+}
+"LAB1_FLR4B"
+{
+	"material" "kafel"
+}
+"LAB1_FLR4C"
+{
+	"material" "kafel"
+}
+"LAB1_FLR4D"
+{
+	"material" "kafel"
+}
+"LAB1_FLR5B"
+{
+	"material" "kafel"
+}
+"LAB1_FLR5C"
+{
+	"material" "kafel"
+}
+"LAB1_FLR5D"
+{
+	"material" "kafel"
+}
+"LAB1_FLR5D"
+{
+	"material" "kafel"
+}
+"LAB1_FLR6B"
+{
+	"material" "kafel"
+}
+"LAB1_FLR6C"
+{
+	"material" "kafel"
+}
+"LAB1_FLR6D"
+{
+	"material" "kafel"
+}
+"LAB1_W8FLR1"
+{
+	"material" "kafel"
+}
+"LAB1_W8FLR1B"
+{
+	"material" "kafel"
+}
+"LAB1_W8FLR1C"
+{
+	"material" "kafel"
+}
+"LAB1_W8FLR1D"
+{
+	"material" "kafel"
+}
+"C2A4_FLR6"
+{
+	"material" "kafel"
+}
+"C1A2_FLR1"
+{
+	"material" "kafel"
+}
+"C1A2_FLR2"
+{
+	"material" "kafel"
+}
+"C1A0_LABFLRB"
+{
+	"material" "kafel"
+}
+"C1A0_LABFLRC"
+{
+	"material" "kafel"
+}
+"C1A0_LABFLRD"
+{
+	"material" "kafel"
+}
+"C1A0_LABFLRE"
+{
+	"material" "kafel"
+}
+"C1A0_LABFLR"
+{
+	"material" "kafel"
+}
+
+
+"CRATE01"
+{
+	"material" "wood"
+}
+"CRATE02"
+{
+	"material" "wood"
+}
+"CRATE02B"
+{
+	"material" "wood"
+}
+"CRATE03"
+{
+	"material" "wood"
+}
+"CRATE04"
+{
+	"material" "wood"
+}
+"CRATE05"
+{
+	"material" "wood"
+}
+"CRATE06"
+{
+	"material" "wood"
+}
+"CRATE07"
+{
+	"material" "wood"
+}
+"CRATE08"
+{
+	"material" "wood"
+}
+"CRATE08B"
+{
+	"material" "wood"
+}
+"CRATE09"
+{
+	"material" "wood"
+}
+"CRATE09B"
+{
+	"material" "wood"
+}
+"CRATE09C"
+{
+	"material" "wood"
+}
+"CRATE19"
+{
+	"material" "wood"
+}
+"CRATE20"
+{
+	"material" "wood"
+}
+"CRATE21"
+{
+	"material" "wood"
+}
+"CRATE22"
+{
+	"material" "wood"
+}
+"CRATE23"
+{
+	"material" "wood"
+}
+"CRATE25"
+{
+	"material" "wood"
+}
+"FIFTIES_DR6"
+{
+	"material" "wood"
+}
+"FIFTIES_DR6A"
+{
+	"material" "wood"
+}
+"FIFTIES_CCH1"
+{
+	"material" "wood"
+}
+"FIFTIES_CCH2"
+{
+	"material" "wood"
+}
+"FIFTIES_CCH3"
+{
+	"material" "wood"
+}
+"FIFTIES_CCH4"
+{
+	"material" "wood"
+}
+"FIFTIES_DR1K"
+{
+	"material" "wood"
+}
+"FIFTIES_DR2"
+{
+	"material" "wood"
+}
+"FIFTIES_DR7"
+{
+	"material" "wood"
+}
+"FIFTIES_DR8"
+{
+	"material" "wood"
+}
+"FIFTIES_DR9"
+{
+	"material" "wood"
+}
+"FIFTIES_DSK1"
+{
+	"material" "wood"
+}
+"OUT_SLAT01"
+{
+	"material" "wood"
+}
+"OUT_WD"
+{
+	"material" "wood"
+}
+"OUT_CAC1"
+{
+	"material" "wood"
+}
+"OUT_CAC2"
+{
+	"material" "wood"
+}
+"OUT_CAC2"
+{
+	"material" "wood"
+}
+"BCRATE02"
+{
+	"material" "wood"
+}
+"BCRATE03"
+{
+	"material" "wood"
+}
+"BCRATE04"
+{
+	"material" "wood"
+}
+"BCRATE05"
+{
+	"material" "wood"
+}
+"BCRATE06"
+{
+	"material" "wood"
+}
+"BCRATE07"
+{
+	"material" "wood"
+}
+"BCRATE08"
+{
+	"material" "wood"
+}
+"BCRATE12"
+{
+	"material" "wood"
+}
+"BCRATE14"
+{
+	"material" "wood"
+}
+"BCRATE15"
+{
+	"material" "wood"
+}
+"BCRATE16"
+{
+	"material" "wood"
+}
+"BCRATE17"
+{
+	"material" "wood"
+}
+"BCRATE18"
+{
+	"material" "wood"
+}
+"BCRATE25"
+{
+	"material" "wood"
+}
+"BCRATE26"
+{
+	"material" "wood"
+}
+"CRATE10"
+{
+	"material" "wood"
+}
+"CRATE11"
+{
+	"material" "wood"
+}
+"CRATE12"
+{
+	"material" "wood"
+}
+"CRATE13"
+{
+	"material" "wood"
+}
+"CRATE24"
+{
+	"material" "wood"
+}
+"CRATE27"
+{
+	"material" "wood"
+}
+"C3A1_NRC2"
+{
+	"material" "electronic"
+}
+"C1A1_GAD1"
+{
+	"material" "electronic"
+}
+"C1A1_GAD2"
+{
+	"material" "electronic"
+}
+"C1A1_GAD3"
+{
+	"material" "electronic"
+}
+"C1A1_GAD4"
+{
+	"material" "electronic"
+}
+"C1A1_GAD4A"
+{
+	"material" "electronic"
+}
+"C1A1_GGT8"
+{
+	"material" "electronic"
+}
+"C1A4_PAN1A"
+{
+	"material" "electronic"
+}
+"C1A4_PAN1B"
+{
+	"material" "electronic"
+}
+"C1A4_SWTCH1"
+{
+	"material" "electronic"
+}
+"C2A2_SATORB"
+{
+	"material" "electronic"
+}
+"C2A4_CMP1"
+{
+	"material" "electronic"
+}
+"C2A4_GAD2"
+{
+	"material" "electronic"
+}
+"C3A2A_W1D"
+{
+	"material" "electronic"
+}
+"C3A2A_W1E"
+{
+	"material" "electronic"
+}
+"C3A2A_W2D"
+{
+	"material" "electronic"
+}
+"C3A2A_W2E"
+{
+	"material" "electronic"
+}
+"DRKMTL_SCRN2"
+{
+	"material" "electronic"
+}
+"DRKMTL_SCRN3"
+{
+	"material" "electronic"
+}
+"DRKMTL_SCRN4"
+{
+	"material" "electronic"
+}
+"DRKMTLT_WALL"
+{
+	"material" "electronic"
+}
+"FIFTIES_GGT8"
+{
+	"material" "electronic"
+}
+"FIFTIES_MON1"
+{
+	"material" "electronic"
+}
+"FIFTIES_MON1B"
+{
+	"material" "electronic"
+}
+"FIFTIES_MON2"
+{
+	"material" "electronic"
+}
+"FIFTIES_MON2B"
+{
+	"material" "electronic"
+}
+"FIFTIES_MON3"
+{
+	"material" "electronic"
+}
+"FIFTIES_MON3B"
+{
+	"material" "electronic"
+}
+"FIFTIES_MON4"
+{
+	"material" "electronic"
+}
+"FIFTIES_PAN2"
+{
+	"material" "electronic"
+}
+"GENERIC105"
+{
+	"material" "electronic"
+}
+"GENERIC106"
+{
+	"material" "electronic"
+}
+"GENERIC107"
+{
+	"material" "electronic"
+}
+"GENERIC114"
+{
+	"material" "electronic"
+}
+"GENERIC87A"
+{
+	"material" "electronic"
+}
+"GENERIC88A"
+{
+	"material" "electronic"
+}
+"GENERIC89A"
+{
+	"material" "electronic"
+}
+"GENERIC113"
+{
+	"material" "electronic"
+}
+"LAB1_CMPM1"
+{
+	"material" "electronic"
+}
+"LAB1_CMPM2"
+{
+	"material" "electronic"
+}
+"LAB1_CMPM3"
+{
+	"material" "electronic"
+}
+"LAB1_CMPM4"
+{
+	"material" "electronic"
+}
+"LAB1_CMPM5"
+{
+	"material" "electronic"
+}
+"LAB1_CMPM6"
+{
+	"material" "electronic"
+}
+"LAB1_CMPM7"
+{
+	"material" "electronic"
+}
+"LAB1_CMPM8"
+{
+	"material" "electronic"
+}
+"LAB1_COMP1"
+{
+	"material" "electronic"
+}
+"LAB1_COMP2"
+{
+	"material" "electronic"
+}
+"LAB1_COMP3"
+{
+	"material" "electronic"
+}
+"LAB1_COMP2A"
+{
+	"material" "electronic"
+}
+"LAB1_COMP10A"
+{
+	"material" "electronic"
+}
+"LAB1_COMP10B"
+{
+	"material" "electronic"
+}
+"LAB1_COMP10C"
+{
+	"material" "electronic"
+}
+"LAB1_COMP10D"
+{
+	"material" "electronic"
+}
+"LAB1_COMP10E"
+{
+	"material" "electronic"
+}
+"LAB1_COMP7"
+{
+	"material" "electronic"
+}
+"LAB1_COMP8"
+{
+	"material" "electronic"
+}
+"LAB1_COMP9A"
+{
+	"material" "electronic"
+}
+"LAB1_COMP9A2"
+{
+	"material" "electronic"
+}
+"LAB1_COMP9B"
+{
+	"material" "electronic"
+}
+"LAB1_COMP9C"
+{
+	"material" "electronic"
+}
+"LAB1_COMP9D"
+{
+	"material" "electronic"
+}
+"LAB1_GAD2"
+{
+	"material" "electronic"
+}
+"LAB1_GAD3"
+{
+	"material" "electronic"
+}
+"LAB1_GAD4"
+{
+	"material" "electronic"
+}
+"LAB1_RADSCRN2"
+{
+	"material" "electronic"
+}
+"LAB4_GAD3"
+{
+	"material" "electronic"
+}
+"LAB4_GAD4"
+{
+	"material" "electronic"
+}
+"LAB4_SWTCH"
+{
+	"material" "electronic"
+}
+"LAB_COMPM4"
+{
+	"material" "electronic"
+}
+"RECHARGEA"
+{
+	"material" "electronic"
+}
+"TNNL_GAD1"
+{
+	"material" "electronic"
+}
+"TNNL_GAD2"
+{
+	"material" "electronic"
+}
+"TNNL_GAD4"
+{
+	"material" "electronic"
+}
+"C2A4C2C"
+{
+	"material" "electronic"
+}
+"C2A4W1B"
+{
+	"material" "electronic"
+}
+"LAB1_CMP"
+{
+	"material" "electronic"
+}
+"LAB1_CMP1"
+{
+	"material" "electronic"
+}
+"LAB1_CMP2"
+{
+	"material" "electronic"
+}
+"LAB1_COMP3"
+{
+	"material" "electronic"
+}
+"LAB1_COMP3A"
+{
+	"material" "electronic"
+}
+"LAB1_COMP3B"
+{
+	"material" "electronic"
+}
+"LAB1_COMP3C"
+{
+	"material" "electronic"
+}
+"LAB1_COMP3D"
+{
+	"material" "electronic"
+}
+"LAB1_COMP4"
+{
+	"material" "electronic"
+}
+"LAB1_COMP5"
+{
+	"material" "electronic"
+}
+"LAB1_COMP7"
+{
+	"material" "electronic"
+}
+"LAB1_COMP8"
+{
+	"material" "electronic"
+}
+"LAB1_SW1"
+{
+	"material" "electronic"
+}
+"LAB_CRT1"
+{
+	"material" "electronic"
+}
+"LAB_CRT10A"
+{
+	"material" "electronic"
+}
+"LAB_CRT10B"
+{
+	"material" "electronic"
+}
+"LAB_CRT10C"
+{
+	"material" "electronic"
+}
+"LAB_CRT10D"
+{
+	"material" "electronic"
+}
+"LAB_CRT2"
+{
+	"material" "electronic"
+}
+"LAB_CRT3"
+{
+	"material" "electronic"
+}
+"LAB_CRT4"
+{
+	"material" "electronic"
+}
+"LAB_CRT5"
+{
+	"material" "electronic"
+}
+"LAB_CRT6"
+{
+	"material" "electronic"
+}
+"LAB_CRT7"
+{
+	"material" "electronic"
+}
+"LAB_CRT8"
+{
+	"material" "electronic"
+}
+"LAB_CRT9C"
+{
+	"material" "electronic"
+}
+"CRETESTCH01A"
+{
+	"material" "electronic"
+}
+"DRKMTLLGT1"
+{
+	"material" "electronic"
+}
+"FIFTS_LGHT01"
+{
+	"material" "electronic"
+}
+"FIFTS_LGHT3"
+{
+	"material" "electronic"
+}
+"FIFTS_LGHT4"
+{
+	"material" "electronic"
+}
+"FIFTIES_LGT2"
+{
+	"material" "electronic"
+}
+"FIFTS_LGHT5"
+{
+	"material" "electronic"
+}
+"GYMLIGHT"
+{
+	"material" "electronic"
+}
+"LIGHT1"
+{
+	"material" "electronic"
+}
+"LIGHT2A"
+{
+	"material" "electronic"
+}
+"LIGHT3A"
+{
+	"material" "electronic"
+}
+"LIGHT3B"
+{
+	"material" "electronic"
+}
+"LIGHT3C"
+{
+	"material" "electronic"
+}
+"LIGHT3D"
+{
+	"material" "electronic"
+}
+"LIGHT3E"
+{
+	"material" "electronic"
+}
+"LIGHT3F"
+{
+	"material" "electronic"
+}
+"LIGHT4A"
+{
+	"material" "electronic"
+}
+"LIGHT5A"
+{
+	"material" "electronic"
+}
+"LIGHT5B"
+{
+	"material" "electronic"
+}
+"LIGHT5C"
+{
+	"material" "electronic"
+}
+"LIGHT5D"
+{
+	"material" "electronic"
+}
+"LIGHT5E"
+{
+	"material" "electronic"
+}
+"LIGHT5F"
+{
+	"material" "electronic"
+}
+"LIGHT6A"
+{
+	"material" "electronic"
+}
+"METALSTCH2"
+{
+	"material" "electronic"
+}
+"TNNL_LGT1"
+{
+	"material" "electronic"
+}
+"TNNL_LGT2"
+{
+	"material" "electronic"
+}
+"TNNL_LGT3"
+{
+	"material" "electronic"
+}
+"TNNL_LGT4"
+{
+	"material" "electronic"
+}
+"LAB1_GAD2"
+{
+	"material" "electronic"
+}
+"ELEV1_DWN"
+{
+	"material" "electronic"
+}
+"SPOTBLUE"
+{
+	"material" "electronic"
+}
+"SPOTGREEN"
+{
+	"material" "electronic"
+}
+"SPOTRED"
+{
+	"material" "electronic"
+}
+"SPOTYELLOW"
+{
+	"material" "electronic"
+}
+"LAB1_GAD3"
+{
+	"material" "electronic"
+}
+"LAB1_GAD3B"
+{
+	"material" "electronic"
+}
+"ELEV2_PAN"
+{
+	"material" "electronic"
+}
+"ELEV1_PAN"
+{
+	"material" "electronic"
+}
+"C2A4X_C3"
+{
+	"material" "electronic"
+}
+"C2A4X_C1"
+{
+	"material" "electronic"
+}
+"MEDKIT"
+{
+	"material" "electronic"
+}
+"GLASS_BRIGHT"
+{
+	"material" "glass"
+}
+"GLASS_DARK"
+{
+	"material" "glass"
+}
+"GLASS_MED"
+{
+	"material" "glass"
+}
+"GLASSBLUE1"
+{
+	"material" "glass"
+}
+"GLASSBLUE2"
+{
+	"material" "glass"
+}
+"GLASSGREEEN"
+{
+	"material" "glass"
+}
+"GLASSGREEEN"
+{
+	"material" "glass"
+}

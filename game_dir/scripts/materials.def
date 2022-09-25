@@ -12,49 +12,54 @@
 {
 	"impact_decal"	"shot_metal"
 	"impact_parts"	"metal_flash" "metal_spark" 
-	"impact_sound"	"debris/impact_metal01.wav" "debris/impact_metal02.wav" "debris/impact_metal03.wav" "debris/impact_metal04.wav"
-	"step_sound"	"player/steps_metal01.wav" "player/steps_metal02.wav" "player/steps_metal03.wav" "player/steps_metal04.wav" "player/steps_metal05.wav" "player/steps_metal06.wav" "player/steps_metal07.wav" "player/steps_metal08.wav"
-	"detailmap"	"gfx/detail/det_metal"
+	"impact_sound"	"debris/metal1.wav" "debris/metal2.wav" "debris/metal3.wav" "debris/metal4.wav" "debris/metal5.wav" "debris/metal6.wav"
+	"step_sound"	"player/pl_metal1.wav" "player/pl_metal2.wav" "player/pl_metal3.wav" "player/pl_metal4.wav"
 }
 
 "wood"
 {
 	"impact_decal"	"shot_wood"
 	"impact_parts"	"wood_gibs" "test_impact"
-	"impact_sound"	"debris/wood1.wav" "debris/wood2.wav" "debris/wood3.wav"
-	"step_sound"	"steklo/glass_step_0.wav" "steklo/glass_step_1.wav" "steklo/glass_step_2.wav" "steklo/glass_step_3.wav"
-	"detailmap"	"gfx/detail/det_wood"
+	"impact_sound"	"debris/wood1.wav" "debris/wood2.wav" "debris/wood3.wav" "debris/wood4.wav"
+	"step_sound"	"materials/pstep_1.wav" "materials/pstep_2.wav" "materials/pstep_3.wav" "materials/pstep_4.wav" "materials/pstep_5.wav" "materials/pstep_6.wav"
 }
 
 "glass"
 {
 	"impact_decal"	"shot_glass"
 	"impact_parts"	"glass_gibs"
-	"impact_sound"	"debris/impact_glass01.wav" "debris/impact_glass02.wav" "debris/impact_glass03.wav" "debris/impact_glass04.wav" "debris/impact_glass05.wav" "debris/impact_glass06.wav" "debris/impact_glass07.wav"
-	"step_sound"	"player/pl_grass1.wav" "player/pl_grass2.wav" "player/pl_grass3.wav" "player/pl_grass4.wav"
+	"impact_sound"	"debris/glass1.wav" "debris/glass2.wav" "debris/glass3.wav" "debris/glass4.wav"
+	"step_sound"	"player/pl_tile1.wav" "player/pl_tile2.wav" "player/pl_tile3.wav" "player/pl_tile4.wav" "player/pl_tile5.wav"
 }
 
 "kafel"
 {
 	"impact_decal"	"shot_tile"
 	"impact_parts"	"tile_gibs"
-	"impact_sound"	"debris/impact_kafel01.wav" "debris/impact_kafel02.wav" "debris/impact_kafel03.wav" "debris/impact_kafel04.wav" 
-	"step_sound"	"player/pl_grass1.wav" "player/pl_grass2.wav" "player/pl_grass3.wav" "player/pl_grass4.wav"
-	"detailmap"	"gfx/detail/det_plitka"
+	"impact_sound"	"debris/concrete1.wav" "debris/concrete2.wav" "debris/concrete3.wav"
+	"step_sound"	"player/pl_tile1.wav" "player/pl_tile2.wav" "player/pl_tile3.wav" "player/pl_tile4.wav" "player/pl_tile5.wav"
 }
 
 "grass"
 {
 	"impact_decal"	"shot"
 	"impact_parts"	"dirt_gibs" "test_impact" "test_smoke"
-	"impact_sound"	"debris/concrete1.wav" "debris/concrete2.wav" "debris/concrete3.wav" "debris/concrete4.wav"
-	"step_sound"	"player/pl_grass1.wav" "player/pl_grass2.wav" "player/pl_grass3.wav" "player/pl_grass4.wav"
+	"impact_sound"	"debris/flesh1.wav" "debris/flesh2.wav" "debris/flesh3.wav"
+	"step_sound"	"player/pl_dirt1.wav" "player/pl_dirt2.wav" "player/pl_dirt3.wav" "player/pl_dirt4.wav"
 }
 
 "shlak"
 {
 	"impact_decal"	"shot"
 	"impact_parts"	"dirt_gibs" "test_impact" "test_smoke"
-	"impact_sound"	"debris/concrete1.wav" "debris/concrete2.wav" "debris/concrete3.wav" "debris/concrete4.wav"
+	"impact_sound"	"debris/flesh1.wav" "debris/flesh2.wav" "debris/flesh3.wav" "debris/flesh5.wav"
 	"step_sound"	"player/pl_slosh1.wav" "player/pl_slosh2.wav" "player/pl_slosh3.wav" "player/pl_slosh4.wav"
+}
+
+"electronic"
+{
+	"impact_decal"	"shot"
+	"impact_parts"	"metal_flash" "metal_spark"
+	"impact_sound"	"debris/metal3.wav" "debris/metal4.wav" "debris/metal5.wav" "debris/metal6.wav"
+	"step_sound"	"player/pl_metal1.wav" "player/pl_metal2.wav" "player/pl_metal3.wav" "player/pl_metal4.wav"
 }
