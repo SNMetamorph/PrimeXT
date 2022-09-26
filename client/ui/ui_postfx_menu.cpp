@@ -30,7 +30,7 @@ void CImGuiPostFxMenu::Draw()
     if (ImGui::Checkbox("Enable", &m_ParametersCache.enabled)) {
         StoreParameters();
     };
-    if (ImGui::SliderFloat("Brightness", &m_ParametersCache.brightness, 0.0f, 1.0f)) {
+    if (ImGui::SliderFloat("Brightness", &m_ParametersCache.brightness, -1.0f, 1.0f)) {
         StoreParameters();
     };
     if (ImGui::SliderFloat("Saturation", &m_ParametersCache.saturation, 0.0f, 10.0f)) {
