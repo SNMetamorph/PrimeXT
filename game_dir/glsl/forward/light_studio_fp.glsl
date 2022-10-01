@@ -121,10 +121,6 @@ void main( void )
 	// compute the diffuse term
 	vec4 diffuse = colormap2D( u_ColorMap, vec_TexDiffuse );
 
-#if defined( SIGNED_DISTANCE_FIELD )
-	diffuse.a *= smoothstep( SOFT_EDGE_MIN, SOFT_EDGE_MAX, diffuse.a ); 
-#endif // SIGNED_DISTANCE_FIELD
-
 #if defined( HAS_DETAIL )
 	diffuse.rgb *= detailmap2D( u_DetailMap, var_TexDetail ).rgb * DETAIL_SCALE;
 #endif

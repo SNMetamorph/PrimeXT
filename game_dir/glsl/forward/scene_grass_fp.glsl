@@ -31,10 +31,6 @@ void main( void )
 {
 	vec4 diffuse = colormap2D( u_ColorMap, var_TexDiffuse );
 
-#if defined( SIGNED_DISTANCE_FIELD )
-	diffuse.a *= smoothstep( SOFT_EDGE_MIN, SOFT_EDGE_MAX, diffuse.a ); 
-#endif//DXT_ENCODE_ALPHA_SDF
-
 #if !defined( LIGHTING_FULLBRIGHT )
 #if defined( LIGHTMAP_DEBUG ) || defined( LIGHTVEC_DEBUG )
 	if( bool( gl_FrontFacing ))

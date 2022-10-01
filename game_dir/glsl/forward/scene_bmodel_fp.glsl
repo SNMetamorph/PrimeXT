@@ -180,10 +180,6 @@ void main( void )
 	result.rgb *= u_RenderColor.rgb;
 #endif
 
-#if defined( SIGNED_DISTANCE_FIELD )
-	result.a *= smoothstep( SOFT_EDGE_MIN, SOFT_EDGE_MAX, result.a ); 
-#endif
-
 #if !defined( ALPHA_GLASS ) && defined( TRANSLUCENT )
 	result.a *= (u_RenderColor.a);
 #endif

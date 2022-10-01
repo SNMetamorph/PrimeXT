@@ -182,10 +182,6 @@ void main()
 	vec4 diffuse = colormap2D( u_ColorMap, vec_TexDiffuse );
 #endif
 
-#if defined( SIGNED_DISTANCE_FIELD )
-	diffuse.a *= smoothstep( SOFT_EDGE_MIN, SOFT_EDGE_MAX, diffuse.a ); 
-#endif
-
 #if defined( HAS_DETAIL )
 #if defined( APPLY_TERRAIN )
 	diffuse.rgb *= detailmap2D( u_DetailMap, var_TexGlobal ).rgb * DETAIL_SCALE;

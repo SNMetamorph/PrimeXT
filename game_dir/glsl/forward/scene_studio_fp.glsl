@@ -89,10 +89,6 @@ void main( void )
 	// kRenderTransColor support
 	result.rgb *= u_RenderColor.rgb;
 
-#if defined( SIGNED_DISTANCE_FIELD )
-	result.a *= smoothstep( SOFT_EDGE_MIN, SOFT_EDGE_MAX, result.a ); 
-#endif//SIGNED_DISTANCE_FIELD
-
 #if !defined( ALPHA_GLASS )
 	result.a *= u_RenderColor.a;
 #endif

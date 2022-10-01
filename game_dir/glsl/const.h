@@ -32,10 +32,6 @@ GNU General Public License for more details.
 #define SHADE_LAMBERT	1.495
 #define FOV_MULT		0.5		// FIXME: this should be 0.25
 
-// signed distance field stuff
-#define SOFT_EDGE_MIN		0.15
-#define SOFT_EDGE_MAX		0.45
-
 // alphafunc thresholds
 #define STUDIO_ALPHA_THRESHOLD	0.5
 #define BMODEL_ALPHA_THRESHOLD	0.25
