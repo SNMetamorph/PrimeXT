@@ -3171,9 +3171,6 @@ void R_BuildFaceListForLight( CDynLight *pl, bool solid )
 				continue;
 
 			mextrasurf_t *es = entry->m_pSurf->info;
-			if (entry->m_pSurf->flags & SURF_DRAWTURB)
-				continue; // skip all func_water surfaces
-
 			gl_state_t *glm = GL_GetCache( es->parent->hCachedMatrix );
 			RI->currententity = es->parent;
 			RI->currentmodel = RI->currententity->model;
@@ -3205,9 +3202,6 @@ void R_BuildFaceListForLight( CDynLight *pl, bool solid )
 				continue;
 
 			mextrasurf_t *es = entry->m_pSurf->info;
-			if (entry->m_pSurf->flags & SURF_DRAWTURB)
-				continue; // skip all func_water surfaces
-
 			gl_state_t *glm = GL_GetCache( es->parent->hCachedMatrix );
 			RI->currententity = es->parent;
 			RI->currentmodel = RI->currententity->model;
