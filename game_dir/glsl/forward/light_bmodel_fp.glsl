@@ -61,7 +61,7 @@ uniform float		u_Smoothness;
 
 varying vec2		var_TexDiffuse;
 varying vec3		var_LightVec;
-varying vec3		var_ViewVec;
+varying vec3		var_ViewDir;
 
 #if defined( HAS_DETAIL )
 varying vec2		var_TexDetail;
@@ -72,7 +72,7 @@ varying vec2		var_TexGlobal;
 #endif
 
 #if defined( HAS_NORMALMAP )
-varying mat3		var_WorldMat;
+varying mat3		var_MatrixTBN;
 #else
 varying vec3		var_Normal;
 #endif
@@ -97,8 +97,9 @@ varying vec3		var_TangentLightDir;
 void main()
 {
 	vec2 vec_TexDiffuse = var_TexDiffuse.xy; 
-	vec3 V = normalize( var_ViewVec );
-	vec3 L = vec3( 0.0 );
+	vec3 V = normalize( var_ViewDir );
+	vec3 L = vec3(0.0);
+	vec3 result = vec3(0.0);
 	float atten = 1.0;
 	MaterialData mat;
 
@@ -148,8 +149,9 @@ void main()
 #endif
 
 #if defined( HAS_NORMALMAP )
-	// rotate normal to worldpsace
-	N = normalize( var_WorldMat * N );
+	// transform normal vector to world space
+	mat3 tbnBasis = mat3(normalize(var_MatrixTBN[0]), normalize(var_MatrixTBN[1]), normalize(var_MatrixTBN[2]));
+	N = normalize(tbnBasis * N);
 #endif
 
 // setup material params values
@@ -167,26 +169,36 @@ void main()
 #else
 	mat.smoothness = u_Smoothness;
 #endif
+
+#if defined( LIQUID_SURFACE )
+	mat.smoothness = 0.72;
+	mat.metalness = 1.0;
+	mat.ambientOcclusion = 1.0;
+	mat.specularIntensity = 1.0;
+#else
 	// default params 
 	mat.metalness = 0.0;
 	mat.ambientOcclusion = 1.0;
 	mat.specularIntensity = 1.0;
+#endif // LIQUID_SURFACE
 #endif // HAS_GLOSSMAP
 
 // compute the diffuse term
 #if defined( PLANAR_REFLECTION ) && !defined( LIQUID_UNDERWATER ) // HACKHACK
-	vec4 diffuse = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, u_RefractScale );
+	vec4 albedo = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, u_RefractScale );
 #elif defined( APPLY_TERRAIN )
-	vec4 diffuse = TerrainMixDiffuse( u_ColorMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
+	vec4 albedo = TerrainMixDiffuse( u_ColorMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
+#elif defined( LIQUID_SURFACE )
+	vec4 albedo = vec4(1.0);
 #else
-	vec4 diffuse = colormap2D( u_ColorMap, vec_TexDiffuse );
+	vec4 albedo = colormap2D( u_ColorMap, vec_TexDiffuse );
 #endif
 
 #if defined( HAS_DETAIL )
 #if defined( APPLY_TERRAIN )
-	diffuse.rgb *= detailmap2D( u_DetailMap, var_TexGlobal ).rgb * DETAIL_SCALE;
+	albedo.rgb *= detailmap2D( u_DetailMap, var_TexGlobal ).rgb * DETAIL_SCALE;
 #else
-	diffuse.rgb *= detailmap2D( u_DetailMap, var_TexDetail ).rgb * DETAIL_SCALE;
+	albedo.rgb *= detailmap2D( u_DetailMap, var_TexDetail ).rgb * DETAIL_SCALE;
 #endif
 #endif
 
@@ -226,21 +238,18 @@ void main()
 	if (shadow <= 0.0) 
 		discard; // fast reject
 
-	vec3 albedo = diffuse.rgb;
 	light *= atten * shadow; // apply attenuation and shadowing
-	LightingData lighting = ComputeLighting(N, V, L, albedo, light, mat);
+	LightingData lighting = ComputeLighting(N, V, L, albedo.rgb, light, mat);
+	result += lighting.specular;
 
+#if !defined( LIQUID_SURFACE ) // disable diffuse lighting on liquid
 #if defined( APPLY_PBS )
-	diffuse.rgb = (lighting.kD * albedo / M_PI) * lighting.diffuse;
+	result += (lighting.kD * albedo.rgb / M_PI) * lighting.diffuse;
 #else
-	diffuse.rgb = lighting.diffuse * albedo;
+	result += lighting.diffuse * albedo.rgb;
 #endif
-
-	diffuse.rgb += lighting.specular;
-#if defined( LIGHT_PROJ )
-	diffuse.rgb += (albedo * u_LightDiffuse * u_AmbientFactor); // what is this?
 #endif
 
 	// compute final color
-	gl_FragColor = diffuse;
+	gl_FragColor = vec4(result, 1.0);
 }

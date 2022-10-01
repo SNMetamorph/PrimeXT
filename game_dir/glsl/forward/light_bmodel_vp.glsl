@@ -29,7 +29,7 @@ uniform vec2	u_TexOffset;
 
 varying vec2	var_TexDiffuse;
 varying vec3	var_LightVec;
-varying vec3	var_ViewVec;
+varying vec3	var_ViewDir;
 
 #if defined( HAS_DETAIL )
 varying vec2	var_TexDetail;
@@ -40,7 +40,7 @@ varying vec2	var_TexGlobal;
 #endif
 
 #if defined( HAS_NORMALMAP )
-varying mat3	var_WorldMat;
+varying mat3	var_MatrixTBN;
 #else
 varying vec3	var_Normal;
 #endif
@@ -92,12 +92,12 @@ void main( void )
 	var_ShadowCoord = worldpos;
 #endif
 
-	// these things are in worldspace and not a normalized
+	// these things are in world space and not a normalized
 	var_LightVec = ( u_LightOrigin.xyz - worldpos.xyz );
-	var_ViewVec = ( u_ViewOrigin.xyz - worldpos.xyz );
+	var_ViewDir = ( u_ViewOrigin - worldpos.xyz );
 
 #if defined( HAS_NORMALMAP )
-	var_WorldMat = tbn;
+	var_MatrixTBN = tbn;
 #else
 	var_Normal = tbn[2];
 #endif

@@ -71,7 +71,6 @@ varying vec4		var_TexMirror;	// mirror coords
 #endif
 
 #if defined( REFLECTION_CUBEMAP )
-varying vec3		var_WorldNormal;
 varying mat3		var_MatrixTBN;
 #endif
 
