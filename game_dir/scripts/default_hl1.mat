@@ -330,19 +330,6 @@
 {
 	"material" "default"
 }
-"GRID1"
-{
-	"material" "default"
-}
-"GRID2"
-{
-	"material" "default"
-}
-"GENERIC015V"
-{
-	"material" "default"
-}
-
 "TNNL_FLR6"
 {
 	"material" "metal"
@@ -540,11 +527,6 @@
 	"material" "shlak"
 }
 
-"FLUID1A"
-{
-	"material" "shlak"
-}
-
 "FIFT_BLOODFLR"
 {
 	"material" "kafel"
@@ -695,10 +677,6 @@
 	"material" "kafel"
 }
 "LAB1_FLR5C"
-{
-	"material" "kafel"
-}
-"LAB1_FLR5D"
 {
 	"material" "kafel"
 }
@@ -901,10 +879,6 @@
 	"material" "wood"
 }
 "OUT_CAC1"
-{
-	"material" "wood"
-}
-"OUT_CAC2"
 {
 	"material" "wood"
 }
@@ -1312,10 +1286,6 @@
 {
 	"material" "electronic"
 }
-"LAB1_COMP3"
-{
-	"material" "electronic"
-}
 "LAB1_COMP3A"
 {
 	"material" "electronic"
@@ -1337,14 +1307,6 @@
 	"material" "electronic"
 }
 "LAB1_COMP5"
-{
-	"material" "electronic"
-}
-"LAB1_COMP7"
-{
-	"material" "electronic"
-}
-"LAB1_COMP8"
 {
 	"material" "electronic"
 }
@@ -1520,10 +1482,6 @@
 {
 	"material" "electronic"
 }
-"LAB1_GAD2"
-{
-	"material" "electronic"
-}
 "ELEV1_DWN"
 {
 	"material" "electronic"
@@ -1541,10 +1499,6 @@
 	"material" "electronic"
 }
 "SPOTYELLOW"
-{
-	"material" "electronic"
-}
-"LAB1_GAD3"
 {
 	"material" "electronic"
 }
@@ -1589,10 +1543,6 @@
 	"material" "glass"
 }
 "GLASSBLUE2"
-{
-	"material" "glass"
-}
-"GLASSGREEEN"
 {
 	"material" "glass"
 }
