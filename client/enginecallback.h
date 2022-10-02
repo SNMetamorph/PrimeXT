@@ -150,8 +150,7 @@ inline int CREATE_TEXTURE_ARRAY(const char *name, int width, int height, int dep
 
 #define GL_GetProcAddress		(*gRenderfuncs.GL_GetProcAddress)
 
-//#define MOD_HANDLE			(*gRenderfuncs.pfnGetModel)
-inline model_t *MOD_HANDLE(int modelindex)
+inline model_t *MODEL_HANDLE(int modelindex)
 {
 	return reinterpret_cast<model_t*>((*gRenderfuncs.pfnGetModel)(modelindex));
 }

@@ -1053,13 +1053,13 @@ void CreateDecal(const Vector &vecEndPos, const Vector &vecPlaneNormal, float an
 		ent = GET_ENTITY( entityIndex );
 
 		if( modelIndex > 0 )
-			decalClip.model = MOD_HANDLE( modelIndex );
+			decalClip.model = MODEL_HANDLE( modelIndex );
 		else if( ent != NULL )
-			decalClip.model = MOD_HANDLE( ent->curstate.modelindex );
+			decalClip.model = MODEL_HANDLE( ent->curstate.modelindex );
 		else return;
 	}
 	else if( modelIndex > 0 )
-		decalClip.model = MOD_HANDLE( modelIndex );
+		decalClip.model = MODEL_HANDLE( modelIndex );
 	else decalClip.model = worldmodel;
 
 	if( !decalClip.model ) return;
@@ -1171,7 +1171,7 @@ void CreateDecal(const Vector &vecEndPos, const Vector &vecPlaneNormal, float an
 	// FIXME: this is doesn't working
 	for( int i = 0; i < 1024; i++ )
 	{
-		model_t *mod = MOD_HANDLE( i );
+		model_t *mod = MODEL_HANDLE( i );
 
 		if( !mod || mod->type != mod_brush || mod == decalClip.model )
 			continue;

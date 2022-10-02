@@ -329,7 +329,7 @@ void HUD_MuzzleFlash( const cl_entity_t *e, const Vector &pos, const Vector &fwd
 		body = frameCount - 1;
 
 	// must set position for right culling on render
-	if( !( pTemp = gEngfuncs.pEfxAPI->CL_TempEntAllocHigh((float *)&pos, MOD_HANDLE(modelIndex))))
+	if( !( pTemp = gEngfuncs.pEfxAPI->CL_TempEntAllocHigh((float *)&pos, MODEL_HANDLE(modelIndex))))
 		return;
 
 	VectorAngles( -fwd, flash_angles );

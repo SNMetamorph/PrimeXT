@@ -2603,7 +2603,7 @@ void CStudioModelRenderer :: DrawViewModel( void )
 	bool bCustom = ComputeCustomFov( projMatrix, worldViewProjMatrix );
 
 	// prevent ugly blinking when weapon is changed
-	view->model = MOD_HANDLE( gHUD.m_iViewModelIndex );
+	view->model = MODEL_HANDLE( gHUD.m_iViewModelIndex );
 
 	// copy viewhands modelindx into weaponmodel
 	if( view->index > 0 )
