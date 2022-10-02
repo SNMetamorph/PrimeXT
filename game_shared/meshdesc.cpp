@@ -40,7 +40,7 @@ GNU General Public License for more details.
 #include <new> // placement
 CMeshDesc *UTIL_GetCollisionMesh( int modelindex )
 {
-	model_t *mod = (model_t *)MOD_HANDLE( modelindex );
+	model_t *mod = (model_t *)MODEL_HANDLE( modelindex );
 
 	if( !mod || mod->type != mod_studio )
 		return NULL;

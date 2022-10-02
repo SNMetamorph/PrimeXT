@@ -36,7 +36,7 @@ GNU General Public License for more details.
 
 void TraceMesh :: SetTraceMesh( mmesh_t *cached_mesh, areanode_t *tree, int modelindex )
 {
-	m_pModel = (model_t *)MOD_HANDLE( modelindex );
+	m_pModel = (model_t *)MODEL_HANDLE( modelindex );
 	mesh = cached_mesh;
 	areanodes = tree;
 }
