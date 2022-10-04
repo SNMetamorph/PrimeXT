@@ -506,9 +506,8 @@ void COM_DefaultExtension(char *path, const char *extension)
 	const char *src = path + Q_strlen(path) - 1;
 	while (*src != '/' && *src != '\\' && src != path)
 	{
-		// it has an extension
 		if (*src == '.') {
-			MsgDev(D_WARN, "COM_DefaultExtension: found dot symbol in file name (%s)\n", path);
+			return; // it has an extension, therefore we don't need to append it
 		}
 		src--;
 	}
