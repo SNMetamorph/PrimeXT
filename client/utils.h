@@ -158,6 +158,7 @@ void R_SplitPolygon( int numPoints, Vector *points, const struct mplane_s *plane
 float ComputePixelWidthOfSphere(const Vector &vecOrigin, float flRadius);
 bool UTIL_IsPlayer( int idx );
 bool UTIL_IsLocal( int idx );
+void Physic_SweepTest(cl_entity_t *pTouch, const Vector &start, const Vector &mins, const Vector &maxs, const Vector &end, trace_t *tr);
 
 //extern int HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname );
 //extern void HUD_TxferLocalOverrides( struct entity_state_s *state, const struct clientdata_s *client );
@@ -202,10 +203,6 @@ extern void IN_ClearStates( void );
 extern void *KB_Find( const char *name );
 extern void CL_CreateMove( float frametime, struct usercmd_s *cmd, int active );
 extern int CL_IsDead( void );
-
-
-extern void PM_Init( struct playermove_s *ppmove );
-extern void PM_Move( struct playermove_s *ppmove, int server );
 extern void V_CalcRefdef( struct ref_params_s *pparams );
 
 extern void CreateDecal(const Vector &p, const Vector &n, float ang, const char *sz, int flags = 0, int eIdx = 0, int mIdx = 0, bool source = true);

@@ -20,6 +20,8 @@ GNU General Public License for more details.
 #include "gl_local.h"
 #include <mathlib.h>
 #include "r_efx.h"
+#include "trace.h"
+#include "gl_studio.h"
 
 /*
 =============
@@ -195,6 +197,64 @@ SpriteHandle LoadSprite( const char *pszName )
 	Q_snprintf( sz, sizeof( sz ), pszName, i );
 
 	return SPR_Load( sz );
+}
+
+void Physic_SweepTest(cl_entity_t *pTouch, const Vector &start, const Vector &mins, const Vector &maxs, const Vector &end, trace_t *tr)
+{
+	if (!pTouch->model || !pTouch->model->cache.data)
+	{
+		// bad model?
+		tr->allsolid = false;
+		return;
+	}
+
+	Vector trace_mins, trace_maxs, bounds[2];
+	UTIL_MoveBounds(start, mins, maxs, end, trace_mins, trace_maxs);
+
+	if (!R_StudioGetBounds(pTouch, bounds))
+	{
+		tr->allsolid = false;
+		return;
+	}
+
+	// NOTE: pmove code completely ignore a bounds checking. So we need to do it here
+	if (!BoundsIntersect(trace_mins, trace_maxs, bounds[0], bounds[1]))
+	{
+		tr->allsolid = false;
+		return;
+	}
+
+	CMeshDesc *bodyMesh = UTIL_GetCollisionMesh(pTouch->curstate.modelindex);
+
+	if (!bodyMesh)
+	{
+		tr->allsolid = false;
+		return;
+	}
+
+	mmesh_t *pMesh = bodyMesh->GetMesh();
+	areanode_t *pHeadNode = bodyMesh->GetHeadNode();
+	entity_state_t *pev = &pTouch->curstate;
+
+	if (!pMesh)
+	{
+		// failed to build mesh for some reasons, so skip them
+		tr->allsolid = false;
+		return;
+	}
+
+	TraceMesh	trm;	// a name like Doom3 :-)
+
+	trm.SetTraceMesh(pMesh, pHeadNode, pTouch->curstate.modelindex);
+	trm.SetMeshOrientation(pev->origin, pev->angles, pev->startpos);
+	trm.SetupTrace(start, mins, maxs, end, tr);
+
+	if (trm.DoTrace())
+	{
+		if (tr->fraction < 1.0f || tr->startsolid)
+			tr->ent = (edict_t *)pTouch;	// g-cont. no need, really. i'm leave this just for fun
+		tr->surf = trm.GetLastHitSurface();
+	}
 }
 
 //=================
