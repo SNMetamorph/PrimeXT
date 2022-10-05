@@ -43,12 +43,12 @@ typedef struct mvert_s
 typedef struct mfacet_s
 {
 	link_t		area;			// linked to a division node or leaf
-	int		skinref;			// pointer to texture for special effects
-	mvert_t		triangle[3];		// store triangle points
+	int			skinref;		// pointer to texture for special effects
+	mvert_t		triangle[3];	// store triangle points
 	Vector		mins, maxs;		// an individual size of each facet
-	vec3_t		edge1, edge2;		// new trace stuff
+	vec3_t		edge1, edge2;	// new trace stuff
 	byte		numplanes;		// because numplanes for each facet can't exceeds MAX_FACET_PLANES!
-	uint		*indices;			// a indexes into mesh plane pool
+	uint		*indices;		// a indexes into mesh plane pool
 } mfacet_t;
 
 typedef struct
@@ -64,37 +64,42 @@ class CMeshDesc
 {
 private:
 	mmesh_t		m_mesh;
-	const char	*m_debugName;		// just for debug purpoces
+	const char	*m_debugName;	// just for debug purpoces
 	areanode_t	areanodes[MAX_AREANODES];	// AABB tree for speedup trace test
 	int		numareanodes;
-	bool		has_tree;			// build AABB tree
+	bool	has_tree;			// build AABB tree
+	bool	m_bMeshBuilt;		// indicates is mesh ready for use
 	int		m_iTotalPlanes;		// just for stats
 	int		m_iAllocPlanes;		// allocated count of planes
 	int		m_iHashPlanes;		// total count of hashplanes
-	int		m_iNumTris;		// if > 0 we are in build mode
-	size_t		mesh_size;		// mesh total size
-	model_t		*m_pModel;		// parent model pointer
+	int		m_iNumTris;			// if > 0 we are in build mode
+	size_t	mesh_size;			// mesh total size
+	model_t	*m_pModel;			// parent model pointer
 
 	// used only while mesh is constructing
-	mfacet_t		*m_srcFacets;
+	mfacet_t	*m_srcFacets;
 	hashplane_t	**m_srcPlaneHash;
 	hashplane_t	*m_srcPlanePool;
 	uint		*m_srcPlaneElems;
-	uint		*m_curPlaneElems;		// sliding pointer
+	uint		*m_curPlaneElems; // sliding pointer
 
 	// pacifier stuff
 	bool		m_bShowPacifier;
-	int		m_iOldPercent;
+	int			m_iOldPercent;
 public:
 	CMeshDesc();
 	~CMeshDesc();
 
 	// mesh construction
 	bool InitMeshBuild( int numTrinagles ); 
-	bool AddMeshTrinagle( const mvert_t triangle[3], int skinref );
 	bool FinishMeshBuild( void );
+	mmesh_t *CheckMesh();
 	void FreeMeshBuild( void );
 	void FreeMesh( void );
+
+	// accepts triangles in model local space
+	bool AddMeshTrinagle(const mvert_t triangle[3], int skinref);
+	bool AddMeshTrinagle(const Vector triangle[3]);
 
 	void SetDebugName( const char *name ) { m_debugName = name; }
 	void SetModel( const model_t *mod ) { m_pModel = (model_t *)mod; }

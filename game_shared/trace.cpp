@@ -30,6 +30,8 @@ GNU General Public License for more details.
 #include "edict.h"
 #include "eiface.h"
 #include "physcallback.h"
+
+extern globalvars_t *gpGlobals;
 #endif
 
 #include "enginecallback.h"
@@ -43,7 +45,8 @@ void TraceMesh :: SetTraceMesh( mmesh_t *cached_mesh, areanode_t *tree, int mode
 
 mstudiomaterial_t *TraceMesh :: GetMaterialForFacet( const mfacet_t *facet )
 {
-	if( !m_pModel ) return NULL;
+	if (!m_pModel || facet->skinref < 0) 
+		return NULL;
 
 	mstudiomaterial_t *materials = m_pModel->materials;
 	studiohdr_t *phdr = (studiohdr_t *)m_pModel->cache.data;
@@ -89,7 +92,7 @@ void TraceMesh :: SetupTrace( const Vector &start, const Vector &mins, const Vec
 	int i, total_signbits = 0;
 
 	m_vecSrcStart = start;
-	m_vecSrcEnd = end;
+ 	m_vecSrcEnd = end;
 
 	// adjust so that mins and maxs are always symetric, which
 	// avoids some complications with plane expanding of rotated
@@ -150,7 +153,7 @@ void TraceMesh :: SetupTrace( const Vector &start, const Vector &mins, const Vec
 		{
 			ALERT( at_error, "total signbits %d != 28 (mins %g %g %g) maxs( %g %g %g)\n",
 			total_signbits, lmins.x, lmins.y, lmins.z, lmaxs.x, lmaxs.y, lmaxs.z );
-			ALERT( at_error, "rotated angles %g %g %g\n", -m_vecAngles.x, m_vecAngles.y, m_vecAngles.z );
+			ALERT( at_error, "rotated angles %g %g %g\n", m_vecAngles.x, m_vecAngles.y, m_vecAngles.z );
 
 			for( i = 0; i < 8; i++ )
 			{
@@ -502,7 +505,7 @@ bool TraceMesh :: ClipRayToFacet( const mfacet_t *facet )
 
 void TraceMesh :: ClipToLinks( areanode_t *node )
 {
-	link_t	*l, *next;
+	link_t	*l, *next = nullptr;
 	mfacet_t	*facet;
 
 	// touch linked edicts

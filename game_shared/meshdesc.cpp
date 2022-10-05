@@ -59,7 +59,7 @@ CMeshDesc *UTIL_GetCollisionMesh( int modelindex )
 //	bodyMesh->CMeshDesc();
 	bodyMesh->SetDebugName( mod->name );
 	bodyMesh->SetModel( mod );
-
+	 
 	if( bodyMesh->StudioConstructMesh( ))
 	{
 		// now cached
@@ -83,6 +83,7 @@ CMeshDesc :: CMeshDesc( void )
 	m_srcPlanePool = NULL;
 	m_srcFacets = NULL;
 	m_pModel = NULL;
+	m_bMeshBuilt = false;
 	m_iNumTris = 0;
 }
 
@@ -199,6 +200,7 @@ areanode_t *CMeshDesc :: CreateAreaNode( int depth, const Vector &mins, const Ve
 void CMeshDesc :: FreeMesh( void )
 {
 	has_tree = false;
+	m_bMeshBuilt = false;
 
 	if( m_mesh.numfacets <= 0 )
 		return;
@@ -592,6 +594,174 @@ bool CMeshDesc :: AddMeshTrinagle( const mvert_t triangle[3], int skinref )
 	}
 
 	for( i = 0; i < 3; i++ )
+	{
+		// spread the mins / maxs by a pixel
+		facet->mins[i] -= 1.0f;
+		facet->maxs[i] += 1.0f;
+	}
+
+	// added
+	m_iTotalPlanes += numplanes;
+	m_mesh.numfacets++;
+	return true;
+}
+
+bool CMeshDesc::AddMeshTrinagle(const Vector triangle[3])
+{
+	int	i;
+
+	if (m_iNumTris <= 0)
+		return false; // were not in a build mode!
+
+	if (m_mesh.numfacets >= m_iNumTris)
+	{
+		ALERT(at_error, "AddMeshTriangle: %s overflow (%i >= %i)\n", m_debugName, m_mesh.numfacets, m_iNumTris);
+		return false;
+	}
+
+	int planenum;
+	mfacet_t *facet = &m_srcFacets[m_mesh.numfacets];
+	mplane_t *mainplane;
+
+	if ((planenum = PlaneFromPoints(triangle[0], triangle[1], triangle[2])) == -1)
+		return false; // bad plane
+
+	mainplane = &m_srcPlanePool[planenum].pl;
+
+	mplane_t planes[MAX_FACET_PLANES];
+	Vector normal;
+	int numplanes;
+	float dist;
+
+	facet->numplanes = numplanes = 0;
+
+	// add front plane
+	SnapPlaneToGrid(mainplane);
+
+	planes[numplanes].normal = mainplane->normal;
+	planes[numplanes].dist = mainplane->dist;
+	numplanes++;
+
+	// calculate mins & maxs
+	ClearBounds(facet->mins, facet->maxs);
+
+	for (i = 0; i < 3; i++)
+	{
+		AddPointToBounds(triangle[i], facet->mins, facet->maxs);
+		facet->triangle[i].point = triangle[i];
+	}
+
+	facet->edge1 = facet->triangle[1].point - facet->triangle[0].point;
+	facet->edge2 = facet->triangle[2].point - facet->triangle[0].point;
+
+	// add the axial planes
+	for (int axis = 0; axis < 3; axis++)
+	{
+		for (int dir = -1; dir <= 1; dir += 2)
+		{
+			for (i = 0; i < numplanes; i++)
+			{
+				if (planes[i].normal[axis] == dir)
+					break;
+			}
+
+			if (i == numplanes)
+			{
+				normal = g_vecZero;
+				normal[axis] = dir;
+				if (dir == 1)
+					dist = facet->maxs[axis];
+				else dist = -facet->mins[axis];
+
+				planes[numplanes].normal = normal;
+				planes[numplanes].dist = dist;
+				numplanes++;
+			}
+		}
+	}
+
+	// add the edge bevels
+	for (i = 0; i < 3; i++)
+	{
+		int j = (i + 1) % 3;
+		int k = (i + 2) % 3;
+
+		Vector vec = triangle[i] - triangle[j];
+		if (vec.Length() < 0.5f) continue;
+
+		vec = vec.Normalize();
+		SnapVectorToGrid(vec); // do we need to do this? in p2 we don't do it
+
+		for (j = 0; j < 3; j++)
+		{
+			if (vec[j] == 1.0f || vec[j] == -1.0f)
+				break; // axial
+		}
+
+		if (j != 3) continue; // only test non-axial edges
+
+		// try the six possible slanted axials from this edge
+		for (int axis = 0; axis < 3; axis++)
+		{
+			for (int dir = -1; dir <= 1; dir += 2)
+			{
+				// construct a plane
+				Vector vec2 = g_vecZero;
+				vec2[axis] = dir;
+				normal = CrossProduct(vec, vec2);
+
+				if (normal.Length() < 0.5f)
+					continue;
+
+				normal = normal.Normalize();
+				dist = DotProduct(triangle[i], normal);
+
+				for (j = 0; j < numplanes; j++)
+				{
+					// if this plane has already been used, skip it
+					if (ComparePlanes(&planes[j], normal, dist))
+						break;
+				}
+
+				if (j != numplanes) continue;
+
+				// if all other points are behind this plane, it is a proper edge bevel
+				for (j = 0; j < 3; j++)
+				{
+					if (j != i)
+					{
+						float d = DotProduct(triangle[j], normal) - dist;
+						// point in front: this plane isn't part of the outer hull
+						if (d > 0.1f) break;
+					}
+				}
+
+				if (j != 3) continue;
+
+				// add this plane
+				planes[numplanes].normal = normal;
+				planes[numplanes].dist = dist;
+				numplanes++;
+			}
+		}
+	}
+
+	// add triangle to bounds
+	for (i = 0; i < 3; i++)
+		AddPointToBounds(triangle[i], m_mesh.mins, m_mesh.maxs);
+
+	facet->indices = m_curPlaneElems;
+	m_curPlaneElems += numplanes;
+	facet->numplanes = numplanes;
+	facet->skinref = -1;
+
+	for (i = 0; i < facet->numplanes; i++)
+	{
+		// add plane to global pool
+		facet->indices[i] = FindFloatPlane(planes[i].normal, planes[i].dist);
+	}
+
+	for (i = 0; i < 3; i++)
 	{
 		// spread the mins / maxs by a pixel
 		facet->mins[i] -= 1.0f;
@@ -1219,7 +1389,16 @@ bool CMeshDesc :: FinishMeshBuild( void )
 			RelinkFacet( &m_mesh.facets[i] );
 	}
 
+	m_bMeshBuilt = true;
 	return true;
+}
+
+mmesh_t *CMeshDesc::CheckMesh()
+{
+	if (m_bMeshBuilt)
+		return &m_mesh;
+	else
+		return nullptr;
 }
 
 void CMeshDesc :: PrintMeshInfo( void )

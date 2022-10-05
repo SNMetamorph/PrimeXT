@@ -18,6 +18,8 @@ set(SVDLL_SOURCES
 	"../game_shared/stringlib.cpp"
 	"../game_shared/vector.cpp"
 	"../game_shared/virtualfs.cpp"
+	"../game_shared/trace.cpp"
+	"../game_shared/meshdesc.cpp"
 )
 
 list(APPEND SVDLL_SOURCES
@@ -90,7 +92,6 @@ list(APPEND SVDLL_SOURCES
 	"monsters/nodes.cpp"
 	"novodex.cpp"
 	"physics/NxUserStream.cpp"
-	"physics/meshdesc.cpp"
 	"monsters/osprey.cpp"
 	"pathcorner.cpp"
 	"physents.cpp"
@@ -124,7 +125,6 @@ list(APPEND SVDLL_SOURCES
 	"teamplay_gamerules.cpp"
 	"monsters/tempmonster.cpp"
 	"monsters/tentacle.cpp"
-	"physics/tracemesh.cpp"
 	"triggers.cpp"
 	"tripmine.cpp"
 	"monsters/turret.cpp"
