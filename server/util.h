@@ -688,7 +688,6 @@ struct areaclip_t
 int UTIL_HullPointContents( hull_t *hull, int num, const Vector &p );
 hull_t *UTIL_HullForBsp( CBaseEntity *pEntity, const Vector &mins, const Vector &maxs, Vector &offset );
 void UTIL_AreaNode(	Vector vecAbsMin, Vector vecAbsMax, int type, AREACHECK pfnCallback );
-void UTIL_MoveBounds( const Vector &start, const Vector &mins, const Vector &maxs, const Vector &end, Vector &outmins, Vector &outmaxs );
 trace_t UTIL_CombineTraces( trace_t *cliptrace, trace_t *trace, CBaseEntity *pTouch );
 int UTIL_DropToFloor( CBaseEntity *pEntity );
 void UTIL_WaterMove( CBaseEntity *pEntity );

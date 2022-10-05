@@ -84,6 +84,7 @@ bool PlanesGetIntersectionPoint( const struct mplane_s *plane1, const struct mpl
 Vector PlaneIntersect( struct mplane_s *plane, const Vector& p0, const Vector& p1 );
 void VectorAngles( const Vector &forward, Vector &angles );
 void VectorAnglesSQB(const Vector &forward, Vector &angles);
+void UTIL_MoveBounds(const Vector &start, const Vector &mins, const Vector &maxs, const Vector &end, Vector &outmins, Vector &outmaxs);
 
 // Remap a value in the range [A,B] to [C,D].
 inline float RemapVal( float val, float A, float B, float C, float D)
