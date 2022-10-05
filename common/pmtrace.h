@@ -16,6 +16,8 @@
 #ifndef PM_TRACE_H
 #define PM_TRACE_H
 
+#include <studio.h>
+
 typedef struct
 {
 	vec3_t	normal;
@@ -35,7 +37,12 @@ struct pmtrace_s
 	int	ent;		// entity at impact
 	vec3_t	deltavelocity;	// Change in player's velocity caused by impact.  
 				// Only run on server.
-	int	hitgroup;
+	union 
+	{
+		// FIXME it's will not work on 64-bit
+		int	hitgroup;				// 0 == generic, non zero is specific body part
+		mstudiomaterial_t *surf;	// only if ent->v.solid == SOLID_CUSTOM!
+	};
 };
 
 #endif//PM_TRACE_H
