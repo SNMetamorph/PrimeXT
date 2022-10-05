@@ -30,6 +30,7 @@ GNU General Public License for more details.
 #include "physic.h"
 #include "triangleapi.h"
 #include "pm_defs.h"
+#include "pm_shared.h"
 #include "player.h"
 #include "sv_materials.h"
 
@@ -149,10 +150,10 @@ void SV_ClipPMoveToEntity( physent_t *pe, const float *start, float *mins, float
 	tr->endpos = trace.endpos;
 	tr->plane.dist = trace.plane.dist;
 	tr->plane.normal = trace.plane.normal;
-	tr->hitgroup = trace.hitgroup;
+	tr->surf = trace.surf;
 
-	if (trace.ent)
-		tr->ent = pe->info;
+	if (trace.ent != nullptr && PM_GetPlayerMove())
+		tr->ent = pe - PM_GetPlayerMove()->physents;
 	else 
 		tr->ent = -1;
 }
