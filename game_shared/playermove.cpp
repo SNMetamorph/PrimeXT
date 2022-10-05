@@ -71,7 +71,7 @@ playermove_t *pmove = NULL;
 #define CHAR_TEX_GLASS		'Y'
 #define CHAR_TEX_FLESH		'F'
 
-#define STEP_CONCRETE	0		// default step sound
+#define STEP_MATERIAL	0		// custom step sounds
 #define STEP_METAL		1		// metal floor
 #define STEP_DIRT		2		// dirt, sand, rock
 #define STEP_VENT		3		// ventillation duct
@@ -254,21 +254,6 @@ void PM_PlayStepSound(int step, float fvol)
 	}
 }
 
-int PM_MapTextureTypeStepType(char chTextureType)
-{
-	switch (chTextureType)
-	{
-		default:
-		case CHAR_TEX_CONCRETE:	return STEP_CONCRETE;	
-		case CHAR_TEX_METAL: return STEP_METAL;	
-		case CHAR_TEX_DIRT: return STEP_DIRT;	
-		case CHAR_TEX_VENT: return STEP_VENT;	
-		case CHAR_TEX_GRATE: return STEP_GRATE;	
-		case CHAR_TEX_TILE: return STEP_TILE;
-		case CHAR_TEX_SLOSH: return STEP_SLOSH;
-	}
-}
-
 /*
 ====================
 PM_CatagorizeTextureType
@@ -293,14 +278,14 @@ void PM_CatagorizeTextureType(void)
 	{
 		pmove->pMaterial = COM_MatDefFromSurface(pmove->PM_TraceSurface(pmove->onground, start, end), pmove->origin);
 	}
-	// TODO uncomment when material tracing for studiomodels will done
-	//else if (pe->solid == SOLID_CUSTOM)
-	//{
-	//	pmtrace_t *tr = pmove->PM_TraceLine(start, end, PM_STUDIO_IGNORE, 2, -1);
-
-	//	if (tr->ent == pmove->onground && tr->surf)
-	//		pmove->pMaterial = tr->surf->effects;
-	//}
+	else if (pe->solid == SOLID_CUSTOM)
+	{
+		pmtrace_t *tr = pmove->PM_TraceLine(start, end, PM_TRACELINE_PHYSENTSONLY, 2, -1);
+		if (tr->ent == pmove->onground && tr->surf)
+		{
+			pmove->pMaterial = tr->surf->effects;
+		}
+	}
 
 	if (!pmove->pMaterial) 
 		return;
@@ -390,46 +375,9 @@ void PM_UpdateStepSound( void )
 		{
 			// find texture under player, if different from current texture, 
 			// get material type
-			step = PM_MapTextureTypeStepType( pmove->chtexturetype );
-
-			switch ( pmove->chtexturetype )
-			{
-			default:
-			case CHAR_TEX_CONCRETE:						
-				fvol = fWalking ? 0.2 : 0.5;
-				pmove->flTimeStepSound = fWalking ? 400 : 300;
-				break;
-
-			case CHAR_TEX_METAL:	
-				fvol = fWalking ? 0.2 : 0.5;
-				pmove->flTimeStepSound = fWalking ? 400 : 300;
-				break;
-
-			case CHAR_TEX_DIRT:	
-				fvol = fWalking ? 0.25 : 0.55;
-				pmove->flTimeStepSound = fWalking ? 400 : 300;
-				break;
-
-			case CHAR_TEX_VENT:	
-				fvol = fWalking ? 0.4 : 0.7;
-				pmove->flTimeStepSound = fWalking ? 400 : 300;
-				break;
-
-			case CHAR_TEX_GRATE:
-				fvol = fWalking ? 0.2 : 0.5;
-				pmove->flTimeStepSound = fWalking ? 400 : 300;
-				break;
-
-			case CHAR_TEX_TILE:	
-				fvol = fWalking ? 0.2 : 0.5;
-				pmove->flTimeStepSound = fWalking ? 400 : 300;
-				break;
-
-			case CHAR_TEX_SLOSH:
-				fvol = fWalking ? 0.2 : 0.5;
-				pmove->flTimeStepSound = fWalking ? 400 : 300;
-				break;
-			}
+			step = STEP_MATERIAL;
+			fvol = fWalking ? 0.2 : 0.5;
+			pmove->flTimeStepSound = fWalking ? 400 : 300;
 		}
 		
 		pmove->flTimeStepSound += flduck; // slower step time if ducking
@@ -1866,7 +1814,7 @@ void PM_LadderMove( physent_t *pLadder )
 	floor.z += pmove->player_mins[pmove->usehull][2] - 1;
 
 	// g-cont. check bmodels ground too
-	tr = pmove->PM_TraceLine( floor, floor, PM_STUDIO_IGNORE, 2, -1 );
+	tr = pmove->PM_TraceLine( floor, floor, PM_TRACELINE_PHYSENTSONLY, 2, -1 );
 
 	if( /*pmove->PM_PointContents( floor, NULL ) == CONTENTS_SOLID || */ tr->ent != -1 )
 		onFloor = true;
@@ -2327,7 +2275,7 @@ void PM_Jump (void)
 	}
 	else
 	{
-		PM_PlayStepSound( PM_MapTextureTypeStepType( pmove->chtexturetype ), 1.0 );
+		PM_PlayStepSound( STEP_MATERIAL, 1.0 );
 	}
 
 	// See if user can super long jump?
@@ -2492,7 +2440,7 @@ void PM_CheckFalling( void )
 			PM_UpdateStepSound();
 			
 			// play step sound for current texture
-			PM_PlayStepSound( PM_MapTextureTypeStepType( pmove->chtexturetype ), fvol );
+			PM_PlayStepSound( STEP_MATERIAL, fvol );
 
 			// Knock the screen around a little bit, temporary effect
 			pmove->punchangle[ 2 ] = pmove->flFallVelocity * 0.013;	// punch z axis
@@ -3139,3 +3087,7 @@ void PM_Init( struct playermove_s *ppmove )
 	pm_shared_initialized = 1;
 }
 
+playermove_t *PM_GetPlayerMove(void)
+{
+	return pmove;
+}
