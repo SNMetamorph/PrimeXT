@@ -68,6 +68,7 @@ extern enginefuncs_t g_engfuncs;
 #define RANDOM_LONG		(*g_engfuncs.pfnRandomLong)
 #define RANDOM_FLOAT	(*g_engfuncs.pfnRandomFloat)
 #define GETPLAYERAUTHID	(*g_engfuncs.pfnGetPlayerAuthId)
+#define Sys_DoubleTime	(*g_engfuncs.pfnTime)
 
 inline void MESSAGE_BEGIN( int msg_dest, int msg_type, const float *pOrigin = NULL, edict_t *ed = NULL ) {
 	(*g_engfuncs.pfnMessageBegin)(msg_dest, msg_type, pOrigin, ed);

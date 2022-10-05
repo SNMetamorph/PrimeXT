@@ -51,15 +51,7 @@ GNU General Public License for more details.
 #define LUMP_SAVE_NO_DATA		7
 #define LUMP_SAVE_CORRUPTED		8
 
-typedef struct areanode_s
-{
-	int		axis;		// -1 = leaf node
-	float		dist;
-	struct areanode_s	*children[2];
-	link_t		trigger_edicts;
-	link_t		solid_edicts;
-	link_t		portal_edicts;
-} areanode_t;
+#include "areanode.h"
 
 typedef struct server_physics_api_s
 {
