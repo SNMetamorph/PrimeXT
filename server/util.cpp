@@ -31,7 +31,7 @@
 #include "weapons.h"
 #include "gamerules.h"
 #include "studio.h"
-#include "tracemesh.h"
+#include "trace.h"
 #include "utldict.h"
 #include "render_api.h"
 
@@ -2853,28 +2853,6 @@ int UTIL_HullPointContents( hull_t *hull, int num, const Vector &p )
 		num = hull->clipnodes[num].children[PlaneDiff( p, plane ) < 0];
 	}
 	return num;
-}
-
-/*
-==================
-UTIL_MoveBounds
-==================
-*/
-void UTIL_MoveBounds( const Vector &start, const Vector &mins, const Vector &maxs, const Vector &end, Vector &outmins, Vector &outmaxs )
-{
-	for( int i = 0; i < 3; i++ )
-	{
-		if( end[i] > start[i] )
-		{
-			outmins[i] = start[i] + mins[i] - 1;
-			outmaxs[i] = end[i] + maxs[i] + 1;
-		}
-		else
-		{
-			outmins[i] = end[i] + mins[i] - 1;
-			outmaxs[i] = start[i] + maxs[i] + 1;
-		}
-	}
 }
 
 trace_t UTIL_CombineTraces( trace_t *cliptrace, trace_t *trace, CBaseEntity *pTouch )

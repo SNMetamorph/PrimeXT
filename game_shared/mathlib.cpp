@@ -1616,3 +1616,25 @@ void V_AdjustFov(float &fov_x, float &fov_y, float width, float height, bool loc
 		fov_x = x;
 	else fov_y = y;
 }
+
+/*
+==================
+UTIL_MoveBounds
+==================
+*/
+void UTIL_MoveBounds(const Vector &start, const Vector &mins, const Vector &maxs, const Vector &end, Vector &outmins, Vector &outmaxs)
+{
+	for (int i = 0; i < 3; i++)
+	{
+		if (end[i] > start[i])
+		{
+			outmins[i] = start[i] + mins[i] - 1;
+			outmaxs[i] = end[i] + maxs[i] + 1;
+		}
+		else
+		{
+			outmins[i] = end[i] + mins[i] - 1;
+			outmaxs[i] = start[i] + maxs[i] + 1;
+		}
+	}
+}
