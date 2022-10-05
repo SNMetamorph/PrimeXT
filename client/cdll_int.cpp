@@ -28,6 +28,8 @@
 #include "tri.h"
 #include "mobility_int.h"
 #include "imgui_manager.h"
+#include "utils.h"
+#include "pm_shared.h"
 
 int developer_level;
 int g_iXashEngineBuildNumber;
@@ -309,6 +311,51 @@ extern "C" int DLLEXPORT HUD_Key_Event( int down, int keynum, const char *pszCur
 
 extern "C" void DLLEXPORT HUD_PostRunCmd( struct local_state_s*, local_state_s *, struct usercmd_s*, int, double, unsigned int )
 {
+}
+
+/*
+==========================
+HUD_ClipMoveToEntity
+
+This called only for non-local clients (multiplayer)
+==========================
+*/
+extern "C" void DLLEXPORT HUD_ClipMoveToEntity(physent_t * pe, const float *start, float *mins, float *maxs, const float *end, pmtrace_t * tr)
+{
+	// convert physent_t to cl_entity_t
+	cl_entity_t *pTouch = gEngfuncs.GetEntityByIndex(pe->info);
+	trace_t trace;
+
+	if (!pTouch)
+	{
+		// removed entity?
+		tr->allsolid = false;
+		return;
+	}
+
+	// make trace default
+	memset(&trace, 0, sizeof(trace));
+	trace.allsolid = true;
+	trace.fraction = 1.0f;
+	trace.endpos = end;
+
+	Physic_SweepTest(pTouch, start, mins, maxs, end, &trace);
+
+	// convert trace_t into pmtrace_t
+	tr->allsolid = trace.allsolid;
+	tr->startsolid = trace.startsolid;
+	tr->inopen = trace.inopen;
+	tr->inwater = trace.inwater;
+	tr->fraction = trace.fraction;
+	tr->endpos = trace.endpos;
+	tr->plane.dist = trace.plane.dist;
+	tr->plane.normal = trace.plane.normal;
+	tr->surf = trace.surf;
+	
+	if (trace.ent != NULL && PM_GetPlayerMove())
+		tr->ent = pe - PM_GetPlayerMove()->physents;
+	else 
+		tr->ent = -1;
 }
 
 void HUD_VoiceStatus( int entindex, qboolean bTalking )
