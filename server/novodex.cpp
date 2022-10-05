@@ -28,7 +28,7 @@ GNU General Public License for more details.
 #include "pm_defs.h"
 #include "pm_movevars.h"
 #include "animation.h"
-#include "tracemesh.h"
+#include "trace.h"
 #include "game.h"
 
 #if defined (HAS_PHYSIC_VEHICLE)
@@ -2336,8 +2336,10 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 		return;
 	}
 
-	mmesh_t *pMesh = pTouch->m_BodyMesh.CheckMesh( pTouch->GetAbsOrigin(), pTouch->GetAbsAngles( ));
+	mmesh_t *pMesh = pTouch->m_BodyMesh.CheckMesh();
 	areanode_t *pHeadNode = pTouch->m_BodyMesh.GetHeadNode();
+	vec3_t scale = pTouch->pev->startpos.Length() < 0.001f ? vec3_t(1.0f) : pTouch->pev->startpos.Length();
+	matrix4x4 worldToLocalMat = matrix4x4(pTouch->pev->origin, pTouch->pev->angles, scale).InvertFull();
 
 	if( !pMesh )
 	{
@@ -2382,7 +2384,8 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 			NxBox	obb;
 
 			// each box shape contain 12 triangles
-			pTouch->m_BodyMesh.InitMeshBuild( pTouch->GetModel(), pActor->getNbShapes() * 12 );
+			pTouch->m_BodyMesh.SetDebugName(pTouch->GetModel());
+			pTouch->m_BodyMesh.InitMeshBuild(pActor->getNbShapes() * 12);
 
 			for( uint i = 0; i < pActor->getNbShapes(); i++ )
 			{
@@ -2409,6 +2412,10 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 					triangle[1] = verts[i1];
 					triangle[2] = verts[i2];
 
+					// transform from world to model space
+					triangle[0] = worldToLocalMat.VectorTransform(triangle[0]);
+					triangle[1] = worldToLocalMat.VectorTransform(triangle[1]);
+					triangle[2] = worldToLocalMat.VectorTransform(triangle[2]);
 					pTouch->m_BodyMesh.AddMeshTrinagle( triangle );
 				}
 			}
@@ -2418,7 +2425,8 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 			NxMat33 absRot = pShape->getGlobalOrientation();
 			NxVec3 absPos = pShape->getGlobalPosition();
 
-			pTouch->m_BodyMesh.InitMeshBuild( pTouch->GetModel(), NbTris );
+			pTouch->m_BodyMesh.SetDebugName(pTouch->GetModel());
+			pTouch->m_BodyMesh.InitMeshBuild(NbTris);
 
 			// NOTE: we compute triangles in abs coords because player AABB
 			// can't be transformed as done for not axial cases
@@ -2439,6 +2447,10 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 				triangle[1] = v1 + absPos;
 				triangle[2] = v2 + absPos;
 
+				// transform from world to model space
+				triangle[0] = worldToLocalMat.VectorTransform(triangle[0]);
+				triangle[1] = worldToLocalMat.VectorTransform(triangle[1]);
+				triangle[2] = worldToLocalMat.VectorTransform(triangle[2]);
 				pTouch->m_BodyMesh.AddMeshTrinagle( triangle );
 			}
 		}
@@ -2456,12 +2468,13 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 		pHeadNode = pTouch->m_BodyMesh.GetHeadNode();
 	}
 
-	TraceMesh	trm;	// a name like Doom3 :-)
+	TraceMesh trm;	// a name like Doom3 :-)
 
 	trm.SetTraceMesh( pMesh, pHeadNode, pTouch->pev->modelindex );
+	trm.SetMeshOrientation(pTouch->pev->origin, pTouch->pev->angles, scale);
 	trm.SetupTrace( start, mins, maxs, end, tr );
 
-	if( trm.DoTrace())
+	if (trm.DoTrace())
 	{
 		if( tr->fraction < 1.0f || tr->startsolid )
 			tr->ent = pTouch->edict();
