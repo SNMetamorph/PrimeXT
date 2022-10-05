@@ -170,10 +170,11 @@ void DecalGunshot( TraceResult *pTrace, int iBulletType, const vec3_t &origin, c
 	{
 		msurface_t *surf = TRACE_SURFACE(pTrace->pHit, origin, vecEnd);
 		pMaterial = COM_MatDefFromSurface(surf, pTrace->vecEndPos);
-		if (pMaterial) 
+		if (pMaterial) {
 			UTIL_TraceCustomDecal(pTrace, pMaterial->impact_decal, RANDOM_FLOAT(0.0f, 360.0f));
+		}
 	}
-	else if (characterEntity || studiomodelEntity)
+	else if (characterEntity)
 	{
 		// Decal the model with a blood
 		switch (iBulletType)
@@ -196,6 +197,13 @@ void DecalGunshot( TraceResult *pTrace, int iBulletType, const vec3_t &origin, c
 				// wall decal
 				UTIL_StudioDecalTrace(pTrace, DamageDecal(pTarget, DMG_CLUB));
 				break;
+		}
+	}
+	else if (studiomodelEntity && pTrace->pMat != nullptr)
+	{
+		pMaterial = pTrace->pMat->effects;
+		if (pMaterial) {
+			UTIL_StudioDecalTrace(pTrace, pMaterial->impact_decal);
 		}
 	}
 }
