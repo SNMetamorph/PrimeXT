@@ -2338,7 +2338,7 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 
 	mmesh_t *pMesh = pTouch->m_BodyMesh.CheckMesh();
 	areanode_t *pHeadNode = pTouch->m_BodyMesh.GetHeadNode();
-	vec3_t scale = pTouch->pev->startpos.Length() < 0.001f ? vec3_t(1.0f) : pTouch->pev->startpos.Length();
+	vec3_t scale = pTouch->pev->startpos.Length() < 0.001f ? vec3_t(1.0f) : pTouch->pev->startpos;
 	matrix4x4 worldToLocalMat = matrix4x4(pTouch->pev->origin, pTouch->pev->angles, scale).InvertFull();
 
 	if( !pMesh )
