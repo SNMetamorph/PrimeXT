@@ -544,7 +544,8 @@ void OnFreeEntPrivateData( edict_s *pEdict )
 		if( pEdict && pEdict->pvPrivateData )
 		{
 			CBaseEntity *pEntity = CBaseEntity::Instance( pEdict );
-			pEntity->m_BodyMesh.FreeMesh(); // release all local copy of meshes
+			pEntity->m_CookedMesh.FreeMesh(); // release all local copy of meshes
+			pEntity->m_OriginalMesh.FreeMesh();
 		}
 
 		if( GET_SERVER_STATE() == SERVER_DEAD )
@@ -554,7 +555,8 @@ void OnFreeEntPrivateData( edict_s *pEdict )
 	if( pEdict && pEdict->pvPrivateData )
 	{
 		CBaseEntity *pEntity = CBaseEntity::Instance( pEdict );
-		pEntity->m_BodyMesh.FreeMesh();
+		pEntity->m_CookedMesh.FreeMesh();
+		pEntity->m_OriginalMesh.FreeMesh();
 		pEntity->UpdateOnRemove();
 	}
 }

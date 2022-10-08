@@ -1393,14 +1393,6 @@ bool CMeshDesc :: FinishMeshBuild( void )
 	return true;
 }
 
-mmesh_t *CMeshDesc::CheckMesh()
-{
-	if (m_bMeshBuilt)
-		return &m_mesh;
-	else
-		return nullptr;
-}
-
 void CMeshDesc :: PrintMeshInfo( void )
 {
 #if 0	// g-cont. just not needs

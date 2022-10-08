@@ -93,7 +93,6 @@ public:
 	// mesh construction
 	bool InitMeshBuild( int numTrinagles ); 
 	bool FinishMeshBuild( void );
-	mmesh_t *CheckMesh();
 	void FreeMeshBuild( void );
 	void FreeMesh( void );
 
@@ -136,7 +135,7 @@ public:
 	int SnapNormal( Vector &normal );
 
 	// get cached collision
-	mmesh_t *GetMesh() { return (mesh_size) ? &m_mesh : NULL; } 
+	mmesh_t *GetMesh() { return (m_bMeshBuilt) ? &m_mesh : NULL; }
 };
 
 CMeshDesc *UTIL_GetCollisionMesh( int modelindex );
