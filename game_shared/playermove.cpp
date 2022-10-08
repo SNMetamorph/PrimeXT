@@ -30,10 +30,14 @@
 // g-cont. Damn! stupid valve coders!!!
 #ifdef CLIENT_DLL
 #include "cdll_int.h"
+#include "cl_entity.h"
+#include "utils.h"
 extern cl_enginefunc_t gEngfuncs;
 #define AngleVectors	(*gEngfuncs.pfnAngleVectors)
 #else
 #include "eiface.h"
+#include "progdefs.h"
+extern globalvars_t *gpGlobals;
 extern enginefuncs_t g_engfuncs;
 #define AngleVectors	(*g_engfuncs.pfnAngleVectors)
 #endif
@@ -280,10 +284,26 @@ void PM_CatagorizeTextureType(void)
 	}
 	else if (pe->solid == SOLID_CUSTOM)
 	{
+#ifndef CLIENT_DLL
+		SetBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
 		pmtrace_t *tr = pmove->PM_TraceLine(start, end, PM_TRACELINE_PHYSENTSONLY, 2, -1);
-		if (tr->ent == pmove->onground && tr->surf)
+		ClearBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
+#else
+		pmtrace_t *tr = pmove->PM_TraceLine(start, end, PM_TRACELINE_PHYSENTSONLY, 2, -1);
+#endif
+		if (tr->ent == pmove->onground)
 		{
-			pmove->pMaterial = tr->surf->effects;
+#ifdef CLIENT_DLL
+			// hack to get underlying studiomodel texture material
+			trace_t materialTrace;
+			const vec3_t zeroVector = vec3_t(0.0f);
+			cl_entity_t *ent = gEngfuncs.GetEntityByIndex(pmove->physents[tr->ent].info);
+			Physic_SweepTest(ent, start, zeroVector, zeroVector, end, &materialTrace);
+			tr->surf = materialTrace.surf;
+#endif
+ 			if (tr->surf) {
+				pmove->pMaterial = tr->surf->effects;
+			}
 		}
 	}
 
