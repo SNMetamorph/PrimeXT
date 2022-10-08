@@ -2631,8 +2631,18 @@ void CBaseMonster :: StepSound( void )
 	}
 	else if (pEntity->pev->solid == SOLID_CUSTOM)
 	{
-		if (ptr.pMat) 
-			pMaterial = ptr.pMat->effects;
+		// repeat tracing with material trace flag
+		TraceResult tr;
+		SetBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
+		UTIL_TraceLine(
+			ptr.vecEndPos + (ptr.vecPlaneNormal * 0.5f),
+			ptr.vecEndPos + (ptr.vecPlaneNormal * -0.5f),
+			ignore_monsters, NULL, &tr
+		);
+		ClearBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
+		if (tr.pMat != nullptr) {
+			pMaterial = tr.pMat->effects;
+		}
 	}
 
 	if (pMaterial)
