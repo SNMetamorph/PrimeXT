@@ -2336,12 +2336,13 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 		return;
 	}
 
-	mmesh_t *pMesh = pTouch->m_BodyMesh.CheckMesh();
-	areanode_t *pHeadNode = pTouch->m_BodyMesh.GetHeadNode();
+	mmesh_t *pMesh;
+	areanode_t *pHeadNode;
 	vec3_t scale = pTouch->pev->startpos.Length() < 0.001f ? vec3_t(1.0f) : pTouch->pev->startpos;
 	matrix4x4 worldToLocalMat = matrix4x4(pTouch->pev->origin, pTouch->pev->angles, scale).InvertFull();
+	model_t *mod = (model_t *)MODEL_HANDLE(pTouch->pev->modelindex);
 
-	if( !pMesh )
+	if (!pTouch->m_CookedMesh.GetMesh())
 	{
 		// update cache or build from scratch
 		NxShape *pShape = pActor->getShapes()[0];
@@ -2384,8 +2385,8 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 			NxBox	obb;
 
 			// each box shape contain 12 triangles
-			pTouch->m_BodyMesh.SetDebugName(pTouch->GetModel());
-			pTouch->m_BodyMesh.InitMeshBuild(pActor->getNbShapes() * 12);
+			pTouch->m_CookedMesh.SetDebugName(pTouch->GetModel());
+			pTouch->m_CookedMesh.InitMeshBuild(pActor->getNbShapes() * 12);
 
 			for( uint i = 0; i < pActor->getNbShapes(); i++ )
 			{
@@ -2416,7 +2417,7 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 					triangle[0] = worldToLocalMat.VectorTransform(triangle[0]);
 					triangle[1] = worldToLocalMat.VectorTransform(triangle[1]);
 					triangle[2] = worldToLocalMat.VectorTransform(triangle[2]);
-					pTouch->m_BodyMesh.AddMeshTrinagle( triangle );
+					pTouch->m_CookedMesh.AddMeshTrinagle( triangle );
 				}
 			}
 		}
@@ -2425,8 +2426,8 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 			NxMat33 absRot = pShape->getGlobalOrientation();
 			NxVec3 absPos = pShape->getGlobalPosition();
 
-			pTouch->m_BodyMesh.SetDebugName(pTouch->GetModel());
-			pTouch->m_BodyMesh.InitMeshBuild(NbTris);
+			pTouch->m_CookedMesh.SetDebugName(pTouch->GetModel());
+			pTouch->m_CookedMesh.InitMeshBuild(NbTris);
 
 			// NOTE: we compute triangles in abs coords because player AABB
 			// can't be transformed as done for not axial cases
@@ -2451,28 +2452,46 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 				triangle[0] = worldToLocalMat.VectorTransform(triangle[0]);
 				triangle[1] = worldToLocalMat.VectorTransform(triangle[1]);
 				triangle[2] = worldToLocalMat.VectorTransform(triangle[2]);
-				pTouch->m_BodyMesh.AddMeshTrinagle( triangle );
+				pTouch->m_CookedMesh.AddMeshTrinagle( triangle );
 			}
 		}
 
-		if( !pTouch->m_BodyMesh.FinishMeshBuild( ))
+		if( !pTouch->m_CookedMesh.FinishMeshBuild( ))
 		{
-			ALERT( at_error, "failed to build mesh from %s\n", pTouch->GetModel() );
+			ALERT(at_error, "failed to build cooked mesh from %s\n", pTouch->GetModel());
 			tr->allsolid = false;
 			return;
 		}
 
-		// NOTE: don't care about validity this pointer
-		// just trace failed if it's happens
-		pMesh = pTouch->m_BodyMesh.GetMesh();
-		pHeadNode = pTouch->m_BodyMesh.GetHeadNode();
+		if (mod && mod->type == mod_studio)
+		{
+ 			pTouch->m_OriginalMesh.CMeshDesc::CMeshDesc();
+			pTouch->m_OriginalMesh.SetDebugName(pTouch->GetModel());
+			pTouch->m_OriginalMesh.SetModel(mod);
+			pTouch->m_OriginalMesh.StudioConstructMesh();
+
+			if (!pTouch->m_OriginalMesh.GetMesh())
+			{
+				ALERT(at_error, "failed to build original mesh from %s\n", pTouch->GetModel());
+			}
+		}
 	}
 
-	TraceMesh trm;	// a name like Doom3 :-)
+	if (mod->type == mod_studio && FBitSet(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE))
+	{
+		pMesh = pTouch->m_OriginalMesh.GetMesh();
+		pHeadNode = pTouch->m_OriginalMesh.GetHeadNode();
+	} 
+	else
+	{
+		pMesh = pTouch->m_CookedMesh.GetMesh();
+		pHeadNode = pTouch->m_CookedMesh.GetHeadNode();
+	}
 
-	trm.SetTraceMesh( pMesh, pHeadNode, pTouch->pev->modelindex );
-	trm.SetMeshOrientation(pTouch->pev->origin, pTouch->pev->angles, scale);
-	trm.SetupTrace( start, mins, maxs, end, tr );
+	TraceMesh trm;
+	trm.SetTraceMesh(pMesh, pHeadNode, pTouch->pev->modelindex);
+	trm.SetMeshOrientation(pTouch->pev->origin, pTouch->pev->angles, scale); 
+	trm.SetupTrace(start, mins, maxs, end, tr);
 
 	if (trm.DoTrace())
 	{

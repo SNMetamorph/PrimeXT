@@ -61,6 +61,7 @@
 #define FTRACE_SIMPLEBOX		(1<<0)	// Traceline with a simple box
 #define FTRACE_IGNORE_GLASS		(1<<1)	// traceline will be ignored entities with rendermode != kRenderNormal
 #define FTRACE_IGNORE_ALPHATEST	(1<<2)	// all the studio models with transparent surfaces will be traced like normal surfaces
+#define FTRACE_MATERIAL_TRACE	(1<<3)	// use original (not cooked with physics engine) mesh for tracing, to trace studiomodel materials
 
 // walkmove modes
 #define WALKMOVE_NORMAL		0	// normal walkmove
