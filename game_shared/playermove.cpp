@@ -298,6 +298,8 @@ void PM_CatagorizeTextureType(void)
 			trace_t materialTrace;
 			const vec3_t zeroVector = vec3_t(0.0f);
 			cl_entity_t *ent = gEngfuncs.GetEntityByIndex(pmove->physents[tr->ent].info);
+
+			memset(&materialTrace, 0, sizeof(materialTrace));
 			Physic_SweepTest(ent, start, zeroVector, zeroVector, end, &materialTrace);
 			tr->surf = materialTrace.surf;
 #endif
