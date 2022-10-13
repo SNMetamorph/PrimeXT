@@ -36,6 +36,10 @@ extern globalvars_t *gpGlobals;
 
 #include "enginecallback.h"
 
+// keep 1/8 unit away to keep the position valid before network snapping
+// and to avoid various numeric issues
+#define	SURFACE_CLIP_EPSILON	(0.125)
+
 void TraceMesh :: SetTraceMesh( mmesh_t *cached_mesh, areanode_t *tree, int modelindex )
 {
 	m_pModel = (model_t *)MODEL_HANDLE( modelindex );
@@ -219,7 +223,7 @@ void TraceMesh :: SetupTrace( const Vector &start, const Vector &mins, const Vec
 void TraceMesh :: ClipBoxToFacet( mfacet_t *facet )
 {
 	mplane_t	*p, *clipplane;
-	float	enterfrac, leavefrac, distfrac;
+	float	enterfrac, leavefrac;
 	mstudiotexture_t *ptexture;
 	bool	getout, startout;
 	Vector	startp, endp;
@@ -282,31 +286,32 @@ void TraceMesh :: ClipBoxToFacet( mfacet_t *facet )
 		if( d1 > 0.0f ) startout = true;
 
 		// if completely in front of face, no intersection
-		if( d1 > 0 && d2 >= d1 )
+		if (d1 > 0 && (d2 >= SURFACE_CLIP_EPSILON || d2 >= d1))
 			return;
 
+		// if it doesn't cross the plane, the plane isn't relevent
 		if( d1 <= 0 && d2 <= 0 )
 			continue;
 
 		// crosses face
-		d = 1.0f / (d1 - d2);
-		f = d1 * d;
-
-		if( d > 0.0f )
-		{	
-			// enter
-			if( f > enterfrac )
-			{
-				distfrac = d;
+		if (d1 > d2) {	// enter
+			f = (d1 - SURFACE_CLIP_EPSILON) / (d1 - d2);
+			if (f < 0) {
+				f = 0;
+			}
+			if (f > enterfrac) {
 				enterfrac = f;
 				clipplane = p;
 			}
 		}
-		else if( d < 0.0f )
-		{	
-			// leave
-			if( f < leavefrac )
+		else {	// leave
+			f = (d1 + SURFACE_CLIP_EPSILON) / (d1 - d2);
+			if (f > 1) {
+				f = 1;
+			}
+			if (f < leavefrac) {
 				leavefrac = f;
+			}
 		}
 	}
 
@@ -326,7 +331,7 @@ void TraceMesh :: ClipBoxToFacet( mfacet_t *facet )
 			m_flRealFraction = enterfrac;
 			trace->plane.normal = clipplane->normal;
 			trace->plane.dist = clipplane->dist;
-			trace->fraction = enterfrac - DIST_EPSILON * distfrac;
+			trace->fraction = enterfrac;
 			material = GetMaterialForFacet( facet ); // material was hit
 		}
 	}
