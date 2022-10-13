@@ -347,7 +347,7 @@ int CMeshDesc :: FindFloatPlane( const Vector &normal, float dist )
 	int	hash;
 
 	// trying to find equal plane
-	hash = (int)fabs( dist );
+	hash = (int)fabs( dist / 0.2f );
 	hash &= (PLANE_HASHES - 1);
 
 	// search the border bins as well
@@ -690,7 +690,7 @@ bool CMeshDesc::AddMeshTrinagle(const Vector triangle[3])
 		if (vec.Length() < 0.5f) continue;
 
 		vec = vec.Normalize();
-		SnapVectorToGrid(vec); // do we need to do this? in p2 we don't do it
+		SnapVectorToGrid(vec);
 
 		for (j = 0; j < 3; j++)
 		{
@@ -758,6 +758,7 @@ bool CMeshDesc::AddMeshTrinagle(const Vector triangle[3])
 	for (i = 0; i < facet->numplanes; i++)
 	{
 		// add plane to global pool
+		SnapPlaneToGrid(&planes[i]);
 		facet->indices[i] = FindFloatPlane(planes[i].normal, planes[i].dist);
 	}
 
