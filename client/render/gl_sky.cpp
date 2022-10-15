@@ -334,7 +334,7 @@ void R_DrawSkyBox()
 	if (!FBitSet( RI->view.flags, RF_SKYVISIBLE ) || tr.ignore_2d_skybox)
 		return;
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	GL_DepthMask( GL_FALSE );
 	GL_Blend( GL_FALSE );
 	GL_AlphaTest( GL_FALSE );
@@ -374,7 +374,6 @@ void R_DrawSkyBox()
 
 	GL_ClipPlane( true );
 	GL_DepthMask( GL_TRUE );
-	GL_DebugGroupPop();
 }
 
 void R_DrawSkyPortal(cl_entity_t *skyPortal)
@@ -383,7 +382,7 @@ void R_DrawSkyPortal(cl_entity_t *skyPortal)
 	const float skyFov = skyPortal->curstate.fuser2;
 	const float skyScale = skyPortal->curstate.scale;
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	R_PushRefState();
 
 	rvp.flags = RI->params | RP_SKYPORTALVIEW;
@@ -420,7 +419,6 @@ void R_DrawSkyPortal(cl_entity_t *skyPortal)
 	r_stats.c_sky_passes++;
 	R_RenderScene(&rvp, (RefParams)rvp.flags);
 	R_PopRefState();
-	GL_DebugGroupPop();
 }
 
 void R_CheckSkyPortal(cl_entity_t *skyPortal)

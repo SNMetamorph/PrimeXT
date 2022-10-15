@@ -1,14 +1,13 @@
 #pragma once
 #include "vector.h"
 #include "com_model.h"
+#include "gl_debug_scope.h"
 
 #define GL_CheckForErrors() (GL_CheckForErrorsInternal((__FUNCTION__), (__LINE__)))
 
 //
 // gl_debug.cpp
 //
-void GL_DebugGroupPush(const char *markerName);
-void GL_DebugGroupPop();
 void GL_CheckForErrorsInternal(const char *filename, int line);
 void DBG_PrintVertexVBOSizes();
 void DBG_DrawLightFrustum();

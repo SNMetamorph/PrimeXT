@@ -180,8 +180,9 @@ void CBasePostEffects::PrintLuminanceValue()
 
 void CBasePostEffects::RenderAverageLuminance()
 {
+	GL_DEBUG_SCOPE();
+
 	// render luminance to first mip
-	GL_DebugGroupPush(__FUNCTION__);
 	gl_drawbuffer_t *baseLevel = avg_luminance_fbo[0];
 	pglViewport(0, 0, baseLevel->width, baseLevel->height);
 	pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, baseLevel->id);
@@ -225,7 +226,6 @@ void CBasePostEffects::RenderAverageLuminance()
 	GL_CleanupAllTextureUnits();
 	pglViewport(0, 0, glState.width, glState.height);
 	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
-	GL_DebugGroupPop();
 }
 
 int CBasePostEffects::RenderExposureStorage()
@@ -236,7 +236,7 @@ int CBasePostEffects::RenderExposureStorage()
 	gl_drawbuffer_t *fbo = avg_luminance_fbo[0];
 	const float mipCount = static_cast<float>(GL_TextureMipCount(fbo->width, fbo->height));
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	GL_BindShader(&glsl_programs[exposureGenShader]);
 	fboIndex = (fboIndex + 1) % 2;
 
@@ -268,7 +268,6 @@ int CBasePostEffects::RenderExposureStorage()
 	pglViewport(0, 0, glState.width, glState.height);
 	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
 	GL_CleanupAllTextureUnits();
-	GL_DebugGroupPop();
 	return exposure_storage_texture[destIndex];
 }
 
@@ -687,6 +686,7 @@ void RenderPostprocessing()
 	if (!RP_NORMALPASS())
 		return;
 
+	GL_DEBUG_SCOPE();
 	if (CVAR_TO_BOOL(r_postfx_enable))
 	{
 		post.brightnessFactor = r_postfx_brightness->value;
@@ -711,12 +711,10 @@ void RenderPostprocessing()
 		post.filmGrainScale = 0.0f;
 	}
 
-	GL_DebugGroupPush(__FUNCTION__);
 	GL_Setup2D();
 	post.RequestScreenColor();
 	V_RenderPostEffect( post.postprocessingShader );
 	post.End();
-	GL_DebugGroupPop();
 }
 
 void RenderUnderwaterBlur( void )
@@ -728,9 +726,8 @@ void RenderUnderwaterBlur( void )
 	float blurX = RemapVal( factor, -1.0f, 1.0f, 0.18f, 0.23f );
 	float blurY = RemapVal( factor, -1.0f, 1.0f, 0.15f, 0.24f );
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	RenderBlur( blurX, blurY );
-	GL_DebugGroupPop();
 }
 
 void RenderNerveGasBlur( void )
@@ -746,9 +743,8 @@ void RenderNerveGasBlur( void )
 	blurX = bound( 0.0f, blurX, blurAmount);
 	blurY = bound( 0.0f, blurY, blurAmount);
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	RenderBlur( blurX, blurY );
-	GL_DebugGroupPop();
 }
 
 void RenderDOF( void )
@@ -756,12 +752,11 @@ void RenderDOF( void )
 	if( !post.ProcessDepthOfField( ))
 		return;
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	post.RequestScreenColor();
 	post.RequestScreenDepth();
 	V_RenderPostEffect( post.dofShader );
 	post.End();
-	GL_DebugGroupPop();
 }
 
 void RenderSunShafts( void )
@@ -769,7 +764,7 @@ void RenderSunShafts( void )
 	if( !post.ProcessSunShafts( ))
 		return;
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	post.RequestScreenColor();
 	post.RequestScreenDepth();
 
@@ -789,7 +784,6 @@ void RenderSunShafts( void )
 	post.SetNormalViewport();
 	V_RenderPostEffect( post.drawSunShafts );
 	post.End();
-	GL_DebugGroupPop();
 }
 
 void RenderBloom()
@@ -812,7 +806,7 @@ void RenderBloom()
 		return; // bad shader?
 	}
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	GL_BindShader(&glsl_programs[post.blurMipShader]);
 	GL_Bind(GL_TEXTURE0, tr.screen_temp_fbo->colortarget[0]);
 	GL_Setup2D();
@@ -886,7 +880,6 @@ void RenderBloom()
 	pglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_LOD, 0.0);
 	GL_Blend(GL_FALSE);
 	post.End();
-	GL_DebugGroupPop();
 }
 
 void RenderTonemap()
@@ -894,7 +887,7 @@ void RenderTonemap()
 	if (!CVAR_TO_BOOL(r_tonemap))
 		return;
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	GL_Setup2D();
 	post.RequestScreenColor();
 	int exposureTexture = post.RenderExposureStorage();
@@ -920,15 +913,13 @@ void RenderTonemap()
 	RenderFSQ(glState.width, glState.height);
 	post.PrintLuminanceValue();
 	post.End();
-	GL_DebugGroupPop();
 }
 
 void RenderAverageLuminance()
 {
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	GL_Setup2D();
 	post.RequestScreenColor();
 	post.RenderAverageLuminance();
 	post.End();
-	GL_DebugGroupPop();
 }

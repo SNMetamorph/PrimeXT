@@ -39,20 +39,6 @@ void GL_GpuMemUsage_f( void )
 	Msg( "GPU used memory %s\n", Q_memprint(( total_mem_kb - cur_avail_mem_kb ) * 1024 ));
 }
 
-void GL_DebugGroupPush(const char *markerName)
-{
-	if (developer_level > 0 && GL_Support(R_KHR_DEBUG)) {
-		pglPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION_ARB, 0, -1, markerName);
-	}
-}
-
-void GL_DebugGroupPop()
-{
-	if (developer_level > 0 && GL_Support(R_KHR_DEBUG)) {
-		pglPopDebugGroup();
-	}
-}
-
 static const char *GL_GetErrorString(int errorCode)
 {
 	switch (errorCode)
@@ -292,10 +278,9 @@ void DrawViewLeaf( void )
 	if( !CVAR_TO_BOOL( r_show_viewleaf ))
 		return;
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	GL_Blend( GL_FALSE );
 	R_RenderVisibleLeafs();
-	GL_DebugGroupPop();
 }
 
 /*
@@ -313,7 +298,8 @@ void DrawLightProbes( void )
 	if( !CVAR_TO_BOOL( r_show_lightprobes ))
 		return;
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
+
 	GL_Blend( GL_FALSE );
 	GL_Bind( GL_TEXTURE0, tr.whiteTexture );
 	pglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
@@ -335,7 +321,6 @@ void DrawLightProbes( void )
 	}
 
 	pglColor3f( 1.0f, 1.0f, 1.0f );
-	GL_DebugGroupPop();
 }
 
 /*
@@ -350,7 +335,7 @@ void DrawCubeMaps( void )
 	if( !CVAR_TO_BOOL( r_show_cubemaps ))
 		return;
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	GL_Blend( GL_FALSE );
 	GL_Bind( GL_TEXTURE0, tr.whiteTexture );
 	pglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
@@ -363,7 +348,6 @@ void DrawCubeMaps( void )
 	}
 
 	pglColor3f( 1.0f, 1.0f, 1.0f );
-	GL_DebugGroupPop();
 }
 
 void DBG_DrawBBox( const Vector &mins, const Vector &maxs )
@@ -405,7 +389,7 @@ void DBG_DrawLightFrustum( void )
 {
 	if( CVAR_TO_BOOL( r_scissor_light_debug ) && RP_NORMALPASS( ))
 	{
-		GL_DebugGroupPush(__FUNCTION__);
+		GL_DEBUG_SCOPE();
 		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
 		for( int i = 0; i < MAX_DLIGHTS; i++ )
@@ -432,7 +416,6 @@ void DBG_DrawLightFrustum( void )
 				DBG_DrawBBox( pl->absmin, pl->absmax );
 			}
 		}
-		GL_DebugGroupPop();
 	}
 }
 
@@ -467,7 +450,7 @@ void DrawTangentSpaces( void )
 	if( !CVAR_TO_BOOL( cv_show_tbn ))
 		return;
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	GL_Bind( GL_TEXTURE0, tr.whiteTexture );
 	pglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 	pglDisable( GL_DEPTH_TEST );
@@ -505,7 +488,6 @@ void DrawTangentSpaces( void )
 
 	pglEnd();
 	pglEnable( GL_DEPTH_TEST );
-	GL_DebugGroupPop();
 }
 
 void DrawWireFrame( void )
@@ -515,7 +497,7 @@ void DrawWireFrame( void )
 	if( !CVAR_TO_BOOL( r_wireframe ))
 		return;
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	pglEnable( GL_BLEND );
 	pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	pglPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -569,7 +551,6 @@ void DrawWireFrame( void )
 	pglDisable( GL_LINE_SMOOTH );
 	pglEnable( GL_DEPTH_TEST );
 	pglDisable( GL_BLEND );
-	GL_DebugGroupPop();
 }
 
 void DrawWirePoly( msurface_t *surf )
@@ -577,7 +558,7 @@ void DrawWirePoly( msurface_t *surf )
 	if( !surf ) 
 		return;
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	pglEnable( GL_BLEND );
 	pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	pglPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -606,7 +587,6 @@ void DrawWirePoly( msurface_t *surf )
 	pglEnable( GL_DEPTH_TEST );
 	pglDisable( GL_BLEND );
 	pglLineWidth( 1.0f );
-	GL_DebugGroupPop();
 }
 
 void R_ShowLightMaps( void )

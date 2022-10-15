@@ -3847,7 +3847,7 @@ void CStudioModelRenderer :: RenderShadowStudioList( void )
 	RI->currententity = NULL;
 	RI->currentmodel = NULL;
 	m_pCurrentMaterial = NULL;
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 
 	for( int i = 0; i < RI->frame.solid_meshes.Count(); i++ )
 	{
@@ -3857,7 +3857,6 @@ void CStudioModelRenderer :: RenderShadowStudioList( void )
 
 	GL_AlphaTest( GL_FALSE );
 	GL_CleanupDrawState();
-	GL_DebugGroupPop();
 }
 
 void CStudioModelRenderer :: RenderDebugStudioList( bool bViewModel )
@@ -3869,7 +3868,7 @@ void CStudioModelRenderer :: RenderDebugStudioList( bool bViewModel )
 	if( FBitSet( RI->params, RP_SHADOWVIEW|RP_ENVVIEW|RP_SKYVIEW ))
 		return;
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	GL_CleanupDrawState();
 
 	if( bViewModel )
@@ -3882,7 +3881,6 @@ void CStudioModelRenderer :: RenderDebugStudioList( bool bViewModel )
 		for( i = 0; i < tr.num_draw_entities; i++ )
 			StudioDrawDebug( tr.draw_entities[i] );
 	}
-	GL_DebugGroupPop();
 }
 
 void CStudioModelRenderer :: ClearLightCache( void )

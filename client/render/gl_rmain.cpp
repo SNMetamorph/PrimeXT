@@ -834,6 +834,7 @@ void R_DrawParticles( qboolean trans )
 	if( FBitSet( RI->params, ( RP_ENVVIEW|RP_SKYVIEW )))
 		return;
 
+	GL_DEBUG_SCOPE();
 	RI->view.port.WriteToArray(rvp.viewport);
 	rvp.viewangles = RI->view.angles;
 	rvp.vieworigin = RI->view.origin;
@@ -848,9 +849,7 @@ void R_DrawParticles( qboolean trans )
 	if( FBitSet( RI->params, RP_DRAW_OVERVIEW ))
 		SetBits( rvp.flags, RF_DRAW_OVERVIEW );
 
-	GL_DebugGroupPush(__FUNCTION__);
 	DRAW_PARTICLES( &rvp, trans, tr.frametime );
-	GL_DebugGroupPop();
 }
 
 /*
@@ -880,7 +879,7 @@ void R_RenderTransList( void )
 	if( !RI->frame.trans_list.Count() )
 		return;
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	GL_Blend( GL_FALSE ); // mixing screencopy with diffuse so we don't need blend
 	GL_AlphaTest( GL_FALSE );
 	// yes, we rendering translucent objects with enabdled depthwrite
@@ -925,7 +924,6 @@ void R_RenderTransList( void )
 	GL_Cull( GL_FRONT );
 
 	DBG_DrawGlassScissors();
-	GL_DebugGroupPop();
 }
 
 /*
@@ -945,7 +943,7 @@ void R_RenderScene( const ref_viewpass_t *rvp, RefParams params )
 		tr.frametime = tr.saved_frametime;
 	else tr.frametime = 0.0;
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	R_BuildViewPassHierarchy();
 	R_SetupViewCache( rvp );
 
@@ -978,7 +976,6 @@ void R_RenderScene( const ref_viewpass_t *rvp, RefParams params )
 
 	GL_BindShader( NULL );
 	R_ResetGLstate();
-	GL_DebugGroupPop();
 }
 
 /*
@@ -992,7 +989,7 @@ void R_RenderDeferredScene( const ref_viewpass_t *rvp, RefParams params )
 
 	// now we know about pass specific
 	RI->params = params;
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	R_SetupViewCache( rvp );
 
 	// draw all the shadowmaps
@@ -1017,7 +1014,6 @@ void R_RenderDeferredScene( const ref_viewpass_t *rvp, RefParams params )
 
 	GL_DrawDeferredPass();
 	R_ResetGLstate();
-	GL_DebugGroupPop();
 }
 
 /*
@@ -1033,6 +1029,8 @@ the client (e.g. playersetup preview)
 */
 int HUD_RenderFrame( const struct ref_viewpass_s *rvp )
 {
+	GL_DEBUG_SCOPE();
+
 	RefParams refParams = RP_NONE;
 	ref_viewpass_t defVP = *rvp;
 	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
@@ -1062,10 +1060,8 @@ int HUD_RenderFrame( const struct ref_viewpass_s *rvp )
 	if( FBitSet( rvp->flags, RF_DRAW_WORLD ))
 		SetBits( refParams, RP_DRAW_WORLD );
 
-	GL_DebugGroupPush(__FUNCTION__);
 	if (!GL_BackendStartFrame(&defVP, refParams))
 	{
-		GL_DebugGroupPop();
 		return 0;
 	}
 
@@ -1091,7 +1087,6 @@ int HUD_RenderFrame( const struct ref_viewpass_s *rvp )
 	defVP = *rvp;
 
 	GL_BackendEndFrame( &defVP, refParams );
-	GL_DebugGroupPop();
 	return 1;
 }
 

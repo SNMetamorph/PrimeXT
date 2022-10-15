@@ -605,17 +605,17 @@ static void GL_FilterCubemapSpecularIBL(mcubemap_t *cubemap)
 
 static void GL_RenderCubemapSide(mcubemap_t *cubemap, int side)
 {
+	GL_DEBUG_SCOPE();
+
 	ref_viewpass_t rvp;
-	GL_DebugGroupPush(__FUNCTION__);
 	cubemap->framebuffer.Bind(cubemap->texture, side);
 	GL_SetupCubemapSideView(cubemap, rvp, side);
 	R_RenderScene(&rvp, static_cast<RefParams>(rvp.flags));
-	GL_DebugGroupPop();
 }
 
 static void GL_RenderCubemap(mcubemap_t *cubemap)
 {
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	if (Mod_AllocateCubemap(cubemap)) 
 	{
 		GL_ComputeCubemapViewBoxSize(cubemap);
@@ -636,7 +636,6 @@ static void GL_RenderCubemap(mcubemap_t *cubemap)
 	else {
 		ALERT(at_warning, "GL_RenderCubemap: failed to allocate cubemap \"%s\"\n", cubemap->name);
 	}
-	GL_DebugGroupPop();
 }
 
 /*
@@ -649,6 +648,8 @@ loading actual cubemaps into videomemory
 */
 void GL_LoadAndRebuildCubemaps(RefParams refParams)
 {
+	GL_DEBUG_SCOPE();
+
 	bool realtimeBaking = CVAR_TO_BOOL(r_cubemap_realtime);
 	if (!world->loading_cubemaps && !realtimeBaking)
 		return; // job is done
@@ -657,9 +658,8 @@ void GL_LoadAndRebuildCubemaps(RefParams refParams)
 		return; // already in cubemap-rendering mode
 
 	int oldFBO = glState.frameBuffer;
-	GL_DebugGroupPush(__FUNCTION__);
+
 	R_PushRefState();
-	
 	if (world->build_default_cubemap)
 	{
 		GL_RenderCubemap(&world->defaultCubemap);
@@ -707,7 +707,6 @@ void GL_LoadAndRebuildCubemaps(RefParams refParams)
 	R_PopRefState();
 	GL_BindFBO(oldFBO);
 	GL_BindShader(NULL);
-	GL_DebugGroupPop();
 	CL_LinkCubemapsWithSurfaces();
 }
 

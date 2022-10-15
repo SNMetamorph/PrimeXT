@@ -646,9 +646,8 @@ extern CStudioModelRenderer g_StudioRenderer;
 inline void R_RunViewmodelEvents( void ) { g_StudioRenderer.RunViewModelEvents(); }
 inline void R_DrawViewModel( void ) 
 { 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	g_StudioRenderer.DrawViewModel(); 
-	GL_DebugGroupPop();
 }
 inline void R_ProcessStudioData( model_t *mod, qboolean create, const byte *buffer )
 {
@@ -683,9 +682,8 @@ inline void R_RenderDeferredStudioList( void )
 
 inline void R_RenderSolidStudioList( void )
 {
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	g_StudioRenderer.RenderSolidStudioList();
-	GL_DebugGroupPop();
 }
 
 inline void R_RenderTransMesh( CTransEntry *entry )

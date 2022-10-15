@@ -3514,7 +3514,7 @@ void R_RenderSolidBrushList( void )
 	if( !RI->frame.solid_faces.Count() )
 		return;
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	GL_Blend( GL_FALSE );
 	GL_AlphaTest( GL_FALSE );
 	GL_DepthMask( GL_TRUE );
@@ -3626,7 +3626,6 @@ void R_RenderSolidBrushList( void )
 
 	// render all decals with gray base
 	R_RenderDecalsSolidList( DRAWLIST_TRANS );
-	GL_DebugGroupPop();
 }
 
 void R_RenderTransSurface( CTransEntry *entry )
@@ -3705,7 +3704,7 @@ void R_RenderShadowBrushList( void )
 	if( !RI->frame.solid_faces.Count() )
 		return;
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	pglBindVertexArray( world->vertex_array_object );
 	pglAlphaFunc( GL_GREATER, 0.25f );
 	numTempElems = 0;
@@ -3775,5 +3774,4 @@ void R_RenderShadowBrushList( void )
 
 	R_RenderShadowGrassOnList();
 	GL_CleanupDrawState();
-	GL_DebugGroupPop();
 }

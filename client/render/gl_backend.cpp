@@ -186,7 +186,7 @@ void GL_ComputeSunParams( const Vector &skyVector )
 
 static void R_RenderScreenQuad()
 {
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	// copy depth from HDR framebuffer to screen framebuffer
 	pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, FBO_MAIN);
 	pglBindFramebuffer(GL_READ_FRAMEBUFFER, tr.screen_temp_fbo->id);
@@ -196,7 +196,6 @@ static void R_RenderScreenQuad()
 	GL_Bind(GL_TEXTURE0, tr.screen_temp_fbo->colortarget[0]);
 	RenderFSQ(glState.width, glState.height);
 	GL_Bind(GL_TEXTURE0, 0);
-	GL_DebugGroupPop();
 }
 
 /*
@@ -459,10 +458,11 @@ GL_BackendEndFrame
 */
 void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 {
+	GL_DEBUG_SCOPE();
+
 	mstudiolight_t	light;
 	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
 	tr.frametime = tr.saved_frametime;
-	GL_DebugGroupPush(__FUNCTION__);
 
 	// go into 2D mode (in case we draw PlayerSetup between two 2d calls)
 	if( !FBitSet( params, RP_DRAW_WORLD ))
@@ -537,7 +537,6 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	GL_PrintStats( params );
 
 	R_UnloadFarGrass();
-	GL_DebugGroupPop();
 	tr.params_changed = false;
 	tr.realframecount++;
 

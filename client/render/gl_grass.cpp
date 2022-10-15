@@ -1059,7 +1059,7 @@ void R_RenderShadowGrassOnList( void )
 	if( !RI->frame.grass_list.Count())
 		return; // don't waste time
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	GL_AlphaTest( GL_TRUE );
 	pglAlphaFunc( GL_GREATER, r_grass_alpha->value );
 	GL_Cull( GL_NONE );	// grass is double-sided poly
@@ -1101,7 +1101,6 @@ void R_RenderShadowGrassOnList( void )
 
 	// restore old binding
 	GL_Cull( GL_FRONT );
-	GL_DebugGroupPop();
 }
 
 /*

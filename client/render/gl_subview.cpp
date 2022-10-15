@@ -629,7 +629,7 @@ void R_RenderSubview()
 	if (R_CheckOutside())
 		return;
 
-	GL_DebugGroupPush(__FUNCTION__);
+	GL_DEBUG_SCOPE();
 	R_PushRefState(); // make refinst backup
 	prevRI = R_GetPrevInstance();
 
@@ -705,7 +705,5 @@ void R_RenderSubview()
 		GL_BindFBO( oldFBO );
 		R_ResetRefState();
 	}
-
 	R_PopRefState(); // restore ref instance
-	GL_DebugGroupPop();
 }
