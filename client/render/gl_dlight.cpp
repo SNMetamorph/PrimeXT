@@ -304,52 +304,6 @@ Vector R_LightsForPoint( const Vector &point, float radius )
 
 /*
 ================
-R_GetLightVectors
-
-Get light vectors for entity
-================
-*/
-void R_GetLightVectors( cl_entity_t *pEnt, Vector &origin, Vector &angles )
-{
-	// fill default case
-	origin = pEnt->origin;
-	angles = pEnt->angles; 
-
-	// try to grab position from attachment
-	if( pEnt->curstate.aiment > 0 && pEnt->curstate.movetype == MOVETYPE_FOLLOW )
-	{
-		cl_entity_t *pParent = GET_ENTITY( pEnt->curstate.aiment );
-		studiohdr_t *pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata( pParent->model );
-
-		if( pParent && pParent->model && pStudioHeader != NULL )
-		{
-			// make sure what model really has attachements
-			if( pEnt->curstate.body > 0 && ( pStudioHeader && pStudioHeader->numattachments > 0 ))
-			{
-				int num = bound( 1, pEnt->curstate.body, MAXSTUDIOATTACHMENTS );
-				R_StudioAttachmentPosAng( pParent, num - 1, &origin, &angles );
-			}
-			else if( pParent->curstate.movetype == MOVETYPE_STEP )
-			{
-				origin = pParent->origin;
-				angles = pParent->angles;
-
-				// add the eye position for monster
-				if( pParent->curstate.eflags & EFLAG_SLERP )
-					origin += pStudioHeader->eyeposition;
-			} 
-			else
-			{
-				origin = pParent->origin;
-				angles = pParent->angles;
-			}
-		}
-	}
-	// all other parent types will be attached on the server
-}
-
-/*
-================
 R_SetupLightTexture
 
 Must be called after R_SetupLightParams

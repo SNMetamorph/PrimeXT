@@ -59,6 +59,9 @@ list(APPEND CLDLL_SOURCES
 # render source files
 file(GLOB RENDER_SOURCES "render/*.cpp")
 
+# entity wrappers source files
+file(GLOB ENTITIES_SOURCES "entities/*.cpp")
+
 # ImGui source files
 if(NOT ENABLE_VGUI_COMPATIBILITY)
 	list(APPEND IMGUI_SOURCES
@@ -79,12 +82,14 @@ if(NOT ENABLE_VGUI_COMPATIBILITY)
 endif()
 
 list(APPEND CLDLL_SOURCES ${RENDER_SOURCES})
+list(APPEND CLDLL_SOURCES ${ENTITIES_SOURCES})
 add_library(${PROJECT_NAME} SHARED ${CLDLL_SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"."
 	"render/"
 	"ui/"
+	"entities/"
 	"../common"
 	"../engine"
 	"../game_shared"

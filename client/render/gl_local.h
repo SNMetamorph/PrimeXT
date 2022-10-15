@@ -861,7 +861,6 @@ void R_LightmapCoords( struct mstudiosurface_s *surf, const Vector &vec, const V
 // gl_rlight.cpp
 //
 CDynLight *CL_AllocDlight( int key );
-void R_GetLightVectors( cl_entity_t *pEnt, Vector &origin, Vector &angles );
 void R_SetupLightParams( CDynLight *pl, const Vector &origin, const Vector &angles, float radius, float fov, int type, int flags = 0 );
 void R_FindWorldLights( const Vector &origin, const Vector &mins, const Vector &maxs, byte lights[MAXDYNLIGHTS], bool skipZ = false );
 void R_LightForStudio( const Vector &point, mstudiolight_t *light, bool ambient );
