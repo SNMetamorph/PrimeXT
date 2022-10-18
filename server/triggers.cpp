@@ -4572,6 +4572,9 @@ void CTriggerCamera::FollowTarget( void )
 	if( m_hPlayer == NULL )
 		return;
 
+	// update target, maybe it was changed by changetarget.
+	m_hTarget = GetNextTarget();
+
 	if( m_hTarget == NULL || (m_hTarget->IsMonster() && !m_hTarget->IsAlive())
 	|| !m_hPlayer->IsAlive() || ( m_flWait != -1 && m_flReturnTime < gpGlobals->time ))
 	{
@@ -4580,7 +4583,6 @@ void CTriggerCamera::FollowTarget( void )
 	}
 
 	Vector vecGoal = UTIL_VecToAngles( m_hTarget->GetAbsOrigin() - GetLocalOrigin() );
-
 	Vector angles = GetLocalAngles();
 
 	if (angles.y > 360)
