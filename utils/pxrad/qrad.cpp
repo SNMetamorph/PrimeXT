@@ -12,6 +12,7 @@
 
 #include "qrad.h"
 #include "app_info.h"
+#include "crashhandler.h"
 
 /*
 NOTES
@@ -2515,6 +2516,7 @@ int main( int argc, char **argv )
 	atexit( Sys_CloseLog );
 	source[0] = '\0';
 
+	Sys_SetupCrashHandler();
 	g_smoothing_threshold = cos( DEG2RAD( g_smoothvalue )); // Originally zero.
 
 	for( i = 1; i < argc; i++ )
@@ -2709,6 +2711,7 @@ int main( int argc, char **argv )
 	FreeWorldTrace ();
 	FreeEntities ();
 	FS_Shutdown();
+	Sys_RestoreCrashHandler();
 
 	SetDeveloperLevel( D_REPORT );
 	Mem_Check();
