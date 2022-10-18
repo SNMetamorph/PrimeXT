@@ -13,7 +13,6 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-#define _GNU_SOURCE
 
 #include "crashhandler.h"
 #include "build.h"
@@ -211,11 +210,6 @@ static void Sys_StackTrace( PEXCEPTION_POINTERS pInfo )
 		len += Q_snprintf( message + len, 1024 - len, ")\n");
 	}
 
-#if XASH_SDL == 2
-	if( host.type != HOST_DEDICATED ) // let system to restart server automaticly
-		SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Sys_Crash", message, host.hWnd );
-#endif
-
 	Sys_PrintLog( message );
 
 	SymCleanup( process );
@@ -257,8 +251,6 @@ void Sys_RestoreCrashHandler( void )
 
 #elif XASH_CRASHHANDLER == CRASHHANDLER_UCONTEXT
 // Posix signal handler
-
-#include "library.h"
 
 #if XASH_FREEBSD || XASH_NETBSD || XASH_OPENBSD || XASH_ANDROID || XASH_LINUX
 #define HAVE_UCONTEXT_H 1
@@ -320,7 +312,7 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 {
 	void *pc = NULL, **bp = NULL, **sp = NULL; // this must be set for every OS!
 	char message[8192];
-	int len, logfd, i = 0;
+	int len, i = 0;
 	size_t pagesize;
 
 #if XASH_OPENBSD
@@ -375,9 +367,14 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 	sp = (void*)ucontext->uc_mcontext.arm_sp;
 #endif
 
+#if 0
+	// TODO print build number, commit hash, build arch
 	// safe actions first, stack and memory may be corrupted
 	len = Q_snprintf( message, sizeof( message ), "Ver: %s %s (build %i-%s, %s-%s)\n",
 		XASH_ENGINE_NAME, XASH_VERSION, Q_buildnum(), Q_buildcommit(), Q_buildos(), Q_buildarch() );
+#else
+	len = 0;
+#endif
 
 #if !XASH_BSD
 	len += Q_snprintf( message + len, sizeof( message ) - len, "Crash: signal %d errno %d with code %d at %p %p\n", signal, si->si_errno, si->si_code, si->si_addr, si->si_ptr );
@@ -391,16 +388,11 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 	fflush( stdout );
 	fflush( stderr );
 
-	// now get log fd and write trace directly to log
-	logfd = Sys_LogFileNo();
-	write( logfd, message, len );
-
 	if( pc && bp && sp )
 	{
 		size_t pagesize = sysconf( _SC_PAGESIZE );
 		// try to print backtrace
 		write( STDERR_FILENO, STACK_BACKTRACE_STR, STACK_BACKTRACE_STR_LEN );
-		write( logfd, STACK_BACKTRACE_STR, STACK_BACKTRACE_STR_LEN );
 		Q_strncpy( message + len, STACK_BACKTRACE_STR, sizeof( message ) - len );
 		len += STACK_BACKTRACE_STR_LEN;
 
@@ -415,7 +407,6 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 		{
 			int line = Sys_PrintFrame( message + len, sizeof( message ) - len, ++i, pc);
 			write( STDERR_FILENO, message + len, line );
-			write( logfd, message + len, line );
 			len += line;
 			//if( !dladdr(bp,0) ) break; // only when bp is in module
 			if( try_allow_read( bp, pagesize ) )
@@ -429,7 +420,6 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 
 		// try to print stack
 		write( STDERR_FILENO, STACK_DUMP_STR, STACK_DUMP_STR_LEN );
-		write( logfd, STACK_DUMP_STR, STACK_DUMP_STR_LEN );
 		Q_strncpy( message + len, STACK_DUMP_STR, sizeof( message ) - len );
 		len += STACK_DUMP_STR_LEN;
 
@@ -439,7 +429,6 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 			{
 				int line = Sys_PrintFrame( message + len, sizeof( message ) - len, i, sp[i] );
 				write( STDERR_FILENO, message + len, line );
-				write( logfd, message + len, line );
 				len += line;
 			}
 		}
@@ -447,20 +436,9 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 #undef try_allow_read
 	}
 
-	// put MessageBox as Sys_Error
-	Msg( "%s\n", message );
-#ifdef XASH_SDL
-	SDL_SetWindowGrab( host.hWnd, SDL_FALSE );
-#endif
-	MSGBOX( message );
-
-	// log saved, now we can try to save configs and close log correctly, it may crash
-	if( host.type == HOST_NORMAL )
-		CL_Crashed();
-	host.status = HOST_CRASHED;
-	host.crashed = true;
-
-	Sys_Quit();
+	Msg("%s\n", message);
+	Sys_PrintLog(message);
+	exit(1);
 }
 
 void Sys_SetupCrashHandler( void )
