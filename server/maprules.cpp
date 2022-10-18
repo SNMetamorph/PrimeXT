@@ -749,6 +749,8 @@ public:
 
 	inline BOOL UseOnly( void ) { return (pev->spawnflags & SF_PLAYEREQUIP_USEONLY) ? TRUE : FALSE; }
 
+	DECLARE_DATADESC();
+
 private:
 	void EquipPlayer( CBaseEntity *pPlayer );
 
@@ -757,6 +759,12 @@ private:
 };
 
 LINK_ENTITY_TO_CLASS( game_player_equip, CGamePlayerEquip );
+
+BEGIN_DATADESC( CGamePlayerEquip )
+	DEFINE_AUTO_ARRAY( m_weaponCount, FIELD_INTEGER ),
+	DEFINE_AUTO_ARRAY( m_weaponNames, FIELD_STRING ),
+	DEFINE_FUNCTION( EquipPlayer ),
+END_DATADESC()
 
 void CGamePlayerEquip::KeyValue( KeyValueData *pkvd )
 {
