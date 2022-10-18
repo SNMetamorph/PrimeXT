@@ -15,6 +15,22 @@ const config = {
   favicon: 'img/favicon.ico?v=2',
   organizationName: 'SNMetamorph', // Usually your GitHub org/user name.
   projectName: 'PrimeXT', // Usually your repo name.
+  plugins: [],
+  themes: [
+    [
+      require.resolve('@easyops-cn/docusaurus-search-local'),
+      /** @type {import('@easyops-cn/docusaurus-search-local').PluginOptions} */
+      ({
+        // ... Your options.
+        // `hashed` is recommended as long-term-cache of index file is possible.
+        hashed: true,
+        // For Docs using Chinese, The `language` is recommended to set to:
+        // ```
+        // language: ["en", "zh"],
+        // ```
+      }),
+    ],
+  ],
 
   presets: [
     [
