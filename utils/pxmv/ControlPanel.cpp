@@ -67,14 +67,12 @@ ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0,
 	cbBackground = new mxCheckBox (wRender, 260, 45, 130, 20, "Show Background", IDC_BACKGROUND);
 	mxCheckBox *cbWireframe = new mxCheckBox (wRender, 260, 65, 130, 20, "Wireframe Overlay", IDC_WIREFRAME);
 
-#ifdef HAVE_SCALE
 	leMeshScale = new mxLineEdit (wRender, 430, 5, 50, 18, "1.0");
 	mxToolTip::add (leMeshScale, "Mesh Scale");
 	leBoneScale = new mxLineEdit (wRender, 430, 25, 50, 18, "1.0");
 	mxToolTip::add (leBoneScale, "Bone Scale");
-	mxButton *bMeshScale = new mxButton (wRender, 485, 5, 80, 18, "Sacle Meshes", 10001);
+	mxButton *bMeshScale = new mxButton (wRender, 485, 5, 80, 18, "Scale Meshes", 10001);
 	mxButton *bBoneScale = new mxButton (wRender, 485, 25, 80, 18, "Scale Bones", 10002);
-#endif
 	lDrawnPolys = new mxLabel (wRender, 430, 65, 110, 18, "Drawn Polys: 0");
 
 	mxWindow *wBody = new mxWindow (this, 0, 0, 0, 0);
@@ -1040,7 +1038,7 @@ ControlPanel::handleEvent (mxEvent *event)
 		case IDC_EDIT_SIZE:
 			toggleMoveSize( ((mxCheckBox *) event->widget)->isChecked ());
 		break;
-#ifdef HAVE_SCALE
+
 		case 10001:
 		{
 			float scale = (float) atof (leMeshScale->getLabel ());
@@ -1060,7 +1058,7 @@ ControlPanel::handleEvent (mxEvent *event)
 			}
 		}
 		break;
-#endif
+
 		default:
 		{
 			if (event->action >= IDC_POSEPARAMETER && event->action < IDC_POSEPARAMETER + NUM_POSEPARAMETERS)
