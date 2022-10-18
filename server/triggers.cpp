@@ -4572,14 +4572,16 @@ void CTriggerCamera::FollowTarget( void )
 	if( m_hPlayer == NULL )
 		return;
 
-	// update target, maybe it was changed by changetarget.
-	m_hTarget = GetNextTarget();
-
 	if( m_hTarget == NULL || (m_hTarget->IsMonster() && !m_hTarget->IsAlive())
 	|| !m_hPlayer->IsAlive() || ( m_flWait != -1 && m_flReturnTime < gpGlobals->time ))
 	{
 		Stop();
 		return;
+	}
+
+	// update target, maybe it was changed by trigger_changetarget
+	if (!(pev->spawnflags & SF_CAMERA_PLAYER_TARGET)) {
+		m_hTarget = GetNextTarget();
 	}
 
 	Vector vecGoal = UTIL_VecToAngles( m_hTarget->GetAbsOrigin() - GetLocalOrigin() );
