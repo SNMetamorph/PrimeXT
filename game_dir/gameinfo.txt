@@ -21,7 +21,6 @@ hull0		( 0 0 0 ) ( 0 0 0 )
 hull1		( -16 -16 -36 ) ( 16 16 36 )
 hull2		( -32 -32 -32 ) ( 32 32 32 )
 hull3		( -16 -16 -18 ) ( 16 16 18 )
-ambient1		"ambience/wind2.wav"
 max_edicts		2048
 max_tempents	1024
 max_beams		128
