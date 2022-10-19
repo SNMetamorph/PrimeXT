@@ -109,9 +109,8 @@ static int Sys_ModuleName( HANDLE process, char *name, void *address, int len )
 
 static void Sys_StackTrace( PEXCEPTION_POINTERS pInfo )
 {
-	char message[1024];
+	static char message[4096];
 	int len = 0;
-	size_t i;
 	HANDLE process = GetCurrentProcess();
 	HANDLE thread = GetCurrentThread();
 	IMAGEHLP_LINE64 line;
@@ -161,24 +160,28 @@ static void Sys_StackTrace( PEXCEPTION_POINTERS pInfo )
 #elif
 #error
 #endif
-	len += Q_snprintf( message + len, 1024 - len, "Sys_Crash: address %p, code %p\n",
-		pInfo->ExceptionRecord->ExceptionAddress, (void*)pInfo->ExceptionRecord->ExceptionCode );
-	if( SymGetLineFromAddr64( process, (DWORD64)pInfo->ExceptionRecord->ExceptionAddress, &dline, &line ) )
+	len += Q_snprintf(message + len, sizeof(message) - len, "Sys_Crash: address %p, code %p\n",
+		pInfo->ExceptionRecord->ExceptionAddress, (void*)pInfo->ExceptionRecord->ExceptionCode);
+
+	if (SymGetLineFromAddr64(process, (DWORD64)pInfo->ExceptionRecord->ExceptionAddress, &dline, &line))
 	{
-		len += Q_snprintf(message + len, 1024 - len, "Exception: %s:%d:%d\n",
+		len += Q_snprintf(message + len, sizeof(message) - len, "Exception: %s:%d:%d\n",
 			(char*)line.FileName, (int)line.LineNumber, (int)dline);
 	}
-	if( SymGetLineFromAddr64( process, stackframe.AddrPC.Offset, &dline, &line ) )
+
+	if (SymGetLineFromAddr64( process, stackframe.AddrPC.Offset, &dline, &line))
 	{
-		len += Q_snprintf(message + len, 1024 - len,"PC: %s:%d:%d\n",
+		len += Q_snprintf(message + len, sizeof(message) - len, "PC: %s:%d:%d\n",
 			(char*)line.FileName, (int)line.LineNumber, (int)dline);
 	}
-	if( SymGetLineFromAddr64( process, stackframe.AddrFrame.Offset, &dline, &line ) )
+
+	if (SymGetLineFromAddr64(process, stackframe.AddrFrame.Offset, &dline, &line))
 	{
-		len += Q_snprintf(message + len, 1024 - len,"Frame: %s:%d:%d\n",
+		len += Q_snprintf(message + len, sizeof(message) - len, "Frame: %s:%d:%d\n",
 			(char*)line.FileName, (int)line.LineNumber, (int)dline);
 	}
-	for( i = 0; i < 25; i++ )
+
+	for (size_t i = 0; i < 25; i++)
 	{
 		char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
 		PSYMBOL_INFO symbol = (PSYMBOL_INFO)buffer;
@@ -194,20 +197,23 @@ static void Sys_StackTrace( PEXCEPTION_POINTERS pInfo )
 		symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 		symbol->MaxNameLen = MAX_SYM_NAME;
 
-		len += Q_snprintf( message + len, 1024 - len, "% 2d %p",
-			i, (void*)stackframe.AddrPC.Offset );
-		if( SymFromAddr( process, stackframe.AddrPC.Offset, &displacement, symbol ) )
+		len += Q_snprintf(message + len, sizeof(message) - len, "% 2d %p",
+			i, (void*)stackframe.AddrPC.Offset);
+
+		if (SymFromAddr( process, stackframe.AddrPC.Offset, &displacement, symbol))
 		{
-			len += Q_snprintf( message + len, 1024 - len, " %s ", symbol->Name );
+			len += Q_snprintf(message + len, sizeof(message) - len, " %s ", symbol->Name);
 		}
-		if( SymGetLineFromAddr64( process, stackframe.AddrPC.Offset, &dline, &line ) )
+
+		if (SymGetLineFromAddr64( process, stackframe.AddrPC.Offset, &dline, &line))
 		{
-			len += Q_snprintf(message + len, 1024 - len,"(%s:%d:%d) ",
+			len += Q_snprintf(message + len, sizeof(message) - len,"(%s:%d:%d) ",
 				(char*)line.FileName, (int)line.LineNumber, (int)dline);
 		}
-		len += Q_snprintf( message + len, 1024 - len, "(");
-		len += Sys_ModuleName( process, message + len, (void*)stackframe.AddrPC.Offset, 1024 - len );
-		len += Q_snprintf( message + len, 1024 - len, ")\n");
+
+		len += Q_snprintf(message + len, sizeof(message) - len, "(");
+		len += Sys_ModuleName(process, message + len, (void *)stackframe.AddrPC.Offset, sizeof(message) - len);
+		len += Q_snprintf(message + len, sizeof(message) - len, ")\n");
 	}
 
 	Sys_PrintLog( message );
