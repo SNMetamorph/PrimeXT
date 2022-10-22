@@ -1211,9 +1211,16 @@ void GL_BindShader( glsl_program_t *shader )
 	}
 	else if (shader != RI->currentshader && shader != NULL && shader->handle)
 	{
-		pglUseProgram(shader->handle);
-		r_stats.num_shader_binds++;
-		RI->currentshader = shader;
+		if (!FBitSet(shader->status, SHADER_PROGRAM_LINKED))
+		{
+			ALERT(at_error, "^1GL_BindShader: ^7trying to bind shader \"%s\" which is not compiled.\n", shader->name);
+		}
+		else
+		{
+			pglUseProgram(shader->handle);
+			r_stats.num_shader_binds++;
+			RI->currentshader = shader;
+		}
 	}
 }
 
