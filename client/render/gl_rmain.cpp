@@ -770,8 +770,9 @@ R_Clear
 */
 void R_Clear( int bitMask )
 {
-	int	bits = GL_DEPTH_BUFFER_BIT;
+	GL_DEBUG_SCOPE();
 
+	int	bits = GL_DEPTH_BUFFER_BIT;
 	// NOTE: mask should be enabled to properly clear buffer
 	GL_DepthMask( GL_TRUE );
 

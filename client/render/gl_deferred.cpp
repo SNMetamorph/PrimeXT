@@ -20,6 +20,7 @@ GNU General Public License for more details.
 #include "gl_world.h"
 #include "gl_grass.h"
 #include "gl_cvars.h"
+#include "gl_debug.h"
 
 enum
 {
@@ -182,6 +183,7 @@ GL_Setup2D
 */
 void GL_SetupDeferred( void )
 {
+	GL_DEBUG_SCOPE();
 	// set up full screen workspace
 	pglMatrixMode( GL_PROJECTION );
 	pglLoadIdentity();
@@ -219,6 +221,7 @@ static void GL_DrawDeferred( word hProgram, int pass )
 	}
 
 	// prepare deferred pass
+	GL_DEBUG_SCOPE();
 	GL_SetupDeferred();
 
 	if( RI->currentshader != &glsl_programs[hProgram] )
@@ -541,6 +544,7 @@ void GL_DrawDeferredPass( void )
 	if( !tr.defSceneShader || !tr.defLightShader )
 		return; // oops!
 
+	GL_DEBUG_SCOPE();
 	GL_ComputeScreenRays();
 
 	if( FBitSet( RI->params, RP_DEFERREDSCENE ))

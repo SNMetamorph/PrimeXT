@@ -3386,6 +3386,7 @@ void R_RenderDeferredBrushList( void )
 	if( !RI->frame.solid_faces.Count() )
 		return;
 
+	GL_DEBUG_SCOPE();
 	GL_Blend( GL_FALSE );
 	GL_AlphaTest( GL_FALSE );
 	GL_DepthMask( GL_TRUE );

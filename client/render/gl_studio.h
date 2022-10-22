@@ -677,6 +677,7 @@ inline int R_StudioGetBounds( CSolidEntry *entry, Vector bounds[2] )
 
 inline void R_RenderDeferredStudioList( void )
 {
+	GL_DEBUG_SCOPE();
 	g_StudioRenderer.RenderDeferredStudioList();
 }
 
