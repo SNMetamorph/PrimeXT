@@ -100,7 +100,7 @@ void main( void )
 	diffuse.rgb *= light.rgb * atten * shadow;
 #if defined( HAS_GLOSSMAP )
 	//vec3 gloss = SpecularBRDF( N, V, L, glossmap.a, glossmap.rgb ) * light * NdotL * atten;
-	diffuse.rgb += shadow; // * gloss;
+	//diffuse.rgb += shadow * gloss;
 #endif
 	gl_FragColor = vec4( diffuse, 1.0 );
 }

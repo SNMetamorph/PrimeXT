@@ -136,7 +136,7 @@ void main( void )
 #if defined( BSPTRACE_BMODELS )
 		if( add > EQUAL_EPSILON && bool( traceRay2( pos, delta )))
 #else
-		if( add > EQUAL_EPSILON && bool( traceRay( pos, delta )))
+		if( add > EQUAL_EPSILON && bool( traceRay( pos, delta, 0.0 )))
 #endif
 		{
 			shadowmap[i] += (first) ? 0.25 : 0.75;

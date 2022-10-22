@@ -128,7 +128,7 @@ vec3 ProcessWorldLights( const vec3 pos, const vec3 normal )
 
 		if( VectorMax( add ) > EQUAL_EPSILON )
 		{
-			add *= traceRay( pos, delta );
+			add *= traceRay( pos, delta, 0.0 );
 
 			// unroll styles
 			if( styles[0] == 255.0 )

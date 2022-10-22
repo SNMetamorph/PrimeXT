@@ -52,7 +52,7 @@ void main( void )
 {
 	vec4 albedo = vec4( 0.0 );
 	vec4 normal = vec4( 0.0 );
-	vec4 smooth = vec4( 0.0 );
+	vec4 smoothness = vec4( 0.0 );
 
 	vec2 screenCoord = gl_FragCoord.xy * u_ScreenSizeInv;
 	vec4 frag_diffuse = colormap2D( u_FragData0, screenCoord );
@@ -104,8 +104,8 @@ void main( void )
 #endif
 
 #if defined( HAS_GLOSSMAP )
-	smooth = colormap2D( u_GlossMap, vecTexCoord.xy );
-	smooth.a = u_Smoothness;
+	smoothness = colormap2D( u_GlossMap, vecTexCoord.xy );
+	smoothness.a = u_Smoothness;
 #endif
 	vec4 diffuse = decalmap2D( u_DecalMap, vecTexCoord.xy );
 
@@ -135,11 +135,11 @@ void main( void )
 	albedo.rgb = diffuse.rgb * frag_diffuse.rgb + diffuse.rgb * frag_diffuse.rgb;
 #endif
 	normal.rgb = mix( normal.xyz, frag_normal.rgb, alpha );
-	smooth = mix( smooth, frag_smooth, alpha );
+	smoothness = mix( smoothness, frag_smooth, alpha );
 #else
 	albedo.rgb = mix( frag_diffuse.rgb, diffuse.rgb, diffuse.a );
 	normal.rgb = mix( frag_normal.rgb, normal.xyz, diffuse.a );
-	smooth = mix( smooth, frag_smooth, diffuse.a );
+	smoothness = mix( smoothness, frag_smooth, diffuse.a );
 #endif
 	normal.xyz = ( normal.xyz + 1.0 ) * 0.5;
 	CompressUnsignedNormalToNormalsBuffer( normal.xyz );
@@ -149,5 +149,5 @@ void main( void )
 
 	gl_FragData[0] = albedo;		// red, green, blue, alpha
 	gl_FragData[1] = normal;		// X, Y, Z, flag fullbright
-	gl_FragData[2] = smooth;		// gloss R, G, B, smooth factor
+	gl_FragData[2] = smoothness;	// gloss R, G, B, smoothness factor
 }

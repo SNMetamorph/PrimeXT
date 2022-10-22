@@ -43,7 +43,7 @@ void main( void )
 	// compute the diffuse term
 	vec4 albedo = colormap2D( u_ColorMap, var_TexDiffuse );
 	vec4 normal = vec4( 0.0 );
-	vec4 smooth = vec4( 0.0 );
+	vec4 smoothness = vec4( 0.0 );
 
 #if defined( HAS_DETAIL )
 	albedo.rgb *= detailmap2D( u_DetailMap, var_TexDetail ).rgb * DETAIL_SCALE;
@@ -75,18 +75,18 @@ void main( void )
 	CompressUnsignedNormalToNormalsBuffer( normal.xyz );
 
 #if defined( HAS_GLOSSMAP )
-	smooth = colormap2D( u_GlossMap, var_TexDiffuse );
-	smooth.a = u_Smoothness;
+	smoothness = colormap2D( u_GlossMap, var_TexDiffuse );
+	smoothness.a = u_Smoothness;
 #endif
 
 // multiply gloss intensity with reflection cube color
 #if defined( REFLECTION_CUBEMAP )
-	vec3 reflectance = CubemapReflectionProbe( var_Position, u_ViewOrigin.xyz, var_WorldMat[2], smooth.a );
+	vec3 reflectance = CubemapReflectionProbe( var_Position, u_ViewOrigin.xyz, var_WorldMat[2], smoothness.a );
 	albedo.rgb += reflectance * u_ReflectScale;
 #endif
 	gl_FragData[0] = albedo;	// red, green, blue, alpha
 	gl_FragData[1] = normal;	// X, Y, Z, flag fullbright
-	gl_FragData[2] = smooth;	// gloss R, G, B, smooth factor
+	gl_FragData[2] = smoothness;	// gloss R, G, B, smoothness factor
 	gl_FragData[3] = u_LightNums0 * (1.0 / 255.0);
 	gl_FragData[4] = u_LightNums1 * (1.0 / 255.0);
 }

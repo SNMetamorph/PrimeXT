@@ -61,7 +61,7 @@ void main( void )
 {
 	vec4 albedo = vec4( 0.0 );
 	vec4 normal = vec4( 0.0 );
-	vec4 smooth = vec4( 0.0 );
+	vec4 smoothness = vec4( 0.0 );
 	vec2 vec_TexDiffuse = var_TexDiffuse;
 
 // parallax     
@@ -90,8 +90,8 @@ void main( void )
 #endif
 
 #if defined( HAS_GLOSSMAP )
-	smooth = TerrainMixGlossmap( u_GlossMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
-	smooth.a = TerrainMixSmoothness( u_Smoothness, mask0, mask1, mask2, mask3 );
+	smoothness = TerrainMixGlossmap( u_GlossMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
+	smoothness.a = TerrainMixSmoothness( u_Smoothness, mask0, mask1, mask2, mask3 );
 #endif
 
 #else	// !APPLY_TERRAIN
@@ -119,8 +119,8 @@ void main( void )
 #endif
 
 #if defined( HAS_GLOSSMAP )
-	smooth = colormap2D( u_GlossMap, vec_TexDiffuse );
-	smooth.a = u_Smoothness;
+	smoothness = colormap2D( u_GlossMap, vec_TexDiffuse );
+	smoothness.a = u_Smoothness;
 #endif
 
 #endif	// !APPLY_TERRAIN
@@ -129,12 +129,12 @@ void main( void )
 
 // multiply gloss intensity with reflection cube color
 #if defined( REFLECTION_CUBEMAP )
-	vec3 reflectance = CubemapReflectionProbe( var_Position, u_ViewOrigin.xyz, var_WorldMat[2], smooth.a );
+	vec3 reflectance = CubemapReflectionProbe( var_Position, u_ViewOrigin.xyz, var_WorldMat[2], smoothness.a );
 	albedo.rgb += reflectance * u_ReflectScale;
 #endif
 	gl_FragData[0] = albedo;		// red, green, blue, alpha
 	gl_FragData[1] = normal;		// X, Y, Z, flag fullbright
-	gl_FragData[2] = smooth;		// gloss R, G, B, smooth factor
+	gl_FragData[2] = smoothness;		// gloss R, G, B, smoothness factor
 	gl_FragData[3] = var_LightNums0;	// number of lights affected this face
 	gl_FragData[4] = var_LightNums1;
 }

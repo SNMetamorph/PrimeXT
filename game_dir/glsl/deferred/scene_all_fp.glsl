@@ -167,7 +167,7 @@ void main( void )
 #if defined( BSPTRACE_BMODELS )
 			add *= traceRay2( pos, delta );
 #else
-			add *= traceRay( pos, delta );
+			add *= traceRay( pos, delta, 0.0 );
 #endif
 			// unroll styles
 			if( styles[0] == 255.0 )
