@@ -462,6 +462,7 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 
 	mstudiolight_t	light;
 	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
+	bool deferred = CVAR_TO_BOOL(cv_deferred);
 	tr.frametime = tr.saved_frametime;
 
 	// go into 2D mode (in case we draw PlayerSetup between two 2d calls)
@@ -493,10 +494,10 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	RI->view.fov_x = rvp->fov_x;
 	RI->view.fov_y = rvp->fov_y; 
 
-	if( !CVAR_TO_BOOL( cv_deferred ))
+	if (!deferred)
 		R_DrawViewModel();		// 3D
 
-	if (hdr_rendering)
+	if (!deferred && hdr_rendering)
 	{
 		// copy image from multisampling framebuffer to screen framebuffer
 		pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, tr.screen_temp_fbo->id);
@@ -509,7 +510,7 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	RenderDOF();				// 2D
 	RenderNerveGasBlur();		// 2D
 	RenderUnderwaterBlur();		// 2D
-	if (hdr_rendering)
+	if (!deferred && hdr_rendering)
 	{
 		RenderBloom();
 		RenderTonemap();		// should be last step in HDR pipeline!!!
@@ -520,7 +521,7 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	RenderPostprocessing();		// 2D
 	R_ShowLightMaps();			// 2D
 	
-	if (hdr_rendering) {
+	if (!deferred && hdr_rendering) {
 		R_RenderScreenQuad();
 	}
 

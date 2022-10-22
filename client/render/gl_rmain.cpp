@@ -1065,9 +1065,6 @@ int HUD_RenderFrame( const struct ref_viewpass_s *rvp )
 		return 0;
 	}
 
-	if (hdr_rendering)
-		GL_BindDrawbuffer(tr.screen_temp_fbo_msaa);
-
 	if( CVAR_TO_BOOL( cv_deferred ))
 	{
 		if( !CVAR_TO_BOOL( cv_deferred_full ))
@@ -1081,6 +1078,9 @@ int HUD_RenderFrame( const struct ref_viewpass_s *rvp )
 	}
 	else
 	{
+		if (hdr_rendering) {
+			GL_BindDrawbuffer(tr.screen_temp_fbo_msaa);
+		}
 		R_RenderScene( &defVP, refParams );
 	}
 

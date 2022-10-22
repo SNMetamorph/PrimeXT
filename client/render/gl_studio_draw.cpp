@@ -3318,9 +3318,11 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force )
 	if( entry->m_pRenderModel == IEngineStudio.GetModelByIndex( e->curstate.weaponmodel ))
 		weapon_model = true;
 
-	if (weapon_model || RI->currentmodel)
+	if (weapon_model)
 		mat = &entry->m_pRenderModel->materials[pskinref[pMesh->skinref]];
-	else mat = &m_pModelInstance->materials[pskinref[pMesh->skinref]]; // NOTE: use local copy for right cache shadernums
+	else 
+		mat = &m_pModelInstance->materials[pskinref[pMesh->skinref]]; // NOTE: use local copy for right cache shadernums
+
 	mstudiolight_t *light = &inst->light;
 
 	if( mat != m_pCurrentMaterial )
