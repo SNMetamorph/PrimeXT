@@ -162,14 +162,11 @@ struct tface_t
 		minc = Q_min( minc, triangle[c].point[split_plane] );
 		maxc = Q_max( maxc, triangle[c].point[split_plane] );
 
-		if( minc >= split_value )
+		if (minc > split_value)
 			return PLANECHECK_POSITIVE;
 
-		if( maxc <= split_value )
+		if (maxc < split_value)
 			return PLANECHECK_NEGATIVE;
-
-		if( minc == maxc )
-			return PLANECHECK_POSITIVE;
 
 		return PLANECHECK_STRADDLING;
 	}
