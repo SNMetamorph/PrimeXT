@@ -934,8 +934,6 @@ R_RenderScene
 */
 void R_RenderScene( const ref_viewpass_t *rvp, RefParams params )
 {
-	int	err;
-	
 	// now we know about pass specific
 	RI->params = params;
 
@@ -986,8 +984,6 @@ R_RenderDeferredScene
 */
 void R_RenderDeferredScene( const ref_viewpass_t *rvp, RefParams params )
 {
-	int	err;
-
 	// now we know about pass specific
 	RI->params = params;
 	GL_DEBUG_SCOPE();
@@ -1197,7 +1193,23 @@ extern "C" int DLLEXPORT HUD_GetRenderInterface( int version, render_api_t *rend
 
 	// get pointer to movevars
 	tr.movevars = gEngfuncs.pEventAPI->EV_GetMovevars();
-	g_fRenderInitialized = TRUE;
 
+	// check that engine started with ref_gl renderer
+	const char *refName = gEngfuncs.pfnGetCvarString("r_refdll");
+	if (refName && strcmp(refName, "soft") == 0)
+	{
+		HOST_ERROR("PrimeXT cannot be started with software renderer. "
+			"Please, select \"OpenGL\" renderer in game settings, "
+			"otherwise you can use \"ref -gl\" startup parameter, "
+			"or remove your \"video.cfg\" configuration file."
+		);
+		return FALSE;
+	}
+	else if (refName && strcmp(refName, "gl") != 0)
+	{
+		ALERT(at_warning, "PrimeXT may not work or work unstable on all other renderers except OpenGL.");
+	}
+
+	g_fRenderInitialized = TRUE;
 	return TRUE;
 }
