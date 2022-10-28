@@ -411,7 +411,7 @@ void WriteMiptex( void )
 		const char *miptex_name = TEX_GetMiptexNameByHash(tx->miptex); //(char *)tx->miptex;
 		tx->miptex = TEX_FindMiptex( miptex_name );
 		// free up the originally strdup()'ed miptex_name
-		//free( miptex_name );
+		//Mem_Free( miptex_name );
 	}
 
 	int	totaldatasize = sizeof( int ) + ( sizeof( int ) * g_nummiptex );

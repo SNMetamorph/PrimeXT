@@ -22,6 +22,7 @@
 #include "ControlPanel.h"
 #include "activity.h"
 #include "stringlib.h"
+#include "cmdlib.h"
 
 #include <mx.h>
 #include "mdlviewer.h"
@@ -97,7 +98,7 @@ void StudioModel::UploadTexture(mstudiotexture_t *ptexture, byte *data, byte *sr
 	if (outheight > MAX_TEXTURE_DIMS)
 		outheight = MAX_TEXTURE_DIMS;
 
-	in = (byte *)malloc( ptexture->width * ptexture->height * 4);
+	in = (byte *)Mem_Alloc( ptexture->width * ptexture->height * 4);
 	if (!in) return;
 
 	if( ptexture->flags & STUDIO_NF_COLORMAP )
@@ -176,7 +177,7 @@ void StudioModel::UploadTexture(mstudiotexture_t *ptexture, byte *data, byte *sr
 		}
 	}
 
-	tex = out = (byte *)malloc( outwidth * outheight * 4);
+	tex = out = (byte *)Mem_Alloc( outwidth * outheight * 4);
 	if (!out)
 	{
 		return;
@@ -233,8 +234,8 @@ void StudioModel::UploadTexture(mstudiotexture_t *ptexture, byte *data, byte *sr
 		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy );
 	}
 
-	free( tex );
-	free( in );
+	Mem_Free( tex );
+	Mem_Free( in );
 }
 
 void StudioModel :: FreeModel( void )
@@ -281,10 +282,10 @@ void StudioModel :: FreeModel( void )
 	}
 
 	if (m_pstudiohdr)
-		free (m_pstudiohdr);
+		Mem_Free(m_pstudiohdr);
 
 	if (m_ptexturehdr && m_owntexmodel)
-		free (m_ptexturehdr);
+		Mem_Free(m_ptexturehdr);
 
 	g_boneSetup.SetStudioPointers( NULL, NULL );
 
@@ -298,7 +299,7 @@ void StudioModel :: FreeModel( void )
 	{
 		if (m_panimhdr[i])
 		{
-			free (m_panimhdr[i]);
+			Mem_Free(m_panimhdr[i]);
 			m_panimhdr[i] = 0;
 		}
 	}
@@ -345,7 +346,7 @@ studiohdr_t *StudioModel::LoadModel( char *modelname )
 	size = ftell( fp );
 	fseek( fp, 0, SEEK_SET );
 
-	buffer = malloc( size );
+	buffer = Mem_Alloc( size );
 	if (!buffer || size <= 0)
 	{
 		fclose (fp);
@@ -370,20 +371,20 @@ studiohdr_t *StudioModel::LoadModel( char *modelname )
 			mxMessageBox( g_GlWindow, "Quake 1 models doesn't supported.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR );
 		else mxMessageBox( g_GlWindow, "Unknown file format.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR );
 
-		free (buffer);
+		Mem_Free(buffer);
 		return 0;
 	}
 
 	if (!strncmp ((const char *) buffer, "IDSQ", 4) && !m_pstudiohdr)
 	{
-		free (buffer);
+		Mem_Free(buffer);
 		return 0;
 	}
 
 	if( phdr->version != STUDIO_VERSION )
 	{
 		mxMessageBox( g_GlWindow, "Unsupported studio version.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR );
-		free (buffer);
+		Mem_Free(buffer);
 		return 0;
 	}
 

@@ -31,6 +31,7 @@
 #include "ViewerSettings.h"
 #include "ControlPanel.h"
 #include "stringlib.h"
+#include "cmdlib.h"
 #include "mdlviewer.h"
 #include "app_info.h"
 #include "build.h"
@@ -909,7 +910,7 @@ mxImage *GlWindow::readBmpFromBuffer(const byte * buffer, size_t size)
 	// Read bitmap bits (remainder of file)
 	cbBmpBits = bmfh.bfSize - (buffer - bufstart);
 
-	pbHold = pb = (byte *)malloc(cbBmpBits * sizeof(byte));
+	pbHold = pb = (byte *)Mem_Alloc(cbBmpBits * sizeof(byte));
 	if (pb == 0)
 	{
 		delete image;
@@ -968,7 +969,7 @@ mxImage *GlWindow::readBmpFromBuffer(const byte * buffer, size_t size)
 					*pbBmpBits++ = alpha;
 					break;
 				default:
-					free(pbHold);
+					Mem_Free(pbHold);
 					delete image;
 					goto GetOut;
 			}
@@ -977,7 +978,7 @@ mxImage *GlWindow::readBmpFromBuffer(const byte * buffer, size_t size)
 		pb += padSize;	// actual only for 4-bit bmps
 	}
 
-	free(pbHold);
+	Mem_Free(pbHold);
 GetOut:
 	return image;
 }

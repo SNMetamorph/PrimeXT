@@ -20,6 +20,7 @@
 #include "GlWindow.h"
 #include "ViewerSettings.h"
 #include "stringlib.h" 
+#include "cmdlib.h"
 
 #include <mx.h>
 #include "sprviewer.h"
@@ -84,7 +85,7 @@ void SpriteModel :: UploadTexture( byte *data, int width, int height, byte *srcp
 	if (outheight > MAX_TEXTURE_DIMS)
 		outheight = MAX_TEXTURE_DIMS;
 
-	in = (byte *)malloc(width * height * 4);
+	in = (byte *)Mem_Alloc(width * height * 4);
 	if (!in) return;
 
 	if( size == 1024 )
@@ -123,7 +124,7 @@ void SpriteModel :: UploadTexture( byte *data, int width, int height, byte *srcp
 		}
 	}
 
-	tex = out = (byte *)malloc( outwidth * outheight * 4);
+	tex = out = (byte *)Mem_Alloc(outwidth * outheight * 4);
 	if (!out) return;
 
 	for (i = 0; i < outwidth; i++)
@@ -174,8 +175,8 @@ void SpriteModel :: UploadTexture( byte *data, int width, int height, byte *srcp
 		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy );
 	}
 
-	free( tex );
-	free( in );
+	Mem_Free( tex );
+	Mem_Free( in );
 }
 
 /*
@@ -198,7 +199,7 @@ dframetype_t* SpriteModel :: LoadSpriteFrame( void *pin, mspriteframe_t **ppfram
 	UploadTexture( (byte *)(pinframe + 1), pinframe->width, pinframe->height, m_palette, g_tex_base + m_loadframe, 1024, has_alpha );
 
 	// setup frame description
-	pspriteframe = (mspriteframe_t *)calloc( 1, sizeof( mspriteframe_t ));
+	pspriteframe = (mspriteframe_t *)Mem_Alloc(1, sizeof(mspriteframe_t));
 	pspriteframe->width = pinframe->width;
 	pspriteframe->height = pinframe->height;
 	pspriteframe->up = pinframe->origin[1];
@@ -230,12 +231,12 @@ dframetype_t* SpriteModel :: LoadSpriteGroup( void *pin, mspriteframe_t **ppfram
 	numframes = pingroup->numframes;
 
 	groupsize = sizeof( mspritegroup_t ) + (numframes - 1) * sizeof( pspritegroup->frames[0] );
-	pspritegroup = (mspritegroup_t *)calloc( 1, groupsize );
+	pspritegroup = (mspritegroup_t *)Mem_Alloc(1, groupsize);
 	pspritegroup->numframes = numframes;
 
 	*ppframe = (mspriteframe_t *)pspritegroup;
 	pin_intervals = (dspriteinterval_t *)(pingroup + 1);
-	poutintervals = (float *)malloc( numframes * sizeof( float ));
+	poutintervals = (float *)Mem_Alloc(numframes * sizeof(float));
 	pspritegroup->intervals = poutintervals;
 
 	for( i = 0; i < numframes; i++ )
@@ -272,7 +273,7 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 	m_iFileSize = ftell( fp );
 	fseek( fp, 0, SEEK_SET );
 
-	buffer = malloc( m_iFileSize );
+	buffer = Mem_Alloc(m_iFileSize);
 	if (!buffer)
 	{
 		m_iFileSize = 0;
@@ -297,7 +298,7 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 	{
 		mxMessageBox( g_GlWindow, "Unknown file format.", g_appTitle, MX_MB_OK | MX_MB_ERROR );
 		m_iFileSize = 0;
-		free (buffer);
+		Mem_Free(buffer);
 		return 0;
 	}
 
@@ -305,7 +306,7 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 	{
 		mxMessageBox( g_GlWindow, "Unsupported sprite version.", g_appTitle, MX_MB_OK | MX_MB_ERROR );
 		m_iFileSize = 0;
-		free (buffer);
+		Mem_Free(buffer);
 		return 0;
 	}
 
@@ -313,7 +314,7 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 	{
 		pinq1 = (dsprite_q1_t *)buffer;
 		size = sizeof( msprite_t ) + ( pinq1->numframes - 1 ) * sizeof( psprite->frames );
-		psprite = (msprite_t *)calloc( 1, size );
+		psprite = (msprite_t *)Mem_Alloc(1, size);
 		m_pspritehdr = psprite;	// make link to extradata
 
 		psprite->type = pinq1->type;
@@ -333,7 +334,7 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 	{
 		pinhl = (dsprite_hl_t *)buffer;
 		size = sizeof( msprite_t ) + ( pinhl->numframes - 1 ) * sizeof( psprite->frames );
-		psprite = (msprite_t *)calloc( 1, size );
+		psprite = (msprite_t *)Mem_Alloc(1, size);
 		m_pspritehdr = psprite;	// make link to extradata
 
 		psprite->type = pinhl->type;
@@ -406,18 +407,18 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 	else 
 	{
 		mxMessageBox( g_GlWindow, "sprite has wrong number of palette colors.\n", g_appTitle, MX_MB_OK | MX_MB_ERROR );
-		free( m_pspritehdr );
+		Mem_Free(m_pspritehdr);
 		m_iFileSize = 0;
-		free (buffer);
+		Mem_Free(buffer);
 		return 0;
 	}
 
 	if( m_pspritehdr->numframes > MAX_SPRITE_FRAMES )
 	{
 		mxMessageBox( g_GlWindow, "sprite has too many frames.", g_appTitle, MX_MB_OK | MX_MB_ERROR );
-		free( m_pspritehdr );
+		Mem_Free(m_pspritehdr);
 		m_iFileSize = 0;
-		free (buffer);
+		Mem_Free(buffer);
 		return 0;
 	}
 
@@ -464,7 +465,7 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 
 	// free buffer
 	m_iFileSize = 0;
-	free (buffer);
+	Mem_Free(buffer);
 
 	return m_pspritehdr;
 }
@@ -510,13 +511,13 @@ void SpriteModel :: FreeSprite( void )
 			if( m_pspritehdr->frames[i].type != FRAME_SINGLE )
 			{
 				pgroup = (mspritegroup_t *)m_pspritehdr->frames[i].frameptr;
-				free( pgroup->intervals );	// throw intervals
+				Mem_Free(pgroup->intervals);	// throw intervals
 				// throw frames
 				for( i = 0; i < pgroup->numframes; i++ )
-					free( pgroup->frames[i] );
-				free( pgroup ); // throw himself
+					Mem_Free(pgroup->frames[i]);
+				Mem_Free(pgroup); // throw himself
 			}
-			else free( m_pspritehdr->frames[i].frameptr );
+			else Mem_Free(m_pspritehdr->frames[i].frameptr);
 		}
 
 		glDeleteTextures (m_loadframe, (const GLuint *)textures);
@@ -524,7 +525,7 @@ void SpriteModel :: FreeSprite( void )
 	}
 
 	if (m_pspritehdr)
-		free (m_pspritehdr);
+		Mem_Free(m_pspritehdr);
 
 	m_frame = 0;
 	m_pspritehdr = 0;
