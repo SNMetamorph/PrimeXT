@@ -23,6 +23,10 @@ set(DIR_UTILS_OUTPUT
 add_subdirectory("${CMAKE_SOURCE_DIR}/external/mxtk" mxtk)
 set_compiler_runtime(mxtk STATIC)
 
+# add mimalloc library
+add_subdirectory("${CMAKE_SOURCE_DIR}/external/mimalloc" mimalloc EXCLUDE_FROM_ALL)
+set_compiler_runtime(mimalloc-static STATIC)
+
 message(STATUS "Utility binaries output directory: ${DIR_UTILS_OUTPUT}")
 if(MSVC)
     set_target_properties(pxstudiomdl pxmv pxbsp pxcsg pxrad pxvis pxsv PROPERTIES 

@@ -42,6 +42,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"../../public"
 	"../../common"
 	"../../game_shared"
+	"${CMAKE_SOURCE_DIR}/external/mimalloc/include"
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
@@ -89,11 +90,17 @@ if(ENABLE_STATIC_LINKING)
 	set_compiler_runtime(${PROJECT_NAME} STATIC)
 endif()
 
+# add mimalloc library depedency
+target_link_libraries(${PROJECT_NAME} PRIVATE
+	mimalloc-static
+)
+
 if(NOT MSVC)
 	# add pthread library depedency
 	target_link_libraries(${PROJECT_NAME} PRIVATE
 		pthread
 	)
+else()
 endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

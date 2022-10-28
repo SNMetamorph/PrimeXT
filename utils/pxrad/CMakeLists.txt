@@ -54,6 +54,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"../../common"
 	"../../game_shared"
 	"${CMAKE_SOURCE_DIR}/external/squish"
+	"${CMAKE_SOURCE_DIR}/external/mimalloc/include"
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
@@ -129,9 +130,6 @@ endif()
 
 # add squish library depedency
 add_subdirectory("${CMAKE_SOURCE_DIR}/external/squish" squish)
-target_link_libraries(${PROJECT_NAME} PRIVATE
-	squish
-)
 
 # set static compiler runtime
 if(ENABLE_STATIC_LINKING)
@@ -139,6 +137,11 @@ if(ENABLE_STATIC_LINKING)
 endif()
 
 # link depedency libraries
+target_link_libraries(${PROJECT_NAME} PRIVATE
+	squish
+	mimalloc-static
+)
+
 if(NOT MSVC)
 	target_link_libraries(${PROJECT_NAME} PRIVATE
 		pthread
