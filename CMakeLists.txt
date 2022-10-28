@@ -16,7 +16,7 @@ if(${CMAKE_VERSION} VERSION_LESS "3.0.2")
 	endmacro()
 endif()
 
-project(primext)
+project(PrimeXT)
 option(BUILD_CLIENT "Build client library" ON)
 option(BUILD_SERVER "Build server library" ON)
 option(BUILD_UTILS "Build developer utilities (map/models compilers, etc.)" ON)
