@@ -26,6 +26,7 @@
 #include <mxBmp.h>
 #include "mdlviewer.h"
 #include "stringlib.h"
+#include "cmdlib.h"
 #include "app_info.h"
 
 ControlPanel *g_ControlPanel = 0;
@@ -269,8 +270,8 @@ ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0,
 
 ControlPanel::~ControlPanel ()
 {
-	free( iSelectionToSequence );
-	free( iSequenceToSelection );
+	Mem_Free( iSelectionToSequence );
+	Mem_Free( iSequenceToSelection );
 }
 
 int ControlPanel::getTableIndex()
@@ -1413,11 +1414,11 @@ ControlPanel::initSequences ()
 	{
 		mstudioseqdesc_t *pseqdescs = (mstudioseqdesc_t *) ((byte *) hdr + hdr->seqindex);
 
-		if( iSelectionToSequence ) free( iSelectionToSequence );
-		iSelectionToSequence = (int *)malloc( hdr->numseq * sizeof( int ));
+		if( iSelectionToSequence ) Mem_Free( iSelectionToSequence );
+		iSelectionToSequence = (int *)Mem_Alloc( hdr->numseq * sizeof( int ));
 
-		if( iSequenceToSelection ) free( iSequenceToSelection );
-		iSequenceToSelection = (int*)malloc( hdr->numseq * sizeof( int ));
+		if( iSequenceToSelection ) Mem_Free( iSequenceToSelection );
+		iSequenceToSelection = (int*)Mem_Alloc( hdr->numseq * sizeof( int ));
 
 		cSequence->removeAll ();
 		int k = 0;

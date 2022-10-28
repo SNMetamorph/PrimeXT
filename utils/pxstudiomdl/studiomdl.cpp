@@ -125,7 +125,7 @@ void ClearModel( void )
 	}
 
 	for( i = 1; i <= g_numxnodes; i++ )
-		free( g_xnodename[i] );
+		Mem_Free( g_xnodename[i] );
 
 	for( i = 0; i < g_numtextures; i++ )
 		Mem_Free( g_texture[i].pdata );
