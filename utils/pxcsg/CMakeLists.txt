@@ -50,6 +50,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 	IGNORE_SEARCH_IN_WADS=1
 	ALLOW_WADS_IN_PACKS=1
 	PXBSP_COMPILING=1 # hack to avoid header hell
+	MIMALLOC_ALLOCATOR=1
 )
 
 # pxcsg compile-time settings
