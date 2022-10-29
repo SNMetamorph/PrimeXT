@@ -1,4 +1,5 @@
 #include "qrad.h"
+#include <mimalloc-override.h>
 
 #ifdef HLRAD_AMBIENTCUBES
 

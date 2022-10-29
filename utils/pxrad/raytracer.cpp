@@ -14,6 +14,7 @@
 #include "raytracer.h"
 #include "../../engine/studio.h"
 #include "model_trace.h"
+#include <mimalloc-override.h>
 
 #ifdef HLRAD_RAYTRACE
 void CWorldRayTrace :: AddTriangle( tface_t *tf )

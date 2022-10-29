@@ -11,6 +11,7 @@
 // textures.c
 
 #include "qrad.h"
+#include <mimalloc-override.h>
 
 typedef struct wadlist_s
 {

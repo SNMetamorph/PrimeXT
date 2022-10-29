@@ -14,6 +14,7 @@
 #include "alias.h"
 #include "../../engine/studio.h"
 #include "model_trace.h"
+#include <mimalloc-override.h>
 
 typedef struct moveclip_s
 {
