@@ -326,7 +326,7 @@ private:
 		const float	threehalfs = 1.5F;
 		float x2 = number * 0.5F;
 		float y = number;
-		int i = *(long *)&y;	// evil floating point bit level hacking
+		int i = *(int *)&y;	// evil floating point bit level hacking
 		i = 0x5f3759df - (i >> 1);	// what the fuck?
 		y = *(float *)&i;
 		y = y * (1.5F - (x2 * y * y));   // 1st iteration
