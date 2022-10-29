@@ -42,7 +42,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
-	IGNORE_SEARCH_IN_WADS=1 
+	IGNORE_SEARCH_IN_WADS=1
+	MIMALLOC_ALLOCATOR=1
 )
 
 if(NOT MSVC)
