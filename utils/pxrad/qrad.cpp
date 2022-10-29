@@ -13,6 +13,7 @@
 #include "qrad.h"
 #include "app_info.h"
 #include "crashhandler.h"
+#include <mimalloc-override.h>
 
 /*
 NOTES

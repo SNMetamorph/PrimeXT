@@ -14,6 +14,7 @@
 #include "../../engine/studio.h"
 #include "model_trace.h"
 #include "imagelib.h"
+#include <mimalloc-override.h>
 
 typedef struct
 {

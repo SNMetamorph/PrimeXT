@@ -11,6 +11,7 @@
 // dirtmap.c	// quake3 dirt-mapping (fake Ambient Occlusion)
 
 #include "qrad.h"
+#include <mimalloc-override.h>
 
 #define DIRT_CONE_ANGLE		115  // in degrees
 #define DIRT_NUM_ELEVATION_STEPS	3
