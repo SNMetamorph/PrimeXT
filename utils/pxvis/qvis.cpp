@@ -12,6 +12,7 @@
 
 #include "qvis.h"
 #include "threads.h"
+#include "crashhandler.h"
 #include "app_info.h"
 
 int	g_numportals;
@@ -579,6 +580,7 @@ int main( int argc, char **argv )
 	char	str[64];
 
 	atexit( Sys_CloseLog );
+	Sys_SetupCrashHandler();
 	source[0] = '\0';
 
 	for( i = 1; i < argc; i++ )
@@ -672,6 +674,7 @@ int main( int argc, char **argv )
 	Mem_Free( g_uncompressed );
 	FreePortals();
 
+	Sys_RestoreCrashHandler();
 	SetDeveloperLevel( D_REPORT );
 	Mem_Check();
 
