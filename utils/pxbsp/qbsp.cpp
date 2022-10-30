@@ -11,6 +11,7 @@
 // qbsp.c
 
 #include "bsp5.h"
+#include "crashhandler.h"
 #include "app_info.h"
 
 //
@@ -546,6 +547,7 @@ int main( int argc, char **argv )
 	char	str[64];
 
 	atexit( Sys_CloseLog );
+	Sys_SetupCrashHandler();
 	source[0] = '\0';
 
 	for( i = 1; i < argc; i++ )
@@ -624,12 +626,10 @@ int main( int argc, char **argv )
 	Msg( "\n%s %s (%s)\n", TOOLNAME, VERSIONSTRING, __DATE__ );
 
 	PrintBspSettings();
-
 	ThreadSetDefault ();
-
 	ProcessFile( source );
-
 	FreeEntities();
+	Sys_RestoreCrashHandler();
 
 	// now check for leaks
 	SetDeveloperLevel( D_REPORT );
