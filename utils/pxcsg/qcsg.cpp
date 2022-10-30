@@ -15,7 +15,8 @@
 #define DEFAULT_ONLYENTS		false
 #define DEFAULT_NULLIFYTRIGGER	true
 #define DEFAULT_WADTEXTURES		true
-#define DEFAULT_NOCLIP		false
+#define DEFAULT_NOCLIP			false
+//#define ENABLE_TESTMAP
 
 // acutal compiler settings
 bool		g_onlyents = DEFAULT_ONLYENTS;
@@ -132,8 +133,8 @@ void WriteMapKeyValues( mapent_t *ent )
 void WriteMapFace( bface_t *f )
 {
 	dtexinfo_t	*tx = NULL;
-	char		texname[16];
-	texvecs_t		valve;
+	char		texname[64];
+	texvecs_t	valve;
 
 	if( !test_mapfile ) return;
 
@@ -167,7 +168,7 @@ void WriteMapFace( bface_t *f )
 			else VectorCopy( axis, valve.VAxis );
 		}
 
-		Q_strncpy( texname, (char *)tx->miptex, sizeof( texname ));
+		Q_strncpy(texname, TEX_GetMiptexNameByHash(tx->miptex), sizeof(texname));
 	}
 	else
 	{
@@ -257,7 +258,9 @@ void ProcessModels( const char *source )
 
 	// DEBUG: write test map
 	Q_snprintf( name, sizeof( name ), "%s_csg.map", source );
-//	test_mapfile = fopen( name, "w" );
+#ifdef ENABLE_TESTMAP
+	test_mapfile = fopen( name, "w" );
+#endif
 
 	for( i = 0; i < g_mapentities.Count(); i++ )
 	{

@@ -194,6 +194,7 @@ void TEX_LoadTextures( CUtlArray<mapent_t> *entities, bool merge );
 void TEX_FreeTextures( void );
 void WriteMiptex( void );
 void TEX_GetSize( const char *name, int *width, int *height );
+const char *TEX_GetMiptexNameByHash( int hash );
 void TextureAxisFromNormal( vec3_t normal, vec3_t xv, vec3_t yv, bool brush_primitive );
 int TexinfoForSide( plane_t *plane, side_t *s, const vec3_t origin );
 short FaceinfoForTexinfo( const char *landname, const int in_texture_step, const int in_max_extent, const int groupid );
