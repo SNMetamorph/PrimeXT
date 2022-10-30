@@ -1436,7 +1436,7 @@ void CalcTBN(const Vector &p0, const Vector &p1, const Vector &p2, const Vector2
 	if ((deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x) < 0.0f)
 		r = -1.0f;
 	
-    s = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
+	s = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
 	t = (deltaPos1 * deltaUV2.x - deltaPos2 * deltaUV1.x) * r;	//binormal is inverted compared to the opengl one, probably due to quake left-handed coord system
 
 	if (!areaweight)
