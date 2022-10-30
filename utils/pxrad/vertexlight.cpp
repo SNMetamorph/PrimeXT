@@ -72,7 +72,7 @@ void NudgeVertexPosition( vec3_t position )
 void GetStylesFromMesh( byte newstyles[4], const tmesh_t *mesh )
 {
 	ThreadLock();
-	memcpy( newstyles, mesh->styles, sizeof( newstyles ));
+	memcpy(newstyles, mesh->styles, sizeof(mesh->styles));
 	ThreadUnlock();
 }
 
