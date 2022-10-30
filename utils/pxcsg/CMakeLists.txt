@@ -18,6 +18,7 @@ list(APPEND DIR_SOURCES
 	"../common/threads.cpp"
 	"../common/wadfile.cpp"
 	"../common/zone.cpp"
+	"../common/crashhandler.cpp"
 	"aselib.cpp"
 	"brush.cpp"
 	"csg4.cpp"
@@ -68,8 +69,8 @@ if(NOT MSVC)
 		target_compile_definitions(${PROJECT_NAME} PRIVATE _snprintf=snprintf _vsnprintf=vsnprintf)
 	endif()
 else()
-	# disable annoying CRT warnings
-	target_compile_definitions(${PROJECT_NAME} PRIVATE _CRT_SECURE_NO_WARNINGS=1 _CRT_NONSTDC_NO_DEPRECATE=1)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE _CRT_SECURE_NO_WARNINGS=1 _CRT_NONSTDC_NO_DEPRECATE=1) # disable annoying CRT warnings
+	target_compile_definitions(${PROJECT_NAME} PRIVATE DBGHELP=1)
 endif()
 
 if(MSVC)
@@ -100,8 +101,12 @@ if(NOT MSVC)
 	# add pthread library depedency
 	target_link_libraries(${PROJECT_NAME} PRIVATE
 		pthread
+		dl
 	)
 else()
+	target_link_libraries(${PROJECT_NAME} PRIVATE
+		dbghelp
+	)
 endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
