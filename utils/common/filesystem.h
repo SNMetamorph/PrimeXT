@@ -104,7 +104,7 @@ search_t *COM_Search( const char *pattern, int caseinsensitive, wfile_t *source_
 search_t *FS_Search( const char *pattern, int caseinsensitive, int gamedironly );
 byte *COM_LoadFile( const char *filepath, size_t *filesize, bool safe = true );
 bool COM_SaveFile( const char *filepath, void *buffer, size_t filesize, bool safe = true );
-long COM_FileTime( const char *filename );
+int COM_FileTime( const char *filename );
 bool COM_FolderExists( const char *path );
 bool COM_FileExists( const char *path );
 void COM_CreatePath( char *path );
@@ -118,21 +118,21 @@ void COM_StripExtension( char *path );
 
 // virtual filesystem
 vfile_t *VFS_Create( const byte *buffer = NULL, size_t buffsize = 0 );
-long VFS_Read( vfile_t *file, void *buffer, size_t buffersize );
-long VFS_Write( vfile_t *file, const void *buf, size_t size );
-long VFS_Insert( vfile_t *file, const void *buf, size_t size );
+size_t VFS_Read( vfile_t *file, void *buffer, size_t buffersize );
+size_t VFS_Write( vfile_t *file, const void *buf, size_t size );
+size_t VFS_Insert( vfile_t *file, const void *buf, size_t size );
 byte *VFS_GetBuffer( vfile_t *file );
-long VFS_GetSize( vfile_t *file );
-long VFS_Tell( vfile_t *file );
+size_t VFS_GetSize( vfile_t *file );
+size_t VFS_Tell( vfile_t *file );
 bool VFS_Eof( vfile_t *file );
-int VFS_Print( vfile_t *file, const char *msg );
-int VFS_IPrint( vfile_t *file, const char *msg );
-int VFS_VPrintf( vfile_t *file, const char *format, va_list ap );
-int VFS_VIPrintf( vfile_t *file, const char *format, va_list ap );
-int VFS_Printf( vfile_t *file, const char *format, ... );
-int VFS_IPrintf( vfile_t *file, const char *format, ... );
-int VFS_Seek( vfile_t *file, long offset, int whence );
-int VFS_Getc( vfile_t *file );
+size_t VFS_Print( vfile_t *file, const char *msg );
+size_t VFS_IPrint( vfile_t *file, const char *msg );
+size_t VFS_VPrintf( vfile_t *file, const char *format, va_list ap );
+size_t VFS_VIPrintf( vfile_t *file, const char *format, va_list ap );
+size_t VFS_Printf( vfile_t *file, const char *format, ... );
+size_t VFS_IPrintf( vfile_t *file, const char *format, ... );
+int VFS_Seek( vfile_t *file, size_t offset, int whence );
+char VFS_Getc( vfile_t *file );
 int VFS_Gets( vfile_t* file, byte *string, size_t bufsize );
 void VFS_Close( vfile_t *file );
 

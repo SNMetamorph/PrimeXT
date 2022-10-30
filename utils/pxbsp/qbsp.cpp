@@ -43,7 +43,10 @@ void ReadMapPlanes( const char *source )
 
 	Q_snprintf( path, sizeof( path ), "%s.pln", source );
 	f = fopen( path, "rb" );
-	if( !f ) COM_FatalError( "couldn't open %s\n", path );
+	if (!f) {
+		COM_FatalError("couldn't open %s\n", path);
+		return;
+	}
 
 	fseek( f, 0, SEEK_END );
 	filelen = ftell( f );
@@ -58,7 +61,7 @@ void ReadMapPlanes( const char *source )
 	if( fread( g_mapplanes, 1, filelen, f ) != filelen )
 		COM_FatalError( "failed to read mapplanes\n" );
 
-	g_nummapplanes = filelen / sizeof( plane_t );
+	g_nummapplanes = static_cast<int>(filelen / sizeof(plane_t));
 
 	fclose( f );
 
@@ -383,11 +386,17 @@ void CreateSingleHull( const char *source, int hullnum )
 
 	Q_snprintf( name, sizeof( name ), "%s.p%i", source, hullnum );
 	polyfile = fopen( name, "r" );
-	if( !polyfile ) COM_FatalError( "Can't open %s", name );
+	if (!polyfile) {
+		COM_FatalError("Can't open %s", name);
+		return;
+	}
 
 	Q_snprintf( name, sizeof( name ), "%s.b%i", source, hullnum );
 	brushfile = fopen( name, "r" );
-	if( !brushfile ) COM_FatalError( "Can't open %s", name );
+	if (!brushfile) {
+		COM_FatalError("Can't open %s", name);
+		return;
+	}
 
 	while(( tree = MakeTreeFromHullFaces( polyfile, brushfile )) != NULL )
 	{

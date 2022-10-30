@@ -432,20 +432,20 @@ rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize 
 	buf_p = (byte *)buffer;
 	bhdr.id[0] = *buf_p++;
 	bhdr.id[1] = *buf_p++;		// move pointer
-	bhdr.fileSize = *(long *)buf_p;	buf_p += 4;
-	bhdr.reserved0 = *(long *)buf_p;	buf_p += 4;
-	bhdr.bitmapDataOffset = *(long *)buf_p;	buf_p += 4;
-	bhdr.bitmapHeaderSize = *(long *)buf_p;	buf_p += 4;
-	bhdr.width = *(long *)buf_p;		buf_p += 4;
-	bhdr.height = *(long *)buf_p;		buf_p += 4;
-	bhdr.planes = *(short *)buf_p;	buf_p += 2;
-	bhdr.bitsPerPixel = *(short *)buf_p;	buf_p += 2;
-	bhdr.compression = *(long *)buf_p;	buf_p += 4;
-	bhdr.bitmapDataSize = *(long *)buf_p;	buf_p += 4;
-	bhdr.hRes = *(long *)buf_p;		buf_p += 4;
-	bhdr.vRes = *(long *)buf_p;		buf_p += 4;
-	bhdr.colors = *(long *)buf_p;		buf_p += 4;
-	bhdr.importantColors = *(long *)buf_p;	buf_p += 4;
+	bhdr.fileSize = *(uint32_t *)buf_p;	buf_p += 4;
+	bhdr.reserved0 = *(uint32_t *)buf_p;	buf_p += 4;
+	bhdr.bitmapDataOffset = *(uint32_t *)buf_p;	buf_p += 4;
+	bhdr.bitmapHeaderSize = *(uint32_t *)buf_p;	buf_p += 4;
+	bhdr.width = *(int32_t *)buf_p;		buf_p += 4;
+	bhdr.height = *(int32_t *)buf_p;		buf_p += 4;
+	bhdr.planes = *(uint16_t *)buf_p;	buf_p += 2;
+	bhdr.bitsPerPixel = *(uint16_t *)buf_p;	buf_p += 2;
+	bhdr.compression = *(uint32_t *)buf_p;	buf_p += 4;
+	bhdr.bitmapDataSize = *(uint32_t *)buf_p;	buf_p += 4;
+	bhdr.hRes = *(uint32_t *)buf_p;		buf_p += 4;
+	bhdr.vRes = *(uint32_t *)buf_p;		buf_p += 4;
+	bhdr.colors = *(uint32_t *)buf_p;		buf_p += 4;
+	bhdr.importantColors = *(uint32_t *)buf_p;	buf_p += 4;
 
 	// bogus file header check
 	if( bhdr.reserved0 != 0 ) return NULL;
@@ -936,14 +936,14 @@ bool Image_SaveTGA( const char *name, rgbdata_t *pix )
 
 bool Image_SaveBMP( const char *name, rgbdata_t *pix )
 {
-	long		file;
+	int					file;
 	BITMAPFILEHEADER	bmfh;
 	BITMAPINFOHEADER	bmih;
 	RGBQUAD		rgrgbPalette[256];
-	dword		cbBmpBits;
-	byte		*pb, *pbBmpBits;
-	dword		cbPalBytes = 0;
-	dword		biTrueWidth;
+	uint32_t	cbBmpBits;
+	uint8_t		*pb, *pbBmpBits;
+	uint32_t	cbPalBytes = 0;
+	uint32_t	biTrueWidth;
 	int		pixel_size;
 	int		i, x, y;
 

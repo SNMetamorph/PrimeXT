@@ -107,7 +107,7 @@ int		g_numentities;
 entity_t		g_entities[MAX_MAP_ENTITIES];
 
 dheader_t		*header, outheader;
-long		wadfile;
+int		wadfile;
 
 char		g_wadpath[1024];	// path to wads may be empty
 

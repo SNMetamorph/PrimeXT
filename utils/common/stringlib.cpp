@@ -286,7 +286,7 @@ char *Q_stristr( const char *string, const char *string2 )
 
 int Q_vsnprintf( char *buffer, size_t buffersize, const char *format, va_list args )
 {
-	size_t	result;
+	int	result;
 
 #ifdef _MSC_VER
 	__try
@@ -300,7 +300,7 @@ int Q_vsnprintf( char *buffer, size_t buffersize, const char *format, va_list ar
 	__except( EXCEPTION_EXECUTE_HANDLER )
 	{
 		Q_strncpy( buffer, "^1sprintf throw exception^7\n", buffersize );
-		result = buffersize;
+		result = static_cast<int>(buffersize);
 	}
 #endif
 

@@ -129,7 +129,7 @@ void Sys_Print( const char *pMsg )
 #if XASH_WIN32
 	char tmpBuf[8192];
 	HANDLE hOut = GetStdHandle( STD_OUTPUT_HANDLE );
-	unsigned long cbWritten;
+	DWORD cbWritten;
 	char *pTemp = tmpBuf;
 
 	while( pMsg && *pMsg )
@@ -140,7 +140,7 @@ void Sys_Print( const char *pMsg )
 			{
 				// dump accumulated text before change color
 				*pTemp = 0; // terminate string
-				WriteFile( hOut, tmpBuf, strlen( tmpBuf ), &cbWritten, 0 );
+				WriteFile( hOut, tmpBuf, static_cast<DWORD>(strlen(tmpBuf)), &cbWritten, 0 );
 				Sys_PrintLog( tmpBuf );
 				pTemp = tmpBuf;
 			}
@@ -157,7 +157,7 @@ void Sys_Print( const char *pMsg )
 		{
 			// temp buffer is full, dump it now
 			*pTemp = 0; // terminate string
-			WriteFile( hOut, tmpBuf, strlen( tmpBuf ), &cbWritten, 0 );
+			WriteFile( hOut, tmpBuf, static_cast<DWORD>(strlen(tmpBuf)), &cbWritten, 0 );
 			Sys_PrintLog( tmpBuf );
 			pTemp = tmpBuf;
 		}
@@ -168,7 +168,7 @@ void Sys_Print( const char *pMsg )
 	{
 		// dump accumulated text
 		*pTemp = 0; // terminate string
-		WriteFile( hOut, tmpBuf, strlen( tmpBuf ), &cbWritten, 0 );
+		WriteFile( hOut, tmpBuf, static_cast<DWORD>(strlen(tmpBuf)), &cbWritten, 0 );
 		Sys_PrintLog( tmpBuf );
 		pTemp = tmpBuf;
 	}

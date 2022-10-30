@@ -157,12 +157,12 @@ static void AliasRelinkFace( aabb_tree_t *tree, tface_t *face )
 	InsertLinkBefore( &face->area, &node->solid_edicts );
 }
 
-void LoadAlias( entity_t *ent, void *extradata, long fileLength, int flags )
+void LoadAlias( entity_t *ent, void *extradata, int fileLength, int flags )
 {
 	const char	*modname = ValueForKey( ent, "model" );
 	int		keyframe = IntForKey( ent, "frame" );
 	double		start = I_FloatTime();
-	dword		modelCRC = 0;
+	uint32_t	modelCRC = 0;
 	daliashdr_t	*phdr;
 	stvert_t		*pinstverts;
 	dtriangle_t	*pintriangles;

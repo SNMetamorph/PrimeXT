@@ -48,10 +48,10 @@ double I_FloatTime( void );
 // normal file
 typedef struct file_s	file_t;
 
-long	SafeOpenWrite( const char *filename );
-long	SafeOpenRead( const char *filename );
-void	SafeReadExt( long handle, void *buffer, int count, const char *file, const int line );
-void	SafeWriteExt( long handle, void *buffer, int count, const char *file, const int line );
+int		SafeOpenWrite( const char *filename );
+int		SafeOpenRead( const char *filename );
+void	SafeReadExt( int handle, void *buffer, int count, const char *file, const int line );
+void	SafeWriteExt( int handle, void *buffer, int count, const char *file, const int line );
 
 #define SafeRead( file, buffer, count )		SafeReadExt( file, buffer, count, __FILE__, __LINE__ )
 #define SafeWrite( file, buffer, count )	SafeWriteExt( file, buffer, count, __FILE__, __LINE__ )
@@ -90,23 +90,26 @@ void Mem_Peak( void );
 //
 // basefs.c
 //
-void FS_Init( const char *source );
-byte *FS_LoadFile( const char *path, size_t *filesizeptr, bool gamedironly );
-bool FS_FileExists( const char *filename, bool gamedironly );
-void FS_Shutdown( void );
-file_t *FS_Open( const char *filepath, const char *mode, bool gamedironly );
-long FS_Read( file_t *file, void *buffer, size_t buffersize );
-int FS_Gets( file_t *file, byte *string, size_t bufsize );
-void FS_AllowDirectPaths( bool enable );
-long FS_FileLength( file_t *f );
-int FS_Close( file_t *file );
+void FS_Init(const char *source);
+byte *FS_LoadFile(const char *path, size_t *filesizeptr, bool gamedironly);
+bool FS_FileExists(const char *filename, bool gamedironly);
+void FS_Shutdown(void);
+file_t *FS_Open(const char *filepath, const char *mode, bool gamedironly);
+size_t FS_Read(file_t *file, void *buffer, size_t buffersize);
+int FS_Write(file_t *file, const void *data, size_t datasize);
+size_t FS_Tell(file_t *file);
+int FS_Seek(file_t *file, int64_t offset, int whence);
+int FS_Gets(file_t *file, byte *string, size_t bufsize);
+void FS_AllowDirectPaths(bool enable);
+size_t FS_FileLength(file_t *f);
+int FS_Close(file_t *file);
 
 //
 // crclib.c
 //
-void CRC32_Init( dword *pulCRC );
-void CRC32_Final( dword *pulCRC );
-void CRC32_ProcessByte( dword *pulCRC, byte ch );
-void CRC32_ProcessBuffer( dword *pulCRC, const void *pBuffer, int nBuffer );
+void CRC32_Init(uint32_t *pulCRC);
+void CRC32_Final(uint32_t *pulCRC);
+void CRC32_ProcessByte(uint32_t *pulCRC, byte ch);
+void CRC32_ProcessBuffer(uint32_t *pulCRC, const void *pBuffer, int nBuffer);
 
 #endif

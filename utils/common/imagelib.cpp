@@ -270,7 +270,7 @@ const imgtype_t *Image_ImageTypeFromHint( char value )
 	return NULL;
 }
 
-void Image_PackRGB( float flColor[3], dword &icolor )
+void Image_PackRGB( float flColor[3], uint32_t &icolor )
 {
 	byte	rgba[4];
 	
@@ -281,7 +281,7 @@ void Image_PackRGB( float flColor[3], dword &icolor )
 	icolor = (0xFF << 24) | (rgba[2] << 16) | (rgba[1] << 8) | rgba[0];
 }
 
-void Image_UnpackRGB( dword icolor, float flColor[3] )
+void Image_UnpackRGB( uint32_t icolor, float flColor[3] )
 {
 	flColor[0] = TextureToLinear((icolor & 0x000000FF) >> 0 );
 	flColor[1] = TextureToLinear((icolor & 0x0000FF00) >> 8 );
@@ -519,7 +519,7 @@ rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize 
 	byte	*buf_p, *pixbuf;
 	byte	palette[256][4];
 	int	columns, column, rows, row, bpp = 4;
-	int	cbPalBytes = 0, padSize = 0, bps = 0;
+	size_t	cbPalBytes = 0, padSize = 0, bps = 0;
 	rgbdata_t *pic;
 	bmp_t	bhdr;
 
@@ -574,7 +574,7 @@ rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize 
 		if( bhdr.colors == 0 )
 		{
 			bhdr.colors = 256;
-			cbPalBytes = (1 << bhdr.bitsPerPixel) * sizeof( RGBQUAD );
+			cbPalBytes = static_cast<size_t>(powf(2, bhdr.bitsPerPixel)) * sizeof(RGBQUAD);
 		}
 		else cbPalBytes = bhdr.colors * sizeof( RGBQUAD );
 	}
@@ -849,12 +849,12 @@ bool Image_SaveTGA( const char *name, rgbdata_t *pix )
 
 bool Image_SaveBMP( const char *name, rgbdata_t *pix )
 {
-	long		file;
+	int					file;
 	BITMAPFILEHEADER	bmfh;
 	BITMAPINFOHEADER	bmih;
-	dword		cbBmpBits;
+	uint32_t	cbBmpBits;
 	byte		*pb, *pbBmpBits;
-	dword		biTrueWidth;
+	uint32_t	biTrueWidth;
 	int		pixel_size;
 	int		i, x, y;
 

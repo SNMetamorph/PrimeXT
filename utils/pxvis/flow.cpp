@@ -189,8 +189,8 @@ inline static void RecursiveLeafFlow( int leafnum, threaddata_t *thread, pstack_
 {
 	pstack_t	stack;
 	plane_t	backplane;
-	long	*test, *might;
-	long	more, *vis;
+	int	*test, *might;
+	int	more, *vis;
 	leaf_t 	*leaf;
 	portal_t	*p;
 	vec_t	d;
@@ -220,8 +220,8 @@ inline static void RecursiveLeafFlow( int leafnum, threaddata_t *thread, pstack_
 	stack.leaf = leaf;
 	stack.portal = NULL;
 
-	might = (long *)stack.mightsee;
-	vis = (long *)thread->leafvis;
+	might = (int *)stack.mightsee;
+	vis = (int *)thread->leafvis;
 	
 	// check all portals for flowing into other leafs	
 	for( int i = 0; i < leaf->numportals; i++ )
@@ -243,12 +243,12 @@ inline static void RecursiveLeafFlow( int leafnum, threaddata_t *thread, pstack_
 		// if the portal can't see anything we haven't allready seen, skip it
 		if( p->status == stat_done )
 		{
-			test = (long *)p->visbits;
+			test = (int *)p->visbits;
 			c_vistest++;
 		}
 		else
 		{
-			test = (long *)p->mightsee;
+			test = (int *)p->mightsee;
 			c_mighttest++;
 		}
 
@@ -256,7 +256,7 @@ inline static void RecursiveLeafFlow( int leafnum, threaddata_t *thread, pstack_
 
 		for( int j = 0; j < g_bitlongs; j++ )
 		{
-			might[j] = ((long *)prevstack->mightsee)[j] & test[j];
+			might[j] = ((int *)prevstack->mightsee)[j] & test[j];
 			more |= (might[j] & ~vis[j]);
 		}
 		
@@ -410,11 +410,11 @@ Called with the lock held.
 */
 static void PortalCompleted( portal_t *completed )
 {
-	long	*might, *vis;
+	int *might, *vis;
 	int	leafnum;
-	portal_t	*p, *p2;
-	leaf_t	*myleaf;
-	long	changed;
+	portal_t *p, *p2;
+	leaf_t *myleaf;
+	int	changed;
 
 	ThreadLock();
 
@@ -428,8 +428,8 @@ static void PortalCompleted( portal_t *completed )
 		if( p->status != stat_done )
 			continue;
 
-		might = (long *)p->mightsee;
-		vis = (long *)p->visbits;
+		might = (int *)p->mightsee;
+		vis = (int *)p->visbits;
 
 		for( int j = 0; j < g_bitlongs; j++ )
 		{
@@ -444,8 +444,8 @@ static void PortalCompleted( portal_t *completed )
 
 				p2 = myleaf->portals[k];
 				if( p2->status == stat_done )
-					changed &= ~((long *)p2->visbits)[j];
-				else changed &= ~((long *)p2->mightsee)[j];
+					changed &= ~((int *)p2->visbits)[j];
+				else changed &= ~((int *)p2->mightsee)[j];
 				if( !changed ) break;
 			}
 
@@ -488,7 +488,7 @@ void PortalFlow( int portalnum, int threadnum )
 	data.pstack_head.portalplane = p->plane;
 
 	for( int i = 0; i < g_bitlongs; i++ )
-		((long *)data.pstack_head.mightsee)[i] = ((long *)p->mightsee)[i];
+		((int *)data.pstack_head.mightsee)[i] = ((int *)p->mightsee)[i];
 
 	RecursiveLeafFlow( p->leaf, &data, &data.pstack_head );
 	p->status = stat_done;
@@ -521,7 +521,7 @@ void PortalFlow( portal_t *p )
 	data.pstack_head.portalplane = p->plane;
 
 	for( int i = 0; i < g_bitlongs; i++ )
-		((long *)data.pstack_head.mightsee)[i] = ((long *)p->mightsee)[i];
+		((int *)data.pstack_head.mightsee)[i] = ((int *)p->mightsee)[i];
 
 	RecursiveLeafFlow( p->leaf, &data, &data.pstack_head );
 	p->status = stat_done;

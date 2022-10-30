@@ -622,10 +622,10 @@ bool StudioConstructMesh( entity_t *ent, void *extradata, const char *modname, u
 	return true;
 }
 
-void LoadStudio( entity_t *ent, void *extradata, long fileLength, int flags )
+void LoadStudio( entity_t *ent, void *extradata, int fileLength, int flags )
 {
-	const char	*modname = ValueForKey( ent, "model" );
-	dword		modelCRC = 0;
+	const char *modname = ValueForKey( ent, "model" );
+	uint32_t modelCRC = 0;
 	studiohdr_t	*phdr;
 
 	if( !extradata )

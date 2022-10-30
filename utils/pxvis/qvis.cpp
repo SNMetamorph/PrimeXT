@@ -395,7 +395,7 @@ static void LoadPortals( const char *name )
 
 	// these counts should take advantage of 64 bit systems automatically
 	g_bitbytes = ((g_portalleafs + 63) & ~63) >> 3;
-	g_bitlongs = g_bitbytes / sizeof( long );
+	g_bitlongs = g_bitbytes / sizeof(int);
 	
 	// each file portal is split into two memory portals
 	g_portals = (portal_t *)Mem_Alloc( 2 * g_numportals * sizeof( portal_t ));

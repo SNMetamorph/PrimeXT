@@ -318,9 +318,9 @@ search_t *COM_Search( const char *pattern, int caseinsensitive, wfile_t *source_
 
 byte *COM_LoadFile( const char *filepath, size_t *filesize, bool safe )
 {
-	long		handle;
-	size_t		size;
-	unsigned char	*buf;
+	int	handle;
+	int	size;
+	unsigned char *buf;
 
 	handle = open( filepath, O_RDONLY|O_BINARY, 0666 );
 
@@ -345,8 +345,8 @@ byte *COM_LoadFile( const char *filepath, size_t *filesize, bool safe )
 
 bool COM_SaveFile( const char *filepath, void *buffer, size_t filesize, bool safe )
 {
-	long		handle;
-	size_t		size;
+	int	handle;
+	int	size;
 
 	if( buffer == NULL || filesize <= 0 )
 		return false;
@@ -629,7 +629,7 @@ COM_FileTime
 Internal function used to determine filetime
 ====================
 */
-long COM_FileTime( const char *filename )
+int COM_FileTime( const char *filename )
 {
 	struct stat buf;
 	
@@ -646,38 +646,36 @@ long COM_FileTime( const char *filename )
 
 =============================================================================
 */
-long SafeOpenWrite( const char *filename )
+int SafeOpenWrite( const char *filename )
 {
-	long	handle;
-
-	handle = open( filename, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, 0666 );
-	if( handle < 0 ) COM_FatalError( "couldn't open %s\n", filename );
-
+	int	handle = open( filename, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, 0666 );
+	if (handle < 0) {
+		COM_FatalError("couldn't open %s\n", filename);
+	}
 	return handle;
 }
 
-long SafeOpenRead( const char *filename )
+int SafeOpenRead( const char *filename )
 {
-	long	handle;
-
-	handle = open( filename, O_RDONLY|O_BINARY, 0666 );
-	if( handle < 0 ) COM_FatalError( "couldn't open %s\n", filename );
-
+	int	handle = open( filename, O_RDONLY|O_BINARY, 0666 );
+	if (handle < 0) {
+		COM_FatalError("couldn't open %s\n", filename);
+	}
 	return handle;
 }
 
-void SafeReadExt( long handle, void *buffer, int count, const char *file, const int line )
+void SafeReadExt( int handle, void *buffer, int count, const char *file, const int line )
 {
-	size_t	read_count = read( handle, buffer, count );
-
-	if( read_count != (size_t)count )
-		COM_FatalError( "file read failure ( %i != %i ) at %s:%i\n", read_count, count, file, line );
+	int	read_count = read( handle, buffer, count );
+	if (read_count != count) {
+		COM_FatalError("file read failure ( %i != %i ) at %s:%i\n", read_count, count, file, line);
+	}
 }
 
-void SafeWriteExt( long handle, void *buffer, int count, const char *file, const int line )
+void SafeWriteExt( int handle, void *buffer, int count, const char *file, const int line )
 {
-	size_t	write_count = write( handle, buffer, count );
-
-	if( write_count != (size_t)count )
-		COM_FatalError( "file write failure ( %i != %i ) at %s:%i\n", write_count, count, file, line );
+	int	write_count = write( handle, buffer, count );
+	if (write_count != count) {
+		COM_FatalError("file write failure ( %i != %i ) at %s:%i\n", write_count, count, file, line);
+	}
 }

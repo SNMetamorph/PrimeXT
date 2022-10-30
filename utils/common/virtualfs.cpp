@@ -66,9 +66,9 @@ VFS_Read
 Reading the virtual file
 ====================
 */
-long VFS_Read( vfile_t *file, void *buffer, size_t buffersize )
+size_t VFS_Read( vfile_t *file, void *buffer, size_t buffersize )
 {
-	long	read_size = 0;
+	size_t read_size = 0;
 
 	if( buffersize == 0 )
 		return 1;
@@ -87,7 +87,7 @@ long VFS_Read( vfile_t *file, void *buffer, size_t buffersize )
 	}
 	else
 	{
-		int reduced_size = file->length - file->offset;
+		size_t reduced_size = file->length - file->offset;
 		memcpy( buffer, file->buff + file->offset, reduced_size );
 		file->offset += reduced_size;
 		read_size = reduced_size;
@@ -103,13 +103,14 @@ VFS_Write
 Write to the virtual file
 ====================
 */
-long VFS_Write( vfile_t *file, const void *buf, size_t size )
+size_t VFS_Write( vfile_t *file, const void *buf, size_t size )
 {
-	if( !file ) return -1;
+	if (!file) 
+		return -1;
 
 	if(( file->offset + size ) >= file->buffsize )
 	{
-		int	newsize = file->offset + size + FILE_BUFF_SIZE;
+		size_t newsize = file->offset + size + FILE_BUFF_SIZE;
 
 		if( file->buffsize < newsize )
 		{
@@ -136,18 +137,17 @@ VFS_Insert
 Insert new portion at current position (not overwrite)
 ====================
 */
-long VFS_Insert( vfile_t *file, const void *buf, size_t size )
+size_t VFS_Insert( vfile_t *file, const void *buf, size_t size )
 {
 	byte	*backup;
-	long	rp_size;
+	size_t	rp_size;
 
 	if( !file || !file->buff || size <= 0 )
 		return -1;
 
 	if(( file->length + size ) >= file->buffsize )
 	{
-		int	newsize = file->length + size + FILE_BUFF_SIZE;
-
+		size_t newsize = file->length + size + FILE_BUFF_SIZE;
 		if( file->buffsize < newsize )
 		{
 			// reallocate buffer now
@@ -195,7 +195,7 @@ VFS_GetSize
 Get buffer size
 ====================
 */
-long VFS_GetSize( vfile_t *file )
+size_t VFS_GetSize( vfile_t *file )
 {
 	if( !file ) return 0;
 	return file->length;
@@ -208,7 +208,7 @@ VFS_Tell
 get current position
 ====================
 */
-long VFS_Tell( vfile_t *file )
+size_t VFS_Tell( vfile_t *file )
 {
 	if( !file ) return 0;
 	return file->offset;
@@ -234,7 +234,7 @@ VFS_Print
 Print a string into a file
 ====================
 */
-int VFS_Print( vfile_t *file, const char *msg )
+size_t VFS_Print( vfile_t *file, const char *msg )
 {
 	return VFS_Write( file, msg, Q_strlen( msg ));
 }
@@ -246,7 +246,7 @@ VFS_IPrint
 Insert a string into a file
 ====================
 */
-int VFS_IPrint( vfile_t *file, const char *msg )
+size_t VFS_IPrint( vfile_t *file, const char *msg )
 {
 	return VFS_Insert( file, msg, Q_strlen( msg ));
 }
@@ -259,26 +259,27 @@ VFS_VPrintf
 Print a formatted string into a buffer
 ====================
 */
-int VFS_VPrintf( vfile_t *file, const char *format, va_list ap )
+size_t VFS_VPrintf( vfile_t *file, const char *format, va_list ap )
 {
-	long	buff_size = MAX_TOKEN;
-	char	*tempbuff;
 	int	len;
-
-	while( 1 )
+	char *tempbuff;
+	int	buff_size = MAX_TOKEN;
+	
+	while (1)
 	{
-		tempbuff = (char *)Mem_Alloc( buff_size );
-		len = Q_vsprintf( tempbuff, format, ap );
-		if( len >= 0 && len < buff_size ) break;
+		tempbuff = (char *)Mem_Alloc(buff_size);
+		len = Q_vsprintf(tempbuff, format, ap);
+		if (len >= 0 && len < buff_size)
+			break;
+
 		Mem_Free( tempbuff );
 		buff_size <<= 1;
 		tempbuff = NULL;
 	}
 
-	len = VFS_Write( file, tempbuff, len );
-	Mem_Free( tempbuff );
-
-	return len;
+	size_t len2 = VFS_Write(file, tempbuff, len);
+	Mem_Free(tempbuff);
+	return len2;
 }
 
 /*
@@ -288,26 +289,27 @@ VFS_VIPrintf
 Insert a formatted string into a buffer
 ====================
 */
-int VFS_VIPrintf( vfile_t *file, const char *format, va_list ap )
+size_t VFS_VIPrintf( vfile_t *file, const char *format, va_list ap )
 {
-	long	buff_size = MAX_TOKEN;
-	char	*tempbuff;
 	int	len;
-
-	while( 1 )
+	char *tempbuff;
+	int	buff_size = MAX_TOKEN;
+	
+	while (1)
 	{
-		tempbuff = (char *)Mem_Alloc( buff_size );
-		len = Q_vsprintf( tempbuff, format, ap );
-		if( len >= 0 && len < buff_size ) break;
+		tempbuff = (char *)Mem_Alloc(buff_size);
+		len = Q_vsprintf(tempbuff, format, ap);
+		if (len >= 0 && len < buff_size)
+			break;
+
 		Mem_Free( tempbuff );
 		buff_size <<= 1;
 		tempbuff = NULL;
 	}
 
-	len = VFS_Insert( file, tempbuff, len );
-	Mem_Free( tempbuff );
-
-	return len;
+	size_t len2 = VFS_Insert(file, tempbuff, len);
+	Mem_Free(tempbuff);
+	return len2;
 }
 
 /*
@@ -317,15 +319,14 @@ VFS_Printf
 Print a formatted string into a buffer
 ====================
 */
-int VFS_Printf( vfile_t *file, const char *format, ... )
+size_t VFS_Printf( vfile_t *file, const char *format, ... )
 {
-	int	result;
+	size_t result;
 	va_list	args;
 
 	va_start( args, format );
 	result = VFS_VPrintf( file, format, args );
 	va_end( args );
-
 	return result;
 }
 
@@ -336,15 +337,14 @@ VFS_IPrintf
 Print a formatted string into a buffer
 ====================
 */
-int VFS_IPrintf( vfile_t *file, const char *format, ... )
+size_t VFS_IPrintf( vfile_t *file, const char *format, ... )
 {
-	int	result;
+	size_t	result;
 	va_list	args;
 
 	va_start( args, format );
 	result = VFS_VIPrintf( file, format, args );
 	va_end( args );
-
 	return result;
 }
 
@@ -355,7 +355,7 @@ VFS_Seek
 seeking into buffer
 ====================
 */
-int VFS_Seek( vfile_t *file, long offset, int whence )
+int VFS_Seek( vfile_t *file, size_t offset, int whence )
 {
 	if( !file ) return -1;
 
@@ -377,7 +377,6 @@ int VFS_Seek( vfile_t *file, long offset, int whence )
 		return -1;
 
 	file->offset = offset;
-
 	return 0;
 }
 
@@ -388,14 +387,13 @@ VFS_Getc
 Get the next character of a file
 ====================
 */
-int VFS_Getc( vfile_t *file )
+char VFS_Getc( vfile_t *file )
 {
-	char	c;
-
-	if( !VFS_Read( file, &c, 1 ))
+	char c;
+	if (!VFS_Read(file, &c, 1))
 		return EOF;
-
-	return c;
+	else
+		return c;
 }
 
 /*

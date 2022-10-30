@@ -176,20 +176,20 @@ struct tface_t
 struct tmesh_t
 {
 	vec3_t		absmin, absmax;
-	timage_t		*textures;
+	timage_t	*textures;
 	tface_t		*faces;
-	int		numfaces;
+	int			numfaces;
 	tvert_t		*verts;
-	int		numverts;
+	int			numverts;
 
-	int		flags;
+	int			flags;
 	float		backfrac;		// 0.0 by default
-	dword		modelCRC;
-	byte		styles[MAXLIGHTMAPS];
-	int		texture_step;	// lightmap resolution
+	uint32_t	modelCRC;
+	uint8_t		styles[MAXLIGHTMAPS];
+	int			texture_step;	// lightmap resolution
 	dvlightofs_t	vsubmodels[32];	// MAXSTUDIOMODELS
 	dflightofs_t	fsubmodels[32];
-	byte		*vislight;	//[numworldlights/8]
+	uint8_t		*vislight;	//[numworldlights/8]
 	float		origin[3];
 	float		angles[3];
 	float		scale[3];

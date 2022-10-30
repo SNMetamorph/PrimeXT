@@ -332,7 +332,7 @@ void StudioModel::RemapTextures( void )
 studiohdr_t *StudioModel::LoadModel( char *modelname )
 {
 	FILE *fp;
-	long size;
+	int size;
 	void *buffer;
 
 	if (!modelname)
@@ -346,10 +346,9 @@ studiohdr_t *StudioModel::LoadModel( char *modelname )
 	size = ftell( fp );
 	fseek( fp, 0, SEEK_SET );
 
-	buffer = Mem_Alloc( size );
-	if (!buffer || size <= 0)
+	if (size <= 0 || (buffer = Mem_Alloc(size)) == nullptr)
 	{
-		fclose (fp);
+		fclose(fp);
 		return 0;
 	}
 

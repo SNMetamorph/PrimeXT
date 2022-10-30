@@ -57,13 +57,13 @@ typedef struct
 struct file_s
 {
 	int		handle;			// file descriptor
-	long		real_length;		// uncompressed file size (for files opened in "read" mode)
-	long		position;			// current position in the file
-	long		offset;			// offset into the package (0 if external file)
+	size_t	real_length;	// uncompressed file size (for files opened in "read" mode)
+	size_t	position;		// current position in the file
+	size_t	offset;			// offset into the package (0 if external file)
 	int		ungetc;			// single stored character from ungetc, cleared to EOF when read contents buffer
-	time_t		filetime;			// pak, wad or real filetime
-	long		buff_ind, buff_len;		// buffer current index and length
-	byte		buff[FILE_BUFF_SIZE];	// intermediate buffer
+	time_t	filetime;				// pak, wad or real filetime
+	size_t	buff_ind, buff_len;		// buffer current index and length
+	byte	buff[FILE_BUFF_SIZE];	// intermediate buffer
 };
 
 typedef struct pack_s
@@ -93,9 +93,9 @@ char			fs_falldir[MAX_SYSPATH];	// game falling directory
 bool			fs_ext_path = false;	// attempt to read\write from ./ or ../ pathes 
 
 static searchpath_t *FS_FindFile( const char *name, int *index, bool gamedironly );
-static dpackfile_t* FS_AddFileToPack( const char* name, pack_t *pack, long offset, long size );
+static dpackfile_t* FS_AddFileToPack( const char* name, pack_t *pack, int offset, int size );
 static byte *W_LoadFile( const char *path, size_t *filesizeptr, bool gamedironly );
-long FS_FileTime( const char *filename, bool gamedironly );
+int FS_FileTime( const char *filename, bool gamedironly );
 static void FS_Purge( file_t* file );
 
 void FS_AllowDirectPaths( bool enable )
@@ -117,7 +117,7 @@ FS_AddFileToPack
 Add a file to the list of files contained into a package
 ====================
 */
-static dpackfile_t *FS_AddFileToPack( const char *name, pack_t *pack, long offset, long size )
+static dpackfile_t *FS_AddFileToPack( const char *name, pack_t *pack, int offset, int size )
 {
 	int		left, right, middle;
 	dpackfile_t	*pfile;
@@ -780,7 +780,7 @@ static searchpath_t *FS_FindFile( const char *name, int *index, bool gamedironly
 	// search through the path, one element at a time
 	for( search = fs_searchpaths; search; search = search->next )
 	{
-		if( gamedironly & !FBitSet( search->flags, FS_GAMEDIR_PATH ))
+		if (gamedironly && !FBitSet(search->flags, FS_GAMEDIR_PATH))
 			continue;
 
 		// is the element a pak file?
@@ -990,13 +990,14 @@ FS_Read
 Read up to "buffersize" bytes from a file
 ====================
 */
-long FS_Read( file_t *file, void *buffer, size_t buffersize )
+size_t FS_Read( file_t *file, void *buffer, size_t buffersize )
 {
-	long	count, done;
-	long	nb;
+	int64_t count, done;
+	int	nb;
 
 	// nothing to copy
-	if( buffersize == 0 ) return 1;
+	if( buffersize == 0 ) 
+		return 1;
 
 	// Get rid of the ungetc character
 	if( file->ungetc != EOF )
@@ -1006,15 +1007,16 @@ long FS_Read( file_t *file, void *buffer, size_t buffersize )
 		file->ungetc = EOF;
 		done = 1;
 	}
-	else done = 0;
+	else {
+		done = 0;
+	}
 
 	// first, we copy as many bytes as we can from "buff"
 	if( file->buff_ind < file->buff_len )
 	{
 		count = file->buff_len - file->buff_ind;
-
-		done += ((long)buffersize > count ) ? count : (long)buffersize;
-		memcpy( buffer, &file->buff[file->buff_ind], done );
+		done += (buffersize > count) ? count : buffersize;
+		memcpy(buffer, &file->buff[file->buff_ind], done);
 		file->buff_ind += done;
 
 		buffersize -= done;
@@ -1023,15 +1025,14 @@ long FS_Read( file_t *file, void *buffer, size_t buffersize )
 	}
 
 	// NOTE: at this point, the read buffer is always empty
-
 	// we must take care to not read after the end of the file
 	count = file->real_length - file->position;
 
 	// if we have a lot of data to get, put them directly into "buffer"
 	if( buffersize > sizeof( file->buff ) / 2 )
 	{
-		if( count > (long)buffersize )
-			count = (long)buffersize;
+		if( count > buffersize )
+			count = buffersize;
 		lseek( file->handle, file->offset + file->position, SEEK_SET );
 		nb = read (file->handle, &((byte *)buffer)[done], count );
 
@@ -1045,8 +1046,9 @@ long FS_Read( file_t *file, void *buffer, size_t buffersize )
 	}
 	else
 	{
-		if( count > (long)sizeof( file->buff ))
-			count = (long)sizeof( file->buff );
+		if (count > sizeof(file->buff))
+			count = sizeof(file->buff);
+
 		lseek( file->handle, file->offset + file->position, SEEK_SET );
 		nb = read( file->handle, file->buff, count );
 
@@ -1056,7 +1058,7 @@ long FS_Read( file_t *file, void *buffer, size_t buffersize )
 			file->position += nb;
 
 			// copy the requested data in "buffer" (as much as we can)
-			count = (long)buffersize > file->buff_len ? file->buff_len : (long)buffersize;
+			count = (buffersize > file->buff_len) ? file->buff_len : buffersize;
 			memcpy( &((byte *)buffer)[done], file->buff, count );
 			file->buff_ind = count;
 			done += count;
@@ -1073,7 +1075,7 @@ FS_Seek
 Move the position index in a file
 ====================
 */
-int FS_Seek( file_t *file, long offset, int whence )
+int FS_Seek( file_t *file, int64_t offset, int whence )
 {
 	// compute the file offset
 	switch( whence )
@@ -1117,9 +1119,11 @@ FS_Tell
 Give the current position in a file
 ====================
 */
-long FS_Tell( file_t *file )
+size_t FS_Tell( file_t *file )
 {
-	if( !file ) return 0;
+	if (!file) {
+		return 0;
+	}
 	return file->position - file->buff_len + file->buff_ind;
 }
 
@@ -1226,9 +1230,9 @@ FS_Write
 Write "datasize" bytes into a file
 ====================
 */
-long FS_Write( file_t *file, const void *data, size_t datasize )
+int FS_Write( file_t *file, const void *data, size_t datasize )
 {
-	long	result;
+	int	result;
 
 	if( !file ) return 0;
 
@@ -1240,7 +1244,7 @@ long FS_Write( file_t *file, const void *data, size_t datasize )
 	FS_Purge( file );
 
 	// write the buffer and update the position
-	result = write( file->handle, data, (long)datasize );
+	result = write( file->handle, data, datasize );
 	file->position = lseek( file->handle, 0, SEEK_CUR );
 
 	if( file->real_length < file->position )
@@ -1293,9 +1297,11 @@ FS_FileLength
 return size of file in bytes
 ==================
 */
-long FS_FileLength( file_t *f )
+size_t FS_FileLength( file_t *f )
 {
-	if( !f ) return 0;
+	if (!f) {
+		return 0;
+	}
 	return f->real_length;
 }
 
@@ -1327,7 +1333,7 @@ FS_FileTime
 return time of creation file in seconds
 ==================
 */
-long FS_FileTime( const char *filename, bool gamedironly )
+int FS_FileTime( const char *filename, bool gamedironly )
 {
 	searchpath_t	*search;
 	int		pack_ind;

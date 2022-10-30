@@ -77,10 +77,8 @@ allocate mem
 */
 void *Mem_Alloc( size_t size, unsigned int target )
 {
-	memhdr_t	*memhdr = NULL;
-	void	*mem;
-
-	if( size <= 0 ) return NULL;
+	memhdr_t *memhdr = nullptr;
+	void *mem;
 
 #ifdef ZONE_ATTEMPT_CALLOC
 	mem = attempt_calloc( sizeof( memhdr_t ) + size );
@@ -103,7 +101,7 @@ void *Mem_Alloc( size_t size, unsigned int target )
 	c_alloc[target]++;
 	ThreadUnlock();
 #endif
-	return (void *)((byte *)mem + sizeof( memhdr_t ));
+	return (void *)((uint8_t *)mem + sizeof(memhdr_t));
 }
 
 void *Mem_Realloc( void *ptr, size_t size, unsigned int target )

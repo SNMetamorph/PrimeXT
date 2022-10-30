@@ -276,7 +276,7 @@ static int lump_sorter_by_wad_and_name( const void *lump1, const void *lump2 )
 LoadLump
 ==================
 */
-int LoadLump( mipentry_t *source, byte *dest )
+size_t LoadLump( mipentry_t *source, byte *dest )
 {
 	if( source->datasize )
 	{
@@ -313,7 +313,7 @@ LumpSize
 returns the size of lump
 ==================
 */
-int LumpSize( const mipentry_t *source )
+size_t LumpSize( const mipentry_t *source )
 {
 	if( source->datasize )
 	{
@@ -392,7 +392,7 @@ void WriteMiptex( void )
 {
 	dtexinfo_t	*tx = g_texinfo;
 	char		szTmpWad[1024];
-	int		i, len;
+	size_t		i, len;
 	byte		*data;
 	dmiptexlump_t	*l;
 
@@ -414,7 +414,7 @@ void WriteMiptex( void )
 		//Mem_Free( miptex_name );
 	}
 
-	int	totaldatasize = sizeof( int ) + ( sizeof( int ) * g_nummiptex );
+	size_t totaldatasize = sizeof(int) + (sizeof(int) * g_nummiptex);
 
 	for( i = 0; i < g_nummiptex; i++ )
 	{

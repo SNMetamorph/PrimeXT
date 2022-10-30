@@ -206,12 +206,16 @@ PAKViewer::handleEvent (mxEvent *event)
 				else if (mode == 1)
 				{
 					char str[256];
-					_makeTempFileName (str, e);
-					if (!pak_ExtractFile (d_pakFile, d_currLumpName, str))
-						mxMessageBox (this, "Error extracting from PAK file.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
-					else
-						if ((int) ShellExecute ((HWND) getHandle (), "open", str, 0, 0, SW_SHOW) <= 32)
-							mxMessageBox (this, "Error executing document with associated program.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
+					_makeTempFileName(str, e);
+					if (!pak_ExtractFile(d_pakFile, d_currLumpName, str)) {
+						mxMessageBox(this, "Error extracting from PAK file.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
+					}
+					else 
+					{
+						if ((INT_PTR)ShellExecute((HWND)getHandle(), "open", str, 0, 0, SW_SHOW) <= 32) {
+							mxMessageBox(this, "Error executing document with associated program.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
+						}
+					}
 				}
 
 				// HLMV default

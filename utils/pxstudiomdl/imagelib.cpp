@@ -380,8 +380,8 @@ rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize 
 {
 	byte	*buf_p, *pixbuf;
 	byte	palette[256][4];
-	int	i, columns, column, rows, row, bpp = 1;
-	int	cbPalBytes = 0, padSize = 0, bps = 0;
+	int		i, columns, column, rows, row, bpp = 1;
+	size_t	cbPalBytes = 0, padSize = 0, bps = 0;
 	rgbdata_t *pic;
 	bmp_t	bhdr;
 
@@ -436,7 +436,7 @@ rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize 
 		if( bhdr.colors == 0 )
 		{
 			bhdr.colors = 256;
-			cbPalBytes = (1 << bhdr.bitsPerPixel) * sizeof( RGBQUAD );
+			cbPalBytes = static_cast<size_t>(powf(2, bhdr.bitsPerPixel)) * sizeof(RGBQUAD);
 		}
 		else cbPalBytes = bhdr.colors * sizeof( RGBQUAD );
 	}

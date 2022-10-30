@@ -20,7 +20,7 @@ GNU General Public License for more details.
 #define CRC32_INIT_VALUE	0xFFFFFFFFUL
 #define CRC32_XOR_VALUE	0xFFFFFFFFUL
 
-static const dword crc32table[NUM_BYTES] =
+static const uint32_t crc32table[NUM_BYTES] =
 {
 0x00000000, 0x77073096, 0xee0e612c, 0x990951ba,
 0x076dc419, 0x706af48f, 0xe963a535, 0x9e6495a3,
@@ -88,31 +88,30 @@ static const dword crc32table[NUM_BYTES] =
 0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 };
 
-void CRC32_Init( dword *pulCRC )
+void CRC32_Init(uint32_t *pulCRC)
 {
 	*pulCRC = CRC32_INIT_VALUE;
 }
 
-void CRC32_Final( dword *pulCRC )
+void CRC32_Final(uint32_t *pulCRC)
 {
 	*pulCRC ^= CRC32_XOR_VALUE;
 }
 
-void CRC32_ProcessByte( dword *pulCRC, byte ch )
+void CRC32_ProcessByte(uint32_t *pulCRC, byte ch)
 {
-	dword	ulCrc = *pulCRC;
-
+	uint32_t ulCrc = *pulCRC;
 	ulCrc ^= ch;
 	ulCrc = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 	*pulCRC = ulCrc;
 }
 
-void CRC32_ProcessBuffer( dword *pulCRC, const void *pBuffer, int nBuffer )
+void CRC32_ProcessBuffer(uint32_t *pulCRC, const void *pBuffer, int nBuffer )
 {
-	dword	ulCrc = *pulCRC;
+	uint32_t ulCrc = *pulCRC;
 	byte	*pb = (byte *)pBuffer;
 	uint	nFront;
-	int	nMain;
+	int		nMain;
 JustAfew:
 	switch( nBuffer )
 	{
@@ -120,7 +119,7 @@ JustAfew:
 	case 6: ulCrc  = crc32table[*pb++ ^ (byte)ulCrc] ^ (ulCrc >> 8);
 	case 5: ulCrc  = crc32table[*pb++ ^ (byte)ulCrc] ^ (ulCrc >> 8);
 	case 4:
-		ulCrc ^= *(dword *)pb;	// warning, this only works on little-endian.
+		ulCrc ^= *(uint32_t *)pb;	// warning, this only works on little-endian.
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
@@ -151,12 +150,12 @@ JustAfew:
 	nMain = nBuffer >> 3;
 	while( nMain-- )
 	{
-		ulCrc ^= *(dword *)pb;	// warning, this only works on little-endian.
+		ulCrc ^= *(uint32_t *)pb;	// warning, this only works on little-endian.
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
-		ulCrc ^= *(dword *)(pb + 4);// warning, this only works on little-endian.
+		ulCrc ^= *(uint32_t *)(pb + 4);// warning, this only works on little-endian.
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);

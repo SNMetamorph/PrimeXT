@@ -22,14 +22,7 @@ GNU General Public License for more details.
 #include "wfile.h"
 #include "port.h"
 
-#ifdef ALLOW_WADS_IN_PACKS
-long FS_Tell( file_t *file );
-int FS_Seek( file_t *file, long offset, int whence );
-file_t *FS_Open( const char *filepath, const char *mode, bool gamedironly );
-long FS_Read( file_t *file, void *buffer, size_t buffersize );
-long FS_Write( file_t *file, const void *data, size_t datasize );
-int FS_Close( file_t *file );
-#else
+#ifndef ALLOW_WADS_IN_PACKS
 #define FS_Tell( x )	tell( x )
 #define FS_Seek( x, y, z )	lseek( x, y, z )
 #define FS_Read( x, y, z )	read( x, y, z )
@@ -391,7 +384,7 @@ bool W_WriteLump( wfile_t *wad, dlumpinfo_t *lump, const void *data, size_t data
 		return false;
 	}
 
-	lump->size = lump->disksize = datasize;
+	lump->size = lump->disksize = static_cast<int>(datasize);
 
 	if( FS_Write( wad->handle, data, datasize ) == datasize )
 		return true;		
@@ -673,7 +666,7 @@ void W_Close( wfile_t *wad )
 		// write the header
 		hdr.ident = IDWAD3HEADER;
 		hdr.numlumps = wad->numlumps;
-		hdr.infotableofs = ofs;
+		hdr.infotableofs = static_cast<int>(ofs);
 
 		FS_Seek( wad->handle, 0, SEEK_SET );
 		FS_Write( wad->handle, &hdr, sizeof( hdr ));

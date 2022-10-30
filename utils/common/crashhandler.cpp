@@ -223,7 +223,7 @@ static void Sys_StackTrace( PEXCEPTION_POINTERS pInfo )
 #endif /* XASH_CRASHHANDLER == CRASHHANDLER_DBGHELP */
 
 LPTOP_LEVEL_EXCEPTION_FILTER       oldFilter;
-static long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
+static LONG _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 {
 #if XASH_CRASHHANDLER == CRASHHANDLER_DBGHELP
 	Sys_StackTrace( pInfo );
@@ -297,7 +297,7 @@ static int Sys_PrintFrame( char *buf, int len, int i, void *addr )
 	{
 		if( dlinfo.dli_sname )
 			return Q_snprintf( buf, len, "%2d: %p <%s+%lu> (%s)\n", i, addr, dlinfo.dli_sname,
-				(unsigned long)addr - (unsigned long)dlinfo.dli_saddr, dlinfo.dli_fname ); // print symbol, module and address
+				(uintptr_t)addr - (uintptr_t)dlinfo.dli_saddr, dlinfo.dli_fname ); // print symbol, module and address
 		else
 			return Q_snprintf( buf, len, "%2d: %p (%s)\n", i, addr, dlinfo.dli_fname ); // print module and address
 	}

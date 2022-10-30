@@ -485,13 +485,13 @@ void WriteModelLighting( void );
 //
 // alias.c
 //
-void LoadAlias( entity_t *ent, void *buffer, long fileLength, int flags );
+void LoadAlias( entity_t *ent, void *buffer, int fileLength, int flags );
 void AliasGetBounds( entity_t *ent, vec3_t mins, vec3_t maxs );
 
 //
 // studio.c
 //
-void LoadStudio( entity_t *ent, void *buffer, long fileLength, int flags );
+void LoadStudio( entity_t *ent, void *buffer, int fileLength, int flags );
 void StudioGetBounds( entity_t *ent, vec3_t mins, vec3_t maxs );
 
 //

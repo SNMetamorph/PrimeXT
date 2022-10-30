@@ -399,7 +399,7 @@ static bool Image_DXTGetPixelFormat( dds_t *hdr, uint &flags, uint &sqFlags )
 	return true;
 }
 
-static size_t Image_DXTGetLinearSize( int block, int width, int height )
+static size_t Image_DXTGetLinearSize( size_t block, int width, int height )
 {
 	return ((width + 3) / 4) * ((height + 3) / 4) * block;
 }
@@ -612,11 +612,11 @@ rgbdata_t *DDSToBuffer( const char *name, const byte *buffer, size_t filesize )
 
 static bool Image_DXTWriteHeader( vfile_t *f, rgbdata_t *pix, int format, int numMipMaps )
 {
-	uint	dwFourCC = 0, dwFlags1 = 0, dwFlags2 = 0, dwCaps1 = 0, dwCaps2 = 0;
-	uint	dwLinearSize, dwSize = 124, dwSize2 = sizeof( dds_pixf_t );
-	uint	dwWidth, dwHeight, dwMipCount, dwCustomEncode = DXT_ENCODE_DEFAULT;
-	dword	dwReflectivity = 0;
-	uint	dwIdent = DDSHEADER;
+	uint32_t	dwFourCC = 0, dwFlags1 = 0, dwFlags2 = 0, dwCaps1 = 0, dwCaps2 = 0;
+	uint32_t	dwLinearSize, dwSize = 124, dwSize2 = sizeof( dds_pixf_t );
+	uint32_t	dwWidth, dwHeight, dwMipCount, dwCustomEncode = DXT_ENCODE_DEFAULT;
+	uint32_t	dwReflectivity = 0;
+	uint32_t	dwIdent = DDSHEADER;
 
 	if( !pix || !pix->buffer )
 		return false;
@@ -662,30 +662,30 @@ static bool Image_DXTWriteHeader( vfile_t *f, rgbdata_t *pix, int format, int nu
 	dwWidth = pix->width;
 	dwHeight = pix->height;
 
-	VFS_Write( f, &dwIdent, sizeof( uint ));
-	VFS_Write( f, &dwSize, sizeof( uint ));
-	VFS_Write( f, &dwFlags1, sizeof( uint ));
-	VFS_Write( f, &dwHeight, sizeof( uint ));
-	VFS_Write( f, &dwWidth, sizeof( uint ));
+	VFS_Write( f, &dwIdent, sizeof(uint32_t));
+	VFS_Write( f, &dwSize, sizeof(uint32_t));
+	VFS_Write( f, &dwFlags1, sizeof(uint32_t));
+	VFS_Write( f, &dwHeight, sizeof(uint32_t));
+	VFS_Write( f, &dwWidth, sizeof(uint32_t));
 
-	dwLinearSize = Image_DXTGetLinearSize( Image_DXTGetBlockSize( format ), pix->width, pix->height );
-	VFS_Write( f, &dwLinearSize, sizeof( uint ));
+	dwLinearSize = static_cast<uint32_t>(Image_DXTGetLinearSize(Image_DXTGetBlockSize(format), pix->width, pix->height));
+	VFS_Write( f, &dwLinearSize, sizeof(uint32_t));
 
-	VFS_Write( f, 0, sizeof( uint ));
-	VFS_Write( f, &dwMipCount, sizeof( uint ));
-	VFS_Write( f, NULL, sizeof( uint ));
-	VFS_Write( f, &dwCustomEncode, sizeof( uint ));	// was dwReserved[0]
-	VFS_Write( f, &dwReflectivity, sizeof( dword ));	// was dwReserved[1]
-	VFS_Write( f, NULL, sizeof( uint ) * 8 );	// reserved fields
+	VFS_Write( f, 0, sizeof(uint32_t));
+	VFS_Write( f, &dwMipCount, sizeof(uint32_t));
+	VFS_Write( f, NULL, sizeof(uint32_t));
+	VFS_Write( f, &dwCustomEncode, sizeof(uint32_t));	// was dwReserved[0]
+	VFS_Write( f, &dwReflectivity, sizeof(uint32_t));	// was dwReserved[1]
+	VFS_Write( f, NULL, sizeof(uint32_t) * 8 );	// reserved fields
 
-	VFS_Write( f, &dwSize2, sizeof( uint ));
-	VFS_Write( f, &dwFlags2, sizeof( uint ));
-	VFS_Write( f, &dwFourCC, sizeof( uint ));
-	VFS_Write( f, NULL, sizeof( uint ));
-	VFS_Write( f, NULL, sizeof( uint ));
-	VFS_Write( f, NULL, sizeof( uint ));
-	VFS_Write( f, NULL, sizeof( uint ));
-	VFS_Write( f, NULL, sizeof( uint ));
+	VFS_Write( f, &dwSize2, sizeof(uint32_t));
+	VFS_Write( f, &dwFlags2, sizeof(uint32_t));
+	VFS_Write( f, &dwFourCC, sizeof(uint32_t));
+	VFS_Write( f, NULL, sizeof(uint32_t));
+	VFS_Write( f, NULL, sizeof(uint32_t));
+	VFS_Write( f, NULL, sizeof(uint32_t));
+	VFS_Write( f, NULL, sizeof(uint32_t));
+	VFS_Write( f, NULL, sizeof(uint32_t));
 
 	dwCaps1 |= DDS_TEXTURE;
 
@@ -698,9 +698,9 @@ static bool Image_DXTWriteHeader( vfile_t *f, rgbdata_t *pix, int format, int nu
 		SetBits( dwCaps2, DDS_CUBEMAP|DDS_CUBEMAP_ALL_SIDES );
 	}
 
-	VFS_Write( f, &dwCaps1, sizeof( uint ));
-	VFS_Write( f, &dwCaps2, sizeof( uint ));
-	VFS_Write( f, NULL, sizeof( uint ) * 3 ); // other caps and TextureStage
+	VFS_Write( f, &dwCaps1, sizeof(uint32_t));
+	VFS_Write( f, &dwCaps2, sizeof(uint32_t));
+	VFS_Write( f, NULL, sizeof(uint32_t) * 3 ); // other caps and TextureStage
 
 	return true;
 }

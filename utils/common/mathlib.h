@@ -88,13 +88,13 @@ typedef half	hvec3_t[3];
 #define Q_min( a, b )	(((a) < (b)) ? (a) : (b))
 #define Q_max( a, b )	(((a) > (b)) ? (a) : (b))
 #define Q_recip( a )	((vec_t)(1.0 / (vec_t)(a)))
-#define Q_floor( a )	((vec_t)(long)(a))
-#define Q_ceil( a )		((vec_t)(long)((a) + 1))
+#define Q_floor( a )	((vec_t)(intptr_t)(a))
+#define Q_ceil( a )		((vec_t)(intptr_t)((a) + 1))
 #define Q_round( a )	(floor(( a ) + 0.5))
 #define Q_rounddn( x, y )	(floor( x / y + 0.5 ) * y )
 #define Q_roundup( x, y )	(ceil( x / y ) * y )
 
-#define Q_rint(x)		((x) < 0 ? ((int)((x) - 0.5)) : ((int)((x) + 0.5)))
+#define Q_rint(x)		((x) < 0 ? ((intptr_t)((x) - 0.5)) : ((intptr_t)((x) + 0.5)))
 #define IS_NAN(x)		(((*(int *)&x) & (255<<23)) == (255<<23))
 
 #define AxisFromNormal( n )	( fabs( n[0] ) < NORMAL_EPSILON ) + ( fabs( n[1] ) < NORMAL_EPSILON ) + ( fabs( n[2] ) < NORMAL_EPSILON )
@@ -210,13 +210,15 @@ inline vec_t VectorNormalize( vec3_t v )
 	return length;
 }
 
-_forceinline int ffsl( long mask )
+_forceinline int ffsl( uint32_t mask )
 {
-	int	bit;
+	if (mask == 0) 
+		return 0;
 
-	if( mask == 0 ) return 0;
-	for( bit = 1; !(mask & 1); bit++ )
-		mask = (unsigned long)mask >> 1;
+	int	bit;
+	for (bit = 1; !(mask & 1); bit++)
+		mask = mask >> 1;
+
 	return bit;
 }
 

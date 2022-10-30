@@ -2364,8 +2364,9 @@ void Option_Weightlist( s_weightlist_t *pweightlist )
 
 		if( endofscript )
 		{
-			if( depth != 0 )
-				TokenError("missing }\n" );
+			if (depth != 0) {
+				TokenError("missing }\n");
+			}
 			return;
 		}
 
@@ -2380,10 +2381,10 @@ void Option_Weightlist( s_weightlist_t *pweightlist )
 		else if( !Q_stricmp( "posweight", token ))
 		{
 			i = pweightlist->numbones - 1;
-			if( i < 0 )
+			if (i < 0)
 			{
-				TokenError( "Error with specifing bone Position weight \'%s:%s\'\n",
-				pweightlist->name, pweightlist->bonename[i] );
+				TokenError("Error with specifing bone Position weight \'%s\'\n", pweightlist->name);
+				return;
 			}
 
 			GetToken( false );
@@ -2400,6 +2401,7 @@ void Option_Weightlist( s_weightlist_t *pweightlist )
 			if( i >= MAXWEIGHTSPERLIST )
 			{
 				TokenError( "Too many bones (%d) in weightlist '%s'\n", i, pweightlist->name );
+				return;
 			}
 
 			pweightlist->bonename[i] = strdup( token );
@@ -2411,6 +2413,7 @@ void Option_Weightlist( s_weightlist_t *pweightlist )
 		if( depth < 0 )
 		{
 			TokenError( "missing {\n" );
+			return;
 		}
 	}
 }
@@ -2642,13 +2645,17 @@ bool ParseAnimationToken( s_animation_t *panim )
 				break;
 		}
 
-		if( i == g_numcmdlists )
-			TokenError( "unknown cmdlist %s\n", token );
+		if (i == g_numcmdlists) {
+			TokenError("unknown cmdlist %s\n", token);
+			return false;
+		}
 
 		for( int j = 0; j < g_cmdlist[i].numcmds; j++ )
 		{
-			if( panim->numcmds >= MAXSTUDIOCMDS )
-				TokenError( "Too many cmds in %s\n", panim->name );
+			if (panim->numcmds >= MAXSTUDIOCMDS) {
+				TokenError("Too many cmds in %s\n", panim->name);
+				return false;
+			}
 			panim->cmds[panim->numcmds++] = g_cmdlist[i].cmds[j];
 		}
 
@@ -2921,11 +2928,12 @@ void CopyAnimationSettings( s_animation_t *pdest, s_animation_t *psrc )
 	pdest->scale = psrc->scale;
 	pdest->motiontype = psrc->motiontype;
 
-	for( int i = 0; i < psrc->numcmds; i++ )
+	for (int i = 0; i < psrc->numcmds; i++)
 	{
-		if( pdest->numcmds >= MAXSTUDIOCMDS )
-			TokenError("Too many cmds in %s\n", pdest->name );
-
+		if (pdest->numcmds >= MAXSTUDIOCMDS) {
+			TokenError("Too many cmds in %s\n", pdest->name);
+			return;
+		}
 		pdest->cmds[pdest->numcmds++] = psrc->cmds[i];
 	}
 }

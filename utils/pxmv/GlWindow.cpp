@@ -814,7 +814,7 @@ mxImage *GlWindow::readBmpFromBuffer(const byte * buffer, size_t size)
 	const byte *bufstart, *bufend;
 	byte *pbBmpBits;
 	byte *pb, *pbHold;
-	int cbPalBytes = 0;
+	size_t cbPalBytes = 0;
 	int biTrueWidth;
 	mxImage *image = 0;
 
@@ -857,7 +857,7 @@ mxImage *GlWindow::readBmpFromBuffer(const byte * buffer, size_t size)
 		// Figure out how many entires are actually in the table
 		if (bmih.biClrUsed == 0)
 		{
-			cbPalBytes = (1 << bmih.biBitCount) * sizeof(mxBitmapRGBQuad);
+			cbPalBytes = static_cast<size_t>(pow(2, bmih.biBitCount)) * sizeof(mxBitmapRGBQuad);
 			bmih.biClrUsed = 256;
 		}
 		else

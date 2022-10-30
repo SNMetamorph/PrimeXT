@@ -16,6 +16,8 @@ GNU General Public License for more details.
 #ifndef IMAGELIB_H
 #define IMAGELIB_H
 
+#include <stdint.h>
+
 #define GAMMA		( 2.2f )		// Valve Software gamma
 #define INVGAMMA		( 1.0f / 2.2f )	// back to 1.0
 
@@ -29,21 +31,21 @@ GNU General Public License for more details.
 #pragma pack( 1 )
 typedef struct
 {
-	char	id[2];		// bmfh.bfType
-	dword	fileSize;		// bmfh.bfSize
-	dword	reserved0;	// bmfh.bfReserved1 + bmfh.bfReserved2
-	dword	bitmapDataOffset;	// bmfh.bfOffBits
-	dword	bitmapHeaderSize;	// bmih.biSize
-	int	width;		// bmih.biWidth
-	int	height;		// bmih.biHeight
-	word	planes;		// bmih.biPlanes
-	word	bitsPerPixel;	// bmih.biBitCount
-	dword	compression;	// bmih.biCompression
-	dword	bitmapDataSize;	// bmih.biSizeImage
-	dword	hRes;		// bmih.biXPelsPerMeter
-	dword	vRes;		// bmih.biYPelsPerMeter
-	dword	colors;		// bmih.biClrUsed
-	dword	importantColors;	// bmih.biClrImportant
+	int8_t		id[2];		// bmfh.bfType
+	uint32_t	fileSize;	// bmfh.bfSize
+	uint32_t	reserved0;	// bmfh.bfReserved1 + bmfh.bfReserved2
+	uint32_t	bitmapDataOffset;	// bmfh.bfOffBits
+	uint32_t	bitmapHeaderSize;	// bmih.biSize
+	int32_t		width;		// bmih.biWidth
+	int32_t		height;		// bmih.biHeight
+	uint16_t	planes;		// bmih.biPlanes
+	uint16_t	bitsPerPixel;	// bmih.biBitCount
+	uint32_t	compression;	// bmih.biCompression
+	uint32_t	bitmapDataSize;	// bmih.biSizeImage
+	uint32_t	hRes;		// bmih.biXPelsPerMeter
+	uint32_t	vRes;		// bmih.biYPelsPerMeter
+	uint32_t	colors;		// bmih.biClrUsed
+	uint32_t	importantColors;	// bmih.biClrImportant
 } bmp_t;
 #pragma pack( )
 
@@ -175,8 +177,8 @@ rgbdata_t *Image_Alloc( int width, int height, bool paletted = false );
 rgbdata_t *Image_AllocCubemap( int width, int height );
 rgbdata_t *Image_AllocSkybox( int width, int height );
 rgbdata_t *Image_Copy( rgbdata_t *src );
-void Image_PackRGB( float flColor[3], dword &icolor );
-void Image_UnpackRGB( dword icolor, float flColor[3] );
+void Image_PackRGB( float flColor[3], uint32_t &icolor );
+void Image_UnpackRGB( uint32_t icolor, float flColor[3] );
 char Image_HintFromSuf( const char *lumpname );
 rgbdata_t *COM_LoadImage( const char *filename, bool quiet = false );
 rgbdata_t *COM_LoadImageMemory( const char *filename, const byte *buf, size_t fileSize );

@@ -15,6 +15,7 @@ GNU General Public License for more details.
 
 #ifndef IMAGELIB_H
 #define IMAGELIB_H
+#include <stdint.h>
 
 /*
 ========================================================================
@@ -26,21 +27,21 @@ GNU General Public License for more details.
 #pragma pack( 1 )
 typedef struct
 {
-	char	id[2];		// bmfh.bfType
-	dword	fileSize;		// bmfh.bfSize
-	dword	reserved0;	// bmfh.bfReserved1 + bmfh.bfReserved2
-	dword	bitmapDataOffset;	// bmfh.bfOffBits
-	dword	bitmapHeaderSize;	// bmih.biSize
-	int	width;		// bmih.biWidth
-	int	height;		// bmih.biHeight
-	word	planes;		// bmih.biPlanes
-	word	bitsPerPixel;	// bmih.biBitCount
-	dword	compression;	// bmih.biCompression
-	dword	bitmapDataSize;	// bmih.biSizeImage
-	dword	hRes;		// bmih.biXPelsPerMeter
-	dword	vRes;		// bmih.biYPelsPerMeter
-	dword	colors;		// bmih.biClrUsed
-	dword	importantColors;	// bmih.biClrImportant
+	int8_t		id[2];		// bmfh.bfType
+	uint32_t	fileSize;		// bmfh.bfSize
+	uint32_t	reserved0;	// bmfh.bfReserved1 + bmfh.bfReserved2
+	uint32_t	bitmapDataOffset;	// bmfh.bfOffBits
+	uint32_t	bitmapHeaderSize;	// bmih.biSize
+	int32_t		width;		// bmih.biWidth
+	int32_t		height;		// bmih.biHeight
+	uint16_t	planes;		// bmih.biPlanes
+	uint16_t	bitsPerPixel;	// bmih.biBitCount
+	uint32_t	compression;	// bmih.biCompression
+	uint32_t	bitmapDataSize;	// bmih.biSizeImage
+	uint32_t	hRes;		// bmih.biXPelsPerMeter
+	uint32_t	vRes;		// bmih.biYPelsPerMeter
+	uint32_t	colors;		// bmih.biClrUsed
+	uint32_t	importantColors;	// bmih.biClrImportant
 } bmp_t;
 #pragma pack( )
 
@@ -54,18 +55,18 @@ typedef struct
 #pragma pack( 1 )
 typedef struct tga_s
 {
-	byte	id_length;
-	byte	colormap_type;
-	byte	image_type;
-	word	colormap_index;
-	word	colormap_length;
-	byte	colormap_size;
-	word	x_origin;
-	word	y_origin;
-	word	width;
-	word	height;
-	byte	pixel_size;
-	byte	attributes;
+	uint8_t		id_length;
+	uint8_t		colormap_type;
+	uint8_t		image_type;
+	uint16_t	colormap_index;
+	uint16_t	colormap_length;
+	uint8_t		colormap_size;
+	uint16_t	x_origin;
+	uint16_t	y_origin;
+	uint16_t	width;
+	uint16_t	height;
+	uint8_t		pixel_size;
+	uint8_t		attributes;
 } tga_t;
 #pragma pack( )
 
@@ -90,11 +91,11 @@ typedef enum
 // loaded image
 typedef struct rgbdata_s
 {
-	word	width;		// image width
-	word	height;		// image height
-	word	flags;		// misc image flags
-	byte	*palette;		// palette if present
-	byte	*buffer;		// image buffer
+	uint16_t width;		// image width
+	uint16_t height;	// image height
+	uint16_t flags;		// misc image flags
+	uint8_t	*palette;	// palette if present
+	uint8_t *buffer;	// image buffer
 	size_t	size;		// for bounds checking
 } rgbdata_t;
 
