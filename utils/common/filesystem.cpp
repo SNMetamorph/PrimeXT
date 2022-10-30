@@ -159,12 +159,10 @@ void stringlistsort( stringlist_t *list )
 
 void listdirectory( stringlist_s *list, const char *path, bool lowercase )
 {
-	int		i;
-	signed char *c;
 #if XASH_WIN32
 	char pattern[4096];
-	struct _finddata_t	n_file;
-	int		hFile;
+	struct _finddata_t n_file;
+	intptr_t hFile;
 #else
 	DIR *dir;
 	struct dirent *entry;
@@ -175,13 +173,15 @@ void listdirectory( stringlist_s *list, const char *path, bool lowercase )
 
 	// ask for the directory listing handle
 	hFile = _findfirst( pattern, &n_file );
-	if( hFile == -1 ) return;
+	if (hFile == -1) 
+		return;
 
 	// start a new chain with the the first name
 	stringlistappend( list, n_file.name );
 	// iterate through the directory
-	while( _findnext( hFile, &n_file ) == 0 )
-		stringlistappend( list, n_file.name );
+	while (_findnext(hFile, &n_file) == 0) {
+		stringlistappend(list, n_file.name);
+	}
 	_findclose( hFile );
 #else
 	if( !( dir = opendir( path ) ) )
@@ -194,13 +194,13 @@ void listdirectory( stringlist_s *list, const char *path, bool lowercase )
 #endif
 
 	// convert names to lowercase because windows doesn't care, but pattern matching code often does
-	if( lowercase )
+	if (lowercase)
 	{
-		for( i = 0; i < list->numstrings; i++ )
+		for (int i = 0; i < list->numstrings; i++)
 		{
-			for( c = (signed char *)list->strings[i]; *c; c++ )
+			for (char *c = (char *)list->strings[i]; *c; c++)
 			{
-				if( *c >= 'A' && *c <= 'Z' )
+				if (*c >= 'A' && *c <= 'Z')
 					*c += 'a' - 'A';
 			}
 		}
