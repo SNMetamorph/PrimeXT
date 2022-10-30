@@ -1427,45 +1427,17 @@ bool SolveInverseQuadratic( float x1, float y1, float x2, float y2, float x3, fl
 
 void CalcTBN(const Vector &p0, const Vector &p1, const Vector &p2, const Vector2D &t0, const Vector2D &t1, const Vector2D &t2, Vector &s, Vector &t, bool areaweight)
 {
-	// Compute the partial derivatives of X, Y, and Z with respect to S and T.
-	s.Init(0.0f, 0.0f, 0.0f);
-	t.Init(0.0f, 0.0f, 0.0f);
+	Vector deltaPos1 = p1 - p0;
+	Vector deltaPos2 = p2 - p0;
+	Vector2D deltaUV1 = t1 - t0;
+	Vector2D deltaUV2 = t2 - t0;
 
-	// x, s, t
-	Vector edge01(p1.x - p0.x, t1.x - t0.x, t1.y - t0.y);
-	Vector edge02(p2.x - p0.x, t2.x - t0.x, t2.y - t0.y);
-
-	Vector cross = CrossProduct(edge01, edge02);
-
-	if (fabs(cross.x) > SMALL_FLOAT)
-	{
-		s.x += -cross.y / cross.x;
-		t.x += -cross.z / cross.x;
-	}
-
-	// y, s, t
-	edge01.Init(p1.y - p0.y, t1.x - t0.x, t1.y - t0.y);
-	edge02.Init(p2.y - p0.y, t2.x - t0.x, t2.y - t0.y);
-
-	cross = CrossProduct(edge01, edge02);
-
-	if (fabs(cross.x) > SMALL_FLOAT)
-	{
-		s.y += -cross.y / cross.x;
-		t.y += -cross.z / cross.x;
-	}
-
-	// z, s, t
-	edge01.Init(p1.z - p0.z, t1.x - t0.x, t1.y - t0.y);
-	edge02.Init(p2.z - p0.z, t2.x - t0.x, t2.y - t0.y);
-
-	cross = CrossProduct(edge01, edge02);
-
-	if (fabs(cross.x) > SMALL_FLOAT)
-	{
-		s.z += -cross.y / cross.x;
-		t.z += -cross.z / cross.x;
-	}
+	float r = 1.0f;
+	if ((deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x) < 0.0f)
+		r = -1.0f;
+	
+    s = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
+	t = (deltaPos1 * deltaUV2.x - deltaPos2 * deltaUV1.x) * r;	//binormal is inverted compared to the opengl one, probably due to quake left-handed coord system
 
 	if (!areaweight)
 	{
