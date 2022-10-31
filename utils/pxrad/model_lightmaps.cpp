@@ -1150,18 +1150,19 @@ void ReduceModelLightmap( byte *oldlightdata, byte *olddeluxdata, byte *oldshado
 		mesh->styles[3] = 255;
 	}
 
-	for( int index = 0; index < g_modellight_numindexes; index++ )
+	for (int index = 0; index < g_modellight_numindexes; index++)
 	{
 		int	modelnum = g_modellight_indexes[index].modelnum;
 		int	facenum = g_modellight_indexes[index].facenum;
-		entity_t	*mapent = g_modellight[modelnum];
+		entity_t *mapent = g_modellight[modelnum];
 
-         		mesh = (tmesh_t *)mapent->cache;
+		mesh = (tmesh_t *)mapent->cache;
 		f = mesh->faces[facenum].light;
-		if( !f ) continue;
+		if (!f) 
+			continue;
 		fl = &f->facelight;
 
-		if( f->lightofs == -1 )
+		if (f->lightofs == -1)
 			continue;
 
 		byte	oldstyles[MAXLIGHTMAPS];
@@ -1171,44 +1172,52 @@ void ReduceModelLightmap( byte *oldlightdata, byte *olddeluxdata, byte *oldshado
 		oldofs = f->lightofs;
 		f->lightofs = g_lightdatasize;
 
-		for( k = 0; k < MAXLIGHTMAPS; k++ )
+		for (k = 0; k < MAXLIGHTMAPS; k++)
 		{
 			oldstyles[k] = f->styles[k];
 			f->styles[k] = 255;
 		}
 
-		for( k = 0; k < MAXLIGHTMAPS && oldstyles[k] != 255; k++ )
+		for (k = 0; k < MAXLIGHTMAPS && oldstyles[k] != 255; k++)
 		{
 			int	count = fl->numsamples;
 			byte	maxb = 0;
 
-			for( i = 0; i < count; i++ )
+			for (i = 0; i < count; i++)
 			{
 				byte *v = &oldlightdata[oldofs + count * 3 * k + i * 3];
-				maxb = Q_max( maxb, VectorMaximum( v ));
+				maxb = Q_max(maxb, VectorMaximum(v));
 			}
 
-			if( maxb <= 0 ) // black
+			if (maxb <= 0) // black
 				continue;
 
 			f->styles[numstyles] = oldstyles[k];
-			memcpy( &g_dlightdata[f->lightofs + count * 3 * numstyles], &oldlightdata[oldofs + count * 3 * k], count * 3 );
+			memcpy(&g_dlightdata[f->lightofs + count * 3 * numstyles], &oldlightdata[oldofs + count * 3 * k], count * 3);
 #ifdef HLRAD_DELUXEMAPPING
-			if( g_ddeluxdata != NULL )
-				memcpy( &g_ddeluxdata[f->lightofs + count * 3 * numstyles], &olddeluxdata[oldofs + count * 3 * k], count * 3 );
-			if( g_dshadowdata != NULL )
-				memcpy( &g_dshadowdata[(f->lightofs/3) + count * numstyles], &oldshadowdata[(oldofs / 3) + count * k], count );
+			if (g_ddeluxdata && olddeluxdata) {
+				memcpy(&g_ddeluxdata[f->lightofs + count * 3 * numstyles], &olddeluxdata[oldofs + count * 3 * k], count * 3);
+			}
+#endif
+#ifdef HLRAD_SHADOWMAPPING
+			if (g_dshadowdata && oldshadowdata) {
+				memcpy(&g_dshadowdata[(f->lightofs / 3) + count * numstyles], &oldshadowdata[(oldofs / 3) + count * k], count);
+			}
 #endif
 			numstyles++;
 		}
 		g_lightdatasize += fl->numsamples * 3 * numstyles;
 #ifdef HLRAD_DELUXEMAPPING
-		if( g_ddeluxdata != NULL )
+		if (g_ddeluxdata) {
 			g_deluxdatasize += fl->numsamples * 3 * numstyles;
-
-		if( g_dshadowdata != NULL )
-			g_shadowdatasize += fl->numsamples * numstyles;
+		}
 #endif
+#ifdef HLRAD_SHADOWMAPPING
+		if (g_dshadowdata) {
+			g_shadowdatasize += fl->numsamples * numstyles;
+		}
+#endif
+
 		// wrote styles into mesh to determine completely black models
 		for( i = 0; i < MAXLIGHTMAPS && f->styles[i] != 255; i++ )
 		{
