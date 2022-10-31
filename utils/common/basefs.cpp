@@ -21,6 +21,12 @@ GNU General Public License for more details.
 #include "filesystem.h"
 #include "wfile.h"
 #include "bspfile.h"
+#include "build.h"
+
+#if !XASH_WIN32
+#include <sys/types.h>
+#include <dirent.h>
+#endif
 
 #define FILE_COPY_SIZE		(1024 * 1024)
 #define FILE_BUFF_SIZE		(65535)
@@ -92,11 +98,12 @@ char			fs_gamedir[MAX_SYSPATH];	// game current directory
 char			fs_falldir[MAX_SYSPATH];	// game falling directory
 bool			fs_ext_path = false;	// attempt to read\write from ./ or ../ pathes 
 
-static searchpath_t *FS_FindFile( const char *name, int *index, bool gamedironly );
-static dpackfile_t* FS_AddFileToPack( const char* name, pack_t *pack, int offset, int size );
-static byte *W_LoadFile( const char *path, size_t *filesizeptr, bool gamedironly );
-int FS_FileTime( const char *filename, bool gamedironly );
-static void FS_Purge( file_t* file );
+static searchpath_t *FS_FindFile(const char *name, int *index, bool gamedironly);
+static dpackfile_t *FS_AddFileToPack(const char *name, pack_t *pack, int offset, int size);
+static byte *W_LoadFile(const char *path, size_t *filesizeptr, bool gamedironly);
+int FS_FileTime(const char *filename, bool gamedironly);
+static bool FS_SysDirectoryExists(const char *filepath);
+static void FS_Purge(file_t *file);
 
 void FS_AllowDirectPaths( bool enable )
 {
@@ -419,7 +426,9 @@ FS_AddGameHierarchy
 void FS_AddGameHierarchy( const char *dir, int flags )
 {
 	// Add the common game directory
-	if( dir && *dir ) FS_AddGameDirectory( va( "%s/%s/", fs_rootdir, dir ), flags );
+	if (dir && *dir) {
+		FS_AddGameDirectory(va("%s/%s/", fs_rootdir, dir), flags);
+	}
 }
 
 /*
@@ -561,13 +570,16 @@ void FS_Rescan( void )
 {
 	FS_ClearSearchPath();
 
-	if( Q_stricmp( fs_basedir, fs_gamedir ))
-		FS_AddGameHierarchy( fs_basedir, 0 );
+	if (Q_stricmp(fs_basedir, fs_gamedir))
+		FS_AddGameHierarchy(fs_basedir, 0);
 
-	if( Q_stricmp( fs_basedir, fs_falldir ) && Q_stricmp( fs_gamedir, fs_falldir ))
-		FS_AddGameHierarchy( fs_falldir, 0 );
+	if (Q_stricmp(fs_basedir, fs_falldir) && Q_stricmp(fs_gamedir, fs_falldir))
+		FS_AddGameHierarchy(fs_falldir, 0);
 
-	FS_AddGameHierarchy( fs_gamedir, FS_GAMEDIR_PATH );
+	FS_AddGameHierarchy(fs_gamedir, FS_GAMEDIR_PATH);
+	if (FS_SysDirectoryExists(va("%s/%s/custom/", fs_rootdir, fs_gamedir))) {
+		FS_AddGameHierarchy(va("%s/custom", fs_gamedir), 0);
+	}
 }
 
 /*
@@ -627,20 +639,24 @@ void FS_Init( const char *source )
 	FS_Rescan(); // create new filesystem
 
 	MsgDev( D_REPORT, "FS_Init: done\n" );
-
-	searchpath_t	*s;
-
 	MsgDev( D_REPORT, "Current search path:\n" );
 
-	for( s = fs_searchpaths; s; s = s->next )
+	for (searchpath_t *s = fs_searchpaths; s; s = s->next)
 	{
-		if( s->pack ) MsgDev( D_REPORT, "%s (%i files)\n", s->pack->filename, s->pack->numfiles );
-		else if( s->wad ) MsgDev( D_REPORT, "%s (%i files)\n", s->wad->filename, s->wad->numlumps );
-		else MsgDev( D_REPORT, "%s\n", s->filename );
+		if (s->pack) {
+			MsgDev(D_REPORT, "%s (%i files)\n", s->pack->filename, s->pack->numfiles);
+		}
+		else if (s->wad) {
+			MsgDev(D_REPORT, "%s (%i files)\n", s->wad->filename, s->wad->numlumps);
+		}
+		else {
+			MsgDev(D_REPORT, "%s\n", s->filename);
+		}
 	}
 
-	if( COM_FileExists( hullfile ))
-		CheckHullFile( hullfile );
+	if (COM_FileExists(hullfile)) {
+		CheckHullFile(hullfile);
+	}
 }
 
 /*
@@ -725,6 +741,29 @@ static file_t *FS_SysOpen( const char *filepath, const char *mode )
 	else lseek( file->handle, 0, SEEK_SET );
 
 	return file;
+}
+
+/*
+====================
+FS_SysDirectoryExists
+
+Check, using system API, is specified directory exists or not
+====================
+*/
+static bool FS_SysDirectoryExists(const char *filepath)
+{
+#if XASH_WIN32
+	DWORD dwAttrib = GetFileAttributes(filepath);
+	return (dwAttrib != INVALID_FILE_ATTRIBUTES && (dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+#else
+	DIR *dir = opendir(filepath);
+	if (dir)
+	{
+		closedir(dir);
+		return true;
+	}
+	return false;
+#endif
 }
 
 /*
