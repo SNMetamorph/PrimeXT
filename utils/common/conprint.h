@@ -19,16 +19,17 @@ GNU General Public License for more details.
 
 #define DEFAULT_DEVELOPER		D_ERROR
 
-void Msg( const char *pMsg, ... );
-void MsgDev( int level, const char *pMsg, ... );
-void MsgAnim( int level, const char *pMsg, ... );
-void SetDeveloperLevel( int level );
-int GetDeveloperLevel( void );
-void Sys_InitLog( const char *logname );
-void Sys_InitLogAppend( const char *logname );
-void Sys_CloseLog( void );
-void Sys_PrintLog( const char *pMsg );
-void Sys_IgnoreLog( bool ignore );
-void Sys_Sleep( unsigned int msec );
+void Msg(const char *pMsg, ...);
+void MsgDev(int level, const char *pMsg, ...);
+void MsgAnim(int level, const char *pMsg, ...);
+void SetDeveloperLevel(int level);
+int GetDeveloperLevel(void);
+void Sys_InitLog(const char *logname);
+void Sys_InitLogAppend(const char *logname);
+void Sys_CloseLog(void);
+void Sys_PrintLog(const char *pMsg);
+void Sys_IgnoreLog(bool ignore);
+void Sys_Print(const char *pMsg);
+void Sys_Sleep(unsigned int msec);
 
 #endif//CONRPINT_H
