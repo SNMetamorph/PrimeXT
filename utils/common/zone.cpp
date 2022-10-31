@@ -77,22 +77,27 @@ allocate mem
 */
 void *Mem_Alloc( size_t size, unsigned int target )
 {
-	memhdr_t *memhdr = nullptr;
-	void *mem;
-
-#ifdef ZONE_ATTEMPT_CALLOC
-	mem = attempt_calloc( sizeof( memhdr_t ) + size );
-#else
-	mem = mi_calloc( sizeof( memhdr_t ) + size, 1 );
-#endif
-	if( mem == NULL )
-	{
-		if( target == C_SAFEALLOC )
-			return NULL;
-		COM_FatalError( "out of memory!\n" );
+	// return nullptr if trying to allocate null size hunk
+	// some code depends on this behavior, therefore we should do this
+	if (size == 0) {
+		return nullptr;
 	}
 
-	memhdr = (memhdr_t *)mem;
+#ifdef ZONE_ATTEMPT_CALLOC
+	void *mem = attempt_calloc(sizeof(memhdr_t) + size);
+#else
+	void *mem = mi_calloc(sizeof(memhdr_t) + size, 1);
+#endif
+	if (!mem)
+	{
+		if (target == C_SAFEALLOC) {
+			return nullptr;
+		}
+		COM_FatalError("out of memory!\n");
+		return nullptr;
+	}
+
+	memhdr_t *memhdr = (memhdr_t *)mem;
 	memhdr->size = size;
 #ifdef ZONE_DEBUG
 	ThreadLock();
