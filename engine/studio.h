@@ -72,25 +72,25 @@ Studio models are position independent, so the cache manager can move them.
 // lighting & rendermode options
 #define STUDIO_NF_FLATSHADE		0x0001
 #define STUDIO_NF_CHROME		0x0002
-#define STUDIO_NF_FULLBRIGHT		0x0004
+#define STUDIO_NF_FULLBRIGHT	0x0004
 #define STUDIO_NF_NOMIPS		0x0008	// ignore mip-maps
-#define STUDIO_NF_SMOOTH		0x0010	// smooth tangent space
+#define STUDIO_NF_SMOOTH		0x0010	// smooth tangent space basis (deprecated and unused)
 #define STUDIO_NF_ADDITIVE		0x0020	// rendering with additive mode
 #define STUDIO_NF_MASKED		0x0040	// use texture with alpha channel
 #define STUDIO_NF_NORMALMAP		0x0080	// indexed normalmap
 #define STUDIO_NF_GLOSSMAP		0x0100	// glossmap
-#define STUDIO_NF_GLOSSPOWER		0x0200
-#define STUDIO_NF_LUMA		0x0400	// self-illuminate parts
-#define STUDIO_NF_ALPHASOLID		0x0800	// use with STUDIO_NF_MASKED to have solid alphatest surfaces for env_static
+#define STUDIO_NF_GLOSSPOWER	0x0200
+#define STUDIO_NF_LUMA			0x0400	// self-illuminate parts
+#define STUDIO_NF_ALPHASOLID	0x0800	// use with STUDIO_NF_MASKED to have solid alphatest surfaces for env_static
 #define STUDIO_NF_TWOSIDE		0x1000	// render mesh as twosided
 #define STUDIO_NF_HEIGHTMAP		0x2000
 
 #define STUDIO_NF_NODRAW		(1<<16)	// failed to create shader for this mesh
 #define STUDIO_NF_NODLIGHT		(1<<17)	// failed to create dlight shader for this mesh
-#define STUDIO_NF_NOSUNLIGHT		(1<<18)	// failed to create sun light shader for this mesh
+#define STUDIO_NF_NOSUNLIGHT	(1<<18)	// failed to create sun light shader for this mesh
 
 #define STUDIO_NF_HAS_ALPHA		(1<<20)	// external texture has alpha-channel
-#define STUDIO_NF_HAS_DETAIL		(1<<21)	// studiomodels has detail textures
+#define STUDIO_NF_HAS_DETAIL	(1<<21)	// studiomodels has detail textures
 
 #define STUDIO_NF_COLORMAP		(1<<30)	// can changed by colormap command
 #define STUDIO_NF_UV_COORDS		(1<<31)	// using half-float coords instead of ST
