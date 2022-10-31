@@ -216,9 +216,9 @@ static void Sys_StackTrace( PEXCEPTION_POINTERS pInfo )
 		len += Q_snprintf(message + len, sizeof(message) - len, ")\n");
 	}
 
-	Sys_PrintLog( message );
-
-	SymCleanup( process );
+	Sys_Print("\n");
+	Sys_Print(message);
+	SymCleanup(process);
 }
 #endif /* XASH_CRASHHANDLER == CRASHHANDLER_DBGHELP */
 
@@ -442,8 +442,8 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 #undef try_allow_read
 	}
 
-	Msg("%s\n", message);
-	Sys_PrintLog(message);
+	Sys_Print("\n");
+	Sys_Print(message);
 	exit(1);
 }
 
