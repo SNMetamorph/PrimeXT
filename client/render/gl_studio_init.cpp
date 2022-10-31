@@ -1139,7 +1139,6 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 	mstudiomaterial_t	*pmaterial = (mstudiomaterial_t *)RI->currentmodel->materials;
 	static Vector	localverts[MAXARRAYVERTS];
 	bool		use_fan_sequence = false;
-	bool		smooth_tbn = false;
 	dmodelvertlight_t	*dvl = NULL;
 	dmodelfacelight_t	*dfl = NULL;
 	int		i, count;
@@ -1198,10 +1197,6 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 		mstudiotexture_t *ptexture = pmaterial->pSource;
 		float s = 1.0f / (float)ptexture->width;
 		float t = 1.0f / (float)ptexture->height;
-
-		// at least one of submodel mesh reqiuried smoothing
-		if( FBitSet( ptexture->flags, STUDIO_NF_SMOOTH ))
-			smooth_tbn = true;
 
 		// first create trifan array from studiomodel mesh
 		while(( count = *( ptricmds++ )))
@@ -1473,8 +1468,9 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 			CalcTBN( v[0], v[1], v[2], tc[0], tc[1], tc[2], triSVect[triID], triTVect[triID] );
 		}	
 
-		// calculate an average tangent space for each vertex.
-		for( int vertID = 0; vertID < m_nNumArrayVerts; vertID++ )
+		// calculate an average tangent space for each vertex
+		// this is naive implementation, that can be slow on hi-poly models
+		for (int vertID = 0; vertID < m_nNumArrayVerts; vertID++)
 		{
 			svert_t *v = &m_arrayxvert[vertID];
 			const Vector &normal = v->normal;
@@ -1490,28 +1486,34 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 				tVect += triTVect[vertToTriMap[vertID][triID]];
 			}
 
-			if( smooth_tbn )
+			// smooth TBN
+			Vector vertPos1 = m_arrayverts[vertID]; // transformed to global pose to avoid seams
+			Vector4D vertUV1 = m_arrayxvert[vertID].stcoord;
+			Vector vertNorm1 = m_arrayxvert[vertID].normal;
+
+			for (int vertID2 = 0; vertID2 < m_nNumArrayVerts; vertID2++)
 			{
-				// smooth TBN
-				Vector vertPos1 = m_arrayverts[vertID]; // transformed to global pose to avoid seams
-
-				for( int vertID2 = 0; vertID2 < m_nNumArrayVerts; vertID2++ )
+				if (vertID2 == vertID)
+					continue;
+				
+				Vector vertPos2 = m_arrayverts[vertID2]; // transformed to global pose to avoid seams
+				if (vertPos1 != vertPos2)
+					continue;
+				
+				Vector4D vertUV2 = m_arrayxvert[vertID2].stcoord;
+				if (vertUV1 != vertUV2)
+					continue;
+				
+				Vector vertNorm2 = m_arrayxvert[vertID2].normal;
+				if (vertNorm1 != vertNorm2)
+					continue;	
+					
+				for( int triID2 = 0; triID2 < vertToTriMap[vertID2].Size(); triID2++ )
 				{
-					if( vertID2 == vertID )
-						continue;
-
-					Vector vertPos2 = m_arrayverts[vertID2]; // transformed to global pose to avoid seams
-
-					if( vertPos1 == vertPos2 )
-					{
-						for( int triID2 = 0; triID2 < vertToTriMap[vertID2].Size(); triID2++ )
-						{
-							sVect += triSVect[vertToTriMap[vertID2][triID2]];
-							tVect += triTVect[vertToTriMap[vertID2][triID2]];
-						}
-					}
-				}
-			}
+					sVect += triSVect[vertToTriMap[vertID2][triID2]];
+					tVect += triTVect[vertToTriMap[vertID2][triID2]];
+				}				
+			}			
 
 			// rotate tangent and binormal back to bone space
 			ComputeSkinMatrix( &m_arrayxvert[vertID], bones, skinMat );
@@ -1519,23 +1521,11 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 			sVect = skinMat.VectorIRotate( sVect );
 			tVect = skinMat.VectorIRotate( tVect );
 
-			if( !smooth_tbn )
-			{
-				Vector tmpVect = CrossProduct( sVect, tVect );
-				bool leftHanded = DotProduct( tmpVect, normal ) < 0.0f;
-
-				if( !leftHanded )
-				{
-					tVect = CrossProduct( normal, sVect );
-					sVect = CrossProduct( tVect, normal );
-				}
-				else
-				{
-					// make studiomodel TBN right-side coordinate system for accordance with TBN of bmodels
-					tVect = CrossProduct( sVect, normal );
-					sVect = CrossProduct( tVect, normal );
-				}
-			}
+			// orthogonalization
+			sVect = sVect.Normalize();
+			tVect = tVect.Normalize();			
+			sVect = sVect - normal * DotProduct(normal, sVect);
+			tVect = CrossProduct(normal, sVect) * Q_sign(DotProduct(CrossProduct(normal, sVect), tVect));	
 
 			finalSVect = sVect.Normalize();
 			finalTVect = tVect.Normalize();
