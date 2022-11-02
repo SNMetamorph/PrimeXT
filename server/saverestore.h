@@ -64,7 +64,7 @@ public:
 	void	WriteVector( const char *pname, const float *value, int count );	// Save a vector
 	void	WritePositionVector( const char *pname, const Vector &value );		// Offset for landmark if necessary
 	void	WritePositionVector( const char *pname, const float *value, int count );	// array of pos vectors
-	void	WriteFunction( DATAMAP *pRootMap, const char *pname, const int *value, int count );	// Save a function pointer
+	void	WriteFunction( DATAMAP *pRootMap, const char *pname, void **value, int count );	// Save a function pointer
 	int	WriteEntVars( const char *pname, DATAMAP *pMap, entvars_t *pev );	// Save entvars_t (entvars_t)
 	int	WriteFields( const char *pname, const void *pBaseData, DATAMAP *pMap, TYPEDESCRIPTION *pFields, int fieldCount );
 
