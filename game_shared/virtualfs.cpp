@@ -55,7 +55,7 @@ size_t CVirtualFS :: Read( void *out, size_t size )
 	}
 	else
 	{
-		int reduced_size = state.m_iLength - state.m_iOffset;
+		size_t reduced_size = state.m_iLength - state.m_iOffset;
 		memcpy( out, state.m_pBuffer + state.m_iOffset, reduced_size );
 		state.m_iOffset += reduced_size;
 		read_size = reduced_size;
