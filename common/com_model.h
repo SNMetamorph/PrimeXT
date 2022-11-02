@@ -404,8 +404,8 @@ typedef struct model_s
 	// brush model
 	union
 	{
-	int		firstmodelsurface;
-	unsigned long	modelCRC;
+	int			firstmodelsurface;
+	uint32_t	modelCRC;
 	};
 	int		nummodelsurfaces;
 

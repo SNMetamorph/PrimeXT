@@ -27,7 +27,7 @@ extern mobile_engfuncs_t gMobileAPI;
 extern render_api_t gRenderfuncs;
 
 #define GET_CLIENT_TIME	(*gEngfuncs.GetClientTime)
-#define GET_CLIENT_OLDTIME	(*gEngfuncs.GetClientOldTime)
+#define GET_CLIENT_OLDTIME	(*gEngfuncs.pfnGetClientOldTime)
 #define CVAR_REGISTER	(*gEngfuncs.pfnRegisterVariable)
 #define CVAR_GET_FLOAT	(*gEngfuncs.pfnGetCvarFloat)
 #define CVAR_GET_STRING	(*gEngfuncs.pfnGetCvarString)
