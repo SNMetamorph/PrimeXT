@@ -210,6 +210,8 @@ inline vec_t VectorNormalize( vec3_t v )
 	return length;
 }
 
+#if !XASH_LINUX
+// disabled declaration for linux to avoid conflict
 _forceinline int ffsl( uint32_t mask )
 {
 	if (mask == 0) 
@@ -221,6 +223,7 @@ _forceinline int ffsl( uint32_t mask )
 
 	return bit;
 }
+#endif
 
 /*
 ==============
