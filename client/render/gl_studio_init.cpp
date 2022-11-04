@@ -1437,27 +1437,13 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 	// compute tangent space for all submodel meshes to avoid seams
 	if( m_iTBNState == TBNSTATE_GENERATE )
 	{
-		// build a map from vertex to a list of triangles that share the vert.
-		CUtlArray<CIntVector> vertToTriMap;
-
-		vertToTriMap.AddMultipleToTail( m_nNumArrayVerts );
-		int triID;
-
-		for( triID = 0; triID < (m_nNumArrayElems / 3); triID++ )
-		{
-			vertToTriMap[m_arrayelems[triID*3+0]].AddToTail( triID );
-			vertToTriMap[m_arrayelems[triID*3+1]].AddToTail( triID );
-			vertToTriMap[m_arrayelems[triID*3+2]].AddToTail( triID );
-		}
-
-		// calculate the tangent space for each triangle.
-		CUtlArray<Vector> triSVect, triTVect;
-		triSVect.AddMultipleToTail( (m_nNumArrayElems / 3) );
-		triTVect.AddMultipleToTail( (m_nNumArrayElems / 3) );
+		for( int vertID = 0; vertID < m_nNumArrayVerts; vertID++ )
+			m_arrayxvert[vertID].tangent = m_arrayxvert[vertID].binormal = g_vecZero;
 
 		float	*v[3], *tc[3];
-
-		for( triID = 0; triID < (m_nNumArrayElems / 3); triID++ )
+		Vector triSVect, triTVect;
+		
+		for( int triID = 0; triID < (m_nNumArrayElems / 3); triID++ )
 		{
 			for( int i = 0; i < 3; i++ )
 			{
@@ -1465,70 +1451,155 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 				tc[i] = (float *)&m_arrayxvert[m_arrayelems[triID*3+i]].stcoord;
 			}
 
-			CalcTBN( v[0], v[1], v[2], tc[0], tc[1], tc[2], triSVect[triID], triTVect[triID] );
+			CalcTBN( v[0], v[1], v[2], tc[0], tc[1], tc[2], triSVect, triTVect );
+			
+			for( i = 0; i < 3; i++ )
+			{
+				m_arrayxvert[m_arrayelems[triID*3+i]].tangent += triSVect;
+				m_arrayxvert[m_arrayelems[triID*3+i]].binormal += triTVect;
+			}
 		}	
 
-		// calculate an average tangent space for each vertex
-		// this is naive implementation, that can be slow on hi-poly models
-		for (int vertID = 0; vertID < m_nNumArrayVerts; vertID++)
+		int *sort_IDs = new int[m_nNumArrayVerts];
+		for( i = 0; i < m_nNumArrayVerts; i++ )
+			sort_IDs[i] = i;
+		
+		//yes, this is qsort
 		{
-			svert_t *v = &m_arrayxvert[vertID];
-			const Vector &normal = v->normal;
-			Vector &finalSVect = v->tangent;
-			Vector &finalTVect = v->binormal;
-			Vector sVect, tVect;
+			int i, j;
+			int lb, ub;
+			int lbstack[32], ubstack[32];
+			int stackpos = 1;
+			int ppos;
+			int pivot;
+			int temp;
 
-			sVect = tVect = g_vecZero;
+			lbstack[1] = 0;
+			ubstack[1] = m_nNumArrayVerts - 1;
 
-			for( triID = 0; triID < vertToTriMap[vertID].Size(); triID++ )
-			{
-				sVect += triSVect[vertToTriMap[vertID][triID]];
-				tVect += triTVect[vertToTriMap[vertID][triID]];
-			}
-
-			// smooth TBN
-			Vector vertPos1 = m_arrayverts[vertID]; // transformed to global pose to avoid seams
-			Vector4D vertUV1 = m_arrayxvert[vertID].stcoord;
-			Vector vertNorm1 = m_arrayxvert[vertID].normal;
-
-			for (int vertID2 = 0; vertID2 < m_nNumArrayVerts; vertID2++)
-			{
-				if (vertID2 == vertID)
-					continue;
-				
-				Vector vertPos2 = m_arrayverts[vertID2]; // transformed to global pose to avoid seams
-				if (vertPos1 != vertPos2)
-					continue;
-				
-				Vector4D vertUV2 = m_arrayxvert[vertID2].stcoord;
-				if (vertUV1 != vertUV2)
-					continue;
-				
-				Vector vertNorm2 = m_arrayxvert[vertID2].normal;
-				if (vertNorm1 != vertNorm2)
-					continue;	
-					
-				for( int triID2 = 0; triID2 < vertToTriMap[vertID2].Size(); triID2++ )
+			while ( stackpos > 0 )
+			{ 
+				lb = lbstack[ stackpos ];
+				ub = ubstack[ stackpos ];
+				stackpos--;
+				while ( lb < ub )
 				{
-					sVect += triSVect[vertToTriMap[vertID2][triID2]];
-					tVect += triTVect[vertToTriMap[vertID2][triID2]];
-				}				
-			}			
+					ppos = ( lb + ub ) >> 1;
+					i = lb;
+					j = ub;
+					pivot = sort_IDs[ppos];
 
-			// rotate tangent and binormal back to bone space
+					while ( i <= j )
+					{
+						while ((m_arrayverts[sort_IDs[i]].x < m_arrayverts[pivot].x) || (
+						(m_arrayverts[sort_IDs[i]].x == m_arrayverts[pivot].x) && ((m_arrayverts[sort_IDs[i]].y < m_arrayverts[pivot].y) ||
+						(m_arrayverts[sort_IDs[i]].y == m_arrayverts[pivot].y) && ((m_arrayverts[sort_IDs[i]].z < m_arrayverts[pivot].z) ||
+						(m_arrayverts[sort_IDs[i]].z == m_arrayverts[pivot].z) && ((m_arrayxvert[sort_IDs[i]].normal.x < m_arrayxvert[pivot].normal.x) ||
+						(m_arrayxvert[sort_IDs[i]].normal.x == m_arrayxvert[pivot].normal.x) && ((m_arrayxvert[sort_IDs[i]].normal.y < m_arrayxvert[pivot].normal.y) ||
+						(m_arrayxvert[sort_IDs[i]].normal.y == m_arrayxvert[pivot].normal.y) && ((m_arrayxvert[sort_IDs[i]].normal.z < m_arrayxvert[pivot].normal.z) ||
+						(m_arrayxvert[sort_IDs[i]].normal.z == m_arrayxvert[pivot].normal.z) && ((m_arrayxvert[sort_IDs[i]].stcoord[0] < m_arrayxvert[pivot].stcoord[0]) ||
+						(m_arrayxvert[sort_IDs[i]].stcoord[0] == m_arrayxvert[pivot].stcoord[0])  && ((m_arrayxvert[sort_IDs[i]].stcoord[1] < m_arrayxvert[pivot].stcoord[1]) ||
+						(m_arrayxvert[sort_IDs[i]].stcoord[1] == m_arrayxvert[pivot].stcoord[1])  && ((m_arrayxvert[sort_IDs[i]].stcoord[2] < m_arrayxvert[pivot].stcoord[2])
+						)))))))))) i++;
+						
+						while ((m_arrayverts[pivot].x < m_arrayverts[sort_IDs[j]].x) || (
+						(m_arrayverts[pivot].x == m_arrayverts[sort_IDs[j]].x) && ((m_arrayverts[pivot].y < m_arrayverts[sort_IDs[j]].y) ||
+						(m_arrayverts[pivot].y == m_arrayverts[sort_IDs[j]].y) && ((m_arrayverts[pivot].z < m_arrayverts[sort_IDs[j]].z) ||
+						(m_arrayverts[pivot].z == m_arrayverts[sort_IDs[j]].z) && ((m_arrayxvert[pivot].normal.x < m_arrayxvert[sort_IDs[j]].normal.x) ||
+						(m_arrayxvert[pivot].normal.x == m_arrayxvert[sort_IDs[j]].normal.x) && ((m_arrayxvert[pivot].normal.y < m_arrayxvert[sort_IDs[j]].normal.y) ||
+						(m_arrayxvert[pivot].normal.y == m_arrayxvert[sort_IDs[j]].normal.y) && ((m_arrayxvert[pivot].normal.z < m_arrayxvert[sort_IDs[j]].normal.z) ||
+						(m_arrayxvert[pivot].normal.z == m_arrayxvert[sort_IDs[j]].normal.z) && ((m_arrayxvert[pivot].stcoord[0] < m_arrayxvert[sort_IDs[j]].stcoord[0]) ||
+						(m_arrayxvert[pivot].stcoord[0] == m_arrayxvert[sort_IDs[j]].stcoord[0])  && ((m_arrayxvert[pivot].stcoord[1] < m_arrayxvert[sort_IDs[j]].stcoord[1]) ||
+						(m_arrayxvert[pivot].stcoord[1] == m_arrayxvert[sort_IDs[j]].stcoord[1])  && ((m_arrayxvert[pivot].stcoord[2] < m_arrayxvert[sort_IDs[j]].stcoord[2])
+						)))))))))) j--;
+
+						if ( i <= j )
+						{
+							temp = sort_IDs[i];
+							sort_IDs[i] = sort_IDs[j];
+							sort_IDs[j] = temp;
+							i++;
+							j--;
+						}
+					}
+
+					if ( i < ppos )
+					{
+						if ( i < ub )
+						{
+							stackpos++;
+							lbstack[ stackpos ] = i;
+							ubstack[ stackpos ] = ub;
+						}
+						ub = j;
+					}
+					else
+					{
+						if ( j > lb )
+						{
+							stackpos++;
+							lbstack[ stackpos ] = lb;
+							ubstack[ stackpos ] = j;
+						}
+						lb = i;
+					}
+				} 
+			}
+		}
+
+		int dups = 0;
+		for( i = 1; i < m_nNumArrayVerts; i++ )
+		{			
+			if ((m_arrayverts[sort_IDs[i]] == m_arrayverts[sort_IDs[i - 1]])&&
+			(m_arrayxvert[sort_IDs[i]].normal == m_arrayxvert[sort_IDs[i - 1]].normal)&&
+			(m_arrayxvert[sort_IDs[i]].stcoord[0] == m_arrayxvert[sort_IDs[i - 1]].stcoord[0])&&
+			(m_arrayxvert[sort_IDs[i]].stcoord[1] == m_arrayxvert[sort_IDs[i - 1]].stcoord[1]))
+			{
+				dups++;
+				m_arrayxvert[sort_IDs[i]].tangent += m_arrayxvert[sort_IDs[i - 1]].tangent;
+				m_arrayxvert[sort_IDs[i]].binormal += m_arrayxvert[sort_IDs[i - 1]].binormal;
+			}
+			else
+			{
+				if (dups > 0)
+				{
+					for (int j = i - dups - 1; j < i - 1; j++)
+					{
+						m_arrayxvert[sort_IDs[j]].tangent = m_arrayxvert[sort_IDs[i - 1]].tangent;
+						m_arrayxvert[sort_IDs[j]].binormal = m_arrayxvert[sort_IDs[i - 1]].binormal;
+					}	
+					dups = 0;
+				}
+			}
+		}
+		if (dups > 0)
+		{
+			for (int j = i - dups - 1; j < i - 1; j++)
+			{
+				m_arrayxvert[sort_IDs[j]].tangent = m_arrayxvert[sort_IDs[i - 1]].tangent;
+				m_arrayxvert[sort_IDs[j]].binormal = m_arrayxvert[sort_IDs[i - 1]].binormal;
+			}
+		}
+		
+		delete [] sort_IDs;	
+		
+		for( vertID = 0; vertID < m_nNumArrayVerts; vertID++ )
+		{
+			m_arrayxvert[vertID].tangent = m_arrayxvert[vertID].tangent.Normalize();
+			m_arrayxvert[vertID].binormal = m_arrayxvert[vertID].binormal.Normalize();
+			
 			ComputeSkinMatrix( &m_arrayxvert[vertID], bones, skinMat );
 
-			sVect = skinMat.VectorIRotate( sVect );
-			tVect = skinMat.VectorIRotate( tVect );
+			m_arrayxvert[vertID].tangent = skinMat.VectorIRotate( m_arrayxvert[vertID].tangent );
+			m_arrayxvert[vertID].binormal = skinMat.VectorIRotate( m_arrayxvert[vertID].binormal );	
+			
+			//orthogonalization		
+			m_arrayxvert[vertID].tangent = m_arrayxvert[vertID].tangent - m_arrayxvert[vertID].normal * DotProduct(m_arrayxvert[vertID].normal , m_arrayxvert[vertID].tangent );
+			m_arrayxvert[vertID].binormal = CrossProduct(m_arrayxvert[vertID].normal , m_arrayxvert[vertID].tangent ) * 
+				Q_sign(DotProduct(CrossProduct(m_arrayxvert[vertID].normal , m_arrayxvert[vertID].tangent ) , m_arrayxvert[vertID].binormal ));		
 
-			// orthogonalization
-			sVect = sVect.Normalize();
-			tVect = tVect.Normalize();			
-			sVect = sVect - normal * DotProduct(normal, sVect);
-			tVect = CrossProduct(normal, sVect) * Q_sign(DotProduct(CrossProduct(normal, sVect), tVect));	
-
-			finalSVect = sVect.Normalize();
-			finalTVect = tVect.Normalize();
+			m_arrayxvert[vertID].tangent = m_arrayxvert[vertID].tangent.Normalize();
+			m_arrayxvert[vertID].binormal = m_arrayxvert[vertID].binormal.Normalize();
 		}
 
 		// search for submodel offset
