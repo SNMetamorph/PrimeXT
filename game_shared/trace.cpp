@@ -21,6 +21,7 @@ GNU General Public License for more details.
 #include "com_model.h"
 #include "trace.h"
 #include "mathlib.h"
+#include "stringlib.h"
 
 #ifdef CLIENT_DLL
 #include "utils.h"
@@ -47,29 +48,41 @@ void TraceMesh :: SetTraceMesh( mmesh_t *cached_mesh, areanode_t *tree, int mode
 	areanodes = tree;
 }
 
-mstudiomaterial_t *TraceMesh :: GetMaterialForFacet( const mfacet_t *facet )
+matdesc_t *TraceMesh :: GetMaterialForFacet( const mfacet_t *facet )
 {
-	if (!m_pModel || facet->skinref < 0) 
-		return NULL;
-
-	mstudiomaterial_t *materials = m_pModel->materials;
-	studiohdr_t *phdr = (studiohdr_t *)m_pModel->cache.data;
-	if( !materials || !phdr ) return NULL;
-
-	short *pskinref = (short *)((byte *)phdr + phdr->skinindex);
-	if( m_iSkin > 0 && m_iSkin < phdr->numskinfamilies )
-		pskinref += (m_iSkin * phdr->numskinref);
-
-	return &materials[pskinref[facet->skinref]];
+	mstudiotexture_t *texture = GetTextureForFacet(facet);
+	if (texture)
+	{
+		char materialName[64];
+		char modelName[64];
+		char textureName[64];
+		COM_FileBase(m_pModel->name, modelName);
+		COM_FileBase(texture->name, textureName);
+		snprintf(materialName, sizeof(materialName) - 1, "%s/%s", modelName, textureName);
+		return COM_FindMaterial(materialName);
+	}
+	return nullptr;
 }
 
 mstudiotexture_t *TraceMesh :: GetTextureForFacet( const mfacet_t *facet )
 {
-	mstudiomaterial_t *material = GetMaterialForFacet( facet );
+	if (!m_pModel || facet->skinref < 0)
+		return nullptr;
 
-	if( material )
-		return material->pSource;
-	return NULL;
+	studiohdr_t *phdr = (studiohdr_t *)m_pModel->cache.data;
+	mstudiotexture_t *textures = (mstudiotexture_t *)((byte *)phdr + phdr->textureindex);
+	if (phdr && textures)
+	{
+		if (phdr->numtextures != 0 && phdr->textureindex != 0)
+		{
+			short *pskinref = (short *)((byte *)phdr + phdr->skinindex);
+			if (m_iSkin > 0 && m_iSkin < phdr->numskinfamilies)
+				pskinref += (m_iSkin * phdr->numskinref);
+
+			return &textures[pskinref[facet->skinref]];
+		}
+	}
+	return nullptr;
 }
 
 bool TraceMesh :: IsTrans( const mfacet_t *facet )
