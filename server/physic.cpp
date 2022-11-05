@@ -150,7 +150,7 @@ void SV_ClipPMoveToEntity( physent_t *pe, const float *start, float *mins, float
 	tr->endpos = trace.endpos;
 	tr->plane.dist = trace.plane.dist;
 	tr->plane.normal = trace.plane.normal;
-	tr->surf = trace.surf;
+	tr->materialHash = trace.materialHash;
 
 	if (trace.ent != nullptr && PM_GetPlayerMove())
 		tr->ent = pe - PM_GetPlayerMove()->physents;

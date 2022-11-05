@@ -213,17 +213,16 @@ void DecalGunshot( TraceResult *pTrace, int iBulletType, const vec3_t &origin, c
 		);
  		ClearBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
 
-		if (tr.pMat != nullptr)
+		if (tr.materialHash)
 		{
-			pMaterial = tr.pMat->effects;
+			matdesc_t *mat = COM_FindMaterial(tr.materialHash);
+			pMaterial = mat ? mat->effects : nullptr;
 			if (pMaterial) {
 				UTIL_StudioDecalTrace(pTrace, pMaterial->impact_decal);
 			}
 		}
 	}
 }
-
-
 
 //
 // EjectBrass - tosses a brass shell from passed origin at passed velocity

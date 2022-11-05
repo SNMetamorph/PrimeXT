@@ -1780,11 +1780,11 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr, Vector vecSrc, Vector vecEnd, int 
 	{
 		msurface_t *surf = TRACE_SURFACE(pEntity->edict(), vecSrc, vecEnd);
 
-		if (!surf || !surf->texinfo || !surf->texinfo->texture || !surf->texinfo->texture->material)
+		if (!surf || !surf->texinfo || !surf->texinfo->texture)
 			return 0.0f;
 
 		impactType = IMPACT_MATERIAL;
-		pMat = surf->texinfo->texture->material->effects; // epic chain!
+		pMat = surf->texinfo->texture->effects;
 	}
 	else if (pEntity->pev->solid == SOLID_CUSTOM)
 	{
@@ -1798,9 +1798,16 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr, Vector vecSrc, Vector vecEnd, int 
 		);
 		ClearBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
 
-		if (tr.pMat != nullptr) {
-			pMat = tr.pMat->effects;
-			impactType = IMPACT_MATERIAL;
+		if (tr.materialHash) {
+			matdesc_t *mat = COM_FindMaterial(tr.materialHash);
+			if (mat)
+			{
+				pMat = mat->effects;
+				impactType = IMPACT_MATERIAL;
+			}
+			else {
+				return 0.0f;
+			}
 		}
 		else {
 			return 0.0f;
