@@ -157,11 +157,8 @@ void main( void )
 #endif
 #elif defined( LIGHT_PROJ )
 #if defined( APPLY_SHADOW )
-	if( NdotL > 0.0 )
-	{
+	if( NdotL > 0.0 ) {
 		shadow = ShadowProj( var_ShadowCoord.xyz );
-		shadow = mix( shadow, 0.0, u_SunRefract );
-		shadow = max( shadow, u_AmbientFactor );
 	}
 #endif
 #endif
@@ -179,10 +176,5 @@ void main( void )
 #endif
 
 	diffuse.rgb += lighting.specular;
-#if defined( LIGHT_PROJ )
-	diffuse.rgb += (albedo * u_LightDiffuse * u_AmbientFactor); // what is this?
-#endif
-
-	// compute final color
 	gl_FragColor = diffuse;
 }
