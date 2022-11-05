@@ -946,12 +946,8 @@ void GameDLLInit( void )
 
 	WorldPhysic->InitPhysic();	// initialize physic world
 	LinkUserMessages();			// yes in the Xash3D we can register messages here
-
-	if (IS_DEDICATED_SERVER())
-	{
-		COM_InitMatdef();
-		SV_InitMaterials();
-	}
+	COM_InitMatdef();
+	SV_InitMaterials();
 }
 
 void GameDLLShutdown( void )
