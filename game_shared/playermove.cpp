@@ -301,10 +301,12 @@ void PM_CatagorizeTextureType(void)
 
 			memset(&materialTrace, 0, sizeof(materialTrace));
 			Physic_SweepTest(ent, start, zeroVector, zeroVector, end, &materialTrace);
-			tr->surf = materialTrace.surf;
+			tr->materialHash = materialTrace.materialHash;
 #endif
- 			if (tr->surf) {
-				pmove->pMaterial = tr->surf->effects;
+ 			if (tr->materialHash) 
+			{
+				matdesc_t *mat = COM_FindMaterial(tr->materialHash);
+				pmove->pMaterial = mat ? mat->effects : nullptr;
 			}
 		}
 	}
