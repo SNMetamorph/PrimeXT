@@ -253,7 +253,7 @@ void Physic_SweepTest(cl_entity_t *pTouch, const Vector &start, const Vector &mi
 	{
 		if (tr->fraction < 1.0f || tr->startsolid)
 			tr->ent = (edict_t *)pTouch;	// g-cont. no need, really. i'm leave this just for fun
-		tr->surf = trm.GetLastHitSurface();
+		tr->materialHash = COM_GetMaterialHash(trm.GetLastHitSurface());
 	}
 }
 

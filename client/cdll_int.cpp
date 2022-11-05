@@ -350,7 +350,7 @@ extern "C" void DLLEXPORT HUD_ClipMoveToEntity(physent_t * pe, const float *star
 	tr->endpos = trace.endpos;
 	tr->plane.dist = trace.plane.dist;
 	tr->plane.normal = trace.plane.normal;
-	tr->surf = trace.surf;
+	tr->materialHash = trace.materialHash;
 	
 	if (trace.ent != NULL && PM_GetPlayerMove())
 		tr->ent = pe - PM_GetPlayerMove()->physents;
