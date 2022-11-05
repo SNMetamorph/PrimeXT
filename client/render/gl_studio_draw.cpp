@@ -2896,8 +2896,9 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 			// process lightstyles
 			for( int i = 0; i < MAXLIGHTMAPS && m_pModelInstance->styles[i] != LS_NONE; i++ )
 			{
-				if( tr.sun_light_enabled && m_pModelInstance->styles[i] == LS_SKY )
+				if (!R_UseSkyLightstyle(m_pModelInstance->styles[i]))
 					continue;	// skip the sunlight due realtime sun is enabled
+
 				GL_AddShaderDirective( options, va( "APPLY_STYLE%i", i ));
 			}
 

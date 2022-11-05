@@ -858,7 +858,7 @@ void R_LightmapCoords( msurface_t *surf, const Vector &vec, float *coords, int s
 void R_LightmapCoords( struct mstudiosurface_s *surf, const Vector &vec, const Vector lmvecs[2], float *coords, int style );
 
 //
-// gl_rlight.cpp
+// gl_dlight.cpp
 //
 CDynLight *CL_AllocDlight( int key );
 void R_SetupLightParams( CDynLight *pl, const Vector &origin, const Vector &angles, float radius, float fov, int type, int flags = 0 );
@@ -875,6 +875,7 @@ void R_AnimateLight( void );
 int HasDynamicLights( void );
 int HasStaticLights( void );
 void CL_DecayLights( void );
+bool R_UseSkyLightstyle(int lightstyleIndex);
 
 //
 // gl_rmain.cpp

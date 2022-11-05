@@ -153,6 +153,20 @@ int HasStaticLights( void )
 	return numLights;
 }
 
+
+/*
+===============
+R_UseSkyLightstyle
+
+===============
+*/
+bool R_UseSkyLightstyle(int lightstyleIndex)
+{
+	if (tr.sun_light_enabled && lightstyleIndex == LS_SKY)
+		return false;
+	return true;
+}
+
 /*
 =============================================================================
 
@@ -205,8 +219,9 @@ void R_AnimateLight( void )
 			float	value = ls->map[0];
 
 			// turn off the baked sunlight
-			if( tr.sun_light_enabled && i == LS_SKY )
-				value = (float)('a' - 'a');
+			if (!R_UseSkyLightstyle(i)) {
+				value = 0.0f;
+			}
 
 			// single length style so don't bother interpolating
 			tr.lightstyle[i] = value * 22.0f * scale;

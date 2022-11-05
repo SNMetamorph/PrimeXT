@@ -796,7 +796,7 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 		// process lightstyles
 		for( int i = 0; i < MAXLIGHTMAPS && s->styles[i] != LS_NONE; i++ )
 		{
-			if( tr.sun_light_enabled && s->styles[i] == LS_SKY )
+			if (!R_UseSkyLightstyle(s->styles[i]))
 				continue;	// skip the sunlight due realtime sun is enabled
 			GL_AddShaderDirective( options, va( "APPLY_STYLE%i", i ));
 		}
