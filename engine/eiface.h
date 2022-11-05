@@ -36,6 +36,7 @@
 
 #include "exportdef.h"
 #include "studio.h"
+#include "crc.h"
 
 #ifndef offsetof
 #define offsetof(s,m)	(size_t)&(((s *)0)->m)
@@ -74,7 +75,7 @@ typedef struct gametrace_s
 	union
 	{
 		int		iHitgroup;// 0 == generic, non zero is specific body part
-		mstudiomaterial_t *pMat;	// env_static hitting surface
+		CRC32_t	materialHash;	// env_static hitting surface
 	};
 } TraceResult;
 

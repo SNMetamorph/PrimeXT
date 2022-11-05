@@ -15,6 +15,7 @@
 #ifndef CONST_H
 #define CONST_H
 #include "vector.h"
+#include "crc.h"
 
 //
 // Constants shared by the engine and dlls
@@ -819,7 +820,7 @@ typedef struct trace_s
 	union
 	{
 		int	hitgroup; // 0 == generic, non zero is specific body part
-		struct mstudiomat_s *surf;	// valid only if ent->v.solid == SOLID_CUSTOM!
+		CRC32_t materialHash; // valid only if ent->v.solid == SOLID_CUSTOM!
 	};
 } trace_t;
 
