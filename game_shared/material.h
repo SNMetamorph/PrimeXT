@@ -13,16 +13,19 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#pragma once
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
 #include "com_model.h"
 #include "vector.h"
+#include "crc.h"
 
-#define MAX_MAT_SOUNDS	8
-#define IMPACT_NONE		0
-#define IMPACT_BODY		1
-#define IMPACT_MATERIAL	2
+#define MAX_MAT_SOUNDS		8
+#define IMPACT_NONE			0
+#define IMPACT_BODY			1
+#define IMPACT_MATERIAL		2
+#define DEFAULT_SMOOTHNESS	0.0f
 
 #define COM_CopyString( s )	_COM_CopyString( s, __FILE__, __LINE__ )
 
@@ -37,9 +40,37 @@ struct matdef_t
 	vec2_t		detailScale;			// detail texture scales x, y
 };
 
+// NOTE: if this is changed it must be changed in studio.h and com_model.h too!!!
+struct matdesc_t
+{
+	float		smoothness;			// smoothness factor
+	vec2_t		detailScale;		// detail texture scales x, y
+	float		reflectScale;		// reflection scale for translucent water
+	float		refractScale;		// refraction scale for mirrors, windows, water
+	float		aberrationScale;	// chromatic abberation
+	float		reliefScale;		// relief-mapping
+	matdef_t	*effects;			// hit, impact, particle effects etc
+	char		name[64];
+	unsigned short	dt_texturenum;	// detail texture load directly from material specific
+	CRC32_t		hash;
+
+	char		diffusemap[64];
+	char		normalmap[64];
+	char		glossmap[64];
+};
+
+// matdef is physical properties description
 matdef_t *COM_MatDefFromSurface(msurface_t *surf, const Vector &pointOnSurf);
 matdef_t *COM_FindMatdef(const char *name);
 matdef_t *COM_DefaultMatdef();
 void COM_InitMatdef();
+
+// matdesc is visual properties description
+matdesc_t *COM_DefaultMatdesc();
+void COM_LoadMaterials(const char *path);
+matdesc_t *COM_FindMaterial(const char *texName);
+matdesc_t *COM_FindMaterial(CRC32_t matHash);
+void COM_InitMaterials(matdesc_t *&matlist, int &matcount);
+CRC32_t COM_GetMaterialHash(matdesc_t *mat);
 
 #endif//MATERIAL_H
