@@ -14,6 +14,7 @@ GNU General Public License for more details.
 */
 
 #include "crc.h"
+#include <stddef.h>
 
 #define NUM_BYTES		256
 #define CRC32_INIT_VALUE	0xFFFFFFFFUL
