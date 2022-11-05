@@ -416,7 +416,7 @@ static void R_ShadowPassSetupViewCache( CDynLight *pl, int split = 0 )
 				RI->currententity = esrf->parent;
 				RI->currentmodel = RI->currententity->model;
 
-				R_AddGrassToDrawList( surf, DRAWLIST_SHADOW );
+				R_AddSurfaceToDrawList( surf, DRAWLIST_SHADOW );
 			}
 			else
 			{
@@ -425,7 +425,7 @@ static void R_ShadowPassSetupViewCache( CDynLight *pl, int split = 0 )
 
 				esrf->parent = RI->currententity; // setup dynamic upcast
 
-				R_AddGrassToDrawList( surf, DRAWLIST_SHADOW );
+				R_AddSurfaceToDrawList( surf, DRAWLIST_SHADOW );
 
 				if( R_CullSurface( surf, GetVieworg(), &RI->view.frustum ))
 				{
