@@ -1710,9 +1710,6 @@ void CStudioModelRenderer :: SetDecalUniforms( studiodecal_t *pDecal )
 				u->SetValue( &gl_lightViewProjMatrix[0] );
 			}
 			break;
-		case UT_DIFFUSEFACTOR:
-			u->SetValue( tr.diffuseFactor );
-			break;
 		case UT_AMBIENTFACTOR:
 			if( pl && pl->type == LIGHT_DIRECTIONAL )
 				u->SetValue( tr.sun_ambient );

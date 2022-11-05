@@ -627,9 +627,6 @@ void V_RenderPostEffect( word hProgram )
 		case UT_LIGHTGAMMA:
 			u->SetValue( tr.light_gamma );
 			break;
-		case UT_DIFFUSEFACTOR:
-			u->SetValue( tr.diffuseFactor );
-			break;
 		case UT_AMBIENTFACTOR:
 			u->SetValue( tr.ambientFactor );
 			break;

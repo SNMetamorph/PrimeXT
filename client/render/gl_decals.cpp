@@ -1481,9 +1481,6 @@ void R_SetDecalUniforms( brushdecal_t *decal )
 		case UT_SMOOTHNESS:
 			u->SetValue( desc->smoothness );
 			break;
-		case UT_DIFFUSEFACTOR:
-			u->SetValue( tr.diffuseFactor );
-			break;
 		case UT_AMBIENTFACTOR:
 			u->SetValue( tr.ambientFactor );
 			break;

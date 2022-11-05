@@ -280,7 +280,6 @@ static uniformTable_t glsl_uniformTable[] =
 { "u_LightShade",		UT_LIGHTSHADE,		0 },
 { "u_LightOrigin",		UT_LIGHTORIGIN,		0 },
 { "u_LightViewProjMatrix",	UT_LIGHTVIEWPROJMATRIX,	0 },
-{ "u_DiffuseFactor",	UT_DIFFUSEFACTOR,		UFL_GLOBAL_PARM },
 { "u_AmbientFactor",	UT_AMBIENTFACTOR,		UFL_GLOBAL_PARM },
 { "u_AmbientCube",		UT_AMBIENTCUBE,		0 },
 { "u_SunRefract",		UT_SUNREFRACT,		UFL_GLOBAL_PARM },

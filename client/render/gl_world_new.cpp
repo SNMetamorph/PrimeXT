@@ -3075,9 +3075,6 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 				u->SetValue( &gl_lightViewProjMatrix[0] );
 			}
 			break;
-		case UT_DIFFUSEFACTOR:
-			u->SetValue( tr.diffuseFactor );
-			break;
 		case UT_AMBIENTFACTOR:
 			if( pl && pl->type == LIGHT_DIRECTIONAL )
 				u->SetValue( tr.sun_ambient );
