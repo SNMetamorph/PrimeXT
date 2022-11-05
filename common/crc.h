@@ -32,9 +32,9 @@ typedef struct
 
 typedef uint32_t CRC32_t;
 void CRC32_Init(CRC32_t *pulCRC);
-CRC32_t CRC32_Final(CRC32_t pulCRC);
-void CRC32_ProcessBuffer(CRC32_t *pulCRC, void *p, int len);
-void CRC32_ProcessByte(CRC32_t *pulCRC, unsigned char ch);
+void CRC32_Final(CRC32_t *pulCRC);
+void CRC32_ProcessBuffer(CRC32_t *pulCRC, const void *pBuffer, int nBuffer);
+void CRC32_ProcessByte(CRC32_t *pulCRC, uint8_t ch);
 int CRC_File(CRC32_t *crcvalue, char *pszFileName);
 
 unsigned char COM_BlockSequenceCRCByte (unsigned char *base, int length, int sequence);

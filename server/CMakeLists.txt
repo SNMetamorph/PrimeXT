@@ -7,19 +7,20 @@ check_include_file("tgmath.h" HAVE_TGMATH_H)
 
 # add source files
 set(SVDLL_SOURCES
-	"../game_shared/bone_setup.cpp"
-	"../game_shared/common.cpp"
-	"../game_shared/ikcontext.cpp"
-	"../game_shared/mathlib.cpp"
-	"../game_shared/matrix.cpp"
-	"../game_shared/material.cpp"
-	"../game_shared/plane.cpp"
-	"../game_shared/playermove.cpp"
-	"../game_shared/stringlib.cpp"
-	"../game_shared/vector.cpp"
-	"../game_shared/virtualfs.cpp"
-	"../game_shared/trace.cpp"
-	"../game_shared/meshdesc.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/bone_setup.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/common.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/ikcontext.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/mathlib.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/matrix.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/material.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/plane.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/playermove.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/stringlib.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/vector.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/virtualfs.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/trace.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/meshdesc.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/crc.cpp"
 )
 
 list(APPEND SVDLL_SOURCES
