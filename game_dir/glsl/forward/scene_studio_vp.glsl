@@ -36,7 +36,6 @@ attribute vec4	attr_LightStyles;
 #endif
 
 uniform float	u_AmbientFactor;
-uniform float	u_DiffuseFactor;
 uniform vec2	u_DetailScale;
 uniform vec3	u_ViewOrigin;
 uniform vec3	u_ViewRight;

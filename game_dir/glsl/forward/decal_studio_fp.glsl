@@ -28,7 +28,6 @@ uniform sampler2D	u_GlossMap;
 
 uniform float	u_Smoothness;
 uniform float	u_RenderAlpha;
-uniform float	u_DiffuseFactor;
 uniform float	u_AmbientFactor;
 uniform vec2	u_LightShade;
 uniform vec4	u_FogParams;
