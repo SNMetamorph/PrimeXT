@@ -22,130 +22,11 @@ GNU General Public License for more details.
 #include "enginecallback.h"
 #include "stringlib.h"
 
-sv_matdesc_t	*sv_materials;
+matdesc_t	*sv_materials;
 int		sv_matcount;
 
-terrain_t		*sv_terrains;
+sv_terrain_t *sv_terrains;
 int		sv_numterrains;
-
-/*
-==================
-SV_LoadMaterials
-
-parse material from a given file
-==================
-*/
-void SV_LoadMaterials( const char *path )
-{
-	ALERT( at_aiconsole, "loading %s\n", path );
-
-	char *afile = (char *)LOAD_FILE( (char *)path, NULL );
-
-	if( !afile )
-	{
-		ALERT( at_error, "Cannot open file \"%s\"\n", path );
-		return;
-	}
-
-	sv_matdesc_t *oldmaterials = sv_materials;
-	int oldcount = sv_matcount;
-	char *pfile = afile;
-	char token[256];
-	int depth = 0;
-
-	// count materials
-	while( pfile != NULL )
-	{
-		pfile = COM_ParseFile( pfile, token );
-		if( !pfile ) break;
-
-		if( Q_strlen( token ) > 1 )
-			continue;
-
-		if( token[0] == '{' )
-		{
-			depth++;
-		}
-		else if( token[0] == '}' )
-		{
-			sv_matcount++;
-			depth--;
-		}
-	}
-
-	if( depth > 0 ) ALERT( at_warning, "%s: EOF reached without closing brace\n", path );
-	if( depth < 0 ) ALERT( at_warning, "%s: EOF reached without opening brace\n", path );
-
-	sv_materials = (sv_matdesc_t *)Mem_Alloc( sizeof( sv_matdesc_t ) * sv_matcount );
-	memcpy( sv_materials, oldmaterials, oldcount * sizeof( sv_matdesc_t ));
-	Mem_Free( oldmaterials );
-	pfile = afile; // start real parsing
-
-	int current = oldcount; // starts from
-
-	while( pfile != NULL )
-	{
-		pfile = COM_ParseFile( pfile, token );
-		if( !pfile ) break;
-
-		if( current >= sv_matcount )
-		{
-			ALERT ( at_error, "material parse is overrun %d > %d\n", current, sv_matcount );
-			break;
-		}
-
-		sv_matdesc_t *mat = &sv_materials[current];
-
-		// read the material name
-		Q_strncpy( mat->name, token, sizeof( mat->name ));
-		COM_StripExtension( mat->name );
-
-		// read opening brace
-		pfile = COM_ParseFile( pfile, token );
-		if( !pfile ) break;
-
-		if( token[0] != '{' )
-		{
-			ALERT( at_error, "found %s when expecting {\n", token );
-			break;
-		}
-
-		while( pfile != NULL )
-		{
-			pfile = COM_ParseFile( pfile, token );
-			if( !pfile )
-			{
-				ALERT( at_error, "EOF without closing brace\n" );
-				goto getout;
-			}
-
-			// description end goto next material
-			if( token[0] == '}' )
-			{
-				current++;
-				break;
-			}
-			else if( !Q_stricmp( token, "material" ))
-			{
-				pfile = COM_ParseFile( pfile, token );
-				if( !pfile )
-				{
-					ALERT( at_error, "hit EOF while parsing 'material'\n" );
-					goto getout;
-				}
-
-				mat->effects = COM_FindMatdef( token );
-			}
-			else continue; // skip all other tokens on server-side
-		}
-
-		// apply default values
-		if( !mat->effects ) mat->effects = COM_DefaultMatdef();
-	}
-getout:
-	FREE_FILE( afile );
-	ALERT( at_aiconsole, "%d materials parsed\n", current );
-}
 
 /*
 ==================
@@ -154,16 +35,9 @@ SV_InitMaterials
 parse global material settings
 ==================
 */
-void SV_InitMaterials( void )
+void SV_InitMaterials()
 {
-	int count = 0;
-	char **filenames = GET_FILES_LIST( "scripts/*.mat", &count, 0 );
-
-	sv_matcount = 0;
-
-	// sequentially load materials
-	for( int i = 0; i < count; i++ )
-		SV_LoadMaterials( filenames[i] );
+	COM_InitMaterials(sv_materials, sv_matcount);
 }
 
 /*
@@ -173,24 +47,9 @@ SV_FindMaterial
 This function never failed
 ==================
 */
-sv_matdesc_t *SV_FindMaterial( const char *name )
+matdesc_t *SV_FindMaterial(const char *name)
 {
-	static sv_matdesc_t	defmat;
-
-	if( !defmat.name[0] )
-	{
-		// initialize default material
-		Q_strncpy( defmat.name, "*default", sizeof( defmat.name ));
-		defmat.effects = COM_DefaultMatdef();
-	}
-
-	for( int i = 0; i < sv_matcount; i++ )
-	{
-		if( !Q_stricmp( name, sv_materials[i].name ))
-			return &sv_materials[i];
-	}
-
-	return &defmat;
+	return COM_FindMaterial(name);
 }
 
 /*
@@ -271,7 +130,7 @@ void SV_FreeLandscapes( void )
 {
 	for( int i = 0; i < sv_numterrains; i++ )
 	{
-		terrain_t *terra = &sv_terrains[i];
+		sv_terrain_t *terra = &sv_terrains[i];
 		sv_indexMap_t *im = &terra->indexmap;
 		if( im->pixels ) Mem_Free( im->pixels );
 	}
@@ -327,7 +186,7 @@ void SV_LoadLandscapes( const char *filename )
 	if( depth > 0 ) ALERT( at_warning, "%s: EOF reached without closing brace\n", filepath );
 	if( depth < 0 ) ALERT( at_warning, "%s: EOF reached without opening brace\n", filepath );
 
-	sv_terrains = (terrain_t *)Mem_Alloc( sizeof( terrain_t ) * sv_numterrains );
+	sv_terrains = (sv_terrain_t *)Mem_Alloc( sizeof( sv_terrain_t ) * sv_numterrains );
 	pfile = afile; // start real parsing
 
 	int current = 0;
@@ -343,7 +202,7 @@ void SV_LoadLandscapes( const char *filename )
 			break;
 		}
 
-		terrain_t *terra = &sv_terrains[current];
+		sv_terrain_t *terra = &sv_terrains[current];
 
 		// read the landscape name
 		Q_strncpy( terra->name, token, sizeof( terra->name ));
@@ -428,7 +287,7 @@ SV_FindTerrain
 find the terrain description
 ========================
 */
-terrain_t *SV_FindTerrain( const char *texname )
+sv_terrain_t *SV_FindTerrain( const char *texname )
 {
 	for( int i = 0; i < sv_numterrains; i++ )
 	{
@@ -513,8 +372,7 @@ void Mod_LoadWorld( model_t *mod, const byte *buf )
 		// bad texture? 
 		if( !tx || !tx->name[0] ) continue;
 
-		sv_matdesc_t *desc = SV_FindMaterial( tx->name );
-
+		matdesc_t *desc = SV_FindMaterial( tx->name );
 		tx->effects = desc->effects;
 	}
 

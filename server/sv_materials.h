@@ -18,13 +18,6 @@
 #include "com_model.h"
 #include "material.h"
 
-// material system
-typedef struct
-{
-	matdef_t	*effects;	// hit, impact, particle effects etc
-	char		name[64];
-} sv_matdesc_t;
-
 typedef struct
 {
 	char		name[64];
@@ -40,17 +33,16 @@ typedef struct
 	matdef_t	*effects[MAX_LANDSCAPE_LAYERS];	// layer settings
 } sv_layerMap_t;
 
-typedef struct terrain_s
+typedef struct sv_terrain_s
 {
 	char		name[16];
 	sv_indexMap_t	indexmap;
 	sv_layerMap_t	layermap;
 	int		numLayers;	// count of array textures
 	bool		valid;		// if heightmap was actual
-} terrain_t;
+} sv_terrain_t;
 
 void SV_InitMaterials();
 void COM_InitMatdef();
-sv_matdesc_t *SV_FindMaterial(const char *name);
-terrain_t *SV_FindTerrain(const char *texname);
+sv_terrain_t *SV_FindTerrain(const char *texname);
 void SV_ProcessWorldData(model_t *mod, qboolean create, const byte *buffer);
