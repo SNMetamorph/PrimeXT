@@ -228,7 +228,7 @@ void TextureCoordRanges( s_mesh_t *pmesh, s_texture_t *ptexture )
 		{
 			float min_u = 9999.0f;
 			float max_u =-9999.0f;
-			float k_max_u, n_min_u;
+			float k_max_u = -9999.0f, n_min_u = 9999.0f;
 			k = n = -1;
 
 			for( i = 0; i < pmesh->numtris; i++ ) 
@@ -274,7 +274,7 @@ void TextureCoordRanges( s_mesh_t *pmesh, s_texture_t *ptexture )
 		{
 			float min_v = 9999.0f;
 			float max_v =-9999.0f;
-			float k_max_v, n_min_v;
+			float k_max_v = -9999.0f, n_min_v = 9999.0f;
 			k = n = -1;
 
 			for( i = 0; i < pmesh->numtris; i++ ) 
