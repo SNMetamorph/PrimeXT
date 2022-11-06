@@ -87,6 +87,11 @@ set(DIR_COMMON_OUTPUT
 message(STATUS "Common binaries output directory: ${DIR_COMMON_OUTPUT}")
 
 if(BUILD_CLIENT)
+	set_target_properties(client PROPERTIES DEBUG_POSTFIX "${XASH_BUILD_POSTFIX}")
+	set_target_properties(client PROPERTIES RELEASE_POSTFIX "${XASH_BUILD_POSTFIX}")
+	set_target_properties(client PROPERTIES RELWITHDEBINFO_POSTFIX "${XASH_BUILD_POSTFIX}")
+	set_target_properties(client PROPERTIES MINSIZEREL_POSTFIX "${XASH_BUILD_POSTFIX}")
+
 	if(MSVC)
 		set_target_properties(client PROPERTIES 
 			ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${DIR_COMMON_OUTPUT}
@@ -106,6 +111,11 @@ if(BUILD_CLIENT)
 endif()
 
 if(BUILD_SERVER)
+	set_target_properties(server PROPERTIES DEBUG_POSTFIX "${XASH_BUILD_POSTFIX}")
+	set_target_properties(server PROPERTIES RELEASE_POSTFIX "${XASH_BUILD_POSTFIX}")
+	set_target_properties(server PROPERTIES RELWITHDEBINFO_POSTFIX "${XASH_BUILD_POSTFIX}")
+	set_target_properties(server PROPERTIES MINSIZEREL_POSTFIX "${XASH_BUILD_POSTFIX}")
+
 	if(MSVC)
 		set_target_properties(server PROPERTIES 
 			ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${DIR_COMMON_OUTPUT}
