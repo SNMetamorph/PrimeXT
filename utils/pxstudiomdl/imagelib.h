@@ -72,8 +72,8 @@ typedef struct tga_s
 
 #define IMAGE_MINWIDTH	1			// last mip-level is 1x1
 #define IMAGE_MINHEIGHT	1
-#define IMAGE_MAXWIDTH	4096
-#define IMAGE_MAXHEIGHT	4096
+#define IMAGE_MAXWIDTH	8192
+#define IMAGE_MAXHEIGHT	8192
 #define MIP_MAXWIDTH	1024			// large sizes it's too complicated for quantizer
 #define MIP_MAXHEIGHT	1024			// and provoked color degradation
 
