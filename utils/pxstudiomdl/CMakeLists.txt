@@ -9,6 +9,7 @@ list(APPEND DIR_SOURCES
 	"../../game_shared/matrix.cpp"
 	"../common/cmdlib.cpp"
 	"../common/conprint.cpp"
+	"../common/crashhandler.cpp"
 	"../common/filesystem.cpp"
 	"../common/scriplib.cpp"
 	"../common/stringlib.cpp"
@@ -56,8 +57,8 @@ if(NOT MSVC)
 		target_compile_definitions(${PROJECT_NAME} PRIVATE _snprintf=snprintf _vsnprintf=vsnprintf)
 	endif()
 else()
-	# disable annoying CRT warnings
-	target_compile_definitions(${PROJECT_NAME} PRIVATE _CRT_SECURE_NO_WARNINGS=1 _CRT_NONSTDC_NO_DEPRECATE=1)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE DBGHELP=1)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE _CRT_SECURE_NO_WARNINGS=1 _CRT_NONSTDC_NO_DEPRECATE=1) # disable annoying CRT warnings
 endif()
 
 if(MSVC)
@@ -83,6 +84,17 @@ endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE
 	mimalloc-static
 )
+
+# link platform-specific depedency libraries
+if(NOT MSVC)
+	target_link_libraries(${PROJECT_NAME} PRIVATE
+		dl
+	)
+else()
+	target_link_libraries(${PROJECT_NAME} PRIVATE
+		dbghelp
+	)
+endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)

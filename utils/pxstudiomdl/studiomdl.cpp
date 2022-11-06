@@ -24,6 +24,7 @@ GNU General Public License for more details.
 #include "studiomdl.h"
 #include "activity.h"
 #include "activitymap.h"
+#include "crashhandler.h"
 
 CUtlArray< char >	g_KeyValueText;
 char		filename[1024];
@@ -5423,6 +5424,7 @@ int main( int argc, char **argv )
 
 	atexit( Sys_CloseLog );
 	COM_InitCmdlib( argv, argc );
+	Sys_SetupCrashHandler();
 
 	// impicit path
 	Q_strncpy( cddir[0], ".\\", sizeof( cddir[0] ));
@@ -5537,6 +5539,7 @@ int main( int argc, char **argv )
 
 	SetDeveloperLevel( D_REPORT );
 	Mem_Check(); // report leaks
+	Sys_RestoreCrashHandler();
 
 	return 0;
 }
