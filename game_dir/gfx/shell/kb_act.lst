@@ -45,7 +45,7 @@
 "blank"			"#Valve_Miscellaneous_Title"
 "blank"			"=========================="
 "+showscores"	"#Valve_Display_Scores"
-"snapshot"		"#Valve_Take_Screen_Shot"
+"screenshot"	"#Valve_Take_Screen_Shot"
 "save quick"	"#Valve_Quick_Save"
 "load quick"	"#Valve_Quick_Load"
 "pause"			"#Valve_Pause_Game"

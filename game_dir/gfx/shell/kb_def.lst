@@ -40,7 +40,7 @@
 "MWHEELDOWN"	"invnext"
 "]"				"invnext"
 "q"				"lastinv"
-"F5"			"snapshot"
+"F5"			"screenshot"
 "F6"			"save quick"
 "F7"			"load quick"
 "F10"			"quit"
