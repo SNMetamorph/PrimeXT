@@ -2,8 +2,9 @@
 #include "imgui.h"
 #include "hud.h"
 #include "gl_cvars.h"
+#include "keydefs.h"
 
-bool CImGuiPostFxMenu::m_Visible = false;
+bool CImGuiPostFxMenu::m_bVisible = false;
 
 void CImGuiPostFxMenu::Initialize()
 {
@@ -26,7 +27,7 @@ void CImGuiPostFxMenu::Draw()
 {
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_AlwaysAutoResize;
     LoadParameters();
-    ImGui::Begin("Postprocessing Menu", &m_Visible, windowFlags);
+    ImGui::Begin("Postprocessing Menu", &m_bVisible, windowFlags);
     if (ImGui::Checkbox("Enable", &m_ParametersCache.enabled)) {
         StoreParameters();
     };
@@ -62,7 +63,7 @@ void CImGuiPostFxMenu::Draw()
 
 bool CImGuiPostFxMenu::Active()
 {
-    return m_Visible;
+    return m_bVisible;
 }
 
 bool CImGuiPostFxMenu::CursorRequired()
@@ -72,7 +73,10 @@ bool CImGuiPostFxMenu::CursorRequired()
 
 bool CImGuiPostFxMenu::HandleKey(bool keyDown, int keyNumber, const char *bindName)
 {
-    // block all incoming key events
+    if (keyNumber == K_ESCAPE)
+    {
+        m_bVisible = false;
+    }
     return false;
 }
 
@@ -117,5 +121,5 @@ void CImGuiPostFxMenu::ResetParameters()
 
 void CImGuiPostFxMenu::ShowMaterialEditor()
 {
-    m_Visible = !m_Visible;
+    m_bVisible = !m_bVisible;
 }

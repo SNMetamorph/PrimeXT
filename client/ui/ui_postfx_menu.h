@@ -32,6 +32,6 @@ private:
     void ResetParameters();
 
     static void ShowMaterialEditor();
-    static bool m_Visible;
+    static bool m_bVisible;
     ParametersCache m_ParametersCache;
 };
