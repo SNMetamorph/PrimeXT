@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 7 May 2022)
+// PrimeXT FGD (last updated 7 November 2022)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -1384,6 +1384,26 @@
 	holdtime(string) : "Hold Fade (seconds)" : "0"
 	renderamt(integer) : "Fade Alpha" : 255
 	rendercolor(color255) : "Fade Color (R G B)" : "0 0 0"
+]
+
+@PointClass base(Targetname)  iconsprite("sprites/fgd/glow01.spr") = env_postfx_controller : "PostFX Controller" 
+[
+	spawnflags(flags) =
+	[
+		1: "Fade From" : 0
+		2: "Activator Only" : 0
+	]
+	fade_in_time(string) : "Fade-in (seconds)" : "3.0"
+	brightness(string) : "Brightness [-1..1]" : "0.0"
+	saturation(string) : "Saturation [0..x]" : "1.0"
+	contrast(string) : "Contrast [0..x]" : "1.0"
+	red_level(string) : "Red Level [0..1]" : "1.0"
+	green_level(string) : "Green Level [0..1]" : "1.0"
+	blue_level(string) : "Blue Level [0..1]" : "1.0"
+	vignette_scale(string) : "Vignette Scale [0..1]" : "0.0"
+	film_grain_scale(string) : "Film Grain Scale [0..1]" : "0.0"
+	color_accent_scale(string) : "Color Accent Scale [0..1]" : "0.0"
+	rendercolor(color255) : "Accent Color (R G B)" : "0 0 0"
 ]
 
 @PointClass sprite() base(Targetname, Parent) iconsprite("sprites/fgd/flare6.spr") = env_funnel : "Large Portal Funnel" 
