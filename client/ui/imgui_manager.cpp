@@ -89,8 +89,12 @@ void CImGuiManager::UpdateMouseState()
 void CImGuiManager::UpdateCursorState()
 {
     ImGuiIO &io = ImGui::GetIO();
-    if (m_WindowSystem.CursorRequired()) 
+    bool cursorRequired = m_WindowSystem.CursorRequired();
+    if (cursorRequired) 
     {
+        // it's better to call CursorSelect only when cursor hidden but required
+        // but since we can't find out is cursor hidden or not,
+        // all we can do is just call this function every time
         if (io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange) {
             g_VguiApiFuncs->CursorSelect(dc_arrow);
         }
@@ -100,9 +104,10 @@ void CImGuiManager::UpdateCursorState()
             g_VguiApiFuncs->CursorSelect(m_CursorMapping[imgui_cursor]);
         }
     }
-    else {
+    else if (cursorRequired != m_bWasCursorRequired) {
         g_VguiApiFuncs->CursorSelect(dc_none);
     }
+    m_bWasCursorRequired = cursorRequired;
 }
 
 void CImGuiManager::UpdateKeyModifiers()
