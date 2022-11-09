@@ -432,6 +432,7 @@ void CStudioModelRenderer :: ClearInstanceData( bool create )
 	m_pModelInstance->m_VlCache = NULL;
 	m_pModelInstance->m_FlCache = NULL;
 	m_pModelInstance->m_DecalCount = 0;
+	m_pModelInstance->m_bExternalBones = false;
 	m_pModelInstance->cached_frame = -1;
 	m_pModelInstance->visframe = -1;
 	m_pModelInstance->radius = 0.0f;

@@ -183,6 +183,9 @@ private:
 	// Set up model bone positions
 	void StudioSetupBones( void );	
 
+	// External simulation for bones
+	void StudioCalcBonesExternal( Vector pos[], Vector4D q[] );
+
 	// Find final attachment points
 	void StudioCalcAttachments( matrix3x4 bones[] );
 
@@ -385,6 +388,12 @@ private:
 		matrix3x4			m_pwpnbones[MAXSTUDIOBONES];
 		Vector4D			m_glstudiobones[MAXSTUDIOBONES*3];	// GLSL-friendly compacted matrix4x3
 		Vector4D			m_glweaponbones[MAXSTUDIOBONES*3];	// GLSL-friendly compacted matrix4x3
+
+		// external bones data
+		Radian		m_externalBonesAngles[MAXSTUDIOBONES];
+		Vector		m_externalBonesOrigin[MAXSTUDIOBONES];
+		bool		m_bExternalBones;
+		float		m_flLastExternalBonesUpdate;
 
 		// GLSL cached arrays
 		Vector4D			m_studioquat[MAXSTUDIOBONES];
@@ -758,6 +767,11 @@ inline int R_StudioLookupAttachment(const cl_entity_t *ent, const char *name)
 inline void R_UpdateLatchedVars( cl_entity_t *e, qboolean reset )
 {
 	g_StudioRenderer.UpdateLatchedVars( e, reset );
+}
+
+inline void R_StudioSetBonesExternal( const cl_entity_t *ent, const Vector pos[], const Radian ang[] )
+{
+	g_StudioRenderer.StudioSetBonesExternal( ent, pos, ang );
 }
 
 #endif// GL_STUDIO_H

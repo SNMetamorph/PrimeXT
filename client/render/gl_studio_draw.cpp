@@ -165,6 +165,12 @@ int CStudioModelRenderer :: StudioComputeBBox( void )
 	if( !StudioExtractBbox( m_pStudioHeader, sequence, mins, maxs ))
 		return false;
 
+	if (m_pModelInstance->m_bExternalBones)
+	{
+		mins = RI->currententity->curstate.mins;
+		maxs = RI->currententity->curstate.maxs;
+	}
+
 	// FIXME: some problems in studiomdl compiler?
 	if( BoundsIsCleared( mins, maxs ) || BoundsIsNull( mins, maxs ))
 	{
@@ -1047,9 +1053,14 @@ bool CStudioModelRenderer :: CheckBoneCache( float f )
 		inst->light_update = true;
 	}
 
-	// can't use cache if jiggle bones enabled
+	// can't use cache if jiggle bones enabled, because it need to be updated every frame
 	if (inst->m_pJiggleBones) {
 		return false;
+	}
+
+	// external bones also need to be updated every frame
+	if (m_pModelInstance->m_bExternalBones) {
+		return false; 
 	}
 
 	// no cache for local player
@@ -1094,6 +1105,53 @@ bool CStudioModelRenderer :: CheckBoneCache( float f )
 	cache->gaitframe = e->curstate.fuser1;
 
 	return false;
+}
+
+void CStudioModelRenderer :: StudioSetBonesExternal( const cl_entity_t *ent, const Vector pos[], const Radian ang[] )
+{
+	RI->currententity = (cl_entity_t *)ent;
+	RI->currentmodel = ent->model;
+
+	if (!RI->currentmodel)
+		return;
+
+	// setup global pointers
+	m_pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata(RI->currentmodel);
+
+	// aliasmodel instead of studio?
+	if (!m_pStudioHeader)
+		return;
+
+	if (RI->currententity->modelhandle == INVALID_HANDLE)
+		return; // out of memory ?
+
+	m_pModelInstance = &m_ModelInstances[RI->currententity->modelhandle];
+
+	for (int i = 0; i < m_pStudioHeader->numbones; i++)
+	{
+		m_pModelInstance->m_externalBonesAngles[i] = ang[i];
+		m_pModelInstance->m_externalBonesOrigin[i] = pos[i];
+	}
+
+	m_pModelInstance->m_flLastExternalBonesUpdate = tr.time + 0.1f;
+	m_pModelInstance->m_bExternalBones = true;
+}
+
+void CStudioModelRenderer :: StudioCalcBonesExternal( Vector pos[], Vector4D q[] )
+{
+	if (!m_pModelInstance->m_bExternalBones)
+		return;
+
+	for (int i = 0; i < m_pStudioHeader->numbones; i++)
+	{
+		q[i] = m_pModelInstance->m_externalBonesAngles[i];
+		pos[i] = m_pModelInstance->m_externalBonesOrigin[i];
+	}
+
+	// update is expired, reset extenal bones status
+	if (tr.time > m_pModelInstance->m_flLastExternalBonesUpdate) {
+		m_pModelInstance->m_bExternalBones = false;
+	}
 }
 
 /*
@@ -1205,6 +1263,8 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 		CalculateIKLocks( pIK );
 		pIK->SolveDependencies( pos, q, m_pModelInstance->m_pbones, boneComputed );
 	}
+
+	StudioCalcBonesExternal( pos, q );
 
 	for( int i = 0; i < m_pStudioHeader->numbones; i++ ) 
 	{

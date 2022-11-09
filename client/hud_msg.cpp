@@ -457,15 +457,13 @@ int CHud :: MsgFunc_StudioDecal( const char *pszName, int iSize, void *pbuf )
 
 int CHud :: MsgFunc_SetupBones( const char *pszName, int iSize, void *pbuf )
 {
-	ALERT(at_error, "MsgFunc_SetupBones: rope feature not implemented at the moment, it'll be fixed in future\n");
-	/*
 	static Vector pos[MAXSTUDIOBONES];
 	static Radian ang[MAXSTUDIOBONES];
 
-	BEGIN_READ( pszName, pbuf, iSize );
+	BEGIN_READ(pszName, pbuf, iSize);
 		int entityIndex = READ_SHORT();
 		int boneCount = READ_BYTE();
-		for( int i = 0; i < boneCount; i++ )
+		for (int i = 0; i < boneCount; i++)
 		{
 			pos[i].x = (float)READ_SHORT() * (1.0f/128.0f);
 			pos[i].y = (float)READ_SHORT() * (1.0f/128.0f);
@@ -476,19 +474,15 @@ int CHud :: MsgFunc_SetupBones( const char *pszName, int iSize, void *pbuf )
 		}
 	END_READ();	
 
-	cl_entity_t *ent = GET_ENTITY( entityIndex );
-
-	if( !ent )
+	cl_entity_t *ent = GET_ENTITY(entityIndex);
+	if (!ent)
 	{
 		// something very bad happens...
-		ALERT( at_error, "SetupBones: ent == NULL\n" );
-
+		ALERT(at_error, "MsgFunc_SetupBones: ent == NULL\n");
 		return 1;
 	}
 
-	R_StudioSetBonesExternal( ent, pos, ang );
-
-	*/
+	R_StudioSetBonesExternal(ent, pos, ang);
 	return 1;
 }
 
