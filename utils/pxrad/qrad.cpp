@@ -789,10 +789,15 @@ void ReadLightFile( const char *filename, bool use_direct_path )
 	int	j, argCnt;
 	file_t	*f;
 
-	FS_AllowDirectPaths( use_direct_path );	
-	f = FS_Open( filename, "r", false );
-	FS_AllowDirectPaths( false );	
-	if( !f ) return;
+	FS_AllowDirectPaths(use_direct_path);
+	f = FS_Open(filename, "r", false);
+	FS_AllowDirectPaths(false);
+
+	if (!f) 
+	{
+		MsgDev(D_INFO, "ReadLightFile: failed to parse texlights from '%s'\n", filename);
+		return;
+	}
 
 	while( result != EOF )
 	{
@@ -2676,15 +2681,18 @@ int main( int argc, char **argv )
 	// Set the required global lights filename
 	// try looking in the directory we were run from
 	Q_getwd( global_lights, sizeof( global_lights ) );
-	Q_strncat( global_lights, "/lights.rad", sizeof( global_lights ));
+	Q_strncat( global_lights, "lights.rad", sizeof( global_lights ));
 
 	// Set the optional level specific lights filename
 	COM_FileBase( source, str );
 	Q_snprintf( level_lights, sizeof( level_lights ), "maps/%s.rad", str );
 	if( !FS_FileExists( level_lights, false )) level_lights[0] = '\0';	
 
-	ReadLightFile( global_lights, true );			// Required
-	if( *level_lights )	ReadLightFile( level_lights, false );	// Optional & implied
+	// parse .rad files
+	ReadLightFile(global_lights, true);	// Required
+	if (*level_lights) {
+		ReadLightFile(level_lights, false);	// Optional & implied
+	}
 
 	COM_DefaultExtension( source, ".bsp" );
 
