@@ -22,11 +22,12 @@ GNU General Public License for more details.
 #include "enginecallback.h"
 #include "stringlib.h"
 
-matdesc_t	*sv_materials;
-int		sv_matcount;
+material_t	*sv_materials;
+matdesc_t	*sv_matdesc_list;
+int	sv_matdesc_count;
 
 sv_terrain_t *sv_terrains;
-int		sv_numterrains;
+int	sv_numterrains;
 
 /*
 ==================
@@ -37,7 +38,7 @@ parse global material settings
 */
 void SV_InitMaterials()
 {
-	COM_InitMaterials(sv_materials, sv_matcount);
+	COM_InitMaterials(sv_matdesc_list, sv_matdesc_count);
 }
 
 /*
@@ -343,6 +344,26 @@ static void Mod_ProcessLandscapes( msurface_t *surf, mextrasurf_t *esrf )
 }
 
 /*
+========================
+Mod_CopyMaterialDesc
+
+copy params from description
+to real material struct
+========================
+*/
+static void Mod_CopyMaterialDesc(material_t *mat, const matdesc_t *desc)
+{
+	mat->smoothness = desc->smoothness;
+	mat->detailScale[0] = desc->detailScale[0];
+	mat->detailScale[1] = desc->detailScale[1];
+	mat->reflectScale = desc->reflectScale;
+	mat->refractScale = desc->refractScale;
+	mat->aberrationScale = desc->aberrationScale;
+	mat->reliefScale = desc->reliefScale;
+	mat->effects = desc->effects;
+}
+
+/*
 =================
 Mod_LoadWorld
 
@@ -351,36 +372,46 @@ Mod_LoadWorld
 */
 void Mod_LoadWorld( model_t *mod, const byte *buf )
 {
-	dheader_t	*header;
-	dextrahdr_t *extrahdr;
 	char barename[64];
-	int i;
-
-	header = (dheader_t *)buf;
-	extrahdr = (dextrahdr_t *)((byte *)buf + sizeof( dheader_t ));
-
-	COM_FileBase( mod->name, barename );
+	dheader_t	*header = (dheader_t *)buf;
+	dextrahdr_t *extrahdr = (dextrahdr_t *)((byte *)buf + sizeof(dheader_t));
+	
+	COM_FileBase(mod->name, barename);
 
 	// process landscapes first
-	SV_LoadLandscapes( barename );
+	SV_LoadLandscapes(barename);
 
 	// apply materials to right get them on dedicated server
-	for( i = 0; i < mod->numtextures; i++ )
+	if (sv_materials) {
+		Mem_Free(sv_materials);
+	}
+
+	// TODO also implement freeing this array when game stopping
+	sv_materials = (material_t *)Mem_Alloc(sizeof(material_t) * mod->numtextures); 
+
+	for (int i = 0; i < mod->numtextures; i++)
 	{
 		texture_t *tx = mod->textures[i];
+		material_t *mat = &sv_materials[i];
 
 		// bad texture? 
-		if( !tx || !tx->name[0] ) continue;
+		if (!tx || !tx->name[0]) {
+			continue;
+		}
 
-		matdesc_t *desc = SV_FindMaterial( tx->name );
-		tx->effects = desc->effects;
+		matdesc_t *desc = SV_FindMaterial(tx->name);
+		Mod_CopyMaterialDesc(mat, desc);
+
+		// link texture and material together
+		tx->material = mat;
+		mat->pSource = tx;
 	}
 
 	// mark surfaces for world features
-	for( i = 0; i < mod->numsurfaces; i++ )
+	for (int i = 0; i < mod->numsurfaces; i++)
 	{
 		msurface_t *surf = &mod->surfaces[i];
-		Mod_ProcessLandscapes( surf, surf->info );
+		Mod_ProcessLandscapes(surf, surf->info);
 	}
 }
 

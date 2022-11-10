@@ -1780,11 +1780,11 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr, Vector vecSrc, Vector vecEnd, int 
 	{
 		msurface_t *surf = TRACE_SURFACE(pEntity->edict(), vecSrc, vecEnd);
 
-		if (!surf || !surf->texinfo || !surf->texinfo->texture)
+		if (!surf || !surf->texinfo || !surf->texinfo->texture || !surf->texinfo->texture->material)
 			return 0.0f;
 
 		impactType = IMPACT_MATERIAL;
-		pMat = surf->texinfo->texture->effects;
+		pMat = surf->texinfo->texture->material->effects;
 	}
 	else if (pEntity->pev->solid == SOLID_CUSTOM)
 	{
