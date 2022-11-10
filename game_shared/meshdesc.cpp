@@ -850,15 +850,15 @@ bool CMeshDesc :: StudioLoadCache( const char *pszModelName )
 
 	// read plane representation table
 	lump = &hdr.lumps[LUMP_CLIP_PLANE_INDEXES];
-	m_iAllocPlanes = m_iTotalPlanes = lump->filelen / sizeof( uint );
+	m_iAllocPlanes = m_iTotalPlanes = lump->filelen / sizeof( uint32_t );
 
-	if( lump->filelen <= 0 || lump->filelen % sizeof( uint ))
+	if( lump->filelen <= 0 || lump->filelen % sizeof( uint32_t ))
 	{
 		ALERT( at_warning, "%s has funny size of LUMP_CLIP_PLANE_INDEXES\n", szFilename );
 		goto cleanup;
 	}
 
-	m_srcPlaneElems = (uint *)calloc( sizeof( uint ), m_iAllocPlanes );
+	m_srcPlaneElems = (uint *)calloc( sizeof( uint32_t ), m_iAllocPlanes );
 	m_curPlaneElems = m_srcPlaneElems;
 	file.Seek( lump->fileofs, SEEK_SET );
 
@@ -1003,7 +1003,7 @@ bool CMeshDesc :: StudioSaveCache( const char *pszModelName )
 
 	lump = &hdr.lumps[LUMP_CLIP_PLANE_INDEXES];
 	lump->fileofs = file.Tell();
-	lump->filelen = sizeof( uint ) * m_iTotalPlanes;
+	lump->filelen = sizeof( uint32_t ) * m_iTotalPlanes;
 	file.Write( m_srcPlaneElems, (lump->filelen + 3) & ~3 );
 
 	// update header
@@ -1062,7 +1062,7 @@ bool CMeshDesc :: InitMeshBuild( int numTriangles )
 	m_srcFacets = (mfacet_t *)calloc( sizeof( mfacet_t ), numTriangles );
 	m_srcPlaneHash = (hashplane_t **)calloc( sizeof( hashplane_t* ), m_iHashPlanes );
 	m_srcPlanePool = (hashplane_t *)calloc( sizeof( hashplane_t ), m_iAllocPlanes );
-	m_srcPlaneElems = (uint *)calloc( sizeof( uint ), m_iAllocPlanes );
+	m_srcPlaneElems = (uint *)calloc( sizeof( uint32_t ), m_iAllocPlanes );
 	m_curPlaneElems = m_srcPlaneElems;
 
 	return true;
@@ -1332,7 +1332,7 @@ bool CMeshDesc :: FinishMeshBuild( void )
 		m_mesh.maxs[i] += 1.0f;
 	}
 
-	size_t memsize = (sizeof( mfacet_t ) * m_mesh.numfacets) + (sizeof( mplane_t ) * m_mesh.numplanes) + (sizeof( uint ) * m_iTotalPlanes);
+	size_t memsize = (sizeof( mfacet_t ) * m_mesh.numfacets) + (sizeof( mplane_t ) * m_mesh.numplanes) + (sizeof( uint32_t ) * m_iTotalPlanes);
 	mesh_size = sizeof( m_mesh ) + memsize;
 
 	// create non-fragmented memory piece and move mesh
@@ -1349,7 +1349,7 @@ bool CMeshDesc :: FinishMeshBuild( void )
 	for( i = 0; i < m_mesh.numfacets; i++ )
 	{
 		m_mesh.facets[i].indices = (uint *)buffer;
-		buffer += (sizeof( uint ) * m_srcFacets[i].numplanes);
+		buffer += (sizeof( uint32_t ) * m_srcFacets[i].numplanes);
 	}
 
 	if( buffer != bufend )
