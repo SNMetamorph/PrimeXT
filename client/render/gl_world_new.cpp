@@ -265,8 +265,6 @@ static void Mod_LoadWorldMaterials( void )
 
 		if( mat->gl_detailmap_id > 0 && mat->gl_detailmap_id != tr.grayTexture )
 			SetBits( mat->flags, BRUSH_HAS_DETAIL );
-
-		tx->effects = mat->effects;
 	}
 }
 
