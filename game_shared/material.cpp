@@ -124,22 +124,23 @@ safe version to get matdef_t
 */
 matdef_t *COM_MatDefFromSurface(msurface_t *surf, const Vector &pointOnSurf)
 {
-	if( !surf || !surf->texinfo )
+	if (!surf || !surf->texinfo)
 		return NULL;
 
 	mtexinfo_t *tx = surf->texinfo;
-	int layerNum = COM_GetLayerIndexForPoint( tx->faceinfo, pointOnSurf);
+	int layerNum = COM_GetLayerIndexForPoint(tx->faceinfo, pointOnSurf);
 
-	if( layerNum != -1 && layerNum < MAX_LANDSCAPE_LAYERS )
+	if (layerNum != -1 && layerNum < MAX_LANDSCAPE_LAYERS)
 	{
 		// landscape support
 		return tx->faceinfo->effects[layerNum];
 	}
 
-	if( !tx->texture )
+	if (!tx->texture || !tx->texture->material) {
 		return NULL;
+	}
 
-	return surf->texinfo->texture->effects;	// epic chain!
+	return surf->texinfo->texture->material->effects;
 }
 
 matdef_t *COM_DefaultMatdef()
