@@ -382,11 +382,6 @@ void Mod_LoadWorld( model_t *mod, const byte *buf )
 	SV_LoadLandscapes(barename);
 
 	// apply materials to right get them on dedicated server
-	if (sv_materials) {
-		Mem_Free(sv_materials);
-	}
-
-	// TODO also implement freeing this array when game stopping
 	sv_materials = (material_t *)Mem_Alloc(sizeof(material_t) * mod->numtextures); 
 
 	for (int i = 0; i < mod->numtextures; i++)
@@ -419,6 +414,7 @@ void Mod_FreeWorld( model_t *mod )
 {
 	// free landscapes
 	SV_FreeLandscapes();
+	Mem_Free(sv_materials);
 }
 
 /*
