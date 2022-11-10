@@ -282,19 +282,15 @@ void PrepWorldFrame( void )
 
 void SV_ProcessModelData(model_t *mod, qboolean create, const byte *buffer)
 {
-	CRC32_t ulCrc;
-
-	// g-cont. probably this is redundant :-)
-	if (!IS_DEDICATED_SERVER())
-		return;
-
-	if (FBitSet(mod->flags, MODEL_WORLD))
+	if (FBitSet(mod->flags, MODEL_WORLD)) {
 		SV_ProcessWorldData(mod, create, buffer);
+	}
 
 	if (mod->type == mod_studio)
 	{
 		if (create)
 		{
+			CRC32_t ulCrc;
 			studiohdr_t *src = (studiohdr_t *)buffer;
 			CRC32_INIT(&ulCrc);
 			CRC32_PROCESS_BUFFER(&ulCrc, (byte *)buffer, src->length);
