@@ -1990,7 +1990,7 @@ void CStudioModelRenderer :: CreateStudioCacheVL( const char *modelname, int cac
 		}
 		else if( RI->currentmodel->modelCRC != dml->modelCRC )
 		{
-			ALERT( at_error, "%s failed to create vertex lighting: model CRC %p != %p\n",
+			ALERT( at_error, "%s failed to create vertex lighting: model CRC %08X != %08X\n",
 				modelname, RI->currentmodel->modelCRC, dml->modelCRC );
 		}
 		else
@@ -2037,7 +2037,7 @@ void CStudioModelRenderer :: CreateStudioCacheFL( const char *modelname, int cac
 		}
 		else if( RI->currentmodel->modelCRC != dml->modelCRC )
 		{
-			ALERT( at_error, "%s failed to create surface lighting: model CRC %p != %p\n",
+			ALERT( at_error, "%s failed to create surface lighting: model CRC %08X != %08X\n",
 				modelname, RI->currentmodel->modelCRC, dml->modelCRC );
 		}
 		else

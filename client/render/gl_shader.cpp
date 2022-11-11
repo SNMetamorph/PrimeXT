@@ -833,7 +833,7 @@ static bool GL_LoadGPUBinaryShader( glsl_program_t *shader, const char *vpname, 
 	if( !GL_Support( R_BINARY_SHADER_EXT ))
 		return false;
 
-	Q_snprintf( szFilename, sizeof( szFilename ), "cache/glsl/%p.bin", checksum );
+	Q_snprintf( szFilename, sizeof( szFilename ), "cache/glsl/%08X.bin", checksum );
 	Q_snprintf( szVpSource, sizeof( szVpSource ), "glsl/%s_vp.glsl", vpname );
 	Q_snprintf( szFpSource, sizeof( szFpSource ), "glsl/%s_fp.glsl", fpname );
 
@@ -873,7 +873,7 @@ static bool GL_SaveGPUBinaryShader(glsl_program_t *shader, uint checksum)
 	if (!GL_Support(R_BINARY_SHADER_EXT))
 		return false;
 
-	Q_snprintf(szFilename, sizeof(szFilename), "cache/glsl/%p.bin", checksum);
+	Q_snprintf(szFilename, sizeof(szFilename), "cache/glsl/%08X.bin", checksum);
 	pglGetProgramiv(shader->handle, GL_PROGRAM_BINARY_LENGTH, &length);
 
 	if (length <= 0) 
@@ -886,7 +886,7 @@ static bool GL_SaveGPUBinaryShader(glsl_program_t *shader, uint checksum)
 
 	if (result != 0)
 	{
-		ALERT(at_aiconsole, "^2GL_SaveGPUBinaryShader: ^7wrote \"%s\" cache (length %i, hash %p)\n", shader->name, length, checksum);
+		ALERT(at_aiconsole, "^2GL_SaveGPUBinaryShader: ^7wrote \"%s\" cache (length %i, hash %08X)\n", shader->name, length, checksum);
 		return true;
 	}
 	return false;
