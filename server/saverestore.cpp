@@ -983,40 +983,36 @@ int CRestore::ReadEntVars( const char *pname, DATAMAP *pMap, entvars_t *pev )
 
 int CRestore::ReadFields( const char *pname, const void *pBaseData, DATAMAP *pMap, TYPEDESCRIPTION *pFields, int fieldCount )
 {
-	unsigned short	i, token;
 	int		lastField, fileCount;
 	HEADER	header;
 
-	i = ReadShort();
-	ASSERT( i == sizeof(int) );			// First entry should be an int
-
-	token = ReadShort();
+	// First entry should be an int
+	ASSERT(ReadShort() == sizeof(int));
 
 	// Check the struct name
-	if ( token != TokenHash(pname) )			// Field Set marker
+	if (ReadShort() != TokenHash(pname))			// Field Set marker
 	{
-//		ALERT( at_error, "Expected %s found %s!\n", pname, BufferPointer() );
-		BufferRewind( 2*sizeof(short) );
+		//ALERT( at_error, "Expected %s found %s!\n", pname, BufferPointer() );
+		BufferRewind(2 * sizeof(short));
 		return 0;
 	}
 
 	// Skip over the struct name
 	fileCount = ReadInt();						// Read field count
-
 	lastField = 0;								// Make searches faster, most data is read/written in the same order
 
 	// Clear out base data
-	for ( i = 0; i < fieldCount; i++ )
+	for (int i = 0; i < fieldCount; i++)
 	{
 		// Don't clear global fields
-		if ( !m_global || !(pFields[i].flags & FTYPEDESC_GLOBAL) )
-			memset( ((char *)pBaseData + pFields[i].fieldOffset), 0, pFields[i].fieldSize * gSizes[pFields[i].fieldType] );
+		if (!m_global || !(pFields[i].flags & FTYPEDESC_GLOBAL))
+			memset(((char *)pBaseData + pFields[i].fieldOffset), 0, pFields[i].fieldSize * gSizes[pFields[i].fieldType]);
 	}
 
-	for ( i = 0; i < fileCount; i++ )
+	for (int i = 0; i < fileCount; i++)
 	{
-		BufferReadHeader( &header );
-		lastField = ReadField( pBaseData, pMap, pFields, fieldCount, lastField, header.size, m_pdata->pTokens[header.token], header.pData );
+		BufferReadHeader(&header);
+		lastField = ReadField(pBaseData, pMap, pFields, fieldCount, lastField, header.size, m_pdata->pTokens[header.token], header.pData);
 		lastField++;
 	}
 	
