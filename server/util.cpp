@@ -170,6 +170,11 @@ void DumpStrings_f( void )
 	g_GameStringPool.Dump();
 }
 
+extern "C" DLLEXPORT void custom(entvars_t *pev) 
+{
+	EntityFactoryDictionary()->Create(STRING(pev->classname), pev);
+}
+
 // This does the necessary casting / extract to grab a pointer to a member function as a void *
 // UNDONE: Cast to BASEPTR or something else here?
 #define EXTRACT_VOID_FUNCTIONPTR(x)		(*(void **)(&(x)))
