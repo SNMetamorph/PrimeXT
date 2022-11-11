@@ -828,7 +828,7 @@ bool CMeshDesc :: StudioLoadCache( const char *pszModelName )
 
 	if( hdr.id != IDCLIPHEADER )
 	{
-		ALERT( at_warning, "%s has wrong id (%p should be %p)\n", szFilename, hdr.id, IDCLIPHEADER );
+		ALERT( at_warning, "%s has wrong id (%X should be %X)\n", szFilename, hdr.id, IDCLIPHEADER );
 		goto cleanup;
 	}
 
