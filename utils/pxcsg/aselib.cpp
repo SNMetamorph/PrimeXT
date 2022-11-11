@@ -529,7 +529,7 @@ static void ASE_KeyMESH_TVERTLIST( const char *token )
 	}
 	else
 	{
-		COM_FatalError( "Unknown token '%s' while parsing MESH_TVERTLIST\n" );
+		COM_FatalError( "Unknown token '%s' while parsing MESH_TVERTLIST\n", token );
 	}
 }
 
