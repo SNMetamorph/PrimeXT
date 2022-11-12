@@ -6,7 +6,7 @@
       "displayName": "Windows Common Base Preset",
       "description": " ",
       "hidden": true,
-      "generator": "Visual Studio 16 2019",
+      "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
     },
@@ -17,8 +17,8 @@
       "inherits": [ "Windows-Common-Base" ],
       "hidden": true,
       "architecture": {
-        "value": "win32",
-        "strategy": "set"
+        "value": "x86",
+        "strategy": "external"
       }
     },
     {
@@ -47,7 +47,7 @@
       "hidden": true,
       "architecture": {
         "value": "x64",
-        "strategy": "set"
+        "strategy": "external"
       }
     },
     {
