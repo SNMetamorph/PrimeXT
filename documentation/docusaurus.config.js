@@ -129,6 +129,9 @@ const config = {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
       },
+      metadata: [
+        { name: 'keywords', content: 'hlsdk, gamedev, programming, open source, half-life, xash3d, fwgs, goldsrc, sdk, opengl, physx, xashxt, modding, snmetamorph' }
+      ]
     }),
 };
 
