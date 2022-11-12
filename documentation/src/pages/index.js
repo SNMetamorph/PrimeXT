@@ -35,7 +35,7 @@ export default function Home() {
   return (
     <Layout
       title={`Main Page`}
-      description="Description will go into a meta tag in <head />">
+      description="Modern SDK for the Xash3D FWGS engine, with cross-platform support and improved graphics/physics, while retaining all the features and approaches to work inherent in GoldSrc and Xash3D">
       <HomepageHeader />
       <main>
         <HomepageFeatures />
