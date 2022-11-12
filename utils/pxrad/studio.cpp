@@ -538,7 +538,9 @@ bool StudioConstructMesh( entity_t *ent, void *extradata, const char *modname, u
 	GetVectorForKey( ent, "origin", origin );
 	GetVectorForKey( ent, "angles", angles );
 
-	angles[0] = -angles[0]; // Stupid quake bug workaround
+	// TODO enable this when compatibility with GoldSrc is turned on
+	//angles[0] = -angles[0]; // Stupid quake bug workaround
+
 	scale = FloatForKey( ent, "scale" );
 	body = IntForKey( ent, "body" );
 	skin = IntForKey( ent, "skin" );
