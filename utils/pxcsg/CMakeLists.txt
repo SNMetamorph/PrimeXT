@@ -19,6 +19,7 @@ list(APPEND DIR_SOURCES
 	"../common/wadfile.cpp"
 	"../common/zone.cpp"
 	"../common/crashhandler.cpp"
+	"${CMAKE_SOURCE_DIR}/public/build_info.cpp"
 	"aselib.cpp"
 	"brush.cpp"
 	"csg4.cpp"

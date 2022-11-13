@@ -9,6 +9,7 @@
 ****/
 
 #include "csg.h"
+#include "build_info.h"
 
 CUtlArray<mapent_t>	g_mapentities;
 brush_t		g_mapbrushes[MAX_MAP_BRUSHES];
@@ -1061,11 +1062,18 @@ bool ParseMapEntity( CUtlArray<mapent_t> *entities, bool external = false )
 		}
 	}
 
-	if( !external && entities->Count() == 1 )
+	if (!external && entities->Count() == 1)
 	{
 		// let the map tell which version of the compiler it comes from, to help tracing compiler bugs.
-		Q_snprintf( str, sizeof( str ), "%s %s (%s)", COMPILERSTRING, VERSIONSTRING, __DATE__ );
-		SetKeyValue( (entity_t *)mapent, "_compiler", str ); // g-cont. don't pass this field into game dlls
+		Q_snprintf(str, sizeof(str), "%s %s (%s / %s / %s / %s)",
+			COMPILERSTRING,
+			VERSIONSTRING,
+			BuildInfo::GetDate(),
+			BuildInfo::GetCommitHash(),
+			BuildInfo::GetArchitecture(),
+			BuildInfo::GetPlatform()
+		);
+		SetKeyValue((entity_t *)mapent, "_compiler", str); // g-cont. don't pass this field into game dlls
 	}
 
 	// save off to displaying the map format
