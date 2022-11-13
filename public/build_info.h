@@ -17,7 +17,9 @@ GNU General Public License for more details.
 
 namespace BuildInfo
 {
-	const char *GetOS();
+	const char *GetPlatform();
 	const char *GetArchitecture();
 	const char *GetCommitHash();
+	const char *GetGitHubLink();
+	const char *GetDate();
 };

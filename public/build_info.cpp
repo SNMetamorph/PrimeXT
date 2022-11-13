@@ -18,11 +18,11 @@ GNU General Public License for more details.
 
 /*
 ============
-BuildInfo::GetOS
+BuildInfo::GetPlatform
 Returns current name of operating system. Without any spaces.
 ============
 */
-const char *BuildInfo::GetOS()
+const char *BuildInfo::GetPlatform()
 {
 #if XASH_MINGW
 	return "win32-mingw";
@@ -136,4 +136,26 @@ const char *BuildInfo::GetCommitHash()
 #else
 	return "notset";
 #endif
+}
+
+/*
+=============
+BuildInfo::GetGitHubLink
+Returns project's GitHub repository URL.
+=============
+*/
+const char *BuildInfo::GetGitHubLink()
+{
+	return "https://github.com/SNMetamorph/PrimeXT";
+}
+
+/*
+=============
+BuildInfo::GetGitHubLink
+Returns build host machine date when program was built.
+=============
+*/
+const char *BuildInfo::GetDate()
+{
+	return __DATE__;
 }
