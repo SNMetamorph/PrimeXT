@@ -14,6 +14,7 @@
 #include "threads.h"
 #include "crashhandler.h"
 #include "app_info.h"
+#include "build_info.h"
 
 int	g_numportals;
 int	g_portalleafs;
@@ -641,7 +642,12 @@ int main( int argc, char **argv )
 
 	Sys_InitLogAppend( va( "%s.log", source ));
 
-	Msg( "\n%s %s (%s)\n", TOOLNAME, VERSIONSTRING, __DATE__ );
+	Msg( "\n%s %s (%s, commit %s, arch %s, platform %s)\n", TOOLNAME, VERSIONSTRING, 
+		BuildInfo::GetDate(), 
+		BuildInfo::GetCommitHash(), 
+		BuildInfo::GetArchitecture(), 
+		BuildInfo::GetPlatform()
+	);
 
 	PrintVisSettings();
 
