@@ -777,7 +777,7 @@ static bool GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum s
 		Q_snprintf( filename, sizeof( filename ), "glsl/%s_fp.glsl", name );
 		break;
 	default:
-		ALERT( at_error, "^1GL_LoadGPUShader: ^7unknown shader type %p\n", shaderType );
+		ALERT( at_error, "^1GL_LoadGPUShader: ^7unknown shader type 0x%x\n", shaderType );
 		return false;
 	}
 
