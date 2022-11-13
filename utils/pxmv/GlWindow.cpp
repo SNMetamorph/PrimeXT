@@ -445,7 +445,8 @@ void GlWindow :: draw( void )
 
 			if( g_viewerSettings.pending_export_uvmap && g_viewerSettings.uvmapPath[0] )
 			{
-				mxImage *image = new mxImage ();
+				mxImage *image = (mxImage *)Mem_Alloc(sizeof(mxImage));
+				new (image) mxImage();
 
 				if( image->create((int)w, (int)h, 24 ))
 				{
@@ -461,7 +462,7 @@ void GlWindow :: draw( void )
 				// cleanup
 				memset( g_viewerSettings.uvmapPath, 0, sizeof( g_viewerSettings.uvmapPath ));
 				g_viewerSettings.pending_export_uvmap = false;
-				delete image;
+				Mem_Free(image);
 			}
 
 			glClear( GL_DEPTH_BUFFER_BIT );
@@ -715,8 +716,7 @@ int GlWindow :: loadTextureImage( mxImage *image, int name )
 			}
 		}
 
-		delete image;
-
+		Mem_Free(image);
 		return name;
 	}
 
@@ -788,18 +788,20 @@ void GlWindow :: dumpViewport( const char *filename )
 	int w = w2();
 	int h = h2();
 
-	mxImage *image = new mxImage ();
-	if( image->create( w, h, 24 ))
+	mxImage *image = (mxImage *)Mem_Alloc(sizeof(mxImage));
+	new (image) mxImage();
+
+	if (image && image->create( w, h, 24 ))
 	{
 		glReadBuffer( GL_FRONT );
 		glReadPixels( 0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, image->data );
 
 		image->flip_vertical();
 
-		if( !mxBmpWrite( filename, image ))
+		if (!mxBmpWrite( filename, image ))
 			mxMessageBox( this, "Error writing screenshot.", APP_TITLE_STR, MX_MB_OK|MX_MB_ERROR );
 
-		delete image;
+		Mem_Free(image);
 	}
 }
 
@@ -870,12 +872,15 @@ mxImage *GlWindow::readBmpFromBuffer(const byte * buffer, size_t size)
 		buffer += cbPalBytes;
 	}
 
-	image = new mxImage();
-	if (!image) goto GetOut;
+	image = (mxImage *)Mem_Alloc(sizeof(mxImage));
+	new (image) mxImage();
+
+	if (!image) 
+		goto GetOut;
 
 	if (!image->create(bmih.biWidth, abs(bmih.biHeight), bmih.biBitCount))
 	{
-		delete image;
+		Mem_Free(image);
 		goto GetOut;
 	}
 
@@ -913,7 +918,7 @@ mxImage *GlWindow::readBmpFromBuffer(const byte * buffer, size_t size)
 	pbHold = pb = (byte *)Mem_Alloc(cbBmpBits * sizeof(byte));
 	if (pb == 0)
 	{
-		delete image;
+		Mem_Free(image);
 		goto GetOut;
 	}
 
@@ -970,7 +975,7 @@ mxImage *GlWindow::readBmpFromBuffer(const byte * buffer, size_t size)
 					break;
 				default:
 					Mem_Free(pbHold);
-					delete image;
+					Mem_Free(image);
 					goto GetOut;
 			}
 		}
