@@ -30,6 +30,7 @@
 #include "stringlib.h"
 #include "app_info.h"
 #include "build.h"
+#include "build_info.h"
 
 MDLViewer *g_MDLViewer = 0;
 static char recentFiles[8][256] = { "", "", "", "", "", "", "", "" };
@@ -471,21 +472,25 @@ MDLViewer::handleEvent (mxEvent *event)
 
 #ifdef WIN32
 		case IDC_HELP_GOTOHOMEPAGE:
-			ShellExecute (0, "open", APP_GITHUB_LINK, 0, 0, SW_SHOW);
+			ShellExecute(0, "open", BuildInfo::GetGitHubLink(), 0, 0, SW_SHOW);
 			break;
 #endif
 
 		case IDC_HELP_ABOUT:
-			mxMessageBox (this,
+			mxMessageBox(this, va(
 				APP_TITLE_STR " " APP_VERSION_STRING2 "\n"
 				"Based on P2MV code by Unkle Mike\n\n"
 				"Left-drag to rotate.\n"
 				"Right-drag to zoom.\n"
 				"Shift-left-drag to x-y-pan.\n"
 				"Ctrl-drag to move lights.\n\n"
-				"Build:\t" APP_BUILD_DATE "\n"
-				"Web:\t" APP_GITHUB_LINK, "About PXMV",
-				MX_MB_OK | MX_MB_INFORMATION );
+				"Build:\t%s, commit %s, arch %s\n"
+				"Web:\t%s", 
+				BuildInfo::GetDate(), 
+				BuildInfo::GetCommitHash(),
+				BuildInfo::GetArchitecture(),
+				BuildInfo::GetGitHubLink()), 
+				"About", MX_MB_OK | MX_MB_INFORMATION);
 			break;
 		
 		} //switch (event->action)
