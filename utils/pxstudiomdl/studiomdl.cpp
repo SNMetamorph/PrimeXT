@@ -25,6 +25,7 @@ GNU General Public License for more details.
 #include "activity.h"
 #include "activitymap.h"
 #include "crashhandler.h"
+#include "build_info.h"
 
 CUtlArray< char >	g_KeyValueText;
 char		filename[1024];
@@ -5414,7 +5415,12 @@ void PrintTitle()
 {
 	Msg("	PrimeXT Studio Model Compiler\n");
 	Msg("	Based on P2:Savior Studio Model Compiler\n");
-	Msg("	Copyright (^1c^7) XashXT Group 2018\n\n\n");
+	Msg("	Copyright (^1c^7) XashXT Group 2018\n");
+	Msg("	Built %s, commit %s, arch %s\n\n\n", 
+		BuildInfo::GetDate(), 
+		BuildInfo::GetCommitHash(), 
+		BuildInfo::GetArchitecture()
+	);
 }
 
 int main( int argc, char **argv )

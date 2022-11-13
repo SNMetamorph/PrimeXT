@@ -14,6 +14,7 @@ list(APPEND DIR_SOURCES
 	"../common/scriplib.cpp"
 	"../common/stringlib.cpp"
 	"../common/zone.cpp"
+	"${CMAKE_SOURCE_DIR}/public/build_info.cpp"
 	"imagelib.cpp"
 	"optimize.cpp"
     "quantizer.cpp"
