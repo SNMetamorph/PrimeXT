@@ -16,6 +16,7 @@ list(APPEND DIR_SOURCES
 	"../common/threads.cpp"
 	"../common/zone.cpp"
 	"../common/crashhandler.cpp"
+	"${CMAKE_SOURCE_DIR}/public/build_info.cpp"
 	"detail.cpp"
 	"merge.cpp"
 	"outside.cpp"
