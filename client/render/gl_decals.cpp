@@ -662,23 +662,13 @@ static void R_DecalComputeTBN( brushdecal_t *decal )
 			tVect += triTVect[vertToTriMap[vertID][triID]];
 		}
 
-		// make decals TBN right-side coordinate system for accordance
-		Vector tmpVect = CrossProduct( tVect, sVect );
-		bool leftHanded = DotProduct( tmpVect, normal ) < 0.0f;
+		sVect = sVect.Normalize();
+		tVect = tVect.Normalize();			
+		sVect = sVect - normal * DotProduct(normal, sVect);
+		tVect = CrossProduct(normal, sVect) * Q_sign(DotProduct(CrossProduct(normal, sVect), tVect));	
 
-		if( !leftHanded )
-		{
-			tVect = CrossProduct( normal, sVect );
-			sVect = CrossProduct( tVect, normal );
-		}
-		else
-		{
-			tVect = CrossProduct( sVect, normal );
-			sVect = CrossProduct( normal, tVect );
-		}
-
-		finalSVect = -sVect.Normalize();
-		finalTVect = -tVect.Normalize();
+		finalSVect = sVect.Normalize();
+		finalTVect = tVect.Normalize();
 	}
 }
 	

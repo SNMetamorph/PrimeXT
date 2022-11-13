@@ -967,19 +967,10 @@ void CStudioModelRenderer :: ComputeDecalTBN( DecalBuildInfo_t& build )
 			tVect += triTVect[vertToTriMap[vertID][triID]];
 		}
 
-		Vector tmpVect = CrossProduct( tVect, sVect );
-		bool leftHanded = DotProduct( tmpVect, normal ) < 0.0f;
-
-		if( !leftHanded )
-		{
-			tVect = CrossProduct( normal, sVect );
-			sVect = CrossProduct( tVect, normal );
-		}
-		else
-		{
-			tVect = CrossProduct( sVect, normal );
-			sVect = CrossProduct( normal, tVect );
-		}
+        sVect = sVect.Normalize();
+        tVect = tVect.Normalize();            
+        sVect = sVect - normal * DotProduct(normal, sVect);
+        tVect = CrossProduct(normal, sVect) * Q_sign(DotProduct(CrossProduct(normal, sVect), tVect));
 
 		finalSVect = sVect.Normalize();
 		finalTVect = tVect.Normalize();
