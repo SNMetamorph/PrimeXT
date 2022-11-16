@@ -20,7 +20,7 @@ set(SVDLL_SOURCES
 	"${CMAKE_SOURCE_DIR}/game_shared/virtualfs.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/trace.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/meshdesc.cpp"
-	"${CMAKE_SOURCE_DIR}/game_shared/crc.cpp"
+	"${CMAKE_SOURCE_DIR}/public/crclib.cpp"
 )
 
 list(APPEND SVDLL_SOURCES
