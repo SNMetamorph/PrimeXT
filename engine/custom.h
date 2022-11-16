@@ -57,8 +57,6 @@ typedef struct resourceinfo_s
 #define RES_REQUESTED	   (1<<3)	// Already requested a download of this one
 #define RES_PRECACHED	   (1<<4)	// Already precached
 
-#include "crc.h"
-
 typedef struct resource_s
 {
 	char              szFileName[MAX_QPATH]; // File name to download/precache.
