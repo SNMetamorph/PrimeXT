@@ -19,7 +19,6 @@ GNU General Public License for more details.
 
 #include "com_model.h"
 #include "vector.h"
-#include "crc.h"
 
 #define MAX_MAT_SOUNDS		8
 #define IMPACT_NONE			0
@@ -52,7 +51,7 @@ struct matdesc_t
 	matdef_t	*effects;			// hit, impact, particle effects etc
 	char		name[64];
 	unsigned short	dt_texturenum;	// detail texture load directly from material specific
-	CRC32_t		hash;
+	uint32_t	hash;
 
 	char		diffusemap[64];
 	char		normalmap[64];
@@ -69,8 +68,8 @@ void COM_InitMatdef();
 matdesc_t *COM_DefaultMatdesc();
 void COM_LoadMaterials(const char *path);
 matdesc_t *COM_FindMaterial(const char *texName);
-matdesc_t *COM_FindMaterial(CRC32_t matHash);
+matdesc_t *COM_FindMaterial(uint32_t matHash);
 void COM_InitMaterials(matdesc_t *&matlist, int &matcount);
-CRC32_t COM_GetMaterialHash(matdesc_t *mat);
+uint32_t COM_GetMaterialHash(matdesc_t *mat);
 
 #endif//MATERIAL_H

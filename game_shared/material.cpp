@@ -681,7 +681,7 @@ matdesc_t *COM_FindMaterial(const char *texName)
 	return COM_DefaultMatdesc();
 }
 
-matdesc_t *COM_FindMaterial(CRC32_t matHash)
+matdesc_t *COM_FindMaterial(uint32_t matHash)
 {
 	matdesc_t *&matlist = *g_matDescList;
 	int &matcount = *g_matDescCount;
@@ -714,14 +714,14 @@ void COM_InitMaterials(matdesc_t *&matlist, int &matcount)
 	}
 }
 
-CRC32_t COM_GetMaterialHash(matdesc_t *mat)
+uint32_t COM_GetMaterialHash(matdesc_t *mat)
 {
 	if (mat)
 	{
-		CRC32_t hash;
+		uint32_t hash;
 		CRC32_Init(&hash);
 		CRC32_ProcessBuffer(&hash, mat->name, strlen(mat->name));
-		CRC32_Final(&hash);
+		hash = CRC32_Final(hash);
 		return hash;
 	}
 	return 0;
