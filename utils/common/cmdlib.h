@@ -104,12 +104,4 @@ void FS_AllowDirectPaths(bool enable);
 size_t FS_FileLength(file_t *f);
 int FS_Close(file_t *file);
 
-//
-// crclib.c
-//
-void CRC32_Init(uint32_t *pulCRC);
-void CRC32_Final(uint32_t *pulCRC);
-void CRC32_ProcessByte(uint32_t *pulCRC, byte ch);
-void CRC32_ProcessBuffer(uint32_t *pulCRC, const void *pBuffer, int nBuffer);
-
 #endif
