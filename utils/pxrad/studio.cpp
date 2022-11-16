@@ -14,6 +14,7 @@
 #include "../../engine/studio.h"
 #include "model_trace.h"
 #include "imagelib.h"
+#include "crclib.h"
 #include <mimalloc-override.h>
 
 typedef struct
@@ -659,7 +660,7 @@ void LoadStudio( entity_t *ent, void *extradata, int fileLength, int flags )
 #if defined( HLRAD_VERTEXLIGHTING ) || defined( HLRAD_LIGHTMAPMODELS )
 	CRC32_Init( &modelCRC );
 	CRC32_ProcessBuffer( &modelCRC, extradata, phdr->length );
-	CRC32_Final( &modelCRC );
+	modelCRC = CRC32_Final( modelCRC );
 #endif
 	// well the textures place in separate file (very stupid case)
 	if( phdr->numtextures == 0 )
