@@ -17,6 +17,7 @@ GNU General Public License for more details.
 #include "crclib.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <cctype>
 
 #define NUM_BYTES		256
@@ -142,7 +143,7 @@ JustAfew:
 	// the main loop is aligned and only has to worry about 8 byte at a time.
 	// The low-order two bits of pb and nBuffer in total control the
 	// upfront work.
-	nFront = ((uint32_t)pb) & 3;
+	nFront = ((ptrdiff_t)pb) & 3;
 	nBuffer -= nFront;
 
 	switch( nFront )
