@@ -17,7 +17,6 @@
 #define PM_TRACE_H
 
 #include <studio.h>
-#include "crc.h"
 
 typedef struct
 {
@@ -41,7 +40,7 @@ struct pmtrace_s
 	union 
 	{
 		int	hitgroup;		// 0 == generic, non zero is specific body part
-		CRC32_t materialHash;	// only if ent->v.solid == SOLID_CUSTOM!
+		uint32_t materialHash;	// only if ent->v.solid == SOLID_CUSTOM!
 	};
 };
 
