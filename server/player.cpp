@@ -203,6 +203,7 @@ int gmsgMusicFade = 0;
 int gmsgRainData = 0;
 int gmsgStatusIcon = 0;
 int gmsgSetupBones = 0;
+int gmsgPostFxSettings = 0;
 
 void LinkUserMessages( void )
 {
@@ -258,6 +259,7 @@ void LinkUserMessages( void )
 	gmsgMusicFade = REG_USER_MSG( "MusicFade", 2 );
 	gmsgStatusIcon = REG_USER_MSG( "StatusIcon", -1 );
 	gmsgSetupBones = REG_USER_MSG( "SetupBones", -1 );
+	gmsgPostFxSettings = REG_USER_MSG("PostFxSettings", -1);
 }
 
 LINK_ENTITY_TO_CLASS( player, CBasePlayer );
