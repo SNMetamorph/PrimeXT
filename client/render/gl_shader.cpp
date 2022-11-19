@@ -311,6 +311,7 @@ static uniformTable_t glsl_uniformTable[] =
 { "u_ColorLevels",		UT_COLORLEVELS,		0 },
 { "u_VignetteScale",	UT_VIGNETTESCALE,		0 },
 { "u_FilmGrainScale",	UT_FILMGRAINSCALE,		0 },
+{ "u_AccentColor",		UT_ACCENTCOLOR,		0 },
 { "u_LightGamma",		UT_LIGHTGAMMA,		UFL_GLOBAL_PARM },
 { "u_LightScale",		UT_LIGHTSCALE,		UFL_GLOBAL_PARM },
 { "u_LightThreshold",	UT_LIGHTTHRESHOLD,		UFL_GLOBAL_PARM },

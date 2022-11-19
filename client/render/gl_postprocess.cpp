@@ -590,6 +590,12 @@ void V_RenderPostEffect( word hProgram )
 		case UT_FILMGRAINSCALE:
 			u->SetValue(post.fxParameters.GetFilmGrainScale());
 			break;
+		case UT_ACCENTCOLOR:
+		{
+			const Vector &accentColor = post.fxParameters.GetAccentColor();
+			u->SetValue(accentColor.x, accentColor.y, accentColor.z, post.fxParameters.GetColorAccentScale());
+			break;
+		}
 		case UT_BLURFACTOR:
 			u->SetValue( post.blurFactor[0], post.blurFactor[1] );
 			break;
