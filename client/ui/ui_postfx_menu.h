@@ -1,4 +1,5 @@
 #include "imgui_window.h"
+#include "vector.h"
 
 class CImGuiPostFxMenu : public IImGuiWindow
 {
@@ -25,13 +26,15 @@ private:
         float blueLevel;
         float vignetteScale;
         float filmGrainScale;
+        float colorAccentScale;
+        Vector accentColor;
     };
     
     void LoadParameters();
     void StoreParameters();
     void ResetParameters();
 
-    static void ShowMaterialEditor();
+    static void ShowMenu();
     static bool m_bVisible;
     ParametersCache m_ParametersCache;
 };

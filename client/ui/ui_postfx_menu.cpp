@@ -1,4 +1,5 @@
 #include "ui_postfx_menu.h"
+#include "postfx_controller.h"
 #include "imgui.h"
 #include "hud.h"
 #include "gl_cvars.h"
@@ -8,7 +9,7 @@ bool CImGuiPostFxMenu::m_bVisible = false;
 
 void CImGuiPostFxMenu::Initialize()
 {
-    gEngfuncs.pfnAddCommand("r_postfx_showmenu", CImGuiPostFxMenu::ShowMaterialEditor);
+    gEngfuncs.pfnAddCommand("r_postfx_showmenu", CImGuiPostFxMenu::ShowMenu);
 }
 
 void CImGuiPostFxMenu::VidInitialize()
@@ -82,44 +83,41 @@ bool CImGuiPostFxMenu::HandleKey(bool keyDown, int keyNumber, const char *bindNa
 
 void CImGuiPostFxMenu::LoadParameters()
 {
+    CPostFxParameters state = g_PostFxController.GetState();
     m_ParametersCache.enabled = CVAR_TO_BOOL(r_postfx_enable);
-    m_ParametersCache.brightness = r_postfx_brightness->value;
-    m_ParametersCache.saturation = r_postfx_saturation->value;
-    m_ParametersCache.contrast = r_postfx_contrast->value;
-    m_ParametersCache.redLevel = r_postfx_redlevel->value;
-    m_ParametersCache.greenLevel = r_postfx_greenlevel->value;
-    m_ParametersCache.blueLevel = r_postfx_bluelevel->value;
-    m_ParametersCache.vignetteScale = r_postfx_vignettescale->value;
-    m_ParametersCache.filmGrainScale = r_postfx_filmgrainscale->value;
+    m_ParametersCache.brightness = state.GetBrightness();
+    m_ParametersCache.saturation = state.GetSaturation();
+    m_ParametersCache.contrast = state.GetContrast();
+    m_ParametersCache.redLevel = state.GetRedLevel();
+    m_ParametersCache.greenLevel = state.GetGreenLevel();
+    m_ParametersCache.blueLevel = state.GetBlueLevel();
+    m_ParametersCache.vignetteScale = state.GetVignetteScale();
+    m_ParametersCache.filmGrainScale = state.GetFilmGrainScale();
 }
 
 void CImGuiPostFxMenu::StoreParameters()
 {
+    CPostFxParameters state;
     r_postfx_enable->value = m_ParametersCache.enabled ? 1.0f : 0.0f;
-    r_postfx_brightness->value = m_ParametersCache.brightness;
-    r_postfx_saturation->value = m_ParametersCache.saturation;
-    r_postfx_contrast->value = m_ParametersCache.contrast;
-    r_postfx_redlevel->value = m_ParametersCache.redLevel;
-    r_postfx_greenlevel->value = m_ParametersCache.greenLevel;
-    r_postfx_bluelevel->value = m_ParametersCache.blueLevel;
-    r_postfx_vignettescale->value = m_ParametersCache.vignetteScale;
-    r_postfx_filmgrainscale->value = m_ParametersCache.filmGrainScale;
+    state.SetBrightness(m_ParametersCache.brightness);
+    state.SetSaturation(m_ParametersCache.saturation);
+    state.SetContrast(m_ParametersCache.contrast);
+    state.SetRedLevel(m_ParametersCache.redLevel);
+    state.SetGreenLevel(m_ParametersCache.greenLevel);
+    state.SetBlueLevel(m_ParametersCache.blueLevel);
+    state.SetVignetteScale(m_ParametersCache.vignetteScale);
+    state.SetFilmGrainScale(m_ParametersCache.filmGrainScale);
+    state.SetColorAccentScale(m_ParametersCache.colorAccentScale);
+    state.SetAccentColor(m_ParametersCache.accentColor);
+    g_PostFxController.UpdateState(state, false);
 }
 
 void CImGuiPostFxMenu::ResetParameters()
 {
-    m_ParametersCache.brightness = 0.0f;
-    m_ParametersCache.saturation = 1.0f;
-    m_ParametersCache.contrast = 1.0f;
-    m_ParametersCache.redLevel = 1.0f;
-    m_ParametersCache.greenLevel = 1.0f;
-    m_ParametersCache.blueLevel = 1.0f;
-    m_ParametersCache.vignetteScale = 0.0f;
-    m_ParametersCache.filmGrainScale = 0.0f;
-    StoreParameters();
+    g_PostFxController.UpdateState(CPostFxParameters::Defaults(), false);
 }
 
-void CImGuiPostFxMenu::ShowMaterialEditor()
+void CImGuiPostFxMenu::ShowMenu()
 {
     m_bVisible = !m_bVisible;
 }
