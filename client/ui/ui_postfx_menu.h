@@ -30,6 +30,7 @@ private:
         Vector accentColor;
     };
     
+    void BeginColorPicker();
     void LoadParameters();
     void StoreParameters();
     void ResetParameters();

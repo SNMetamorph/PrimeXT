@@ -56,6 +56,10 @@ void CImGuiPostFxMenu::Draw()
     if (ImGui::SliderFloat("Film Grain Scale", &m_ParametersCache.filmGrainScale, 0.0f, 1.0f)) {
         StoreParameters();
     };
+    if (ImGui::SliderFloat("Color Accent Scale", &m_ParametersCache.colorAccentScale, 0.0f, 1.0f)) {
+        StoreParameters();
+    };
+    BeginColorPicker();
     if (ImGui::Button("Reset")) {
         ResetParameters();
     }
@@ -81,6 +85,25 @@ bool CImGuiPostFxMenu::HandleKey(bool keyDown, int keyNumber, const char *bindNa
     return false;
 }
 
+void CImGuiPostFxMenu::BeginColorPicker()
+{
+    const Vector &accentColor = m_ParametersCache.accentColor;
+    ImVec4 color = ImVec4(accentColor.x, accentColor.y, accentColor.z, 1.0f);
+    const ImGuiColorEditFlags flags = (
+        ImGuiColorEditFlags_DisplayRGB | 
+        ImGuiColorEditFlags_InputRGB |
+        ImGuiColorEditFlags_PickerHueWheel
+    );
+    
+    if (ImGui::ColorEdit3("Accent Color", (float*)&color, flags))
+    {
+        m_ParametersCache.accentColor.x = color.x;
+        m_ParametersCache.accentColor.y = color.y;
+        m_ParametersCache.accentColor.z = color.z;
+        StoreParameters();
+    }
+}
+
 void CImGuiPostFxMenu::LoadParameters()
 {
     CPostFxParameters state = g_PostFxController.GetState();
@@ -93,6 +116,7 @@ void CImGuiPostFxMenu::LoadParameters()
     m_ParametersCache.blueLevel = state.GetBlueLevel();
     m_ParametersCache.vignetteScale = state.GetVignetteScale();
     m_ParametersCache.filmGrainScale = state.GetFilmGrainScale();
+    m_ParametersCache.accentColor = state.GetAccentColor();
 }
 
 void CImGuiPostFxMenu::StoreParameters()
