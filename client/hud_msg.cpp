@@ -22,6 +22,7 @@
 #include "r_weather.h"
 #include "r_efx.h"
 #include "gl_studio.h"
+#include "postfx_controller.h"
 
 // CHud message handlers
 DECLARE_HUDMESSAGE( Logo );
@@ -44,6 +45,7 @@ DECLARE_HUDMESSAGE( KillDecals );
 DECLARE_HUDMESSAGE( CustomDecal );
 DECLARE_HUDMESSAGE( StudioDecal );
 DECLARE_HUDMESSAGE( SetupBones );
+DECLARE_HUDMESSAGE( PostFxSettings );
 
 int CHud :: InitHUDMessages( void )
 {
@@ -67,6 +69,7 @@ int CHud :: InitHUDMessages( void )
 	HOOK_MESSAGE( CustomDecal );
 	HOOK_MESSAGE( StudioDecal );
 	HOOK_MESSAGE( SetupBones );
+	HOOK_MESSAGE( PostFxSettings );
 
 	m_iFOV = 0;
 	m_iHUDColor = 0x00FFA000; // 255,160,0
@@ -483,6 +486,16 @@ int CHud :: MsgFunc_SetupBones( const char *pszName, int iSize, void *pbuf )
 	}
 
 	R_StudioSetBonesExternal(ent, pos, ang);
+	return 1;
+}
+
+int _cdecl CHud::MsgFunc_PostFxSettings(const char * pszName, int iSize, void * pbuf)
+{
+	CPostFxParameters postFxParams;
+	BEGIN_READ(pszName, pbuf, iSize);
+	postFxParams.ParseMessage();
+	g_PostFxController.UpdateState(postFxParams);
+	END_READ();	
 	return 1;
 }
 
