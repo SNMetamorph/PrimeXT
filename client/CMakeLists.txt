@@ -37,6 +37,8 @@ list(APPEND CLDLL_SOURCES
 	"train.cpp"
 	"utils.cpp"
 	"r_view.cpp"
+	"postfx_controller.cpp"
+	"postfx_parameters.cpp"
 )
 
 # shared source files
