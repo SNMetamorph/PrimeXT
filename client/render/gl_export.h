@@ -1270,7 +1270,6 @@ EXTERN void ( APIENTRY *pglPointParameterfvEXT)( GLenum param, const GLfloat *va
 EXTERN void ( APIENTRY *pglLockArraysEXT) (int , int);
 EXTERN void ( APIENTRY *pglUnlockArraysEXT) (void);
 EXTERN void ( APIENTRY *pglActiveTextureARB)( GLenum );
-EXTERN void ( APIENTRY *pglClientActiveTextureARB)( GLenum );
 EXTERN void ( APIENTRY *pglGetCompressedTexImage)( GLenum target, GLint lod, const void* data );
 EXTERN void ( APIENTRY *pglDrawRangeElements)( GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices );
 EXTERN void ( APIENTRY *pglDrawRangeElementsEXT)( GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices );
@@ -1285,7 +1284,6 @@ EXTERN void ( APIENTRY *pglMultiTexCoord2f) (GLenum, GLfloat, GLfloat);
 EXTERN void ( APIENTRY *pglMultiTexCoord3f) (GLenum, GLfloat, GLfloat, GLfloat);
 EXTERN void ( APIENTRY *pglMultiTexCoord4f) (GLenum, GLfloat, GLfloat, GLfloat, GLfloat);
 EXTERN void ( APIENTRY *pglActiveTexture) (GLenum);
-EXTERN void ( APIENTRY *pglClientActiveTexture) (GLenum);
 EXTERN void ( APIENTRY *pglCompressedTexImage3DARB)(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, const void *data);
 EXTERN void ( APIENTRY *pglCompressedTexImage2DARB)(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border,  GLsizei imageSize, const void *data);
 EXTERN void ( APIENTRY *pglCompressedTexImage1DARB)(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLint border, GLsizei imageSize, const void *data);

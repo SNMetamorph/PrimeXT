@@ -186,6 +186,12 @@ static dllfunc_t opengl_200funcs[] =
 { "glGetUniformLocation"		, (void **)&pglGetUniformLocation },
 { "glGetProgramiv"              , (void **)&pglGetProgramiv },
 { "glBlendEquation"             , (void **)&pglBlendEquation },
+{ "glVertexAttribPointer"		, (void **)&pglVertexAttribPointerARB },
+{ "glEnableVertexAttribArray"	, (void **)&pglEnableVertexAttribArrayARB },
+{ "glDisableVertexAttribArray"	, (void **)&pglDisableVertexAttribArrayARB },
+{ "glBindAttribLocation"		, (void **)&pglBindAttribLocationARB },
+{ "glGetActiveAttrib"			, (void **)&pglGetActiveAttribARB },
+{ "glGetAttribLocation"			, (void **)&pglGetAttribLocationARB },
 { NULL, NULL }
 };
 
@@ -229,8 +235,6 @@ static dllfunc_t multitexturefuncs[] =
 { "glMultiTexCoord4fARB"     , (void **)&pglMultiTexCoord4f },
 { "glActiveTextureARB"       , (void **)&pglActiveTexture },
 { "glActiveTextureARB"       , (void **)&pglActiveTextureARB },
-{ "glClientActiveTextureARB" , (void **)&pglClientActiveTexture },
-{ "glClientActiveTextureARB" , (void **)&pglClientActiveTextureARB },
 { NULL, NULL }
 };
 
@@ -273,28 +277,11 @@ static dllfunc_t shaderobjectsfuncs[] =
 { "glGetAttachedObjectsARB"       , (void **)&pglGetAttachedObjectsARB },
 { "glGetUniformfvARB"             , (void **)&pglGetUniformfvARB },
 { "glGetUniformivARB"             , (void **)&pglGetUniformivARB },
-{ "glVertexAttribPointerARB"      , (void **)&pglVertexAttribPointerARB },
-{ "glEnableVertexAttribArrayARB"  , (void **)&pglEnableVertexAttribArrayARB },
-{ "glDisableVertexAttribArrayARB" , (void **)&pglDisableVertexAttribArrayARB },
-{ "glBindAttribLocationARB"       , (void **)&pglBindAttribLocationARB },
-{ "glGetActiveAttribARB"          , (void **)&pglGetActiveAttribARB },
-{ "glGetAttribLocationARB"        , (void **)&pglGetAttribLocationARB },
 { "glVertexAttrib2f"              , (void **)&pglVertexAttrib2fARB },
 { "glVertexAttrib2fv"             , (void **)&pglVertexAttrib2fvARB },
 { "glVertexAttrib3fv"             , (void **)&pglVertexAttrib3fvARB },
 { "glVertexAttrib4fv"             , (void **)&pglVertexAttrib4fvARB },
 { "glVertexAttrib4ubv"            , (void **)&pglVertexAttrib4ubvARB },
-{ NULL, NULL }
-};
-
-static dllfunc_t vertexshaderfuncs[] =
-{
-{ "glVertexAttribPointerARB"      , (void **)&pglVertexAttribPointerARB },
-{ "glEnableVertexAttribArrayARB"  , (void **)&pglEnableVertexAttribArrayARB },
-{ "glDisableVertexAttribArrayARB" , (void **)&pglDisableVertexAttribArrayARB },
-{ "glBindAttribLocationARB"       , (void **)&pglBindAttribLocationARB },
-{ "glGetActiveAttribARB"          , (void **)&pglGetActiveAttribARB },
-{ "glGetAttribLocationARB"        , (void **)&pglGetAttribLocationARB },
 { NULL, NULL }
 };
 
@@ -690,7 +677,7 @@ static void GL_InitExtensions( void )
 		return;
 	}
 
-	GL_CheckExtension( "GL_ARB_vertex_shader", vertexshaderfuncs, "gl_vertexshader", R_VERTEX_SHADER_EXT );
+	GL_CheckExtension( "GL_ARB_vertex_shader", NULL, "gl_vertexshader", R_VERTEX_SHADER_EXT );
 
 	if( !GL_Support( R_VERTEX_SHADER_EXT ))
 	{
