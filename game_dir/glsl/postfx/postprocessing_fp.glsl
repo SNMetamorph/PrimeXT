@@ -70,23 +70,24 @@ vec3 ApplyColorAccent(vec3 color)
 	const float threshold = 0.999;
 	float scale = u_AccentColor.a;
 	vec3 monochrome = vec3(GetLuminance(color));
-    vec3 probeColor = normalize(color + vec3(0.001)); // to avoid normalizing null vector
-    float t = dot(probeColor, normalize(u_AccentColor.rgb + vec3(0.001)));
-    float f = smoothstep(threshold - 0.1, threshold, t);
-    vec3 b = mix(color, monochrome, scale);
-    return mix(b, color, f);
+	vec3 probeColor = normalize(color + vec3(0.001)); // to avoid normalizing null vector
+	vec3 desiredColor = normalize(u_AccentColor.rgb + vec3(0.001));
+	float t = dot(probeColor, desiredColor);
+	float f = smoothstep(threshold - 0.1, threshold, t);
+	vec3 b = mix(color, monochrome, scale);
+	return mix(b, color, f);
 }
 
 void main()
 {
 	vec3 color = texture2D(u_ScreenMap, var_TexCoord).rgb;
 	color = AdjustColorLevels(color);
+	color = ApplyColorAccent(color);
 	color = AdjustBrightness(color);
 	color = AdjustSaturation(color);
 	color = AdjustContrast(color);
 	color = ApplyFilmGrain(color);
 	color = ApplyVignette(color);
-	color = ApplyColorAccent(color);
 	color = ConvertLinearToSRGB(color); // gamma-correction
 	gl_FragColor = vec4(color, 1.0);
 }
