@@ -15,6 +15,7 @@
 
 #ifndef PARSEMSG_H
 #define PARSEMSG_H
+#include "basetypes.h"
 
 // Macros to hook function calls into the HUD object
 #define HOOK_MESSAGE(x)	gEngfuncs.pfnHookUserMsg(#x, __MsgFunc_##x );
