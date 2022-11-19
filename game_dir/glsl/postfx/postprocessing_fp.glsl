@@ -23,6 +23,7 @@ uniform float		u_Brightness;
 uniform float		u_Saturation;
 uniform float		u_Contrast;
 uniform vec3 		u_ColorLevels;
+uniform vec4		u_AccentColor;
 uniform float		u_VignetteScale;
 uniform float		u_FilmGrainScale;
 
@@ -64,6 +65,18 @@ vec3 ApplyFilmGrain(vec3 color)
 	return mix(color, vec3(0.5), noise * u_FilmGrainScale);
 }
 
+vec3 ApplyColorAccent(vec3 color)
+{
+	const float threshold = 0.999;
+	float scale = u_AccentColor.a;
+	vec3 monochrome = vec3(GetLuminance(color));
+    vec3 probeColor = normalize(color + vec3(0.001)); // to avoid normalizing null vector
+    float t = dot(probeColor, normalize(u_AccentColor.rgb + vec3(0.001)));
+    float f = smoothstep(threshold - 0.1, threshold, t);
+    vec3 b = mix(color, monochrome, scale);
+    return mix(b, color, f);
+}
+
 void main()
 {
 	vec3 color = texture2D(u_ScreenMap, var_TexCoord).rgb;
@@ -73,6 +86,7 @@ void main()
 	color = AdjustContrast(color);
 	color = ApplyFilmGrain(color);
 	color = ApplyVignette(color);
+	color = ApplyColorAccent(color);
 	color = ConvertLinearToSRGB(color); // gamma-correction
 	gl_FragColor = vec4(color, 1.0);
 }
