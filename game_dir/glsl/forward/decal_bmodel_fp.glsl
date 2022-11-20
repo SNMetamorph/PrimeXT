@@ -42,16 +42,16 @@ varying vec3	var_TexLight0;
 varying vec3	var_TexLight1;
 varying vec3	var_TexLight2;
 varying vec3	var_TexLight3;
-varying vec3	var_ViewDir;
 varying vec3	var_Normal;
-varying vec3	var_Position;
+centroid varying vec3	var_ViewDir;
+centroid varying vec3	var_Position;
 
 #if defined( PLANAR_REFLECTION )
 varying vec4	var_TexMirror;	// mirror coords
 #endif
 
 #if defined( REFLECTION_CUBEMAP )
-varying mat3	var_MatrixTBN;
+centroid varying mat3	var_MatrixTBN;
 #endif
 
 void main( void )

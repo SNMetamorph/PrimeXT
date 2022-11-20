@@ -29,22 +29,22 @@ uniform vec3	u_ViewOrigin;	// already in modelspace
 uniform vec2	u_DetailScale;
 uniform vec2	u_TexOffset;	// conveyor stuff
 
-varying vec2	var_TexDiffuse;
-varying vec3	var_TexLight0;
-varying vec3	var_TexLight1;
-varying vec3	var_TexLight2;
-varying vec3	var_TexLight3;
-varying vec2	var_TexDetail;
-varying vec2	var_TexGlobal;
-varying vec3	var_ViewDir;
-varying vec3	var_Position;
+centroid varying vec2	var_TexDiffuse;
+centroid varying vec3	var_TexLight0;
+centroid varying vec3	var_TexLight1;
+centroid varying vec3	var_TexLight2;
+centroid varying vec3	var_TexLight3;
+centroid varying vec2	var_TexDetail;
+centroid varying vec2	var_TexGlobal;
+centroid varying vec3	var_ViewDir;
+centroid varying vec3	var_Position;
 
 #if defined( PLANAR_REFLECTION )
 varying vec4	var_TexMirror;	// mirror coords
 #endif
 
 #if defined( REFLECTION_CUBEMAP )
-varying mat3	var_MatrixTBN;
+centroid varying mat3	var_MatrixTBN;
 #endif
 
 #if !defined( HAS_NORMALMAP )
@@ -52,7 +52,7 @@ varying vec3	var_Normal;
 #endif
 
 #if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
-varying vec3	var_TangentViewDir;
+centroid varying vec3	var_TangentViewDir;
 #endif
 
 void main( void )
