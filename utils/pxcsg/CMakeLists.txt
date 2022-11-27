@@ -88,6 +88,14 @@ if(MSVC)
 	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release,RelWithDebInfo>:/GL>) # enable whole program optimization
 endif()
 
+if(ENABLE_MAP_COMPILERS_AVX2)
+	if(MSVC)
+		target_compile_options(${PROJECT_NAME} PRIVATE /arch:AVX2)
+	else()
+		message(WARNING "AVX2 support parameters not implemented for this compiler")
+	endif()
+endif()
+
 # set static compiler runtime
 if(ENABLE_STATIC_LINKING)
 	set_compiler_runtime(${PROJECT_NAME} STATIC)
@@ -98,8 +106,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 	mimalloc-static
 )
 
+# link platform-specific depedency libraries
 if(NOT MSVC)
-	# add pthread library depedency
 	target_link_libraries(${PROJECT_NAME} PRIVATE
 		pthread
 		dl
