@@ -87,13 +87,20 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 
 # link platform-specific depedency libraries
-if(NOT MSVC)
+if(NOT XASH_WIN32)
 	target_link_libraries(${PROJECT_NAME} PRIVATE
 		dl
 	)
 else()
 	target_link_libraries(${PROJECT_NAME} PRIVATE
 		dbghelp
+	)
+endif()
+
+# link log library for Android platform
+if(XASH_ANDROID)
+	target_link_libraries(${PROJECT_NAME} PRIVATE
+		log
 	)
 endif()
 
