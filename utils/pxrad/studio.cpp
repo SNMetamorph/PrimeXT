@@ -239,12 +239,12 @@ static int StudioCreateMeshFromTriangles( entity_t *ent, studiohdr_t *phdr, cons
 		for( j = 0; j < psubmodel->nummesh; j++ ) 
 		{
 			mstudiomesh_t	*pmesh = (mstudiomesh_t *)((byte *)phdr + psubmodel->meshindex) + j;
-			float		s = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].width;
-			float		t = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].height;
-			short		*ptricmds = (short *)((byte *)phdr + pmesh->triindex);
+			float	s = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].width;
+			float	t = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].height;
+			short	*ptricmds = (short *)((byte *)phdr + pmesh->triindex);
 			int		flags = ptexture[pskinref[pmesh->skinref]].flags;
 
-			while( i = *( ptricmds++ ))
+			while ((i = *(ptricmds++)) != 0)
 			{
 				int	vertexState = 0;
 				bool	tri_strip;
