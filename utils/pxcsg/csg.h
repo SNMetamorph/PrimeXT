@@ -19,8 +19,8 @@
 #include "bspfile.h"
 #include "shaders.h"
 #include "port.h"
-
 #include "utlarray.h"
+#include <stdint.h>
 
 #ifndef DOUBLEVEC_T
 #error you must add -dDOUBLEVEC_T to the project!
@@ -110,13 +110,13 @@ typedef struct side_s
 
 typedef struct bface_s
 {
-	struct bface_s	*next;
-	int		planenum;
+	struct bface_s *next;
+	int			planenum;
 	plane_t		*plane;
-	winding_t		*w;
-	int		texinfo;
-	int		flags;		// side settings
-	char		contents[2];	// 0 = front side
+	winding_t	*w;
+	int			texinfo;
+	int			flags;		// side settings
+	int8_t		contents[2];	// 0 = front side
 	vec3_t		mins, maxs;
 } bface_t;
 
@@ -135,7 +135,7 @@ typedef struct brush_s
 
 	// brush settings
 	int		flags;		// brush settings
-	char		detaillevel;
+	int8_t	detaillevel;
 	int		contents;
 	int		csg_detaillevel( int hull ) const	{ return (hull == 0) ? detaillevel : 0; }
 
