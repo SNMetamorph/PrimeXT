@@ -74,8 +74,7 @@ static int		radpower[initrad];		// radpower for precomputation
 
 void initnet( byte *thepic, int len, int sample )	
 {
-	register int  i, *p;
-	
+	int i, *p;
 	thepicture = thepic;
 	lengthcount = len;
 	samplefac = sample;
@@ -107,8 +106,8 @@ void unbiasnet( void )
 // insertion sort of network and building of netindex[0..255] (to do after unbias)
 void inxbuild( void )
 {
-	register int *p, *q;
-	register int i, j, smallpos, smallval;
+	int *p, *q;
+	int i, j, smallpos, smallval;
 	int previouscol, startpos;
 
 	previouscol = 0;
@@ -166,9 +165,9 @@ void inxbuild( void )
 // search for BGR values 0..255 (after net is unbiased) and return colour index
 int inxsearch( int r, int g, int b )
 {
-	register int	i, j, dist, a, bestd;
-	register int	*p;
-	int		best;
+	int	i, j, dist, a, bestd;
+	int	*p;
+	int	best;
 
 	bestd = 1000;	// biggest possible dist is 256 * 3
 	best = -1;
@@ -252,8 +251,8 @@ int contest( int r, int g, int b )
 	// for frequently chosen neurons, freq[i] is high and bias[i] is negative
 	// bias[i] = gamma * ((1 / netsize) - freq[i])
 
-	register int *p, *f, *n;
-	register int i, dist, a, biasdist, betafreq;
+	int *p, *f, *n;
+	int i, dist, a, biasdist, betafreq;
 	int bestpos, bestbiaspos, bestd, bestbiasd;
 
 	bestd = ~(1<<31);
@@ -303,7 +302,7 @@ int contest( int r, int g, int b )
 // move neuron i towards biased (b,g,r) by factor alpha
 void altersingle( int alpha, int i, int r, int g, int b )
 {
-	register int *n;
+	int *n;
 
 	n = network[i];	// alter hit neuron
 	*n -= (alpha * (*n - r)) / initalpha;
@@ -316,8 +315,8 @@ void altersingle( int alpha, int i, int r, int g, int b )
 // move adjacent neurons by precomputed alpha*(1-((i-j)^2/[r]^2)) in radpower[|i-j|]
 void alterneigh( int rad, int i, int r, int g, int b )
 {
-	register int j, k, lo, hi, a;
-	register int *p, *q;
+	int j, k, lo, hi, a;
+	int *p, *q;
 
 	lo = i - rad;
 	if( lo < -1 )
@@ -362,8 +361,8 @@ void alterneigh( int rad, int i, int r, int g, int b )
 // main Learning Loop
 void learn( void )
 {
-	register byte *p;
-	register int i, j, r, g, b;
+	byte *p;
+	int i, j, r, g, b;
 	int radius, rad, alpha, step;
 	int delta, samplepixels;
 	byte *lim;
