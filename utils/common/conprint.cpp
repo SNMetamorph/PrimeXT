@@ -24,7 +24,7 @@ GNU General Public License for more details.
 #include "mathlib.h"
 
 #if XASH_ANDROID
-#include <log.h>
+#include <android/log.h>
 #endif
 
 #define IsColorString( p )		( p && *( p ) == '^' && *(( p ) + 1) && *(( p ) + 1) >= '0' && *(( p ) + 1 ) <= '9' )
