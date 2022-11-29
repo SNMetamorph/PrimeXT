@@ -238,10 +238,10 @@ search_t *COM_Search( const char *pattern, int caseinsensitive, wfile_t *source_
 		return NULL;
 	}
 
-	Q_getwd( root, sizeof( root ) );
-	if( !root )
+	Q_getwd(root, sizeof(root));
+	if (root[0] == '\0')
 	{
-		MsgDev( D_ERROR, "couldn't determine current directory\n" );
+		MsgDev(D_ERROR, "couldn't determine current directory\n");
 		return NULL;
 	}
 
