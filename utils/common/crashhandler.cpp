@@ -365,12 +365,12 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 	#endif
 #elif XASH_ARM && XASH_64BIT
 	pc = (void*)ucontext->uc_mcontext.pc;
-	bp = (void*)ucontext->uc_mcontext.regs[29];
-	sp = (void*)ucontext->uc_mcontext.sp;
+	bp = (void**)ucontext->uc_mcontext.regs[29];
+	sp = (void**)ucontext->uc_mcontext.sp;
 #elif XASH_ARM
 	pc = (void*)ucontext->uc_mcontext.arm_pc;
-	bp = (void*)ucontext->uc_mcontext.arm_fp;
-	sp = (void*)ucontext->uc_mcontext.arm_sp;
+	bp = (void**)ucontext->uc_mcontext.arm_fp;
+	sp = (void**)ucontext->uc_mcontext.arm_sp;
 #endif
 
 #if 0
