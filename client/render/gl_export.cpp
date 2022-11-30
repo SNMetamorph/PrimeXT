@@ -728,8 +728,10 @@ static void GL_InitExtensions( void )
 	pglGetIntegerv( GL_MAX_VERTEX_ATTRIBS_ARB, &glConfig.max_vertex_attribs );
 	pglGetIntegerv( GL_MAX_VARYING_FLOATS_ARB, &glConfig.max_varying_floats );
 
-	if( glConfig.hardware_type == GLHW_RADEON && glConfig.max_vertex_uniforms > 512 )
-		glConfig.max_vertex_uniforms /= 4; // only radion returns count of floats other returns count of vec4
+	// is this actual hack? we can't say without testing on wide range of AMD hardware
+	// if this problem will occur, they hack should be returned and made togglable with cvar
+	//if( glConfig.hardware_type == GLHW_RADEON && glConfig.max_vertex_uniforms > 512 )
+	//	glConfig.max_vertex_uniforms /= 4; // only radion returns count of floats other returns count of vec4
 
 	glConfig.max_skinning_bones = bound( 0, ( Q_max( glConfig.max_vertex_uniforms - MAX_RESERVED_UNIFORMS, 0 ) / 7 ), MAXSTUDIOBONES );
 
