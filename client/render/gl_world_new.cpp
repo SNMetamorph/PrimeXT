@@ -3268,7 +3268,7 @@ void R_DrawLightForSurfList( CDynLight *pl )
 		{
 			if( numTempElems )
 			{
-				pglDrawRangeElementsEXT( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
+				pglDrawRangeElements( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
 				r_stats.c_total_tris += (numTempElems / 3);
 				r_stats.num_flushes++;
 				numTempElems = 0;
@@ -3293,7 +3293,7 @@ void R_DrawLightForSurfList( CDynLight *pl )
 
 	if( numTempElems )
 	{
-		pglDrawRangeElementsEXT( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
+		pglDrawRangeElements( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
 		r_stats.c_total_tris += (numTempElems / 3);
 		r_stats.num_flushes++;
 		startv = MAX_MAP_ELEMS;
@@ -3433,7 +3433,7 @@ void R_RenderDeferredBrushList( void )
 		{
 			if( numTempElems )
 			{
-				pglDrawRangeElementsEXT( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
+				pglDrawRangeElements( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
 				r_stats.c_total_tris += (numTempElems / 3);
 				r_stats.num_flushes++;
 				numTempElems = 0;
@@ -3461,7 +3461,7 @@ void R_RenderDeferredBrushList( void )
 
 	if( numTempElems )
 	{
-		pglDrawRangeElementsEXT( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
+		pglDrawRangeElements( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
 		r_stats.c_total_tris += (numTempElems / 3);
 		r_stats.num_flushes++;
 		startv = MAX_MAP_ELEMS;
@@ -3562,7 +3562,7 @@ void R_RenderSolidBrushList( void )
 		{
 			if( numTempElems )
 			{
-				pglDrawRangeElementsEXT( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
+				pglDrawRangeElements( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
 				r_stats.c_total_tris += (numTempElems / 3);
 				r_stats.num_flushes++;
 				numTempElems = 0;
@@ -3592,7 +3592,7 @@ void R_RenderSolidBrushList( void )
 
 	if( numTempElems )
 	{
-		pglDrawRangeElementsEXT( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
+		pglDrawRangeElements( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
 		r_stats.c_total_tris += (numTempElems / 3);
 		r_stats.num_flushes++;
 		startv = MAX_MAP_ELEMS;
@@ -3672,7 +3672,7 @@ void R_RenderTransSurface( CTransEntry *entry )
 
 	if( numTempElems )
 	{
-		pglDrawRangeElementsEXT( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
+		pglDrawRangeElements( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
 		r_stats.c_total_tris += (numTempElems / 3);
 		r_stats.num_flushes++;
 		numTempElems = 0;
@@ -3734,7 +3734,7 @@ void R_RenderShadowBrushList( void )
 		{
 			if( numTempElems )
 			{
-				pglDrawRangeElementsEXT( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
+				pglDrawRangeElements( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
 				r_stats.c_total_tris += (numTempElems / 3);
 				r_stats.num_flushes++;
 				numTempElems = 0;
@@ -3760,7 +3760,7 @@ void R_RenderShadowBrushList( void )
 
 	if( numTempElems )
 	{
-		pglDrawRangeElementsEXT( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
+		pglDrawRangeElements( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
 		r_stats.c_total_tris += (numTempElems / 3);
 		r_stats.num_flushes++;
 		startv = MAX_MAP_ELEMS;

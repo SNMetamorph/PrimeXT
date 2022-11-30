@@ -149,7 +149,7 @@ static dllfunc_t opengl_110funcs[] =
 { "glCopyTexSubImage1D"  	, (void **)&pglCopyTexSubImage1D },
 { "glCopyTexSubImage2D"  	, (void **)&pglCopyTexSubImage2D },
 { "glScissor"            	, (void **)&pglScissor },
-{ "glGetTexImage"		, (void **)&pglGetTexImage },
+{ "glGetTexImage"			, (void **)&pglGetTexImage },
 { "glGetTexEnviv"        	, (void **)&pglGetTexEnviv },
 { "glPolygonOffset"      	, (void **)&pglPolygonOffset },
 { "glPolygonMode"        	, (void **)&pglPolygonMode },
@@ -195,18 +195,13 @@ static dllfunc_t opengl_200funcs[] =
 { "glTexImage3D"				, (void **)&pglTexImage3D },
 { "glTexSubImage3D"				, (void **)&pglTexSubImage3D },
 { "glCopyTexSubImage3D"			, (void **)&pglCopyTexSubImage3D },
-{ NULL, NULL }
-};
-
-static dllfunc_t drawrangeelementsfuncs[] =
-{
-{ "glDrawRangeElements" , (void **)&pglDrawRangeElements },
+{ "glDrawRangeElements"			, (void **)&pglDrawRangeElements },
 { NULL, NULL }
 };
 
 static dllfunc_t drawrangeelementsextfuncs[] =
 {
-{ "glDrawRangeElementsEXT" , (void **)&pglDrawRangeElementsEXT },
+{ "glDrawRangeElementsEXT" , (void **)&pglDrawRangeElements },
 { NULL, NULL }
 };
 
@@ -558,17 +553,10 @@ static void GL_InitExtensions( void )
 
 	Msg( "GL_VERSION: %g\n", glConfig.version );
 
-	GL_CheckExtension( "glDrawRangeElements", drawrangeelementsfuncs, "gl_drawrangeelments", R_DRAW_RANGEELEMENTS_EXT );
-
-	if( !GL_Support( R_DRAW_RANGEELEMENTS_EXT ))
-		GL_CheckExtension( "GL_EXT_draw_range_elements", drawrangeelementsextfuncs, "gl_drawrangeelments", R_DRAW_RANGEELEMENTS_EXT );
-
-	// we don't care if it's an extension or not, they are identical functions, so keep it simple in the rendering code
-	if( pglDrawRangeElementsEXT == NULL ) pglDrawRangeElementsEXT = pglDrawRangeElements;
-
-	if( !GL_Support( R_DRAW_RANGEELEMENTS_EXT ))
+	GL_CheckExtension("GL_EXT_draw_range_elements", (!pglDrawRangeElements) ? drawrangeelementsextfuncs : nullptr, "gl_drawrangeelments", R_DRAW_RANGEELEMENTS_EXT);
+	if (!GL_Support(R_DRAW_RANGEELEMENTS_EXT))
 	{
-		ALERT( at_error, "GL_EXT_draw_range_elements not support. Custom renderer disabled\n" );
+		ALERT(at_error, "GL_EXT_draw_range_elements not support. Custom renderer disabled\n");
 		g_fRenderInitialized = FALSE;
 		return;
 	}
@@ -729,7 +717,7 @@ static void GL_InitExtensions( void )
 	pglGetIntegerv( GL_MAX_VARYING_FLOATS_ARB, &glConfig.max_varying_floats );
 
 	// is this actual hack? we can't say without testing on wide range of AMD hardware
-	// if this problem will occur, they hack should be returned and made togglable with cvar
+	// if this problem will occur, this hack should be returned and made togglable with cvar
 	//if( glConfig.hardware_type == GLHW_RADEON && glConfig.max_vertex_uniforms > 512 )
 	//	glConfig.max_vertex_uniforms /= 4; // only radion returns count of floats other returns count of vec4
 
