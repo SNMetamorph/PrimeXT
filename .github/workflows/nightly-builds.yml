@@ -185,6 +185,5 @@ jobs:
           file_glob: true
           file: PrimeXT-*
           tag: continious
-          overwrite: true
           prerelease: true
           release_name: PrimeXT Continious Build
