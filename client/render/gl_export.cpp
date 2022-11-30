@@ -192,6 +192,9 @@ static dllfunc_t opengl_200funcs[] =
 { "glBindAttribLocation"		, (void **)&pglBindAttribLocationARB },
 { "glGetActiveAttrib"			, (void **)&pglGetActiveAttribARB },
 { "glGetAttribLocation"			, (void **)&pglGetAttribLocationARB },
+{ "glTexImage3D"				, (void **)&pglTexImage3D },
+{ "glTexSubImage3D"				, (void **)&pglTexSubImage3D },
+{ "glCopyTexSubImage3D"			, (void **)&pglCopyTexSubImage3D },
 { NULL, NULL }
 };
 
@@ -235,14 +238,6 @@ static dllfunc_t multitexturefuncs[] =
 { "glMultiTexCoord4fARB"     , (void **)&pglMultiTexCoord4f },
 { "glActiveTextureARB"       , (void **)&pglActiveTexture },
 { "glActiveTextureARB"       , (void **)&pglActiveTextureARB },
-{ NULL, NULL }
-};
-
-static dllfunc_t texture3dextfuncs[] =
-{
-{ "glTexImage3DEXT"        , (void **)&pglTexImage3D },
-{ "glTexSubImage3DEXT"     , (void **)&pglTexSubImage3D },
-{ "glCopyTexSubImage3DEXT" , (void **)&pglCopyTexSubImage3D },
 { NULL, NULL }
 };
 
@@ -596,7 +591,7 @@ static void GL_InitExtensions( void )
 	}
 
 	// 3d texture support
-	GL_CheckExtension( "GL_EXT_texture3D", texture3dextfuncs, "gl_texture_3d", R_TEXTURE_3D_EXT, true );
+	GL_CheckExtension( "GL_EXT_texture3D", NULL, "gl_texture_3d", R_TEXTURE_3D_EXT, true );
 
 	if( GL_Support( R_TEXTURE_3D_EXT ))
 	{
@@ -610,7 +605,7 @@ static void GL_InitExtensions( void )
 	}
 
 	// 2d texture array support
-	GL_CheckExtension( "GL_EXT_texture_array", texture3dextfuncs, "gl_texture_2d_array", R_TEXTURE_ARRAY_EXT, true );
+	GL_CheckExtension( "GL_EXT_texture_array", NULL, "gl_texture_2d_array", R_TEXTURE_ARRAY_EXT, true );
 
 	if( !GL_Support( R_TEXTURE_ARRAY_EXT ))
 		ALERT( at_warning, "GL_EXT_texture_array not support. Landscapes will be unavailable\n" );
