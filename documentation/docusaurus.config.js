@@ -63,7 +63,7 @@ const config = {
         title: 'PrimeXT Docs',
         logo: {
           alt: 'PrimeXT Logo',
-          src: 'img/logo.png',
+          src: 'img/logo_256.png',
         },
         items: [
           {
@@ -84,24 +84,15 @@ const config = {
         style: 'dark',
         links: [
           {
-            title: 'Docs',
-            items: [
-              {
-                label: 'Tutorial',
-                to: '/docs/eng/intro',
-              },
-            ],
-          },
-          {
             title: 'Community',
             items: [
               {
-                label: 'GitHub',
-                href: 'https://github.com/SNMetamorph/PrimeXT',
-              },
-              {
                 label: 'Discord',
                 href: 'https://discord.gg/BxQUMUescJ',
+              },
+              {
+                label: 'ModDB',
+                href: 'https://www.moddb.com/mods/primext',
               },
               {
                 label: 'VKontakte',
@@ -110,14 +101,23 @@ const config = {
             ],
           },
           {
-            title: 'More',
+            title: 'Forums',
             items: [
               {
                 label: 'HLFX Topic',
                 href: 'https://hlfx.ru/forum/showthread.php?s=&threadid=5371',
               },
               {
-                label: 'Xash3D FWGS GitHub',
+                label: 'CSM.Dev Topic',
+                href: 'https://csm.dev/threads/primext.39978/',
+              },
+            ],
+          },
+          {
+            title: 'Related projects',
+            items: [
+              {
+                label: 'Xash3D FWGS',
                 href: 'https://github.com/FWGS/xash3d-fwgs',
               },
             ],
