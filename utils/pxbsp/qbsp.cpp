@@ -496,7 +496,7 @@ show compiler settings like ZHLT
 */
 static void PrintBspSettings( void )
 {
-	Msg( "\nCurrent %s settings\n", APP_ABBREVIATION );
+	Msg( "Current %s settings\n", APP_ABBREVIATION );
 	Msg( "Name                 |  Setting  |  Default\n" );
 	Msg( "---------------------|-----------|-------------------------\n" );
 	Msg( "developer             [ %7d ] [ %7d ]\n", GetDeveloperLevel(), DEFAULT_DEVELOPER );
@@ -624,7 +624,7 @@ int main( int argc, char **argv )
 
 	Sys_InitLogAppend( va( "%s.log", source ));
 
-	Msg( "\n%s %s (%s, commit %s, arch %s, platform %s)\n", TOOLNAME, VERSIONSTRING, 
+	Msg( "\n%s %s (%s, commit %s, arch %s, platform %s)\n\n", TOOLNAME, VERSIONSTRING, 
 		BuildInfo::GetDate(), 
 		BuildInfo::GetCommitHash(), 
 		BuildInfo::GetArchitecture(), 
