@@ -204,11 +204,13 @@ static int EmitClipNodes_r( node_t *node, const node_t *portalleaf )
 	}
 
 	// emit a clipnode
-	if( g_numclipnodes == MAX_MAP_CLIPNODES )
-		MsgAnim( D_INFO, "^3=== MAX_MAP_CLIPNODES is exceeded. Map will not run under GoldSource ===\r" );
+	if (g_numclipnodes == MAX_MAP_CLIPNODES) {
+		MsgDev(D_INFO, "^3=== MAX_MAP_CLIPNODES is exceeded. Map will not run under GoldSource ===\n");
+	}
 
-	if( g_numclipnodes == MAX_MAP_CLIPNODES32 )
-		COM_FatalError( "MAX_MAP_CLIPNODES32 limit exceeded\n" );
+	if (g_numclipnodes == MAX_MAP_CLIPNODES32) {
+		COM_FatalError("MAX_MAP_CLIPNODES32 limit exceeded\n");
+	}
 
 	c = g_numclipnodes;
 	cn = &g_dclipnodes32[g_numclipnodes++];

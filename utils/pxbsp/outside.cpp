@@ -395,11 +395,11 @@ bool FillOutside( tree_t *tree, int hullnum, bool leakfile )
 		leaked = true;
 
 		// do animation
-		MsgAnim( D_INFO, "^3=== LEAK in hull %i ===\r", hullnum );
-		GetVectorForKey( &g_entities[hit_occupied], "origin", origin );
-		MsgDev( D_REPORT, "\nEntity %i @ (%4.0f,%4.0f,%4.0f)\n", hit_occupied, origin[0], origin[1], origin[2] );
-		MsgDev( D_REPORT, "no filling performed\n" );
-		MsgDev( D_REPORT, "point file and line file generated\n" );
+		MsgDev(D_INFO, "^3=== LEAK in hull %i ===\n", hullnum);
+		GetVectorForKey(&g_entities[hit_occupied], "origin", origin);
+		MsgDev(D_REPORT, "\nEntity %i @ (%4.0f,%4.0f,%4.0f)\n", hit_occupied, origin[0], origin[1], origin[2]);
+		MsgDev(D_REPORT, "no filling performed\n");
+		MsgDev(D_REPORT, "point file and line file generated\n");
 
 		// allow to vis maps even with leak
 		if( g_forcevis == false )
