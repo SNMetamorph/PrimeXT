@@ -612,7 +612,7 @@ static void LinkEdict( entity_t *ent, modtype_t modtype, const char *modname, in
 				}
 			}
 		}
-		else {
+		else if (modtype != mod_brush) {
 			MsgDev(D_INFO, "^3Warning:^7 Failed to load model %s\n", modname);
 		}
 	}
