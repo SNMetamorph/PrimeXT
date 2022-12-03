@@ -566,43 +566,54 @@ static void LinkEdict( entity_t *ent, modtype_t modtype, const char *modname, in
 		}
 	}
 
-	if( ent->modtype == mod_unknown )
+	if (ent->modtype == mod_unknown)
 	{
-		size_t	fileLength = 0;
+		size_t fileLength = 0;
 
 		// init trace nodes
-		switch( modtype )
+		switch (modtype)
 		{
-		case mod_brush:
-			bm = ModelForEntity( ent );
-			if( !bm ) COM_FatalError( "LinkEdict: not a inline bmodel!\n" );
-			MakeTnodes( ent, bm );
-			break;
-		default:
-			// trying to recognize file format by it's header
-			if( !g_nomodelshadow )
-				filedata = FS_LoadFile( modname, &fileLength, false );
-			break;
-		}
-
-		if( filedata != NULL )
-		{
-			MsgDev( D_NOTE, "loading %s\n", modname );
-
-			// call the apropriate loader
-			switch( *(uint *)filedata )
+			case mod_brush:
 			{
-			case IDSTUDIOHEADER:
-				LoadStudio( ent, filedata, fileLength, flags );
-				break;
-			case IDALIASHEADER:
-				LoadAlias( ent, filedata, fileLength, flags );
-				break;
-			default:
-				MsgDev( D_ERROR, "%s unknown file format\n", modname );
-				Mem_Free( filedata, C_FILESYSTEM );
+				bm = ModelForEntity(ent);
+				if (!bm) {
+					COM_FatalError("LinkEdict: not a inline bmodel!\n");
+					return;
+				}
+				MakeTnodes(ent, bm);
 				break;
 			}
+			default:
+			{
+				// trying to recognize file format by it's header
+				if (!g_nomodelshadow) {
+					filedata = FS_LoadFile(modname, &fileLength, false);
+				}
+				break;
+			}
+		}
+
+		if (filedata)
+		{
+			MsgDev(D_NOTE, "Loading model %s\n", modname);
+			switch (*(uint32_t*)filedata) // call the apropriate loader
+			{
+				case IDSTUDIOHEADER:
+					LoadStudio(ent, filedata, fileLength, flags);
+					break;
+				case IDALIASHEADER:
+					LoadAlias(ent, filedata, fileLength, flags);
+					break;
+				default:
+				{
+					MsgDev(D_ERROR, "%s unknown file format\n", modname);
+					Mem_Free(filedata, C_FILESYSTEM);
+					break;
+				}
+			}
+		}
+		else {
+			MsgDev(D_INFO, "^3Warning:^7 Failed to load model %s\n", modname);
 		}
 	}
 
