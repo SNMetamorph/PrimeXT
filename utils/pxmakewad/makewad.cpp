@@ -14,16 +14,19 @@ GNU General Public License for more details.
 */
 
 #include "conprint.h"
-#include <windows.h>
-#include <direct.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <io.h>
 #include "cmdlib.h"
 #include "stringlib.h"
 #include "filesystem.h"
 #include "imagelib.h"
 #include "makewad.h"
+#include "crashhandler.h"
+#include "build_info.h"
+#include "app_info.h"
+#include <windows.h>
+#include <direct.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <io.h>
 
 wfile_t *source_wad = NULL;	// input WAD3 file
 wfile_t *output_wad = NULL;	// output WAD3 file
@@ -334,6 +337,40 @@ void CDECL Shutdown_Makewad( void )
 	W_Close( output_wad );
 }
 
+static void PrintTitle()
+{
+	Msg("\n");
+	Msg(" pxmakewad^7 - utility for editing or creating WAD files from textures\n");
+	Msg(" Version   : %s (^1%s ^7/ ^2%s ^7/ ^3%s ^7/ ^4%s^7)\n",
+		APP_VERSION_STRING,
+		BuildInfo::GetDate(),
+		BuildInfo::GetCommitHash(),
+		BuildInfo::GetArchitecture(),
+		BuildInfo::GetPlatform()
+	);
+	Msg(" Usage     : -input <wad|tga|bmp|lmp> -output <wadname.wad|tga|bmp|lmp> <options>\n");
+	Msg(" Example   : -input \"C:/img/*.bmp\" -output new.wad\n");
+	Msg("\n");
+}
+
+static void PrintOptionsList()
+{
+	Msg(" Options list:\n"
+		"    ^5-replace^7      : replace existing images if they matched by size\n"
+		"    ^5-forcereplace^7 : replace existing images even if they doesn't matched by size\n"
+		"    ^5-resize^7       : resize source image in percents (range 10%%-200%%)\n"
+		"    ^5-help^7         : print more detailed instructions\n"
+		"    ^5-dev^7          : set message verbose level (1-5, default is 3)\n"
+		"\n"
+	);
+}
+
+static void WaitForKey()
+{
+	Msg("Press any key to exit...");
+	system("pause>nul");
+}
+
 int main( int argc, char **argv )
 {
 	char	srcpath[256], dstpath[256];
@@ -344,12 +381,10 @@ int main( int argc, char **argv )
 	char	str[64];
 	int	i;
 
-	start = I_FloatTime();
-
-	Msg( "		Image Quantizer & Wad3 creator\n" );
-	Msg( "		   Xash XT Group 2018(^1c^7)\n\n\n" );
-
 	atexit( Shutdown_Makewad );
+	Sys_SetupCrashHandler();
+	PrintTitle();
+	start = I_FloatTime();
 
 	// initialize command vars
 	SetReplaceLevel( REP_IGNORE );
@@ -398,14 +433,8 @@ int main( int argc, char **argv )
 
 	if( i != argc || !srcset || !dstset )
 	{
-		Msg( "Usage: -input <wad|tga|bmp|lmp> -output <wadname.wad|tga|bmp|lmp> <options>\n"
-		"\nlist options:\n"
-		"^2-replace^7 - replace existing images if they matched by size\n"
-		"^2-forcereplace^7 - replace existing images even if they doesn't matched by size\n"
-		"^2-resize^7 - resize source image in percents (range 10%%-200%%)\n\n"
-		"\t\tPress any key to exit" );
-
-		system( "pause>nul" );
+		PrintOptionsList();
+		WaitForKey();
 		return 1;
 	}
 	else
@@ -453,15 +482,9 @@ int main( int argc, char **argv )
 			}
 			else
 			{
-				Msg( "Usage: -input <wad|tga|bmp|lmp> -output <wadname.wad|tga|bmp|lmp> <options>\n"
-				"\nlist options:\n"
-				"^2-replace^7 - replace existing images if they matched by size\n"
-				"^2-forcereplace^7 - replace existing images even if they doesn't matched by size\n"
-				"^2-resize^7 - resize source image in percents (range 10%%-200%%)\n\n"
-				"\t\tPress any key to exit" );
-
+				PrintOptionsList();
 				Mem_Free( search );
-				system( "pause>nul" );
+				WaitForKey();
 				return 1;
 			}
 		}
@@ -503,5 +526,6 @@ int main( int argc, char **argv )
 		Mem_Check(); // report leaks
 	}
 
+	Sys_RestoreCrashHandler();
 	return 0;
 }

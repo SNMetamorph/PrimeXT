@@ -23,17 +23,16 @@ if(BUILD_PXMV OR BUILD_PXSV)
 endif()
 
 add_subdirectory(pxstudiomdl)
+add_subdirectory(pxmakewad)
 add_subdirectory(pxbsp)
 add_subdirectory(pxcsg)
 add_subdirectory(pxrad)
 add_subdirectory(pxvis)
-#add_subdirectory(pxmakefont)
-#add_subdirectory(pxmakewad)
-#add_subdirectory(pxmaketex)
 
 # append all targets to list
 list(APPEND UTILS_TARGETS
 	pxstudiomdl
+	pxmakewad
 	pxbsp
 	pxcsg
 	pxrad
