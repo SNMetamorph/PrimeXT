@@ -14,11 +14,8 @@ GNU General Public License for more details.
 */
 
 #include "conprint.h"
-#include <windows.h>
-#include <direct.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <io.h>
 #include "cmdlib.h"
 #include "stringlib.h"
 #include "imagelib.h"
