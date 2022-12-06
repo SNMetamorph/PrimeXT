@@ -2265,10 +2265,33 @@ void CStudioBoneSetup :: CalcBoneAdj( Vector pos[], Vector4D q[], const byte con
 		{
 			i = pbonecontroller->index;
 
+#if 1
 			if( i == STUDIO_MOUTH )
 				value = bound( 0.0f, ( mouthopen / 64.0f ), 1.0f );				
 			else value = bound( 0.0f, (float)controllers[i] / 255.0f, 1.0f );
-			value = (1.0f - value) * pbonecontroller->start + value * pbonecontroller->end;
+#else
+			if (i != STUDIO_MOUTH) 
+			{
+				//value = bound(0.0f, (float)controllers[i] / 255.0f, 1.0f);
+				//value = (1.0f - value) * pbonecontroller->start + value * pbonecontroller->end;
+				if (pbonecontroller->type & STUDIO_RLOOP)
+				{
+					value = controllers[j] * (360.0/256.0) + pbonecontroller->start;
+				}
+				else 
+				{
+					value = controllers[j] / 255.0;
+					if (value < 0) value = 0;
+					if (value > 1.0) value = 1.0;
+					value = (1.0 - value) * pbonecontroller[j].start + value * pbonecontroller[j].end;
+				}
+			}
+			else 
+			{
+				value = bound(0.0f, (mouthopen / 64.0f), 1.0f);
+				value = (1.0f - value) * pbonecontroller->start + value * pbonecontroller->end;
+			}
+#endif
 
 			switch( pbonecontroller->type & STUDIO_TYPES )
 			{
@@ -2319,10 +2342,33 @@ void CStudioBoneSetup :: CalcBoneAdj( float adj[], const byte controllers[], byt
 		{
 			i = pbonecontroller->index;
 
+#if 1
 			if( i == STUDIO_MOUTH )
 				value = bound( 0.0f, ( mouthopen / 64.0f ), 1.0f );				
 			else value = bound( 0.0f, (float)controllers[i] / 255.0f, 1.0f );
-			value = (1.0f - value) * pbonecontroller->start + value * pbonecontroller->end;
+#else
+			if (i != STUDIO_MOUTH) 
+			{
+				//value = bound(0.0f, (float)controllers[i] / 255.0f, 1.0f);
+				//value = (1.0f - value) * pbonecontroller->start + value * pbonecontroller->end;
+				if (pbonecontroller->type & STUDIO_RLOOP)
+				{
+					value = controllers[j] * (360.0/256.0) + pbonecontroller->start;
+				}
+				else 
+				{
+					value = controllers[j] / 255.0;
+					if (value < 0) value = 0;
+					if (value > 1.0) value = 1.0;
+					value = (1.0 - value) * pbonecontroller[j].start + value * pbonecontroller[j].end;
+				}
+			}
+			else 
+			{
+				value = bound(0.0f, (mouthopen / 64.0f), 1.0f);
+				value = (1.0f - value) * pbonecontroller->start + value * pbonecontroller->end;
+			}
+#endif
 
 			switch( pbonecontroller->type & STUDIO_TYPES )
 			{

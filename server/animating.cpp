@@ -164,8 +164,8 @@ float CBaseAnimating :: StudioGaitFrameAdvance( void )
 	pev->controller[3] = iTorsoAdjust;
 
 	SetBlending( 0, (pev->angles[PITCH] * 3.0f));
-	pev->angles[YAW] = m_flGaitYaw;
 
+	pev->angles[YAW] = m_flGaitYaw;
 	if( pev->angles[YAW] < -0.0f )
 		pev->angles[YAW] += 360.0f;
 
