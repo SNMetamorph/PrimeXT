@@ -175,7 +175,9 @@ private:
 
 	float CalcStairSmoothValue( float oldz, float newz, float smoothtime, float smoothvalue );
 
-	const Vector StudioGetOrigin( void );
+	// Returns current entity valid origin/angles
+	const Vector StudioGetOrigin();
+	const Vector StudioGetAngles();
 
 	// Interpolate model position and angles and set up matrices
 	void StudioSetUpTransform( void );

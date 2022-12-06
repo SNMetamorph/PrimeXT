@@ -196,7 +196,7 @@ int CStudioModelRenderer :: StudioComputeBBox( void )
 		scale = Vector( RI->currententity->curstate.scale );
 	}
 
-	Vector angles = RI->currententity->angles;
+	Vector angles = StudioGetAngles();
 
 	// don't rotate player model, only aim
 	if( RI->currententity->player ) 
@@ -291,9 +291,14 @@ int CStudioModelRenderer :: StudioCheckLOD( void )
 	return 0; // no lod-levels for this model
 }
 
-const Vector CStudioModelRenderer :: StudioGetOrigin( void )
+const Vector CStudioModelRenderer::StudioGetOrigin()
 {
 	return RI->currententity->origin;
+}
+
+const Vector CStudioModelRenderer::StudioGetAngles()
+{
+	return RI->currententity->angles;
 }
 
 /*
@@ -343,7 +348,7 @@ void CStudioModelRenderer :: StudioSetUpTransform( void )
 	}
 
 	Vector origin = StudioGetOrigin();
-	Vector angles = RI->currententity->angles;
+	Vector angles = StudioGetAngles();
 	Vector scale = Vector( 1.0f, 1.0f, 1.0f );
 
 	// apply lodnum to model
@@ -833,9 +838,9 @@ void CStudioModelRenderer :: CalculateIKLocks( CIKContext *pIK )
 				Vector p1, p2;
 
 				// adjust ground to original ground position
-				estGround = (pTarget->est.pos - RI->currententity->origin);
+				estGround = (pTarget->est.pos - StudioGetOrigin());
 				estGround = estGround - (estGround * up) * up;
-				estGround = RI->currententity->origin + estGround + pTarget->est.floor * up;
+				estGround = StudioGetOrigin() + estGround + pTarget->est.floor * up;
 
 				p1 = estGround + up * pTarget->est.height;
 				p2 = estGround - up * pTarget->est.height;
@@ -935,7 +940,7 @@ void CStudioModelRenderer :: CalculateIKLocks( CIKContext *pIK )
 					else if( m_pGround != NULL )
 					{
 						pTarget->SetPos( trace->endpos );
-						pTarget->SetAngles( RI->currententity->angles );
+						pTarget->SetAngles( StudioGetAngles() );
 
 						// only do this on forward tracking or commited IK ground rules
 						if( pTarget->est.release < 0.1f )
@@ -970,7 +975,7 @@ void CStudioModelRenderer :: CalculateIKLocks( CIKContext *pIK )
 					else
 					{
 						pTarget->SetPos( trace->endpos );
-						pTarget->SetAngles( RI->currententity->angles );
+						pTarget->SetAngles( StudioGetAngles() );
 						pTarget->SetOnWorld( true );
 					}
 				}
@@ -1179,7 +1184,7 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 		ALERT( at_aiconsole, "StudioSetupBones: sequence %i/%i out of range for model %s\n",
 		sequence, m_pStudioHeader->numseq, RI->currentmodel->name );
 		e->curstate.sequence = 0;
-          }
+    }
 
 	pseqdesc = (mstudioseqdesc_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqindex) + e->curstate.sequence;
 	float f = StudioEstimateFrame( pseqdesc );
@@ -1194,7 +1199,7 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 	{
 		if( FBitSet( e->curstate.effects, EF_NOINTERP ))
 			m_pModelInstance->m_ik.ClearTargets();
-		m_pModelInstance->m_ik.Init( &m_boneSetup, e->angles, e->origin, tr.time, tr.realframecount );
+		m_pModelInstance->m_ik.Init( &m_boneSetup, StudioGetAngles(), StudioGetOrigin(), tr.time, tr.realframecount );
 		pIK = &m_pModelInstance->m_ik;
 	}
 
@@ -1246,7 +1251,7 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 		BlendSequence( pos, q, &m_pModelInstance->m_seqblend[i] );
 
 	CIKContext auto_ik;
-	auto_ik.Init( &m_boneSetup, e->angles, e->origin, 0.0f, 0 );
+	auto_ik.Init( &m_boneSetup, StudioGetAngles(), StudioGetOrigin(), 0.0f, 0 );
 	m_boneSetup.CalcAutoplaySequences( &auto_ik, pos, q );
 	if( !CVAR_TO_BOOL( m_pCvarCompatible ))
 		m_boneSetup.CalcBoneAdj( pos, q, m_pModelInstance->m_controller, e->mouth.mouthopen );
@@ -1443,9 +1448,9 @@ void CStudioModelRenderer :: StudioCalcAttachments( matrix3x4 bones[] )
 		// clear attachments
 		for( int i = 0; i < MAXSTUDIOATTACHMENTS; i++ )
 		{
-			if( i < 4 ) e->attachment[i] = e->origin;
-			att[i].angles = e->angles;
-			att[i].origin = e->origin;
+			if( i < 4 ) e->attachment[i] = StudioGetOrigin();
+			att[i].angles = StudioGetAngles();
+			att[i].origin = StudioGetOrigin();
 		}
 		return;
 	}

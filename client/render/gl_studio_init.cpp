@@ -460,7 +460,7 @@ void CStudioModelRenderer :: ClearInstanceData( bool create )
 	memset( &m_pModelInstance->lights, 255, sizeof( byte[MAXDYNLIGHTS] ));
 	memset( &m_pModelInstance->m_controller, 0, sizeof( m_pModelInstance->m_controller ));
 	memset( &m_pModelInstance->m_seqblend, 0, sizeof( m_pModelInstance->m_seqblend ));
-	m_pModelInstance->lerp.stairoldz = RI->currententity->origin[2];
+	m_pModelInstance->lerp.stairoldz = StudioGetOrigin().z;
 	m_pModelInstance->lerp.stairtime = tr.time;
 	m_pModelInstance->m_current_seqblend = 0;
 	m_pModelInstance->light_update = false;
