@@ -179,8 +179,9 @@ extern int		g_world_luxels;
 extern bool		g_noclip;
 extern bool		g_wadtextures;
 extern bool		g_nullifytrigger;
+extern bool		g_compatibility_goldsrc;
 extern bool		g_onlyents;
-extern vec_t		g_csgepsilon;
+extern vec_t	g_csgepsilon;
 
 extern char		g_pszWadInclude[MAX_TEXFILES][64];
 extern int		g_nWadInclude;

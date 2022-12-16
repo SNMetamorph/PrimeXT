@@ -878,16 +878,19 @@ short GetFaceInfoForEntity( mapent_t *mapent )
 	if( g_onlyents ) return -1; // don't modify g_dfaceinfo!
 
 	// NOTE: we guranteed what this function called only for non-point entities
-	const char	*landname = ValueForKey( (entity_t *)mapent, "zhlt_landscape" );
-	int		texture_step = Q_max( 0, IntForKey( (entity_t *)mapent, "zhlt_texturestep" ));
-	int		max_extent = Q_max( 0, IntForKey( (entity_t *)mapent, "zhlt_maxextent" ));
-	int		global_texture_step = TEXTURE_STEP, global_max_extent = MAX_SURFACE_EXTENT;
-	int		lmscale = TEXTURE_STEP * Q_max( 0, FloatForKey( (entity_t *)mapent, "_lmscale" ));
-	short		faceinfo = -1;
+	const char *landname = ValueForKey( (entity_t *)mapent, "zhlt_landscape" );
+	int	texture_step = g_compatibility_goldsrc ? TEXTURE_STEP : Q_max( 0, IntForKey( (entity_t *)mapent, "zhlt_texturestep" ));
+	int	max_extent = g_compatibility_goldsrc ? MAX_SURFACE_EXTENT : Q_max( 0, IntForKey( (entity_t *)mapent, "zhlt_maxextent" ));
+	int	global_texture_step = TEXTURE_STEP, global_max_extent = MAX_SURFACE_EXTENT;
+	int	lmscale = TEXTURE_STEP * Q_max( 0, FloatForKey( (entity_t *)mapent, "_lmscale" ));
+	short faceinfo = -1;
 
-	// TyrUtils: handle _lmscale feature
-	if( lmscale && lmscale != TEXTURE_STEP )
-		texture_step = lmscale;
+	if (!g_compatibility_goldsrc)
+	{
+		// TyrUtils: handle _lmscale feature
+		if (lmscale && lmscale != TEXTURE_STEP)
+			texture_step = lmscale;
+	}
 
 	// update global settings
 	if( g_world_faceinfo != -1 )
@@ -899,32 +902,27 @@ short GetFaceInfoForEntity( mapent_t *mapent )
 	// setup the global parms for world entity
 	if( g_mapentities.Count() == 1 )
 	{
+		// get defaults
+		if( !max_extent ) max_extent = MAX_SURFACE_EXTENT;
+		if( !texture_step ) texture_step = TEXTURE_STEP;
+
 		// if user not specified landscape but desire to change lightmap resolution\subdiv size globally
 		if( !ValueForKey( (entity_t *)mapent, "zhlt_landscape", true ))
 		{
-			// get defaults
-			if( !max_extent ) max_extent = MAX_SURFACE_EXTENT;
-			if( !texture_step ) texture_step = TEXTURE_STEP;
-
 			// check for default values
 			if( max_extent == MAX_SURFACE_EXTENT && texture_step == TEXTURE_STEP )
 				return -1; // nothing changed
 
 			// store a global settings for lightmap resoltion\subdiv size
 			g_world_faceinfo = FaceinfoForTexinfo( landname, texture_step, max_extent, 0 );
-
 			return g_world_faceinfo;
 		}
 		else // user specified landscape for world-entity, so all other entities will be ingnore them
 		{
-			// get defaults
-			if( !max_extent ) max_extent = MAX_SURFACE_EXTENT;
-			if( !texture_step ) texture_step = TEXTURE_STEP;
 			g_groupid++; // increase group number because landscape was specified
 
 			// now we specified a global landscape for all the world brushes but except all other entities (include func_group etc)
 			faceinfo = FaceinfoForTexinfo( landname, texture_step, max_extent, g_groupid );
-
 			return faceinfo;
 		}
 	}
@@ -934,34 +932,29 @@ short GetFaceInfoForEntity( mapent_t *mapent )
 		if( !CheckKey( (entity_t *)mapent, "zhlt_landscape" ) && !CheckKey( (entity_t *)mapent, "zhlt_texturestep" ) && !CheckKey( (entity_t *)mapent, "zhlt_maxextent" ))
 		{
 			return g_world_faceinfo; // nothing changed
-                    }
+        }
+
+		// get defaults
+		if( !max_extent ) max_extent = global_max_extent;
+		if( !texture_step ) texture_step = global_texture_step;
 
 		// if user not specified landscape but desire to change lightmap resolution\subdiv size
 		if( !ValueForKey( (entity_t *)mapent, "zhlt_landscape", true ))
 		{
-			// get defaults
-			if( !max_extent ) max_extent = global_max_extent;
-			if( !texture_step ) texture_step = global_texture_step;
-
 			// check for default values
 			if( max_extent == global_max_extent && texture_step == global_texture_step )
 				return g_world_faceinfo; // nothing changed
 
 			// store a global settings for lightmap resoltion\subdiv size
 			faceinfo = FaceinfoForTexinfo( landname, texture_step, max_extent, 0 );
-
 			return faceinfo;
 		}
 		else // user specified landscape for world-entity, so all other entities will be ingnore them
 		{
-			// get defaults
-			if( !max_extent ) max_extent = global_max_extent;
-			if( !texture_step ) texture_step = global_texture_step;
 			g_groupid++; // increase group number because landscape was specified
 
 			// now we specified a global landscape for all the world brushes but except all other entities (include func_group etc)
 			faceinfo = FaceinfoForTexinfo( landname, texture_step, max_extent, g_groupid );
-
 			return faceinfo;
 		}
 	}
