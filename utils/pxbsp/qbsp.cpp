@@ -530,8 +530,6 @@ static void PrintBspUsage( void )
 	Msg( "    -maxnodesize val : sets the maximum portal node size\n" );
 	Msg( "    -epsilon         : portal chop precision epsilon\n" );
 	Msg( "    mapfile          : the mapfile to compile\n\n" );
-
-	exit( 1 );
 }
 
 /*
@@ -542,7 +540,7 @@ main
 */
 int main( int argc, char **argv )
 {
-	int	i;
+	int		i;
 	double	start, end;
 	char	source[1024];
 	char	str[64];
@@ -613,11 +611,14 @@ int main( int argc, char **argv )
 		}
 	}
 
-	if( i != argc || !source[0] )
+	if (i != argc || !source[0])
 	{
-		if( !source[0] )
-			Msg( "no mapfile specified\n" );
+		if (!source[0]) {
+			Msg("no mapfile specified\n");
+		}
+
 		PrintBspUsage();
+		exit(1);
 	}
 
 	start = I_FloatTime ();

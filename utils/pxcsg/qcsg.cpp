@@ -648,6 +648,7 @@ static void PrintCsgUsage( void )
 	Msg( "    -nonullifytrigger: remove 'aaatrigger' visible faces\n" );
 	Msg( "    -epsilon         : CSG chop precision epsilon\n" );
 	Msg( "    mapfile          : the mapfile to compile\n\n" );
+}
 
 /*
 ============
@@ -675,7 +676,7 @@ int main( int argc, char **argv )
 	char	mapname[1024];
 	double	start, end;
 	char	str[64];
-	int	i;
+	int		i;
 
 	atexit( Sys_CloseLog );
 	Sys_SetupCrashHandler();
@@ -741,11 +742,14 @@ int main( int argc, char **argv )
 		}
 	}
 
-	if( i != argc || !source[0] )
+	if (i != argc || !source[0])
 	{
-		if( !source[0] )
-			Msg( "no mapfile specified\n" );
+		if (!source[0]) {
+			Msg("no mapfile specified\n");
+		}
+
 		PrintCsgUsage();
+		exit(1);
 	}
 
 	start = I_FloatTime ();

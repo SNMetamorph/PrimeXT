@@ -2503,8 +2503,6 @@ static void PrintRadUsage( void )
 	Msg( "    -gammamode #   : gamma correction mode (0, 1, 2)\n" );
 #endif
 	Msg( "    bspfile        : The bspfile to compile\n\n" );
-
-	exit( 1 );
 }
 
 /*
@@ -2518,7 +2516,7 @@ int main( int argc, char **argv )
 {
 	double	start, end;
 	char	str[64];
-	int	i;
+	int		i;
 
 	atexit( Sys_CloseLog );
 	source[0] = '\0';
@@ -2659,11 +2657,14 @@ int main( int argc, char **argv )
 		}
 	}
 
-	if( i != argc || !source[0] )
+	if (i != argc || !source[0])
 	{
-		if( !source[0] )
-			Msg( "no mapfile specified\n" );
+		if (!source[0]) {
+			Msg("no mapfile specified\n");
+		}
+
 		PrintRadUsage();
+		exit(1);
 	}
 
 	start = I_FloatTime ();

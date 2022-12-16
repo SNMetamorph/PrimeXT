@@ -563,6 +563,7 @@ static void PrintVisUsage( void )
 	Msg( "    -nosort        : don't sort portals (disable optimization)\n" );
 	Msg( "    -maxdistance   : limit visible distance (e.g. for fogged levels)\n" );
 	Msg( "    bspfile        : The bspfile to compile\n\n" );
+}
 
 /*
 ============
@@ -587,9 +588,9 @@ main
 int main( int argc, char **argv )
 {
 	char	portalfile[1024];
-	char		source[1024];
+	char	source[1024];
 	int		i;
-	double		start, end;
+	double	start, end;
 	char	str[64];
 
 	atexit( Sys_CloseLog );
@@ -615,10 +616,6 @@ int main( int argc, char **argv )
 		else if( !Q_strcmp( argv[i], "-fast" ))
 		{
 			g_fastvis = true;
-		}
-		else if( !Q_strcmp( argv[i], "-full" ))
-		{
-			// compatibility issues, does nothing
 		}
 		else if( !Q_strcmp( argv[i], "-nosort" ))
 		{
@@ -647,11 +644,14 @@ int main( int argc, char **argv )
 		}
 	}
 
-	if( i != argc || !source[0] )
+	if (i != argc || !source[0])
 	{
-		if( !source[0] )
-			Msg( "no mapfile specified\n" );
+		if (!source[0]) {
+			Msg("no mapfile specified\n");
+		}
+
 		PrintVisUsage();
+		exit(1);
 	}
 
 	start = I_FloatTime ();
