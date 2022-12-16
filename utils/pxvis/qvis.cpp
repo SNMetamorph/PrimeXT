@@ -564,7 +564,19 @@ static void PrintVisUsage( void )
 	Msg( "    -maxdistance   : limit visible distance (e.g. for fogged levels)\n" );
 	Msg( "    bspfile        : The bspfile to compile\n\n" );
 
-	exit( 1 );
+/*
+============
+CheckDeprecatedParameter
+
+checks should be parameter ignored or not
+============
+*/
+static bool CheckDeprecatedParameter(const char *name)
+{
+	if (!Q_strcmp(name, "-full"))
+		return true;
+	else
+		return false;
 }
 
 /*
@@ -586,7 +598,11 @@ int main( int argc, char **argv )
 
 	for( i = 1; i < argc; i++ )
 	{
-		if( !Q_strcmp( argv[i], "-dev" ))
+		if (CheckDeprecatedParameter(argv[i]))
+		{
+			// compatibility issues, does nothing
+		}
+		else if( !Q_strcmp( argv[i], "-dev" ))
 		{
 			SetDeveloperLevel( atoi( argv[i+1] ));
 			i++;

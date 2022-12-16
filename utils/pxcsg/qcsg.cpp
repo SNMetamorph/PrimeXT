@@ -649,7 +649,19 @@ static void PrintCsgUsage( void )
 	Msg( "    -epsilon         : CSG chop precision epsilon\n" );
 	Msg( "    mapfile          : the mapfile to compile\n\n" );
 
-	exit( 1 );
+/*
+============
+CheckDeprecatedParameter
+
+checks should be parameter ignored or not
+============
+*/
+static bool CheckDeprecatedParameter(const char *name)
+{
+	if (!Q_strcmp(name, "-wadautodetect"))
+		return true;
+	else
+		return false;
 }
 
 /*
@@ -671,7 +683,11 @@ int main( int argc, char **argv )
 
 	for( i = 1; i < argc; i++ )
 	{
-		if( !Q_strcmp( argv[i], "-dev" ))
+		if (CheckDeprecatedParameter(argv[i]))
+		{
+			// compatibility issues, does nothing
+		}
+		else if( !Q_strcmp( argv[i], "-dev" ))
 		{
 			SetDeveloperLevel( atoi( argv[i+1] ));
 			i++;
