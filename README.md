@@ -1,6 +1,6 @@
 # PrimeXT
 [![Discord](https://img.shields.io/discord/824538989616824350)](https://discord.gg/BxQUMUescJ)
-![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/SNMetamorph/PrimeXT/nightly-builds/master)
+![GitHub Workflow Status (branch)](https://img.shields.io/github/actions/workflow/status/SNMetamorph/PrimeXT/nightly-builds.yml?branch=master)
 ![GitHub release (by tag)](https://img.shields.io/github/downloads/SNMetamorph/PrimeXT/total)
 ![GitHub repo size](https://img.shields.io/github/repo-size/SNMetamorph/PrimeXT)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/SNMetamorph/PrimeXT)
