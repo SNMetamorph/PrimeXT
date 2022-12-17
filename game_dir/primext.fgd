@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 17 November 2022)
+// PrimeXT FGD (last updated 17 December 2022)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -735,7 +735,7 @@
 // Entities
 //
 
-@PointClass iconsprite("sprites/fgd/aiscrip_seq.spr") base(Targetname, Targetx, Parent, Angles) size(-2 -2 0, 2 2 8) color(255 0 255)=aiscripted_sequence:"AI Scripted Sequence"
+@PointClass base(Targetname, Targetx, Parent, Angles) size(-16 -16 0, 16 16 72) color(255 0 255)=aiscripted_sequence:"AI Scripted Sequence"
 [
 	m_iszEntity(string) : "Target Monster"
 	m_iszPlay(string) : "Action Animation" : ""
