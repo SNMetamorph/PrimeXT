@@ -950,16 +950,16 @@ int CRestore::ReadField( const void *pBaseData, DATAMAP *pMap, TYPEDESCRIPTION *
 						break;
 					case FIELD_BOOLEAN:
 					case FIELD_INTEGER:
-						*((int *)pOutputData) = *( int *)pInputData;
+						*((int *)pOutputData) = *(int *)pInputData;
 						break;
 					case FIELD_SHORT:
-						*((short *)pOutputData) = *( short *)pInputData;
+						*((short *)pOutputData) = *(short *)pInputData;
 						break;
 					case FIELD_CHARACTER:
-						*((char *)pOutputData) = *( char *)pInputData;
+						*((char *)pOutputData) = *(char *)pInputData;
 						break;
 					case FIELD_POINTER:
-						*((int *)pOutputData) = *( int *)pInputData;
+						*((void **)pOutputData) = *(void **)pInputData;
 						break;
 					case FIELD_FUNCTION:
 						ReadFunction( pMap, (void **)pOutputData, (const char *)pInputData );

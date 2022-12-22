@@ -52,6 +52,7 @@ extern CBaseEntity	*CreateEntityByName( const char *className, entvars_t *pev = 
 #define ALLOC_STRING	(*g_engfuncs.pfnAllocString)
 
 #ifdef HAVE_STRINGPOOL
+// TODO need some workarond for 64-bit string offset
 #define STRING		(*g_engfuncs.pfnSzFromIndex)
 #define MAKE_STRING		(*g_engfuncs.pfnAllocString)
 #else

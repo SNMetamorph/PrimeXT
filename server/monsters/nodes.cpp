@@ -576,7 +576,7 @@ int CGraph :: FindShortestPath ( int *piPath, int iStart, int iDest, int iHull, 
 	int		iVisitNode;
 	int		iCurrentNode;
 	int		iNumPathNodes;
-	int		iHullMask;
+	int		iHullMask = 0;
 
 	if ( !m_fGraphPresent || !m_fGraphPointersSet )
 	{// protect us in the case that the node graph isn't available or built
