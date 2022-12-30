@@ -12,11 +12,11 @@ list(APPEND DIR_SOURCES
 	"../common/wadfile.cpp"
 	"../common/mathlib.cpp"
 	"../common/stringlib.cpp"
+	"../common/quantizer.cpp"
 	"../common/zone.cpp"
 	"${CMAKE_SOURCE_DIR}/public/build_info.cpp"
 	"imagelib.cpp"
 	"lmptex.cpp"
-    "quantizer.cpp"
     "makewad.cpp"
     "miptex.cpp"
 )

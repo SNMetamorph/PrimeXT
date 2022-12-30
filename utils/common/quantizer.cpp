@@ -1,6 +1,7 @@
 /*
 quantizer.cpp - image quantizer. based on Antony Dekker original code
 Copyright (C) 2015 Uncle Mike
+Copyright (C) 2022 SNMetamorph
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -16,9 +17,6 @@ GNU General Public License for more details.
 #include "port.h"
 #include "cmdlib.h"
 #include "mathlib.h"
-#include "stringlib.h"
-#include "scriplib.h"
-#include "filesystem.h"
 #include "imagelib.h"
 
 #define netsize		256			// number of colours used
