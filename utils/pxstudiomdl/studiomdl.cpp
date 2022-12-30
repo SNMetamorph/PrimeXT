@@ -25,6 +25,7 @@ GNU General Public License for more details.
 #include "activity.h"
 #include "activitymap.h"
 #include "crashhandler.h"
+#include "app_info.h"
 #include "build_info.h"
 
 CUtlArray< char >	g_KeyValueText;
@@ -5411,16 +5412,43 @@ void ParseScript( void )
 	}
 }
 
-void PrintTitle()
+static void PrintTitle(bool printUsage = true)
 {
-	Msg("	PrimeXT Studio Model Compiler\n");
-	Msg("	Based on P2:Savior Studio Model Compiler\n");
-	Msg("	Copyright (^1c^7) XashXT Group 2018\n");
-	Msg("	Built %s, commit %s, arch %s\n\n\n", 
-		BuildInfo::GetDate(), 
-		BuildInfo::GetCommitHash(), 
-		BuildInfo::GetArchitecture()
+	Msg("\n");
+	Msg(" pxstudiomdl^7 - advanced, crossplatform studiomodel compiler, based on p2studiomdl\n");
+	Msg(" Version   : %s (^1%s ^7/ ^2%s ^7/ ^3%s ^7/ ^4%s^7)\n",
+		APP_VERSION_STRING,
+		BuildInfo::GetDate(),
+		BuildInfo::GetCommitHash(),
+		BuildInfo::GetArchitecture(),
+		BuildInfo::GetPlatform()
 	);
+
+	if (printUsage) {
+		Msg(" Usage     : pxstudiomdl <options> file.qc\n");
+	}
+	Msg("\n");
+}
+
+static void PrintOptionsList()
+{
+	Msg(" Options list:\n"
+		"    ^5-t^7   : replace all model textures with specified\n"
+		"    ^5-r^7   : tag reversed\n"
+		"    ^5-n^7   : tag bad normals\n"
+		"    ^5-f^7   : flip all triangles\n"
+		"    ^5-a^7   : normal blend angle\n"
+		"    ^5-h^7   : dump hitboxes\n"
+		"    ^5-g^7   : dump transition graph\n"
+		"    ^5-dev^7 : set message verbose level (1-5, default is 3)\n"
+		"\n"
+	);
+}
+
+static void WaitForKey()
+{
+	Msg("Press any key to exit...");
+	system("pause>nul");
 }
 
 int main( int argc, char **argv )
@@ -5454,24 +5482,13 @@ int main( int argc, char **argv )
 	if( argc == 1 )
 	{
 		PrintTitle();
-		Msg( "usage: studiomdl <options> file.qc\n"
-		"\nlist options:\n"
-		"^2-t^7 - replace all model textures with specified\n"
-		"^2-r^7 - tag reversed\n"
-		"^2-n^7 - tag bad normals\n"
-		"^2-f^7 - flip all triangles\n"
-		"^2-a^7 - normal blend angle\n"
-		"^2-h^7 - dump hitboxes\n"
-		"^2-g^7 - dump transition graph\n"
-		"^2-dev^7 - shows developer messages\n"
-		"\n\t\tPress any key to exit" );
-
-		system( "pause>nul" );
+		PrintOptionsList();
+		WaitForKey();
 		return 1;
 	}
 
-	Sys_InitLog( "studiomdl.log" );
-	PrintTitle();
+	Sys_InitLog("pxstudiomdl.log");
+	PrintTitle(false);
 
 	for( i = 1; i < argc - 1; i++ )
 	{
