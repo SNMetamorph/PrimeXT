@@ -5423,6 +5423,7 @@ static void PrintTitle(bool printUsage = true)
 		BuildInfo::GetArchitecture(),
 		BuildInfo::GetPlatform()
 	);
+	Msg(" Website   : https://github.com/SNMetamorph/PrimeXT\n");
 
 	if (printUsage) {
 		Msg(" Usage     : pxstudiomdl <options> file.qc\n");
