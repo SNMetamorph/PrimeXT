@@ -348,6 +348,7 @@ static void PrintTitle()
 		BuildInfo::GetArchitecture(),
 		BuildInfo::GetPlatform()
 	);
+	Msg(" Website   : https://github.com/SNMetamorph/PrimeXT\n");
 	Msg(" Usage     : -input <wad|tga|bmp|lmp> -output <wadname.wad|tga|bmp|lmp> <options>\n");
 	Msg(" Example   : -input \"C:/img/*.bmp\" -output new.wad\n");
 	Msg("\n");
