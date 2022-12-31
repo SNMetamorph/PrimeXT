@@ -12,11 +12,14 @@ set(DIR_UTILS_OUTPUT
 	${CMAKE_BINARY_DIR}/$<CONFIG>/${GAMEDIR}/devkit/
 )
 
-# link mimalloc library
+# add mimalloc library subproject
 add_subdirectory("${CMAKE_SOURCE_DIR}/external/mimalloc" mimalloc EXCLUDE_FROM_ALL)
 set_compiler_runtime(mimalloc-static STATIC)
 
-# link mxtk library (used by pxmv and pxsv)
+# add squish library subproject
+add_subdirectory("${CMAKE_SOURCE_DIR}/external/squish" squish)
+
+# add mxtk library subproject (used by pxmv and pxsv)
 if(BUILD_PXMV OR BUILD_PXSV)
 	add_subdirectory("${CMAKE_SOURCE_DIR}/external/mxtk" mxtk)
 	set_compiler_runtime(mxtk STATIC)

@@ -143,10 +143,7 @@ if(ENABLE_STATIC_LINKING)
 	set_compiler_runtime(${PROJECT_NAME} STATIC)
 endif()
 
-# add squish library depedency
-add_subdirectory("${CMAKE_SOURCE_DIR}/external/squish" squish)
-
-# link depedency libraries
+# link dependency libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE
 	squish
 	mimalloc-static
