@@ -145,13 +145,25 @@ allocate image struct and partially fill it
 */
 rgbdata_t *Image_Alloc( int width, int height, bool paletted )
 {
-	size_t pic_size = sizeof( rgbdata_t ) + (width * height * 4);
-	rgbdata_t	*pic = (rgbdata_t *)Mem_Alloc( pic_size );
+	size_t pixel_size = paletted ? 1 : 4;
+	size_t palette_size = paletted ? 1024 : 0;
+	size_t pic_size = sizeof(rgbdata_t) + (width * height * pixel_size) + palette_size;
+	rgbdata_t *pic = (rgbdata_t *)Mem_Alloc(pic_size);
 
-	pic->buffer = ((byte *)pic) + sizeof( rgbdata_t ); 
-	pic->size = (width * height * 4);
+	pic->buffer = ((byte *)pic) + sizeof(rgbdata_t); 
+	if (paletted)
+	{
+		pic->palette = ((byte *)pic) + sizeof(rgbdata_t) + width * height * pixel_size;
+		pic->flags |= IMAGE_QUANTIZED;
+	}
+	else
+	{
+		pic->palette = nullptr;
+	}
+
 	pic->width = width;
 	pic->height = height;
+	pic->size = width * height * pixel_size;
 
 	return pic;
 }
@@ -207,16 +219,18 @@ make an copy of image
 */
 rgbdata_t *Image_Copy( rgbdata_t *src )
 {
-	size_t pic_size = sizeof( rgbdata_t ) + src->size;
-	rgbdata_t	*dst = (rgbdata_t *)Mem_Alloc( pic_size );
-	dst->buffer = ((byte *)dst) + sizeof( rgbdata_t );
-	memcpy( dst->buffer, src->buffer, src->size );
+	rgbdata_t *dst = Image_Alloc(src->width, src->height, FBitSet(src->flags, IMAGE_QUANTIZED));
 
+	memcpy(dst->buffer, src->buffer, src->size);
+	if (FBitSet(src->flags, IMAGE_QUANTIZED) && src->palette) {
+		memcpy(dst->palette, src->palette, 1024); // copy palette if it's presented
+	}
+	
 	dst->size = src->size;
 	dst->width = src->width;
 	dst->height = src->height;
 	dst->flags = src->flags;
-	VectorCopy( src->reflectivity, dst->reflectivity );
+	VectorCopy(src->reflectivity, dst->reflectivity);
 
 	return dst;
 }
@@ -402,7 +416,11 @@ rgbdata_t *Image_LoadTGA( const char *name, const byte *buffer, size_t filesize 
 		}
 	}
 
-	pic = Image_Alloc( targa_header.width, targa_header.height );
+	bool paletted = (targa_header.image_type == 1 || targa_header.image_type == 9);
+	pic = Image_Alloc(targa_header.width, targa_header.height, paletted);
+	if (paletted) {
+		memcpy(pic->palette, palette, sizeof(palette));
+	}
 
 	columns = targa_header.width;
 	rows = targa_header.height;
@@ -416,8 +434,16 @@ rgbdata_t *Image_LoadTGA( const char *name, const byte *buffer, size_t filesize 
 	}
 	else
 	{
-		pixbuf = targa_rgba + ( rows - 1 ) * columns * 4;
-		row_inc = -columns * 4 * 2;
+		if (FBitSet(pic->flags, IMAGE_QUANTIZED))
+		{
+			pixbuf = targa_rgba + (rows - 1) * columns;
+			row_inc = -columns * 2;
+		}
+		else
+		{
+			pixbuf = targa_rgba + (rows - 1) * columns * 4;
+			row_inc = -columns * 2 * 4;
+		}
 	}
 
 	compressed = ( targa_header.image_type == 9 || targa_header.image_type == 10 || targa_header.image_type == 11 );
@@ -487,10 +513,17 @@ rgbdata_t *Image_LoadTGA( const char *name, const byte *buffer, size_t filesize 
 			pic->reflectivity[1] += TextureToLinear( green );
 			pic->reflectivity[2] += TextureToLinear( blue );
 
-			*pixbuf++ = red;
-			*pixbuf++ = green;
-			*pixbuf++ = blue;
-			*pixbuf++ = alpha;
+			if (FBitSet(pic->flags, IMAGE_QUANTIZED))
+			{
+				*pixbuf++ = palIndex;
+			}
+			else
+			{
+				*pixbuf++ = red;
+				*pixbuf++ = green;
+				*pixbuf++ = blue;
+				*pixbuf++ = alpha;
+			}
 
 			if( ++col == columns )
 			{
@@ -581,6 +614,26 @@ rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize 
 
 	memcpy( palette, buf_p, cbPalBytes );
 
+	if (bhdr.bitsPerPixel == 8)
+	{
+		pixbuf = pic->palette;
+
+		// bmp have a reversed palette colors
+		for (int i = 0; i < bhdr.colors; i++)
+		{
+			*pixbuf++ = palette[i][2];
+			*pixbuf++ = palette[i][1];
+			*pixbuf++ = palette[i][0];
+			*pixbuf++ = palette[i][3];
+
+			if (palette[i][0] != palette[i][1] || palette[i][1] != palette[i][2])
+				pic->flags |= IMAGE_HAS_COLOR;
+		}
+	}
+	else {
+		bpp = 4;
+	}
+
 	buf_p += cbPalBytes;
 	bps = bhdr.width * (bhdr.bitsPerPixel >> 3);
 
@@ -647,10 +700,18 @@ rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize 
 				green = palette[palIndex][1];
 				blue = palette[palIndex][0];
 				alpha = palette[palIndex][3];
-				*pixbuf++ = red;
-				*pixbuf++ = green;
-				*pixbuf++ = blue;
-				*pixbuf++ = alpha;
+
+				if (FBitSet(pic->flags, IMAGE_QUANTIZED))
+				{
+					*pixbuf++ = palIndex;
+				}
+				else
+				{
+					*pixbuf++ = red;
+					*pixbuf++ = green;
+					*pixbuf++ = blue;
+					*pixbuf++ = alpha;
+				}
 				break;
 			case 16:
 				shortPixel = *(word *)buf_p, buf_p += 2;
@@ -688,7 +749,7 @@ rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize 
 			pic->reflectivity[1] += TextureToLinear( green );
 			pic->reflectivity[2] += TextureToLinear( blue );
 
-			if(( red != green ) || ( green != blue ))
+			if (!FBitSet(pic->flags, IMAGE_QUANTIZED) && (red != green) || (green != blue))
 				pic->flags |= IMAGE_HAS_COLOR;
 
 			if( alpha != 255 )
@@ -719,6 +780,117 @@ Image_LoadDDS
 rgbdata_t *Image_LoadDDS( const char *name, const byte *buffer, size_t filesize )
 {
 	return DDSToRGBA( name, buffer, filesize );
+}
+
+/*
+=============
+Image_LoadMIP
+
+just read header
+=============
+*/
+rgbdata_t *Image_LoadMIP( const char *name, const byte *buffer, size_t filesize )
+{
+	char tmpname[64];
+
+	if (filesize < sizeof(mip_t))
+		return NULL;
+
+	mip_t *mip = (mip_t *)buffer;
+
+	if (!Image_ValidSize(name, mip->width, mip->height))
+		return NULL;
+
+	int pixels = mip->width * mip->height;
+
+	if (filesize < (sizeof(mip_t) + ((pixels * 85) >> 6) + sizeof(short) + 768))
+	{
+		MsgDev(D_ERROR, "Image_LoadMIP: %s probably corrupted\n", name);
+		return NULL;
+	}
+
+	rgbdata_t *pic = Image_Alloc(mip->width, mip->height, true);
+	memcpy(pic->buffer, buffer + mip->offsets[0], pixels);
+	uint8_t *pal = (uint8_t *)buffer + mip->offsets[0] + (((mip->width * mip->height) * 85) >> 6);
+
+	int numcolors = *(int16_t *)pal;
+	if (numcolors != 256) {
+		MsgDev(D_WARN, "Image_LoadMIP: %s invalid palette num colors %i\n", name, numcolors);
+	}
+	pal += sizeof(int16_t); // skip colorsize 
+
+	// expand palette
+	for (int i = 0; i < 256; i++)
+	{
+		pic->palette[i * 4 + 0] = *pal++;
+		pic->palette[i * 4 + 1] = *pal++;
+		pic->palette[i * 4 + 2] = *pal++;
+		pic->palette[i * 4 + 3] = 255;
+
+		if (pic->palette[i * 4 + 0] != pic->palette[i * 4 + 1] || pic->palette[i * 4 + 1] != pic->palette[i * 4 + 2])
+			pic->flags |= IMAGE_HAS_COLOR;
+	}
+
+	// check for one-bit alpha
+	COM_FileBase(name, tmpname);
+
+	if (tmpname[0] == '{' && pic->palette[255 * 3 + 0] == 0 && pic->palette[255 * 3 + 1] == 0 && pic->palette[255 * 3 + 2] == 255)
+		pic->flags |= IMAGE_HAS_1BIT_ALPHA;
+
+	return pic;
+}
+
+/*
+=============
+Image_LoadLMP
+
+just read header
+=============
+*/
+rgbdata_t *Image_LoadLMP( const char *name, const byte *buffer, size_t filesize )
+{
+	if (filesize < sizeof(lmp_t))
+		return NULL;
+
+	lmp_t *lmp = (lmp_t *)buffer;
+
+	if (!Image_ValidSize(name, lmp->width, lmp->height))
+		return NULL;
+
+	int pixels = lmp->width * lmp->height;
+
+	if (filesize < (sizeof(lmp_t) + pixels + sizeof(short) + 768))
+	{
+		MsgDev(D_ERROR, "Image_LoadLMP: %s probably corrupted\n", name);
+		return NULL;
+	}
+
+	rgbdata_t *pic = Image_Alloc(lmp->width, lmp->height, true);
+	memcpy(pic->buffer, buffer + sizeof(lmp_t), pixels);
+	uint8_t *pal = (uint8_t *)buffer + sizeof(lmp_t) + pixels;
+
+	int numcolors = *(int16_t *)pal;
+	if (numcolors != 256) {
+		MsgDev(D_WARN, "Image_LoadLMP: %s invalid palette num colors %i\n", name, numcolors);
+	}
+	pal += sizeof(int16_t); // skip colorsize 
+
+	// expand palette
+	for (int i = 0; i < 256; i++)
+	{
+		pic->palette[i * 4 + 0] = *pal++;
+		pic->palette[i * 4 + 1] = *pal++;
+		pic->palette[i * 4 + 2] = *pal++;
+		pic->palette[i * 4 + 3] = 255;
+
+		if (pic->palette[i * 4 + 0] != pic->palette[i * 4 + 1] || pic->palette[i * 4 + 1] != pic->palette[i * 4 + 2])
+			pic->flags |= IMAGE_HAS_COLOR;
+	}
+
+	// always has the alpha
+	pic->flags |= IMAGE_HAS_1BIT_ALPHA;
+
+	return pic;
 }
 
 /*
@@ -794,50 +966,104 @@ Image_SaveTGA
 */
 bool Image_SaveTGA( const char *name, rgbdata_t *pix )
 {
-	const char	*comment = "Generated by XashNT MakeTex tool.\0";
-	int		y, outsize, pixel_size = 4;
-	const byte	*bufend, *in;
-	byte		*buffer, *out;
+	const char	*comment = "Generated by PrimeXT Image Library\0";
+	int	y, outsize, pixel_size = 4;
+	const byte *bufend, *in;
+	byte *buffer, *out;
 
-	if( COM_FileExists( name ))
+	if (COM_FileExists(name))
 		return false; // already existed
 
 	// bogus parameter check
-	if( !pix->buffer )
+	if (!pix->buffer)
 		return false;
 
-	if( pix->flags & IMAGE_HAS_ALPHA )
-		outsize = pix->width * pix->height * 4 + 18 + Q_strlen( comment );
-	else outsize = pix->width * pix->height * 3 + 18 + Q_strlen( comment );
+	if (FBitSet(pix->flags, IMAGE_QUANTIZED)) {
+		outsize = pix->width * pix->height + 18 + Q_strlen(comment);
+	}
+	else
+	{
+		if (pix->flags & IMAGE_HAS_ALPHA)
+			outsize = pix->width * pix->height * 4 + 18 + Q_strlen(comment);
+		else
+			outsize = pix->width * pix->height * 3 + 18 + Q_strlen(comment);
+	}
+
+	if (FBitSet(pix->flags, IMAGE_QUANTIZED)) {
+		outsize += 768;	// reserve bytes for palette
+	}
 
 	buffer = (byte *)Mem_Alloc( outsize );
-	memset( buffer, 0, 18 );
+	memset(buffer, 0, sizeof(tga_t));
+	tga_t *header = reinterpret_cast<tga_t*>(buffer);
 
 	// prepare header
 	buffer[0] = Q_strlen( comment ); // tga comment length
-	buffer[2] = 2; // uncompressed type
+
+	if (FBitSet(pix->flags, IMAGE_QUANTIZED))
+	{
+		buffer[1] = 1;	// color map type
+		buffer[2] = 1;	// uncompressed color mapped image
+		buffer[5] = 0;	// number of palette entries (lo)
+		buffer[6] = 1;	// number of palette entries (hi)
+		buffer[7] = 24;	// palette bpp
+	}
+	else {
+		buffer[2] = 2; // uncompressed type
+	}
+
 	buffer[12] = (pix->width >> 0) & 0xFF;
 	buffer[13] = (pix->width >> 8) & 0xFF;
 	buffer[14] = (pix->height >> 0) & 0xFF;
 	buffer[15] = (pix->height >> 8) & 0xFF;
-	buffer[16] = ( pix->flags & IMAGE_HAS_ALPHA ) ? 32 : 24; // RGB pixel size
-	buffer[17] = ( pix->flags & IMAGE_HAS_ALPHA ) ? 8 : 0; // 8 bits of alpha
+
+	if (!FBitSet(pix->flags, IMAGE_QUANTIZED))
+	{
+		buffer[16] = (pix->flags & IMAGE_HAS_ALPHA) ? 32 : 24; // RGB pixel size
+		buffer[17] = (pix->flags & IMAGE_HAS_ALPHA) ? 8 : 0; // 8 bits of alpha
+	}
+	else {
+		buffer[16] = 8; // pixel size
+		buffer[17] = 0; // ???
+	}
 
 	Q_strncpy( (char *)(buffer + 18), comment, Q_strlen( comment )); 
 	out = buffer + 18 + Q_strlen( comment );
 
-	// swap rgba to bgra and flip upside down
-	for( y = pix->height - 1; y >= 0; y-- )
+	// store palette, swapping rgb to bgr
+	if (FBitSet(pix->flags, IMAGE_QUANTIZED))
 	{
-		in = pix->buffer + y * pix->width * pixel_size;
-		bufend = in + pix->width * pixel_size;
-		for( ; in < bufend; in += pixel_size )
+		for (int i = 0; i < 256; i++)
 		{
-			*out++ = in[2];
-			*out++ = in[1];
-			*out++ = in[0];
-			if( pix->flags & IMAGE_HAS_ALPHA )
-				*out++ = in[3];
+			*out++ = pix->palette[i * 4 + 2];	// blue
+			*out++ = pix->palette[i * 4 + 1];	// green
+			*out++ = pix->palette[i * 4 + 0];	// red
+		}
+
+		// store the image data (and flip upside down)
+		for (y = pix->height - 1; y >= 0; y--)
+		{
+			in = pix->buffer + y * pix->width;
+			bufend = in + pix->width;
+			for (; in < bufend; in++)
+				*out++ = *in;
+		}
+	}
+	else
+	{
+		// swap rgba to bgra and flip upside down
+		for (y = pix->height - 1; y >= 0; y--)
+		{
+			in = pix->buffer + y * pix->width * pixel_size;
+			bufend = in + pix->width * pixel_size;
+			for (; in < bufend; in += pixel_size)
+			{
+				*out++ = in[2];
+				*out++ = in[1];
+				*out++ = in[0];
+				if (pix->flags & IMAGE_HAS_ALPHA)
+					*out++ = in[3];
+			}
 		}
 	}
 
@@ -854,6 +1080,7 @@ bool Image_SaveBMP( const char *name, rgbdata_t *pix )
 	BITMAPINFOHEADER	bmih;
 	uint32_t	cbBmpBits;
 	byte		*pb, *pbBmpBits;
+	uint32_t	cbPalBytes = 0;
 	uint32_t	biTrueWidth;
 	int		pixel_size;
 	int		i, x, y;
@@ -865,9 +1092,16 @@ bool Image_SaveBMP( const char *name, rgbdata_t *pix )
 	if( !pix->buffer )
 		return false;
 
-	if( FBitSet( pix->flags, IMAGE_HAS_ALPHA ))
-		pixel_size = 4;
-	else pixel_size = 3;
+	if (FBitSet(pix->flags, IMAGE_QUANTIZED)) {
+		pixel_size = 1;
+	}
+	else 
+	{
+		if (FBitSet(pix->flags, IMAGE_HAS_ALPHA))
+			pixel_size = 4;
+		else 
+			pixel_size = 3;
+	}
 
 	COM_CreatePath( (char *)name );
 
@@ -878,11 +1112,14 @@ bool Image_SaveBMP( const char *name, rgbdata_t *pix )
 	// after create sprite or lump image, it's just standard requiriments 
 	biTrueWidth = ((pix->width + 3) & ~3);
 	cbBmpBits = biTrueWidth * pix->height * pixel_size;
+	if (pixel_size == 1) {
+		cbPalBytes = 256 * sizeof(RGBQUAD);
+	}
 
 	// Bogus file header check
 	bmfh.bfType = MAKEWORD( 'B', 'M' );
-	bmfh.bfSize = sizeof( bmfh ) + sizeof( bmih ) + cbBmpBits;
-	bmfh.bfOffBits = sizeof( bmfh ) + sizeof( bmih );
+	bmfh.bfSize = sizeof( bmfh ) + sizeof( bmih ) + cbBmpBits + cbPalBytes;
+	bmfh.bfOffBits = sizeof( bmfh ) + sizeof( bmih ) + cbPalBytes;
 	bmfh.bfReserved1 = bmfh.bfReserved2 = 0;
 
 	// write header
@@ -898,32 +1135,38 @@ bool Image_SaveBMP( const char *name, rgbdata_t *pix )
 	bmih.biSizeImage = cbBmpBits;
 	bmih.biXPelsPerMeter = 0;
 	bmih.biYPelsPerMeter = 0;
-	bmih.biClrUsed = 0;
+	bmih.biClrUsed = (pixel_size == 1) ? 256 : 0;
 	bmih.biClrImportant = 0;
 
 	// write info header
 	write( file, &bmih, sizeof( bmih ));
 
-	pbBmpBits = (byte *)Mem_Alloc( cbBmpBits );
-
+	pbBmpBits = (byte *)Mem_Alloc(cbBmpBits);
 	pb = pix->buffer;
-
-	for( y = 0; y < bmih.biHeight; y++ )
+	for (y = 0; y < bmih.biHeight; y++)
 	{
-		i = (bmih.biHeight - 1 - y ) * (bmih.biWidth);
-
-		for( x = 0; x < pix->width; x++ )
+		i = (bmih.biHeight - 1 - y) * (bmih.biWidth);
+		for (x = 0; x < pix->width; x++)
 		{
-			// 24 bit
-			pbBmpBits[i*pixel_size+0] = pb[x*4+2];
-			pbBmpBits[i*pixel_size+1] = pb[x*4+1];
-			pbBmpBits[i*pixel_size+2] = pb[x*4+0];
+			if (pixel_size == 1)
+			{
+				// 8-bit
+				pbBmpBits[i] = pb[x];
+			}
+			else
+			{
+				// 24 bit
+				pbBmpBits[i * pixel_size + 0] = pb[x * pixel_size + 2];
+				pbBmpBits[i * pixel_size + 1] = pb[x * pixel_size + 1];
+				pbBmpBits[i * pixel_size + 2] = pb[x * pixel_size + 0];
+			}
 
-			if( pixel_size == 4 ) // write alpha channel
-				pbBmpBits[i*pixel_size+3] = pb[x*4+3];
+			if (pixel_size == 4) {
+				// write alpha channel
+				pbBmpBits[i * pixel_size + 3] = pb[x * pixel_size + 3];
+			}
 			i++;
 		}
-
 		pb += pix->width * pixel_size;
 	}
 
@@ -1051,7 +1294,7 @@ static void Image_Resample32LerpLine( const byte *in, byte *out, int inwidth, in
 	}
 }
 
-void Image_Resample32Lerp( const void *indata, int inwidth, int inheight, void *outdata, int outwidth, int outheight )
+static void Image_Resample32Lerp( const void *indata, int inwidth, int inheight, void *outdata, int outwidth, int outheight )
 {
 	const byte *inrow;
 	int	i, j, r, yi, oldy = 0, f, fstep, lerp, endy = (inheight - 1);
@@ -1160,6 +1403,29 @@ void Image_Resample32Lerp( const void *indata, int inwidth, int inheight, void *
 	Mem_Free( resamplerow1 );
 }
 
+static void Image_Resample8Nolerp( const void *indata, int inwidth, int inheight, void *outdata, int outwidth, int outheight )
+{
+	int	i, j;
+	byte	*in, *inrow;
+	size_t	frac, fracstep;
+	byte	*out = (byte *)outdata;
+
+	in = (byte *)indata;
+	fracstep = inwidth * 0x10000 / outwidth;
+
+	for( i = 0; i < outheight; i++, out += outwidth )
+	{
+		inrow = in + inwidth * (i * inheight / outheight);
+		frac = fracstep >> 1;
+
+		for( j = 0; j < outwidth; j++ )
+		{
+			out[j] = inrow[frac>>16];
+			frac += fracstep;
+		}
+	}
+}
+
 /*
 ================
 Image_Resample
@@ -1167,24 +1433,99 @@ Image_Resample
 */
 rgbdata_t *Image_Resample( rgbdata_t *pic, int new_width, int new_height )
 {
-	if( !pic ) return NULL;
+	if (!pic) 
+		return NULL;
 
 	// nothing to resample ?
-	if( pic->width == new_width && pic->height == new_height )
+	if (pic->width == new_width && pic->height == new_height)
 		return pic;
 
-	MsgDev( D_REPORT, "Image_Resample: from %ix%i to %ix%i\n", pic->width, pic->height, new_width, new_height );
+	MsgDev(D_REPORT, "Image_Resample: from %ix%i to %ix%i\n", pic->width, pic->height, new_width, new_height);
+	rgbdata_t *out = Image_Alloc(new_width, new_height, FBitSet(pic->flags, IMAGE_QUANTIZED));
 
-	rgbdata_t *out = Image_Alloc( new_width, new_height );
+	if (FBitSet(pic->flags, IMAGE_QUANTIZED))
+		Image_Resample8Nolerp(pic->buffer, pic->width, pic->height, out->buffer, out->width, out->height);
+	else
+		Image_Resample32Lerp(pic->buffer, pic->width, pic->height, out->buffer, out->width, out->height);
 
-	Image_Resample32Lerp( pic->buffer, pic->width, pic->height, out->buffer, out->width, out->height );
+	// copy remaining data from source
+	if (FBitSet(pic->flags, IMAGE_QUANTIZED))
+		memcpy(out->palette, pic->palette, 1024);
 
 	out->flags = pic->flags;
 
 	// release old image
-	Mem_Free( pic );
+	Mem_Free(pic);
 
 	return out;
+}
+
+/*
+==============
+Image_MakeOneBitAlpha
+
+remap all pixels of color 0, 0, 255 to index 255
+and remap index 255 to something else
+==============
+*/
+void Image_MakeOneBitAlpha( rgbdata_t *pic )
+{
+	byte	transtable[256], *buf;
+	int	i, j, firsttrans = -1;
+
+	if (!pic) return;
+
+	if (!FBitSet(pic->flags, IMAGE_QUANTIZED))
+		return; // only for quantized images
+
+	// don't move colors in quake palette!
+	if (FBitSet(pic->flags, IMAGE_QUAKE1_PAL))
+	{
+		// needs for software mip generator
+		SetBits(pic->flags, IMAGE_HAS_1BIT_ALPHA);
+		return;
+	}
+
+	for (i = 0; i < 256; i++)
+	{
+		if (IS_TRANSPARENT((pic->palette + (i * 4))))
+		{
+			transtable[i] = 255;
+			if (firsttrans < 0)
+				firsttrans = i;
+		}
+		else transtable[i] = i;
+	}
+
+	// if there is some transparency, translate it
+	if (firsttrans >= 0)
+	{
+		if (!IS_TRANSPARENT((pic->palette + (255 * 4))))
+			transtable[255] = firsttrans;
+		buf = pic->buffer;
+
+		for (j = 0; j < pic->height; j++)
+		{
+			for (i = 0; i < pic->width; i++)
+			{
+				*buf = transtable[*buf];
+				buf++;
+			}
+		}
+
+		// move palette entry for pixels previously mapped to entry 255
+		pic->palette[firsttrans * 4 + 0] = pic->palette[255 * 4 + 0];
+		pic->palette[firsttrans * 4 + 1] = pic->palette[255 * 4 + 1];
+		pic->palette[firsttrans * 4 + 2] = pic->palette[255 * 4 + 2];
+		pic->palette[firsttrans * 4 + 3] = pic->palette[255 * 4 + 3];
+		pic->palette[255 * 4 + 0] = TRANSPARENT_R;
+		pic->palette[255 * 4 + 1] = TRANSPARENT_G;
+		pic->palette[255 * 4 + 2] = TRANSPARENT_B;
+		pic->palette[255 * 4 + 3] = 0xFF;
+	}
+
+	// needs for software mip generator
+	SetBits(pic->flags, IMAGE_HAS_1BIT_ALPHA);
 }
 
 /*
@@ -1199,10 +1540,14 @@ rgbdata_t *Image_ExtractAlphaMask( rgbdata_t *pic )
 {
 	rgbdata_t *out;
 
-	if( !pic ) return NULL;
+	if (!pic)
+		return NULL;
 
-	if( !FBitSet( pic->flags, IMAGE_HAS_ALPHA ))
+	if (!FBitSet(pic->flags, IMAGE_HAS_ALPHA))
 		return NULL; // no alpha-channel stored
+
+	if (FBitSet(pic->flags, IMAGE_QUANTIZED))
+		return NULL; // can extract only from RGBA buffer
 
 	out = Image_Copy( pic ); // duplicate the image
 
@@ -1256,14 +1601,17 @@ rgbdata_t *Image_MergeColorAlpha( rgbdata_t *color, rgbdata_t *alpha )
 	rgbdata_t *int_alpha;
 	byte	avalue;
 
-	if( !color ) return NULL;
-	if( !alpha ) return color;
+	if (!color) return NULL;
+	if (!alpha) return color;
 
-	if( FBitSet( color->flags, IMAGE_DXT_FORMAT ))
+	if (FBitSet(color->flags, IMAGE_DXT_FORMAT))
 		return color; // can't merge compressed formats
 
-	if( FBitSet( alpha->flags, IMAGE_DXT_FORMAT ))
+	if (FBitSet(alpha->flags, IMAGE_DXT_FORMAT))
 		return color; // can't merge compressed formats
+
+	if (FBitSet(color->flags | alpha->flags, IMAGE_QUANTIZED))
+		return color; // can't merge paletted images
 
 	int_alpha = Image_Copy( alpha ); // duplicate the image
 

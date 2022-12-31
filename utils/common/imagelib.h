@@ -166,6 +166,8 @@ typedef struct saveimage_s
 rgbdata_t *Image_LoadTGA( const char *name, const byte *buffer, size_t filesize );
 rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize );
 rgbdata_t *Image_LoadDDS( const char *name, const byte *buffer, size_t filesize );
+rgbdata_t *Image_LoadMIP( const char *name, const byte *buffer, size_t filesize );
+rgbdata_t *Image_LoadLMP( const char *name, const byte *buffer, size_t filesize );
 
 // image storing
 bool Image_SaveTGA( const char *name, rgbdata_t *pix );
@@ -190,12 +192,10 @@ rgbdata_t *Image_Resample( rgbdata_t *pic, int new_width, int new_height );
 rgbdata_t *Image_MergeColorAlpha( rgbdata_t *color, rgbdata_t *alpha );
 rgbdata_t *Image_CreateCubemap( rgbdata_t *images[6], bool skybox = false, bool nomips = false );
 void Image_ConvertBumpStalker( rgbdata_t *bump, rgbdata_t *gloss );
-void Image_MakeSignedDistanceField( rgbdata_t *pic );
 rgbdata_t *Image_ExtractAlphaMask( rgbdata_t *pic );
 void Image_MakeOneBitAlpha( rgbdata_t *pic );
 rgbdata_t *Image_Quantize( rgbdata_t *pic );
 void Image_ApplyGamma( rgbdata_t *pic );
-rgbdata_t *Image_Flip( rgbdata_t *src );
 
 extern float	g_gamma;
 
