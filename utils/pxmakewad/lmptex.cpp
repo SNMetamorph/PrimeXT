@@ -14,18 +14,14 @@ GNU General Public License for more details.
 */
 
 #include "conprint.h"
-#include <windows.h>
-#include <direct.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <math.h>
-#include <io.h>
 #include "cmdlib.h"
 #include "stringlib.h"
 #include "filesystem.h"
 #include "imagelib.h"
 #include "makewad.h"
 #include "miptex.h"
+#include "port.h"
+#include <math.h>
 
 bool LMP_WriteLmptex( const char *lumpname, rgbdata_t *pix, bool todisk )
 {
