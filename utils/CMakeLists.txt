@@ -26,6 +26,7 @@ if(BUILD_PXMV OR BUILD_PXSV)
 endif()
 
 add_subdirectory(pxstudiomdl)
+add_subdirectory(pxmakewad)
 add_subdirectory(pxbsp)
 add_subdirectory(pxcsg)
 add_subdirectory(pxrad)
@@ -34,17 +35,12 @@ add_subdirectory(pxvis)
 # append all targets to list
 list(APPEND UTILS_TARGETS
 	pxstudiomdl
+	pxmakewad
 	pxbsp
 	pxcsg
 	pxrad
 	pxvis
 )
-
-if(XASH_WIN32)
-	# for now, enable it only for Windows, because it contains a lot of platform-specific code
-	add_subdirectory(pxmakewad)
-	list(APPEND UTILS_TARGETS pxmakewad)
-endif()
 
 if(BUILD_PXMV)
 	add_subdirectory(pxmv)

@@ -33,10 +33,10 @@ endif()
 
 add_executable(${PROJECT_NAME} ${DIR_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
-	"."
+	"." # keep in memory, order of entries important!
+	"../common"
 	"../../public"
 	"../../common"
-	"../common"
 	"${CMAKE_SOURCE_DIR}/external/squish"
 	"${CMAKE_SOURCE_DIR}/external/mimalloc/include"
 )
