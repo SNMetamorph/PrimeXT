@@ -56,7 +56,7 @@ typedef int qboolean;
 // We need to inform the compiler that Host_Error() and Sys_Error() will
 // never return, so any conditions that leeds to them being called are
 // guaranteed to be false in the following code
-#define NO_RETURN __declspec( noreturn )
+#define NO_RETURN [[noreturn]]
 #define ALIGN16   alignas(16)
 
 // a simple string implementation
