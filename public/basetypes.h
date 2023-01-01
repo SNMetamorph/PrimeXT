@@ -1,8 +1,7 @@
 /*
 basetypes.h - aliases for some base types for convenience
 Copyright (C) 2012 Uncle Mike
-
-This file is part of XashNT source code.
+Copyright (C) 2022 SNMetamorph
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,16 +32,17 @@ typedef unsigned long	dword;
 typedef unsigned int	uint;
 typedef unsigned long	ulong;
 
-typedef uint8_t		uint8;
-typedef int8_t		int8;
-typedef int16_t		int16;
-typedef uint16_t	uint16;
-typedef int32_t		int32;
-typedef uint32_t	uint32;
-typedef int64_t		int64;
-typedef uint64_t	uint64;
+typedef uint8_t 		uint8;
+typedef int8_t 			int8;
+typedef int16_t 		int16;
+typedef uint16_t 		uint16;
+typedef int32_t 		int32;
+typedef uint32_t 		uint32;
+typedef int64_t 		int64;
+typedef uint64_t 		uint64;
 
-typedef int64 longtime_t;
+typedef uint32_t        poolhandle_t;
+typedef int64			longtime_t;
 
 #undef true
 #undef false
@@ -57,7 +57,7 @@ typedef int qboolean;
 // never return, so any conditions that leeds to them being called are
 // guaranteed to be false in the following code
 #define NO_RETURN __declspec( noreturn )
-#define ALIGN16   alignas(16) //__declspec(align(16))
+#define ALIGN16   alignas(16)
 
 // a simple string implementation
 #define MAX_STRING		256
@@ -67,9 +67,9 @@ typedef char		string[MAX_STRING];
 enum
 {
 	D_INFO = 1,	// "-dev 1", shows various system messages
-	D_ERROR,		// "-dev 2", shows critical warnings 
+	D_ERROR,	// "-dev 2", shows critical warnings 
 	D_WARN,		// "-dev 3", shows not critical system warnings
-	D_REPORT,		// "-dev 4", show system reports for advanced users and engine developers
+	D_REPORT,	// "-dev 4", show system reports for advanced users and engine developers
 	D_NOTE		// "-dev 5", show system notifications for engine developers
 };
 
@@ -80,4 +80,4 @@ enum
 #define DXT_ENCODE_ALPHA_SDF		0x1A04	// signed distance field
 #define DXT_ENCODE_NORMAL_AG_PARABOLOID	0x1A07	// paraboloid projection
 
-#endif//BASETYPES_H
+#endif // BASETYPES_H
