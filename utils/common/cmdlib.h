@@ -31,8 +31,8 @@ GNU General Public License for more details.
 #define bound( min, num, max )	((num) >= (min) ? ((num) < (max) ? (num) : (max)) : (min))
 #define ASSERT( exp )		if(!( exp )) COM_Assert( "%s:%i\n", __FILE__, __LINE__ )
 
-void COM_Assert( const char *error, ... );
-void COM_FatalError( const char *error, ... );
+NO_RETURN void COM_Assert( const char *error, ... );
+NO_RETURN void COM_FatalError( const char *error, ... );
 void COM_InitCmdlib( char **argv, int argc );
 bool COM_GetLastParmExt( char *out, size_t size );
 #define COM_GetLastParm( a )	COM_GetLastParmExt( a, sizeof( a ))

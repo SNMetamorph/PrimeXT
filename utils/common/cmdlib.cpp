@@ -115,12 +115,12 @@ bool COM_GetLastParmExt( char *out, size_t size )
 
 /*
 ============
-COM_Error
+COM_FatalError
 
 Stop the app with error
 ============
 */
-void COM_FatalError( const char *error, ... )
+NO_RETURN void COM_FatalError( const char *error, ... )
 {
 	char	message[8192];
 	va_list	argptr;
@@ -140,7 +140,7 @@ COM_Assert
 assertation
 ============
 */
-void COM_Assert( const char *error, ... )
+NO_RETURN void COM_Assert( const char *error, ... )
 {
 	char	message[8192];
 	va_list	argptr;
