@@ -427,7 +427,7 @@ static bool W_SysOpen( wfile_t *wad, const char *filename, const char *mode, boo
 			opt |= O_BINARY;
 			break;
 		default:
-			MsgDev( D_ERROR, "W_Open: %s: unknown char in mode (%c)\n", filename, mode, mode[ind] );
+			MsgDev( D_ERROR, "W_Open: %s: unknown char in mode (%c)\n", filename, mode[ind] );
 			break;
 		}
 	}
