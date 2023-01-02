@@ -599,9 +599,9 @@ rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize 
 	if( !Image_ValidSize( name, columns, rows ))
 		return NULL;          
 
-	pic = Image_Alloc( columns, rows );
+	pic = Image_Alloc( columns, rows, (bhdr.bitsPerPixel == 4 || bhdr.bitsPerPixel == 8));
 
-	if( bhdr.bitsPerPixel <= 8 )
+	if (bhdr.bitsPerPixel <= 8)
 	{
 		// figure out how many entries are actually in the table
 		if( bhdr.colors == 0 )
@@ -614,7 +614,7 @@ rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize 
 
 	memcpy( palette, buf_p, cbPalBytes );
 
-	if (bhdr.bitsPerPixel == 8)
+	if (bhdr.bitsPerPixel == 4 || bhdr.bitsPerPixel == 8)
 	{
 		pixbuf = pic->palette;
 
@@ -683,16 +683,43 @@ rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize 
 			case 4:
 				alpha = *buf_p++;
 				palIndex = alpha >> 4;
-				*pixbuf++ = red = palette[palIndex][2];
-				*pixbuf++ = green = palette[palIndex][1];
-				*pixbuf++ = blue = palette[palIndex][0];
-				*pixbuf++ = palette[palIndex][3];
-				if( ++column == columns ) break;
+				red = palette[palIndex][2];
+				green = palette[palIndex][1];
+				blue = palette[palIndex][0];
+				alpha = palette[palIndex][3];
+
+				if (FBitSet(pic->flags, IMAGE_QUANTIZED))
+				{
+					*pixbuf++ = palIndex;
+				}
+				else
+				{
+					*pixbuf++ = red;
+					*pixbuf++ = green;
+					*pixbuf++ = blue;
+					*pixbuf++ = alpha;
+				}
+
+				if (++column == columns)
+					break;
+
 				palIndex = alpha & 0x0F;
-				*pixbuf++ = red = palette[palIndex][2];
-				*pixbuf++ = green = palette[palIndex][1];
-				*pixbuf++ = blue = palette[palIndex][0];
-				*pixbuf++ = palette[palIndex][3];
+				red = palette[palIndex][2];
+				green = palette[palIndex][1];
+				blue = palette[palIndex][0];
+				alpha = palette[palIndex][3];
+
+				if (FBitSet(pic->flags, IMAGE_QUANTIZED))
+				{
+					*pixbuf++ = palIndex;
+				}
+				else
+				{
+					*pixbuf++ = red;
+					*pixbuf++ = green;
+					*pixbuf++ = blue;
+					*pixbuf++ = alpha;
+				}
 				break;
 			case 8:
 				palIndex = *buf_p++;
@@ -1468,14 +1495,12 @@ remap all pixels of color 0, 0, 255 to index 255
 and remap index 255 to something else
 ==============
 */
-void Image_MakeOneBitAlpha( rgbdata_t *pic )
+void Image_MakeOneBitAlpha( rgbdata_t *pic, bool translateTransparency )
 {
 	byte	transtable[256], *buf;
 	int	i, j, firsttrans = -1;
 
-	if (!pic) return;
-
-	if (!FBitSet(pic->flags, IMAGE_QUANTIZED))
+	if (!pic || !FBitSet(pic->flags, IMAGE_QUANTIZED))
 		return; // only for quantized images
 
 	// don't move colors in quake palette!
@@ -1498,7 +1523,7 @@ void Image_MakeOneBitAlpha( rgbdata_t *pic )
 	}
 
 	// if there is some transparency, translate it
-	if (firsttrans >= 0)
+	if (translateTransparency && firsttrans >= 0)
 	{
 		if (!IS_TRANSPARENT((pic->palette + (255 * 4))))
 			transtable[255] = firsttrans;
@@ -1522,6 +1547,14 @@ void Image_MakeOneBitAlpha( rgbdata_t *pic )
 		pic->palette[255 * 4 + 1] = TRANSPARENT_G;
 		pic->palette[255 * 4 + 2] = TRANSPARENT_B;
 		pic->palette[255 * 4 + 3] = 0xFF;
+	}
+	else if (!translateTransparency)
+	{
+		// just turn last color to blue
+		pic->palette[255*4+0] = TRANSPARENT_R;
+		pic->palette[255*4+1] = TRANSPARENT_G;
+		pic->palette[255*4+2] = TRANSPARENT_B;
+		pic->palette[255*4+3] = 0xFF;
 	}
 
 	// needs for software mip generator

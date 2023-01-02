@@ -183,7 +183,6 @@ void Image_PackRGB( float flColor[3], uint32_t &icolor );
 void Image_UnpackRGB( uint32_t icolor, float flColor[3] );
 char Image_HintFromSuf( const char *lumpname );
 rgbdata_t *COM_LoadImage( const char *filename, bool quiet = false );
-rgbdata_t *COM_LoadImageMemory( const char *filename, const byte *buf, size_t fileSize );
 const imgtype_t *Image_ImageTypeFromHint( char value );
 bool COM_SaveImage( const char *filename, rgbdata_t *pix );
 bool Image_ValidSize( const char *name, int width, int height );
@@ -193,7 +192,7 @@ rgbdata_t *Image_MergeColorAlpha( rgbdata_t *color, rgbdata_t *alpha );
 rgbdata_t *Image_CreateCubemap( rgbdata_t *images[6], bool skybox = false, bool nomips = false );
 void Image_ConvertBumpStalker( rgbdata_t *bump, rgbdata_t *gloss );
 rgbdata_t *Image_ExtractAlphaMask( rgbdata_t *pic );
-void Image_MakeOneBitAlpha( rgbdata_t *pic );
+void Image_MakeOneBitAlpha( rgbdata_t *pic, bool translateTransparency = true );
 rgbdata_t *Image_Quantize( rgbdata_t *pic );
 void Image_ApplyGamma( rgbdata_t *pic );
 
