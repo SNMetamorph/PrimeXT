@@ -551,7 +551,7 @@ rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize 
 {
 	byte	*buf_p, *pixbuf;
 	byte	palette[256][4];
-	int	columns, column, rows, row, bpp = 4;
+	int	columns, column, rows, row, bpp = 1;
 	size_t	cbPalBytes = 0, padSize = 0, bps = 0;
 	rgbdata_t *pic;
 	bmp_t	bhdr;
