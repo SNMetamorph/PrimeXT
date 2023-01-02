@@ -1,5 +1,8 @@
 name: nightly-builds
-on: push
+on: 
+  push:
+    paths-ignore:
+      - 'documentation/**'
 
 jobs:
   build-windows:
