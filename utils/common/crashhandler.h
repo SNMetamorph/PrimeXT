@@ -21,3 +21,4 @@ GNU General Public License for more details.
 //
 void Sys_SetupCrashHandler();
 void Sys_RestoreCrashHandler();
+void Sys_WaitForDebugger();

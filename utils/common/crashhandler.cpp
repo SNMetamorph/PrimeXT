@@ -50,6 +50,25 @@ GNU General Public License for more details.
 
 /*
 ================
+Sys_WaitForDebugger
+
+Useful for debugging things that shutdowns too fast
+================
+*/
+void Sys_WaitForDebugger()
+{
+#if XASH_WIN32
+	Sys_Print("Waiting for debugger...\n");
+	while (!IsDebuggerPresent()) {
+		Sleep(250);
+	}
+#else
+	// TODO implement
+#endif
+}
+
+/*
+================
 Sys_Crash
 
 Crash handler, called from system
