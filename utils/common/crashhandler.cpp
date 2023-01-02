@@ -250,12 +250,14 @@ static LONG _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 	Sys_Warn( "Sys_Crash: call %p at address %p", pInfo->ExceptionRecord->ExceptionAddress, pInfo->ExceptionRecord->ExceptionCode );
 #endif
 
-	if (GetDeveloperLevel() <= 0)
+	if (GetDeveloperLevel() <= D_WARN)
 	{
 		// no reason to call debugger in release build - just exit
 		exit(1);
 		return EXCEPTION_CONTINUE_EXECUTION;
 	}
+	
+	Sys_WaitForDebugger();
 
 	if( oldFilter )
 		return oldFilter( pInfo );
