@@ -485,8 +485,8 @@ static void PrintOptionsList()
 
 static void WaitForKey()
 {
-	Msg("Press any key to exit...");
-	system("pause>nul");
+	Msg("Press any key to exit...\n");
+	Sys_WaitForKeyInput();
 }
 
 int main( int argc, char **argv )
