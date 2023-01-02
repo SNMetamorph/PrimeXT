@@ -98,31 +98,36 @@ void Sys_CloseLog( void )
 	logfile = NULL;
 }
 
-void Sys_PrintLog( const char *pMsg )
+void Sys_PrintLog(const char *pMsg)
 {
-	if( !pMsg || ignore_log )
+	if (!pMsg || ignore_log)
 		return;
 
 	time_t crt_time;
 	const struct tm	*crt_tm;
-	char logtime[32] = "";
 	static char lastchar;
 
-	time( &crt_time );
-	crt_tm = localtime( &crt_time );
+	time(&crt_time);
+	crt_tm = localtime(&crt_time);
 
 #if XASH_ANDROID
-	__android_log_print( ANDROID_LOG_DEBUG, "Xash", "%s", pMsg );
+	__android_log_print(ANDROID_LOG_DEBUG, "PrimeXT", "%s", pMsg);
 #endif
 
-	if( !logfile )
+	if (!logfile)
 		return;
 
-	if( !lastchar || lastchar == '\n')
-		strftime( logtime, sizeof( logtime ), "[%Y:%m:%d|%H:%M:%S]", crt_tm ); // full time
+	if (!lastchar || lastchar == '\n')
+	{
+		char logtime[32] = "";
+		strftime(logtime, sizeof(logtime), "[%Y:%m:%d|%H:%M:%S]", crt_tm); // full time
+		fprintf(logfile, "%s %s", logtime, pMsg);
+	}
+	else {
+		fprintf(logfile, "%s", pMsg);
+	}
 
-	fprintf( logfile, "%s %s", logtime, pMsg );
-	fflush( logfile );
+	fflush(logfile);
 	lastchar = pMsg[strlen(pMsg) - 1];
 }
 
