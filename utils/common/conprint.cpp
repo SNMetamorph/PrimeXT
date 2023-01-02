@@ -14,14 +14,15 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include <stdio.h>
-#include <time.h>
-#include <stdarg.h>
 #include "port.h"
 #include "basetypes.h"
 #include "stringlib.h"
 #include "conprint.h"
 #include "mathlib.h"
+#include <stdio.h>
+#include <time.h>
+#include <stdarg.h>
+#include <conio.h>
 
 #if XASH_ANDROID
 #include <android/log.h>
@@ -354,5 +355,14 @@ void Sys_Sleep( unsigned int msec )
         usleep( msec * 1000 );
 #else
 #error "Implement me!"
+#endif
+}
+
+void Sys_WaitForKeyInput()
+{
+#if XASH_WIN32
+	system("pause>nul");
+#else
+	getch();
 #endif
 }
