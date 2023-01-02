@@ -70,11 +70,15 @@ endif()
 if(MSVC)
 	# debug mode compiler flags
 	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:/Od>) # disable optimizing at all
-	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:/ZI>) # enable "Edit and Continue" MSVC feature
-	target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:
-		/INCREMENTAL 
-		/SAFESEH:NO
-	>)
+	if(NOT ENABLE_ASAN)
+		target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:/ZI>) # enable "Edit and Continue" MSVC feature
+		target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:
+			/INCREMENTAL 
+			/SAFESEH:NO
+		>)
+	else()
+		target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:/Zi>)
+	endif()
 
 	# release mode compiler flags
 	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release,RelWithDebInfo>:/O2>) # enable optimizing to maximize speed
