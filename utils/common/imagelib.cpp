@@ -1,6 +1,7 @@
 /*
-imagelib.cpp - simple loader\serializer for TGA & BMP
+imagelib.cpp - image processing library for PrimeXT utilities
 Copyright (C) 2015 Uncle Mike
+Copyright (C) 2022 SNMetamorph
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,37 +33,37 @@ GNU General Public License for more details.
 
 #if !XASH_WIN32
 
-#define MAKEWORD( a, b )                        ((short int)(((unsigned char)(a))|(((short int)((unsigned char)(b)))<<8)))
+#define MAKEWORD( a, b )	((short int)(((unsigned char)(a))|(((short int)((unsigned char)(b)))<<8)))
 #define BI_RGB 0
 
 #pragma pack(push, 1)
 typedef struct tagBITMAPFILEHEADER {
-  int16  bfType;
-  uint32 bfSize;
-  int16  bfReserved1;
-  int16  bfReserved2;
-  uint32 bfOffBits;
+  int16_t  bfType;
+  uint32_t bfSize;
+  int16_t  bfReserved1;
+  int16_t  bfReserved2;
+  uint32_t bfOffBits;
 } BITMAPFILEHEADER, *PBITMAPFILEHEADER;
 
 typedef struct tagBITMAPINFOHEADER {
-  uint32 biSize;
-  int32  biWidth;
-  int32  biHeight;
-  int16  biPlanes;
-  int16  biBitCount;
-  uint32 biCompression;
-  uint32 biSizeImage;
-  int32  biXPelsPerMeter;
-  int32  biYPelsPerMeter;
-  uint32 biClrUsed;
-  uint32 biClrImportant;
+  uint32_t biSize;
+  int32_t  biWidth;
+  int32_t  biHeight;
+  int16_t  biPlanes;
+  int16_t  biBitCount;
+  uint32_t biCompression;
+  uint32_t biSizeImage;
+  int32_t  biXPelsPerMeter;
+  int32_t  biYPelsPerMeter;
+  uint32_t biClrUsed;
+  uint32_t biClrImportant;
 } BITMAPINFOHEADER, *PBITMAPINFOHEADER;
 
 typedef struct tagRGBQUAD {
-  uint8 rgbBlue;
-  uint8 rgbGreen;
-  uint8 rgbRed;
-  uint8 rgbReserved;
+  uint8_t rgbBlue;
+  uint8_t rgbGreen;
+  uint8_t rgbRed;
+  uint8_t rgbReserved;
 } RGBQUAD;
 #pragma pack(pop)
 
@@ -84,9 +85,9 @@ const imgtype_t img_hints[] =
 { "_luma",   IMG_LUMA	}, // self-illuminate parts on the diffuse
 { "_add",    IMG_LUMA	}, // self-illuminate parts on the diffuse
 { "_illum",  IMG_LUMA	}, // self-illuminate parts on the diffuse
-{ "_bump",   IMG_STALKER_BUMP	}, // stalker two-component bump
-{ "_bump#",  IMG_STALKER_GLOSS}, // stalker two-component bump
-{ "ft",	   IMG_SKYBOX_FT	},
+{ "_bump",   IMG_STALKER_BUMP }, // stalker two-component bump
+{ "_bump#",  IMG_STALKER_GLOSS }, // stalker two-component bump
+{ "ft",      IMG_SKYBOX_FT	},
 { "bk",      IMG_SKYBOX_BK	},
 { "up",      IMG_SKYBOX_UP	},
 { "dn",      IMG_SKYBOX_DN	},
@@ -98,7 +99,7 @@ const imgtype_t img_hints[] =
 { "ny",      IMG_CUBEMAP_NY	},
 { "pz",      IMG_CUBEMAP_PZ	},
 { "nz",      IMG_CUBEMAP_NZ	},
-{ NULL,    0		}  // terminator
+{ NULL,      0		}  // terminator
 };
 
 static const loadimage_t load_hint[] =
@@ -132,7 +133,6 @@ bool Image_ValidSize( const char *name, int width, int height )
 		MsgDev( D_ERROR, "Image: %s has invalid sizes %i x %i\n", name, width, height );
 		return false;
 	}
-
 	return true;
 }
 

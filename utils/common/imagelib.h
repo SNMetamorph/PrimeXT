@@ -1,6 +1,7 @@
 /*
-imagelib.h - simple loader\serializer for TGA & BMP
+imagelib.h - image processing library for PrimeXT utilities
 Copyright (C) 2015 Uncle Mike
+Copyright (C) 2022 SNMetamorph
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,7 +20,7 @@ GNU General Public License for more details.
 #include <stdint.h>
 
 #define GAMMA		( 2.2f )		// Valve Software gamma
-#define INVGAMMA		( 1.0f / 2.2f )	// back to 1.0
+#define INVGAMMA	( 1.0f / 2.2f )	// back to 1.0
 
 /*
 ========================================================================
@@ -56,23 +57,23 @@ typedef struct
 
 ========================================================================
 */
-#pragma pack( 1 )
+#pragma pack(1)
 typedef struct tga_s
 {
-	byte	id_length;
-	byte	colormap_type;
-	byte	image_type;
-	word	colormap_index;
-	word	colormap_length;
-	byte	colormap_size;
-	word	x_origin;
-	word	y_origin;
-	word	width;
-	word	height;
-	byte	pixel_size;
-	byte	attributes;
+	uint8_t		id_length;
+	uint8_t		colormap_type;
+	uint8_t		image_type;
+	uint16_t	colormap_index;
+	uint16_t	colormap_length;
+	uint8_t		colormap_size;
+	uint16_t	x_origin;
+	uint16_t	y_origin;
+	uint16_t	width;
+	uint16_t	height;
+	uint8_t		pixel_size;
+	uint8_t		attributes;
 } tga_t;
-#pragma pack( )
+#pragma pack()
 
 #define IMAGE_MINWIDTH	1			// last mip-level is 1x1
 #define IMAGE_MINHEIGHT	1
@@ -109,18 +110,18 @@ typedef struct tga_s
 #define IMG_CUBEMAP_NZ	20
 
 // rgbdata->flags
-typedef enum
+typedef enum : uint64_t
 {
-	IMAGE_QUANTIZED		= BIT( 0 ),	// this image already quantized
-	IMAGE_HAS_COLOR		= BIT( 1 ),	// image contain RGB-channel
+	IMAGE_QUANTIZED			= BIT( 0 ),	// this image already quantized
+	IMAGE_HAS_COLOR			= BIT( 1 ),	// image contain RGB-channel
 	IMAGE_HAS_1BIT_ALPHA	= BIT( 2 ),	// textures with '{'
 	IMAGE_HAS_8BIT_ALPHA	= BIT( 3 ),	// image contain full-range alpha-channel
 	IMAGE_HAS_SDF_ALPHA		= BIT( 4 ),	// SIgned distance field alpha
-	IMAGE_CUBEMAP		= BIT( 5 ),	// it's 6-sides cubemap buffer
-	IMAGE_SKYBOX		= BIT( 6 ),	// it's 6-sides skybox buffer
+	IMAGE_CUBEMAP			= BIT( 5 ),	// it's 6-sides cubemap buffer
+	IMAGE_SKYBOX			= BIT( 6 ),	// it's 6-sides skybox buffer
 	IMAGE_DXT_FORMAT		= BIT( 7 ),	// this image have a DXT compression
 	IMAGE_QUAKE1_PAL		= BIT( 8 ),	// image has Quake1 palette
-	IMAGE_NOMIPS		= BIT( 9 ),	// don't build mips before DXT compression
+	IMAGE_NOMIPS			= BIT( 9 ),	// don't build mips before DXT compression
 
 	// Image_Process manipulation flags
 	IMAGE_FLIP_X		= BIT( 10 ),	// flip the image by width
@@ -133,13 +134,13 @@ typedef enum
 // loaded image
 typedef struct rgbdata_s
 {
-	word	width;		// image width
-	word	height;		// image height
-	word	flags;		// misc image flags
-	byte	*palette;		// palette if present
-	byte	*buffer;		// image buffer
-	size_t	size;		// for bounds checking
-	float	reflectivity[3];	// sum color of all pixels
+	size_t		width;		// image width
+	size_t		height;		// image height
+	uint64_t	flags;		// misc image flags
+	byte		*palette;	// palette if present
+	byte		*buffer;	// image buffer
+	size_t		size;		// for bounds checking
+	float		reflectivity[3]; // sum color of all pixels
 } rgbdata_t;
 
 typedef struct imgtype_s
@@ -152,7 +153,7 @@ typedef struct loadimage_s
 {
 	const char	*formatstring;
 	const char	*ext;
-	rgbdata_t		*(*loadfunc)( const char *name, const byte *buffer, size_t filesize );
+	rgbdata_t	*(*loadfunc)( const char *name, const byte *buffer, size_t filesize );
 } loadimage_t;
 
 typedef struct saveimage_s
@@ -198,4 +199,4 @@ void Image_ApplyGamma( rgbdata_t *pic );
 
 extern float	g_gamma;
 
-#endif//IMAGELIB_H
+#endif // IMAGELIB_H
