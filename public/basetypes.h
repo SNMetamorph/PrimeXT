@@ -17,32 +17,33 @@ GNU General Public License for more details.
 #ifndef BASETYPES_H
 #define BASETYPES_H
 
+#include "build.h"
 #include <stdint.h>
 #include <cstddef>
 
-#ifdef _WIN32
+#if XASH_MSVC
 #pragma warning( disable : 4244 )	// MIPS
 #pragma warning( disable : 4018 )	// signed/unsigned mismatch
 #pragma warning( disable : 4305 )	// truncation from const double to float
 #endif
 
-typedef unsigned char	byte;
-typedef unsigned short	word;
-typedef unsigned long	dword;
-typedef unsigned int	uint;
-typedef unsigned long	ulong;
+typedef uint8_t		byte;
+typedef uint16_t	word;
+typedef uint32_t	dword;
+typedef uint32_t	uint;
+typedef uint32_t	ulong;
 
-typedef uint8_t 		uint8;
-typedef int8_t 			int8;
-typedef int16_t 		int16;
-typedef uint16_t 		uint16;
-typedef int32_t 		int32;
-typedef uint32_t 		uint32;
-typedef int64_t 		int64;
-typedef uint64_t 		uint64;
+typedef uint8_t 	uint8;
+typedef int8_t 		int8;
+typedef int16_t 	int16;
+typedef uint16_t 	uint16;
+typedef int32_t 	int32;
+typedef uint32_t 	uint32;
+typedef int64_t 	int64;
+typedef uint64_t 	uint64;
 
-typedef uint32_t        poolhandle_t;
-typedef int64			longtime_t;
+typedef uint32_t    poolhandle_t;
+typedef int64		longtime_t;
 
 #undef true
 #undef false
@@ -60,7 +61,7 @@ typedef int qboolean;
 #define ALIGN16   alignas(16)
 
 // a simple string implementation
-#define MAX_STRING		256
+#define MAX_STRING	256
 typedef char		string[MAX_STRING];
 
 // !!! if this is changed, it must be changed in alert.h too !!!
