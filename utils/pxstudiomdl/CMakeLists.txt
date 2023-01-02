@@ -13,10 +13,14 @@ list(APPEND DIR_SOURCES
 	"../common/filesystem.cpp"
 	"../common/scriplib.cpp"
 	"../common/stringlib.cpp"
+	"../common/ddstex.cpp"
+	"../common/gamma.cpp"
+	"../common/virtualfs.cpp"
+	"../common/imagelib.cpp"
 	"../common/quantizer.cpp"
 	"../common/zone.cpp"
 	"${CMAKE_SOURCE_DIR}/public/build_info.cpp"
-	"imagelib.cpp"
+	"image_utils.cpp"
 	"optimize.cpp"
     "simpilfy.cpp"
     "skin.cpp"
@@ -40,6 +44,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"../../public"
 	"../../common"
 	"../common"
+	"${CMAKE_SOURCE_DIR}/external/squish"
 	"${CMAKE_SOURCE_DIR}/external/mimalloc/include"
 )
 
@@ -81,8 +86,9 @@ if(ENABLE_STATIC_LINKING)
 	set_compiler_runtime(${PROJECT_NAME} STATIC)
 endif()
 
-# add mimalloc library depedency
+# link dependency libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE
+	squish
 	mimalloc-static
 )
 

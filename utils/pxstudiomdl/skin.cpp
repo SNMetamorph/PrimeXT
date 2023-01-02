@@ -20,7 +20,7 @@ GNU General Public License for more details.
 #include "filesystem.h"
 #include "studio.h"
 #include "studiomdl.h"
-#include "imagelib.h"
+#include "image_utils.h"
 #include "builtin.h"
 
 void Grab_Skin( s_texture_t *ptexture )
@@ -36,7 +36,7 @@ void Grab_Skin( s_texture_t *ptexture )
 	// use internal image
 	if( !Q_stricmp( ptexture->name, "#white.bmp" ))
 	{
-		pic = COM_LoadImageMemory( ptexture->name, white_bmp, sizeof( white_bmp ));
+		pic = ImageUtils::LoadImageMemory( ptexture->name, white_bmp, sizeof( white_bmp ));
 	}
 	else
 	{
@@ -61,12 +61,12 @@ void Grab_Skin( s_texture_t *ptexture )
 				use_default = true;
 		}
 
-		pic = COM_LoadImage( file1 );
+		pic = ImageUtils::LoadImageFile( file1 );
 		if( !pic ) MsgDev( D_ERROR, "unable to load %s\n", ptexture->name );
 	}	
 
 	// use emo-texture
-	if( !pic ) pic = COM_LoadImageMemory( "default.bmp", default_bmp, sizeof( default_bmp ));
+	if( !pic ) pic = ImageUtils::LoadImageMemory( "default.bmp", default_bmp, sizeof( default_bmp ));
 	if( !pic ) COM_FatalError( "%s not found", file1 ); // ???
 
 	int new_width = Q_min( pic->width, store_uv_coords ? MIP_MAXWIDTH : 512 );
@@ -74,12 +74,12 @@ void Grab_Skin( s_texture_t *ptexture )
 
 	// resample to studio limits
 	pic = Image_Resample( pic, new_width, new_height );
-	pic = Image_Quantize( pic );	// quantize if needs
+	pic = Image_Quantize( pic ); // quantize if needs
 
 	if( FBitSet( ptexture->flags, STUDIO_NF_MASKED ))
-		Image_MakeOneBitAlpha( pic );	// check alpha
+		Image_MakeOneBitAlpha( pic, false ); // check alpha
 
-	Image_ApplyGamma( pic ); // process gamma
+	ImageUtils::ApplyPaletteGamma(pic); // process gamma
 	ptexture->srcwidth = pic->width;
 	ptexture->srcheight = pic->height;
 	ptexture->psrc = pic;
