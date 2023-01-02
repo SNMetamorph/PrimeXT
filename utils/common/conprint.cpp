@@ -121,39 +121,32 @@ void Sys_PrintLog( const char *pMsg )
 	lastchar = pMsg[strlen(pMsg) - 1];
 }
 
-/*
-================
-Sys_Print
-
-print into win32 console
-================
-*/
-void Sys_Print( const char *pMsg )
-{
 #if XASH_WIN32
+static void Sys_PrintWin32(const char *pMsg)
+{
 	char tmpBuf[8192];
-	HANDLE hOut = GetStdHandle( STD_OUTPUT_HANDLE );
+	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	DWORD cbWritten;
 	char *pTemp = tmpBuf;
 
-	while( pMsg && *pMsg )
+	while (pMsg && *pMsg)
 	{
-		if( IsColorString( pMsg ))
+		if (IsColorString(pMsg))
 		{
-			if(( pTemp - tmpBuf ) > 0 )
+			if ((pTemp - tmpBuf) > 0)
 			{
 				// dump accumulated text before change color
 				*pTemp = 0; // terminate string
-				WriteFile( hOut, tmpBuf, static_cast<DWORD>(strlen(tmpBuf)), &cbWritten, 0 );
-				Sys_PrintLog( tmpBuf );
+				WriteFile(hOut, tmpBuf, static_cast<DWORD>(strlen(tmpBuf)), &cbWritten, 0);
+				Sys_PrintLog(tmpBuf);
 				pTemp = tmpBuf;
 			}
 
 			// set new color
-			SetConsoleTextAttribute( hOut, g_color_table[ColorIndex( *(pMsg + 1))] );
+			SetConsoleTextAttribute(hOut, g_color_table[ColorIndex(*(pMsg + 1))]);
 			pMsg += 2; // skip color info
 		}
-		else if(( pTemp - tmpBuf ) < sizeof( tmpBuf ) - 1 )
+		else if ((pTemp - tmpBuf) < sizeof(tmpBuf) - 1)
 		{
 			*pTemp++ = *pMsg++;
 		}
@@ -161,34 +154,28 @@ void Sys_Print( const char *pMsg )
 		{
 			// temp buffer is full, dump it now
 			*pTemp = 0; // terminate string
-			WriteFile( hOut, tmpBuf, static_cast<DWORD>(strlen(tmpBuf)), &cbWritten, 0 );
-			Sys_PrintLog( tmpBuf );
+			WriteFile(hOut, tmpBuf, static_cast<DWORD>(strlen(tmpBuf)), &cbWritten, 0);
+			Sys_PrintLog(tmpBuf);
 			pTemp = tmpBuf;
 		}
 	}
 
 	// check for last portion
-	if(( pTemp - tmpBuf ) > 0 )
+	if ((pTemp - tmpBuf) > 0)
 	{
 		// dump accumulated text
 		*pTemp = 0; // terminate string
-		WriteFile( hOut, tmpBuf, static_cast<DWORD>(strlen(tmpBuf)), &cbWritten, 0 );
-		Sys_PrintLog( tmpBuf );
+		WriteFile(hOut, tmpBuf, static_cast<DWORD>(strlen(tmpBuf)), &cbWritten, 0);
+		Sys_PrintLog(tmpBuf);
 		pTemp = tmpBuf;
 	}
-#else
-	time_t crt_time;
-	const struct tm *crt_tm;
-	char logtime[32] = "";
-	static char lastchar;
+}
+#endif
 
-	time(&crt_time);
-	crt_tm = localtime(&crt_time);
-
+#if !XASH_WIN32
+static void Sys_PrintPosix(const char *pMsg)
+{
 #ifdef COLORIZE_CONSOLE
-	if (!lastchar || lastchar == '\n')
-		strftime(logtime, sizeof(logtime), "[%H:%M:%S] ", crt_tm); // short time
-
 	char colored[4096];
 	const char *msg = pMsg;
 	int len = 0;
@@ -227,15 +214,30 @@ void Sys_Print( const char *pMsg )
 	}
 
 	colored[len] = 0;
-	printf("\033[34m%s\033[0m%s\033[0m", logtime, colored);
-	lastchar = pMsg[strlen(pMsg) - 1];
+	printf("%s\033[0m", colored);
 
 #elif !XASH_ANDROID
-	printf("%s %s", logtime, pMsg);
+	printf("%s", pMsg);
 	fflush(stdout);
 #endif
 
-	Sys_PrintLog( pMsg );
+	Sys_PrintLog(pMsg);
+}
+#endif
+
+/*
+================
+Sys_Print
+
+print into win32 console
+================
+*/
+void Sys_Print( const char *pMsg )
+{
+#if XASH_WIN32
+	Sys_PrintWin32(pMsg);
+#else
+	Sys_PrintPosix(pMsg);
 #endif
 }
 
