@@ -22,7 +22,11 @@ GNU General Public License for more details.
 #include <stdio.h>
 #include <time.h>
 #include <stdarg.h>
-#include <conio.h>
+
+#if XASH_POSIX
+#include <termios.h>
+#include <unistd.h>
+#endif
 
 #if XASH_ANDROID
 #include <android/log.h>
@@ -363,6 +367,18 @@ void Sys_WaitForKeyInput()
 #if XASH_WIN32
 	system("pause>nul");
 #else
-	getch();
+	struct termios term;
+	char buf;
+	tcflag_t old_lflag;
+
+	tcgetattr (0, &term);
+	old_lflag = term.c_lflag;
+	term.c_lflag &= ~(ECHO | ICANON);	
+	tcsetattr (0, TCSANOW, &term);		
+	while (read (0, &buf, 1)) {
+		break;
+	}
+	term.c_lflag = old_lflag;
+	tcsetattr (0, TCSANOW, &term);
 #endif
 }
