@@ -31,34 +31,13 @@ GNU General Public License for more details.
 #include "ddstex.h"
 #include "mathlib.h"
 
+#define BI_SIZE 40 // size of bitmap info header.
+
 #if !XASH_WIN32
 
-#define MAKEWORD( a, b )	((short int)(((unsigned char)(a))|(((short int)((unsigned char)(b)))<<8)))
 #define BI_RGB 0
 
 #pragma pack(push, 1)
-typedef struct tagBITMAPFILEHEADER {
-  int16_t  bfType;
-  uint32_t bfSize;
-  int16_t  bfReserved1;
-  int16_t  bfReserved2;
-  uint32_t bfOffBits;
-} BITMAPFILEHEADER, *PBITMAPFILEHEADER;
-
-typedef struct tagBITMAPINFOHEADER {
-  uint32_t biSize;
-  int32_t  biWidth;
-  int32_t  biHeight;
-  int16_t  biPlanes;
-  int16_t  biBitCount;
-  uint32_t biCompression;
-  uint32_t biSizeImage;
-  int32_t  biXPelsPerMeter;
-  int32_t  biYPelsPerMeter;
-  uint32_t biClrUsed;
-  uint32_t biClrImportant;
-} BITMAPINFOHEADER, *PBITMAPINFOHEADER;
-
 typedef struct tagRGBQUAD {
   uint8_t rgbBlue;
   uint8_t rgbGreen;
@@ -1102,80 +1081,87 @@ bool Image_SaveTGA( const char *name, rgbdata_t *pix )
 
 bool Image_SaveBMP( const char *name, rgbdata_t *pix )
 {
-	int					file;
-	BITMAPFILEHEADER	bmfh;
-	BITMAPINFOHEADER	bmih;
-	uint32_t	cbBmpBits;
-	byte		*pb, *pbBmpBits;
-	uint32_t	cbPalBytes = 0;
-	uint32_t	biTrueWidth;
-	int		pixel_size;
-	int		i, x, y;
+	bmp_t		fileHeader;
+	size_t		pixelSize;
+	size_t		paletteBytes;
+	RGBQUAD		rgrgbPalette[256];
 
-	if( COM_FileExists( name ))
+	if (COM_FileExists(name))
 		return false; // already existed
 
 	// bogus parameter check
-	if( !pix->buffer )
+	if (!pix->buffer)
 		return false;
 
 	if (FBitSet(pix->flags, IMAGE_QUANTIZED)) {
-		pixel_size = 1;
+		pixelSize = 1;
 	}
 	else 
 	{
 		if (FBitSet(pix->flags, IMAGE_HAS_ALPHA))
-			pixel_size = 4;
+			pixelSize = 4;
 		else 
-			pixel_size = 3;
+			pixelSize = 3;
 	}
 
-	COM_CreatePath( (char *)name );
-
-	file = open( name, O_WRONLY|O_BINARY|O_CREAT|O_TRUNC, 0666 );
-	if( file < 0 ) return false;
-
-	// NOTE: align transparency column will sucessfully removed
-	// after create sprite or lump image, it's just standard requiriments 
-	biTrueWidth = ((pix->width + 3) & ~3);
-	cbBmpBits = biTrueWidth * pix->height * pixel_size;
-	if (pixel_size == 1) {
-		cbPalBytes = 256 * sizeof(RGBQUAD);
+	COM_CreatePath((char *)name);
+	int file = open(name, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, 0666);
+	if (file < 0) {
+		return false; // failed to open file
 	}
 
-	// Bogus file header check
-	bmfh.bfType = MAKEWORD( 'B', 'M' );
-	bmfh.bfSize = sizeof( bmfh ) + sizeof( bmih ) + cbBmpBits + cbPalBytes;
-	bmfh.bfOffBits = sizeof( bmfh ) + sizeof( bmih ) + cbPalBytes;
-	bmfh.bfReserved1 = bmfh.bfReserved2 = 0;
+	// NOTE: align transparency column will successfully removed
+	// after create sprite or lump image, it's just standard requirements 
+	size_t biTrueWidth = ((pix->width + 3) & ~3);
+	size_t cbBmpBits = biTrueWidth * pix->height * pixelSize;
+	if (pixelSize == 1) {
+		paletteBytes = 256 * sizeof(RGBQUAD);
+	}
+	else {
+		paletteBytes = 0;
+	}
 
-	// write header
-	write( file, &bmfh, sizeof( bmfh ));
+	// write header to file
+	fileHeader.id[0] = 'B';
+	fileHeader.id[1] = 'M';
+	fileHeader.fileSize = sizeof(fileHeader) + cbBmpBits + paletteBytes;
+	fileHeader.reserved0 = 0;
+	fileHeader.bitmapDataOffset = sizeof(fileHeader) + paletteBytes;
+	fileHeader.bitmapHeaderSize = BI_SIZE;
+	fileHeader.width = biTrueWidth;
+	fileHeader.height = pix->height;
+	fileHeader.planes = 1;
+	fileHeader.bitsPerPixel = pixelSize * 8;
+	fileHeader.compression = BI_RGB;
+	fileHeader.bitmapDataSize = cbBmpBits;
+	fileHeader.hRes = 0;
+	fileHeader.vRes = 0;
+	fileHeader.colors = (pixelSize == 1) ? 256 : 0;
+	fileHeader.importantColors = 0;
+	write(file, &fileHeader, sizeof(fileHeader));
 
-	// size of structure
-	bmih.biSize = sizeof( bmih );
-	bmih.biWidth = biTrueWidth;
-	bmih.biHeight = pix->height;
-	bmih.biPlanes = 1;
-	bmih.biBitCount = pixel_size * 8;
-	bmih.biCompression = BI_RGB;
-	bmih.biSizeImage = cbBmpBits;
-	bmih.biXPelsPerMeter = 0;
-	bmih.biYPelsPerMeter = 0;
-	bmih.biClrUsed = (pixel_size == 1) ? 256 : 0;
-	bmih.biClrImportant = 0;
-
-	// write info header
-	write( file, &bmih, sizeof( bmih ));
-
-	pbBmpBits = (byte *)Mem_Alloc(cbBmpBits);
-	pb = pix->buffer;
-	for (y = 0; y < bmih.biHeight; y++)
+	// write palette to file, in case of image is quantized
+	if (pixelSize == 1)
 	{
-		i = (bmih.biHeight - 1 - y) * (bmih.biWidth);
-		for (x = 0; x < pix->width; x++)
+		uint8_t *pb = pix->palette;
+		for (int i = 0; i < (int)fileHeader.colors; i++)
 		{
-			if (pixel_size == 1)
+			rgrgbPalette[i].rgbRed = *pb++;
+			rgrgbPalette[i].rgbGreen = *pb++;
+			rgrgbPalette[i].rgbBlue = *pb++;
+			rgrgbPalette[i].rgbReserved = *pb++;
+		}
+		write(file, rgrgbPalette, paletteBytes);
+	}
+
+	uint8_t *pb = pix->buffer;
+	uint8_t *pbBmpBits = (byte *)Mem_Alloc(cbBmpBits);
+	for (int y = 0; y < fileHeader.height; y++)
+	{
+		int i = (fileHeader.height - 1 - y) * (fileHeader.width);
+		for (int x = 0; x < pix->width; x++)
+		{
+			if (pixelSize == 1)
 			{
 				// 8-bit
 				pbBmpBits[i] = pb[x];
@@ -1183,24 +1169,24 @@ bool Image_SaveBMP( const char *name, rgbdata_t *pix )
 			else
 			{
 				// 24 bit
-				pbBmpBits[i * pixel_size + 0] = pb[x * pixel_size + 2];
-				pbBmpBits[i * pixel_size + 1] = pb[x * pixel_size + 1];
-				pbBmpBits[i * pixel_size + 2] = pb[x * pixel_size + 0];
+				pbBmpBits[i * pixelSize + 0] = pb[x * pixelSize + 2];
+				pbBmpBits[i * pixelSize + 1] = pb[x * pixelSize + 1];
+				pbBmpBits[i * pixelSize + 2] = pb[x * pixelSize + 0];
 			}
 
-			if (pixel_size == 4) {
+			if (pixelSize == 4) {
 				// write alpha channel
-				pbBmpBits[i * pixel_size + 3] = pb[x * pixel_size + 3];
+				pbBmpBits[i * pixelSize + 3] = pb[x * pixelSize + 3];
 			}
 			i++;
 		}
-		pb += pix->width * pixel_size;
+		pb += pix->width * pixelSize;
 	}
 
 	// write bitmap bits (remainder of file)
-	write( file, pbBmpBits, cbBmpBits );
-	close( file );
-	Mem_Free( pbBmpBits );
+	write(file, pbBmpBits, cbBmpBits);
+	close(file);
+	Mem_Free(pbBmpBits);
 
 	return true;
 }
