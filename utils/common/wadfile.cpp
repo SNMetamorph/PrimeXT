@@ -19,7 +19,6 @@ GNU General Public License for more details.
 #include "cmdlib.h"
 #include "stringlib.h"
 #include "filesystem.h"
-#include "wfile.h"
 #include "port.h"
 
 #ifndef ALLOW_WADS_IN_PACKS

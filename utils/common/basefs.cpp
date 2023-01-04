@@ -19,7 +19,6 @@ GNU General Public License for more details.
 #include "mathlib.h"
 #include "stringlib.h"
 #include "filesystem.h"
-#include "wfile.h"
 #include "bspfile.h"
 #include "build.h"
 

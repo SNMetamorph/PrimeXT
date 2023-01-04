@@ -16,8 +16,8 @@ GNU General Public License for more details.
 #ifndef FILESYSTEM_H
 #define FILESYSTEM_H
 
+#include "wadfile.h"
 #include <time.h>
-#include <wadfile.h>
 #include <stdint.h>
 
 #define FILE_BUFF_SIZE	(65535)
@@ -69,9 +69,6 @@ typedef struct wadtype_s
 	int		type;
 } wadtype_t;
 
-// wadfile
-typedef struct wfile_s	wfile_t;
-
 typedef struct vfile_s
 {
 	byte		*buff;
@@ -100,6 +97,21 @@ typedef struct
 	char	name[WAD3_NAMELEN];		// must be null terminated
 } dlumpinfo_t;
 #pragma pack(pop)
+
+struct wfile_t
+{
+	char		filename[256];
+	int		infotableofs;
+	int		numlumps;
+	int		mode;
+#ifdef ALLOW_WADS_IN_PACKS
+	file_t		*handle;
+#else
+	int		handle;
+#endif
+	time_t		filetime;	
+	dlumpinfo_t	*lumps;
+};
 
 extern const wadtype_t wad_hints[];
 
