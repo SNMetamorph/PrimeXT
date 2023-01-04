@@ -1,6 +1,7 @@
 /*
-wfile.h - simple version of game engine filesystem for tools
-Copyright (C) 2018 Uncle Mike
+image_utils.h - utility routines for working with images
+Copyright (C) 2015 Uncle Mike
+Copyright (C) 2022 SNMetamorph
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,23 +14,18 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#ifndef WFILE_H
-#define WFILE_H
+#ifndef IMAGE_UTILS_H
+#define IMAGE_UTILS_H
+#include "imagelib.h"
+#include <stdint.h>
 
-// wad intermediate struct
-struct wfile_s
+namespace ImageUtils
 {
-	char		filename[256];
-	int		infotableofs;
-	int		numlumps;
-	int		mode;
-#ifdef ALLOW_WADS_IN_PACKS
-	file_t		*handle;
-#else
-	int		handle;
-#endif
-	time_t		filetime;	
-	dlumpinfo_t	*lumps;
+	rgbdata_t *LoadImageFile(const char *filename);
+	rgbdata_t *LoadImageMemory(const char *filename, const byte *buf, size_t fileSize);
+	void ApplyPaletteGamma(rgbdata_t *pic);
 };
 
-#endif
+extern float	g_gamma;
+
+#endif // IMAGE_UTILS_H

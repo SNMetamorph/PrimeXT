@@ -2,6 +2,7 @@
 #include "mathlib.h"
 #include "gl_local.h"
 #include "gl_shader.h"
+#include "postfx_parameters.h"
 
 #define DEAD_GRAYSCALE_TIME		5.0f
 #define TARGET_SIZE				256
@@ -23,16 +24,9 @@ public:
 	word	bloomShader;
 
 	int		target_rgb[2];
-	float	brightnessFactor;
-	float	saturationFactor;
-	float	contrastFactor;
-	float	redLevelFactor;
-	float	greenLevelFactor;
-	float	blueLevelFactor;
-	float	vignetteScale;
-	float	filmGrainScale;
 	float	blurFactor[2];
 	bool	m_bUseTarget;
+	CPostFxParameters fxParameters;
 
 	// DOF parameters
 	float	m_flCachedDepth;

@@ -16,6 +16,8 @@
 // nodes.h
 //=========================================================
 
+#include <stdint.h>
+
 //=========================================================
 // DEFINE
 //=========================================================
@@ -118,7 +120,7 @@ public:
 
 	CNode	*m_pNodes;// pointer to the memory block that contains all node info
 	CLink	*m_pLinkPool;// big list of all node connections
-	char    *m_pRouteInfo; // compressed routing information the nodes use.
+	int8_t    *m_pRouteInfo; // compressed routing information the nodes use.
 
 	int		m_cNodes;// total number of nodes
 	int		m_cLinks;// total number of links
@@ -148,7 +150,7 @@ public:
 
 
 	int m_HashPrimes[16];
-	short *m_pHashLinks;
+	int16_t *m_pHashLinks;
 	int m_nHashLinks;
 
 
@@ -267,8 +269,8 @@ class CNodeEnt : public CBaseEntity
 	void KeyValue( KeyValueData *pkvd );
 	virtual int	ObjectCaps( void ) { return CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 
-	short m_sHintType;
-	short m_sHintActivity;
+	int16_t m_sHintType;
+	int16_t m_sHintActivity;
 };
 
 

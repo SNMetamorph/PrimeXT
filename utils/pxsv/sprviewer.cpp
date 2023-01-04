@@ -29,6 +29,7 @@
 #include "stringlib.h"
 #include "SpriteModel.h"
 #include "build.h"
+#include "build_info.h"
 
 SPRViewer *g_SPRViewer = 0;
 char g_appTitle[] = APP_TITLE_STR;
@@ -565,22 +566,25 @@ SPRViewer::handleEvent (mxEvent *event)
 
 #ifdef WIN32
 		case IDC_HELP_GOTOHOMEPAGE:
-			ShellExecute (0, "open", "http://cs-mapping.com.ua/forum/forumdisplay.php?f=189", 0, 0, SW_SHOW);
+			ShellExecute(0, "open", BuildInfo::GetGitHubLink(), 0, 0, SW_SHOW);
 			break;
 #endif
 
 		case IDC_HELP_ABOUT:
-			mxMessageBox (this,
-				"Half-Life Sprite Viewer v0.1 beta (c) 2018 by Unkle Mike\n"
-				"Based on original MD2V code by Mete Ciragan\n\n"
+			mxMessageBox(this, va(
+				APP_TITLE_STR " " APP_VERSION_STRING2 "\n"
+				"Based on HLSV code by g-cont\n\n"
 				"Left-drag to rotate.\n"
 				"Right-drag to zoom.\n"
 				"Shift-left-drag to x-y-pan.\n"
 				"Ctrl-drag to move lights.\n\n"
-				"Build:\t" __DATE__ ".\n"
-				"Email:\tg-cont@rambler.ru\n"
-				"Web:\thttp://www.hlfx.ru/forum\n\thttp://cs-mapping.com.ua/forum", "Half-Life Sprite Viewer",
-				MX_MB_OK | MX_MB_INFORMATION );
+				"Build:\t%s, commit %s, arch %s\n"
+				"Web:\t%s",
+				BuildInfo::GetDate(),
+				BuildInfo::GetCommitHash(),
+				BuildInfo::GetArchitecture(),
+				BuildInfo::GetGitHubLink()), 
+				"About", MX_MB_OK | MX_MB_INFORMATION);
 			break;
 
 		// 

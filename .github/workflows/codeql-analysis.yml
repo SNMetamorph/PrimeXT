@@ -14,9 +14,15 @@ name: "codeql-analysis"
 on:
   push:
     branches: [ 'master', 'codeql-fix' ]
+    paths-ignore:
+      - 'documentation/**'
+
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [ master ]
+    paths-ignore:
+      - 'documentation/**'
+
   schedule:
     - cron: '16 10 * * 3'
 
@@ -38,7 +44,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         submodules: recursive
 

@@ -166,7 +166,7 @@ struct ref_viewpass_s;
 typedef struct render_api_s
 {
 	// Get renderer info (doesn't changes engine state at all)
-	int		(*RenderGetParm)( int parm, int arg );	// generic
+	intptr_t	(*RenderGetParm)( int parm, int arg );	// generic
 	void		(*GetDetailScaleForTexture)( int texture, float *xScale, float *yScale );
 	void		(*GetExtraParmsForTexture)( int texture, byte *red, byte *green, byte *blue, byte *alpha );
 	lightstyle_t*	(*GetLightStyle)( int number );
@@ -280,5 +280,4 @@ typedef struct render_interface_s
 	// shuffle previous & next states for lerping
 	void		(*CL_UpdateLatchedVars)( struct cl_entity_s *e, qboolean reset );
 } render_interface_t;
-
 #endif//RENDER_API_H

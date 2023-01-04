@@ -19,6 +19,7 @@ list(APPEND DIR_SOURCES
 	"../common/wadfile.cpp"
 	"../common/zone.cpp"
 	"../common/crashhandler.cpp"
+	"${CMAKE_SOURCE_DIR}/public/build_info.cpp"
 	"aselib.cpp"
 	"brush.cpp"
 	"csg4.cpp"
@@ -83,8 +84,16 @@ if(MSVC)
 	>)
 
 	# release mode compiler flags
-	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release>:/Ob1>) # disable force function inlining, to prevent segfault in release mode
-	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release>:/O1>) # enable optimizing to minimize size
+	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release,RelWithDebInfo>:/O2>) # enable optimizing to maximize speed
+	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release,RelWithDebInfo>:/GL>) # enable whole program optimization
+endif()
+
+if(ENABLE_MAP_COMPILERS_AVX2)
+	if(MSVC)
+		target_compile_options(${PROJECT_NAME} PRIVATE /arch:AVX2)
+	else()
+		message(WARNING "AVX2 support parameters not implemented for this compiler")
+	endif()
 endif()
 
 # set static compiler runtime
@@ -97,8 +106,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 	mimalloc-static
 )
 
-if(NOT MSVC)
-	# add pthread library depedency
+# link platform-specific depedency libraries
+if(NOT XASH_WIN32)
 	target_link_libraries(${PROJECT_NAME} PRIVATE
 		pthread
 		dl
@@ -109,10 +118,22 @@ else()
 	)
 endif()
 
+# link log library for Android platform
+if(XASH_ANDROID)
+	target_link_libraries(${PROJECT_NAME} PRIVATE
+		log
+	)
+endif()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)
 
-install( TARGETS ${PROJECT_NAME}
+# copy .pdb files to install directory too
+if(MSVC)
+	install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION "${GAMEDIR}/${UTILS_INSTALL_DIR}/")
+endif()
+
+install(TARGETS ${PROJECT_NAME}
 	DESTINATION "${GAMEDIR}/${UTILS_INSTALL_DIR}/"
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
 	    GROUP_READ GROUP_EXECUTE

@@ -14,6 +14,7 @@
 #include "studiomdl.h"
 #include "filesystem.h"
 #include "app_info.h"
+#include "build_info.h"
 
 int totalframes = 0;
 float totalseconds = 0;
@@ -1213,13 +1214,13 @@ void WriteFile( void )
 
 	phdr->ident = IDSTUDIOHEADER;
 	phdr->version = STUDIO_VERSION;
-	COM_FileBase( outname, model_name ); // g-cont. don't show real path on artist machine! palevo!
-	Q_snprintf( phdr->name, sizeof(phdr->name), "%s (pxstudiomdl, %s)", model_name, __DATE__ );
-	VectorCopy( eyeposition, phdr->eyeposition );
-	VectorCopy( bbox[0], phdr->min ); 
-	VectorCopy( bbox[1], phdr->max ); 
-	VectorCopy( cbox[0], phdr->bbmin ); 
-	VectorCopy( cbox[1], phdr->bbmax ); 
+	COM_FileBase(outname, model_name); // g-cont. don't show real path on artist machine! palevo!
+	Q_snprintf(phdr->name, sizeof(phdr->name), "%s (pxstudiomdl / %s / %s)", model_name, BuildInfo::GetCommitHash(), BuildInfo::GetArchitecture());
+	VectorCopy(eyeposition, phdr->eyeposition);
+	VectorCopy(bbox[0], phdr->min);
+	VectorCopy(bbox[1], phdr->max);
+	VectorCopy(cbox[0], phdr->bbmin);
+	VectorCopy(cbox[1], phdr->bbmax);
 
 	phdr->flags = gflags;
 

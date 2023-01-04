@@ -37,6 +37,8 @@ list(APPEND CLDLL_SOURCES
 	"train.cpp"
 	"utils.cpp"
 	"r_view.cpp"
+	"postfx_controller.cpp"
+	"postfx_parameters.cpp"
 )
 
 # shared source files
@@ -54,6 +56,8 @@ list(APPEND CLDLL_SOURCES
 	"${CMAKE_SOURCE_DIR}/game_shared/stringlib.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/virtualfs.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/trace.cpp"
+	"${CMAKE_SOURCE_DIR}/public/crclib.cpp"
+	"${CMAKE_SOURCE_DIR}/public/build_info.cpp"
 )
 
 # render source files
@@ -136,8 +140,8 @@ if(MSVC)
 	>)
 
 	# release mode compiler flags
-	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release>:/Ob1>) # disable force function inlining, to prevent segfault in release mode
-	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release>:/O1>) # enable optimizing to minimize size
+	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release,RelWithDebInfo>:/O2>) # enable optimizing to maximize speed
+	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release,RelWithDebInfo>:/GL>) # enable whole program optimization
 endif()
 
 # set static compiler runtime
@@ -174,7 +178,12 @@ if(APPLE OR WIN32 OR ${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 		PREFIX "")
 endif()
 
-install( TARGETS ${PROJECT_NAME}
+# copy .pdb files to install directory too
+if(MSVC)
+	install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION "${GAMEDIR}/${CLIENT_INSTALL_DIR}/")
+endif()
+
+install(TARGETS ${PROJECT_NAME}
 	DESTINATION "${GAMEDIR}/${CLIENT_INSTALL_DIR}/"
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
 	    GROUP_READ GROUP_EXECUTE

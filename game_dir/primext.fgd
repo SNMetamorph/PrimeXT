@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 7 May 2022)
+// PrimeXT FGD (last updated 17 December 2022)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -735,7 +735,7 @@
 // Entities
 //
 
-@PointClass iconsprite("sprites/fgd/aiscrip_seq.spr") base(Targetname, Targetx, Parent, Angles) size(-2 -2 0, 2 2 8) color(255 0 255)=aiscripted_sequence:"AI Scripted Sequence"
+@PointClass base(Targetname, Targetx, Parent, Angles) size(-16 -16 0, 16 16 72) color(255 0 255)=aiscripted_sequence:"AI Scripted Sequence"
 [
 	m_iszEntity(string) : "Target Monster"
 	m_iszPlay(string) : "Action Animation" : ""
@@ -1386,6 +1386,26 @@
 	rendercolor(color255) : "Fade Color (R G B)" : "0 0 0"
 ]
 
+@PointClass base(Targetname)  iconsprite("sprites/fgd/glow01.spr") = env_postfx_controller : "PostFX Controller" 
+[
+	spawnflags(flags) =
+	[
+		1: "Fade From" : 0
+		2: "Activator Only" : 0
+	]
+	fade_in_time(string) : "Fade-in (seconds)" : "3.0"
+	brightness(string) : "Brightness [-1..1]" : "0.0"
+	saturation(string) : "Saturation [0..x]" : "1.0"
+	contrast(string) : "Contrast [0..x]" : "1.0"
+	red_level(string) : "Red Level [0..1]" : "1.0"
+	green_level(string) : "Green Level [0..1]" : "1.0"
+	blue_level(string) : "Blue Level [0..1]" : "1.0"
+	vignette_scale(string) : "Vignette Scale [0..1]" : "0.0"
+	film_grain_scale(string) : "Film Grain Scale [0..1]" : "0.0"
+	color_accent_scale(string) : "Color Accent Scale [0..1]" : "0.0"
+	rendercolor(color255) : "Accent Color (R G B)" : "0 0 0"
+]
+
 @PointClass sprite() base(Targetname, Parent) iconsprite("sprites/fgd/flare6.spr") = env_funnel : "Large Portal Funnel" 
 [
 	netname(sprite): "Sprite Name" : "sprites/flare6.spr"
@@ -1784,13 +1804,15 @@
 	sequence(integer) : "Sequence" : 0
 	frame(integer) : "Frame"
 	colormap(string): "Colormap"
-	zhlt_shadowmode(string) : "Lightmap shadow quality" : "1"
-	zhlt_modellightmap(string) : "Bake lightmap on model (0 - off, 1 - on)" : "0"
+	zhlt_nosmooth(string) : "Disable normals smoothing (0/1)" : "0"
+	zhlt_selfshadow(string) : "Model selfshadowing (0/1)" : "1"
+	zhlt_modellightmap(string) : "Bake lightmap on model (0/1)" : "0"
 	spawnflags(flags) =
 	[
 		1: "Solid" : 0
 		2: "Drop to Floor" : 0
 		4: "Disable shadow (for lightmap)" : 0
+		8: "Disable vertex lighting" : 0
 		32: "Disable shadow (for dynamic lights)" : 0
 	]
 ]

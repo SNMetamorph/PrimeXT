@@ -280,7 +280,6 @@ static uniformTable_t glsl_uniformTable[] =
 { "u_LightShade",		UT_LIGHTSHADE,		0 },
 { "u_LightOrigin",		UT_LIGHTORIGIN,		0 },
 { "u_LightViewProjMatrix",	UT_LIGHTVIEWPROJMATRIX,	0 },
-{ "u_DiffuseFactor",	UT_DIFFUSEFACTOR,		UFL_GLOBAL_PARM },
 { "u_AmbientFactor",	UT_AMBIENTFACTOR,		UFL_GLOBAL_PARM },
 { "u_AmbientCube",		UT_AMBIENTCUBE,		0 },
 { "u_SunRefract",		UT_SUNREFRACT,		UFL_GLOBAL_PARM },
@@ -312,6 +311,7 @@ static uniformTable_t glsl_uniformTable[] =
 { "u_ColorLevels",		UT_COLORLEVELS,		0 },
 { "u_VignetteScale",	UT_VIGNETTESCALE,		0 },
 { "u_FilmGrainScale",	UT_FILMGRAINSCALE,		0 },
+{ "u_AccentColor",		UT_ACCENTCOLOR,		0 },
 { "u_LightGamma",		UT_LIGHTGAMMA,		UFL_GLOBAL_PARM },
 { "u_LightScale",		UT_LIGHTSCALE,		UFL_GLOBAL_PARM },
 { "u_LightThreshold",	UT_LIGHTTHRESHOLD,		UFL_GLOBAL_PARM },
@@ -778,7 +778,7 @@ static bool GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum s
 		Q_snprintf( filename, sizeof( filename ), "glsl/%s_fp.glsl", name );
 		break;
 	default:
-		ALERT( at_error, "^1GL_LoadGPUShader: ^7unknown shader type %p\n", shaderType );
+		ALERT( at_error, "^1GL_LoadGPUShader: ^7unknown shader type 0x%x\n", shaderType );
 		return false;
 	}
 
@@ -834,7 +834,7 @@ static bool GL_LoadGPUBinaryShader( glsl_program_t *shader, const char *vpname, 
 	if( !GL_Support( R_BINARY_SHADER_EXT ))
 		return false;
 
-	Q_snprintf( szFilename, sizeof( szFilename ), "cache/glsl/%p.bin", checksum );
+	Q_snprintf( szFilename, sizeof( szFilename ), "cache/glsl/%08X.bin", checksum );
 	Q_snprintf( szVpSource, sizeof( szVpSource ), "glsl/%s_vp.glsl", vpname );
 	Q_snprintf( szFpSource, sizeof( szFpSource ), "glsl/%s_fp.glsl", fpname );
 
@@ -874,7 +874,7 @@ static bool GL_SaveGPUBinaryShader(glsl_program_t *shader, uint checksum)
 	if (!GL_Support(R_BINARY_SHADER_EXT))
 		return false;
 
-	Q_snprintf(szFilename, sizeof(szFilename), "cache/glsl/%p.bin", checksum);
+	Q_snprintf(szFilename, sizeof(szFilename), "cache/glsl/%08X.bin", checksum);
 	pglGetProgramiv(shader->handle, GL_PROGRAM_BINARY_LENGTH, &length);
 
 	if (length <= 0) 
@@ -887,7 +887,7 @@ static bool GL_SaveGPUBinaryShader(glsl_program_t *shader, uint checksum)
 
 	if (result != 0)
 	{
-		ALERT(at_aiconsole, "^2GL_SaveGPUBinaryShader: ^7wrote \"%s\" cache (length %i, hash %p)\n", shader->name, length, checksum);
+		ALERT(at_aiconsole, "^2GL_SaveGPUBinaryShader: ^7wrote \"%s\" cache (length %i, hash %08X)\n", shader->name, length, checksum);
 		return true;
 	}
 	return false;

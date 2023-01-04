@@ -17,6 +17,7 @@ list(APPEND DIR_SOURCES
 	"../common/filesystem.cpp"
 	"../common/cmdlib.cpp"
 	"../common/zone.cpp"
+	"${CMAKE_SOURCE_DIR}/public/build_info.cpp"
 	"ControlPanel.cpp"
 	"FileAssociation.cpp"
     "GlWindow.cpp"
@@ -77,8 +78,8 @@ if(MSVC)
 	>)
 
 	# release mode compiler flags
-	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release>:/Ob1>) # disable force function inlining, to prevent segfault in release mode
-	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release>:/O1>) # enable optimizing to minimize size
+	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release,RelWithDebInfo>:/O2>) # enable optimizing to maximize speed
+	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release,RelWithDebInfo>:/GL>) # enable whole program optimization
 endif()
 
 # add depedency libraries
@@ -107,7 +108,12 @@ endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)
 
-install( TARGETS ${PROJECT_NAME}
+# copy .pdb files to install directory too
+if(MSVC)
+	install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION "${GAMEDIR}/${UTILS_INSTALL_DIR}/")
+endif()
+
+install(TARGETS ${PROJECT_NAME}
 	DESTINATION "${GAMEDIR}/${UTILS_INSTALL_DIR}/"
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
 	    GROUP_READ GROUP_EXECUTE

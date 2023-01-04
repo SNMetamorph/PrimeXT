@@ -31,5 +31,6 @@ void Sys_PrintLog(const char *pMsg);
 void Sys_IgnoreLog(bool ignore);
 void Sys_Print(const char *pMsg);
 void Sys_Sleep(unsigned int msec);
+void Sys_WaitForKeyInput();
 
-#endif//CONRPINT_H
+#endif // CONPRINT_H

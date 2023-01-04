@@ -29,7 +29,6 @@ attribute vec4	attr_LightVecs;
 #endif
 
 uniform float	u_AmbientFactor;
-uniform float	u_DiffuseFactor;
 uniform vec3	u_ViewOrigin;
 uniform float	u_Smoothness;
 uniform vec3	u_LightDiffuse;

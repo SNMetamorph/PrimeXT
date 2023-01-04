@@ -40,7 +40,7 @@ vec3 WorldToTexel( vec3 world, int split )
 
 float ShadowProj( const in vec3 world )
 {
-	float shadow = 1.0;
+	float shadow = 0.0;
 
 #if defined( GLSL_gpu_shader4 )
 	// transform to camera space
@@ -129,7 +129,7 @@ float ShadowProj( const in vec3 world )
 			shadow += shadow2D( u_ShadowMap3, shadowVert + vec3(stepSize * 0.125 * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
 		}
 	}
-#else
+#else // no shadow splits at all
 	{
 		shadowVert = WorldToTexel( world, 0 );
 		for( int i = 0; i < SAMPLE_COUNT; i += 1 )
@@ -213,13 +213,13 @@ float ShadowProj( const in vec3 world )
 		shadowVert = WorldToTexel( world, 3 );
 		shadow = shadow2D( u_ShadowMap3, shadowVert.xyz ).r;
 	}
-#else
+#else // no shadow splits at all
 	{
 		shadowVert = WorldToTexel( world, 0 );
 		shadow = shadow2D( u_ShadowMap0, shadowVert.xyz ).r;
 	}
-#endif
-#endif
+#endif // NUM_SHADOW_SPLITS
+#endif // SHADOW_VOGEL_DISK
 #endif // GL_EXT_gpu_shader4
 	return shadow;
 }

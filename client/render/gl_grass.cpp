@@ -689,7 +689,7 @@ void R_DrawGrassMeshFromBuffer( const grass_t *mesh )
 	pglBindVertexArray( mesh->vao );
 
 	if( GL_Support( R_DRAW_RANGEELEMENTS_EXT ))
-		pglDrawRangeElementsEXT( GL_TRIANGLES, 0, mesh->numVerts - 1, mesh->numElems, GL_UNSIGNED_SHORT, 0 );
+		pglDrawRangeElements( GL_TRIANGLES, 0, mesh->numVerts - 1, mesh->numElems, GL_UNSIGNED_SHORT, 0 );
 	else pglDrawElements( GL_TRIANGLES, mesh->numElems, GL_UNSIGNED_SHORT, 0 );
 
 	r_stats.c_total_tris += (mesh->numVerts / 2);
@@ -830,9 +830,6 @@ void R_SetGrassUniforms( word hProgram, grass_t *grass )
 				pl->lightviewProjMatrix.CopyToArray( gl_lightViewProjMatrix );
 				u->SetValue( &gl_lightViewProjMatrix[0] );
 			}
-			break;
-		case UT_DIFFUSEFACTOR:
-			u->SetValue( tr.diffuseFactor );
 			break;
 		case UT_AMBIENTFACTOR:
 			if( pl && pl->type == LIGHT_DIRECTIONAL )

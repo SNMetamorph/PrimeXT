@@ -576,7 +576,7 @@ void DrawRain( void )
 			{
 				// it's time to flush
 				if( GL_Support( R_DRAW_RANGEELEMENTS_EXT ))
-					pglDrawRangeElementsEXT( GL_TRIANGLES, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
+					pglDrawRangeElements( GL_TRIANGLES, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 				else pglDrawElements( GL_TRIANGLES, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 				r_stats.c_total_tris += (m_iNumVerts - 2);
 				m_iNumVerts = m_iNumIndex = 0;
@@ -631,7 +631,7 @@ void DrawRain( void )
 		if( m_iNumVerts && m_iNumIndex )
 		{
 			if( GL_Support( R_DRAW_RANGEELEMENTS_EXT ))
-				pglDrawRangeElementsEXT( GL_TRIANGLES, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
+				pglDrawRangeElements( GL_TRIANGLES, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 			else pglDrawElements( GL_TRIANGLES, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 			r_stats.c_total_tris += (m_iNumVerts - 2);
 			r_stats.num_flushes++;
@@ -653,7 +653,7 @@ void DrawRain( void )
 			{
 				// it's time to flush
 				if( GL_Support( R_DRAW_RANGEELEMENTS_EXT ))
-					pglDrawRangeElementsEXT( GL_QUADS, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
+					pglDrawRangeElements( GL_QUADS, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 				else pglDrawElements( GL_QUADS, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 				r_stats.c_total_tris += (m_iNumVerts / 2);
 				m_iNumVerts = m_iNumIndex = 0;
@@ -715,7 +715,7 @@ void DrawRain( void )
 		{
 			// flush any remaining verts
 			if( GL_Support( R_DRAW_RANGEELEMENTS_EXT ))
-				pglDrawRangeElementsEXT( GL_QUADS, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
+				pglDrawRangeElements( GL_QUADS, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 			else pglDrawElements( GL_QUADS, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 			r_stats.c_total_tris += (m_iNumVerts / 2);
 			r_stats.num_flushes++;
@@ -770,7 +770,7 @@ void DrawFXObjects( void )
 		{
 			// it's time to flush
 			if( GL_Support( R_DRAW_RANGEELEMENTS_EXT ))
-				pglDrawRangeElementsEXT( GL_QUADS, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
+				pglDrawRangeElements( GL_QUADS, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 			else pglDrawElements( GL_QUADS, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 			r_stats.c_total_tris += (m_iNumVerts / 2);
 			m_iNumVerts = m_iNumIndex = 0;
@@ -833,7 +833,7 @@ void DrawFXObjects( void )
 	{
 		// flush any remaining verts
 		if( GL_Support( R_DRAW_RANGEELEMENTS_EXT ))
-			pglDrawRangeElementsEXT( GL_QUADS, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
+			pglDrawRangeElements( GL_QUADS, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 		else pglDrawElements( GL_QUADS, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 		r_stats.c_total_tris += (m_iNumVerts / 2);
 		r_stats.num_flushes++;

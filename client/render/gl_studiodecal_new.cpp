@@ -967,19 +967,10 @@ void CStudioModelRenderer :: ComputeDecalTBN( DecalBuildInfo_t& build )
 			tVect += triTVect[vertToTriMap[vertID][triID]];
 		}
 
-		Vector tmpVect = CrossProduct( tVect, sVect );
-		bool leftHanded = DotProduct( tmpVect, normal ) < 0.0f;
-
-		if( !leftHanded )
-		{
-			tVect = CrossProduct( normal, sVect );
-			sVect = CrossProduct( tVect, normal );
-		}
-		else
-		{
-			tVect = CrossProduct( sVect, normal );
-			sVect = CrossProduct( normal, tVect );
-		}
+        sVect = sVect.Normalize();
+        tVect = tVect.Normalize();            
+        sVect = sVect - normal * DotProduct(normal, sVect);
+        tVect = CrossProduct(normal, sVect) * Q_sign(DotProduct(CrossProduct(normal, sVect), tVect));
 
 		finalSVect = sVect.Normalize();
 		finalTVect = tVect.Normalize();
@@ -1709,9 +1700,6 @@ void CStudioModelRenderer :: SetDecalUniforms( studiodecal_t *pDecal )
 				pl->lightviewProjMatrix.CopyToArray( gl_lightViewProjMatrix );
 				u->SetValue( &gl_lightViewProjMatrix[0] );
 			}
-			break;
-		case UT_DIFFUSEFACTOR:
-			u->SetValue( tr.diffuseFactor );
 			break;
 		case UT_AMBIENTFACTOR:
 			if( pl && pl->type == LIGHT_DIRECTIONAL )

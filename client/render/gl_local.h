@@ -34,6 +34,7 @@ GNU General Public License for more details.
 #include <utlarray.h>
 #include "vector.h"
 #include <matrix.h>
+#include "material.h"
 
 #define ACTUAL_GL_VERSION	30.0f
 
@@ -280,25 +281,6 @@ typedef struct
 	Vector		ambient[6];	// cubemap 1x1 (single pixel per side)
 	bool		nointerp;		// flickering light force nointerp
 } mstudiolight_t;
-
-// NOTE: if this is changed it must be changed in studio.h and com_model.h too!!!
-typedef struct
-{
-	float		smoothness;		// smoothness factor
-	vec2_t		detailScale;		// detail texture scales x, y
-	float		reflectScale;		// reflection scale for translucent water
-	float		refractScale;		// refraction scale for mirrors, windows, water
-	float		aberrationScale;		// chromatic abberation
-	float		reliefScale;		// relief-mapping
-	struct matdef_t	*effects;			// hit, impact, particle effects etc
-
-	char		name[64];
-	unsigned short	dt_texturenum;		// detail texture load directly from material specific
-
-	char		diffusemap[64];
-	char		normalmap[64];
-	char		glossmap[64];
-} matdesc_t;
 
 typedef struct
 {
@@ -622,8 +604,7 @@ typedef struct
 	CDynLight		defaultlightProj;
 
 	matdesc_t		*materials;
-	unsigned int	matcount;
-
+	int				matcount;
 
 	bool		params_changed;		// some cvars are toggled, shaders needs to recompile and resort
 	bool		local_client_added;		// indicate what a local client already been added into renderlist
@@ -858,7 +839,7 @@ void R_LightmapCoords( msurface_t *surf, const Vector &vec, float *coords, int s
 void R_LightmapCoords( struct mstudiosurface_s *surf, const Vector &vec, const Vector lmvecs[2], float *coords, int style );
 
 //
-// gl_rlight.cpp
+// gl_dlight.cpp
 //
 CDynLight *CL_AllocDlight( int key );
 void R_SetupLightParams( CDynLight *pl, const Vector &origin, const Vector &angles, float radius, float fov, int type, int flags = 0 );
@@ -875,6 +856,7 @@ void R_AnimateLight( void );
 int HasDynamicLights( void );
 int HasStaticLights( void );
 void CL_DecayLights( void );
+bool R_UseSkyLightstyle(int lightstyleIndex);
 
 //
 // gl_rmain.cpp

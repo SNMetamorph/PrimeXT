@@ -1504,9 +1504,9 @@ static localtrian_t *CreateLocalTriangulation( const facetriangulation_t *facetr
 	dot = DotProduct (lt->center, lt->plane.normal) - lt->plane.dist;
 	VectorMA( lt->center, -dot, lt->plane.normal, lt->center );
 
-	if( !PointInWindingEpsilon( lt->winding, lt->plane.normal, lt->center, ON_EPSILON, DEFAULT_EDGE_WIDTH ))
+	if (!PointInWindingEpsilon(lt->winding, lt->plane.normal, lt->center, ON_EPSILON, false))
 	{
-		WindingSnapPointEpsilon( lt->winding, lt->plane.normal, lt->center, DEFAULT_EDGE_WIDTH, 4 * DEFAULT_EDGE_WIDTH );
+		WindingSnapPointEpsilon(lt->winding, lt->plane.normal, lt->center, DEFAULT_EDGE_WIDTH, 4 * DEFAULT_EDGE_WIDTH);
 	}
 
 	VectorCopy( lt->plane.normal, lt->normal );

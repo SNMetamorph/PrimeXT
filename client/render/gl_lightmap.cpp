@@ -33,42 +33,41 @@ GNU General Public License for more details.
 */
 static int LM_AllocBlock( unsigned short w, unsigned short h, unsigned short *x, unsigned short *y )
 {
-	gl_lightmap_t	*lms = &tr.lightmaps[tr.current_lightmap_texture];
-	unsigned short	i, j, best, best2;
+	gl_lightmap_t *lms = &tr.lightmaps[tr.current_lightmap_texture];
+	int	j, best, best2;
 
 	best = BLOCK_SIZE;
-
-	for( i = 0; i < BLOCK_SIZE - w; i++ )
+	for (int i = 0; i < BLOCK_SIZE - w; i++)
 	{
 		best2 = 0;
-
-		for( j = 0; j < w; j++ )
+		for (j = 0; j < w; j++)
 		{
-			if( lms->allocated[i+j] >= best )
+			if (lms->allocated[i + j] >= best)
 				break;
-			if( lms->allocated[i+j] > best2 )
-				best2 = lms->allocated[i+j];
+			if (lms->allocated[i + j] > best2)
+				best2 = lms->allocated[i + j];
 		}
 
-		if( j == w )
-		{	
+		if (j == w)
+		{
 			// this is a valid spot
 			*x = i;
 			*y = best = best2;
 		}
 	}
 
-	if( best + h > BLOCK_SIZE )
+	if (best + h > BLOCK_SIZE)
 	{
 		// current lightmap is full
 		lms->state = LM_DONE;
 		return false;
-          }
+	}
 
-	for( i = 0; i < w; i++ )
+	for (int i = 0; i < w; i++) {
 		lms->allocated[*x + i] = best + h;
-	lms->state = LM_USED; // lightmap in use
+	}
 
+	lms->state = LM_USED; // lightmap in use
 	return true;
 }
 

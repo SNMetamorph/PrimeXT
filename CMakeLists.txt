@@ -41,6 +41,20 @@ else()
 	message(STATUS "Building for 32-bit")
 endif()
 
+# get current git commit short hash
+execute_process(COMMAND "git" "rev-parse" "--short" "HEAD"
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+	OUTPUT_VARIABLE SHORT_HASH
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+if(SHORT_HASH)
+	message(STATUS "Current Git commit hash: ${SHORT_HASH}")
+	add_definitions(-DXASH_BUILD_COMMIT="${SHORT_HASH}")
+else()
+	message(STATUS "Current Git commit hash: not set")
+endif()
+
 # multithreaded build flag for MSVC
 add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>) 
 
@@ -84,9 +98,14 @@ endif()
 set(DIR_COMMON_OUTPUT 
 	${CMAKE_BINARY_DIR}/$<CONFIG>/${GAMEDIR}/bin/
 )
-message(STATUS "Common binaries output directory: ${DIR_COMMON_OUTPUT}")
+message(STATUS "Compiled binaries output directory: ${DIR_COMMON_OUTPUT}")
 
 if(BUILD_CLIENT)
+	set_target_properties(client PROPERTIES DEBUG_POSTFIX "${XASH_BUILD_POSTFIX}")
+	set_target_properties(client PROPERTIES RELEASE_POSTFIX "${XASH_BUILD_POSTFIX}")
+	set_target_properties(client PROPERTIES RELWITHDEBINFO_POSTFIX "${XASH_BUILD_POSTFIX}")
+	set_target_properties(client PROPERTIES MINSIZEREL_POSTFIX "${XASH_BUILD_POSTFIX}")
+
 	if(MSVC)
 		set_target_properties(client PROPERTIES 
 			ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${DIR_COMMON_OUTPUT}
@@ -106,6 +125,11 @@ if(BUILD_CLIENT)
 endif()
 
 if(BUILD_SERVER)
+	set_target_properties(server PROPERTIES DEBUG_POSTFIX "${XASH_BUILD_POSTFIX}")
+	set_target_properties(server PROPERTIES RELEASE_POSTFIX "${XASH_BUILD_POSTFIX}")
+	set_target_properties(server PROPERTIES RELWITHDEBINFO_POSTFIX "${XASH_BUILD_POSTFIX}")
+	set_target_properties(server PROPERTIES MINSIZEREL_POSTFIX "${XASH_BUILD_POSTFIX}")
+
 	if(MSVC)
 		set_target_properties(server PROPERTIES 
 			ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${DIR_COMMON_OUTPUT}

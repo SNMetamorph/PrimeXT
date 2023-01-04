@@ -781,8 +781,9 @@ void R_Clear( int bitMask )
 	else pglClearColor( 0.5f, 0.5f, 0.5f, 1.0f );
 
 	// force to clearing screen to avoid ugly blur
-	if( tr.fClearScreen && !CVAR_TO_BOOL( r_clear ))
+	if (tr.fClearScreen || CVAR_TO_BOOL(r_clear)) {
 		bits |= GL_COLOR_BUFFER_BIT;
+	}
 
 	bits &= bitMask;
 

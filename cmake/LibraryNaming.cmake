@@ -129,19 +129,13 @@ else()
 endif()
 
 if(BUILDOS STREQUAL "android")
-	set(POSTFIX "") # force disable for Android, as Android ports aren't distributed in normal way and doesn't follow library naming
+	set(XASH_BUILD_POSTFIX "") # force disable for Android, as Android ports aren't distributed in normal way and doesn't follow library naming
 elseif(BUILDOS AND BUILDARCH)
-	set(POSTFIX "_${BUILDOS}_${BUILDARCH}")
+	set(XASH_BUILD_POSTFIX "_${BUILDOS}_${BUILDARCH}")
 elseif(BUILDARCH)
-	set(POSTFIX "_${BUILDARCH}")
+	set(XASH_BUILD_POSTFIX "_${BUILDARCH}")
 else()
-	set(POSTFIX "")
+	set(XASH_BUILD_POSTFIX "")
 endif()
 
-message(STATUS "Library postfix: " ${POSTFIX})
-
-set(CMAKE_RELEASE_POSTFIX ${POSTFIX})
-set(CMAKE_DEBUG_POSTFIX ${POSTFIX})
-set(CMAKE_RELWITHDEBINFO_POSTFIX ${POSTFIX})
-set(CMAKE_MINSIZEREL_POSTFIX ${POSTFIX})
-set(CMAKE_POSTFIX ${POSTFIX})
+message(STATUS "Library postfix: " ${XASH_BUILD_POSTFIX})

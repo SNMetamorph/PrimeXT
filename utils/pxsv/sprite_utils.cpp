@@ -199,7 +199,7 @@ dframetype_t* SpriteModel :: LoadSpriteFrame( void *pin, mspriteframe_t **ppfram
 	UploadTexture( (byte *)(pinframe + 1), pinframe->width, pinframe->height, m_palette, g_tex_base + m_loadframe, 1024, has_alpha );
 
 	// setup frame description
-	pspriteframe = (mspriteframe_t *)Mem_Alloc(1, sizeof(mspriteframe_t));
+	pspriteframe = (mspriteframe_t *)Mem_Alloc(sizeof(mspriteframe_t));
 	pspriteframe->width = pinframe->width;
 	pspriteframe->height = pinframe->height;
 	pspriteframe->up = pinframe->origin[1];
@@ -231,7 +231,7 @@ dframetype_t* SpriteModel :: LoadSpriteGroup( void *pin, mspriteframe_t **ppfram
 	numframes = pingroup->numframes;
 
 	groupsize = sizeof( mspritegroup_t ) + (numframes - 1) * sizeof( pspritegroup->frames[0] );
-	pspritegroup = (mspritegroup_t *)Mem_Alloc(1, groupsize);
+	pspritegroup = (mspritegroup_t *)Mem_Alloc(groupsize);
 	pspritegroup->numframes = numframes;
 
 	*ppframe = (mspriteframe_t *)pspritegroup;
@@ -314,7 +314,7 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 	{
 		pinq1 = (dsprite_q1_t *)buffer;
 		size = sizeof( msprite_t ) + ( pinq1->numframes - 1 ) * sizeof( psprite->frames );
-		psprite = (msprite_t *)Mem_Alloc(1, size);
+		psprite = (msprite_t *)Mem_Alloc(size);
 		m_pspritehdr = psprite;	// make link to extradata
 
 		psprite->type = pinq1->type;
@@ -334,7 +334,7 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 	{
 		pinhl = (dsprite_hl_t *)buffer;
 		size = sizeof( msprite_t ) + ( pinhl->numframes - 1 ) * sizeof( psprite->frames );
-		psprite = (msprite_t *)Mem_Alloc(1, size);
+		psprite = (msprite_t *)Mem_Alloc(size);
 		m_pspritehdr = psprite;	// make link to extradata
 
 		psprite->type = pinhl->type;

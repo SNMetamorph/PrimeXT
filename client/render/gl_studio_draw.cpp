@@ -165,6 +165,12 @@ int CStudioModelRenderer :: StudioComputeBBox( void )
 	if( !StudioExtractBbox( m_pStudioHeader, sequence, mins, maxs ))
 		return false;
 
+	if (m_pModelInstance->m_bExternalBones)
+	{
+		mins = RI->currententity->curstate.mins;
+		maxs = RI->currententity->curstate.maxs;
+	}
+
 	// FIXME: some problems in studiomdl compiler?
 	if( BoundsIsCleared( mins, maxs ) || BoundsIsNull( mins, maxs ))
 	{
@@ -190,7 +196,7 @@ int CStudioModelRenderer :: StudioComputeBBox( void )
 		scale = Vector( RI->currententity->curstate.scale );
 	}
 
-	Vector angles = RI->currententity->angles;
+	Vector angles = StudioGetAngles();
 
 	// don't rotate player model, only aim
 	if( RI->currententity->player ) 
@@ -285,9 +291,14 @@ int CStudioModelRenderer :: StudioCheckLOD( void )
 	return 0; // no lod-levels for this model
 }
 
-const Vector CStudioModelRenderer :: StudioGetOrigin( void )
+const Vector CStudioModelRenderer::StudioGetOrigin()
 {
 	return RI->currententity->origin;
+}
+
+const Vector CStudioModelRenderer::StudioGetAngles()
+{
+	return RI->currententity->angles;
 }
 
 /*
@@ -337,7 +348,7 @@ void CStudioModelRenderer :: StudioSetUpTransform( void )
 	}
 
 	Vector origin = StudioGetOrigin();
-	Vector angles = RI->currententity->angles;
+	Vector angles = StudioGetAngles();
 	Vector scale = Vector( 1.0f, 1.0f, 1.0f );
 
 	// apply lodnum to model
@@ -827,9 +838,9 @@ void CStudioModelRenderer :: CalculateIKLocks( CIKContext *pIK )
 				Vector p1, p2;
 
 				// adjust ground to original ground position
-				estGround = (pTarget->est.pos - RI->currententity->origin);
+				estGround = (pTarget->est.pos - StudioGetOrigin());
 				estGround = estGround - (estGround * up) * up;
-				estGround = RI->currententity->origin + estGround + pTarget->est.floor * up;
+				estGround = StudioGetOrigin() + estGround + pTarget->est.floor * up;
 
 				p1 = estGround + up * pTarget->est.height;
 				p2 = estGround - up * pTarget->est.height;
@@ -929,7 +940,7 @@ void CStudioModelRenderer :: CalculateIKLocks( CIKContext *pIK )
 					else if( m_pGround != NULL )
 					{
 						pTarget->SetPos( trace->endpos );
-						pTarget->SetAngles( RI->currententity->angles );
+						pTarget->SetAngles( StudioGetAngles() );
 
 						// only do this on forward tracking or commited IK ground rules
 						if( pTarget->est.release < 0.1f )
@@ -964,7 +975,7 @@ void CStudioModelRenderer :: CalculateIKLocks( CIKContext *pIK )
 					else
 					{
 						pTarget->SetPos( trace->endpos );
-						pTarget->SetAngles( RI->currententity->angles );
+						pTarget->SetAngles( StudioGetAngles() );
 						pTarget->SetOnWorld( true );
 					}
 				}
@@ -1047,9 +1058,14 @@ bool CStudioModelRenderer :: CheckBoneCache( float f )
 		inst->light_update = true;
 	}
 
-	// can't use cache if jiggle bones enabled
+	// can't use cache if jiggle bones enabled, because it need to be updated every frame
 	if (inst->m_pJiggleBones) {
 		return false;
+	}
+
+	// external bones also need to be updated every frame
+	if (m_pModelInstance->m_bExternalBones) {
+		return false; 
 	}
 
 	// no cache for local player
@@ -1096,6 +1112,53 @@ bool CStudioModelRenderer :: CheckBoneCache( float f )
 	return false;
 }
 
+void CStudioModelRenderer :: StudioSetBonesExternal( const cl_entity_t *ent, const Vector pos[], const Radian ang[] )
+{
+	RI->currententity = (cl_entity_t *)ent;
+	RI->currentmodel = ent->model;
+
+	if (!RI->currentmodel)
+		return;
+
+	// setup global pointers
+	m_pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata(RI->currentmodel);
+
+	// aliasmodel instead of studio?
+	if (!m_pStudioHeader)
+		return;
+
+	if (RI->currententity->modelhandle == INVALID_HANDLE)
+		return; // out of memory ?
+
+	m_pModelInstance = &m_ModelInstances[RI->currententity->modelhandle];
+
+	for (int i = 0; i < m_pStudioHeader->numbones; i++)
+	{
+		m_pModelInstance->m_externalBonesAngles[i] = ang[i];
+		m_pModelInstance->m_externalBonesOrigin[i] = pos[i];
+	}
+
+	m_pModelInstance->m_flLastExternalBonesUpdate = tr.time + 0.1f;
+	m_pModelInstance->m_bExternalBones = true;
+}
+
+void CStudioModelRenderer :: StudioCalcBonesExternal( Vector pos[], Vector4D q[] )
+{
+	if (!m_pModelInstance->m_bExternalBones)
+		return;
+
+	for (int i = 0; i < m_pStudioHeader->numbones; i++)
+	{
+		q[i] = m_pModelInstance->m_externalBonesAngles[i];
+		pos[i] = m_pModelInstance->m_externalBonesOrigin[i];
+	}
+
+	// update is expired, reset extenal bones status
+	if (tr.time > m_pModelInstance->m_flLastExternalBonesUpdate) {
+		m_pModelInstance->m_bExternalBones = false;
+	}
+}
+
 /*
 ====================
 StudioSetupBones
@@ -1121,7 +1184,7 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 		ALERT( at_aiconsole, "StudioSetupBones: sequence %i/%i out of range for model %s\n",
 		sequence, m_pStudioHeader->numseq, RI->currentmodel->name );
 		e->curstate.sequence = 0;
-          }
+    }
 
 	pseqdesc = (mstudioseqdesc_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqindex) + e->curstate.sequence;
 	float f = StudioEstimateFrame( pseqdesc );
@@ -1136,7 +1199,7 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 	{
 		if( FBitSet( e->curstate.effects, EF_NOINTERP ))
 			m_pModelInstance->m_ik.ClearTargets();
-		m_pModelInstance->m_ik.Init( &m_boneSetup, e->angles, e->origin, tr.time, tr.realframecount );
+		m_pModelInstance->m_ik.Init( &m_boneSetup, StudioGetAngles(), StudioGetOrigin(), tr.time, tr.realframecount );
 		pIK = &m_pModelInstance->m_ik;
 	}
 
@@ -1188,7 +1251,7 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 		BlendSequence( pos, q, &m_pModelInstance->m_seqblend[i] );
 
 	CIKContext auto_ik;
-	auto_ik.Init( &m_boneSetup, e->angles, e->origin, 0.0f, 0 );
+	auto_ik.Init( &m_boneSetup, StudioGetAngles(), StudioGetOrigin(), 0.0f, 0 );
 	m_boneSetup.CalcAutoplaySequences( &auto_ik, pos, q );
 	if( !CVAR_TO_BOOL( m_pCvarCompatible ))
 		m_boneSetup.CalcBoneAdj( pos, q, m_pModelInstance->m_controller, e->mouth.mouthopen );
@@ -1205,6 +1268,8 @@ void CStudioModelRenderer :: StudioSetupBones( void )
 		CalculateIKLocks( pIK );
 		pIK->SolveDependencies( pos, q, m_pModelInstance->m_pbones, boneComputed );
 	}
+
+	StudioCalcBonesExternal( pos, q );
 
 	for( int i = 0; i < m_pStudioHeader->numbones; i++ ) 
 	{
@@ -1383,9 +1448,9 @@ void CStudioModelRenderer :: StudioCalcAttachments( matrix3x4 bones[] )
 		// clear attachments
 		for( int i = 0; i < MAXSTUDIOATTACHMENTS; i++ )
 		{
-			if( i < 4 ) e->attachment[i] = e->origin;
-			att[i].angles = e->angles;
-			att[i].origin = e->origin;
+			if( i < 4 ) e->attachment[i] = StudioGetOrigin();
+			att[i].angles = StudioGetAngles();
+			att[i].origin = StudioGetOrigin();
 		}
 		return;
 	}
@@ -2644,7 +2709,7 @@ void CStudioModelRenderer :: DrawMeshFromBuffer( const vbomesh_t *mesh )
 	pglBindVertexArray( mesh->vao );
 
 	if( GL_Support( R_DRAW_RANGEELEMENTS_EXT ))
-		pglDrawRangeElementsEXT( GL_TRIANGLES, 0, mesh->numVerts - 1, mesh->numElems, GL_UNSIGNED_INT, 0 );
+		pglDrawRangeElements( GL_TRIANGLES, 0, mesh->numVerts - 1, mesh->numElems, GL_UNSIGNED_INT, 0 );
 	else pglDrawElements( GL_TRIANGLES, mesh->numElems, GL_UNSIGNED_INT, 0 );
 
 	r_stats.c_total_tris += (mesh->numElems / 3);
@@ -2896,8 +2961,9 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 			// process lightstyles
 			for( int i = 0; i < MAXLIGHTMAPS && m_pModelInstance->styles[i] != LS_NONE; i++ )
 			{
-				if( tr.sun_light_enabled && m_pModelInstance->styles[i] == LS_SKY )
+				if (!R_UseSkyLightstyle(m_pModelInstance->styles[i]))
 					continue;	// skip the sunlight due realtime sun is enabled
+
 				GL_AddShaderDirective( options, va( "APPLY_STYLE%i", i ));
 			}
 
@@ -3656,9 +3722,6 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force )
 				pl->lightviewProjMatrix.CopyToArray( gl_lightViewProjMatrix );
 				u->SetValue( &gl_lightViewProjMatrix[0] );
 			}
-			break;
-		case UT_DIFFUSEFACTOR:
-			u->SetValue( tr.diffuseFactor );
 			break;
 		case UT_AMBIENTFACTOR:
 			if( pl && pl->type == LIGHT_DIRECTIONAL )

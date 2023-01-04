@@ -136,9 +136,12 @@ typedef struct texture_s
 	struct texture_s	*alternate_anims;	// bmodels in frame 1 use these
 	unsigned short	fb_texturenum;	// auto-luma texturenum
 	unsigned short	dt_texturenum;	// detail-texture binding
-	material_t	*material;	// pointer to texture material
-	struct matdef_t	*effects;		// hit, impact, particle effects etc
-	unsigned int	unused;		// reserved 
+	material_t		*material;	// pointer to texture material
+#if XASH_64BIT
+	uint32_t		unused[1];
+#else
+	uint32_t		unused[2];
+#endif
 } texture_t;
 
 typedef struct
@@ -157,9 +160,12 @@ typedef struct
 	unsigned short	heightmap_width;
 	unsigned short	heightmap_height;
 
+#if CLIENT_DLL
 	struct terrain_s	*terrain;		// valid only for client-side or local game
-
-	int		reserved[13];	// just for future expansions or mod-makers
+#else
+	struct sv_terrain_s *terrain;
+#endif
+	intptr_t			reserved[13];	// just for future expansions or mod-makers
 } mfaceinfo_t;
 
 typedef struct
@@ -213,17 +219,18 @@ typedef struct decal_s	decal_t;
 // JAY: Compress this as much as possible
 struct decal_s
 {
-	decal_t		*pnext;		// linked list for each surface
-	msurface_t	*psurface;	// Surface id for persistence / unlinking
-	float		dx;		// local texture coordinates
-	float		dy;		// 
-	float		scale;		// Pixel scale
+	decal_t		*pnext;			// linked list for each surface
+	msurface_t	*psurface;		// Surface id for persistence / unlinking
+	float		dx;				// local texture coordinates
+	float		dy;				// 
+	float		scale;			// Pixel scale
 	short		texture;		// Decal texture
-	byte		flags;		// Decal flags  FDECAL_*
+	byte		flags;			// Decal flags  FDECAL_*
 	short		entityIndex;	// Entity this is attached to
 // Xash3D added
 	vec3_t		position;		// location of the decal center in world space.
-	glpoly_t		*polys;		// precomputed decal vertices
+	glpoly_t	*polys;			// precomputed decal vertices
+	intptr_t	reserved[4];	// just for future expansions or mod-makers
 };
 
 typedef struct mleaf_s
@@ -329,7 +336,7 @@ typedef struct mextrasurf_s
 	shader_t		forwardDepth;
 
 	struct brushdecal_s	*pdecals;		// linked decals
-	int		reserved[21];	// just for future expansions or mod-makers
+	intptr_t		reserved[21];	// just for future expansions or mod-makers
 } mextrasurf_t;
 
 typedef struct msurface_s
@@ -404,8 +411,8 @@ typedef struct model_s
 	// brush model
 	union
 	{
-	int		firstmodelsurface;
-	unsigned long	modelCRC;
+	int			firstmodelsurface;
+	uint32_t	modelCRC;
 	};
 	int		nummodelsurfaces;
 
@@ -466,7 +473,7 @@ typedef struct model_s
 	union
 	{
 	char		*entities;
-	struct mstudiomat_s	*materials;	// studio materials (only for mod_studio)
+	struct mstudiomat_s	*materials;	// studio materials (only for mod_studio, valid only on clientside)
 	};
 //
 // additional model data

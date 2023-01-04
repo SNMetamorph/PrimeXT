@@ -14,6 +14,7 @@
 #include "../../engine/studio.h"
 #include "model_trace.h"
 #include "imagelib.h"
+#include "crclib.h"
 #include <mimalloc-override.h>
 
 typedef struct
@@ -238,12 +239,12 @@ static int StudioCreateMeshFromTriangles( entity_t *ent, studiohdr_t *phdr, cons
 		for( j = 0; j < psubmodel->nummesh; j++ ) 
 		{
 			mstudiomesh_t	*pmesh = (mstudiomesh_t *)((byte *)phdr + psubmodel->meshindex) + j;
-			float		s = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].width;
-			float		t = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].height;
-			short		*ptricmds = (short *)((byte *)phdr + pmesh->triindex);
+			float	s = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].width;
+			float	t = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].height;
+			short	*ptricmds = (short *)((byte *)phdr + pmesh->triindex);
 			int		flags = ptexture[pskinref[pmesh->skinref]].flags;
 
-			while( i = *( ptricmds++ ))
+			while ((i = *(ptricmds++)) != 0)
 			{
 				int	vertexState = 0;
 				bool	tri_strip;
@@ -538,7 +539,9 @@ bool StudioConstructMesh( entity_t *ent, void *extradata, const char *modname, u
 	GetVectorForKey( ent, "origin", origin );
 	GetVectorForKey( ent, "angles", angles );
 
-	angles[0] = -angles[0]; // Stupid quake bug workaround
+	// TODO enable this when compatibility with GoldSrc is turned on
+	//angles[0] = -angles[0]; // Stupid quake bug workaround
+
 	scale = FloatForKey( ent, "scale" );
 	body = IntForKey( ent, "body" );
 	skin = IntForKey( ent, "skin" );
@@ -657,7 +660,7 @@ void LoadStudio( entity_t *ent, void *extradata, int fileLength, int flags )
 #if defined( HLRAD_VERTEXLIGHTING ) || defined( HLRAD_LIGHTMAPMODELS )
 	CRC32_Init( &modelCRC );
 	CRC32_ProcessBuffer( &modelCRC, extradata, phdr->length );
-	CRC32_Final( &modelCRC );
+	modelCRC = CRC32_Final( modelCRC );
 #endif
 	// well the textures place in separate file (very stupid case)
 	if( phdr->numtextures == 0 )

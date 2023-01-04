@@ -10,6 +10,7 @@ version		0.8
 size		116339527
 noskills 	"1"
 render_picbutton_text "1"
+internal_vgui_support "1"
 url_info	"https://github.com/SNMetamorph/PrimeXT"
 type		"Toolkit"
 dllpath		"bin"

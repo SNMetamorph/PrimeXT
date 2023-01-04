@@ -15,6 +15,7 @@ GNU General Public License for more details.
 
 #ifndef TBNFILE_H
 #define TBNFILE_H
+#include <stdint.h>
 
 /*
 ==============================================================================
@@ -37,18 +38,18 @@ typedef struct
 
 typedef struct
 {
-	int		submodel_offset;	// hack to determine submodel
-	int		vertex_offset;
+	int32_t	submodel_offset;	// hack to determine submodel
+	int32_t	vertex_offset;
 } dvmodelofs_t;
 
 typedef struct
 {
-	int		ident;		// to differentiate from previous lump LUMP_LEAF_LIGHTING
-	int		version;		// data package version
-	unsigned int	modelCRC;		// catch for model changes
-	int		numverts;
+	int32_t		ident;			// to differentiate from previous lump LUMP_LEAF_LIGHTING
+	int32_t		version;		// data package version
+	uint32_t	modelCRC;		// catch for model changes
+	int32_t		numverts;
 	dvmodelofs_t	submodels[32];	// MAXSTUDIOMODELS
 	dvertmatrix_t	verts[1];		// variable sized
 } dmodeltbn_t;
 
-#endif//TBNFILE_H
+#endif //TBNFILE_H

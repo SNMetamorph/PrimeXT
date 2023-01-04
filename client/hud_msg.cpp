@@ -22,6 +22,7 @@
 #include "r_weather.h"
 #include "r_efx.h"
 #include "gl_studio.h"
+#include "postfx_controller.h"
 
 // CHud message handlers
 DECLARE_HUDMESSAGE( Logo );
@@ -44,6 +45,7 @@ DECLARE_HUDMESSAGE( KillDecals );
 DECLARE_HUDMESSAGE( CustomDecal );
 DECLARE_HUDMESSAGE( StudioDecal );
 DECLARE_HUDMESSAGE( SetupBones );
+DECLARE_HUDMESSAGE( PostFxSettings );
 
 int CHud :: InitHUDMessages( void )
 {
@@ -67,6 +69,7 @@ int CHud :: InitHUDMessages( void )
 	HOOK_MESSAGE( CustomDecal );
 	HOOK_MESSAGE( StudioDecal );
 	HOOK_MESSAGE( SetupBones );
+	HOOK_MESSAGE( PostFxSettings );
 
 	m_iFOV = 0;
 	m_iHUDColor = 0x00FFA000; // 255,160,0
@@ -457,15 +460,13 @@ int CHud :: MsgFunc_StudioDecal( const char *pszName, int iSize, void *pbuf )
 
 int CHud :: MsgFunc_SetupBones( const char *pszName, int iSize, void *pbuf )
 {
-	ALERT(at_error, "MsgFunc_SetupBones: rope feature not implemented at the moment, it'll be fixed in future\n");
-	/*
 	static Vector pos[MAXSTUDIOBONES];
 	static Radian ang[MAXSTUDIOBONES];
 
-	BEGIN_READ( pszName, pbuf, iSize );
+	BEGIN_READ(pszName, pbuf, iSize);
 		int entityIndex = READ_SHORT();
 		int boneCount = READ_BYTE();
-		for( int i = 0; i < boneCount; i++ )
+		for (int i = 0; i < boneCount; i++)
 		{
 			pos[i].x = (float)READ_SHORT() * (1.0f/128.0f);
 			pos[i].y = (float)READ_SHORT() * (1.0f/128.0f);
@@ -476,19 +477,25 @@ int CHud :: MsgFunc_SetupBones( const char *pszName, int iSize, void *pbuf )
 		}
 	END_READ();	
 
-	cl_entity_t *ent = GET_ENTITY( entityIndex );
-
-	if( !ent )
+	cl_entity_t *ent = GET_ENTITY(entityIndex);
+	if (!ent)
 	{
 		// something very bad happens...
-		ALERT( at_error, "SetupBones: ent == NULL\n" );
-
+		ALERT(at_error, "MsgFunc_SetupBones: ent == NULL\n");
 		return 1;
 	}
 
-	R_StudioSetBonesExternal( ent, pos, ang );
+	R_StudioSetBonesExternal(ent, pos, ang);
+	return 1;
+}
 
-	*/
+int _cdecl CHud::MsgFunc_PostFxSettings(const char * pszName, int iSize, void * pbuf)
+{
+	CPostFxParameters postFxParams;
+	BEGIN_READ(pszName, pbuf, iSize);
+	postFxParams.ParseMessage();
+	g_PostFxController.UpdateState(postFxParams);
+	END_READ();	
 	return 1;
 }
 

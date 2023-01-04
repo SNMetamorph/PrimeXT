@@ -18,6 +18,7 @@ GNU General Public License for more details.
 
 #include "vector.h"
 #include "meshdesc.h"
+#include "material.h"
 
 #define FRAC_EPSILON	(1.0f / 32.0f)
 #define BARY_EPSILON	0.01f
@@ -42,16 +43,17 @@ private:
 	bool		bUseCapsule;	// use capsule instead of bbox
 	areanode_t	*areanodes;	// AABB for static meshes
 	mmesh_t		*mesh;		// mesh to trace
-	trace_t  		*trace;		// output
-	mstudiomaterial_t	*material;	// pointer to texture for special effects
-	int		checkcount;	// debug
+	trace_t  	*trace;		// output
+	matdesc_t	*material;	// pointer to texture for special effects
+	int			checkcount;	// debug
 	Vector		m_vecOrigin;
 	Vector		m_vecAngles;
 	Vector		m_vecScale;
-	int		m_iSkin;
-	int		m_iBody;
-	matrix4x4		m_transform;
+	int			m_iSkin;
+	int			m_iBody;
+	matrix4x4	m_transform;
 	model_t		*m_pModel;
+
 public:
 	TraceMesh() { mesh = NULL; }
 	~TraceMesh() {}
@@ -71,8 +73,8 @@ public:
 	}
 
 	void SetupTrace( const Vector &start, const Vector &mins, const Vector &maxs, const Vector &end, trace_t *trace ); 
-	mstudiomaterial_t *GetLastHitSurface( void ) { return material; }
-	mstudiomaterial_t *GetMaterialForFacet( const mfacet_t *facet );
+	matdesc_t *GetLastHitSurface( void ) { return material; }
+	matdesc_t *GetMaterialForFacet( const mfacet_t *facet );
 	mstudiotexture_t *GetTextureForFacet( const mfacet_t *facet );
 	bool ClipRayToFacet( const mfacet_t *facet );
 	void ClipBoxToFacet( mfacet_t	*facet );

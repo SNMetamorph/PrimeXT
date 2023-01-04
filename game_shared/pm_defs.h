@@ -13,6 +13,7 @@
 *
 ****/
 
+#pragma once
 #ifndef PM_DEFS_H
 #define PM_DEFS_H
 
@@ -207,7 +208,7 @@ typedef struct playermove_s
 	int		(*PM_HullPointContents)( struct hull_s *hull, int num, float *p );   
 	pmtrace_t		(*PM_PlayerTrace)( float *start, float *end, int traceFlags, int ignore_pe );
 	struct pmtrace_s	*(*PM_TraceLine)( float *start, float *end, int flags, int usehulll, int ignore_pe );
-	long		(*RandomLong)( long lLow, long lHigh );
+	int		(*RandomLong)( int lLow, int lHigh );
 	float		(*RandomFloat)( float flLow, float flHigh );
 	int		(*PM_GetModelType)( struct model_s *mod );
 	void		(*PM_GetModelBounds)( struct model_s *mod, float *mins, float *maxs );

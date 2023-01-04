@@ -23,7 +23,6 @@ GNU General Public License for more details.
 uniform sampler2D		u_LightMap;
 uniform sampler2D		u_DeluxeMap;
 uniform float		u_AmbientFactor;
-uniform float		u_DiffuseFactor;
 uniform float		u_LightGamma;
 
 void ApplyLightStyle( const vec3 lminfo, const vec3 N, const vec3 V, const vec4 albedo, in MaterialData mat, inout LightingData lighting )

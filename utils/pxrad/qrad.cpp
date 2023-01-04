@@ -13,6 +13,7 @@
 #include "qrad.h"
 #include "app_info.h"
 #include "crashhandler.h"
+#include "build_info.h"
 #include <mimalloc-override.h>
 
 /*
@@ -789,10 +790,15 @@ void ReadLightFile( const char *filename, bool use_direct_path )
 	int	j, argCnt;
 	file_t	*f;
 
-	FS_AllowDirectPaths( use_direct_path );	
-	f = FS_Open( filename, "r", false );
-	FS_AllowDirectPaths( false );	
-	if( !f ) return;
+	FS_AllowDirectPaths(use_direct_path);
+	f = FS_Open(filename, "r", false);
+	FS_AllowDirectPaths(false);
+
+	if (!f) 
+	{
+		MsgDev(D_INFO, "ReadLightFile: failed to parse texlights from '%s'\n", filename);
+		return;
+	}
 
 	while( result != EOF )
 	{
@@ -2429,7 +2435,7 @@ static void PrintRadSettings( void )
 	char	buf1[1024];
 	char	buf2[1024];
 
-	Msg( "\nCurrent %s settings\n", APP_ABBREVIATION );
+	Msg( "Current %s settings\n", APP_ABBREVIATION );
 	Msg( "Name                 |  Setting  |  Default\n" );
 	Msg( "---------------------|-----------|-------------------------\n" );
 	Msg( "developer             [ %7d ] [ %7d ]\n", GetDeveloperLevel(), DEFAULT_DEVELOPER );
@@ -2497,8 +2503,6 @@ static void PrintRadUsage( void )
 	Msg( "    -gammamode #   : gamma correction mode (0, 1, 2)\n" );
 #endif
 	Msg( "    bspfile        : The bspfile to compile\n\n" );
-
-	exit( 1 );
 }
 
 /*
@@ -2512,7 +2516,7 @@ int main( int argc, char **argv )
 {
 	double	start, end;
 	char	str[64];
-	int	i;
+	int		i;
 
 	atexit( Sys_CloseLog );
 	source[0] = '\0';
@@ -2653,18 +2657,26 @@ int main( int argc, char **argv )
 		}
 	}
 
-	if( i != argc || !source[0] )
+	if (i != argc || !source[0])
 	{
-		if( !source[0] )
-			Msg( "no mapfile specified\n" );
+		if (!source[0]) {
+			Msg("no mapfile specified\n");
+		}
+
 		PrintRadUsage();
+		exit(1);
 	}
 
 	start = I_FloatTime ();
 
 	Sys_InitLogAppend( va( "%s.log", source ));
 
-	Msg( "\n%s %s (%s)\n", TOOLNAME, VERSIONSTRING, __DATE__ );
+	Msg( "\n%s %s (%s, commit %s, arch %s, platform %s)\n\n", TOOLNAME, VERSIONSTRING, 
+		BuildInfo::GetDate(), 
+		BuildInfo::GetCommitHash(), 
+		BuildInfo::GetArchitecture(), 
+		BuildInfo::GetPlatform()
+	);
 
 	PrintRadSettings();
 
@@ -2676,15 +2688,18 @@ int main( int argc, char **argv )
 	// Set the required global lights filename
 	// try looking in the directory we were run from
 	Q_getwd( global_lights, sizeof( global_lights ) );
-	Q_strncat( global_lights, "/lights.rad", sizeof( global_lights ));
+	Q_strncat( global_lights, "lights.rad", sizeof( global_lights ));
 
 	// Set the optional level specific lights filename
 	COM_FileBase( source, str );
 	Q_snprintf( level_lights, sizeof( level_lights ), "maps/%s.rad", str );
 	if( !FS_FileExists( level_lights, false )) level_lights[0] = '\0';	
 
-	ReadLightFile( global_lights, true );			// Required
-	if( *level_lights )	ReadLightFile( level_lights, false );	// Optional & implied
+	// parse .rad files
+	ReadLightFile(global_lights, true);	// Required
+	if (*level_lights) {
+		ReadLightFile(level_lights, false);	// Optional & implied
+	}
 
 	COM_DefaultExtension( source, ".bsp" );
 

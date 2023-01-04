@@ -76,9 +76,14 @@ inline void MESSAGE_BEGIN( int msg_dest, int msg_type, const float *pOrigin = NU
 #define MESSAGE_END		(*g_engfuncs.pfnMessageEnd)
 #define WRITE_BYTE		(*g_engfuncs.pfnWriteByte)
 
-inline void WRITE_BYTES( const byte *data, int nBytes ) {
-	for( int i = 0; i < nBytes; i++, data++ )
-		WRITE_BYTE( *data );
+inline void WRITE_BYTES(const byte *data, int nBytes) {
+	for (int i = 0; i < nBytes; i++, data++) {
+		WRITE_BYTE(*data);
+	}
+}
+
+inline void WRITE_FLOAT(float data) {
+	(*g_engfuncs.pfnWriteLong)(*(int *)&data);
 }
 
 #define WRITE_CHAR		(*g_engfuncs.pfnWriteChar)

@@ -102,11 +102,8 @@ void main( void )
 #endif
 #elif defined( LIGHT_PROJ )
 #if defined( APPLY_SHADOW )
-	if( NdotL > 0.0 )
-	{
+	if( NdotL > 0.0 ) {
 		shadow = ShadowProj( var_ShadowCoord.xyz );
-		shadow = mix( shadow, 0.0, u_SunRefract );
-		shadow = max( shadow, u_AmbientFactor );
 	}
 #endif
 #endif
@@ -115,9 +112,5 @@ void main( void )
 	// using diffuse lighting only for grass
 	vec3 albedo = diffuse.rgb;
 	diffuse.rgb *= light.rgb * NdotL * atten * shadow;
-#if defined( LIGHT_PROJ )
-	diffuse.rgb += (albedo * u_LightDiffuse * u_AmbientFactor);
-#endif
-	// compute final color
 	gl_FragColor = diffuse;
 }

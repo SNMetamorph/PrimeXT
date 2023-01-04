@@ -149,7 +149,7 @@ static dllfunc_t opengl_110funcs[] =
 { "glCopyTexSubImage1D"  	, (void **)&pglCopyTexSubImage1D },
 { "glCopyTexSubImage2D"  	, (void **)&pglCopyTexSubImage2D },
 { "glScissor"            	, (void **)&pglScissor },
-{ "glGetTexImage"		, (void **)&pglGetTexImage },
+{ "glGetTexImage"			, (void **)&pglGetTexImage },
 { "glGetTexEnviv"        	, (void **)&pglGetTexEnviv },
 { "glPolygonOffset"      	, (void **)&pglPolygonOffset },
 { "glPolygonMode"        	, (void **)&pglPolygonMode },
@@ -186,18 +186,52 @@ static dllfunc_t opengl_200funcs[] =
 { "glGetUniformLocation"		, (void **)&pglGetUniformLocation },
 { "glGetProgramiv"              , (void **)&pglGetProgramiv },
 { "glBlendEquation"             , (void **)&pglBlendEquation },
-{ NULL, NULL }
-};
-
-static dllfunc_t drawrangeelementsfuncs[] =
-{
-{ "glDrawRangeElements" , (void **)&pglDrawRangeElements },
+{ "glVertexAttribPointer"		, (void **)&pglVertexAttribPointerARB },
+{ "glEnableVertexAttribArray"	, (void **)&pglEnableVertexAttribArrayARB },
+{ "glDisableVertexAttribArray"	, (void **)&pglDisableVertexAttribArrayARB },
+{ "glBindAttribLocation"		, (void **)&pglBindAttribLocationARB },
+{ "glGetActiveAttrib"			, (void **)&pglGetActiveAttribARB },
+{ "glGetAttribLocation"			, (void **)&pglGetAttribLocationARB },
+{ "glTexImage3D"				, (void **)&pglTexImage3D },
+{ "glTexSubImage3D"				, (void **)&pglTexSubImage3D },
+{ "glCopyTexSubImage3D"			, (void **)&pglCopyTexSubImage3D },
+{ "glDrawRangeElements"			, (void **)&pglDrawRangeElements },
+{ "glDrawBuffers"				, (void **)&pglDrawBuffersARB },
+{ "glMultiTexCoord1f"			, (void **)&pglMultiTexCoord1f },
+{ "glMultiTexCoord2f"			, (void **)&pglMultiTexCoord2f },
+{ "glMultiTexCoord3f"			, (void **)&pglMultiTexCoord3f },
+{ "glMultiTexCoord4f"			, (void **)&pglMultiTexCoord4f },
+{ "glActiveTexture"				, (void **)&pglActiveTexture },
+{ "glUniformMatrix2fv"			, (void **)&pglUniformMatrix2fvARB },
+{ "glUniformMatrix3fv"			, (void **)&pglUniformMatrix3fvARB },
+{ "glUniformMatrix4fv"			, (void **)&pglUniformMatrix4fvARB },
+{ "glUniform1f"					, (void **)&pglUniform1fARB },
+{ "glUniform2f"					, (void **)&pglUniform2fARB },
+{ "glUniform3f"					, (void **)&pglUniform3fARB },
+{ "glUniform4f"					, (void **)&pglUniform4fARB },
+{ "glUniform1i"					, (void **)&pglUniform1iARB },
+{ "glUniform2i"					, (void **)&pglUniform2iARB },
+{ "glUniform3i"					, (void **)&pglUniform3iARB },
+{ "glUniform4i"					, (void **)&pglUniform4iARB },
+{ "glUniform1fv"				, (void **)&pglUniform1fvARB },
+{ "glUniform2fv"				, (void **)&pglUniform2fvARB },
+{ "glUniform3fv"				, (void **)&pglUniform3fvARB },
+{ "glUniform4fv"				, (void **)&pglUniform4fvARB },
+{ "glUniform1iv"				, (void **)&pglUniform1ivARB },
+{ "glUniform2iv"				, (void **)&pglUniform2ivARB },
+{ "glUniform3iv"				, (void **)&pglUniform3ivARB },
+{ "glUniform4iv"				, (void **)&pglUniform4ivARB },
+{ "glVertexAttrib2f"            , (void **)&pglVertexAttrib2fARB },
+{ "glVertexAttrib2fv"           , (void **)&pglVertexAttrib2fvARB },
+{ "glVertexAttrib3fv"           , (void **)&pglVertexAttrib3fvARB },
+{ "glVertexAttrib4fv"           , (void **)&pglVertexAttrib4fvARB },
+{ "glVertexAttrib4ubv"			, (void **)&pglVertexAttrib4ubvARB },
 { NULL, NULL }
 };
 
 static dllfunc_t drawrangeelementsextfuncs[] =
 {
-{ "glDrawRangeElementsEXT" , (void **)&pglDrawRangeElementsEXT },
+{ "glDrawRangeElementsEXT" , (void **)&pglDrawRangeElements },
 { NULL, NULL }
 };
 
@@ -221,27 +255,6 @@ static dllfunc_t khr_debug_funcs[] =
 { NULL, NULL }
 };
 
-static dllfunc_t multitexturefuncs[] =
-{
-{ "glMultiTexCoord1fARB"     , (void **)&pglMultiTexCoord1f },
-{ "glMultiTexCoord2fARB"     , (void **)&pglMultiTexCoord2f },
-{ "glMultiTexCoord3fARB"     , (void **)&pglMultiTexCoord3f },
-{ "glMultiTexCoord4fARB"     , (void **)&pglMultiTexCoord4f },
-{ "glActiveTextureARB"       , (void **)&pglActiveTexture },
-{ "glActiveTextureARB"       , (void **)&pglActiveTextureARB },
-{ "glClientActiveTextureARB" , (void **)&pglClientActiveTexture },
-{ "glClientActiveTextureARB" , (void **)&pglClientActiveTextureARB },
-{ NULL, NULL }
-};
-
-static dllfunc_t texture3dextfuncs[] =
-{
-{ "glTexImage3DEXT"        , (void **)&pglTexImage3D },
-{ "glTexSubImage3DEXT"     , (void **)&pglTexSubImage3D },
-{ "glCopyTexSubImage3DEXT" , (void **)&pglCopyTexSubImage3D },
-{ NULL, NULL }
-};
-
 static dllfunc_t blendseparatefunc[] =
 {
 { "glBlendFuncSeparateEXT", (void **)&pglBlendFuncSeparate },
@@ -250,51 +263,10 @@ static dllfunc_t blendseparatefunc[] =
 
 static dllfunc_t shaderobjectsfuncs[] =
 {
-{ "glUniform1fARB"                , (void **)&pglUniform1fARB },
-{ "glUniform2fARB"                , (void **)&pglUniform2fARB },
-{ "glUniform3fARB"                , (void **)&pglUniform3fARB },
-{ "glUniform4fARB"                , (void **)&pglUniform4fARB },
-{ "glUniform1iARB"                , (void **)&pglUniform1iARB },
-{ "glUniform2iARB"                , (void **)&pglUniform2iARB },
-{ "glUniform3iARB"                , (void **)&pglUniform3iARB },
-{ "glUniform4iARB"                , (void **)&pglUniform4iARB },
-{ "glUniform1fvARB"               , (void **)&pglUniform1fvARB },
-{ "glUniform2fvARB"               , (void **)&pglUniform2fvARB },
-{ "glUniform3fvARB"               , (void **)&pglUniform3fvARB },
-{ "glUniform4fvARB"               , (void **)&pglUniform4fvARB },
-{ "glUniform1ivARB"               , (void **)&pglUniform1ivARB },
-{ "glUniform2ivARB"               , (void **)&pglUniform2ivARB },
-{ "glUniform3ivARB"               , (void **)&pglUniform3ivARB },
-{ "glUniform4ivARB"               , (void **)&pglUniform4ivARB },
-{ "glUniformMatrix2fvARB"         , (void **)&pglUniformMatrix2fvARB },
-{ "glUniformMatrix3fvARB"         , (void **)&pglUniformMatrix3fvARB },
-{ "glUniformMatrix4fvARB"         , (void **)&pglUniformMatrix4fvARB },
 { "glGetInfoLogARB"               , (void **)&pglGetInfoLogARB },
 { "glGetAttachedObjectsARB"       , (void **)&pglGetAttachedObjectsARB },
 { "glGetUniformfvARB"             , (void **)&pglGetUniformfvARB },
 { "glGetUniformivARB"             , (void **)&pglGetUniformivARB },
-{ "glVertexAttribPointerARB"      , (void **)&pglVertexAttribPointerARB },
-{ "glEnableVertexAttribArrayARB"  , (void **)&pglEnableVertexAttribArrayARB },
-{ "glDisableVertexAttribArrayARB" , (void **)&pglDisableVertexAttribArrayARB },
-{ "glBindAttribLocationARB"       , (void **)&pglBindAttribLocationARB },
-{ "glGetActiveAttribARB"          , (void **)&pglGetActiveAttribARB },
-{ "glGetAttribLocationARB"        , (void **)&pglGetAttribLocationARB },
-{ "glVertexAttrib2f"              , (void **)&pglVertexAttrib2fARB },
-{ "glVertexAttrib2fv"             , (void **)&pglVertexAttrib2fvARB },
-{ "glVertexAttrib3fv"             , (void **)&pglVertexAttrib3fvARB },
-{ "glVertexAttrib4fv"             , (void **)&pglVertexAttrib4fvARB },
-{ "glVertexAttrib4ubv"            , (void **)&pglVertexAttrib4ubvARB },
-{ NULL, NULL }
-};
-
-static dllfunc_t vertexshaderfuncs[] =
-{
-{ "glVertexAttribPointerARB"      , (void **)&pglVertexAttribPointerARB },
-{ "glEnableVertexAttribArrayARB"  , (void **)&pglEnableVertexAttribArrayARB },
-{ "glDisableVertexAttribArrayARB" , (void **)&pglDisableVertexAttribArrayARB },
-{ "glBindAttribLocationARB"       , (void **)&pglBindAttribLocationARB },
-{ "glGetActiveAttribARB"          , (void **)&pglGetActiveAttribARB },
-{ "glGetAttribLocationARB"        , (void **)&pglGetAttribLocationARB },
 { NULL, NULL }
 };
 
@@ -349,7 +321,7 @@ static dllfunc_t fbofuncs[] =
 { "glGetFramebufferAttachmentParameteriv" , (void **)&pglGetFramebufferAttachmentParameteriv },
 { "glGenerateMipmap"                      , (void **)&pglGenerateMipmap },
 { "glColorMaski"                          , (void **)&pglColorMaski },
-{ NULL, NULL}
+{ NULL, NULL }
 };
 
 static dllfunc_t occlusionfunc[] =
@@ -362,12 +334,6 @@ static dllfunc_t occlusionfunc[] =
 { "glGetQueryivARB"        , (void **)&pglGetQueryivARB },
 { "glGetQueryObjectivARB"  , (void **)&pglGetQueryObjectivARB },
 { "glGetQueryObjectuivARB" , (void **)&pglGetQueryObjectuivARB },
-{ NULL, NULL }
-};
-
-static dllfunc_t drawbuffersfuncs[] =
-{
-{ "glDrawBuffersARB" , (void **)&pglDrawBuffersARB },
 { NULL, NULL }
 };
 
@@ -576,24 +542,17 @@ static void GL_InitExtensions( void )
 
 	Msg( "GL_VERSION: %g\n", glConfig.version );
 
-	GL_CheckExtension( "glDrawRangeElements", drawrangeelementsfuncs, "gl_drawrangeelments", R_DRAW_RANGEELEMENTS_EXT );
-
-	if( !GL_Support( R_DRAW_RANGEELEMENTS_EXT ))
-		GL_CheckExtension( "GL_EXT_draw_range_elements", drawrangeelementsextfuncs, "gl_drawrangeelments", R_DRAW_RANGEELEMENTS_EXT );
-
-	// we don't care if it's an extension or not, they are identical functions, so keep it simple in the rendering code
-	if( pglDrawRangeElementsEXT == NULL ) pglDrawRangeElementsEXT = pglDrawRangeElements;
-
-	if( !GL_Support( R_DRAW_RANGEELEMENTS_EXT ))
+	GL_CheckExtension("GL_EXT_draw_range_elements", (!pglDrawRangeElements) ? drawrangeelementsextfuncs : nullptr, "gl_drawrangeelments", R_DRAW_RANGEELEMENTS_EXT);
+	if (!GL_Support(R_DRAW_RANGEELEMENTS_EXT))
 	{
-		ALERT( at_error, "GL_EXT_draw_range_elements not support. Custom renderer disabled\n" );
+		ALERT(at_error, "GL_EXT_draw_range_elements not support. Custom renderer disabled\n");
 		g_fRenderInitialized = FALSE;
 		return;
 	}
 
 	// multitexture
 	glConfig.max_texture_units = 1;
-	GL_CheckExtension( "GL_ARB_multitexture", multitexturefuncs, "gl_arb_multitexture", R_ARB_MULTITEXTURE, true );
+	GL_CheckExtension( "GL_ARB_multitexture", NULL, "gl_arb_multitexture", R_ARB_MULTITEXTURE, true );
 
 	if( GL_Support( R_ARB_MULTITEXTURE ))
 		pglGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, &glConfig.max_texture_units );
@@ -609,7 +568,7 @@ static void GL_InitExtensions( void )
 	}
 
 	// 3d texture support
-	GL_CheckExtension( "GL_EXT_texture3D", texture3dextfuncs, "gl_texture_3d", R_TEXTURE_3D_EXT, true );
+	GL_CheckExtension( "GL_EXT_texture3D", NULL, "gl_texture_3d", R_TEXTURE_3D_EXT, true );
 
 	if( GL_Support( R_TEXTURE_3D_EXT ))
 	{
@@ -623,7 +582,7 @@ static void GL_InitExtensions( void )
 	}
 
 	// 2d texture array support
-	GL_CheckExtension( "GL_EXT_texture_array", texture3dextfuncs, "gl_texture_2d_array", R_TEXTURE_ARRAY_EXT, true );
+	GL_CheckExtension( "GL_EXT_texture_array", NULL, "gl_texture_2d_array", R_TEXTURE_ARRAY_EXT, true );
 
 	if( !GL_Support( R_TEXTURE_ARRAY_EXT ))
 		ALERT( at_warning, "GL_EXT_texture_array not support. Landscapes will be unavailable\n" );
@@ -643,7 +602,7 @@ static void GL_InitExtensions( void )
 
 	GL_CheckExtension( "GL_ARB_texture_non_power_of_two", NULL, "gl_texture_npot", R_ARB_TEXTURE_NPOT_EXT, true );
 
-	GL_CheckExtension( "GL_ARB_draw_buffers", drawbuffersfuncs, "gl_draw_buffers", R_DRAW_BUFFERS_EXT );
+	GL_CheckExtension( "GL_ARB_draw_buffers", NULL, "gl_draw_buffers", R_DRAW_BUFFERS_EXT );
 
 	GL_CheckExtension( "GL_ARB_vertex_buffer_object", vbofuncs, "gl_vertex_buffer_object", R_ARB_VERTEX_BUFFER_OBJECT_EXT );
 
@@ -690,7 +649,7 @@ static void GL_InitExtensions( void )
 		return;
 	}
 
-	GL_CheckExtension( "GL_ARB_vertex_shader", vertexshaderfuncs, "gl_vertexshader", R_VERTEX_SHADER_EXT );
+	GL_CheckExtension( "GL_ARB_vertex_shader", NULL, "gl_vertexshader", R_VERTEX_SHADER_EXT );
 
 	if( !GL_Support( R_VERTEX_SHADER_EXT ))
 	{
@@ -746,8 +705,10 @@ static void GL_InitExtensions( void )
 	pglGetIntegerv( GL_MAX_VERTEX_ATTRIBS_ARB, &glConfig.max_vertex_attribs );
 	pglGetIntegerv( GL_MAX_VARYING_FLOATS_ARB, &glConfig.max_varying_floats );
 
-	if( glConfig.hardware_type == GLHW_RADEON && glConfig.max_vertex_uniforms > 512 )
-		glConfig.max_vertex_uniforms /= 4; // only radion returns count of floats other returns count of vec4
+	// is this actual hack? we can't say without testing on wide range of AMD hardware
+	// if this problem will occur, this hack should be returned and made togglable with cvar
+	//if( glConfig.hardware_type == GLHW_RADEON && glConfig.max_vertex_uniforms > 512 )
+	//	glConfig.max_vertex_uniforms /= 4; // only radion returns count of floats other returns count of vec4
 
 	glConfig.max_skinning_bones = bound( 0, ( Q_max( glConfig.max_vertex_uniforms - MAX_RESERVED_UNIFORMS, 0 ) / 7 ), MAXSTUDIOBONES );
 

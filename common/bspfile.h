@@ -16,6 +16,7 @@ GNU General Public License for more details.
 #ifndef BSPFILE_H
 #define BSPFILE_H
 
+#include <stdint.h>
 #ifndef PXBSP_COMPILING
 #include "color24.h"
 #include "const.h"
@@ -175,20 +176,20 @@ enum
 
 typedef struct
 {
-	int	fileofs;
-	int	filelen;
+	int32_t	fileofs;
+	int32_t	filelen;
 } dlump_t;
 
 typedef struct
 {
-	int	version;
+	int32_t	version;
 	dlump_t	lumps[HEADER_LUMPS];
 } dheader_t;
 
 typedef struct
 {
-	int	id;			// must be little endian XASH
-	int	version;
+	int32_t	id;			// must be little endian XASH
+	int32_t	version;
 	dlump_t	lumps[EXTRA_LUMPS];	
 } dextrahdr_t;
 
@@ -197,24 +198,24 @@ typedef struct
 	float	mins[3];
 	float	maxs[3];
 	float	origin[3];		// for sounds or lights
-	int	headnode[MAX_MAP_HULLS];
-	int	visleafs;			// not including the solid leaf 0
-	int	firstface;
-	int	numfaces;
+	int32_t	headnode[MAX_MAP_HULLS];
+	int32_t	visleafs;			// not including the solid leaf 0
+	int32_t	firstface;
+	int32_t	numfaces;
 } dmodel_t;
 
 typedef struct
 {
-	int	nummiptex;
-	int	dataofs[4];		// [nummiptex]
+	int32_t	nummiptex;
+	int32_t	dataofs[4];		// [nummiptex]
 } dmiptexlump_t;
 
 typedef struct miptex_s
 {
-	char	name[16];
-	uint	width;
-	uint	height;
-	uint	offsets[MIPLEVELS];		// four mip maps stored
+	char		name[16];
+	uint32_t	width;
+	uint32_t	height;
+	uint32_t	offsets[MIPLEVELS];		// four mip maps stored
 } miptex_t;
 
 typedef struct
@@ -226,129 +227,129 @@ typedef struct
 {
 	float	normal[3];
 	float	dist;
-	int	type;
+	int32_t	type;
 } dplane_t;
 
 typedef struct
 {
-	int	planenum;			// allow planes >= 65535
-	short	children[2];		// negative numbers are -(leafs + 1), not nodes
-	short	mins[3];			// for sphere culling
-	short	maxs[3];
-	word	firstface;
-	word	numfaces;			// counting both sides
+	int32_t	planenum;			// allow planes >= 65535
+	int16_t	children[2];		// negative numbers are -(leafs + 1), not nodes
+	int16_t	mins[3];			// for sphere culling
+	int16_t	maxs[3];
+	uint16_t firstface;
+	uint16_t numfaces;			// counting both sides
 } dnode_t;
 
 typedef struct
 {
-	int	planenum;
-	int	children[2];		// negative numbers are -(leafs+1), not nodes
+	int32_t	planenum;
+	int32_t	children[2];		// negative numbers are -(leafs+1), not nodes
 	float	mins[3];			// for sphere culling
 	float	maxs[3];
-	int	firstface;
-	int	numfaces;			// counting both sides
+	int32_t	firstface;
+	int32_t	numfaces;			// counting both sides
 } dnode32_t;
 
 // leaf 0 is the generic CONTENTS_SOLID leaf, used for all solid areas
 // all other leafs need visibility info
 typedef struct
 {
-	int	contents;
-	int	visofs;			// -1 = no visibility info
+	int32_t	contents;
+	int32_t	visofs;			// -1 = no visibility info
 
-	short	mins[3];			// for frustum culling
-	short	maxs[3];
-	word	firstmarksurface;
-	word	nummarksurfaces;
+	int16_t		mins[3];			// for frustum culling
+	int16_t		maxs[3];
+	uint16_t	firstmarksurface;
+	uint16_t	nummarksurfaces;
 
 	// automatic ambient sounds
-	byte	ambient_level[NUM_AMBIENTS];	// ambient sound level (0 - 255)
+	uint8_t	ambient_level[NUM_AMBIENTS];	// ambient sound level (0 - 255)
 } dleaf_t;
 
 typedef struct
 {
-	int	contents;
-	int	visofs;			// -1 = no visibility info
+	int32_t	contents;
+	int32_t	visofs;			// -1 = no visibility info
 
 	float	mins[3];			// for frustum culling
 	float	maxs[3];
 
-	int	firstmarksurface;
-	int	nummarksurfaces;
+	int32_t	firstmarksurface;
+	int32_t	nummarksurfaces;
 
-	byte	ambient_level[NUM_AMBIENTS];
+	uint8_t	ambient_level[NUM_AMBIENTS];
 } dleaf32_t;
 
 typedef struct
 {
-	int	planenum;			// allow planes >= 65535
-	short	children[2];		// negative numbers are contents
+	int32_t	planenum;			// allow planes >= 65535
+	int16_t	children[2];		// negative numbers are contents
 } dclipnode_t;
 
 typedef struct
 {
-	int	planenum;
-	int	children[2];		// negative numbers are contents
+	int32_t	planenum;
+	int32_t	children[2];		// negative numbers are contents
 } dclipnode32_t;
 
 typedef struct
 {
 	float	vecs[2][4];		// texmatrix [s/t][xyz offset]
-	int	miptex;
-	short	flags;
-	short	faceinfo;			// -1 no face info otherwise dfaceinfo_t
+	int32_t	miptex;
+	int16_t	flags;
+	int16_t	faceinfo;			// -1 no face info otherwise dfaceinfo_t
 } dtexinfo_t;
 
-typedef word	dmarkface_t;		// leaf marksurfaces indexes
-typedef int	dmarkface32_t;		// leaf marksurfaces indexes
-typedef int	dsurfedge_t;		// map surfedges
-typedef short	dvertnorm_t;		// map vert normals
+typedef uint16_t	dmarkface_t;		// leaf marksurfaces indexes
+typedef int32_t		dmarkface32_t;		// leaf marksurfaces indexes
+typedef int32_t		dsurfedge_t;		// map surfedges
+typedef int16_t		dvertnorm_t;		// map vert normals
 
 // NOTE: that edge 0 is never used, because negative edge nums
 // are used for counterclockwise use of the edge in a face
 typedef struct
 {
-	word	v[2];			// vertex numbers
+	uint16_t v[2];			// vertex numbers
 } dedge_t;
 
 typedef struct
 {
-	int	v[2];			// vertex numbers
+	int32_t	v[2];			// vertex numbers
 } dedge32_t;
 
 typedef struct
 {
 	word	planenum;
-	short	side;
+	int16_t	side;
 
-	int	firstedge;		// we must support > 64k edges
-	short	numedges;
-	short	texinfo;
+	int32_t	firstedge;		// we must support > 64k edges
+	int16_t	numedges;
+	int16_t	texinfo;
 
 	// lighting info
-	byte	styles[MAXLIGHTMAPS];
-	int	lightofs;			// start of [numstyles*surfsize] samples
+	uint8_t	styles[MAXLIGHTMAPS];
+	int32_t	lightofs;			// start of [numstyles*surfsize] samples
 } dface_t;
 
 typedef struct
 {
-	int	planenum;
-	int	side;
+	int32_t	planenum;
+	int32_t	side;
 
-	int	firstedge;		// we must support > 64k edges
-	int	numedges;
-	int	texinfo;
+	int32_t	firstedge;		// we must support > 64k edges
+	int32_t	numedges;
+	int32_t	texinfo;
 
 	// lighting info
-	byte	styles[MAXLIGHTMAPS];
-	int	lightofs;			// start of [numstyles*surfsize] samples
+	uint8_t	styles[MAXLIGHTMAPS];
+	int32_t	lightofs;			// start of [numstyles*surfsize] samples
 } dface32_t;
 
 //============================================================================
 typedef struct
 {
-	short	origin[3];	// position of light snapped to the nearest integer
-	short	size;		// cubemap side size
+	int16_t	origin[3];	// position of light snapped to the nearest integer
+	int16_t	size;		// cubemap side size
 } dcubemap_t;
 
 typedef struct
@@ -358,22 +359,22 @@ typedef struct
 
 typedef struct
 {
-	char	landname[16];	// name of decsription in mapname_land.txt
-	word	texture_step;	// default is 16, pixels\luxels ratio
-	word	max_extent;	// default is 16, subdivision step ((texture_step * max_extent) - texture_step)
-	short	groupid;		// to determine equal landscapes from various groups, -1 - no group
+	char		landname[16];	// name of decsription in mapname_land.txt
+	uint16_t	texture_step;	// default is 16, pixels\luxels ratio
+	uint16_t	max_extent;	// default is 16, subdivision step ((texture_step * max_extent) - texture_step)
+	int16_t		groupid;		// to determine equal landscapes from various groups, -1 - no group
 } dfaceinfo_t;
 
 typedef struct
 {
-	byte		color[6][3];		// 6 sides 1x1 (single pixel per side)
+	uint8_t		color[6][3];		// 6 sides 1x1 (single pixel per side)
 } dlightcube_t;
 
 typedef struct
 {
 	dlightcube_t	ambient;
-	short		origin[3];
-	short		leafnum;			// leaf that contain this sample
+	int16_t			origin[3];
+	int16_t			leafnum;			// leaf that contain this sample
 } dleafsample_t;
 
 typedef enum
@@ -400,20 +401,20 @@ typedef enum
 
 typedef struct
 {
-	byte		emittype;
-	byte		style;
-	byte		flags;		// will be set in ComputeLeafAmbientLighting
-	short		origin[3];	// light abs origin
+	uint8_t		emittype;
+	uint8_t		style;
+	uint8_t		flags;			// will be set in ComputeLeafAmbientLighting
+	int16_t		origin[3];		// light abs origin
 	float		intensity[3];	// RGB
-	float		normal[3];	// for surfaces and spotlights
+	float		normal[3];		// for surfaces and spotlights
 	float		stopdot;		// for spotlights
 	float		stopdot2;		// for spotlights
-	float		fade;		// falloff scaling for linear and inverse square falloff (0.5 = farther, 2.0 = shorter etc)
-	float		radius;		// light radius
-	short		leafnum;		// light linked into this leaf
-	byte		falloff;		// falloff style 0 = default (inverse square), 1 = inverse falloff, 2 = inverse square
-	unsigned short	facenum;		// face number for emit_surface
-	short		modelnumber;	// g-cont. we can't link lights with entities by entity number so we link it by bmodel number
+	float		fade;			// falloff scaling for linear and inverse square falloff (0.5 = farther, 2.0 = shorter etc)
+	float		radius;			// light radius
+	int16_t		leafnum;		// light linked into this leaf
+	uint8_t		falloff;		// falloff style 0 = default (inverse square), 1 = inverse falloff, 2 = inverse square
+	uint16_t	facenum;		// face number for emit_surface
+	int16_t		modelnumber;	// g-cont. we can't link lights with entities by entity number so we link it by bmodel number
 } dworldlight_t;
 
 #define VLIGHTIDENT		(('T'<<24)+('I'<<16)+('L'<<8)+'V') // little-endian "VLIT"
@@ -428,42 +429,42 @@ typedef struct
 {
 	color24		light[MAXLIGHTMAPS];	// lightvalue
 	color24		deluxe[MAXLIGHTMAPS];	// deluxe vectors
-	byte		shadow[MAXLIGHTMAPS];	// shadowmap
+	uint8_t		shadow[MAXLIGHTMAPS];	// shadowmap
 } dvertlight_t;
 
 typedef struct
 {
-	byte		styles[MAXLIGHTMAPS];
-	int		lightofs;			// -1 no lightdata
+	uint8_t		styles[MAXLIGHTMAPS];
+	int32_t		lightofs;			// -1 no lightdata
 } dfacelight_t;
 
 typedef struct
 {
-	int		submodel_offset;		// hack to determine submodel
-	int		vertex_offset;
+	int32_t		submodel_offset;		// hack to determine submodel
+	int32_t		vertex_offset;
 } dvlightofs_t;
 
 typedef struct
 {
-	int		submodel_offset;		// hack to determine submodel
-	int		surface_offset;
+	int32_t		submodel_offset;		// hack to determine submodel
+	int32_t		surface_offset;
 } dflightofs_t;
 
 typedef struct
 {
-	unsigned int	modelCRC;			// catch for model changes
-	int		numverts;
-	byte		styles[MAXLIGHTMAPS];
+	uint32_t	modelCRC;			// catch for model changes
+	int32_t		numverts;
+	uint8_t		styles[MAXLIGHTMAPS];
 	dvlightofs_t	submodels[32];		// MAXSTUDIOMODELS
 	dvertlight_t	verts[3];			// variable sized
 } dmodelvertlight_t;
 
 typedef struct
 {
-	unsigned int	modelCRC;			// catch for model changes
-	int		numfaces;
-	byte		styles[MAXLIGHTMAPS];
-	short		texture_step;
+	uint32_t	modelCRC;			// catch for model changes
+	int32_t		numfaces;
+	uint8_t		styles[MAXLIGHTMAPS];
+	int16_t		texture_step;
 	float		origin[3];
 	float		angles[3];
 	float		scale[3];
@@ -473,18 +474,18 @@ typedef struct
 
 typedef struct
 {
-	int		ident;			// to differentiate from previous lump LUMP_LEAF_LIGHTING
-	int		version;			// data package version
-	int		nummodels;
-	int		dataofs[4];		// [nummodels]
+	int32_t		ident;			// to differentiate from previous lump LUMP_LEAF_LIGHTING
+	int32_t		version;			// data package version
+	int32_t		nummodels;
+	int32_t		dataofs[4];		// [nummodels]
 } dvlightlump_t;
 
 #define NORMIDENT		(('T'<<24)+('B'<<16)+('T'<<8)+'Q') // little-endian "QTBN"
 
 typedef struct
 {
-	int		ident;			// to differentiate from non-indexed normals storage
-	int		numnormals;		// dvertnorm[numsurfedges] dnormals[numnormals]
+	int32_t		ident;			// to differentiate from non-indexed normals storage
+	int32_t		numnormals;		// dvertnorm[numsurfedges] dnormals[numnormals]
 } dnormallump_t;
 
 #endif//BSPFILE_H

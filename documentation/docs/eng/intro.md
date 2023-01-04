@@ -1,5 +1,6 @@
 ﻿---
 sidebar_position: 1
+description: Modern SDK for the Xash3D FWGS engine, with cross-platform support and improved graphics/physics, while retaining all the features and approaches to work inherent in GoldSrc and Xash3D. Based on XashXT, and therefore has all the functionality inherent in XashXT and Spirit Of Half-Life.
 ---
 
 # Introduction

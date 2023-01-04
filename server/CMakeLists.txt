@@ -7,19 +7,20 @@ check_include_file("tgmath.h" HAVE_TGMATH_H)
 
 # add source files
 set(SVDLL_SOURCES
-	"../game_shared/bone_setup.cpp"
-	"../game_shared/common.cpp"
-	"../game_shared/ikcontext.cpp"
-	"../game_shared/mathlib.cpp"
-	"../game_shared/matrix.cpp"
-	"../game_shared/material.cpp"
-	"../game_shared/plane.cpp"
-	"../game_shared/playermove.cpp"
-	"../game_shared/stringlib.cpp"
-	"../game_shared/vector.cpp"
-	"../game_shared/virtualfs.cpp"
-	"../game_shared/trace.cpp"
-	"../game_shared/meshdesc.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/bone_setup.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/common.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/ikcontext.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/mathlib.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/matrix.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/material.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/plane.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/playermove.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/stringlib.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/vector.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/virtualfs.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/trace.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/meshdesc.cpp"
+	"${CMAKE_SOURCE_DIR}/public/crclib.cpp"
 )
 
 list(APPEND SVDLL_SOURCES
@@ -187,8 +188,8 @@ if(MSVC)
 	>)
 
 	# release mode compiler flags
-	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release>:/Ob1>) # disable force function inlining, to prevent segfault in release mode
-	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release>:/O1>) # enable optimizing to minimize size
+	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release,RelWithDebInfo>:/O2>) # enable optimizing to maximize speed
+	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release,RelWithDebInfo>:/GL>) # enable whole program optimization
 endif()
 
 # set static compiler runtime
@@ -206,7 +207,12 @@ if(APPLE OR WIN32 OR ${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 		PREFIX "")
 endif()
 
-install( TARGETS ${PROJECT_NAME}
+# copy .pdb files to install directory too
+if(MSVC)
+	install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION "${GAMEDIR}/${SERVER_INSTALL_DIR}/")
+endif()
+
+install(TARGETS ${PROJECT_NAME}
 	DESTINATION "${GAMEDIR}/${SERVER_INSTALL_DIR}/"
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
 	    GROUP_READ GROUP_EXECUTE

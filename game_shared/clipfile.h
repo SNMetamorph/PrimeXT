@@ -25,6 +25,8 @@ CLIP FILES
 ==============================================================================
 */
 
+#include <stdint.h>
+
 #define IDCLIPHEADER		(('P'<<24)+('I'<<16)+('L'<<8)+'C') // little-endian "CLIP"
 #define CLIP_VERSION		1
 
@@ -37,26 +39,26 @@ CLIP FILES
 
 typedef struct
 {
-	int	fileofs;
-	int	filelen;
+	int32_t	fileofs;
+	int32_t	filelen;
 } dcachelump_t;
 
 typedef struct
 {
-	int		id;		// must be little endian STCH
-	int		version;
-	unsigned int	modelCRC;		// catch for model changes
-	dcachelump_t	lumps[LUMP_COUNT];	
+	int32_t		id;		// must be little endian STCH
+	int32_t		version;
+	uint32_t	modelCRC;		// catch for model changes
+	dcachelump_t lumps[LUMP_COUNT];	
 } dcachehdr_t;
 
 typedef struct
 {
-	short		skinref;		// pointer to texture for special effects
+	int16_t		skinref;		// pointer to texture for special effects
 	mvert_t		triangle[3];	// store triangle points
 	vec3_t		mins, maxs;	// an individual size of each facet
 	vec3_t		edge1, edge2;	// new trace stuff
-	byte		numplanes;	// because numplanes for each facet can't exceeds MAX_FACET_PLANES!
-	uint		firstindex;	// first index into CLIP_PLANE_INDEXES lump
+	uint8_t		numplanes;	// because numplanes for each facet can't exceeds MAX_FACET_PLANES!
+	uint32_t	firstindex;	// first index into CLIP_PLANE_INDEXES lump
 } dfacet_t;
 
 #endif//CLIPFILE_H

@@ -432,6 +432,7 @@ void CStudioModelRenderer :: ClearInstanceData( bool create )
 	m_pModelInstance->m_VlCache = NULL;
 	m_pModelInstance->m_FlCache = NULL;
 	m_pModelInstance->m_DecalCount = 0;
+	m_pModelInstance->m_bExternalBones = false;
 	m_pModelInstance->cached_frame = -1;
 	m_pModelInstance->visframe = -1;
 	m_pModelInstance->radius = 0.0f;
@@ -459,7 +460,7 @@ void CStudioModelRenderer :: ClearInstanceData( bool create )
 	memset( &m_pModelInstance->lights, 255, sizeof( byte[MAXDYNLIGHTS] ));
 	memset( &m_pModelInstance->m_controller, 0, sizeof( m_pModelInstance->m_controller ));
 	memset( &m_pModelInstance->m_seqblend, 0, sizeof( m_pModelInstance->m_seqblend ));
-	m_pModelInstance->lerp.stairoldz = RI->currententity->origin[2];
+	m_pModelInstance->lerp.stairoldz = StudioGetOrigin().z;
 	m_pModelInstance->lerp.stairtime = tr.time;
 	m_pModelInstance->m_current_seqblend = 0;
 	m_pModelInstance->light_update = false;
@@ -2060,7 +2061,7 @@ void CStudioModelRenderer :: CreateStudioCacheVL( const char *modelname, int cac
 		}
 		else if( RI->currentmodel->modelCRC != dml->modelCRC )
 		{
-			ALERT( at_error, "%s failed to create vertex lighting: model CRC %p != %p\n",
+			ALERT( at_error, "%s failed to create vertex lighting: model CRC %08X != %08X\n",
 				modelname, RI->currentmodel->modelCRC, dml->modelCRC );
 		}
 		else
@@ -2107,7 +2108,7 @@ void CStudioModelRenderer :: CreateStudioCacheFL( const char *modelname, int cac
 		}
 		else if( RI->currentmodel->modelCRC != dml->modelCRC )
 		{
-			ALERT( at_error, "%s failed to create surface lighting: model CRC %p != %p\n",
+			ALERT( at_error, "%s failed to create surface lighting: model CRC %08X != %08X\n",
 				modelname, RI->currentmodel->modelCRC, dml->modelCRC );
 		}
 		else

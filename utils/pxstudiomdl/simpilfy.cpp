@@ -768,9 +768,10 @@ void BuildGlobalBonetable( void )
 	for( i = 0; i < g_nummodels; i++ )
 	{
 		s_model_t	*pmodel = g_model[i];
+		CUtlArray<matrix3x4> srcBoneToWorld;
 
-		matrix3x4	srcBoneToWorld[MAXSTUDIOSRCBONES];
-		BuildRawTransforms( pmodel, g_vecZero, g_radZero, srcBoneToWorld );
+		srcBoneToWorld.SetCount(MAXSTUDIOSRCBONES);
+		BuildRawTransforms( pmodel, g_vecZero, g_radZero, &srcBoneToWorld[0]);
 
 		for( j = 0; j < pmodel->numbones; j++ )
 		{
@@ -1484,13 +1485,15 @@ void RemapVertices( void )
 	for( i = 0; i < g_nummodels; i++ )
 	{
 		int m;
-		matrix3x4	srcBoneToWorld[MAXSTUDIOSRCBONES];
-		matrix3x4	destBoneToWorld[MAXSTUDIOSRCBONES];
+		CUtlArray<matrix3x4> srcBoneToWorld;
+		CUtlArray<matrix3x4> destBoneToWorld;
 		Vector	tmp1, tmp2, vdest, ndest;
 		s_model_t	*pmodel = g_model[i];
 		
-		BuildRawTransforms( pmodel, g_vecZero, g_radZero, srcBoneToWorld );
-		TranslateAnimations( pmodel->boneGlobalToLocal, srcBoneToWorld, destBoneToWorld );
+		srcBoneToWorld.SetCount(MAXSTUDIOSRCBONES);
+		destBoneToWorld.SetCount(MAXSTUDIOSRCBONES);
+		BuildRawTransforms(pmodel, g_vecZero, g_radZero, &srcBoneToWorld[0]);
+		TranslateAnimations(pmodel->boneGlobalToLocal, &srcBoneToWorld[0], &destBoneToWorld[0]);
 
 		for( j = 0; j < pmodel->srcvert.Count(); j++ )
 		{
@@ -1589,14 +1592,17 @@ void BuildVertexArrays( void )
 //-----------------------------------------------------------------------------
 void ConvertAnimation( s_animation_t const *panim, int frame, s_bone_t *dest )
 {
-	matrix3x4	srcBoneToWorld[MAXSTUDIOSRCBONES];
-	matrix3x4	destBoneToWorld[MAXSTUDIOSRCBONES];
-	matrix3x4	destWorldToBone[MAXSTUDIOSRCBONES];
-	matrix3x4	bonematrix;
 	int	k;
-
-	BuildRawTransforms( panim, frame, panim->adjust, panim->rotation, srcBoneToWorld );
-	TranslateAnimations( panim->boneGlobalToLocal, srcBoneToWorld, destBoneToWorld );
+	matrix3x4 bonematrix;
+	CUtlArray<matrix3x4> srcBoneToWorld;
+	CUtlArray<matrix3x4> destBoneToWorld;
+	CUtlArray<matrix3x4> destWorldToBone;
+	
+	srcBoneToWorld.SetCount(MAXSTUDIOSRCBONES);
+	destBoneToWorld.SetCount(MAXSTUDIOSRCBONES);
+	destWorldToBone.SetCount(MAXSTUDIOSRCBONES);
+	BuildRawTransforms(panim, frame, panim->adjust, panim->rotation, &srcBoneToWorld[0]);
+	TranslateAnimations(panim->boneGlobalToLocal, &srcBoneToWorld[0], &destBoneToWorld[0]);
 
 	for( k = 0; k < g_numbones; k++ )
 	{
@@ -2009,11 +2015,12 @@ void buildAnimationWeights( void )
 void linearDelta( s_animation_t *psrc, s_animation_t *pdest, int srcframe, int flags )
 {
  	// create delta animations
-	s_bone_t	src0[MAXSTUDIOSRCBONES];
-	s_bone_t	src1[MAXSTUDIOSRCBONES];
-	int	j, k;
-
-	for( k = 0; k < g_numbones; k++ )
+	CUtlArray<s_bone_t>	src0;
+	CUtlArray<s_bone_t>	src1;
+	
+	src0.SetCount(MAXSTUDIOSRCBONES);
+	src1.SetCount(MAXSTUDIOSRCBONES);
+	for (int k = 0; k < g_numbones; k++)
 	{
 		src0[k].pos = psrc->sanim[0][k].pos;
 		src0[k].rot = psrc->sanim[0][k].rot;
@@ -2026,9 +2033,9 @@ void linearDelta( s_animation_t *psrc, s_animation_t *pdest, int srcframe, int f
 		MsgDev( D_WARN, "%s too short for splinedelta\n", pdest->name );
 	}
 
-	for( k = 0; k < g_numbones; k++ )
+	for( int k = 0; k < g_numbones; k++ )
 	{
-		for( j = 0; j < pdest->numframes; j++ )
+		for( int j = 0; j < pdest->numframes; j++ )
 		{	
 			float s = 1;
 			if( pdest->numframes > 1 )
@@ -2294,15 +2301,20 @@ void worldspaceBlend( s_animation_t *psrc, s_animation_t *pdest, int srcframe, i
 	int	j, k, n;
 
 	// process "match"
-	Vector4D	srcQ[MAXSTUDIOSRCBONES];
-	Vector	srcPos[MAXSTUDIOSRCBONES];
-	matrix3x4	srcBoneToWorld[MAXSTUDIOBONES];
-	matrix3x4	destBoneToWorld[MAXSTUDIOBONES];
 	Vector	tmp;
+	CUtlArray<Vector> srcPos;
+	CUtlArray<Vector4D>	srcQ;
+	CUtlArray<matrix3x4> srcBoneToWorld;
+	CUtlArray<matrix3x4> destBoneToWorld;
+
+	srcQ.SetCount(MAXSTUDIOSRCBONES);
+	srcPos.SetCount(MAXSTUDIOSRCBONES);
+	srcBoneToWorld.SetCount(MAXSTUDIOBONES);
+	destBoneToWorld.SetCount(MAXSTUDIOBONES);
 
 	if( !flags )
 	{
-		CalcBoneTransforms( psrc, srcframe, srcBoneToWorld );
+		CalcBoneTransforms( psrc, srcframe, &srcBoneToWorld[0] );
 		for( k = 0; k < g_numbones; k++ )
 		{
 			srcQ[k] = srcBoneToWorld[k].GetQuaternion();
@@ -2319,7 +2331,7 @@ void worldspaceBlend( s_animation_t *psrc, s_animation_t *pdest, int srcframe, i
 			// pull from a looping source
 			float flCycle = (float)j / (pdest->numframes - 1);
 			flCycle += (float)srcframe / (psrc->numframes - 1);
-			CalcBoneTransformsCycle( psrc, psrc, flCycle, srcBoneToWorld );
+			CalcBoneTransformsCycle( psrc, psrc, flCycle, &srcBoneToWorld[0] );
 
 			for( k = 0; k < g_numbones; k++ )
 			{
@@ -2340,7 +2352,7 @@ void worldspaceBlend( s_animation_t *psrc, s_animation_t *pdest, int srcframe, i
 		}
 
 
-		CalcBoneTransforms( pdest, j, destBoneToWorld );
+		CalcBoneTransforms( pdest, j, &destBoneToWorld[0] );
 
 		for( k = 0; k < g_numbones; k++ )
 		{
@@ -3511,8 +3523,9 @@ void fixupIKErrors( s_animation_t *panim, s_ikrule_t *pRule )
 //-----------------------------------------------------------------------------
 void limitIKChainLength( void )
 {
-	matrix3x4	boneToWorld[MAXSTUDIOSRCBONES];	// bone transformation matrix
 	int	i, j, k;
+	CUtlArray<matrix3x4> boneToWorld;	// bone transformation matrix
+	boneToWorld.SetCount(MAXSTUDIOSRCBONES);
 
 	for( k = 0; k < g_numikchains; k++ )
 	{
@@ -3538,7 +3551,7 @@ void limitIKChainLength( void )
 
 				for( j = 0; j < panim->numframes; j++ )
 				{
-					CalcBoneTransforms( panim, j, boneToWorld );
+					CalcBoneTransforms(panim, j, &boneToWorld[0]);
 
 					Vector	worldThigh;
 					Vector	worldKnee;
@@ -3948,7 +3961,7 @@ static void CompressAnimations( void )
 			{
 				mstudioanimvalue_t data[MAXSTUDIOANIMATIONS];
 				mstudioanimvalue_t *pcount, *pvalue;
-				short value[MAXSTUDIOANIMATIONS];
+				short value[MAXSTUDIOANIMATIONS] = {0};
 
 				if( panim->numframes <= 0 )
 					COM_FatalError( "no animation frames: \"%s\"\n", panim->name );
@@ -4117,7 +4130,7 @@ static void CompressSingle( s_animationstream_t *pStream )
 		pStream->scale[k] = scale;
 		
 		mstudioanimvalue_t *pcount, *pvalue;
-		short value[MAXSTUDIOANIMATIONS];
+		short value[MAXSTUDIOANIMATIONS] = {0};
 		mstudioanimvalue_t data[MAXSTUDIOANIMATIONS];
 		float v;
 
@@ -4995,9 +5008,10 @@ static void ProcessIKRules( void )
 			{
 			case IK_SELF:
 				{
-					matrix3x4	boneToWorld[MAXSTUDIOBONES];
-					matrix3x4	worldToBone;
 					matrix3x4	local;
+					matrix3x4	worldToBone;
+					CUtlArray<matrix3x4> boneToWorld;
+					boneToWorld.SetCount(MAXSTUDIOBONES);
 
 					if( !Q_strlen( pRule->bonename ))
 					{
@@ -5015,17 +5029,18 @@ static void ProcessIKRules( void )
 					{
 						if( pRule->usesequence )
 						{
-							CalcSeqTransforms( n, k + pRule->start, boneToWorld );
+							CalcSeqTransforms(n, k + pRule->start, &boneToWorld[0]);
 						}
 						else if( pRule->usesource )
 						{
-							matrix3x4	srcBoneToWorld[MAXSTUDIOSRCBONES];
-							BuildRawTransforms( panim, k + pRule->start + panim->startframe - panim->source.startframe, panim->adjust, panim->rotation, srcBoneToWorld );
-							TranslateAnimations( panim->boneGlobalToLocal, srcBoneToWorld, boneToWorld );
+							CUtlArray<matrix3x4> srcBoneToWorld;
+							srcBoneToWorld.SetCount(MAXSTUDIOSRCBONES);
+							BuildRawTransforms(panim, k + pRule->start + panim->startframe - panim->source.startframe, panim->adjust, panim->rotation, &srcBoneToWorld[0]);
+							TranslateAnimations(panim->boneGlobalToLocal, &srcBoneToWorld[0], &boneToWorld[0]);
 						}
 						else 
 						{
-							CalcBoneTransforms( panim, k + pRule->start, boneToWorld );
+							CalcBoneTransforms(panim, k + pRule->start, &boneToWorld[0]);
 						}
 
 						if( pRule->bone != -1 )
@@ -5047,12 +5062,13 @@ static void ProcessIKRules( void )
 				break;
 			case IK_ATTACHMENT:
 				{
-					matrix3x4	boneToWorld[MAXSTUDIOBONES];
-					matrix3x4	worldToBone;
 					matrix3x4	local;
+					matrix3x4	worldToBone;
+					CUtlArray<matrix3x4> boneToWorld;
+					boneToWorld.SetCount(MAXSTUDIOBONES);
 
 					int bone = g_ikchain[pRule->chain].link[2].bone;
-					CalcBoneTransforms( panim, pRule->contact, boneToWorld );
+					CalcBoneTransforms(panim, pRule->contact, &boneToWorld[0]);
 					// FIXME: add in motion
 
 					if( !Q_strlen( pRule->bonename ))
@@ -5074,7 +5090,7 @@ static void ProcessIKRules( void )
 					if( pRule->bone != -1 )
 					{
 						// FIXME: look for local bones...
-						CalcBoneTransforms( panim, pRule->contact, boneToWorld );
+						CalcBoneTransforms(panim, pRule->contact, &boneToWorld[0]);
 						pRule->q = boneToWorld[pRule->bone].GetQuaternion();
 						pRule->pos = boneToWorld[pRule->bone].GetOrigin();
 					}
@@ -5085,17 +5101,18 @@ static void ProcessIKRules( void )
 
 						if( pRule->usesequence )
 						{
-							CalcSeqTransforms( n, t, boneToWorld );
+							CalcSeqTransforms(n, t, &boneToWorld[0]);
 						}
 						else if( pRule->usesource )
 						{
-							matrix3x4	srcBoneToWorld[MAXSTUDIOSRCBONES];
-							BuildRawTransforms( panim, t + panim->startframe - panim->source.startframe, g_vecZero, g_radZero, srcBoneToWorld );
-							TranslateAnimations( panim->boneGlobalToLocal, srcBoneToWorld, boneToWorld );
+							CUtlArray<matrix3x4> srcBoneToWorld;
+							srcBoneToWorld.SetCount(MAXSTUDIOSRCBONES);
+							BuildRawTransforms(panim, t + panim->startframe - panim->source.startframe, g_vecZero, g_radZero, &srcBoneToWorld[0]);
+							TranslateAnimations(panim->boneGlobalToLocal, &srcBoneToWorld[0], &boneToWorld[0]);
 						}
 						else 
 						{
-							CalcBoneTransforms( panim, t, boneToWorld );
+							CalcBoneTransforms( panim, t, &boneToWorld[0] );
 						}
 
 						Vector pos = pRule->pos + calcMovement( panim, t, pRule->contact );
@@ -5112,25 +5129,27 @@ static void ProcessIKRules( void )
 				break;
 			case IK_GROUND:
 				{
-					matrix3x4	boneToWorld[MAXSTUDIOBONES];
-					matrix3x4	worldToBone;
 					matrix3x4	local;
+					matrix3x4	worldToBone;
+					CUtlArray<matrix3x4> boneToWorld;
+					boneToWorld.SetCount(MAXSTUDIOBONES);
 
 					int bone = g_ikchain[pRule->chain].link[2].bone;
 
 					if( pRule->usesequence )
 					{
-						CalcSeqTransforms( n, pRule->contact, boneToWorld );
+						CalcSeqTransforms(n, pRule->contact, &boneToWorld[0]);
 					}
 					else if (pRule->usesource)
 					{
-						matrix3x4	srcBoneToWorld[MAXSTUDIOSRCBONES];
-						BuildRawTransforms( panim, pRule->contact + panim->startframe, panim->adjust, panim->rotation, srcBoneToWorld );
-						TranslateAnimations( panim->boneGlobalToLocal, srcBoneToWorld, boneToWorld );
+						CUtlArray<matrix3x4> srcBoneToWorld;
+						srcBoneToWorld.SetCount(MAXSTUDIOSRCBONES);
+						BuildRawTransforms(panim, pRule->contact + panim->startframe, panim->adjust, panim->rotation, &srcBoneToWorld[0]);
+						TranslateAnimations(panim->boneGlobalToLocal, &srcBoneToWorld[0], &boneToWorld[0]);
 					}
 					else 
 					{
-						CalcBoneTransforms( panim, pRule->contact, boneToWorld );
+						CalcBoneTransforms(panim, pRule->contact, &boneToWorld[0]);
 					}
 
 					// FIXME: add in motion
@@ -5152,17 +5171,18 @@ static void ProcessIKRules( void )
 
 						if( pRule->usesequence )
 						{
-							CalcSeqTransforms( n, t, boneToWorld );
+							CalcSeqTransforms(n, t, &boneToWorld[0]);
 						}
 						else if( pRule->usesource )
 						{
-							matrix3x4	srcBoneToWorld[MAXSTUDIOSRCBONES];
-							BuildRawTransforms( panim, pRule->contact + panim->startframe, panim->adjust, panim->rotation, srcBoneToWorld );
-							TranslateAnimations( panim->boneGlobalToLocal, srcBoneToWorld, boneToWorld );
+							CUtlArray<matrix3x4> srcBoneToWorld;
+							srcBoneToWorld.SetCount(MAXSTUDIOSRCBONES);
+							BuildRawTransforms(panim, pRule->contact + panim->startframe, panim->adjust, panim->rotation, &srcBoneToWorld[0]);
+							TranslateAnimations(panim->boneGlobalToLocal, &srcBoneToWorld[0], &boneToWorld[0]);
 						}
 						else 
 						{
-							CalcBoneTransforms( panim, t, boneToWorld );
+							CalcBoneTransforms(panim, t, &boneToWorld[0]);
 						}
 
 						Vector pos = pRule->pos + calcMovement( panim, t, pRule->contact );

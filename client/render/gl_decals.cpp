@@ -366,7 +366,7 @@ static word R_ShaderDecalForward( brushdecal_t *decal )
 	// process lightstyles
 	for( int i = 0; i < MAXLIGHTMAPS && s->styles[i] != LS_NONE; i++ )
 	{
-		if( tr.sun_light_enabled && s->styles[i] == LS_SKY )
+		if (!R_UseSkyLightstyle(s->styles[i]))
 			continue;	// skip the sunlight due realtime sun is enabled
 		GL_AddShaderDirective( options, va( "APPLY_STYLE%i", i ));
 	}
@@ -662,23 +662,13 @@ static void R_DecalComputeTBN( brushdecal_t *decal )
 			tVect += triTVect[vertToTriMap[vertID][triID]];
 		}
 
-		// make decals TBN right-side coordinate system for accordance
-		Vector tmpVect = CrossProduct( tVect, sVect );
-		bool leftHanded = DotProduct( tmpVect, normal ) < 0.0f;
+		sVect = sVect.Normalize();
+		tVect = tVect.Normalize();			
+		sVect = sVect - normal * DotProduct(normal, sVect);
+		tVect = CrossProduct(normal, sVect) * Q_sign(DotProduct(CrossProduct(normal, sVect), tVect));	
 
-		if( !leftHanded )
-		{
-			tVect = CrossProduct( normal, sVect );
-			sVect = CrossProduct( tVect, normal );
-		}
-		else
-		{
-			tVect = CrossProduct( sVect, normal );
-			sVect = CrossProduct( normal, tVect );
-		}
-
-		finalSVect = -sVect.Normalize();
-		finalTVect = -tVect.Normalize();
+		finalSVect = sVect.Normalize();
+		finalTVect = tVect.Normalize();
 	}
 }
 	
@@ -1480,9 +1470,6 @@ void R_SetDecalUniforms( brushdecal_t *decal )
 			break;
 		case UT_SMOOTHNESS:
 			u->SetValue( desc->smoothness );
-			break;
-		case UT_DIFFUSEFACTOR:
-			u->SetValue( tr.diffuseFactor );
 			break;
 		case UT_AMBIENTFACTOR:
 			u->SetValue( tr.ambientFactor );

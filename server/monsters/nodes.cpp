@@ -512,13 +512,13 @@ int CGraph::NextNodeInRoute( int iCurrentNode, int iDest, int iHull, int iCap )
 {
 	int iNext = iCurrentNode;
 	int nCount = iDest+1;
-	char *pRoute = m_pRouteInfo + m_pNodes[ iCurrentNode ].m_pNextBestNode[iHull][iCap];
+	int8_t *pRoute = m_pRouteInfo + m_pNodes[ iCurrentNode ].m_pNextBestNode[iHull][iCap];
 
 	// Until we decode the next best node
 	//
 	while (nCount > 0)
 	{
-		char ch = *pRoute++;
+		int8_t ch = *pRoute++;
 		//ALERT(at_aiconsole, "C(%d)", ch);
 		if (ch < 0)
 		{
@@ -576,7 +576,7 @@ int CGraph :: FindShortestPath ( int *piPath, int iStart, int iDest, int iHull, 
 	int		iVisitNode;
 	int		iCurrentNode;
 	int		iNumPathNodes;
-	int		iHullMask;
+	int		iHullMask = 0;
 
 	if ( !m_fGraphPresent || !m_fGraphPointersSet )
 	{// protect us in the case that the node graph isn't available or built
@@ -1509,13 +1509,13 @@ void CNodeEnt :: KeyValue( KeyValueData *pkvd )
 {
 	if (FStrEq(pkvd->szKeyName, "hinttype"))
 	{
-		m_sHintType = (short)atoi( pkvd->szValue );
+		m_sHintType = (int16_t)atoi( pkvd->szValue );
 		pkvd->fHandled = TRUE;
 	}
 
 	if (FStrEq(pkvd->szKeyName, "activity"))
 	{
-		m_sHintActivity = (short)atoi( pkvd->szValue );
+		m_sHintActivity = (int16_t)atoi( pkvd->szValue );
 		pkvd->fHandled = TRUE;
 	}
 	else
@@ -2399,14 +2399,16 @@ int CGraph :: FLoadGraph ( char *szMapName )
 		// Read it in.
 		//
 		length -= sizeof(DIST_INFO)*m_cNodes;
-		if (length < 0) goto ShortFile;
+		if (length < 0) 
+			goto ShortFile;
+
 		memcpy(m_di, pMemFile, sizeof(DIST_INFO)*m_cNodes);
 		pMemFile += sizeof(DIST_INFO)*m_cNodes;
 
 		// Malloc for the routing info.
 		//
 		m_fRoutingComplete = FALSE;
-		m_pRouteInfo = (char *)calloc( sizeof(char), m_nRouteInfo );
+		m_pRouteInfo = (int8_t *)calloc( sizeof(int8_t), m_nRouteInfo );
 		if ( !m_pRouteInfo )
 		{
 			ALERT ( at_aiconsole, "***ERROR**\nCounldn't malloc %d route bytes!\n", m_nRouteInfo );
@@ -2420,15 +2422,17 @@ int CGraph :: FLoadGraph ( char *szMapName )
 		
 		// Read in the route information.
 		//
-		length -= sizeof(char)*m_nRouteInfo;
-		if (length < 0) goto ShortFile;
-		memcpy(m_pRouteInfo, pMemFile, sizeof(char)*m_nRouteInfo);
-		pMemFile += sizeof(char)*m_nRouteInfo;
+		length -= sizeof(int8_t) * m_nRouteInfo;
+		if (length < 0) 
+			goto ShortFile;
+
+		memcpy(m_pRouteInfo, pMemFile, sizeof(int8_t) * m_nRouteInfo);
+		pMemFile += sizeof(int8_t) * m_nRouteInfo;
 		m_fRoutingComplete = TRUE;;
 
 		// malloc for the hash links
 		//
-		m_pHashLinks = (short *)calloc(sizeof(short), m_nHashLinks);
+		m_pHashLinks = (int16_t *)calloc(sizeof(int16_t), m_nHashLinks);
 		if (!m_pHashLinks)
 		{
 			ALERT ( at_aiconsole, "***ERROR**\nCounldn't malloc %d hash link bytes!\n", m_nHashLinks );
@@ -2437,10 +2441,12 @@ int CGraph :: FLoadGraph ( char *szMapName )
 
 		// Read in the hash link information
 		//
-		length -= sizeof(short)*m_nHashLinks;
-		if (length < 0) goto ShortFile;
-		memcpy(m_pHashLinks, pMemFile, sizeof(short)*m_nHashLinks);
-		pMemFile += sizeof(short)*m_nHashLinks;
+		length -= sizeof(int16_t) * m_nHashLinks;
+		if (length < 0) 
+			goto ShortFile;
+
+		memcpy(m_pHashLinks, pMemFile, sizeof(int16_t) * m_nHashLinks);
+		pMemFile += sizeof(int16_t) * m_nHashLinks;
 
 		// Set the graph present flag, clear the pointers set flag
 		//
@@ -2505,7 +2511,7 @@ int CGraph :: FSaveGraph ( char *szMapName )
 
 	if( m_pHashLinks && m_nHashLinks )
 	{
-		file.Write( m_pHashLinks, sizeof( short ) * m_nHashLinks );
+		file.Write( m_pHashLinks, sizeof( int16_t ) * m_nHashLinks );
 	}
 
 	// dump into real file
@@ -2633,8 +2639,8 @@ int CGraph :: CheckNODFile ( char *szMapName )
 
 struct tagNodePair
 {
-	short iSrc;
-	short iDest;
+	int16_t iSrc;
+	int16_t iDest;
 };
 
 void CGraph::HashInsert(int iSrcNode, int iDestNode, int iKey)
@@ -2834,7 +2840,7 @@ void CGraph::BuildLinkLookups(void)
 	m_nHashLinks = 3*m_cLinks/2 + 3;
 
 	HashChoosePrimes(m_nHashLinks);
-	m_pHashLinks = (short *)calloc(sizeof(short), m_nHashLinks);
+	m_pHashLinks = (int16_t *)calloc(sizeof(int16_t), m_nHashLinks);
 	if (!m_pHashLinks)
 	{
 		ALERT(at_aiconsole, "Couldn't allocated Link Lookup Table.\n");
@@ -3016,11 +3022,11 @@ void CGraph :: ComputeStaticRoutingTables( void )
 {
 	int nRoutes = m_cNodes*m_cNodes;
 #define FROM_TO(x,y) ((x)*m_cNodes+(y))
-	short *Routes = new short[nRoutes];
+	int16_t *Routes = new int16_t[nRoutes];
 
 	int *pMyPath = new int[m_cNodes];
-	unsigned short *BestNextNodes = new unsigned short[m_cNodes];
-	char *pRoute = new char[m_cNodes*2];
+	uint16_t *BestNextNodes = new uint16_t[m_cNodes];
+	int8_t *pRoute = new int8_t[m_cNodes*2];
 
 
 	if (Routes && pMyPath && BestNextNodes && pRoute)
@@ -3114,7 +3120,7 @@ void CGraph :: ComputeStaticRoutingTables( void )
 					int cSequence = 0;
 					int cRepeats = 0;
 					int CompressedSize = 0;
-					char *p = pRoute;
+					int8_t *p = pRoute;
 					for (int i = 0; i < m_cNodes; i++)
 					{
 						BOOL CanRepeat = ((BestNextNodes[i] == iLastNode) && cRepeats < 127);
@@ -3274,7 +3280,7 @@ void CGraph :: ComputeStaticRoutingTables( void )
 						}
 						else
 						{
-							char *Tmp = (char *)calloc(sizeof(char), (m_nRouteInfo + nRoute));
+							int8_t *Tmp = (int8_t *)calloc(sizeof(int8_t), (m_nRouteInfo + nRoute));
 							memcpy(Tmp, m_pRouteInfo, m_nRouteInfo);
 							free(m_pRouteInfo);
 							m_pRouteInfo = Tmp;
@@ -3287,7 +3293,7 @@ void CGraph :: ComputeStaticRoutingTables( void )
 					else
 					{
 						m_nRouteInfo = nRoute;
-						m_pRouteInfo = (char *)calloc(sizeof(char), nRoute);
+						m_pRouteInfo = (int8_t *)calloc(sizeof(int8_t), nRoute);
 						memcpy(m_pRouteInfo, pRoute, nRoute);
 						m_pNodes[ iFrom ].m_pNextBestNode[iHull][iCap] = 0;
 						nTotalCompressedSize += CompressedSize;
@@ -3297,10 +3303,10 @@ void CGraph :: ComputeStaticRoutingTables( void )
 		}		
 		ALERT( at_aiconsole, "Size of Routes = %d\n", nTotalCompressedSize);
 	}
-	if (Routes) delete Routes;
-	if (BestNextNodes) delete BestNextNodes;
-	if (pRoute) delete pRoute;
-	if (pMyPath) delete pMyPath;
+	if (Routes) delete[] Routes;
+	if (BestNextNodes) delete[] BestNextNodes;
+	if (pRoute) delete[] pRoute;
+	if (pMyPath) delete[] pMyPath;
 	Routes = 0;
 	BestNextNodes = 0;
 	pRoute = 0;

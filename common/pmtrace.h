@@ -39,9 +39,8 @@ struct pmtrace_s
 				// Only run on server.
 	union 
 	{
-		// FIXME it's will not work on 64-bit
-		int	hitgroup;				// 0 == generic, non zero is specific body part
-		mstudiomaterial_t *surf;	// only if ent->v.solid == SOLID_CUSTOM!
+		int	hitgroup;		// 0 == generic, non zero is specific body part
+		uint32_t materialHash;	// only if ent->v.solid == SOLID_CUSTOM!
 	};
 };
 

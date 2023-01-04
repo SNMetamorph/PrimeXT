@@ -329,9 +329,6 @@ static void GL_DrawDeferred( word hProgram, int pass )
 		case UT_SCREENSIZEINV:
 			u->SetValue( 1.0f / (float)glState.width, 1.0f / (float)glState.height );
 			break;
-		case UT_DIFFUSEFACTOR:
-			u->SetValue( tr.diffuseFactor );
-			break;
 		case UT_AMBIENTFACTOR:
 			if( pl && pl->type == LIGHT_DIRECTIONAL )
 				u->SetValue( tr.sun_ambient );

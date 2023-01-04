@@ -1219,6 +1219,10 @@ void StudioModel::DrawPoints ( bool bWireframe )
 	Vector		*lv;
 	Vector		lv_tmp;
 	short		*pskinref;
+	
+	if (!m_pmodel->nummesh) {
+		return; // blank submodel, ignore it
+	}
 
 	pvertbone = ((byte *)m_pstudiohdr + m_pmodel->vertinfoindex);
 	pnormbone = ((byte *)m_pstudiohdr + m_pmodel->norminfoindex);

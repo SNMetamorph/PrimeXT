@@ -30,6 +30,7 @@ GNU General Public License for more details.
 #include "animation.h"
 #include "trace.h"
 #include "game.h"
+#include "build.h"
 
 #if defined (HAS_PHYSIC_VEHICLE)
 #include "NxVehicle.h"
@@ -173,14 +174,22 @@ void CPhysicNovodex :: InitPhysic( void )
 		return;
 	}
 
+#if !XASH_64BIT
+	const char *libraryName = "PhysXLoader.dll";
+	const char *libraryGlobalName = "*PhysXLoader.dll";
+#else
+	const char *libraryName = "PhysXLoader64.dll";
+	const char *libraryGlobalName = "*PhysXLoader64.dll";
+#endif
+
 	// trying to load dlls from mod-folder
-	if( !Sys_LoadLibrary( "PhysXLoader.dll", &hPhysics, NxPhysics ))
+	if (!Sys_LoadLibrary(libraryName, &hPhysics, NxPhysics))
 	{
 		// NOTE: using '*' symbol to force loading dll from system path not game folder (Nvidia PhysX drivers)
-		if( !Sys_LoadLibrary( "*PhysXLoader.dll", &hPhysics, NxPhysics ))
+		if (!Sys_LoadLibrary(libraryGlobalName, &hPhysics, NxPhysics))
 		{
-			ALERT( at_error, "InitPhysic: failed to loading NxPhysics.dll.\nPhysics abstraction layer will be disabled.\n" );
-			GameInitNullPhysics ();
+			ALERT(at_error, "InitPhysic: failed to loading \"%s\"\nPhysics abstraction layer will be disabled.\n", libraryName);
+			GameInitNullPhysics();
 			return;
 		}
 	}
@@ -2497,7 +2506,7 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 	{
 		if( tr->fraction < 1.0f || tr->startsolid )
 			tr->ent = pTouch->edict();
-		tr->surf = trm.GetLastHitSurface();
+		tr->materialHash = COM_GetMaterialHash(trm.GetLastHitSurface());
 	}
 }
 

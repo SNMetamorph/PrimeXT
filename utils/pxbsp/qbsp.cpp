@@ -13,6 +13,7 @@
 #include "bsp5.h"
 #include "crashhandler.h"
 #include "app_info.h"
+#include "build_info.h"
 
 //
 // command line flags
@@ -495,7 +496,7 @@ show compiler settings like ZHLT
 */
 static void PrintBspSettings( void )
 {
-	Msg( "\nCurrent %s settings\n", APP_ABBREVIATION );
+	Msg( "Current %s settings\n", APP_ABBREVIATION );
 	Msg( "Name                 |  Setting  |  Default\n" );
 	Msg( "---------------------|-----------|-------------------------\n" );
 	Msg( "developer             [ %7d ] [ %7d ]\n", GetDeveloperLevel(), DEFAULT_DEVELOPER );
@@ -529,8 +530,6 @@ static void PrintBspUsage( void )
 	Msg( "    -maxnodesize val : sets the maximum portal node size\n" );
 	Msg( "    -epsilon         : portal chop precision epsilon\n" );
 	Msg( "    mapfile          : the mapfile to compile\n\n" );
-
-	exit( 1 );
 }
 
 /*
@@ -541,7 +540,7 @@ main
 */
 int main( int argc, char **argv )
 {
-	int	i;
+	int		i;
 	double	start, end;
 	char	source[1024];
 	char	str[64];
@@ -612,18 +611,26 @@ int main( int argc, char **argv )
 		}
 	}
 
-	if( i != argc || !source[0] )
+	if (i != argc || !source[0])
 	{
-		if( !source[0] )
-			Msg( "no mapfile specified\n" );
+		if (!source[0]) {
+			Msg("no mapfile specified\n");
+		}
+
 		PrintBspUsage();
+		exit(1);
 	}
 
 	start = I_FloatTime ();
 
 	Sys_InitLogAppend( va( "%s.log", source ));
 
-	Msg( "\n%s %s (%s)\n", TOOLNAME, VERSIONSTRING, __DATE__ );
+	Msg( "\n%s %s (%s, commit %s, arch %s, platform %s)\n\n", TOOLNAME, VERSIONSTRING, 
+		BuildInfo::GetDate(), 
+		BuildInfo::GetCommitHash(), 
+		BuildInfo::GetArchitecture(), 
+		BuildInfo::GetPlatform()
+	);
 
 	PrintBspSettings();
 	ThreadSetDefault ();

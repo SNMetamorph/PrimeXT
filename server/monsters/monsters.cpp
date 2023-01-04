@@ -2640,8 +2640,10 @@ void CBaseMonster :: StepSound( void )
 			ignore_monsters, NULL, &tr
 		);
 		ClearBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
-		if (tr.pMat != nullptr) {
-			pMaterial = tr.pMat->effects;
+		if (tr.materialHash) 
+		{
+			matdesc_t *mat = COM_FindMaterial(tr.materialHash);
+			pMaterial = mat ? mat->effects : nullptr;
 		}
 	}
 

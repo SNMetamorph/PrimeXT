@@ -421,6 +421,7 @@ extern int gmsgStudioDecal;
 extern int gmsgCustomDecal;
 extern int gmsgMusicFade;
 extern int gmsgSetupBones;
+extern int gmsgPostFxSettings;
 extern BOOL gInitHUD;
 
 #endif // PLAYER_H

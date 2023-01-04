@@ -12,6 +12,7 @@
 #include "gl_world.h"
 #include "gl_cvars.h"
 #include "gl_debug.h"
+#include "postfx_controller.h"
 
 static CBasePostEffects	post;
 void V_RenderPostEffect(word hProgram);
@@ -463,14 +464,6 @@ void InitPostEffects()
 	v_posteffects = CVAR_REGISTER( "gl_posteffects", "1", FCVAR_ARCHIVE );
 	v_sunshafts = CVAR_REGISTER( "gl_sunshafts", "1", FCVAR_ARCHIVE );
 	r_postfx_enable = CVAR_REGISTER("r_postfx_enable", "1.0", 0);
-	r_postfx_brightness = CVAR_REGISTER("r_postfx_brightness", "0.0", 0);
-	r_postfx_saturation = CVAR_REGISTER("r_postfx_saturation", "1.0", 0);
-	r_postfx_contrast = CVAR_REGISTER("r_postfx_contrast", "1.0", 0);
-	r_postfx_redlevel = CVAR_REGISTER("r_postfx_redlevel", "1.0", 0);
-	r_postfx_greenlevel = CVAR_REGISTER("r_postfx_greenlevel", "1.0", 0);
-	r_postfx_bluelevel = CVAR_REGISTER("r_postfx_bluelevel", "1.0", 0);
-	r_postfx_vignettescale = CVAR_REGISTER("r_postfx_vignettescale", "0.0", 0);
-	r_postfx_filmgrainscale = CVAR_REGISTER("r_postfx_filmgrainscale", "0.0", 0);
 	r_tonemap = CVAR_REGISTER("r_tonemap", "1", FCVAR_ARCHIVE);
 	r_bloom = CVAR_REGISTER("r_bloom", "1", FCVAR_ARCHIVE);
 	r_bloom_scale = CVAR_REGISTER("r_bloom_scale", "0.7", FCVAR_ARCHIVE);
@@ -580,23 +573,29 @@ void V_RenderPostEffect( word hProgram )
 			u->SetValue( post.target_rgb[0] );
 			break;
 		case UT_BRIGHTNESS:
-			u->SetValue(post.brightnessFactor);
+			u->SetValue(post.fxParameters.GetBrightness());
 			break;
 		case UT_SATURATION:
-			u->SetValue(post.saturationFactor);
+			u->SetValue(post.fxParameters.GetSaturation());
 			break;
 		case UT_CONTRAST:
-			u->SetValue(post.contrastFactor);
+			u->SetValue(post.fxParameters.GetContrast());
 			break;
 		case UT_COLORLEVELS:
-			u->SetValue(post.redLevelFactor, post.greenLevelFactor, post.blueLevelFactor);
+			u->SetValue(post.fxParameters.GetRedLevel(), post.fxParameters.GetGreenLevel(), post.fxParameters.GetBlueLevel());
 			break;
 		case UT_VIGNETTESCALE:
-			u->SetValue(post.vignetteScale);
+			u->SetValue(post.fxParameters.GetVignetteScale());
 			break;
 		case UT_FILMGRAINSCALE:
-			u->SetValue(post.filmGrainScale);
+			u->SetValue(post.fxParameters.GetFilmGrainScale());
 			break;
+		case UT_ACCENTCOLOR:
+		{
+			const Vector &accentColor = post.fxParameters.GetAccentColor();
+			u->SetValue(accentColor.x, accentColor.y, accentColor.z, post.fxParameters.GetColorAccentScale());
+			break;
+		}
 		case UT_BLURFACTOR:
 			u->SetValue( post.blurFactor[0], post.blurFactor[1] );
 			break;
@@ -626,9 +625,6 @@ void V_RenderPostEffect( word hProgram )
 			break;
 		case UT_LIGHTGAMMA:
 			u->SetValue( tr.light_gamma );
-			break;
-		case UT_DIFFUSEFACTOR:
-			u->SetValue( tr.diffuseFactor );
 			break;
 		case UT_AMBIENTFACTOR:
 			u->SetValue( tr.ambientFactor );
@@ -687,28 +683,13 @@ void RenderPostprocessing()
 		return;
 
 	GL_DEBUG_SCOPE();
-	if (CVAR_TO_BOOL(r_postfx_enable))
-	{
-		post.brightnessFactor = r_postfx_brightness->value;
-		post.saturationFactor = r_postfx_saturation->value;
-		post.contrastFactor = r_postfx_contrast->value;
-		post.redLevelFactor = r_postfx_redlevel->value;
-		post.greenLevelFactor = r_postfx_greenlevel->value;
-		post.blueLevelFactor = r_postfx_bluelevel->value;
-		post.vignetteScale = r_postfx_vignettescale->value;
-		post.filmGrainScale = r_postfx_filmgrainscale->value;
+	if (CVAR_TO_BOOL(r_postfx_enable)) {
+		post.fxParameters = g_PostFxController.GetState();
 	}
 	else
 	{
 		// use default values
-		post.brightnessFactor = 0.0f;
-		post.saturationFactor = 1.0f;
-		post.contrastFactor = 1.0f;
-		post.redLevelFactor = 1.0f;
-		post.greenLevelFactor = 1.0f;
-		post.blueLevelFactor = 1.0f;
-		post.vignetteScale = 0.0f;
-		post.filmGrainScale = 0.0f;
+		post.fxParameters = CPostFxParameters::Defaults();
 	}
 
 	GL_Setup2D();

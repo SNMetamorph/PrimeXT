@@ -31,8 +31,8 @@ GNU General Public License for more details.
 #define bound( min, num, max )	((num) >= (min) ? ((num) < (max) ? (num) : (max)) : (min))
 #define ASSERT( exp )		if(!( exp )) COM_Assert( "%s:%i\n", __FILE__, __LINE__ )
 
-void COM_Assert( const char *error, ... );
-void COM_FatalError( const char *error, ... );
+NO_RETURN void COM_Assert( const char *error, ... );
+NO_RETURN void COM_FatalError( const char *error, ... );
 void COM_InitCmdlib( char **argv, int argc );
 bool COM_GetLastParmExt( char *out, size_t size );
 #define COM_GetLastParm( a )	COM_GetLastParmExt( a, sizeof( a ))
@@ -103,13 +103,5 @@ int FS_Gets(file_t *file, byte *string, size_t bufsize);
 void FS_AllowDirectPaths(bool enable);
 size_t FS_FileLength(file_t *f);
 int FS_Close(file_t *file);
-
-//
-// crclib.c
-//
-void CRC32_Init(uint32_t *pulCRC);
-void CRC32_Final(uint32_t *pulCRC);
-void CRC32_ProcessByte(uint32_t *pulCRC, byte ch);
-void CRC32_ProcessBuffer(uint32_t *pulCRC, const void *pBuffer, int nBuffer);
 
 #endif

@@ -19,7 +19,6 @@ GNU General Public License for more details.
 #include "mathlib.h"
 #include "stringlib.h"
 #include "filesystem.h"
-#include "wfile.h"
 #include "bspfile.h"
 #include "build.h"
 
@@ -856,13 +855,15 @@ static searchpath_t *FS_FindFile( const char *name, int *index, bool gamedironly
 		else if( search->wad )
 		{
 			dlumpinfo_t	*lump;	
-			char		type = W_TypeFromExt( name );
+			int			type = W_TypeFromExt( name );
 			bool		anywadname = true;
 			string		wadname, wadfolder;
 			string		shortname;
 
 			// quick reject by filetype
-			if( type == TYP_NONE ) continue;
+			if( type == TYP_NONE ) 
+				continue;
+
 			COM_ExtractFilePath( name, wadname );
 			wadfolder[0] = '\0';
 
@@ -1484,12 +1485,14 @@ search_t *FS_Search( const char *pattern, int caseinsensitive, int gamedironly )
 		else if( searchpath->wad )
 		{
 			string	wadpattern, wadname, temp2;
-			char	type = W_TypeFromExt( pattern );
-			qboolean	anywadname = true;
-			string	wadfolder;
+			int	type = W_TypeFromExt( pattern );
+			qboolean anywadname = true;
+			string wadfolder;
 
 			// quick reject by filetype
-			if( type == TYP_NONE ) continue;
+			if( type == TYP_NONE ) 
+				continue;
+
 			COM_ExtractFilePath( pattern, wadname );
 			COM_FileBase( pattern, wadpattern );
 			wadfolder[0] = '\0';

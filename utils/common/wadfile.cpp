@@ -19,7 +19,6 @@ GNU General Public License for more details.
 #include "cmdlib.h"
 #include "stringlib.h"
 #include "filesystem.h"
-#include "wfile.h"
 #include "port.h"
 
 #ifndef ALLOW_WADS_IN_PACKS
@@ -118,7 +117,7 @@ W_TypeFromExt
 Extracts file type from extension
 ===========
 */
-char W_TypeFromExt( const char *lumpname )
+int W_TypeFromExt( const char *lumpname )
 {
 	const char	*ext = COM_FileExtension( lumpname );
 	const wadtype_t	*type;
@@ -143,7 +142,7 @@ W_ExtFromType
 Convert type to extension
 ===========
 */
-const char *W_ExtFromType( char lumptype )
+const char *W_ExtFromType( int lumptype )
 {
 	const wadtype_t	*type;
 
@@ -201,7 +200,7 @@ W_FindLump
 Serach for already existed lump
 ===========
 */
-dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const char matchtype )
+dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, int matchtype )
 {
 	char		img_type = IMG_DIFFUSE;
 	char		barename[64], suffix[8];
@@ -427,7 +426,7 @@ static bool W_SysOpen( wfile_t *wad, const char *filename, const char *mode, boo
 			opt |= O_BINARY;
 			break;
 		default:
-			MsgDev( D_ERROR, "W_Open: %s: unknown char in mode (%c)\n", filename, mode, mode[ind] );
+			MsgDev( D_ERROR, "W_Open: %s: unknown char in mode (%c)\n", filename, mode[ind] );
 			break;
 		}
 	}
@@ -687,7 +686,7 @@ W_SaveLump
 write new or replace existed lump
 ===========
 */
-int W_SaveLump( wfile_t *wad, const char *lump, const void *data, size_t datasize, char type, char attribs )
+int W_SaveLump( wfile_t *wad, const char *lump, const void *data, size_t datasize, int type, char attribs )
 {
 	dlumpinfo_t *find, newlump;
 	int lat_size, oldpos;
@@ -803,7 +802,7 @@ W_LoadLump
 loading lump into the tmp buffer
 ===========
 */
-byte *W_LoadLump( wfile_t *wad, const char *lumpname, size_t *lumpsizeptr, const char type )
+byte *W_LoadLump( wfile_t *wad, const char *lumpname, size_t *lumpsizeptr, int type )
 {
 	// assume error
 	if( lumpsizeptr ) *lumpsizeptr = 0;
@@ -848,7 +847,7 @@ void W_SearchForFile( wfile_t *wad, const char *pattern, stringlist_t *resultlis
 {
 	char		wadpattern[256], wadname[256], temp2[256];
 	const char	*slash, *backslash, *colon, *separator;
-	char		type = W_TypeFromExt( pattern );
+	int			type = W_TypeFromExt( pattern );
 	char		wadfolder[256], temp[1024];
 	bool		anywadname = true;
 	int		resultlistindex;
@@ -856,7 +855,9 @@ void W_SearchForFile( wfile_t *wad, const char *pattern, stringlist_t *resultlis
 	if( !wad ) return;
 
 	// quick reject by filetype
-	if( type == TYP_NONE ) return;
+	if( type == TYP_NONE ) 
+		return;
+
 	COM_ExtractFilePath( pattern, wadname );
 	COM_FileBase( pattern, wadpattern );
 	wadfolder[0] = '\0';

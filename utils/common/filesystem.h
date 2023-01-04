@@ -16,8 +16,9 @@ GNU General Public License for more details.
 #ifndef FILESYSTEM_H
 #define FILESYSTEM_H
 
+#include "wadfile.h"
 #include <time.h>
-#include <wadfile.h>
+#include <stdint.h>
 
 #define FILE_BUFF_SIZE	(65535)
 #define WAD3_NAMELEN	16
@@ -65,11 +66,8 @@ typedef struct
 typedef struct wadtype_s
 {
 	char	*ext;
-	char	type;
+	int		type;
 } wadtype_t;
-
-// wadfile
-typedef struct wfile_s	wfile_t;
 
 typedef struct vfile_s
 {
@@ -79,6 +77,7 @@ typedef struct vfile_s
 	size_t		offset;
 } vfile_t;
 
+#pragma pack(push, 1)
 typedef struct
 {
 	int		ident;		// should be WAD3
@@ -88,15 +87,31 @@ typedef struct
 
 typedef struct
 {
-	int		filepos;		// file offset in WAD
-	int		disksize;		// compressed or uncompressed
+	int		filepos;	// file offset in WAD
+	int		disksize;	// compressed or uncompressed
 	int		size;		// uncompressed
-	signed char		type;
-	signed char		attribs;		// file attribs
-	signed char		img_type;		// IMG_*
-	signed char		pad;
-	char		name[WAD3_NAMELEN];		// must be null terminated
+	int8_t	type;
+	int8_t	attribs;	// file attribs
+	int8_t	img_type;	// IMG_*
+	int8_t	pad;
+	char	name[WAD3_NAMELEN];		// must be null terminated
 } dlumpinfo_t;
+#pragma pack(pop)
+
+struct wfile_t
+{
+	char		filename[256];
+	int		infotableofs;
+	int		numlumps;
+	int		mode;
+#ifdef ALLOW_WADS_IN_PACKS
+	file_t		*handle;
+#else
+	int		handle;
+#endif
+	time_t		filetime;	
+	dlumpinfo_t	*lumps;
+};
 
 extern const wadtype_t wad_hints[];
 
@@ -139,14 +154,14 @@ void VFS_Close( vfile_t *file );
 // wadfile routines
 wfile_t *W_Open( const char *filename, const char *mode, int *error = NULL, bool ext_path = true );
 byte *W_ReadLump( wfile_t *wad, dlumpinfo_t *lump, size_t *lumpsizeptr );
-byte *W_LoadLump( wfile_t *wad, const char *lumpname, size_t *lumpsizeptr, const char type );
-int W_SaveLump( wfile_t *wad, const char *lump, const void *data, size_t datasize, char type, char attribs = ATTR_NONE );
+byte *W_LoadLump( wfile_t *wad, const char *lumpname, size_t *lumpsizeptr, int type );
+int W_SaveLump( wfile_t *wad, const char *lump, const void *data, size_t datasize, int type, char attribs = ATTR_NONE );
 void W_SearchForFile( wfile_t *wad, const char *pattern, stringlist_t *resultlist );
-dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const char matchtype );
+dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, int matchtype );
 dlumpinfo_t *W_FindMiptex( wfile_t *wad, const char *name );
 dlumpinfo_t *W_FindLmptex( wfile_t *wad, const char *name );
-char W_TypeFromExt( const char *lumpname );
-const char *W_ExtFromType( char lumptype );
+int W_TypeFromExt( const char *lumpname );
+const char *W_ExtFromType( int lumptype );
 char W_HintFromSuf( const char *lumpname );
 int W_GetHandle( wfile_t *wad );
 void W_Close( wfile_t *wad );

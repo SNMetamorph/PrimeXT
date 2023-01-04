@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8.12)
 
 project(squish)
 include(CompilerRuntime)
+include(CheckCCompilerFlag)
 
 add_library(${PROJECT_NAME} STATIC
 	"alpha.cpp"
@@ -24,16 +25,17 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 )
 
 if(NOT MSVC)
-	include(CheckCCompilerFlag)
-
 	target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions) # GCC/Clang flag
 	target_compile_options(${PROJECT_NAME} PRIVATE -Wno-write-strings) # GCC/Clang flag
 	target_compile_options(${PROJECT_NAME} PRIVATE -fvisibility=hidden) # GCC/Clang flag
-	CHECK_C_COMPILER_FLAG(-msse2 USE_SSE)
 
-	if( USE_SSE )
-		target_compile_options(${PROJECT_NAME} PRIVATE -msse2) # enabled SSE2
-		target_compile_definitions(${PROJECT_NAME} PRIVATE SQUISH_USE_SSE=2)
+	# enable SSE only on x86 and amd64 platforms
+	if(XASH_X86 OR XASH_AMD64)
+		CHECK_C_COMPILER_FLAG(-msse2 USE_SSE)
+		if(USE_SSE)
+			target_compile_options(${PROJECT_NAME} PRIVATE -msse2)
+			target_compile_definitions(${PROJECT_NAME} PRIVATE SQUISH_USE_SSE=2)
+		endif()
 	endif()
 
 	target_compile_definitions(${PROJECT_NAME} PRIVATE _LINUX=1 LINUX=1) # It seems enough for all non-Win32 systems
