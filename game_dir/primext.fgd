@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 17 December 2022)
+// PrimeXT FGD (last updated 04 Janyary 2023)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -3988,12 +3988,12 @@
 	]
 	spawnflags(Flags) = 
 	[
-		4 : "Repeatable"	: 0
-		8 : "Leave Corpse"	: 0
-		32: "No Interruptions"	: 0
-		64: "Override AI"	: 0
-		128: "No Script Movement" : 0
-		256: "Loop Post Idle" : 0
+		4 : "Repeatable" : 0
+		8 : "Leave Corpse" : 0
+		32 : "No Interruptions" : 0
+		64 : "Override AI" : 0
+		128 : "No Script Movement" : 0
+		256 : "Fix anim. transitions" : 1
 	]
 ]
 
