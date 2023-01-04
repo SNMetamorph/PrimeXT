@@ -382,7 +382,7 @@ void ResetTextureCoordRanges( s_mesh_t *pmesh, s_texture_t *ptexture  )
 				pmesh->triangle[i][j].t = (ptexture->max_t + 1 - ptexture->min_t) - (pmesh->triangle[i][j].t - ptexture->min_t);
 			}
 			if (store_uv_coords) {
-				pmesh->triangle[i][j].v = -pmesh->triangle[i][j].v;
+				pmesh->triangle[i][j].v = 1.0f - pmesh->triangle[i][j].v;
 			}
 		}
 	}
