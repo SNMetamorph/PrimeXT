@@ -157,6 +157,9 @@ ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0,
 	slBlender0->setRange( 0, 255 );
 	slBlender1->setRange( 0, 255 );
 
+	bCopySeqName = new mxButton(wSequence, 540, 18, 72, 22, "Copy name", IDC_COPYSEQNAME);
+	mxToolTip::add(bNextFrame, "Copy current sequence name");
+
 	mxWindow *wMisc = new mxWindow (this, 0, 0, 0, 0);
 	tab->add (wMisc, "Misc");
 
@@ -463,6 +466,26 @@ ControlPanel::handleEvent (mxEvent *event)
 			g_nCurrFrame = g_studioModel.SetFrame (g_nCurrFrame + 1);
 			leFrame->setLabel (va("%d", g_nCurrFrame));
 			g_bEndOfSequence = false;
+		}
+		break;
+
+		case IDC_COPYSEQNAME:
+		{
+			if (cSequence->getItemCount() > 0)
+			{
+				char str[32];
+				int index = cSequence->getSelectedIndex();
+				SendMessage((HWND)cSequence->getHandle(), CB_GETLBTEXT, index, (LPARAM)(LPCTSTR)str);
+
+				HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, 32);
+				memcpy(GlobalLock(hMem), str, 32);
+				GlobalUnlock(hMem);
+
+				OpenClipboard((HWND)cSequence->getHandle());
+				EmptyClipboard();
+				SetClipboardData(CF_TEXT, hMem);
+				CloseClipboard();
+			}
 		}
 		break;
 
