@@ -118,8 +118,8 @@ ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0,
 	leTextureName = new mxLineEdit( wTexture, 400, 66, 100, 18, "", IDC_EDIT_TEXTURE_NAME ); 
 
 	slTexScale = new mxSlider (wTexture, 0, 60, 160, 18, IDC_TEXTURESCALE);	
-	slTexScale->setRange( -3.0f, 3.0f, 12);	
-	slTexScale->setValue(0.0f);
+	slTexScale->setRange(-6, 6);	
+	slTexScale->setValue(0);
 	mxToolTip::add (slTexScale, "Scale texture size");
 	lTexScale = new mxLabel (wTexture, 5, 47, 140, 14, "Scale Texture View (1.00x)");
 
@@ -819,7 +819,7 @@ ControlPanel::handleEvent (mxEvent *event)
 
 		case IDC_TEXTURESCALE:
 		{
-			g_viewerSettings.textureScale = (float) ((mxSlider *) event->widget)->getValue();
+			g_viewerSettings.textureScale = 0.5f * (float) ((mxSlider *) event->widget)->getValue();
 			if (g_viewerSettings.textureScale >= 0.0f)
 				g_viewerSettings.textureScale += 1.0f;
 			else
