@@ -226,7 +226,7 @@ search_t *COM_Search( const char *pattern, int caseinsensitive, wfile_t *source_
 	int		i, basepathlength, numfiles, numchars;
 	int		resultlistindex, dirlistindex;
 	const char	*slash, *backslash, *colon, *separator;
-	char		netpath[1024], temp[1024], root[1024];
+	char		temp[1024], root[1024];
 	stringlist_t	resultlist, dirlist;
 	char		*basepath;
 
@@ -262,9 +262,8 @@ search_t *COM_Search( const char *pattern, int caseinsensitive, wfile_t *source_
 	W_SearchForFile( source_wad, pattern, &resultlist );
 #endif
 	// get a directory listing and look at each name
-	Q_sprintf( netpath, "%s%s", root, basepath );
 	stringlistinit( &dirlist );
-	listdirectory( &dirlist, netpath );
+	listdirectory( &dirlist, basepath );
 
 	for( dirlistindex = 0; dirlistindex < dirlist.numstrings; dirlistindex++ )
 	{
