@@ -123,10 +123,7 @@ BEGIN_DATADESC( CCineMonster )
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( scripted_sequence, CCineMonster );
-#define CLASSNAME "scripted_sequence"
-
 LINK_ENTITY_TO_CLASS( aiscripted_sequence, CCineAI );
-
 
 void CCineMonster :: Spawn( void )
 {
@@ -659,7 +656,7 @@ int	CCineMonster::IgnoreConditions( void )
 void ScriptEntityCancel( edict_t *pentCine )
 {
 	// make sure they are a scripted_sequence
-	if (FClassnameIs( pentCine, CLASSNAME ))
+	if (FClassnameIs( pentCine, "scripted_sequence"))
 	{
 		CCineMonster *pCineTarget = GetClassPtr((CCineMonster *)VARS(pentCine));
 		// make sure they have a monster in mind for the script
@@ -879,9 +876,12 @@ BOOL CBaseMonster :: CineCleanup( void )
 			pev->effects |= EF_NOINTERP;
 		}
 
-		// We should have some animation to put these guys in, but for now it's idle.
-		// Due to NOINTERP above, there won't be any blending between this anim & the sequence
-		m_Activity = ACT_RESET;
+		if (!FBitSet(pOldCine->pev->spawnflags, SF_SCRIPT_FIXANIMTRANSITIONS))
+		{
+			// We should have some animation to put these guys in, but for now it's idle.
+			// Due to NOINTERP above, there won't be any blending between this anim & the sequence
+			m_Activity = ACT_RESET;
+		}
 	}
 	// set them back into a normal state
 	pev->enemy = NULL;
