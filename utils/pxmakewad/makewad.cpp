@@ -290,12 +290,14 @@ bool WAD_CreateTexture( const char *filename )
 	if( !output_wad && output_path[0] && output_ext[0] )
 	{
 		char	real_ext[8];
+		char	wad_name[64];
 
 		// set default extension
 		Q_strcpy( real_ext, output_ext );
+		COM_FileBase(source_wad->filename, wad_name);
 
 		// wad-extract mode
-		const char *path = va( "%s\\%s.%s", output_path, lumpname, real_ext );
+		const char *path = va( "%s\\%s_wad\\%s.%s", output_path, wad_name, lumpname, real_ext );
 		bool result = Makewad_SaveImage( path, image );
 
 		if( result ) MsgDev( D_INFO, "%s\n", path );
