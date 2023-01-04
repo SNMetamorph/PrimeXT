@@ -1584,7 +1584,7 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 		
 		delete [] sort_IDs;	
 		
-		for( vertID = 0; vertID < m_nNumArrayVerts; vertID++ )
+		for( int vertID = 0; vertID < m_nNumArrayVerts; vertID++ )
 		{
 			m_arrayxvert[vertID].tangent = m_arrayxvert[vertID].tangent.Normalize();
 			m_arrayxvert[vertID].binormal = m_arrayxvert[vertID].binormal.Normalize();
