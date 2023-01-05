@@ -126,20 +126,22 @@ ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0,
 	mxWindow *wSequence = new mxWindow (this, 0, 0, 0, 0);
 	tab->add (wSequence, "Sequences");
 
-	mxLabel *AnimSequence = new mxLabel (wSequence, 5, 3, 120, 18, "Animation Sequence");
-	cSequence = new mxChoice (wSequence, 5, 18, 200, 22, IDC_SEQUENCE);	
-	mxToolTip::add (cSequence, "Select Sequence");
-	tbStop = new mxButton (wSequence, 5, 46, 60, 18, "Stop", IDC_STOP);
-	mxToolTip::add (tbStop, "Stop Playing");
-	bPrevFrame = new mxButton (wSequence, 84, 46, 30, 18, "<<", IDC_PREVFRAME);
-	bPrevFrame->setEnabled (false);
-	mxToolTip::add (bPrevFrame, "Prev Frame");
-	leFrame = new mxLineEdit (wSequence, 119, 46, 50, 18, "", IDC_FRAME); 
-	leFrame->setEnabled (false);
-	mxToolTip::add (leFrame, "Set Frame");
-	bNextFrame = new mxButton (wSequence, 174, 46, 30, 18, ">>", IDC_NEXTFRAME);
-	bNextFrame->setEnabled (false);
-	mxToolTip::add (bNextFrame, "Next Frame");	
+	mxLabel *AnimSequence = new mxLabel(wSequence, 5, 3, 120, 18, "Animation Sequence");
+	cSequence = new mxChoice(wSequence, 5, 18, 200, 22, IDC_SEQUENCE);
+	mxToolTip::add(cSequence, "Select Sequence");
+	tbStop = new mxButton(wSequence, 5, 46, 60, 18, "Stop", IDC_STOP);
+	mxToolTip::add(tbStop, "Stop Playing");
+	bPrevFrame = new mxButton(wSequence, 84, 46, 30, 18, "<<", IDC_PREVFRAME);
+	bPrevFrame->setEnabled(false);
+	mxToolTip::add(bPrevFrame, "Prev Frame");
+	leFrame = new mxLineEdit(wSequence, 119, 46, 50, 18, "", IDC_FRAME);
+	leFrame->setEnabled(false);
+	mxToolTip::add(leFrame, "Set Frame");
+	bNextFrame = new mxButton(wSequence, 174, 46, 30, 18, ">>", IDC_NEXTFRAME);
+	bNextFrame->setEnabled(false);
+	mxToolTip::add(bNextFrame, "Next Frame");
+	bCopySequenceName = new mxButton(wSequence, 420, 60, 112, 22, "Copy sequence name", IDC_COPYSEQUENCENAME);
+	mxToolTip::add(bCopySequenceName, "Copy current sequence name");
 
 	lSequenceInfo = new mxLabel (wSequence, 228, 12, 90, 100, "");
 
@@ -463,6 +465,28 @@ ControlPanel::handleEvent (mxEvent *event)
 			g_nCurrFrame = g_studioModel.SetFrame (g_nCurrFrame + 1);
 			leFrame->setLabel (va("%d", g_nCurrFrame));
 			g_bEndOfSequence = false;
+		}
+		break;
+
+		case IDC_COPYSEQUENCENAME:
+		{
+			if (cSequence->getItemCount() > 0)
+			{
+				int index = cSequence->getSelectedIndex();
+				studiohdr_t *hdr = g_studioModel.getStudioHeader();
+				if (hdr)
+				{
+					mstudioseqdesc_t *pseqdescs = (mstudioseqdesc_t *)((byte *)hdr + hdr->seqindex);
+					for (int i = 0; i < hdr->numseq; i++)
+					{
+						if (index == i)
+						{
+							COM_SetClipboardText(pseqdescs[i].label);
+							break;
+						}
+					}
+				}
+			}
 		}
 		break;
 

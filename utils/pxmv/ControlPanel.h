@@ -79,6 +79,7 @@
 #define IDC_LOOPANIM				5007
 #define IDC_BLENDER0				5008
 #define IDC_BLENDER1				5009
+#define IDC_COPYSEQUENCENAME		5010
 
 #define NUM_POSEPARAMETERS				4
 #define IDC_POSEPARAMETER_SCALE			5100
@@ -140,6 +141,7 @@ class ControlPanel : public mxWindow
 	mxSlider *slSpeedScale;
 	mxButton *tbStop;
 	mxButton *bPrevFrame, *bNextFrame;
+	mxButton *bCopySequenceName;
 	mxLabel *lSequenceInfo;
 	mxSlider *slBlender0;
 	mxSlider *slBlender1;
