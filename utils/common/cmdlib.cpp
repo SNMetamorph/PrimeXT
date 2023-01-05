@@ -256,3 +256,24 @@ double GAME_EXPORT I_FloatTime( void )
 #endif
 }
 
+void COM_SetClipboardText(const char *text)
+{
+#if XASH_WIN32
+	size_t length = Q_strlen(text);
+	LPTSTR clipboardString = nullptr;
+	HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, length + 1);
+
+	clipboardString = reinterpret_cast<LPTSTR>(GlobalLock(hMem));
+	memcpy(clipboardString, text, length);
+	clipboardString[length] = '\0';
+	GlobalUnlock(hMem);
+
+	OpenClipboard(NULL);
+	EmptyClipboard();
+	SetClipboardData(CF_TEXT, hMem);
+	CloseClipboard();
+#else
+	// TODO implement this for other platforms
+#endif
+}
+

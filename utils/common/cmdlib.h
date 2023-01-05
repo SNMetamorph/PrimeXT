@@ -44,6 +44,7 @@ void Q_getwd( char *out, size_t size );
 char *COM_ExpandArg( const char *path );	// from scripts
 void COM_FixSlashes( char *pname );
 double I_FloatTime( void );
+void COM_SetClipboardText(const char *text);
 
 // normal file
 typedef struct file_s	file_t;
