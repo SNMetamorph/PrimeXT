@@ -477,9 +477,12 @@ ControlPanel::handleEvent (mxEvent *event)
 				if (hdr)
 				{
 					mstudioseqdesc_t *pseqdescs = (mstudioseqdesc_t *)((byte *)hdr + hdr->seqindex);
-					for (int i = 0; i < hdr->numseq; i++)
+					for (int i = 0, k = -1; i < hdr->numseq; i++)
 					{
-						if (index == i)
+						if (!FBitSet(pseqdescs[i].flags, STUDIO_HIDDEN | STUDIO_AUTOPLAY)) {
+							k++;
+						}
+						if (index == k)
 						{
 							COM_SetClipboardText(pseqdescs[i].label);
 							break;
