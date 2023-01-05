@@ -1551,7 +1551,7 @@ void StudioModel::DrawUVMapPoints()
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glDisable( GL_TEXTURE_2D );
-	glColor4f( 1.0f, 1.0f, 1.0f, 0.99f ); 
+	glColor4f( 0.1f, 0.85f, 0.2f, 0.9f );
 //
 // clip and draw all triangles
 //
@@ -1599,9 +1599,9 @@ void StudioModel::DrawUVMapPoints()
 						y = HalfToFloat( ptricmds[3] ) * tex_h;
 
 						if(( x < 0.0f || x > tex_w ) || ( y < 0.0f || y > tex_h ))
-							glColor3f( 1.0f, 0.0f, 0.0f ); 
+							glColor3f( 0.85f, 0.2f, 0.1f );
 						else 
-							glColor3f( 1.0f, 1.0f, 1.0f ); 
+							glColor3f( 0.1f, 0.85f, 0.2f );
 					}
 					else
 					{
@@ -1623,6 +1623,7 @@ void StudioModel::DrawUVMapPoints()
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	glEnable( GL_TEXTURE_2D );
 	glDisable( GL_BLEND );
+	glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
 }
 
 void StudioModel :: DrawModelUVMap( void )
