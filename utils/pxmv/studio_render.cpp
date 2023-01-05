@@ -1597,14 +1597,11 @@ void StudioModel::DrawUVMapPoints()
 					{
 						x = HalfToFloat( ptricmds[2] ) * tex_w;
 						y = HalfToFloat( ptricmds[3] ) * tex_h;
-						if( y < 0.0f ) y += tex_h; // OpenGL issues
 
 						if(( x < 0.0f || x > tex_w ) || ( y < 0.0f || y > tex_h ))
 							glColor3f( 1.0f, 0.0f, 0.0f ); 
-						else glColor3f( 1.0f, 1.0f, 1.0f ); 
-
-						x = Q_max( 0.0f, Q_min( x, tex_w ));
-						y = Q_max( 0.0f, Q_min( y, tex_h ));
+						else 
+							glColor3f( 1.0f, 1.0f, 1.0f ); 
 					}
 					else
 					{
