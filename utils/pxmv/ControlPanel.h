@@ -166,6 +166,7 @@ class ControlPanel : public mxWindow
 	mxLineEdit *leTextureName;
 	mxLabel *lTexSize;
 	mxLabel *lTexScale;
+	mxSlider *slTexScale;
 	mxLineEdit *leWidth, *leHeight;
 	mxLineEdit *leMeshScale, *leBoneScale;
 	mxCheckBox *cbFlagRocket;

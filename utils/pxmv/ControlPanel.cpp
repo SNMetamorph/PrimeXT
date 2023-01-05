@@ -117,8 +117,11 @@ ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0,
 	cbAntiAliasLines = new mxCheckBox (wTexture, 400, 43, 100, 22, "Anti-Alias Lines", IDC_ANTI_ALIAS_LINES);
 	leTextureName = new mxLineEdit( wTexture, 400, 66, 100, 18, "", IDC_EDIT_TEXTURE_NAME ); 
 
-	mxToolTip::add (new mxSlider (wTexture, 0, 60, 160, 18, IDC_TEXTURESCALE), "Scale texture size");
-	lTexScale = new mxLabel (wTexture, 5, 47, 140, 14, "Scale Texture View (1x)");
+	slTexScale = new mxSlider(wTexture, 0, 60, 160, 18, IDC_TEXTURESCALE);
+	mxToolTip::add(slTexScale, "Scale texture size");
+	lTexScale = new mxLabel(wTexture, 5, 47, 140, 14, "Scale Texture View (1.00x)");
+	slTexScale->setRange(-100, 100);
+	slTexScale->setValue(0);
 
 	mxWindow *wSequence = new mxWindow (this, 0, 0, 0, 0);
 	tab->add (wSequence, "Sequences");
@@ -816,8 +819,13 @@ ControlPanel::handleEvent (mxEvent *event)
 
 		case IDC_TEXTURESCALE:
 		{
-			g_viewerSettings.textureScale =  1.0f + (float) ((mxSlider *) event->widget)->getValue () * 4.0f / 100.0f;
-			lTexScale->setLabel( va("Scale Texture View (%.fx)", g_viewerSettings.textureScale) );
+			float sliderFraction = ((mxSlider *)event->widget)->getValue() / 100.0f * 4.0f;
+			if (sliderFraction >= 0.0f)
+				g_viewerSettings.textureScale = sliderFraction + 1.0f;
+			else
+				g_viewerSettings.textureScale = 1.0f / (1.0f - sliderFraction);
+
+			lTexScale->setLabel( va("Scale Texture View (%.2fx)", g_viewerSettings.textureScale) );
 			d_GlWindow->redraw ();
 		}
 		break;
