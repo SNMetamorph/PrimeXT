@@ -573,16 +573,21 @@ SPRViewer::handleEvent (mxEvent *event)
 		case IDC_HELP_ABOUT:
 			mxMessageBox(this, va(
 				APP_TITLE_STR " " APP_VERSION_STRING2 "\n"
-				"Based on HLSV code by g-cont\n\n"
-				"Left-drag to rotate.\n"
-				"Right-drag to zoom.\n"
-				"Shift-left-drag to x-y-pan.\n"
-				"Ctrl-drag to move lights.\n\n"
-				"Build:\t%s, commit %s, arch %s\n"
-				"Web:\t%s",
-				BuildInfo::GetDate(),
+				"Based on HLSV code by g-cont\n"
+				"\n"
+				"Left mouse button and drag - to rotate\n"
+				"Right mouse button and drag - to zoom\n"
+				"Shift + LMB and drag - to XY-pan\n"
+				"\n"
+				"Build date: \t%s\n"
+				"Commit hash: \t%s\n"
+				"Architecture: \t%s\n"
+				"Platform: \t%s\n"
+				"Website: \t%s", 
+				BuildInfo::GetDate(), 
 				BuildInfo::GetCommitHash(),
 				BuildInfo::GetArchitecture(),
+				BuildInfo::GetPlatform(),
 				BuildInfo::GetGitHubLink()), 
 				"About", MX_MB_OK | MX_MB_INFORMATION);
 			break;
