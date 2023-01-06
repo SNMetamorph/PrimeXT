@@ -140,10 +140,10 @@ ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0,
 	bNextFrame = new mxButton(wSequence, 174, 46, 30, 18, ">>", IDC_NEXTFRAME);
 	bNextFrame->setEnabled(false);
 	mxToolTip::add(bNextFrame, "Next Frame");
-	bCopySequenceName = new mxButton(wSequence, 420, 60, 112, 22, "Copy sequence name", IDC_COPYSEQUENCENAME);
-	mxToolTip::add(bCopySequenceName, "Copy current sequence name");
+	bCopySequenceName = new mxButton(wSequence, 210, 18, 65, 22, "Copy name", IDC_COPYSEQUENCENAME);
+	mxToolTip::add(bCopySequenceName, "Copy current animation sequence name");
 
-	lSequenceInfo = new mxLabel (wSequence, 228, 12, 90, 100, "");
+	lSequenceInfo = new mxLabel (wSequence, 288, 12, 90, 100, "");
 
 	mxLabel *SpdLabel = new mxLabel (wSequence, 170, 70, 35, 18, "Speed");
 	slSpeedScale = new mxSlider (wSequence, 0, 70, 165, 18, IDC_SPEEDSCALE);
@@ -151,9 +151,9 @@ ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0,
 	slSpeedScale->setValue (40);
 	mxToolTip::add (slSpeedScale, "Speed Scale");
 
-	slBlender0 = new mxSlider( wSequence, 320, 12, 145, 18, IDC_BLENDER0 );
-	slBlender1 = new mxSlider( wSequence, 320, 35, 145, 18, IDC_BLENDER1 );
-	cbLoopAnim = new mxCheckBox( wSequence, 325, 60, 90, 22, "Loop Animation", IDC_LOOPANIM );
+	slBlender0 = new mxSlider( wSequence, 380, 12, 145, 18, IDC_BLENDER0 );
+	slBlender1 = new mxSlider( wSequence, 380, 35, 145, 18, IDC_BLENDER1 );
+	cbLoopAnim = new mxCheckBox( wSequence, 385, 60, 90, 22, "Loop Animation", IDC_LOOPANIM );
 	new mxLabel( wSequence, 467, 12, 55, 18, "Blender 0" );
 	new mxLabel( wSequence, 467, 35, 55, 18, "Blender 1" );
 	slBlender0->setRange( 0, 255 );
