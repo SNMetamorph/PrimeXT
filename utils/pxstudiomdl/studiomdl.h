@@ -11,8 +11,8 @@
 #define MAXSTUDIOMOVEKEYS		64
 #define MAXSTUDIOIKRULES		64
 #define MAXSTUDIOSRCBONES		512	// bones allowed at source movement
-#define MAXSTUDIOANIMATIONS		512	// max frames per sequence
-#define MAXSTUDIOANIMFRAMES		510	// max frames per sequence
+#define MAXSTUDIOANIMATIONS		16386	// max frames per sequence
+#define MAXSTUDIOANIMFRAMES		16386	// max frames per sequence
 #define MAXSTUDIOSEQUENCES		1024	// total animation sequences
 #define MAXSTUDIOEVENTS		64	// events per sequence
 #define MAXSTUDIOMESHES		256	// max textures per model
