@@ -6,6 +6,8 @@
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/SNMetamorph/PrimeXT)
 ![Lines of code](https://img.shields.io/tokei/lines/github/SNMetamorph/PrimeXT)
 
+[![ModDB Rating](https://button.moddb.com/popularity/medium/mods/56077.png)](https://www.moddb.com/mods/primext)
+
 Modern SDK for Xash3D engine, with extended physics (using PhysX), improved graphics (dynamic lighting with shadows, HDR, cubemap/screen-space reflections, PBR support, parallax-mapping, bloom, color correction, SSAO, etc). 
 Based on XashXT and Spirit Of Half-Life and includes all features and entities from it.  
 At this time, project in primal state: it somehow works, but there is a lot of things to fix/implement next.  
