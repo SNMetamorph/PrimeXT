@@ -205,13 +205,13 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 	const char *ext = COM_FileExtension( filename );
 	int width, height, len = WAD3_NAMELEN;
 	dlumpinfo_t *find, *find2;
-	char lumpname[64], hint;
+	char lumpname[64];
 	int mipwidth, mipheight;
-	rgbdata_t	*image;
+	rgbdata_t *image;
 
 	// store name for detect suffixes
 	COM_FileBase(filename, lumpname);
-	hint = Image_HintFromSuf(lumpname);
+	int hint = Image_HintFromSuf(lumpname, true);
 
 	if (hint != IMG_DIFFUSE)
 	{
