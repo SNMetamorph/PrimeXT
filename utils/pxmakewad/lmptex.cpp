@@ -31,14 +31,14 @@ bool LMP_WriteLmptex( const char *lumpname, rgbdata_t *pix, bool todisk )
 	// check for all the possible problems
 	if (!pix || !FBitSet(pix->flags, IMAGE_QUANTIZED)) 
 	{
-		MsgDev( D_ERROR, "LMP_WriteLmptex: image not quantized or buffer invalid\n" );
+		Msg(S_ERROR "image not quantized or buffer invalid\n");
 		return false;
 	}
 
 	// lmp may have any dimensions
 	if (pix->width < IMAGE_MINWIDTH || pix->width > IMAGE_MAXWIDTH || pix->height < IMAGE_MINHEIGHT || pix->height > IMAGE_MAXHEIGHT)
 	{
-		MsgDev( D_ERROR, "LMP_WriteLmptex: image too small or too large\n" );
+		Msg(S_ERROR "image too small or too large\n");
 		return false; // to small or too large
 	}
 
@@ -102,20 +102,22 @@ bool LMP_CheckForReplace( dlumpinfo_t *find, rgbdata_t *image, int &width, int &
 		switch( GetReplaceLevel( ))
 		{
 		case REP_IGNORE:
-			MsgDev( D_ERROR, "LMP_CreateLmptex: %s already exist\n", find->name ); 
-			if( image ) Mem_Free( image );
+			Msg(S_ERROR "%s already exists\n", find->name); 
+			if (image) {
+				Mem_Free(image);
+			}
 			return false;
 		case REP_NORMAL:
 			if( FBitSet( find->attribs, ATTR_READONLY ))
 			{
 				// g-cont. i left this limitation as a protect of the replacement of compressed lumps
-				MsgDev( D_ERROR, "W_ReplaceLump: %s is read-only\n", find->name );
+				Msg(S_ERROR "%s is read-only\n", find->name);
 				if( image ) Mem_Free( image );
 				return false;
 			}
 			if( lumpsize != find->size )
 			{
-				MsgDev( D_ERROR, "W_ReplaceLump: %s.lmp [%s] should be [%s]\n",
+				Msg(S_ERROR "%s.lmp [%s] should be [%s]\n",
 				find->name, Q_memprint( lumpsize ), Q_memprint( find->size )); 
 				if( image ) Mem_Free( image );
 				return false;
@@ -131,7 +133,7 @@ bool LMP_CheckForReplace( dlumpinfo_t *find, rgbdata_t *image, int &width, int &
 
 				if( lseek( W_GetHandle( output_wad ), find->filepos, SEEK_SET ) == -1 )
 				{
-					MsgDev( D_ERROR, "W_ReplaceLump: %s is corrupted\n", find->name );
+					Msg(S_ERROR "%s is corrupted\n", find->name);
 					lseek( W_GetHandle( output_wad ), oldpos, SEEK_SET );
 					if( image ) Mem_Free( image );
 					return false;
@@ -139,7 +141,7 @@ bool LMP_CheckForReplace( dlumpinfo_t *find, rgbdata_t *image, int &width, int &
 
 				if( read( W_GetHandle( output_wad ), &test, sizeof( test )) != sizeof( test ))
 				{
-					MsgDev( D_ERROR, "W_ReplaceLump: %s is corrupted\n", find->name );
+					Msg(S_ERROR "%s is corrupted\n", find->name);
 					lseek( W_GetHandle( output_wad ), oldpos, SEEK_SET );
 					if( image ) Mem_Free( image );
 					return false;

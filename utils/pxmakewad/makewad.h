@@ -20,6 +20,8 @@ GNU General Public License for more details.
 #include "filesystem.h"
 #include "miptex.h"
 
+#define S_ERROR "^1error:^7 "
+
 extern wfile_t *source_wad;
 extern wfile_t *output_wad;
 extern char output_path[256];

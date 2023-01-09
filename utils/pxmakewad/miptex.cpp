@@ -153,17 +153,17 @@ bool MIP_WriteMiptex( const char *lumpname, rgbdata_t *pix )
 
 	// check for all the possible problems
 	if (!pix || !FBitSet(pix->flags, IMAGE_QUANTIZED)) {
-		MsgDev( D_ERROR, "MIP_WriteMiptex: lump with this name already exist\n" );
+		Msg(S_ERROR "lump with this name already exists or image not quantized\n");
 		return false;
 	}
 
 	if ((pix->width & 7) || (pix->height & 7)) {
-		MsgDev( D_ERROR, "MIP_WriteMiptex: image width/height not aligned by 16\n" );
+		Msg(S_ERROR "image width/height not aligned by 16\n");
 		return false; // not aligned by 16
 	}
 
 	if (pix->width < IMAGE_MINWIDTH || pix->width > IMAGE_MAXWIDTH || pix->height < IMAGE_MINHEIGHT || pix->height > IMAGE_MAXHEIGHT) {
-		MsgDev( D_ERROR, "MIP_WriteMiptex: image too small or too large\n" );
+		Msg(S_ERROR "image too small or too large\n");
 		return false; // to small or too large
 	}
 
@@ -297,8 +297,9 @@ bool MIP_WriteMiptex( const char *lumpname, rgbdata_t *pix )
 
 	size_t disksize = (( lump_p - lumpbuffer ) + 3) & ~3;
 
-	if( lumpsize != disksize )
-		MsgDev( D_ERROR, "%s is corrupted (buffer is %s bytes, written %s)\n", lumpname, Q_memprint( lumpsize ), Q_memprint( disksize ));
+	if (lumpsize != disksize) {
+		MsgDev(D_ERROR, "%s is corrupted (buffer is %s bytes, written %s)\n", lumpname, Q_memprint(lumpsize), Q_memprint(disksize));
+	}
 
 	bool result = W_SaveLump( output_wad, lumpname, lumpbuffer, lumpsize, TYP_MIPTEX, ATTR_NONE ) >= 0;
 
@@ -317,20 +318,22 @@ bool MIP_CheckForReplace( dlumpinfo_t *find, rgbdata_t *image, int &width, int &
 		switch( GetReplaceLevel( ))
 		{
 		case REP_IGNORE:
-			MsgDev( D_ERROR, "MIP_CreateMiptex: %s already exist\n", find->name ); 
-			if( image ) Mem_Free( image );
+			Msg(S_ERROR "%s already exists\n", find->name); 
+			if (image) {
+				Mem_Free(image);
+			}
 			return false;
 		case REP_NORMAL:
 			if( FBitSet( find->attribs, ATTR_READONLY ))
 			{
 				// g-cont. i left this limitation as a protect of the replacement of compressed lumps
-				MsgDev( D_ERROR, "W_ReplaceLump: %s is read-only\n", find->name );
+				Msg(S_ERROR "%s is read-only\n", find->name);
 				if( image ) Mem_Free( image );
 				return false;
 			}
 			if( lumpsize != find->size )
 			{
-				MsgDev( D_ERROR, "W_ReplaceLump: %s.mip [%s] should be [%s]\n",
+				Msg(S_ERROR "%s.mip [%s] should be [%s]\n",
 				find->name, Q_memprint( lumpsize ), Q_memprint( find->size )); 
 				if( image ) Mem_Free( image );
 				return false;
@@ -346,7 +349,7 @@ bool MIP_CheckForReplace( dlumpinfo_t *find, rgbdata_t *image, int &width, int &
 
 				if( lseek( W_GetHandle( output_wad ), find->filepos, SEEK_SET ) == -1 )
 				{
-					MsgDev( D_ERROR, "W_ReplaceLump: %s is corrupted\n", find->name );
+					Msg(S_ERROR "%s is corrupted\n", find->name );
 					lseek( W_GetHandle( output_wad ), oldpos, SEEK_SET );
 					if( image ) Mem_Free( image );
 					return false;
@@ -354,7 +357,7 @@ bool MIP_CheckForReplace( dlumpinfo_t *find, rgbdata_t *image, int &width, int &
 
 				if( read( W_GetHandle( output_wad ), &test, sizeof( test )) != sizeof( test ))
 				{
-					MsgDev( D_ERROR, "W_ReplaceLump: %s is corrupted\n", find->name );
+					Msg(S_ERROR "%s is corrupted\n", find->name );
 					lseek( W_GetHandle( output_wad ), oldpos, SEEK_SET );
 					if( image ) Mem_Free( image );
 					return false;

@@ -78,23 +78,23 @@ handle bmp & tga
 */
 static bool Makewad_SaveImage( const char *filename, rgbdata_t *pix )
 {
-	const char *ext = COM_FileExtension( filename );
+	const char *ext = COM_FileExtension(filename);
 
-	if( !pix )
+	if (!pix)
 	{
-		MsgDev( D_ERROR, "Makewad_SaveImage: pix == NULL\n" );
+		Msg(S_ERROR "pix == NULL\n");
 		return false;
 	}
 
-	if( !Q_stricmp( ext, "tga" ))
-		return Image_SaveTGA( filename, pix );
-	else if( !Q_stricmp( ext, "bmp" ))
-		return Image_SaveBMP( filename, pix );
-	else if( !Q_stricmp( ext, "lmp" ))
-		return LMP_WriteLmptex( filename, pix, true );
+	if (!Q_stricmp(ext, "tga"))
+		return Image_SaveTGA(filename, pix);
+	else if (!Q_stricmp(ext, "bmp"))
+		return Image_SaveBMP(filename, pix);
+	else if (!Q_stricmp(ext, "lmp"))
+		return LMP_WriteLmptex(filename, pix, true);
 	else
 	{
-		MsgDev( D_ERROR, "Makewad_SaveImage: unsupported format (%s)\n", ext );
+		Msg(S_ERROR "unsupported format (%s)\n", ext);
 		return false;
 	}
 }
@@ -111,19 +111,20 @@ static rgbdata_t *Makewad_LoadImage( const char *filename, bool quiet = false )
 	size_t fileSize;	
 	byte *buf = (byte *)COM_LoadFile( filename, &fileSize, false );
 	const char *ext = COM_FileExtension( filename );
-	rgbdata_t	*pic = NULL;
+	rgbdata_t *pic = NULL;
 	char barename[64];
 
-	if( !buf && source_wad != NULL )
+	if (!buf && source_wad != NULL)
 	{
-		COM_FileBase( filename, barename );
-		buf = W_LoadLump( source_wad, barename, &fileSize, W_TypeFromExt( filename ));
+		COM_FileBase(filename, barename);
+		buf = W_LoadLump(source_wad, barename, &fileSize, W_TypeFromExt(filename));
 	}
 
-	if( !buf )
+	if (!buf)
 	{
-		if( !quiet )
-			MsgDev( D_ERROR, "Makewad_LoadImage: unable to load (%s)\n", filename );
+		if (!quiet) {
+			Msg(S_ERROR "unable to load (%s)\n", filename);
+		}
 		return NULL;
 	}
 
@@ -135,8 +136,9 @@ static rgbdata_t *Makewad_LoadImage( const char *filename, bool quiet = false )
 		pic = Image_LoadMIP( filename, buf, fileSize );
 	else if( !Q_stricmp( ext, "lmp" ))
 		pic = Image_LoadLMP( filename, buf, fileSize );
-	else if( !quiet )
-		MsgDev( D_ERROR, "Makewad_LoadImage: unsupported format (%s)\n", ext );
+	else if (!quiet) {
+		Msg(S_ERROR "unsupported format (%s)\n", ext);
+	}
 
 	Mem_Free( buf ); // release file
 
@@ -450,7 +452,7 @@ static const char *GetStatusCodeDescription(FileStatusCode statusCode)
 static void PrintTitle()
 {
 	Msg("\n");
-	Msg("  pxmakewad^7 - utility for editing or creating WAD files from textures\n");
+	Msg("  pxmakewad - utility for editing or creating WAD files from textures\n");
 	Msg("  Version   : %s (^1%s ^7/ ^2%s ^7/ ^3%s ^7/ ^4%s^7)\n",
 		APP_VERSION_STRING,
 		BuildInfo::GetDate(),
@@ -652,7 +654,7 @@ int main( int argc, char **argv )
 
 		for (i = 0; i < search->numfilenames; i++)
 		{
-			Msg("Processing file %s... ", search->filenames[i]);
+			Msg("Processing %s... ", search->filenames[i]);
 
 			FileStatusCode statusCode = WAD_CreateTexture(search->filenames[i]);
 			if (statusCode == FileStatusCode::Success) {
