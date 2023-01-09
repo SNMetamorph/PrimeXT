@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "filesystem.h"
 #include "imagelib.h"
 #include "makewad.h"
+#include "status_code.h"
 #include "crashhandler.h"
 #include "build_info.h"
 #include "app_info.h"
@@ -72,7 +73,7 @@ static bool Makewad_SaveImage( const char *filename, rgbdata_t *pix )
 
 	if( !pix )
 	{
-		MsgDev( D_ERROR, "COM_SaveImage: pix == NULL\n" );
+		MsgDev( D_ERROR, "Makewad_SaveImage: pix == NULL\n" );
 		return false;
 	}
 
@@ -84,7 +85,7 @@ static bool Makewad_SaveImage( const char *filename, rgbdata_t *pix )
 		return LMP_WriteLmptex( filename, pix, true );
 	else
 	{
-		MsgDev( D_ERROR, "COM_SaveImage: unsupported format (%s)\n", ext );
+		MsgDev( D_ERROR, "Makewad_SaveImage: unsupported format (%s)\n", ext );
 		return false;
 	}
 }
@@ -113,7 +114,7 @@ static rgbdata_t *Makewad_LoadImage( const char *filename, bool quiet = false )
 	if( !buf )
 	{
 		if( !quiet )
-			MsgDev( D_ERROR, "COM_LoadImage: unable to load (%s)\n", filename );
+			MsgDev( D_ERROR, "Makewad_LoadImage: unable to load (%s)\n", filename );
 		return NULL;
 	}
 
@@ -126,7 +127,7 @@ static rgbdata_t *Makewad_LoadImage( const char *filename, bool quiet = false )
 	else if( !Q_stricmp( ext, "lmp" ))
 		pic = Image_LoadLMP( filename, buf, fileSize );
 	else if( !quiet )
-		MsgDev( D_ERROR, "COM_LoadImage: unsupported format (%s)\n", ext );
+		MsgDev( D_ERROR, "Makewad_LoadImage: unsupported format (%s)\n", ext );
 
 	Mem_Free( buf ); // release file
 
@@ -188,7 +189,7 @@ put the texture in the wad or
 extract her onto disk
 =============
 */
-bool WAD_CreateTexture( const char *filename )
+FileStatusCode WAD_CreateTexture( const char *filename )
 {
 	const char *ext = COM_FileExtension( filename );
 	int width, height, len = WAD3_NAMELEN;
@@ -198,24 +199,24 @@ bool WAD_CreateTexture( const char *filename )
 	rgbdata_t	*image;
 
 	// store name for detect suffixes
-	COM_FileBase( filename, lumpname );
-	hint = Image_HintFromSuf( lumpname );
+	COM_FileBase(filename, lumpname);
+	hint = Image_HintFromSuf(lumpname);
 
-	if( hint != IMG_DIFFUSE )
+	if (hint != IMG_DIFFUSE)
 	{
-		MsgDev( D_ERROR, "WAD_CreateTexture: non-diffuse texture %s rejected\n", lumpname ); 
-		return false; // only diffuse textures can be passed
+		return FileStatusCode::InvalidImageHint; // only diffuse textures can be passed
 	}
 
-	if( Q_strlen( lumpname ) > len )
+	if (Q_strlen(lumpname) > len)
 	{
 		// NOTE: technically we can cutoff too long names but it just not needs
-		MsgDev( D_ERROR, "WAD_CreateTexture: %s more than %i symbols\n", lumpname, len ); 
-		return false;
+		return FileStatusCode::NameTooLong;
 	}
 
-	image = Makewad_LoadImage( filename );
-	if( !image ) return false;
+	image = Makewad_LoadImage(filename);
+	if (!image) {
+		return FileStatusCode::ErrorSilent;
+	}
 
 	width = mipwidth = image->width;
 	height = mipheight = image->height;
@@ -229,27 +230,23 @@ bool WAD_CreateTexture( const char *filename )
 
 			if( !find )
 			{
+				// can't find textures in source WAD file that matches pattern
 				Mem_Free( image );
-				return false;
+				return FileStatusCode::NoMatchedInputFiles;
 			}
 
 			find2 = W_FindMiptex( output_wad, lumpname );
 
 			if( !MIP_CheckForReplace( find2, image, mipwidth, mipheight ))
-				return false; // NOTE: image already freed on failed
+				return FileStatusCode::ErrorSilent; // NOTE: image already freed on failed
 
 			// fit to the replacement
 			image = Image_Resample( image, mipwidth, mipheight );
 			image = Image_Quantize( image ); // just in case.
-
 			bool result = MIP_WriteMiptex( lumpname, image );
+			Mem_Free(image);
 
-			if( result ) MsgDev( D_INFO, "%s.mip\n", lumpname );
-			else MsgDev( D_ERROR, "coudln't copy: %s.mip\n", lumpname );
-
-			Mem_Free( image );
-
-			return result;
+			return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
 		}
 		else if( !Q_stricmp( ext, "lmp" ))
 		{
@@ -258,53 +255,42 @@ bool WAD_CreateTexture( const char *filename )
 			if( !find )
 			{
 				Mem_Free( image );
-				return false;
+				return FileStatusCode::NoMatchedInputFiles;
 			}
 
 			find2 = W_FindLmptex( output_wad, lumpname );
 
 			if( !LMP_CheckForReplace( find2, image, mipwidth, mipheight ))
-				return false; // NOTE: image already freed on failed
+				return FileStatusCode::ErrorSilent; // NOTE: image already freed on failed
 
 			// fit to the replacement
 			image = Image_Resample( image, mipwidth, mipheight );
 			image = Image_Quantize( image ); // just in case.
-
 			bool result = LMP_WriteLmptex( lumpname, image );
-
-			if( result ) MsgDev( D_INFO, "%s.lmp\n", lumpname );
-			else MsgDev( D_ERROR, "coudln't copy: %s.lmp\n", lumpname );
-
 			Mem_Free( image );
 
-			return result;
+			return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
 		}
 
 		// unknown format?
-		Mem_Free( image );
-		return false;
+		Mem_Free(image);
+		return FileStatusCode::UnknownLumpFormat;
 	}
 
 	// extraction or conversion mode: wad->bmp, wad->tga
 	if( !output_wad && output_path[0] && output_ext[0] )
 	{
 		char	real_ext[8];
-		char	wad_name[64];
 
 		// set default extension
 		Q_strcpy( real_ext, output_ext );
-		COM_FileBase(source_wad->filename, wad_name);
 
 		// wad-extract mode
-		const char *path = va( "%s\\%s_wad\\%s.%s", output_path, wad_name, lumpname, real_ext );
+		const char *path = va( "%s/%s.%s", output_path, lumpname, real_ext );
 		bool result = Makewad_SaveImage( path, image );
-
-		if( result ) MsgDev( D_INFO, "%s\n", path );
-		else MsgDev( D_ERROR, "coudln't save: %s\n", path );
-
 		Mem_Free( image );
 
-		return result;
+		return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
 	}
 
 	// normal mode: bmp->wad, tga->wad
@@ -319,25 +305,17 @@ bool WAD_CreateTexture( const char *filename )
 			find2 = W_FindLmptex( output_wad, lumpname );
 
 			if( !LMP_CheckForReplace( find2, image, mipwidth, mipheight ))
-				return false; // NOTE: image already freed on failed
+				return FileStatusCode::ErrorSilent; // NOTE: image already freed on failed
 
 			rgbdata_t *rgba_image = Image_Copy( image );
-
-			// align by 16 or fit to the replacement
-			image = Image_Resample( image, mipwidth, mipheight );
-
-			// now quantize image
-			image = Image_Quantize( image );
+			image = Image_Resample( image, mipwidth, mipheight ); // align by 16 or fit to the replacement
+			image = Image_Quantize( image ); // now quantize image
 
 			bool result = LMP_WriteLmptex( lumpname, image );
-
-			if( result ) MsgDev( D_INFO, "%s.lmp\n", lumpname );
-			else MsgDev( D_ERROR, "coudln't write: %s.lmp\n", lumpname );
-
 			Mem_Free( rgba_image );
 			Mem_Free( image );	// no reason to keep it
 
-			return result;
+			return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
 		}
 		else // image already indexed
 		{
@@ -348,18 +326,16 @@ bool WAD_CreateTexture( const char *filename )
 			find = W_FindLmptex( output_wad, lumpname );
 
 			if( !LMP_CheckForReplace( find, image, mipwidth, mipheight ))
-				return false; // NOTE: image already freed on failed
+				return FileStatusCode::ErrorSilent; // NOTE: image already freed on failed
 
 			// align by 16 or fit to the replacement
 			image = Image_Resample( image, mipwidth, mipheight );
-
 			bool result = LMP_WriteLmptex( lumpname, image );
 
-			if( result ) MsgDev( D_INFO, "%s.lmp\n", lumpname );
-			else MsgDev( D_ERROR, "coudln't write: %s.lmp\n", lumpname );
-			if( image ) Mem_Free( image );
+			if( image )
+				Mem_Free( image );
 
-			return result;
+			return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
 		}
 	}
 	else
@@ -387,7 +363,7 @@ bool WAD_CreateTexture( const char *filename )
 			find2 = W_FindMiptex( output_wad, lumpname );
 
 			if( !MIP_CheckForReplace( find2, image, mipwidth, mipheight ))
-				return false; // NOTE: image already freed on failed
+				return FileStatusCode::ErrorSilent; // NOTE: image already freed on failed
 
 			rgbdata_t *rgba_image = Image_Copy( image );
 
@@ -401,14 +377,10 @@ bool WAD_CreateTexture( const char *filename )
 				Image_MakeOneBitAlpha( image ); // make one-bit alpha from blue color
 
 			bool result = MIP_WriteMiptex( lumpname, image );
-
-			if( result ) MsgDev( D_INFO, "%s.mip\n", lumpname );
-			else MsgDev( D_ERROR, "coudln't write: %s.mip\n", lumpname );
-
 			Mem_Free( rgba_image );
 			Mem_Free( image );	// no reason to keep it
 
-			return result;
+			return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
 		}
 		else // image already indexed
 		{
@@ -429,30 +401,41 @@ bool WAD_CreateTexture( const char *filename )
 			find = W_FindMiptex( output_wad, lumpname );
 
 			if( !MIP_CheckForReplace( find, image, mipwidth, mipheight ))
-				return false; // NOTE: image already freed on failed
+				return FileStatusCode::ErrorSilent; // NOTE: image already freed on failed
 
 			// align by 16 or fit to the replacement
 			image = Image_Resample( image, mipwidth, mipheight );
 
 			if( lumpname[0] == '{' )
 				Image_MakeOneBitAlpha( image ); // make one-bit alpha from blue color
-			bool result = MIP_WriteMiptex( lumpname, image );
 
-			if( result ) MsgDev( D_INFO, "%s.mip\n", lumpname );
-			else MsgDev( D_ERROR, "coudln't write: %s.mip\n", lumpname );
+			bool result = MIP_WriteMiptex( lumpname, image );
 			if( image ) Mem_Free( image );
 
-			return result;
+			return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
 		}
 	}
 
-	return false;
+	return FileStatusCode::UnknownError;
 }
 
 void __cdecl Shutdown_Makewad( void )
 {
 	W_Close( source_wad );
 	W_Close( output_wad );
+}
+
+static const char *GetStatusCodeDescription(FileStatusCode statusCode)
+{
+	switch (statusCode)
+	{
+		case FileStatusCode::InvalidImageHint: return "non-diffuse texture rejected";
+		case FileStatusCode::NameTooLong: return "file name too long";
+		case FileStatusCode::NoMatchedInputFiles: return "no matched files in source WAD";
+		case FileStatusCode::UnknownError: return "unknown error";
+		case FileStatusCode::UnknownLumpFormat: return "unknown lump format";
+	}
+	return "unknown";
 }
 
 static void PrintTitle()
@@ -498,14 +481,12 @@ int main( int argc, char **argv )
 	bool	dstset = false;
 	double	start, end;
 	char	str[64];
-	int	i;
 
 	atexit( Shutdown_Makewad );
 	Sys_SetupCrashHandler();
 	PrintTitle();
 	start = I_FloatTime();
 
-	// initialize command vars
 	SetReplaceLevel( REP_IGNORE );
 	output_path[0] = '\0';
 	output_ext[0] = '\0';
@@ -657,11 +638,18 @@ int main( int argc, char **argv )
 			MsgDev(D_INFO, "Packing textures into ^3%s\n", dstwad);
 		}
 
-		for( i = 0; i < search->numfilenames; i++ )
+		for (i = 0; i < search->numfilenames; i++)
 		{
-			if( WAD_CreateTexture( search->filenames[i] ))
+			Msg("Processing file %s... ", search->filenames[i]);
+
+			FileStatusCode statusCode = WAD_CreateTexture(search->filenames[i]);
+			if (statusCode == FileStatusCode::Success) {
+				Msg("^2success\n");
 				processed_files++;
-			else processed_errors++;
+			}
+			else if (statusCode != FileStatusCode::ErrorSilent) {
+				Msg("^1%s\n", GetStatusCodeDescription(statusCode));
+			}
 		}
 
 		end = I_FloatTime();
@@ -672,13 +660,12 @@ int main( int argc, char **argv )
 		MsgDev(D_INFO, "%s elapsed\n", str);
 		MsgDev(D_INFO, "\n");
 
-		W_Close( source_wad );
+		W_Close(source_wad);
 		source_wad = NULL;
-
-		W_Close( output_wad );
+		W_Close(output_wad);
 		output_wad = NULL;
 
-		Mem_Free( search );
+		Mem_Free(search);
 		Mem_Check(); // report leaks
 	}
 
