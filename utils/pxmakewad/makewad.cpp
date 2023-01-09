@@ -25,6 +25,14 @@ GNU General Public License for more details.
 #include "app_info.h"
 #include "port.h"
 
+enum class ProgramWorkingMode
+{
+	Unknown,
+	ExtractTextures,
+	PackingTextures,
+	CopyTexturesToWad
+};
+
 wfile_t *source_wad = NULL;	// input WAD3 file
 wfile_t *output_wad = NULL;	// output WAD3 file
 char output_path[256];
@@ -32,6 +40,7 @@ char output_ext[8];
 float resize_percent = 0.0f;
 int processed_files = 0;
 int graphics_wadfile = 0;
+ProgramWorkingMode working_mode = ProgramWorkingMode::Unknown;
 
 // using to detect quake1 textures and possible to convert luma
 static const byte palette_q1[768] =
@@ -222,7 +231,7 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 	height = mipheight = image->height;
 
 	// wad-copy mode: wad->wad
-	if( source_wad && output_wad )
+	if (working_mode == ProgramWorkingMode::CopyTexturesToWad)
 	{
 		if( !Q_stricmp( ext, "mip" ))
 		{
@@ -278,7 +287,7 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 	}
 
 	// extraction or conversion mode: wad->bmp, wad->tga
-	if( !output_wad && output_path[0] && output_ext[0] )
+	if (working_mode == ProgramWorkingMode::ExtractTextures)
 	{
 		char	real_ext[8];
 
@@ -294,7 +303,7 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 	}
 
 	// normal mode: bmp->wad, tga->wad
-	if( graphics_wadfile )
+	if (graphics_wadfile)
 	{
 		if( !FBitSet( image->flags, IMAGE_QUANTIZED ))
 		{
@@ -628,14 +637,17 @@ int main( int argc, char **argv )
 		if (source_wad && !output_wad && output_path[0] && output_ext[0])
 		{
 			MsgDev(D_INFO, "Extract textures from ^3%s\n", srcwad);
+			working_mode = ProgramWorkingMode::ExtractTextures;
 		}
 		else if (source_wad && output_wad)
 		{
 			MsgDev(D_INFO, "Copying textures from ^3%s^7 to ^3%s\n", srcwad, dstwad);
+			working_mode = ProgramWorkingMode::CopyTexturesToWad;
 		}
 		else
 		{
 			MsgDev(D_INFO, "Packing textures into ^3%s\n", dstwad);
+			working_mode = ProgramWorkingMode::PackingTextures;
 		}
 
 		for (i = 0; i < search->numfilenames; i++)
