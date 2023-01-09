@@ -29,12 +29,18 @@ bool LMP_WriteLmptex( const char *lumpname, rgbdata_t *pix, bool todisk )
 	lmp_t	*lmp;
 
 	// check for all the possible problems
-	if( !pix || !FBitSet( pix->flags, IMAGE_QUANTIZED ))
+	if (!pix || !FBitSet(pix->flags, IMAGE_QUANTIZED)) 
+	{
+		MsgDev( D_ERROR, "LMP_WriteLmptex: image not quantized or buffer invalid\n" );
 		return false;
+	}
 
 	// lmp may have any dimensions
-	if( pix->width < IMAGE_MINWIDTH || pix->width > IMAGE_MAXWIDTH || pix->height < IMAGE_MINHEIGHT || pix->height > IMAGE_MAXHEIGHT )
+	if (pix->width < IMAGE_MINWIDTH || pix->width > IMAGE_MAXWIDTH || pix->height < IMAGE_MINHEIGHT || pix->height > IMAGE_MAXHEIGHT)
+	{
+		MsgDev( D_ERROR, "LMP_WriteLmptex: image too small or too large\n" );
 		return false; // to small or too large
+	}
 
 	// calculate gamma corrected linear palette
 	for( int i = 0; i < 256; i++ )
@@ -74,8 +80,9 @@ bool LMP_WriteLmptex( const char *lumpname, rgbdata_t *pix, bool todisk )
 
 	size_t disksize = (( lump_p - lumpbuffer ) + 3) & ~3;
 
-	if( lumpsize != disksize )
-		MsgDev( D_ERROR, "%s is corrupted (buffer is %s bytes, written %s)\n", lumpname, Q_memprint( lumpsize ), Q_memprint( disksize ));
+	if (lumpsize != disksize) {
+		MsgDev(D_ERROR, "%s is corrupted (buffer is %s bytes, written %s)\n", lumpname, Q_memprint(lumpsize), Q_memprint(disksize));
+	}
 
 	if( todisk ) result = COM_SaveFile( lumpname, lumpbuffer, lumpsize );
 	else result = W_SaveLump( output_wad, lumpname, lumpbuffer, lumpsize, TYP_GFXPIC, ATTR_NONE ) >= 0;
