@@ -43,6 +43,7 @@ int COM_CheckString( const char *string );
 void Q_getwd( char *out, size_t size );
 char *COM_ExpandArg( const char *path );	// from scripts
 void COM_FixSlashes( char *pname );
+const char *COM_FindLastSlashEntry(const char *text);
 double I_FloatTime( void );
 void COM_SetClipboardText(const char *text);
 

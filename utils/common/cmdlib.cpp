@@ -202,6 +202,31 @@ void COM_FixSlashes( char *pname )
 }
 
 /*
+============
+COM_FindLastSlashEntry
+
+============
+*/
+const char *COM_FindLastSlashEntry(const char *text)
+{
+	size_t length = strlen(text);
+	size_t i = length - 1;
+	while (length > 0)
+	{
+		if (text[i] == '\\' || text[i] == '/') {
+			return text + i;
+		}
+		if (i == 0) {
+			break;
+		}
+		else {
+			i--;
+		}
+	}
+	return nullptr;
+}
+
+/*
 =============
 COM_CheckString
 
