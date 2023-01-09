@@ -51,34 +51,34 @@ typedef struct tagRGBQUAD {
 // suffix converts to img_type and back
 const imgtype_t img_hints[] =
 {
-{ "_mask",   IMG_ALPHAMASK	}, // alpha-channel stored to another lump
-{ "_norm",   IMG_NORMALMAP	}, // indexed normalmap
-{ "_n",      IMG_NORMALMAP	}, // indexed normalmap
-{ "_nrm",    IMG_NORMALMAP	}, // indexed normalmap
-{ "_local",  IMG_NORMALMAP	}, // indexed normalmap
-{ "_ddn",    IMG_NORMALMAP	}, // indexed normalmap
-{ "_spec",   IMG_GLOSSMAP	}, // grayscale\color specular
-{ "_gloss",  IMG_GLOSSMAP	}, // grayscale\color specular
-{ "_hmap",   IMG_HEIGHTMAP	}, // heightmap (can be converted to normalmap)
-{ "_height", IMG_HEIGHTMAP	}, // heightmap (can be converted to normalmap)
-{ "_luma",   IMG_LUMA	}, // self-illuminate parts on the diffuse
-{ "_add",    IMG_LUMA	}, // self-illuminate parts on the diffuse
-{ "_illum",  IMG_LUMA	}, // self-illuminate parts on the diffuse
-{ "_bump",   IMG_STALKER_BUMP }, // stalker two-component bump
-{ "_bump#",  IMG_STALKER_GLOSS }, // stalker two-component bump
-{ "ft",      IMG_SKYBOX_FT	},
-{ "bk",      IMG_SKYBOX_BK	},
-{ "up",      IMG_SKYBOX_UP	},
-{ "dn",      IMG_SKYBOX_DN	},
-{ "rt",      IMG_SKYBOX_RT	},
-{ "lf",      IMG_SKYBOX_LF	},
-{ "px",      IMG_CUBEMAP_PX	},
-{ "nx",      IMG_CUBEMAP_NX	},
-{ "py",      IMG_CUBEMAP_PY	},
-{ "ny",      IMG_CUBEMAP_NY	},
-{ "pz",      IMG_CUBEMAP_PZ	},
-{ "nz",      IMG_CUBEMAP_NZ	},
-{ NULL,      0		}  // terminator
+{ "_mask",   IMG_ALPHAMASK,		false }, // alpha-channel stored to another lump
+{ "_norm",   IMG_NORMALMAP,		false }, // indexed normalmap
+{ "_n",      IMG_NORMALMAP,		false }, // indexed normalmap
+{ "_nrm",    IMG_NORMALMAP,		false }, // indexed normalmap
+{ "_local",  IMG_NORMALMAP,		false }, // indexed normalmap
+{ "_ddn",    IMG_NORMALMAP,		false }, // indexed normalmap
+{ "_spec",   IMG_GLOSSMAP,		false }, // grayscale\color specular
+{ "_gloss",  IMG_GLOSSMAP,		false }, // grayscale\color specular
+{ "_hmap",   IMG_HEIGHTMAP,		false }, // heightmap (can be converted to normalmap)
+{ "_height", IMG_HEIGHTMAP,		false }, // heightmap (can be converted to normalmap)
+{ "_luma",   IMG_LUMA,			false }, // self-illuminate parts on the diffuse
+{ "_add",    IMG_LUMA,			false }, // self-illuminate parts on the diffuse
+{ "_illum",  IMG_LUMA,			false }, // self-illuminate parts on the diffuse
+{ "_bump",   IMG_STALKER_BUMP,	false }, // stalker two-component bump
+{ "_bump#",  IMG_STALKER_GLOSS, false }, // stalker two-component bump
+{ "ft",      IMG_SKYBOX_FT,		true },
+{ "bk",      IMG_SKYBOX_BK,		true },
+{ "up",      IMG_SKYBOX_UP,		true },
+{ "dn",      IMG_SKYBOX_DN,		true },
+{ "rt",      IMG_SKYBOX_RT,		true },
+{ "lf",      IMG_SKYBOX_LF,		true },
+{ "px",      IMG_CUBEMAP_PX,	true },
+{ "nx",      IMG_CUBEMAP_NX,	true },
+{ "py",      IMG_CUBEMAP_PY,	true },
+{ "ny",      IMG_CUBEMAP_NY,	true },
+{ "pz",      IMG_CUBEMAP_PZ,	true },
+{ "nz",      IMG_CUBEMAP_NZ,	true },
+{ NULL,      0,					true }  // terminator
 };
 
 static const loadimage_t load_hint[] =
@@ -221,10 +221,10 @@ Image_HintFromSuf
 Convert name suffix into image type
 ===========
 */
-char Image_HintFromSuf( const char *lumpname )
+int Image_HintFromSuf( const char *lumpname, bool permissive )
 {
-	char		barename[64];
-	char		suffix[16];
+	char barename[64];
+	char suffix[16];
 	const imgtype_t	*hint;
 
 	// trying to extract hint from the name
@@ -237,8 +237,14 @@ char Image_HintFromSuf( const char *lumpname )
 			continue;	// name too short
 
 		Q_strncpy( suffix, barename + Q_strlen( barename ) - Q_strlen( hint->ext ), sizeof( suffix ));
-		if( !Q_stricmp( suffix, hint->ext ))
+		if (!Q_stricmp(suffix, hint->ext))
+		{
+			// in some cases we don't need such strict checks, so can ability to skip it
+			if (permissive && hint->permissive) {
+				return IMG_DIFFUSE;
+			}
 			return hint->type;
+		}
 	}
 
 	// special additional check for "_normal"

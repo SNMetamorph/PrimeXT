@@ -145,8 +145,9 @@ typedef struct rgbdata_s
 
 typedef struct imgtype_s
 {
-	char	*ext;
-	char	type;
+	const char *ext;
+	int type;
+	bool permissive;
 } imgtype_t;
 
 typedef struct loadimage_s
@@ -182,7 +183,7 @@ rgbdata_t *Image_AllocSkybox( int width, int height );
 rgbdata_t *Image_Copy( rgbdata_t *src );
 void Image_PackRGB( float flColor[3], uint32_t &icolor );
 void Image_UnpackRGB( uint32_t icolor, float flColor[3] );
-char Image_HintFromSuf( const char *lumpname );
+int Image_HintFromSuf( const char *lumpname, bool permissive = false );
 rgbdata_t *COM_LoadImage( const char *filename, bool quiet = false );
 const imgtype_t *Image_ImageTypeFromHint( char value );
 bool COM_SaveImage( const char *filename, rgbdata_t *pix );
