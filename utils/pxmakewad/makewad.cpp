@@ -459,28 +459,27 @@ void __cdecl Shutdown_Makewad( void )
 static void PrintTitle()
 {
 	Msg("\n");
-	Msg(" pxmakewad^7 - utility for editing or creating WAD files from textures\n");
-	Msg(" Version   : %s (^1%s ^7/ ^2%s ^7/ ^3%s ^7/ ^4%s^7)\n",
+	Msg("  pxmakewad^7 - utility for editing or creating WAD files from textures\n");
+	Msg("  Version   : %s (^1%s ^7/ ^2%s ^7/ ^3%s ^7/ ^4%s^7)\n",
 		APP_VERSION_STRING,
 		BuildInfo::GetDate(),
 		BuildInfo::GetCommitHash(),
 		BuildInfo::GetArchitecture(),
 		BuildInfo::GetPlatform()
 	);
-	Msg(" Website   : https://github.com/SNMetamorph/PrimeXT\n");
-	Msg(" Usage     : -input <wad|tga|bmp|lmp> -output <wadname.wad|tga|bmp|lmp> <options>\n");
-	Msg(" Example   : -input \"C:/img/*.bmp\" -output new.wad\n");
+	Msg("  Website   : https://github.com/SNMetamorph/PrimeXT\n");
+	Msg("  Usage     : <input path> <output path> <options>\n");
+	Msg("  Example   : \"C:/img/*.bmp\" \"new.wad\"\n");
 	Msg("\n");
 }
 
 static void PrintOptionsList()
 {
-	Msg(" Options list:\n"
-		"    ^5-replace^7      : replace existing images if they matched by size\n"
-		"    ^5-forcereplace^7 : replace existing images even if they doesn't matched by size\n"
-		"    ^5-resize^7       : resize source image in percents (range 10%%-200%%)\n"
-		"    ^5-help^7         : print more detailed instructions\n"
-		"    ^5-dev^7          : set message verbose level (1-5, default is 3)\n"
+	Msg("  Options list:\n"
+		"     ^5-replace^7      : replace existing images if they matched by size\n"
+		"     ^5-forcereplace^7 : replace existing images even if they doesn't matched by size\n"
+		"     ^5-resize^7       : resize source image in percents (range 10%%-200%%)\n"
+		"     ^5-dev^7          : set message verbose level (1-5, default is 3)\n"
 		"\n"
 	);
 }
@@ -493,8 +492,9 @@ static void WaitForKey()
 
 int main( int argc, char **argv )
 {
-	char	srcpath[256], dstpath[256];
-	char	srcwad[256], dstwad[256];
+	int		i;
+	char	srcpath[256] = "", dstpath[256] = "";
+	char	srcwad[256] = "", dstwad[256] = "";
 	bool	srcset = false;
 	bool	dstset = false;
 	double	start, end;
@@ -511,47 +511,47 @@ int main( int argc, char **argv )
 	output_path[0] = '\0';
 	output_ext[0] = '\0';
 
-	for( i = 1; i < argc; i++ )
+	for (i = 1; i < argc; i++)
 	{
-		if( !Q_stricmp( argv[i], "-input" ))
+		if (!Q_stricmp(argv[i], "-replace"))
 		{
-			Q_strncpy( srcpath, argv[i+1], sizeof( srcpath ));
+			SetReplaceLevel(REP_NORMAL); // replace only if image dimensions is equal
+		}
+		else if (!Q_stricmp(argv[i], "-forcereplace"))
+		{
+			SetReplaceLevel(REP_FORCE); // rescale image, replace in any cases
+		}
+		else if (!Q_stricmp(argv[i], "-resize"))
+		{
+			resize_percent = atof(argv[i + 1]); // resize source image (percent)
+			resize_percent = bound(10.0f, resize_percent, 200.0f);
+			i++;
+		}
+		else if (!Q_stricmp(argv[i], "-dev"))
+		{
+			SetDeveloperLevel(atoi(argv[i + 1]));
+			i++;
+		}
+		else if (i == 1)
+		{
+			Q_strncpy(srcpath, argv[i], sizeof(srcpath));
+			COM_FixSlashes(srcpath);
 			srcset = true;
-			i++;
 		}
-		else if( !Q_stricmp( argv[i], "-output" ))
+		else if (i == 2)
 		{
-			Q_strncpy( dstpath, argv[i+1], sizeof( dstpath ));
+			Q_strncpy(dstpath, argv[i], sizeof(dstpath));
+			COM_FixSlashes(dstpath);
 			dstset = true;
-			i++;
-		}
-		else if( !Q_stricmp( argv[i], "-replace" ))
-		{
-			SetReplaceLevel( REP_NORMAL ); // replace only if image dimensions is equal
-		}
-		else if( !Q_stricmp( argv[i], "-forcereplace" ))
-		{
-			SetReplaceLevel( REP_FORCE ); // rescale image, replace in any cases
-		}
-		else if( !Q_stricmp( argv[i], "-resize" ))
-		{
-			resize_percent = atof( argv[i+1] ); // resize source image (percent)
-			resize_percent = bound( 10.0f, resize_percent, 200.0f );
-			i++;
-		}
-		else if( !Q_stricmp( argv[i], "-dev" ))
-		{
-			SetDeveloperLevel( atoi( argv[i+1] ));
-			i++;
 		}
 		else
 		{
-			Msg( "makewad: unknown option %s\n", argv[i] );
+			Msg("Unknown option %s\n", argv[i]);
 			break;
 		}
 	}
 
-	if( i != argc || !srcset || !dstset )
+	if (i != argc || !srcset)
 	{
 		PrintOptionsList();
 		WaitForKey();
@@ -559,8 +559,8 @@ int main( int argc, char **argv )
 	}
 	else
 	{
-		char	testname[64];
-		char	*find = NULL;
+		char testname[64];
+		char *find = NULL;
 
 		Q_strncpy( srcwad, srcpath, sizeof( srcwad ));
 		find = Q_stristr( srcwad, ".wad" );
@@ -571,12 +571,43 @@ int main( int argc, char **argv )
 			source_wad = W_Open( srcwad, "rb" );
 		}
 
+		// if pattern not set, that means we want to include ALL files in directory
+		const char *a = COM_FindLastSlashEntry(srcpath);
+		if (a)
+		{
+			const char *b = Q_strrchr(a, '*');
+			if (!b) 
+			{
+				if (strlen(a) > 1)
+					Q_strncat(srcpath, "/*.*", sizeof(srcpath));
+				else
+					Q_strncat(srcpath, "*.*", sizeof(srcpath));
+			}
+		}
+		else {
+			Q_strncat(srcpath, "/*.*", sizeof(srcpath));
+		}
+
 		search_t *search = COM_Search( srcpath, true, source_wad );
-		if( !search ) return 1; // nothing found
+		if( !search ) 
+			return 1; // nothing found
 
-		Q_strncpy( dstwad, dstpath, sizeof( dstwad ));
-		find = Q_stristr( dstwad, ".wad" );
+		if (dstset)
+		{
+			Q_strncpy(dstwad, dstpath, sizeof(dstwad));
+		}
+		else if (!source_wad)
+		{
+			const char *filename = COM_FileWithoutPath(srcwad);
+			COM_ExtractFilePath(srcwad, output_path);
+			COM_StripExtension(output_path);
+			if (!output_path[0]) {
+				Q_getwd(output_path, sizeof(output_path));
+			}
+			Q_snprintf(dstwad, sizeof(dstwad), "%s/%s.wad", output_path, filename);
+		}
 
+		find = Q_stristr(dstwad, ".wad");
 		if( find )
 		{
 			find += 4, *find = '\0';
@@ -585,29 +616,32 @@ int main( int argc, char **argv )
 
 			if( !Q_stricmp( testname, "gfx" ) || !Q_stricmp( testname, "cached" ))
 			{
-				Msg( "graphics wad detected\n" );
+				Msg( "Graphics WAD detected\n" );
 				graphics_wadfile = 1;
 			}
 		}
 		else
 		{
-			const char *ext = COM_FileExtension( srcwad );
+			// use .bmp format for extracting textures from WAD by default, if other not specified
+			Q_strncpy(output_ext, "bmp", sizeof(output_ext));
 
-			if( !Q_stricmp( dstpath, "bmp" ) || !Q_stricmp( dstpath, "tga" ) || !Q_stricmp( dstpath, "lmp" ))
-			{
-				COM_ExtractFilePath( srcwad, output_path );
-				COM_StripExtension( output_path );
-				Q_strncpy( output_ext, dstpath, sizeof( output_ext ));
-				if (!output_path[0]) {
-					Q_getwd(output_path, sizeof(output_path));
-				}
+			if (dstset) {
+				Q_strncpy(output_path, dstpath, sizeof(output_path));
 			}
 			else
 			{
-				PrintOptionsList();
-				Mem_Free( search );
-				WaitForKey();
-				return 1;
+				char filename[64];
+				COM_ExtractFilePath(srcwad, output_path);
+				COM_StripExtension(output_path);
+
+				if (!output_path[0]) {
+					Q_getwd(output_path, sizeof(output_path));
+				}
+
+				COM_FileBase(source_wad->filename, filename);
+				Q_strncat(output_path, "/", sizeof(output_path));
+				Q_strncat(output_path, filename, sizeof(output_path));
+				Q_strncat(output_path, "_extracted", sizeof(output_path));
 			}
 		}
 
