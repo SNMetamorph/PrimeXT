@@ -16,11 +16,11 @@ GNU General Public License for more details.
 #include "gl_cvars.h"
 #include "enginecallback.h"
 
-// P2 renderer cvars
 cvar_t *r_test;	// just cvar for testify new effects
 cvar_t *r_stencilbits;
 cvar_t *r_drawentities;
 cvar_t *gl_extensions;
+cvar_t *gl_debug_verbose;
 cvar_t *cv_dynamiclight;
 cvar_t *r_detailtextures;
 cvar_t *r_lighting_ambient;
@@ -158,6 +158,7 @@ void R_InitializeConVars()
 	r_dof_debug = CVAR_REGISTER("r_dof_debug", "0", FCVAR_ARCHIVE);
 
 	cv_renderer = CVAR_REGISTER("gl_renderer", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+	gl_debug_verbose = CVAR_REGISTER("gl_debug_verbose", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 	cv_bump = CVAR_REGISTER("gl_bump", "1", FCVAR_ARCHIVE);
 	cv_bumpvecs = CVAR_REGISTER("bump_vecs", "0", 0);
 	cv_specular = CVAR_REGISTER("gl_specular", "1", FCVAR_ARCHIVE);

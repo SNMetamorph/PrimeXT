@@ -20,11 +20,11 @@ GNU General Public License for more details.
 
 void R_InitializeConVars();
 
-// P2 renderer cvars
 extern cvar_t *r_test;	// just cvar for testify new effects
 extern cvar_t *r_stencilbits;
 extern cvar_t *r_drawentities;
 extern cvar_t *gl_extensions;
+extern cvar_t *gl_debug_verbose;
 extern cvar_t *cv_dynamiclight;
 extern cvar_t *r_detailtextures;
 extern cvar_t *r_lighting_ambient;

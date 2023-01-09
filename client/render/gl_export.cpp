@@ -346,10 +346,9 @@ For ARB_debug_output
 */
 static void CALLBACK GL_DebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLcharARB *message, GLvoid *userParam)
 {
+	char *msg;
+	int verboseLevel; 
 	static char	string[8192];
-	char		*msg;
-
-	string[0] = '\0';
 
 	if (GL_Support(R_KHR_DEBUG))
 	{
@@ -362,48 +361,68 @@ static void CALLBACK GL_DebugOutput(GLenum source, GLenum type, GLuint id, GLenu
 		}
 	}
 
-	switch( type )
+	string[0] = '\0';
+	verboseLevel = static_cast<int>(gl_debug_verbose->value);
+
+	if (verboseLevel < 1)
+		return;
+
+	switch (type)
 	{
-	case GL_DEBUG_TYPE_ERROR_ARB:
-		string[0] = 3; // no extra refresh
-		msg = va( "^1OpenGL Error:^7 %s\n", message );
-		Q_strncat( string, msg, sizeof( string ));
-		break;
-	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB:
-		string[0] = 3; // no extra refresh
-		msg = va( "^3OpenGL Warning:^7 %s\n", message );
-		Q_strncat( string, msg, sizeof( string ));
-		break;
-	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB:
-		string[0] = 3; // no extra refresh
-		msg = va( "^3OpenGL Warning:^7 %s\n", message );
-		Q_strncat( string, msg, sizeof( string ));
-		break;
-	case GL_DEBUG_TYPE_PORTABILITY_ARB:
-		if( developer_level < DEV_EXTENDED )
-			return;
-		string[0] = 3; // no extra refresh
-		msg = va( "^3OpenGL Warning:^7 %s\n", message );
-		Q_strncat( string, msg, sizeof( string ));
-		break;
-	case GL_DEBUG_TYPE_PERFORMANCE_ARB:
-		if( developer_level < DEV_EXTENDED )
-			return;
-		string[0] = 3; // no extra refresh
-		msg = va( "OpenGL Notify: %s\n", message );
-		Q_strncat( string, msg, sizeof( string ));
-		break;
-	case GL_DEBUG_TYPE_OTHER_ARB:
-	default:	
-		// ignore spam about detailed infos
-		if( !Q_strnicmp( message, "Buffer detailed info", 20 ))
-			return;
-		if( !Q_strnicmp( message, "Framebuffer detailed info", 25 ))
-			return;
-		string[0] = 3; // no extra refresh
-		msg = va( "OpenGL: %s\n", message );
-		Q_strncat( string, msg, sizeof( string ));
-		break;
+		case GL_DEBUG_TYPE_ERROR_ARB:
+			string[0] = 3; // no extra refresh
+			msg = va("^1OpenGL Error:^7 %s\n", message);
+			Q_strncat(string, msg, sizeof(string));
+			break;
+
+		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB:
+			if (verboseLevel < 2)
+				return;
+
+			string[0] = 3; // no extra refresh
+			msg = va("^3OpenGL Deprecated Behavior:^7 %s\n", message);
+			Q_strncat(string, msg, sizeof(string));
+			break;
+
+		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB:
+			string[0] = 3; // no extra refresh
+			msg = va("^3OpenGL Undefined Behavior:^7 %s\n", message);
+			Q_strncat(string, msg, sizeof(string));
+			break;
+
+		case GL_DEBUG_TYPE_PORTABILITY_ARB:
+			if (verboseLevel < 2)
+				return;
+
+			string[0] = 3; // no extra refresh
+			msg = va("^3OpenGL Portability:^7 %s\n", message);
+			Q_strncat(string, msg, sizeof(string));
+			break;
+
+		case GL_DEBUG_TYPE_PERFORMANCE_ARB:
+			if (verboseLevel < 2)
+				return;
+
+			string[0] = 3; // no extra refresh
+			msg = va("OpenGL Perfomance: %s\n", message);
+			Q_strncat(string, msg, sizeof(string));
+			break;
+
+		default:
+		case GL_DEBUG_TYPE_OTHER_ARB:
+			if (verboseLevel < 2)
+				return;
+
+			// ignore spam about detailed infos
+			if (!Q_strnicmp(message, "Buffer detailed info", 20))
+				return;
+			if (!Q_strnicmp(message, "Framebuffer detailed info", 25))
+				return;
+
+			string[0] = 3; // no extra refresh
+			msg = va("OpenGL: %s\n", message);
+			Q_strncat(string, msg, sizeof(string));
+			break;
 	}
 
 	if (!string[0]) {
@@ -723,7 +742,7 @@ static void GL_InitExtensions( void )
 
 	ALERT( at_aiconsole, "GL_InitExtensions: max vertex uniforms %i\n", glConfig.max_vertex_uniforms );
 	ALERT( at_aiconsole, "GL_InitExtensions: max varying floats %i\n", glConfig.max_varying_floats );
-	ALERT( at_aiconsole, "GL_InitExtensions: MaxSkinned bones %i\n", glConfig.max_skinning_bones );
+	ALERT( at_aiconsole, "GL_InitExtensions: max skinned bones %i\n", glConfig.max_skinning_bones );
 
 	glConfig.max_texture_units = RENDER_GET_PARM( PARM_MAX_IMAGE_UNITS, 0 );
 
@@ -731,20 +750,12 @@ static void GL_InitExtensions( void )
 		pglEnable(GL_DEBUG_OUTPUT);
 	}
 
-	if (GL_Support(R_DEBUG_OUTPUT))
+	if (GL_Support(R_DEBUG_OUTPUT) || GL_Support(R_KHR_DEBUG))
 	{
-		if (developer_level >= DEV_NORMAL)
-		{
-			pglDebugMessageCallbackARB(GL_DebugOutput, NULL);
-			// force everything to happen in the main thread instead of in a separate driver thread
-			pglEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
-		}
-
-		if (developer_level >= DEV_EXTENDED)
-		{
-			// enable all the low priority messages
-			pglDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW_ARB, 0, NULL, true);
-		}
+		// force everything to happen in the main thread instead of in a separate driver thread
+		pglEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
+		pglDebugMessageCallbackARB(GL_DebugOutput, NULL);
+		pglDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW_ARB, 0, NULL, true); // enable all the low priority messages
 	}
 }
 
