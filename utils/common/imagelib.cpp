@@ -305,8 +305,10 @@ rgbdata_t *Image_LoadTGA( const char *name, const byte *buffer, size_t filesize 
 	bool	compressed;
 	rgbdata_t *pic;
 
-	if( filesize < sizeof( tga_t ))
+	if (filesize < sizeof(tga_t)) {
+		MsgDev( D_ERROR, "Image_LoadTGA: file header validation failed (%s)\n", name );
 		return NULL;
+	}
 
 	buf_p = (byte *)buffer;
 	targa_header.id_length = *buf_p++;
@@ -326,27 +328,29 @@ rgbdata_t *Image_LoadTGA( const char *name, const byte *buffer, size_t filesize 
 		buf_p += targa_header.id_length; // skip TARGA image comment
 
 	// check for tga file
-	if( !Image_ValidSize( name, targa_header.width, targa_header.height ))
+	if (!Image_ValidSize(name, targa_header.width, targa_header.height)) {
+		MsgDev( D_ERROR, "Image_LoadTGA: invalid file size (%s)\n", name );
 		return NULL;
+	}
 
 	if( targa_header.image_type == 1 || targa_header.image_type == 9 )
 	{
 		// uncompressed colormapped image
 		if( targa_header.pixel_size != 8 )
 		{
-			MsgDev( D_WARN, "Image_LoadTGA: (%s) Only 8 bit images supported for type 1 and 9\n", name );
+			MsgDev( D_ERROR, "Image_LoadTGA: only 8 bit images supported for type 1 and 9 (%s)\n", name );
 			return NULL;
 		}
 
 		if( targa_header.colormap_length != 256 )
 		{
-			MsgDev( D_WARN, "Image_LoadTGA: (%s) Only 8 bit colormaps are supported for type 1 and 9\n", name );
+			MsgDev( D_ERROR, "Image_LoadTGA: only 8 bit colormaps are supported for type 1 and 9 (%s)\n", name );
 			return NULL;
 		}
 
 		if( targa_header.colormap_index )
 		{
-			MsgDev( D_WARN, "Image_LoadTGA: (%s) colormap_index is not supported for type 1 and 9\n", name );
+			MsgDev( D_ERROR, "Image_LoadTGA: colormap_index is not supported for type 1 and 9 (%s)\n", name );
 			return NULL;
 		}
 
@@ -372,7 +376,7 @@ rgbdata_t *Image_LoadTGA( const char *name, const byte *buffer, size_t filesize 
 		}
 		else
 		{
-			MsgDev( D_WARN, "Image_LoadTGA: (%s) only 24 and 32 bit colormaps are supported for type 1 and 9\n", name );
+			MsgDev( D_ERROR, "Image_LoadTGA: only 24 and 32 bit colormaps are supported for type 1 and 9 (%s)\n", name );
 			return NULL;
 		}
 	}
@@ -381,7 +385,7 @@ rgbdata_t *Image_LoadTGA( const char *name, const byte *buffer, size_t filesize 
 		// uncompressed or RLE compressed RGB
 		if( targa_header.pixel_size != 32 && targa_header.pixel_size != 24 )
 		{
-			MsgDev( D_WARN, "Image_LoadTGA: (%s) Only 32 or 24 bit images supported for type 2 and 10\n", name );
+			MsgDev( D_ERROR, "Image_LoadTGA: only 32 or 24 bit images supported for type 2 and 10 (%s)\n", name );
 			return NULL;
 		}
 	}
@@ -390,7 +394,7 @@ rgbdata_t *Image_LoadTGA( const char *name, const byte *buffer, size_t filesize 
 		// uncompressed greyscale
 		if( targa_header.pixel_size != 8 )
 		{
-			MsgDev( D_WARN, "Image_LoadTGA: (%s) Only 8 bit images supported for type 3 and 11\n", name );
+			MsgDev( D_ERROR, "Image_LoadTGA: only 8 bit images supported for type 3 and 11 (%s)\n", name );
 			return NULL;
 		}
 	}
@@ -535,16 +539,20 @@ rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize 
 	rgbdata_t *pic;
 	bmp_t	bhdr;
 
-	if( filesize < sizeof( bhdr ))
-		return NULL; 
+	if (filesize < sizeof(bhdr)) {
+		MsgDev( D_ERROR, "Image_LoadBMP: invalid file size (%s)\n", name );
+		return NULL;
+	}
 
 	buf_p = (byte *)buffer;
 	memcpy(&bhdr, buf_p, sizeof(bmp_t));
 	buf_p += 14 + bhdr.bitmapHeaderSize;
 
 	// bogus file header check
-	if( bhdr.reserved0 != 0 ) return NULL;
-	if( bhdr.planes != 1 ) return NULL;
+	if (bhdr.reserved0 != 0 || bhdr.planes != 1) {
+		MsgDev( D_ERROR, "Image_LoadBMP: bogus file header (%s)\n", name );
+		return NULL;
+	}
 
 	if( memcmp( bhdr.id, "BM", 2 ))
 	{
@@ -977,12 +985,16 @@ bool Image_SaveTGA( const char *name, rgbdata_t *pix )
 	const byte *bufend, *in;
 	byte *buffer, *out;
 
-	if (COM_FileExists(name))
+	if (COM_FileExists(name)) {
+		MsgDev( D_ERROR, "Image_SaveTGA: file already exists (%s)\n", name );
 		return false; // already existed
+	}
 
 	// bogus parameter check
-	if (!pix->buffer)
+	if (!pix->buffer) {
+		MsgDev( D_ERROR, "Image_SaveTGA: invalid image buffer (%s)\n", name );
 		return false;
+	}
 
 	if (FBitSet(pix->flags, IMAGE_QUANTIZED)) {
 		outsize = pix->width * pix->height + 18 + Q_strlen(comment);
@@ -1086,12 +1098,16 @@ bool Image_SaveBMP( const char *name, rgbdata_t *pix )
 	size_t		paletteBytes;
 	RGBQUAD		rgrgbPalette[256];
 
-	if (COM_FileExists(name))
+	if (COM_FileExists(name)) {
+		MsgDev( D_ERROR, "Image_SaveBMP: file already exists (%s)\n", name );
 		return false; // already existed
+	}
 
 	// bogus parameter check
-	if (!pix->buffer)
+	if (!pix->buffer) {
+		MsgDev( D_ERROR, "Image_SaveBMP: invalid image buffer (%s)\n", name );
 		return false;
+	}
 
 	if (FBitSet(pix->flags, IMAGE_QUANTIZED)) {
 		pixelSize = 1;
@@ -1107,6 +1123,7 @@ bool Image_SaveBMP( const char *name, rgbdata_t *pix )
 	COM_CreatePath((char *)name);
 	int file = open(name, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, 0666);
 	if (file < 0) {
+		MsgDev( D_ERROR, "Image_SaveBMP: failed to open file (%s)\n", name );
 		return false; // failed to open file
 	}
 
