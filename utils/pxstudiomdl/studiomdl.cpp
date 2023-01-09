@@ -5415,33 +5415,33 @@ void ParseScript( void )
 static void PrintTitle(bool printUsage = true)
 {
 	Msg("\n");
-	Msg(" pxstudiomdl^7 - advanced, crossplatform studiomodel compiler, based on p2studiomdl\n");
-	Msg(" Version   : %s (^1%s ^7/ ^2%s ^7/ ^3%s ^7/ ^4%s^7)\n",
+	Msg("  pxstudiomdl - advanced, crossplatform studiomodel compiler, based on p2studiomdl\n");
+	Msg("  Version     : %s (^1%s ^7/ ^2%s ^7/ ^3%s ^7/ ^4%s^7)\n",
 		APP_VERSION_STRING,
 		BuildInfo::GetDate(),
 		BuildInfo::GetCommitHash(),
 		BuildInfo::GetArchitecture(),
 		BuildInfo::GetPlatform()
 	);
-	Msg(" Website   : https://github.com/SNMetamorph/PrimeXT\n");
+	Msg("  Website     : https://github.com/SNMetamorph/PrimeXT\n");
 
 	if (printUsage) {
-		Msg(" Usage     : pxstudiomdl <options> file.qc\n");
+		Msg("  Usage       : pxstudiomdl <options> file.qc\n");
 	}
 	Msg("\n");
 }
 
 static void PrintOptionsList()
 {
-	Msg(" Options list:\n"
-		"    ^5-t^7   : replace all model textures with specified\n"
-		"    ^5-r^7   : tag reversed\n"
-		"    ^5-n^7   : tag bad normals\n"
-		"    ^5-f^7   : flip all triangles\n"
-		"    ^5-a^7   : normal blend angle\n"
-		"    ^5-h^7   : dump hitboxes\n"
-		"    ^5-g^7   : dump transition graph\n"
-		"    ^5-dev^7 : set message verbose level (1-5, default is 3)\n"
+	Msg("  Options list:\n"
+		"     ^5-t^7   : replace all model textures with specified\n"
+		"     ^5-r^7   : tag reversed\n"
+		"     ^5-n^7   : tag bad normals\n"
+		"     ^5-f^7   : flip all triangles\n"
+		"     ^5-a^7   : normal blend angle\n"
+		"     ^5-h^7   : dump hitboxes\n"
+		"     ^5-g^7   : dump transition graph\n"
+		"     ^5-dev^7 : set message verbose level (1-5, default is 3)\n"
 		"\n"
 	);
 }
