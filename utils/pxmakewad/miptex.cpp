@@ -152,14 +152,20 @@ bool MIP_WriteMiptex( const char *lumpname, rgbdata_t *pix )
 	mip_t	*mip;
 
 	// check for all the possible problems
-	if( !pix || !FBitSet( pix->flags, IMAGE_QUANTIZED ))
+	if (!pix || !FBitSet(pix->flags, IMAGE_QUANTIZED)) {
+		MsgDev( D_ERROR, "MIP_WriteMiptex: lump with this name already exist\n" );
 		return false;
+	}
 
-	if(( pix->width & 7 ) || ( pix->height & 7 ))
+	if ((pix->width & 7) || (pix->height & 7)) {
+		MsgDev( D_ERROR, "MIP_WriteMiptex: image width/height not aligned by 16\n" );
 		return false; // not aligned by 16
+	}
 
-	if( pix->width < IMAGE_MINWIDTH || pix->width > IMAGE_MAXWIDTH || pix->height < IMAGE_MINHEIGHT || pix->height > IMAGE_MAXHEIGHT )
+	if (pix->width < IMAGE_MINWIDTH || pix->width > IMAGE_MAXWIDTH || pix->height < IMAGE_MINHEIGHT || pix->height > IMAGE_MAXHEIGHT) {
+		MsgDev( D_ERROR, "MIP_WriteMiptex: image too small or too large\n" );
 		return false; // to small or too large
+	}
 
 	// calculate gamma corrected linear palette
 	for( int i = 0; i < 256; i++ )
