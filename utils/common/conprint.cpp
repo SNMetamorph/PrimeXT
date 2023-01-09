@@ -139,6 +139,9 @@ static void Sys_PrintWin32(const char *pMsg)
 	DWORD cbWritten;
 	char *pTemp = tmpBuf;
 
+	// always initially reset color to white
+	SetConsoleTextAttribute(hOut, g_color_table[7]); 
+
 	while (pMsg && *pMsg)
 	{
 		if (IsColorString(pMsg))
