@@ -30,7 +30,6 @@ char output_path[256];
 char output_ext[8];
 float resize_percent = 0.0f;
 int processed_files = 0;
-int processed_errors = 0;
 int graphics_wadfile = 0;
 
 // using to detect quake1 textures and possible to convert luma
@@ -645,17 +644,17 @@ int main( int argc, char **argv )
 			}
 		}
 
-		if( source_wad && !output_wad && output_path[0] && output_ext[0] )
+		if (source_wad && !output_wad && output_path[0] && output_ext[0])
 		{
-			MsgDev( D_INFO, "extract textures from %s\n", srcwad );
+			MsgDev(D_INFO, "Extract textures from ^3%s\n", srcwad);
 		}
-		else if( source_wad && output_wad )
+		else if (source_wad && output_wad)
 		{
-			MsgDev( D_INFO, "copying textures from %s to %s\n", srcwad, dstwad );
+			MsgDev(D_INFO, "Copying textures from ^3%s^7 to ^3%s\n", srcwad, dstwad);
 		}
 		else
 		{
-			MsgDev( D_INFO, "write textures into %s\n", dstwad );
+			MsgDev(D_INFO, "Packing textures into ^3%s\n", dstwad);
 		}
 
 		for( i = 0; i < search->numfilenames; i++ )
@@ -666,11 +665,12 @@ int main( int argc, char **argv )
 		}
 
 		end = I_FloatTime();
+		Q_timestring((int)(end - start), str);
 
-		MsgDev( D_INFO, "%3i files processed, %3i errors\n", processed_files, processed_errors );
-
-		Q_timestring((int)(end - start), str );
-		MsgDev( D_INFO, "%s elapsed\n", str );
+		MsgDev(D_INFO, "\n");
+		MsgDev(D_INFO, "%i/%i files processed\n", processed_files, search->numfilenames);
+		MsgDev(D_INFO, "%s elapsed\n", str);
+		MsgDev(D_INFO, "\n");
 
 		W_Close( source_wad );
 		source_wad = NULL;
@@ -682,6 +682,7 @@ int main( int argc, char **argv )
 		Mem_Check(); // report leaks
 	}
 
+	WaitForKey();
 	Sys_RestoreCrashHandler();
 	return 0;
 }
