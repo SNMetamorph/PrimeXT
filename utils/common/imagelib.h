@@ -194,6 +194,7 @@ rgbdata_t *Image_MergeColorAlpha( rgbdata_t *color, rgbdata_t *alpha );
 rgbdata_t *Image_CreateCubemap( rgbdata_t *images[6], bool skybox = false, bool nomips = false );
 void Image_ConvertBumpStalker( rgbdata_t *bump, rgbdata_t *gloss );
 rgbdata_t *Image_ExtractAlphaMask( rgbdata_t *pic );
+bool Image_ReplaceAlphaWithMask( rgbdata_t *pic, float alphaThreshold );
 void Image_MakeOneBitAlpha( rgbdata_t *pic, bool translateTransparency = true );
 rgbdata_t *Image_Quantize( rgbdata_t *pic );
 void Image_ApplyGamma( rgbdata_t *pic );

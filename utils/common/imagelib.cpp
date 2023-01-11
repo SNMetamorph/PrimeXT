@@ -1514,6 +1514,44 @@ rgbdata_t *Image_Resample( rgbdata_t *pic, int new_width, int new_height )
 
 /*
 ==============
+Image_ReplaceAlphaWithMask
+
+replaces all image pixels with transparency color if
+these pixels alpha value is above alpha threshold.
+alpha threshold should be in range [0.0; 1.0]
+==============
+*/
+bool Image_ReplaceAlphaWithMask(rgbdata_t *pic, float alphaThreshold)
+{
+	if (!pic) {
+		return false; // invalid buffer
+	}
+
+	if (!FBitSet(pic->flags, IMAGE_HAS_ALPHA)) {
+		return false; // no alpha-channel stored
+	}
+
+	if (FBitSet(pic->flags, IMAGE_QUANTIZED)) {
+		return false; // can extract only from RGBA buffer
+	}
+
+	for (size_t i = 0; i < pic->width * pic->height; i++)
+	{
+		int threshold = static_cast<int>(Q_round(alphaThreshold * 255.0f));
+		int alpha = pic->buffer[i * 4 + 3];
+		if (alpha < threshold)
+		{
+			pic->buffer[i * 4 + 0] = TRANSPARENT_R;
+			pic->buffer[i * 4 + 1] = TRANSPARENT_G;
+			pic->buffer[i * 4 + 2] = TRANSPARENT_B;
+			pic->buffer[i * 4 + 3] = 0;
+		}
+	}
+	return true;
+}
+
+/*
+==============
 Image_MakeOneBitAlpha
 
 remap all pixels of color 0, 0, 255 to index 255
