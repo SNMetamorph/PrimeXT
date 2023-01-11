@@ -128,7 +128,7 @@ rgbdata_t *Image_Alloc( int width, int height, bool paletted )
 	size_t palette_size = paletted ? 1024 : 0;
 	size_t pic_size = sizeof(rgbdata_t) + (width * height * pixel_size) + palette_size;
 	rgbdata_t *pic = (rgbdata_t *)Mem_Alloc(pic_size);
-
+	
 	if (!pic) 
 	{
 		MsgDev(D_ERROR, "Image_Alloc: failed to allocate image (%ix%i, %zu bytes)\n", width, height, pic_size);
@@ -1227,31 +1227,41 @@ Image_SaveDDS
 */
 bool Image_SaveDDS( const char *name, rgbdata_t *pix )
 {
-	char	lumpname[64];
-	rgbdata_t	*dds_image = NULL;
+	int hint;
+	char lumpname[64];
+	rgbdata_t *dds_image = nullptr;
 
-	if( COM_FileExists( name ))
+	if (COM_FileExists(name))
+	{
+		MsgDev(D_ERROR, "Image_SaveDDS: file already exists (%s)\n", name);
 		return false; // already existed
+	}
 
-	// bogus parameter check
-	if( !pix->buffer )
-		return false;
+	if (!pix->buffer)
+	{
+		MsgDev(D_ERROR, "Image_SaveDDS: invalid image buffer (%s)\n", name);
+		return false; // bogus parameter check
+	}
 
 	// check for easy out
-	if( FBitSet( pix->flags, IMAGE_DXT_FORMAT ))
-		return COM_SaveFile( name, pix->buffer, pix->size );
+	if (FBitSet(pix->flags, IMAGE_DXT_FORMAT))
+	{
+		bool status = COM_SaveFile(name, pix->buffer, pix->size);
+		if (!status) {
+			MsgDev(D_ERROR, "Image_SaveDDS: failed to save file (%s)\n", name);
+		}
+		return status;
+	}
 
-	COM_FileBase( name, lumpname );
+	COM_FileBase(name, lumpname);
+	hint = Image_HintFromSuf(lumpname);
+	dds_image = BufferToDDS(pix, DDS_GetSaveFormatForHint(hint, pix));
 
-	char hint = Image_HintFromSuf( lumpname );
+	if (!dds_image)
+		return false;
 
-	dds_image = BufferToDDS( pix, DDS_GetSaveFormatForHint( hint, pix ));
-	if( !dds_image ) return false;
-
-	bool result = COM_SaveFile( name, dds_image->buffer, dds_image->size );
-
-	Mem_Free( dds_image );
-
+	bool result = COM_SaveFile(name, dds_image->buffer, dds_image->size);
+	Mem_Free(dds_image);
 	return result;
 }
 

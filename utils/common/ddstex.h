@@ -19,6 +19,6 @@ GNU General Public License for more details.
 rgbdata_t *DDSToBuffer( const char *name, const byte *buffer, size_t filesize );
 rgbdata_t *DDSToRGBA( const char *name, const byte *buffer, size_t filesize );
 rgbdata_t *BufferToDDS( rgbdata_t *pix, int saveformat );
-int DDS_GetSaveFormatForHint( char hint, rgbdata_t *pix );
+int DDS_GetSaveFormatForHint( int hint, rgbdata_t *pix );
 
 #endif//DDSTEX_H

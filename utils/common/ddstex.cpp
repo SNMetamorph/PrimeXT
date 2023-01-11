@@ -442,14 +442,17 @@ static size_t Image_DXTCalcSize( const char *name, dds_t *hdr, size_t filesize )
 {
 	size_t buffsize = Image_DXTCalcMipmapSize( hdr );
 
-	if( FBitSet( hdr->dsCaps.dwCaps2, DDS_CUBEMAP )) 
+	if (FBitSet(hdr->dsCaps.dwCaps2, DDS_CUBEMAP)) {
+		// obviously, because cube has 6 sides
 		buffsize *= 6;
+	}
 
-	if( filesize != buffsize ) // main check
+	if (filesize != buffsize) // main check
 	{
-		MsgDev( D_WARN, "LoadDDS: (%s) probably corrupted (%i should be %i)\n", name, buffsize, filesize );
-		if( filesize < buffsize )
-			return false;
+		MsgDev(D_WARN, "Image_DXTCalcSize: probably corrupted (%i should be %i) (%s) \n", buffsize, filesize, name);
+		if (filesize < buffsize) {
+			return 0;
+		}
 	}
 	return buffsize;
 }
@@ -817,70 +820,81 @@ rgbdata_t *BufferToDDS( rgbdata_t *pix, int saveformat )
 
 rgbdata_t *DDSToRGBA( const char *name, const byte *buffer, size_t filesize )
 {
-	uint	flags = 0;
-	uint	sqFlags = 0;
-	dds_t	header;
-	rgbdata_t	*pic;
-	byte	*fin;
+	uint flags = 0;
+	uint sqFlags = 0;
+	dds_t header;
+	rgbdata_t *pic;
+	byte *fin;
 
-	if( filesize < sizeof( dds_t ))
+	if (filesize < sizeof(dds_t))
 	{
-		MsgDev( D_ERROR, "Image_LoadDDS: file (%s) have invalid size\n", name );
-		return NULL;
+		MsgDev(D_ERROR, "Image_LoadDDS: file have invalid size (%s)\n", name);
+		return nullptr;
 	}
 
-	memcpy( &header, buffer, sizeof( dds_t ));
-
-	if( header.dwIdent != DDSHEADER )
-		return NULL; // it's not a dds file, just skip it
-
-	if( header.dwSize != sizeof( dds_t ) - sizeof( uint )) // size of the structure (minus MagicNum)
+	memcpy(&header, buffer, sizeof(dds_t));
+	if (header.dwIdent != DDSHEADER)
 	{
-		MsgDev( D_ERROR, "LoadDDS: (%s) have corrupted header\n", name );
-		return NULL;
+		MsgDev(D_ERROR, "Image_LoadDDS: invalid magic value (%s)\n", name);
+		return nullptr; // it's not a dds file, just skip it
 	}
 
-	if( header.dsPixelFormat.dwSize != sizeof( dds_pixf_t )) // size of the structure
+	if (header.dwSize != sizeof(dds_t) - sizeof(uint)) // size of the structure (minus MagicNum)
 	{
-		MsgDev( D_ERROR, "LoadDDS: (%s) have corrupt pixelformat header\n", name );
-		return NULL;
+		MsgDev(D_ERROR, "Image_LoadDDS: have corrupted header (%s)\n", name);
+		return nullptr;
 	}
 
-	if( !Image_ValidSize( name, header.dwWidth, header.dwHeight ))
-		return NULL;
-
-	if( !Image_DXTGetPixelFormat( &header, flags, sqFlags ))
+	if (header.dsPixelFormat.dwSize != sizeof(dds_pixf_t)) // size of the structure
 	{
-		MsgDev( D_ERROR, "LoadDDS: (%s) unsupported DXT format (only DXT1, DXT3 and DXT5 is supported)\n", name );
-		return NULL;
+		MsgDev(D_ERROR, "Image_LoadDDS: have mismatched pixelformat header size (%s)\n", name);
+		return nullptr;
 	}
 
-	if( FBitSet( flags, IMAGE_DXT_FORMAT ))
-	{
-		if( !Image_DXTCalcSize( name, &header, filesize - sizeof( dds_t ))) 
-			return NULL;
+	if (!Image_ValidSize(name, header.dwWidth, header.dwHeight)) {
+		return nullptr;
 	}
 
-	fin = (byte *)(buffer + sizeof( dds_t )); // pixels are immediately follows after header
+	if (!Image_DXTGetPixelFormat(&header, flags, sqFlags))
+	{
+		MsgDev(D_ERROR, "Image_LoadDDS: unsupported DXT format (only DXT1, DXT3 and DXT5 is supported now) (%s)\n", name);
+		return nullptr;
+	}
 
-	if( FBitSet( sqFlags, squish::kDxt3 ) && Image_CheckDXT3Alpha( &header, fin ))
-		SetBits( flags, IMAGE_HAS_8BIT_ALPHA );
-	else if( FBitSet( sqFlags, squish::kDxt5 ) && Image_CheckDXT5Alpha( &header, fin ))
-		SetBits( flags, IMAGE_HAS_8BIT_ALPHA );
+	if (FBitSet(flags, IMAGE_DXT_FORMAT))
+	{
+		if (!Image_DXTCalcSize(name, &header, filesize - sizeof(dds_t))) {
+			return nullptr;
+		}
+	}
 
-	pic = Image_Alloc( header.dwWidth, header.dwHeight );
+	fin = (byte *)(buffer + sizeof(dds_t)); // pixels are immediately follows after header
 
-	// now all the checks are passed, store image as rgbdata
-	if( FBitSet( flags, IMAGE_DXT_FORMAT ))
-		squish::DecompressImage( pic->buffer, header.dwWidth, header.dwHeight, fin, sqFlags );
-	else memcpy( pic->buffer, fin, header.dwWidth * header.dwHeight * FBitSet( flags, IMAGE_HAS_ALPHA ) ? 4 : 3 );
+	if (FBitSet(sqFlags, squish::kDxt3) && Image_CheckDXT3Alpha(&header, fin)) {
+		SetBits(flags, IMAGE_HAS_8BIT_ALPHA);
+	}
+	else if (FBitSet(sqFlags, squish::kDxt5) && Image_CheckDXT5Alpha(&header, fin)) {
+		SetBits(flags, IMAGE_HAS_8BIT_ALPHA);
+	}
+
+	pic = Image_Alloc(header.dwWidth, header.dwHeight);
+	if (!pic) {
+		return nullptr;
+	}
 	
-	pic->flags = flags;
+	// now all the checks are passed, store image as rgbdata
+	if (FBitSet(flags, IMAGE_DXT_FORMAT)) {
+		squish::DecompressImage(pic->buffer, header.dwWidth, header.dwHeight, fin, sqFlags);
+	}
+	else {
+		memcpy(pic->buffer, fin, header.dwWidth * header.dwHeight * FBitSet(flags, IMAGE_HAS_ALPHA) ? 4 : 3);
+	}
 
+	pic->flags = flags;
 	return pic;
 }
 
-int DDS_GetSaveFormatForHint( char hint, rgbdata_t *pix )
+int DDS_GetSaveFormatForHint( int hint, rgbdata_t *pix )
 {
 	if( hint == IMG_NORMALMAP )
 	{
