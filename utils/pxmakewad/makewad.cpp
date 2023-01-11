@@ -38,6 +38,7 @@ wfile_t *output_wad = NULL;	// output WAD3 file
 char output_path[256];
 char output_ext[8];
 float resize_percent = 0.0f;
+float alpha_threshold = 0.5f;
 int processed_files = 0;
 int graphics_wadfile = 0;
 ProgramWorkingMode working_mode = ProgramWorkingMode::Unknown;
@@ -235,6 +236,7 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 
 	mipwidth = image->width;
 	mipheight = image->height;
+	bool imageHasAlpha = FBitSet(image->flags, IMAGE_HAS_ALPHA);
 
 	// wad-copy mode: wad->wad
 	if (working_mode == ProgramWorkingMode::CopyTexturesToWad)
@@ -319,7 +321,14 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 		image = Image_Resample(image, mipwidth, mipheight); // align by 16 or fit to the replacement
 		if (!FBitSet(image->flags, IMAGE_QUANTIZED))
 		{
+			if (imageHasAlpha) {
+				Image_ReplaceAlphaWithMask(image, alpha_threshold);
+			}
 			image = Image_Quantize(image); // now quantize image
+		}
+
+		if (imageHasAlpha) {
+			Image_MakeOneBitAlpha(image); // make one-bit alpha from blue color
 		}
 
 		bool result = LMP_WriteLmptex(lumpname, image);
@@ -328,8 +337,6 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 	}
 	else
 	{
-		bool imageHasAlpha = FBitSet(image->flags, IMAGE_HAS_ALPHA);
-
 		// check for minmax sizes
 		mipwidth = bound(IMAGE_MINWIDTH, mipwidth, IMAGE_MAXWIDTH);
 		mipheight = bound(IMAGE_MINHEIGHT, mipheight, IMAGE_MAXHEIGHT);
@@ -345,7 +352,6 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 		mipheight = (mipheight + 7) & ~7;
 
 		find = W_FindMiptex(output_wad, lumpname);
-
 		if (!MIP_CheckForReplace(find, image, mipwidth, mipheight)) {
 			return FileStatusCode::ErrorSilent; // NOTE: image already freed on failed
 		}
@@ -354,6 +360,9 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 		image = Image_Resample(image, mipwidth, mipheight);
 		if (!FBitSet(image->flags, IMAGE_QUANTIZED))
 		{
+			if (imageHasAlpha) {
+				Image_ReplaceAlphaWithMask(image, alpha_threshold);
+			}
 			image = Image_Quantize(image); // now quantize image
 		}
 
@@ -411,7 +420,8 @@ static void PrintOptionsList()
 		"     ^5-replace^7      : replace existing images if they matched by size\n"
 		"     ^5-forcereplace^7 : replace existing images even if they doesn't matched by size\n"
 		"     ^5-resize^7       : resize source image in percents (range 10%%-200%%)\n"
-		"     ^5-dev^7          : set message verbose level (1-5, default is 3)\n"
+		"     ^5-alphathres^7   : alpha threshold for transparency (0.0 - 1.0, default is 0.5)\n"
+		"     ^5-dev^7          : set message verbose level (1 - 5, default is 3)\n"
 		"\n"
 	);
 }
@@ -455,6 +465,12 @@ int main( int argc, char **argv )
 		{
 			resize_percent = atof(argv[i + 1]); // resize source image (percent)
 			resize_percent = bound(10.0f, resize_percent, 200.0f);
+			i++;
+		}
+		else if (!Q_stricmp(argv[i], "-alphathres"))
+		{
+			alpha_threshold = atof(argv[i + 1]);
+			alpha_threshold = bound(0.0f, alpha_threshold, 1.0f);
 			i++;
 		}
 		else if (!Q_stricmp(argv[i], "-dev"))
