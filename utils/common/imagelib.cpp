@@ -129,6 +129,12 @@ rgbdata_t *Image_Alloc( int width, int height, bool paletted )
 	size_t pic_size = sizeof(rgbdata_t) + (width * height * pixel_size) + palette_size;
 	rgbdata_t *pic = (rgbdata_t *)Mem_Alloc(pic_size);
 
+	if (!pic) 
+	{
+		MsgDev(D_ERROR, "Image_Alloc: failed to allocate image (%ix%i, %zu bytes)\n", width, height, pic_size);
+		return nullptr;
+	}
+
 	pic->buffer = ((byte *)pic) + sizeof(rgbdata_t); 
 	if (paletted)
 	{
