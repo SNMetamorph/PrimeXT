@@ -1535,9 +1535,9 @@ bool Image_ReplaceAlphaWithMask(rgbdata_t *pic, float alphaThreshold)
 		return false; // can extract only from RGBA buffer
 	}
 
+	int threshold = static_cast<int>(Q_round(alphaThreshold * 255.0f));
 	for (size_t i = 0; i < pic->width * pic->height; i++)
 	{
-		int threshold = static_cast<int>(Q_round(alphaThreshold * 255.0f));
 		int alpha = pic->buffer[i * 4 + 3];
 		if (alpha < threshold)
 		{
