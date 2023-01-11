@@ -207,8 +207,8 @@ extract her onto disk
 FileStatusCode WAD_CreateTexture( const char *filename )
 {
 	const char *ext = COM_FileExtension( filename );
-	int width, height, len = WAD3_NAMELEN;
-	dlumpinfo_t *find, *find2;
+	int len = WAD3_NAMELEN;
+	dlumpinfo_t *find;
 	char lumpname[64];
 	int mipwidth, mipheight;
 	rgbdata_t *image;
@@ -233,69 +233,64 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 		return FileStatusCode::ErrorSilent;
 	}
 
-	width = mipwidth = image->width;
-	height = mipheight = image->height;
+	mipwidth = image->width;
+	mipheight = image->height;
 
 	// wad-copy mode: wad->wad
 	if (working_mode == ProgramWorkingMode::CopyTexturesToWad)
 	{
-		if( !Q_stricmp( ext, "mip" ))
+		bool result;
+		bool extensionMip = !Q_stricmp(ext, "mip");
+		bool extensionLmp = !Q_stricmp(ext, "lmp");
+		if (extensionMip || extensionLmp)
 		{
-			find = W_FindMiptex( source_wad, lumpname );
+			if (extensionMip)
+				find = W_FindMiptex(source_wad, lumpname);
+			else
+				find = W_FindLmptex(source_wad, lumpname);
 
-			if( !find )
+			if (!find)
 			{
-				// can't find textures in source WAD file that matches pattern
-				Mem_Free( image );
+				Mem_Free(image);
 				return FileStatusCode::NoMatchedInputFiles;
 			}
 
-			find2 = W_FindMiptex( output_wad, lumpname );
-
-			if( !MIP_CheckForReplace( find2, image, mipwidth, mipheight ))
-				return FileStatusCode::ErrorSilent; // NOTE: image already freed on failed
+			if (extensionMip)
+			{
+				find = W_FindMiptex(output_wad, lumpname);
+				if (!MIP_CheckForReplace(find, image, mipwidth, mipheight))
+					return FileStatusCode::ErrorSilent; // NOTE: image already freed on failed
+			}
+			else
+			{
+				find = W_FindLmptex(output_wad, lumpname);
+				if (!LMP_CheckForReplace(find, image, mipwidth, mipheight))
+					return FileStatusCode::ErrorSilent; // NOTE: image already freed on failed
+			}
 
 			// fit to the replacement
-			image = Image_Resample( image, mipwidth, mipheight );
-			image = Image_Quantize( image ); // just in case.
-			bool result = MIP_WriteMiptex( lumpname, image );
+			image = Image_Resample(image, mipwidth, mipheight);
+			image = Image_Quantize(image); // just in case.
+
+			if (extensionMip)
+				result = MIP_WriteMiptex(lumpname, image);
+			else
+				result = LMP_WriteLmptex(lumpname, image);
+
 			Mem_Free(image);
-
 			return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
 		}
-		else if( !Q_stricmp( ext, "lmp" ))
+		else
 		{
-			find = W_FindLmptex( source_wad, lumpname );
-
-			if( !find )
-			{
-				Mem_Free( image );
-				return FileStatusCode::NoMatchedInputFiles;
-			}
-
-			find2 = W_FindLmptex( output_wad, lumpname );
-
-			if( !LMP_CheckForReplace( find2, image, mipwidth, mipheight ))
-				return FileStatusCode::ErrorSilent; // NOTE: image already freed on failed
-
-			// fit to the replacement
-			image = Image_Resample( image, mipwidth, mipheight );
-			image = Image_Quantize( image ); // just in case.
-			bool result = LMP_WriteLmptex( lumpname, image );
-			Mem_Free( image );
-
-			return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
+			Mem_Free(image);
+			return FileStatusCode::UnknownLumpFormat;
 		}
-
-		// unknown format?
-		Mem_Free(image);
-		return FileStatusCode::UnknownLumpFormat;
 	}
 
 	// extraction or conversion mode: wad->bmp, wad->tga
 	if (working_mode == ProgramWorkingMode::ExtractTextures)
 	{
-		char	real_ext[8];
+		char real_ext[8];
 
 		// set default extension
 		Q_strcpy( real_ext, output_ext );
@@ -311,124 +306,64 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 	// normal mode: bmp->wad, tga->wad
 	if (graphics_wadfile)
 	{
-		if( !FBitSet( image->flags, IMAGE_QUANTIZED ))
-		{
-			// check for minmax sizes
-			mipwidth = bound( IMAGE_MINWIDTH, mipwidth, IMAGE_MAXWIDTH );
-			mipheight = bound( IMAGE_MINHEIGHT, mipheight, IMAGE_MAXHEIGHT );
+		// check for minmax sizes
+		mipwidth = bound(IMAGE_MINWIDTH, mipwidth, IMAGE_MAXWIDTH);
+		mipheight = bound(IMAGE_MINHEIGHT, mipheight, IMAGE_MAXHEIGHT);
 
-			find2 = W_FindLmptex( output_wad, lumpname );
+		find = W_FindLmptex(output_wad, lumpname);
 
-			if( !LMP_CheckForReplace( find2, image, mipwidth, mipheight ))
-				return FileStatusCode::ErrorSilent; // NOTE: image already freed on failed
-
-			rgbdata_t *rgba_image = Image_Copy( image );
-			image = Image_Resample( image, mipwidth, mipheight ); // align by 16 or fit to the replacement
-			image = Image_Quantize( image ); // now quantize image
-
-			bool result = LMP_WriteLmptex( lumpname, image );
-			Mem_Free( rgba_image );
-			Mem_Free( image );	// no reason to keep it
-
-			return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
+		if (!LMP_CheckForReplace(find, image, mipwidth, mipheight)) {
+			return FileStatusCode::ErrorSilent; // NOTE: image already freed on failed
 		}
-		else // image already indexed
+
+		image = Image_Resample(image, mipwidth, mipheight); // align by 16 or fit to the replacement
+		if (!FBitSet(image->flags, IMAGE_QUANTIZED))
 		{
-			// check for minmax sizes
-			mipwidth = bound( IMAGE_MINWIDTH, mipwidth, IMAGE_MAXWIDTH );
-			mipheight = bound( IMAGE_MINHEIGHT, mipheight, IMAGE_MAXHEIGHT );
-
-			find = W_FindLmptex( output_wad, lumpname );
-
-			if( !LMP_CheckForReplace( find, image, mipwidth, mipheight ))
-				return FileStatusCode::ErrorSilent; // NOTE: image already freed on failed
-
-			// align by 16 or fit to the replacement
-			image = Image_Resample( image, mipwidth, mipheight );
-			bool result = LMP_WriteLmptex( lumpname, image );
-
-			if( image )
-				Mem_Free( image );
-
-			return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
+			image = Image_Quantize(image); // now quantize image
 		}
+
+		bool result = LMP_WriteLmptex(lumpname, image);
+		Mem_Free(image);
+		return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
 	}
 	else
 	{
+		bool imageHasAlpha = FBitSet(image->flags, IMAGE_HAS_ALPHA);
+
+		// check for minmax sizes
+		mipwidth = bound(IMAGE_MINWIDTH, mipwidth, IMAGE_MAXWIDTH);
+		mipheight = bound(IMAGE_MINHEIGHT, mipheight, IMAGE_MAXHEIGHT);
+
+		if (resize_percent > 0.0f)
+		{
+			mipwidth *= (resize_percent / 100.0f);
+			mipheight *= (resize_percent / 100.0f);
+		}
+
 		// all the mips must be aligned by 16
-		width = (width + 7) & ~7;
-		height = (height + 7) & ~7;
+		mipwidth = (mipwidth + 7) & ~7;
+		mipheight = (mipheight + 7) & ~7;
 
-		if( !FBitSet( image->flags, IMAGE_QUANTIZED ))
-		{
-			// check for minmax sizes
-			mipwidth = bound( IMAGE_MINWIDTH, mipwidth, IMAGE_MAXWIDTH );
-			mipheight = bound( IMAGE_MINHEIGHT, mipheight, IMAGE_MAXHEIGHT );
+		find = W_FindMiptex(output_wad, lumpname);
 
-			if( resize_percent != 0.0f )
-			{
-				mipwidth *= (resize_percent / 100.0f);
-				mipheight *= (resize_percent / 100.0f);
-			}
-
-			// all the mips must be aligned by 16
-			mipwidth = (mipwidth + 7) & ~7;
-			mipheight = (mipheight + 7) & ~7;
-
-			find2 = W_FindMiptex( output_wad, lumpname );
-
-			if( !MIP_CheckForReplace( find2, image, mipwidth, mipheight ))
-				return FileStatusCode::ErrorSilent; // NOTE: image already freed on failed
-
-			rgbdata_t *rgba_image = Image_Copy( image );
-
-			// align by 16 or fit to the replacement
-			image = Image_Resample( image, mipwidth, mipheight );
-
-			// now quantize image
-			image = Image_Quantize( image );
-
-			if( lumpname[0] == '{' )
-				Image_MakeOneBitAlpha( image ); // make one-bit alpha from blue color
-
-			bool result = MIP_WriteMiptex( lumpname, image );
-			Mem_Free( rgba_image );
-			Mem_Free( image );	// no reason to keep it
-
-			return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
+		if (!MIP_CheckForReplace(find, image, mipwidth, mipheight)) {
+			return FileStatusCode::ErrorSilent; // NOTE: image already freed on failed
 		}
-		else // image already indexed
+
+		// align by 16 or fit to the replacement
+		image = Image_Resample(image, mipwidth, mipheight);
+		if (!FBitSet(image->flags, IMAGE_QUANTIZED))
 		{
-			// check for minmax sizes
-			mipwidth = bound( IMAGE_MINWIDTH, mipwidth, IMAGE_MAXWIDTH );
-			mipheight = bound( IMAGE_MINHEIGHT, mipheight, IMAGE_MAXHEIGHT );
-
-			if( resize_percent != 0.0f )
-			{
-				mipwidth *= (resize_percent / 100.0f);
-				mipheight *= (resize_percent / 100.0f);
-			}
-
-			// all the mips must be aligned by 16
-			mipwidth = (mipwidth + 7) & ~7;
-			mipheight = (mipheight + 7) & ~7;
-
-			find = W_FindMiptex( output_wad, lumpname );
-
-			if( !MIP_CheckForReplace( find, image, mipwidth, mipheight ))
-				return FileStatusCode::ErrorSilent; // NOTE: image already freed on failed
-
-			// align by 16 or fit to the replacement
-			image = Image_Resample( image, mipwidth, mipheight );
-
-			if( lumpname[0] == '{' )
-				Image_MakeOneBitAlpha( image ); // make one-bit alpha from blue color
-
-			bool result = MIP_WriteMiptex( lumpname, image );
-			if( image ) Mem_Free( image );
-
-			return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
+			image = Image_Quantize(image); // now quantize image
 		}
+
+		if (imageHasAlpha) {
+			Image_MakeOneBitAlpha(image); // make one-bit alpha from blue color
+		}
+
+		bool result = MIP_WriteMiptex(lumpname, image);
+		Mem_Free(image);
+		return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
 	}
 
 	return FileStatusCode::UnknownError;
