@@ -32,22 +32,29 @@ handle bmp & tga
 */
 rgbdata_t *ImageUtils::LoadImageFile( const char *filename )
 {
-	size_t fileSize;	
-	byte *buf = (byte *)COM_LoadFile( filename, &fileSize, false );
-	const char *ext = COM_FileExtension( filename );
-	rgbdata_t	*pic = NULL;
+	size_t fileSize;
+	byte *buf = (byte *)COM_LoadFile(filename, &fileSize, false);
+	const char *ext = COM_FileExtension(filename);
+	rgbdata_t *pic = nullptr;
 
-	if( !buf ) return NULL;
+	if (!buf)
+	{
+		MsgDev(D_ERROR, "LoadImageFile: unable to load (%s)\n", filename);
+		return NULL;
+	}
 
-	if( !Q_stricmp( ext, "tga" ))
-		pic = Image_LoadTGA( filename, buf, fileSize );
-	else if( !Q_stricmp( ext, "bmp" ))
-		pic = Image_LoadBMP( filename, buf, fileSize );
-	else MsgDev( D_ERROR, "COM_LoadImage: unsupported format (%s)\n", ext );
+	if (!Q_stricmp(ext, "tga"))
+		pic = Image_LoadTGA(filename, buf, fileSize);
+	else if (!Q_stricmp(ext, "bmp"))
+		pic = Image_LoadBMP(filename, buf, fileSize);
+	else if (!Q_stricmp(ext, "dds"))
+		pic = Image_LoadDDS(filename, buf, fileSize);
+	else {
+		MsgDev(D_ERROR, "LoadImageFile: unsupported format (%s)\n", ext);
+	}
 
-	Mem_Free( buf ); // release file
-
-	return pic; // may be NULL
+	Mem_Free(buf); // release file
+	return pic;
 }
 
 /*
@@ -59,22 +66,26 @@ handle bmp & tga
 */
 rgbdata_t *ImageUtils::LoadImageMemory( const char *filename, const byte *buf, size_t fileSize )
 {
-	const char *ext = COM_FileExtension( filename );
-	rgbdata_t	*pic = NULL;
+	const char *ext = COM_FileExtension(filename);
+	rgbdata_t *pic = nullptr;
 
-	if( !buf )
+	if (!buf)
 	{
-		MsgDev( D_ERROR, "COM_LoadImageMemory: unable to load (%s)\n", filename );
+		MsgDev(D_ERROR, "LoadImageMemory: unable to load (%s)\n", filename);
 		return NULL;
 	}
 
-	if( !Q_stricmp( ext, "tga" ))
-		pic = Image_LoadTGA( filename, buf, fileSize );
-	else if( !Q_stricmp( ext, "bmp" ))
-		pic = Image_LoadBMP( filename, buf, fileSize );
-	else MsgDev( D_ERROR, "COM_LoadImage: unsupported format (%s)\n", ext );
+	if (!Q_stricmp(ext, "tga"))
+		pic = Image_LoadTGA(filename, buf, fileSize);
+	else if (!Q_stricmp(ext, "bmp"))
+		pic = Image_LoadBMP(filename, buf, fileSize);
+	else if (!Q_stricmp(ext, "dds"))
+		pic = Image_LoadDDS(filename, buf, fileSize);
+	else {
+		MsgDev(D_ERROR, "LoadImageFile: unsupported format (%s)\n", ext);
+	}
 
-	return pic; // may be NULL
+	return pic;
 }
 
 /*
