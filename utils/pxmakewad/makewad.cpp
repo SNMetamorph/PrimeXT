@@ -93,6 +93,8 @@ static bool Makewad_SaveImage( const char *filename, rgbdata_t *pix )
 		return Image_SaveBMP(filename, pix);
 	else if (!Q_stricmp(ext, "dds"))
 		return Image_SaveDDS(filename, pix);
+	else if (!Q_stricmp(ext, "png"))
+		return Image_SavePNG(filename, pix);
 	else if (!Q_stricmp(ext, "lmp"))
 		return LMP_WriteLmptex(filename, pix, true);
 	else
@@ -141,6 +143,8 @@ static rgbdata_t *Makewad_LoadImage( const char *filename, bool quiet = false )
 		pic = Image_LoadLMP(filename, buf, fileSize);
 	else if (!Q_stricmp(ext, "dds"))
 		pic = Image_LoadDDS(filename, buf, fileSize);
+	else if (!Q_stricmp(ext, "png"))
+		pic = Image_LoadPNG(filename, buf, fileSize);
 	else if (!quiet) {
 		Msg(S_ERROR "unsupported format (%s)\n", ext);
 	}
