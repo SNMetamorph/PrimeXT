@@ -2178,114 +2178,53 @@ rgbdata_t *Image_Resample( rgbdata_t *pic, int new_width, int new_height )
 
 /*
 ==============
-Image_ReplaceAlphaWithMask
+Image_ApplyAlphaMask
 
-replaces all image pixels with transparency color if
-these pixels alpha value is above alpha threshold.
-alpha threshold should be in range [0.0; 1.0]
+set transparent color index for all corresponding pixels from alpha mask
+but only if alpha value is above alpha threshold
 ==============
 */
-bool Image_ReplaceAlphaWithMask(rgbdata_t *pic, float alphaThreshold)
+bool Image_ApplyAlphaMask(rgbdata_t *pic, rgbdata_t *alphaMask, float alphaThreshold)
 {
 	if (!pic) {
 		return false; // invalid buffer
 	}
 
-	if (!FBitSet(pic->flags, IMAGE_HAS_ALPHA)) {
-		return false; // no alpha-channel stored
+	if (!FBitSet(pic->flags, IMAGE_QUANTIZED)) {
+		return false; 
 	}
 
-	if (FBitSet(pic->flags, IMAGE_QUANTIZED)) {
-		return false; // can extract only from RGBA buffer
+	if (pic->width != alphaMask->width || pic->height != alphaMask->height) {
+		return false; // alpha mask and original image should be same size
 	}
 
 	int threshold = static_cast<int>(Q_round(alphaThreshold * 255.0f));
-	for (size_t i = 0; i < pic->width * pic->height; i++)
+	size_t pixelCount = alphaMask->width * alphaMask->height;
+
+	// release last index for transparency (replace with closest color)
+	for (size_t i = 0; i < pixelCount; i++)
 	{
-		int alpha = pic->buffer[i * 4 + 3];
-		if (alpha < threshold)
-		{
-			pic->buffer[i * 4 + 0] = TRANSPARENT_R;
-			pic->buffer[i * 4 + 1] = TRANSPARENT_G;
-			pic->buffer[i * 4 + 2] = TRANSPARENT_B;
-			pic->buffer[i * 4 + 3] = 0;
+		if (pic->buffer[i] == 255) {
+			pic->buffer[i] = 254;
 		}
 	}
-	return true;
-}
 
-/*
-==============
-Image_MakeOneBitAlpha
-
-remap all pixels of color 0, 0, 255 to index 255
-and remap index 255 to something else
-==============
-*/
-void Image_MakeOneBitAlpha( rgbdata_t *pic, bool translateTransparency )
-{
-	byte	transtable[256], *buf;
-	int	i, j, firsttrans = -1;
-
-	if (!pic || !FBitSet(pic->flags, IMAGE_QUANTIZED))
-		return; // only for quantized images
-
-	// don't move colors in quake palette!
-	if (FBitSet(pic->flags, IMAGE_QUAKE1_PAL))
+	for (size_t i = 0; i < pixelCount; i++)
 	{
-		// needs for software mip generator
-		SetBits(pic->flags, IMAGE_HAS_1BIT_ALPHA);
-		return;
-	}
-
-	for (i = 0; i < 256; i++)
-	{
-		if (IS_TRANSPARENT((pic->palette + (i * 4))))
-		{
-			transtable[i] = 255;
-			if (firsttrans < 0)
-				firsttrans = i;
+		int alpha = alphaMask->buffer[i];
+		if (alpha < threshold) {
+			pic->buffer[i] = 255;
 		}
-		else transtable[i] = i;
 	}
 
-	// if there is some transparency, translate it
-	if (translateTransparency && firsttrans >= 0)
-	{
-		if (!IS_TRANSPARENT((pic->palette + (255 * 4))))
-			transtable[255] = firsttrans;
-		buf = pic->buffer;
+	// fill last palette color with "transparency color"
+	pic->palette[255 * 4 + 0] = TRANSPARENT_R;
+	pic->palette[255 * 4 + 1] = TRANSPARENT_G;
+	pic->palette[255 * 4 + 2] = TRANSPARENT_B;
+	pic->palette[255 * 4 + 3] = 0xFF;
 
-		for (j = 0; j < pic->height; j++)
-		{
-			for (i = 0; i < pic->width; i++)
-			{
-				*buf = transtable[*buf];
-				buf++;
-			}
-		}
-
-		// move palette entry for pixels previously mapped to entry 255
-		pic->palette[firsttrans * 4 + 0] = pic->palette[255 * 4 + 0];
-		pic->palette[firsttrans * 4 + 1] = pic->palette[255 * 4 + 1];
-		pic->palette[firsttrans * 4 + 2] = pic->palette[255 * 4 + 2];
-		pic->palette[firsttrans * 4 + 3] = pic->palette[255 * 4 + 3];
-		pic->palette[255 * 4 + 0] = TRANSPARENT_R;
-		pic->palette[255 * 4 + 1] = TRANSPARENT_G;
-		pic->palette[255 * 4 + 2] = TRANSPARENT_B;
-		pic->palette[255 * 4 + 3] = 0xFF;
-	}
-	else if (!translateTransparency)
-	{
-		// just turn last color to blue
-		pic->palette[255*4+0] = TRANSPARENT_R;
-		pic->palette[255*4+1] = TRANSPARENT_G;
-		pic->palette[255*4+2] = TRANSPARENT_B;
-		pic->palette[255*4+3] = 0xFF;
-	}
-
-	// needs for software mip generator
 	SetBits(pic->flags, IMAGE_HAS_1BIT_ALPHA);
+	return true;
 }
 
 /*
@@ -2298,30 +2237,35 @@ but we can store it separate as another image
 */
 rgbdata_t *Image_ExtractAlphaMask( rgbdata_t *pic )
 {
-	rgbdata_t *out;
-
-	if (!pic)
-		return NULL;
-
-	if (!FBitSet(pic->flags, IMAGE_HAS_ALPHA))
-		return NULL; // no alpha-channel stored
-
-	if (FBitSet(pic->flags, IMAGE_QUANTIZED))
-		return NULL; // can extract only from RGBA buffer
-
-	out = Image_Copy( pic ); // duplicate the image
-
-	for( int i = 0; i < pic->width * pic->height; i++ )
-	{
-		// copy the alpha into color buffer
-		out->buffer[i*4+0] = pic->buffer[i*4+3];
-		out->buffer[i*4+1] = pic->buffer[i*4+3];
-		out->buffer[i*4+2] = pic->buffer[i*4+3];
-		out->buffer[i*4+3] = 0xFF; // clear the alpha
+	if (!pic) {
+		return nullptr;
 	}
 
-	ClearBits( out->flags, IMAGE_HAS_COLOR );
-	ClearBits( out->flags, IMAGE_HAS_ALPHA );
+	if (!FBitSet(pic->flags, IMAGE_HAS_ALPHA)) {
+		return nullptr; // no alpha-channel stored
+	}
+
+	if (FBitSet(pic->flags, IMAGE_QUANTIZED)) {
+		return nullptr; // can extract only from RGBA buffer
+	}
+
+	size_t pic_size = sizeof(rgbdata_t) + pic->width * pic->height;
+	rgbdata_t *out = (rgbdata_t *)Mem_Alloc(pic_size);
+	if (!out) {
+		return nullptr;
+	}
+
+	out->buffer = reinterpret_cast<byte*>(out) + sizeof(rgbdata_t);
+	out->size = pic->width * pic->height * sizeof(uint8_t);
+	out->width = pic->width;
+	out->height = pic->height;
+	out->palette = nullptr;
+	out->flags = 0;
+
+	size_t pixel_count = pic->width * pic->height;
+	for (size_t i = 0; i < pixel_count; i++) {
+		out->buffer[i] = pic->buffer[i * 4 + 3];
+	}
 
 	return out;
 }
