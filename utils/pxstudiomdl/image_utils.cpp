@@ -49,6 +49,8 @@ rgbdata_t *ImageUtils::LoadImageFile( const char *filename )
 		pic = Image_LoadBMP(filename, buf, fileSize);
 	else if (!Q_stricmp(ext, "dds"))
 		pic = Image_LoadDDS(filename, buf, fileSize);
+	else if (!Q_stricmp(ext, "png"))
+		pic = Image_LoadPNG(filename, buf, fileSize);
 	else {
 		MsgDev(D_ERROR, "LoadImageFile: unsupported format (%s)\n", ext);
 	}
@@ -81,6 +83,8 @@ rgbdata_t *ImageUtils::LoadImageMemory( const char *filename, const byte *buf, s
 		pic = Image_LoadBMP(filename, buf, fileSize);
 	else if (!Q_stricmp(ext, "dds"))
 		pic = Image_LoadDDS(filename, buf, fileSize);
+	else if (!Q_stricmp(ext, "png"))
+		pic = Image_LoadPNG(filename, buf, fileSize);
 	else {
 		MsgDev(D_ERROR, "LoadImageFile: unsupported format (%s)\n", ext);
 	}
