@@ -104,13 +104,13 @@ static const saveimage_t save_hint[] =
 { NULL, NULL, NULL }
 };
 
-static const char png_sign[] = {0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'};
-static const char ihdr_sign[] = {'I', 'H', 'D', 'R'};
-static const char trns_sign[] = {'t', 'R', 'N', 'S'};
-static const char plte_sign[] = {'P', 'L', 'T', 'E'};
-static const char idat_sign[] = {'I', 'D', 'A', 'T'};
-static const char iend_sign[] = {'I', 'E', 'N', 'D'};
-static const int  iend_crc32 = 0xAE426082;
+static const int8_t png_sign[] = { (int8_t)0x89, 'P', 'N', 'G', '\r', '\n', (int8_t)0x1a, '\n'};
+static const int8_t ihdr_sign[] = {'I', 'H', 'D', 'R'};
+static const int8_t trns_sign[] = {'t', 'R', 'N', 'S'};
+static const int8_t plte_sign[] = {'P', 'L', 'T', 'E'};
+static const int8_t idat_sign[] = {'I', 'D', 'A', 'T'};
+static const int8_t iend_sign[] = {'I', 'E', 'N', 'D'};
+static const uint32_t iend_crc32 = 0xAE426082;
 
 /*
 =================
@@ -951,8 +951,11 @@ rgbdata_t *Image_LoadPNG( const char *name, const byte *buffer, size_t filesize 
 	png_t		png_hdr;
 	rgbdata_t	*pic;
 
-	if( filesize < sizeof( png_hdr ) )
-		return false;
+	if (filesize < sizeof(png_hdr))
+	{
+		MsgDev( D_ERROR, "Image_LoadPNG: Invalid file size (%s)\n", name );
+		return nullptr;
+	}
 
 	buf_p = (byte *)buffer;
 
@@ -963,7 +966,7 @@ rgbdata_t *Image_LoadPNG( const char *name, const byte *buffer, size_t filesize 
 	if( memcmp( png_hdr.sign, png_sign, sizeof( png_sign ) ) )
 	{
 		MsgDev( D_ERROR, "Image_LoadPNG: Invalid PNG signature (%s)\n", name );
-		return false;
+		return nullptr;
 	}
 
 	// convert IHDR chunk length to little endian
@@ -973,14 +976,14 @@ rgbdata_t *Image_LoadPNG( const char *name, const byte *buffer, size_t filesize 
 	if( png_hdr.ihdr_len != sizeof( png_ihdr_t ) )
 	{
 		MsgDev( D_ERROR, "Image_LoadPNG: Invalid IHDR chunk size %u (%s)\n", png_hdr.ihdr_len, name );
-		return false;
+		return nullptr;
 	}
 
 	// check IHDR chunk signature
 	if( memcmp( png_hdr.ihdr_sign, ihdr_sign, sizeof( ihdr_sign ) ) )
 	{
 		MsgDev( D_ERROR, "Image_LoadPNG: IHDR chunk corrupted (%s)\n", name );
-		return false;
+		return nullptr;
 	}
 
 	// convert image width and height to little endian
@@ -990,17 +993,17 @@ rgbdata_t *Image_LoadPNG( const char *name, const byte *buffer, size_t filesize 
 	if( png_hdr.ihdr_chunk.height == 0 || png_hdr.ihdr_chunk.width == 0 )
 	{
 		MsgDev( D_ERROR, "Image_LoadPNG: Invalid image size %ux%u (%s)\n", png_hdr.ihdr_chunk.width, png_hdr.ihdr_chunk.height, name );
-		return false;
+		return nullptr;
 	}
 
 	if( !Image_ValidSize( name, width, height ))
-		return false;
+		return nullptr;
 
 	pic = Image_Alloc( width, height );
 	if( png_hdr.ihdr_chunk.bitdepth != 8 )
 	{
 		MsgDev( D_ERROR, "Image_LoadPNG: Only 8-bit images is supported (%s)\n", name );
-		return false;
+		return nullptr;
 	}
 
 	if( !( png_hdr.ihdr_chunk.colortype == PNG_CT_RGB
@@ -1010,31 +1013,31 @@ rgbdata_t *Image_LoadPNG( const char *name, const byte *buffer, size_t filesize 
 	    || png_hdr.ihdr_chunk.colortype == PNG_CT_PALLETE ) )
 	{
 		MsgDev( D_ERROR, "Image_LoadPNG: Unknown color type %u (%s)\n", png_hdr.ihdr_chunk.colortype, name );
-		return false;
+		return nullptr;
 	}
 
 	if( png_hdr.ihdr_chunk.compression > 0 )
 	{
 		MsgDev( D_ERROR, "Image_LoadPNG: Unknown compression method %u (%s)\n", png_hdr.ihdr_chunk.compression, name );
-		return false;
+		return nullptr;
 	}
 
 	if( png_hdr.ihdr_chunk.filter > 0 )
 	{
 		MsgDev( D_ERROR, "Image_LoadPNG: Unknown filter type %u (%s)\n", png_hdr.ihdr_chunk.filter, name );
-		return false;
+		return nullptr;
 	}
 
 	if( png_hdr.ihdr_chunk.interlace == 1 )
 	{
 		MsgDev( D_ERROR, "Image_LoadPNG: Adam7 Interlacing not supported (%s)\n", name );
-		return false;
+		return nullptr;
 	}
 
 	if( png_hdr.ihdr_chunk.interlace > 0 )
 	{
 		MsgDev( D_ERROR, "Image_LoadPNG: Unknown interlacing type %u (%s)\n", png_hdr.ihdr_chunk.interlace, name );
-		return false;
+		return nullptr;
 	}
 
 	// calculate IHDR chunk CRC
@@ -1046,7 +1049,7 @@ rgbdata_t *Image_LoadPNG( const char *name, const byte *buffer, size_t filesize 
 	if( ntohl( png_hdr.ihdr_crc32 ) != crc32_check )
 	{
 		MsgDev( D_ERROR, "Image_LoadPNG: IHDR chunk has wrong CRC32 sum (%s)\n", name );
-		return false;
+		return nullptr;
 	}
 
 	// move pointer
@@ -1065,14 +1068,14 @@ rgbdata_t *Image_LoadPNG( const char *name, const byte *buffer, size_t filesize 
 		{
 			MsgDev( D_ERROR, "Image_LoadPNG: Found chunk with wrong size (%s)\n", name );
 			if( idat_buf ) Mem_Free( idat_buf );
-			return false;
+			return nullptr;
 		}
 
 		if( chunk_len > filesize - ( buf_p - buffer ))
 		{
 			MsgDev( D_ERROR, "Image_LoadPNG: Found chunk with size past file size (%s)\n", name );
 			if( idat_buf ) Mem_Free( idat_buf );
-			return false;
+			return nullptr;
 		}
 
 		// move pointer
@@ -1118,7 +1121,7 @@ rgbdata_t *Image_LoadPNG( const char *name, const byte *buffer, size_t filesize 
 		{
 			MsgDev( D_ERROR, "Image_LoadPNG: Found chunk with wrong CRC32 sum (%s)\n", name );
 			if( idat_buf ) Mem_Free( idat_buf );
-			return false;
+			return nullptr;
 		}
 
 		// move pointer
@@ -1128,28 +1131,28 @@ rgbdata_t *Image_LoadPNG( const char *name, const byte *buffer, size_t filesize 
 	if( oldsize == 0 )
 	{
 		MsgDev( D_ERROR, "Image_LoadPNG: Couldn't find IDAT chunks (%s)\n", name );
-		return false;
+		return nullptr;
 	}
 
 	if( png_hdr.ihdr_chunk.colortype == PNG_CT_PALLETE && !pallete )
 	{
 		MsgDev( D_ERROR, "Image_LoadPNG: PLTE chunk not found (%s)\n", name );
 		Mem_Free( idat_buf );
-		return false;
+		return nullptr;
 	}
 
 	if( !has_iend_chunk )
 	{
 		MsgDev( D_ERROR, "Image_LoadPNG: IEND chunk not found (%s)\n", name );
 		Mem_Free( idat_buf );
-		return false;
+		return nullptr;
 	}
 
 	if( chunk_len != 0 )
 	{
 		MsgDev( D_ERROR, "Image_LoadPNG: IEND chunk has wrong size %u (%s)\n", chunk_len, name );
 		Mem_Free( idat_buf );
-		return false;
+		return nullptr;
 	}
 
 	switch( png_hdr.ihdr_chunk.colortype )
@@ -1197,7 +1200,7 @@ rgbdata_t *Image_LoadPNG( const char *name, const byte *buffer, size_t filesize 
 		MsgDev( D_ERROR, "Image_LoadPNG: IDAT chunk decompression failed (%s)\n", name );
 		Mem_Free( uncompressed_buffer );
 		Mem_Free( idat_buf );
-		return false;
+		return nullptr;
 	}
 
 	ret = inflate( &stream, Z_NO_FLUSH );
@@ -1209,7 +1212,7 @@ rgbdata_t *Image_LoadPNG( const char *name, const byte *buffer, size_t filesize 
 	{
 		MsgDev( D_ERROR, "Image_LoadPNG: IDAT chunk decompression failed (%s)\n", name );
 		Mem_Free( uncompressed_buffer );
-		return false;
+		return nullptr;
 	}
 
 	prior = pixbuf = pic->buffer = reinterpret_cast<byte*>(Mem_Alloc(pic->size));
@@ -1249,7 +1252,7 @@ rgbdata_t *Image_LoadPNG( const char *name, const byte *buffer, size_t filesize 
 		Mem_Free( uncompressed_buffer );
 		Mem_Free( pic->buffer );
 		Mem_Free( pic );
-		return false;
+		return nullptr;
 	}
 
 	for( y = 1; y < pic->height; y++ )
@@ -1314,7 +1317,7 @@ rgbdata_t *Image_LoadPNG( const char *name, const byte *buffer, size_t filesize 
 			Mem_Free( uncompressed_buffer );
 			Mem_Free( pic->buffer );
 			Mem_Free( pic );
-			return false;
+			return nullptr;
 		}
 
 		prior = pixbuf;
