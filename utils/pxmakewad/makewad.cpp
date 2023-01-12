@@ -216,7 +216,7 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 	dlumpinfo_t *find;
 	char lumpname[64];
 	int mipwidth, mipheight;
-	rgbdata_t *image;
+	rgbdata_t *image, *alphaMask;
 
 	// store name for detect suffixes
 	COM_FileBase(filename, lumpname);
@@ -240,7 +240,7 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 
 	mipwidth = image->width;
 	mipheight = image->height;
-	bool imageHasAlpha = FBitSet(image->flags, IMAGE_HAS_ALPHA);
+	bool imageHasAlpha = FBitSet(image->flags, IMAGE_HAS_8BIT_ALPHA);
 
 	// wad-copy mode: wad->wad
 	if (working_mode == ProgramWorkingMode::CopyTexturesToWad)
@@ -326,13 +326,15 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 		if (!FBitSet(image->flags, IMAGE_QUANTIZED))
 		{
 			if (imageHasAlpha) {
-				Image_ReplaceAlphaWithMask(image, alpha_threshold);
+				alphaMask = Image_ExtractAlphaMask(image);
 			}
 			image = Image_Quantize(image); // now quantize image
 		}
 
-		if (imageHasAlpha) {
-			Image_MakeOneBitAlpha(image); // make one-bit alpha from blue color
+		if (imageHasAlpha) 
+		{
+			Image_ApplyAlphaMask(image, alphaMask, alpha_threshold);
+			Mem_Free(alphaMask);
 		}
 
 		bool result = LMP_WriteLmptex(lumpname, image);
@@ -362,16 +364,18 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 
 		// align by 16 or fit to the replacement
 		image = Image_Resample(image, mipwidth, mipheight);
-		if (!FBitSet(image->flags, IMAGE_QUANTIZED))
-		{
-			if (imageHasAlpha) {
-				Image_ReplaceAlphaWithMask(image, alpha_threshold);
-			}
+		if (imageHasAlpha) {
+			alphaMask = Image_ExtractAlphaMask(image);
+		}
+
+		if (!FBitSet(image->flags, IMAGE_QUANTIZED)) {
 			image = Image_Quantize(image); // now quantize image
 		}
 
-		if (imageHasAlpha) {
-			Image_MakeOneBitAlpha(image); // make one-bit alpha from blue color
+		if (imageHasAlpha) 
+		{
+			Image_ApplyAlphaMask(image, alphaMask, alpha_threshold);
+			Mem_Free(alphaMask);
 		}
 
 		bool result = MIP_WriteMiptex(lumpname, image);
