@@ -5441,6 +5441,7 @@ static void PrintOptionsList()
 		"     ^5-a^7   : normal blend angle\n"
 		"     ^5-h^7   : dump hitboxes\n"
 		"     ^5-g^7   : dump transition graph\n"
+		"     ^5-ath^7 : alpha threshold for transparency (0.0 - 1.0, default is 0.5)\n"
 		"     ^5-dev^7 : set message verbose level (1-5, default is 3)\n"
 		"\n"
 	);
@@ -5479,6 +5480,7 @@ int main( int argc, char **argv )
 	allow_boneweights = 0;
 	has_boneweights = 0;
 	g_gamma = 1.8f;
+	g_alpha_threshold = 0.5f;
 
 	if( argc == 1 )
 	{
@@ -5491,52 +5493,60 @@ int main( int argc, char **argv )
 	Sys_InitLog("pxstudiomdl.log");
 	PrintTitle(false);
 
-	for( i = 1; i < argc - 1; i++ )
+	for (i = 1; i < argc - 1; i++)
 	{
-		if( argv[i][0] == '-' )
+		if (argv[i][0] == '-')
 		{
-			if( !Q_stricmp( argv[i], "-dev" ))
+			if (!Q_stricmp(argv[i], "-dev"))
 			{
-				SetDeveloperLevel( verify_atoi( argv[i+1] ));
 				i++;
-				continue;
+				SetDeveloperLevel(verify_atoi(argv[i]));
 			}
-			switch( argv[i][1] )
+			else if (!Q_stricmp(argv[i], "-t"))
 			{
-			case 't':
 				i++;
-				Q_strncpy( defaulttexture[numrep], argv[i], sizeof( defaulttexture[0] ));
-				if( i < argc - 2 && argv[i + 1][0] != '-' )
+				Q_strncpy(defaulttexture[numrep], argv[i], sizeof(defaulttexture[0]));
+				if (i < argc - 2 && argv[i + 1][0] != '-')
 				{
 					i++;
-					Q_strncpy( sourcetexture[numrep], argv[i], sizeof( sourcetexture[0] ));
-					MsgDev( D_INFO, "Replacing %s with %s\n", sourcetexture[numrep], sizeof( defaulttexture[0] ));
+					Q_strncpy(sourcetexture[numrep], argv[i], sizeof(sourcetexture[0]));
+					MsgDev(D_INFO, "Replacing %s with %s\n", sourcetexture[numrep], sizeof(defaulttexture[0]));
 				}
-				MsgDev( D_INFO, "Using default texture: %s\n", defaulttexture );
+				MsgDev(D_INFO, "Using default texture: %s\n", defaulttexture);
 				numrep++;
-				break;
-			case 'r':
+			}
+			else if (!Q_stricmp(argv[i], "-r"))
+			{
 				tag_reversed = 1;
-				break;
-			case 'n':
+			}
+			else if (!Q_stricmp(argv[i], "-n"))
+			{
 				tag_normals = 1;
-				break;
-			case 'f':
+			}
+			else if (!Q_stricmp(argv[i], "-f"))
+			{
 				flip_triangles = 0;
-				break;
-			case 'a':
+			}
+			else if (!Q_stricmp(argv[i], "-a"))
+			{
 				i++;
-				g_normal_blend = cos( DEG2RAD( verify_atof( argv[i] )));
-				break;
-			case 'h':
+				g_normal_blend = cos(DEG2RAD(verify_atof(argv[i])));
+			}
+			else if (!Q_stricmp(argv[i], "-h"))
+			{
 				g_dump_hboxes = true;
-				break;
-			case 'g':
+			}
+			else if (!Q_stricmp(argv[i], "-g"))
+			{
 				g_dump_graph = true;
-				break;
+			}
+			else if (!Q_stricmp(argv[i], "-ath"))
+			{
+				i++;
+				g_alpha_threshold = bound(0.0f, verify_atof(argv[i]), 1.0f);
 			}
 		}
-	}	
+	}
 
 	if( !argv[i] )
 	{

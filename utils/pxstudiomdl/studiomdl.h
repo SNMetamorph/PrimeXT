@@ -41,6 +41,7 @@ EXTERN	int	tag_reversed;
 EXTERN	int	tag_normals;
 EXTERN	bool	flip_triangles;
 EXTERN	float	g_normal_blend;
+EXTERN	float	g_alpha_threshold;
 EXTERN	bool	g_dump_hboxes;
 EXTERN	bool	g_dump_graph;
 EXTERN	Vector	eyeposition;

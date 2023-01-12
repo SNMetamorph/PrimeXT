@@ -25,9 +25,10 @@ GNU General Public License for more details.
 
 void Grab_Skin( s_texture_t *ptexture )
 {
-	bool	use_default = false;
-	char	file1[1024];
-	rgbdata_t	*pic;
+	bool use_default = false;
+	char file1[1024];
+	rgbdata_t *pic = nullptr;
+	rgbdata_t *alphaMask = nullptr;
 
 	// g-cont. moved here to avoid some bugs
 	if( store_uv_coords && !FBitSet( ptexture->flags, STUDIO_NF_CHROME ))
@@ -69,15 +70,22 @@ void Grab_Skin( s_texture_t *ptexture )
 	if( !pic ) pic = ImageUtils::LoadImageMemory( "default.bmp", default_bmp, sizeof( default_bmp ));
 	if( !pic ) COM_FatalError( "%s not found", file1 ); // ???
 
-	int new_width = Q_min( pic->width, store_uv_coords ? MIP_MAXWIDTH : 512 );
-	int new_height = Q_min( pic->height, store_uv_coords ? MIP_MAXHEIGHT : 512 );
+	int new_width = Q_min(pic->width, store_uv_coords ? MIP_MAXWIDTH : 512);
+	int new_height = Q_min(pic->height, store_uv_coords ? MIP_MAXHEIGHT : 512);
+	bool transparent = FBitSet(ptexture->flags, STUDIO_NF_MASKED) && FBitSet(pic->flags, IMAGE_HAS_8BIT_ALPHA);
 
 	// resample to studio limits
-	pic = Image_Resample( pic, new_width, new_height );
-	pic = Image_Quantize( pic ); // quantize if needs
+	pic = Image_Resample(pic, new_width, new_height);
+	if (transparent) {
+		alphaMask = Image_ExtractAlphaMask(pic);
+	}
+	pic = Image_Quantize(pic); // quantize if needs
 
-	if( FBitSet( ptexture->flags, STUDIO_NF_MASKED ))
-		Image_MakeOneBitAlpha( pic, false ); // check alpha
+	if (transparent)
+	{
+		Image_ApplyAlphaMask(pic, alphaMask, g_alpha_threshold);
+		Mem_Free(alphaMask);
+	}
 
 	ImageUtils::ApplyPaletteGamma(pic); // process gamma
 	ptexture->srcwidth = pic->width;
@@ -100,7 +108,7 @@ void ResizeTexture( s_texture_t *ptexture )
 
 	ptexture->size = ptexture->skinwidth * ptexture->skinheight + 256 * 3;
 
-	Msg( "BMP %s [%d %d] (%.0f%%)  %6d bytes\n", ptexture->name,  ptexture->skinwidth, ptexture->skinheight, 
+	Msg( "%s [%d %d] (%.0f%%)  %6d bytes\n", ptexture->name, ptexture->skinwidth, ptexture->skinheight, 
 		((ptexture->skinwidth * ptexture->skinheight) / (float)(ptexture->srcwidth * ptexture->srcheight)) * 100.0, ptexture->size );
 	
 	if( ptexture->size > 1024 * 1024 + 256 * 3 )
