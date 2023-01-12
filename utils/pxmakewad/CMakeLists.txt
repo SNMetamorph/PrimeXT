@@ -19,6 +19,7 @@ list(APPEND DIR_SOURCES
 	"../common/quantizer.cpp"
 	"../common/zone.cpp"
 	"${CMAKE_SOURCE_DIR}/public/build_info.cpp"
+	"${CMAKE_SOURCE_DIR}/public/crclib.cpp"
 	"lmptex.cpp"
     "makewad.cpp"
     "miptex.cpp"
@@ -35,8 +36,9 @@ add_executable(${PROJECT_NAME} ${DIR_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"." # keep in memory, order of entries important!
 	"../common"
-	"../../public"
-	"../../common"
+	"${CMAKE_SOURCE_DIR}/public"
+	"${CMAKE_SOURCE_DIR}/common"
+	"${CMAKE_SOURCE_DIR}/external/miniz"
 	"${CMAKE_SOURCE_DIR}/external/squish"
 	"${CMAKE_SOURCE_DIR}/external/mimalloc/include"
 )

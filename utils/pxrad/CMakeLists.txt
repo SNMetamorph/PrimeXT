@@ -51,9 +51,10 @@ add_executable(${PROJECT_NAME} ${DIR_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"."
 	"../common"
-	"../../public"
-	"../../common"
-	"../../game_shared"
+	"${CMAKE_SOURCE_DIR}/public"
+	"${CMAKE_SOURCE_DIR}/common"
+	"${CMAKE_SOURCE_DIR}/game_shared"
+	"${CMAKE_SOURCE_DIR}/external/miniz"
 	"${CMAKE_SOURCE_DIR}/external/squish"
 	"${CMAKE_SOURCE_DIR}/external/mimalloc/include"
 )
