@@ -13,11 +13,7 @@ list(APPEND DIR_SOURCES
 	"../common/filesystem.cpp"
 	"../common/scriplib.cpp"
 	"../common/stringlib.cpp"
-	"../common/ddstex.cpp"
-	"../common/gamma.cpp"
 	"../common/virtualfs.cpp"
-	"../common/imagelib.cpp"
-	"../common/quantizer.cpp"
 	"../common/zone.cpp"
 	"${CMAKE_SOURCE_DIR}/public/crclib.cpp"
 	"${CMAKE_SOURCE_DIR}/public/build_info.cpp"
@@ -45,8 +41,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"${CMAKE_SOURCE_DIR}/public"
 	"${CMAKE_SOURCE_DIR}/common"
 	"../common"
-	"${CMAKE_SOURCE_DIR}/external/miniz"
-	"${CMAKE_SOURCE_DIR}/external/squish"
+	"../common/imagelib"
 	"${CMAKE_SOURCE_DIR}/external/mimalloc/include"
 )
 
@@ -94,7 +89,7 @@ endif()
 
 # link dependency libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE
-	squish
+	imagelib
 	mimalloc-static
 )
 

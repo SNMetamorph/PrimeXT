@@ -41,6 +41,7 @@ add_executable(${PROJECT_NAME} ${DIR_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"."
 	"../common"
+	"../common/imagelib"
 	"../../public"
 	"../../common"
 	"../../game_shared"

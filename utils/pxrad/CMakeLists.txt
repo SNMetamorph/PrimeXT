@@ -10,10 +10,7 @@ list(APPEND DIR_SOURCES
 	"../common/bspfile.cpp"
 	"../common/cmdlib.cpp"
 	"../common/conprint.cpp"
-	"../common/ddstex.cpp"
 	"../common/filesystem.cpp"
-	"../common/gamma.cpp"
-	"../common/imagelib.cpp"
 	"../common/mathlib.cpp"
 	"../common/polylib.cpp"
 	"../common/scriplib.cpp"
@@ -51,11 +48,10 @@ add_executable(${PROJECT_NAME} ${DIR_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"."
 	"../common"
+	"../common/imagelib"
 	"${CMAKE_SOURCE_DIR}/public"
 	"${CMAKE_SOURCE_DIR}/common"
 	"${CMAKE_SOURCE_DIR}/game_shared"
-	"${CMAKE_SOURCE_DIR}/external/miniz"
-	"${CMAKE_SOURCE_DIR}/external/squish"
 	"${CMAKE_SOURCE_DIR}/external/mimalloc/include"
 )
 
@@ -146,7 +142,7 @@ endif()
 
 # link dependency libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE
-	squish
+	imagelib
 	mimalloc-static
 )
 

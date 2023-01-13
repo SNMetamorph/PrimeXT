@@ -12,11 +12,7 @@ list(APPEND DIR_SOURCES
 	"../common/wadfile.cpp"
 	"../common/mathlib.cpp"
 	"../common/stringlib.cpp"
-	"../common/ddstex.cpp"
-	"../common/gamma.cpp"
 	"../common/virtualfs.cpp"
-	"../common/imagelib.cpp"
-	"../common/quantizer.cpp"
 	"../common/zone.cpp"
 	"${CMAKE_SOURCE_DIR}/public/build_info.cpp"
 	"${CMAKE_SOURCE_DIR}/public/crclib.cpp"
@@ -36,10 +32,9 @@ add_executable(${PROJECT_NAME} ${DIR_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"." # keep in memory, order of entries important!
 	"../common"
+	"../common/imagelib"
 	"${CMAKE_SOURCE_DIR}/public"
 	"${CMAKE_SOURCE_DIR}/common"
-	"${CMAKE_SOURCE_DIR}/external/miniz"
-	"${CMAKE_SOURCE_DIR}/external/squish"
 	"${CMAKE_SOURCE_DIR}/external/mimalloc/include"
 )
 
@@ -83,7 +78,7 @@ endif()
 
 # add mimalloc library depedency
 target_link_libraries(${PROJECT_NAME} PRIVATE
-	squish
+	imagelib
 	mimalloc-static
 )
 
