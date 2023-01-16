@@ -216,7 +216,7 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 	dlumpinfo_t *find;
 	char lumpname[64];
 	int mipwidth, mipheight;
-	rgbdata_t *image, *alphaMask;
+	rgbdata_t *image = nullptr, *alphaMask = nullptr;
 
 	// store name for detect suffixes
 	COM_FileBase(filename, lumpname);
@@ -310,6 +310,14 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 	}
 
 	// normal mode: bmp->wad, tga->wad
+	// append '{' character in case source image has transparency
+	if (imageHasAlpha && lumpname[0] != '{')
+	{
+		char changedLumpName[64];
+		Q_snprintf(changedLumpName, sizeof(changedLumpName), "{%s", lumpname);
+		Q_strncpy(lumpname, changedLumpName, sizeof(lumpname));
+	}
+
 	if (graphics_wadfile)
 	{
 		// check for minmax sizes
@@ -329,12 +337,11 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 				alphaMask = Image_ExtractAlphaMask(image);
 			}
 			image = Image_Quantize(image); // now quantize image
-		}
-
-		if (imageHasAlpha) 
-		{
-			Image_ApplyAlphaMask(image, alphaMask, alpha_threshold);
-			Image_Free(alphaMask);
+			if (imageHasAlpha) 
+			{
+				Image_ApplyAlphaMask(image, alphaMask, alpha_threshold);
+				Image_Free(alphaMask);
+			}
 		}
 
 		bool result = LMP_WriteLmptex(lumpname, image);
@@ -364,18 +371,17 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 
 		// align by 16 or fit to the replacement
 		image = Image_Resample(image, mipwidth, mipheight);
-		if (imageHasAlpha) {
-			alphaMask = Image_ExtractAlphaMask(image);
-		}
-
-		if (!FBitSet(image->flags, IMAGE_QUANTIZED)) {
-			image = Image_Quantize(image); // now quantize image
-		}
-
-		if (imageHasAlpha) 
+		if (!FBitSet(image->flags, IMAGE_QUANTIZED)) 
 		{
-			Image_ApplyAlphaMask(image, alphaMask, alpha_threshold);
-			Image_Free(alphaMask);
+			if (imageHasAlpha) {
+				alphaMask = Image_ExtractAlphaMask(image);
+			}
+			image = Image_Quantize(image); // now quantize image
+			if (imageHasAlpha) 
+			{
+				Image_ApplyAlphaMask(image, alphaMask, alpha_threshold);
+				Image_Free(alphaMask);
+			}
 		}
 
 		bool result = MIP_WriteMiptex(lumpname, image);
