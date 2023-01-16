@@ -319,23 +319,21 @@ bool MIP_CheckForReplace( dlumpinfo_t *find, rgbdata_t *image, int &width, int &
 		{
 		case REP_IGNORE:
 			Msg(S_ERROR "%s already exists\n", find->name); 
-			if (image) {
-				Mem_Free(image);
-			}
+			Image_Free( image );
 			return false;
 		case REP_NORMAL:
 			if( FBitSet( find->attribs, ATTR_READONLY ))
 			{
 				// g-cont. i left this limitation as a protect of the replacement of compressed lumps
 				Msg(S_ERROR "%s is read-only\n", find->name);
-				if( image ) Mem_Free( image );
+				Image_Free( image );
 				return false;
 			}
 			if( lumpsize != find->size )
 			{
 				Msg(S_ERROR "%s.mip [%s] should be [%s]\n",
 				find->name, Q_memprint( lumpsize ), Q_memprint( find->size )); 
-				if( image ) Mem_Free( image );
+				Image_Free( image );
 				return false;
 			}
 			break;
@@ -351,7 +349,7 @@ bool MIP_CheckForReplace( dlumpinfo_t *find, rgbdata_t *image, int &width, int &
 				{
 					Msg(S_ERROR "%s is corrupted\n", find->name );
 					lseek( W_GetHandle( output_wad ), oldpos, SEEK_SET );
-					if( image ) Mem_Free( image );
+					Image_Free( image );
 					return false;
 				}
 
@@ -359,7 +357,7 @@ bool MIP_CheckForReplace( dlumpinfo_t *find, rgbdata_t *image, int &width, int &
 				{
 					Msg(S_ERROR "%s is corrupted\n", find->name );
 					lseek( W_GetHandle( output_wad ), oldpos, SEEK_SET );
-					if( image ) Mem_Free( image );
+					Image_Free( image );
 					return false;
 				}
 

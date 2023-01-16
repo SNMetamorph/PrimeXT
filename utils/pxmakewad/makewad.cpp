@@ -198,7 +198,7 @@ void Test_ConvertImageTo8Bit( const char *filename )
 		MsgDev( D_INFO, "Write %s\n", outpath );
 	else MsgDev( D_INFO, "Failed to save %s\n", outpath );
 
-	Mem_Free( pic );
+	Image_Free( pic );
 }
 
 /*
@@ -257,7 +257,7 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 
 			if (!find)
 			{
-				Mem_Free(image);
+				Image_Free( image );
 				return FileStatusCode::NoMatchedInputFiles;
 			}
 
@@ -283,12 +283,12 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 			else
 				result = LMP_WriteLmptex(lumpname, image);
 
-			Mem_Free(image);
+			Image_Free( image );
 			return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
 		}
 		else
 		{
-			Mem_Free(image);
+			Image_Free( image );
 			return FileStatusCode::UnknownLumpFormat;
 		}
 	}
@@ -304,7 +304,7 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 		// wad-extract mode
 		const char *path = va( "%s/%s.%s", output_path, lumpname, real_ext );
 		bool result = Makewad_SaveImage( path, image );
-		Mem_Free( image );
+		Image_Free( image );
 
 		return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
 	}
@@ -334,11 +334,11 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 		if (imageHasAlpha) 
 		{
 			Image_ApplyAlphaMask(image, alphaMask, alpha_threshold);
-			Mem_Free(alphaMask);
+			Image_Free(alphaMask);
 		}
 
 		bool result = LMP_WriteLmptex(lumpname, image);
-		Mem_Free(image);
+		Image_Free(image);
 		return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
 	}
 	else
@@ -375,11 +375,11 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 		if (imageHasAlpha) 
 		{
 			Image_ApplyAlphaMask(image, alphaMask, alpha_threshold);
-			Mem_Free(alphaMask);
+			Image_Free(alphaMask);
 		}
 
 		bool result = MIP_WriteMiptex(lumpname, image);
-		Mem_Free(image);
+		Image_Free(image);
 		return result ? FileStatusCode::Success : FileStatusCode::ErrorSilent;
 	}
 
