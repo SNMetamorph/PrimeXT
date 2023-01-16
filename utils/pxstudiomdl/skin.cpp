@@ -84,7 +84,7 @@ void Grab_Skin( s_texture_t *ptexture )
 	if (transparent)
 	{
 		Image_ApplyAlphaMask(pic, alphaMask, g_alpha_threshold);
-		Mem_Free(alphaMask);
+		Image_Free(alphaMask);
 	}
 
 	ImageUtils::ApplyPaletteGamma(pic); // process gamma
@@ -150,7 +150,7 @@ void ResizeTexture( s_texture_t *ptexture )
 		pdest[i*3+2] = ptexture->psrc->palette[i*4+2];
 	}
 
-	Mem_Free( ptexture->psrc );
+	Image_Free( ptexture->psrc );
 	ptexture->psrc = NULL;
 }
 
