@@ -229,6 +229,7 @@ bool Image_SavePNG( const char *name, rgbdata_t *pix );
 
 // common functions
 rgbdata_t *Image_Alloc( int width, int height, bool paletted = false );
+void Image_Free( rgbdata_t *image );
 rgbdata_t *Image_AllocCubemap( int width, int height );
 rgbdata_t *Image_AllocSkybox( int width, int height );
 rgbdata_t *Image_Copy( rgbdata_t *src );

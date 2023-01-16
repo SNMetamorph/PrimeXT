@@ -460,7 +460,7 @@ rgbdata_t *Image_Quantize( rgbdata_t *pic )
 
 	for( i = 0; i < pic->width * pic->height; i++ )
 		out->buffer[i] = inxsearch( pic->buffer[i*4+0], pic->buffer[i*4+1], pic->buffer[i*4+2] );
-	Mem_Free( pic ); // release RGBA image
 
+	Image_Free( pic ); // release RGBA image
 	return out;
 }

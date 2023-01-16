@@ -786,13 +786,13 @@ rgbdata_t *BufferToDDS( rgbdata_t *pix, int saveformat )
 			{
 				MsgDev( D_ERROR, "BufferToDDS: can't compress image\n" );
 				VFS_Close( file );
-				Mem_Free( mip );
+				Image_Free( mip );
 				return NULL;
 			}
 		}
 	}
 
-	Mem_Free( mip );
+	Image_Free( mip );
 
 	// create a new pic
 	out = (rgbdata_t *)Mem_Alloc( sizeof( rgbdata_t ) + VFS_Tell( file ));

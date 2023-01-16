@@ -169,6 +169,20 @@ rgbdata_t *Image_Alloc( int width, int height, bool paletted )
 
 /*
 =================
+Image_Free
+
+dispose allocated image representation
+=================
+*/
+void Image_Free( rgbdata_t *image )
+{
+	if (image) {
+		Mem_Free(image);
+	}
+}
+
+/*
+=================
 Image_AllocCubemap
 
 allocate image struct and partially fill it
@@ -781,7 +795,7 @@ rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize 
 				break;
 			default:
 				MsgDev( D_ERROR, "Image_LoadBMP: illegal pixel_size (%s)\n", name );
-				Mem_Free( pic );
+				Image_Free( pic );
 				return NULL;
 			}
 
@@ -1250,8 +1264,7 @@ rgbdata_t *Image_LoadPNG( const char *name, const byte *buffer, size_t filesize 
 	default:
 		MsgDev( D_ERROR, "Image_LoadPNG: Found unknown filter type (%s)\n", name );
 		Mem_Free( uncompressed_buffer );
-		Mem_Free( pic->buffer );
-		Mem_Free( pic );
+		Image_Free( pic );
 		return nullptr;
 	}
 
@@ -1315,8 +1328,7 @@ rgbdata_t *Image_LoadPNG( const char *name, const byte *buffer, size_t filesize 
 		default:
 			MsgDev( D_ERROR, "Image_LoadPNG: Found unknown filter type (%s)\n", name );
 			Mem_Free( uncompressed_buffer );
-			Mem_Free( pic->buffer );
-			Mem_Free( pic );
+			Image_Free( pic );
 			return nullptr;
 		}
 
@@ -1753,7 +1765,7 @@ bool Image_SaveDDS( const char *name, rgbdata_t *pix )
 		return false;
 
 	bool result = COM_SaveFile(name, dds_image->buffer, dds_image->size);
-	Mem_Free(dds_image);
+	Image_Free(dds_image);
 	return result;
 }
 
@@ -2171,7 +2183,7 @@ rgbdata_t *Image_Resample( rgbdata_t *pic, int new_width, int new_height )
 	out->flags = pic->flags;
 
 	// release old image
-	Mem_Free(pic);
+	Image_Free(pic);
 
 	return out;
 }
@@ -2343,7 +2355,7 @@ rgbdata_t *Image_MergeColorAlpha( rgbdata_t *color, rgbdata_t *alpha )
 		color->buffer[i*4+3] = avalue;
 	}
 
-	Mem_Free( int_alpha );
+	Image_Free( int_alpha );
 
 	return color;
 }
@@ -2391,7 +2403,7 @@ rgbdata_t *Image_CreateCubemap( rgbdata_t *images[6], bool skybox, bool nomips )
 	{
 		VectorAdd( out->reflectivity, images[i]->reflectivity, out->reflectivity );
 		memcpy( out->buffer + (images[i]->size * i), images[i]->buffer, images[i]->size );
-		Mem_Free( images[i] ); // release original
+		Image_Free( images[i] ); // release original
 	}
 
 	// divide by sides count
