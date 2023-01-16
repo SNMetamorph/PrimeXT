@@ -59,7 +59,6 @@ const imgtype_t img_hints[] =
 {
 { "_mask",   IMG_ALPHAMASK,		false }, // alpha-channel stored to another lump
 { "_norm",   IMG_NORMALMAP,		false }, // indexed normalmap
-{ "_n",      IMG_NORMALMAP,		false }, // indexed normalmap
 { "_nrm",    IMG_NORMALMAP,		false }, // indexed normalmap
 { "_local",  IMG_NORMALMAP,		false }, // indexed normalmap
 { "_ddn",    IMG_NORMALMAP,		false }, // indexed normalmap
@@ -2198,7 +2197,7 @@ but only if alpha value is above alpha threshold
 */
 bool Image_ApplyAlphaMask(rgbdata_t *pic, rgbdata_t *alphaMask, float alphaThreshold)
 {
-	if (!pic) {
+	if (!pic || !alphaMask) {
 		return false; // invalid buffer
 	}
 
