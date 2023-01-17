@@ -439,12 +439,13 @@ static void PrintOptionsList()
 		"     ^5-resize^7       : resize source image in percents (range 10%%-200%%)\n"
 		"     ^5-alphathres^7   : alpha threshold for transparency (0.0 - 1.0, default is 0.5)\n"
 		"     ^5-defaults^7     : don't ask user to set settings, use default if other not set\n"
+		"     ^5-outputfmt^7    : image format to be used when extracting images (bmp/dds/png/tga, default is \"bmp\")\n"
 		"     ^5-dev^7          : set message verbose level (1 - 5, default is 3)\n"
 		"\n"
 	);
 }
 
-static void AskUserForSettings()
+static void AskPackingSettings()
 {
 	std::string userInput;
 	while (true)
@@ -547,6 +548,20 @@ int main( int argc, char **argv )
 		{
 			ask_for_settings = false;
 		}
+		else if (!Q_stricmp(argv[i], "-outputfmt"))
+		{
+			ask_for_settings = false;
+			if (Q_stricmp(argv[i + 1], "bmp") != 0 &&
+				Q_stricmp(argv[i + 1], "tga") != 0 &&
+				Q_stricmp(argv[i + 1], "dds") != 0 &&
+				Q_stricmp(argv[i + 1], "png") != 0)
+			{
+				Msg("Specified unknown output image file format\n");
+				break;
+			}
+			Q_strncpy(output_ext, argv[i + 1], sizeof(output_ext));
+			i++;
+		}
 		else if (!Q_stricmp(argv[i], "-alphathres"))
 		{
 			ask_for_settings = false;
@@ -589,8 +604,6 @@ int main( int argc, char **argv )
 		char testname[64];
 		char *find = NULL;
 
-		AskUserForSettings();
-		start = I_FloatTime();
 		Q_strncpy( srcwad, srcpath, sizeof( srcwad ));
 		find = Q_stristr( srcwad, ".wad" );
 
@@ -652,7 +665,9 @@ int main( int argc, char **argv )
 		else
 		{
 			// use .bmp format for extracting textures from WAD by default, if other not specified
-			Q_strncpy(output_ext, "bmp", sizeof(output_ext));
+			if (Q_strlen(output_ext) == 0) {
+				Q_strncpy(output_ext, "bmp", sizeof(output_ext));
+			}
 
 			if (dstset) {
 				Q_strncpy(output_path, dstpath, sizeof(output_path));
@@ -686,10 +701,12 @@ int main( int argc, char **argv )
 		}
 		else
 		{
+			AskPackingSettings();
 			MsgDev(D_INFO, "Packing textures into ^3%s\n", dstwad);
 			working_mode = ProgramWorkingMode::PackingTextures;
 		}
 
+		start = I_FloatTime();
 		for (i = 0; i < search->numfilenames; i++)
 		{
 			Msg("Processing %s... ", search->filenames[i]);
