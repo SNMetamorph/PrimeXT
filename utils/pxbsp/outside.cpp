@@ -395,7 +395,7 @@ bool FillOutside( tree_t *tree, int hullnum, bool leakfile )
 		leaked = true;
 
 		// do animation
-		MsgDev(D_INFO, "^3=== LEAK in hull %i ===\n", hullnum);
+		MsgAnim(D_INFO, "^3=== LEAK in hull %i ===\n", hullnum);
 		GetVectorForKey(&g_entities[hit_occupied], "origin", origin);
 		MsgDev(D_REPORT, "\nEntity %i @ (%4.0f,%4.0f,%4.0f)\n", hit_occupied, origin[0], origin[1], origin[2]);
 		MsgDev(D_REPORT, "no filling performed\n");
