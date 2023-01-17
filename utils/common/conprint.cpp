@@ -313,39 +313,34 @@ void MsgAnim( int level, const char *pMsg, ... )
 	int j;
 	va_list	argptr;
 	char	text[1024];
-	
-	if( devloper_level < level ) 
+	char	empty[1024];
+
+	if (devloper_level < level)
 		return;
 
-	va_start( argptr, pMsg );
-	Q_vsnprintf( text, sizeof( text ), pMsg, argptr );
-	va_end( argptr );
-
-#if XASH_POSIX
-	Sys_Print("\033[5m");
-	Sys_Print(text);
-	Sys_Print( "^7\n" );
-#elif XASH_WIN32
-	char	empty[1024];
+	va_start(argptr, pMsg);
+	Q_vsnprintf(text, sizeof(text), pMsg, argptr);
+	va_end(argptr);
 
 	// fill clear string
 	for (j = 0; j < Q_strlen(text); j++) {
 		empty[j] = ' ';
-	}
+}
 	empty[j] = '\r';
-	empty[j+1] = '\0';
+	empty[j + 1] = '\0';
 
 	// do animation
-	for( int i = 0; i < 8; i++ )
+	for (int i = 0; i < 8; i++)
 	{
-		Sys_IgnoreLog( i < 7 );
-		if( i & 1 ) Sys_Print( text );
-		else Sys_Print( empty );
-		Sleep( 150 );
+		Sys_IgnoreLog(i < 7);
+		if (i & 1) {
+			Sys_Print(text);
+		}
+		else {
+			Sys_Print(empty);
+		}
+		Sys_Sleep(150);
 	}
-#else
-#error "Implement me!"
-#endif
 }
 
 /*
