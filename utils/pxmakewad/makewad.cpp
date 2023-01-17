@@ -24,6 +24,8 @@ GNU General Public License for more details.
 #include "build_info.h"
 #include "app_info.h"
 #include "port.h"
+#include <string>
+#include <iostream>
 
 enum class ProgramWorkingMode
 {
@@ -39,6 +41,7 @@ char output_path[256];
 char output_ext[8];
 float resize_percent = 0.0f;
 float alpha_threshold = 0.5f;
+bool ask_for_settings = true;
 int processed_files = 0;
 int graphics_wadfile = 0;
 ProgramWorkingMode working_mode = ProgramWorkingMode::Unknown;
@@ -402,7 +405,7 @@ static const char *GetStatusCodeDescription(FileStatusCode statusCode)
 {
 	switch (statusCode)
 	{
-		case FileStatusCode::InvalidImageHint: return "non-diffuse texture rejected";
+		case FileStatusCode::InvalidImageHint: return "wrong texture type";
 		case FileStatusCode::NameTooLong: return "file name too long";
 		case FileStatusCode::NoMatchedInputFiles: return "no matched files in source WAD";
 		case FileStatusCode::UnknownError: return "unknown error";
@@ -435,9 +438,66 @@ static void PrintOptionsList()
 		"     ^5-forcereplace^7 : replace existing images even if they doesn't matched by size\n"
 		"     ^5-resize^7       : resize source image in percents (range 10%%-200%%)\n"
 		"     ^5-alphathres^7   : alpha threshold for transparency (0.0 - 1.0, default is 0.5)\n"
+		"     ^5-defaults^7     : don't ask user to set settings, use default if other not set\n"
 		"     ^5-dev^7          : set message verbose level (1 - 5, default is 3)\n"
 		"\n"
 	);
+}
+
+static void AskUserForSettings()
+{
+	std::string userInput;
+	while (true)
+	{
+		Sys_Print("Would you like to set settings? [y/n]: ");
+		std::cin >> userInput;
+		if (userInput.compare("y") == 0) {
+			break;
+		}
+		else if (userInput.compare("n") == 0) {
+			return;
+		}
+	}
+
+	while (true)
+	{
+		Sys_Print("Alpha transparency threshold [0.0 - 1.0, \"d\" - for default]: ");
+		std::cin >> userInput;
+		if (userInput.compare("d") == 0) {
+			break;
+		}
+		else if (!userInput.empty()) {
+			alpha_threshold = bound(0.0f, atof(userInput.c_str()), 1.0f);
+			break;
+		}
+	}
+
+	while (true)
+	{
+		Sys_Print("Image resize percent [10% - 200%, \"n\" - to disable resize]: ");
+		std::cin >> userInput;
+		if (userInput.compare("n") == 0) {
+			break;
+		}
+		else if (!userInput.empty()) {
+			resize_percent = bound(10.0f, atof(userInput.c_str()), 200.0f);
+			break;
+		}
+	}
+
+	while (true)
+	{
+		Sys_Print("Replace existing images in WAD, if they matched by size? [y/n, \"d\" - for default]: ");
+		std::cin >> userInput;
+		if (userInput.compare("y") == 0) {
+			SetReplaceLevel(REP_NORMAL);
+			break;
+		}
+		else if (userInput.compare("n") == 0 || userInput.compare("d") == 0) {
+			break;
+		}
+	}
+	Sys_Print("\n");
 }
 
 static void WaitForKey()
@@ -459,7 +519,6 @@ int main( int argc, char **argv )
 	atexit( Shutdown_Makewad );
 	Sys_SetupCrashHandler();
 	PrintTitle();
-	start = I_FloatTime();
 
 	SetReplaceLevel( REP_IGNORE );
 	output_path[0] = '\0';
@@ -469,20 +528,28 @@ int main( int argc, char **argv )
 	{
 		if (!Q_stricmp(argv[i], "-replace"))
 		{
+			ask_for_settings = false;
 			SetReplaceLevel(REP_NORMAL); // replace only if image dimensions is equal
 		}
 		else if (!Q_stricmp(argv[i], "-forcereplace"))
 		{
+			ask_for_settings = false;
 			SetReplaceLevel(REP_FORCE); // rescale image, replace in any cases
 		}
 		else if (!Q_stricmp(argv[i], "-resize"))
 		{
+			ask_for_settings = false;
 			resize_percent = atof(argv[i + 1]); // resize source image (percent)
 			resize_percent = bound(10.0f, resize_percent, 200.0f);
 			i++;
 		}
+		else if (!Q_stricmp(argv[i], "-defaults"))
+		{
+			ask_for_settings = false;
+		}
 		else if (!Q_stricmp(argv[i], "-alphathres"))
 		{
+			ask_for_settings = false;
 			alpha_threshold = atof(argv[i + 1]);
 			alpha_threshold = bound(0.0f, alpha_threshold, 1.0f);
 			i++;
@@ -522,6 +589,8 @@ int main( int argc, char **argv )
 		char testname[64];
 		char *find = NULL;
 
+		AskUserForSettings();
+		start = I_FloatTime();
 		Q_strncpy( srcwad, srcpath, sizeof( srcwad ));
 		find = Q_stristr( srcwad, ".wad" );
 
