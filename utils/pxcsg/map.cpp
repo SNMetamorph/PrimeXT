@@ -903,8 +903,24 @@ short GetFaceInfoForEntity( mapent_t *mapent )
 	if( g_mapentities.Count() == 1 )
 	{
 		// get defaults
-		if( !max_extent ) max_extent = MAX_SURFACE_EXTENT;
-		if( !texture_step ) texture_step = TEXTURE_STEP;
+		if (g_compatibility_goldsrc)
+		{
+			if (!max_extent) {
+				max_extent = MAX_SURFACE_EXTENT;
+			}
+			if (!texture_step) {
+				texture_step = TEXTURE_STEP;
+			}
+		}
+		else
+		{
+			if (!max_extent) {
+				max_extent = 128;
+			}
+			if (!texture_step) {
+				texture_step = TEXTURE_STEP;
+			}
+		}
 
 		// if user not specified landscape but desire to change lightmap resolution\subdiv size globally
 		if( !ValueForKey( (entity_t *)mapent, "zhlt_landscape", true ))
