@@ -906,7 +906,6 @@ word GL_FindShader( const char *glname, const char *vpname, const char *fpname, 
 void GL_SetShaderDirective( char *options, const char *directive );
 void GL_AddShaderDirective( char *options, const char *directive );
 void GL_AddShaderFeature( word shaderNum, int feature );
-void GL_CheckTextureAlpha( char *options, int texturenum );
 void GL_EncodeNormal( char *options, int texturenum );
 void GL_BindShader( struct glsl_prog_s *shader );
 void GL_FreeUberShaders( void );
