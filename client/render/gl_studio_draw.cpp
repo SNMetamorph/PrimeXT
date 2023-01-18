@@ -3052,7 +3052,7 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 	}
 
 	if( shader_translucent )
-		GL_AddShaderFeature( shaderNum, SHADER_TRANSLUCENT|SHADER_USE_SCREENCOPY );
+		GL_AddShaderFeature( shaderNum, SHADER_USE_SCREENCOPY );
 
 	if( using_cubemaps )
 		GL_AddShaderFeature( shaderNum, SHADER_USE_CUBEMAPS );

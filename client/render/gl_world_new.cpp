@@ -923,7 +923,7 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 	}
 
 	if( shader_translucent )
-		GL_AddShaderFeature( shaderNum, SHADER_TRANSLUCENT|SHADER_USE_SCREENCOPY );
+		GL_AddShaderFeature( shaderNum, SHADER_USE_SCREENCOPY );
 	if( shader_additive )
 		GL_AddShaderFeature( shaderNum, SHADER_ADDITIVE );
 
