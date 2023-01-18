@@ -81,7 +81,7 @@ Studio models are position independent, so the cache manager can move them.
 #define STUDIO_NF_GLOSSMAP		0x0100	// glossmap
 #define STUDIO_NF_GLOSSPOWER	0x0200
 #define STUDIO_NF_LUMA			0x0400	// self-illuminate parts
-#define STUDIO_NF_ALPHASOLID	0x0800	// use with STUDIO_NF_MASKED to have solid alphatest surfaces for env_static
+#define STUDIO_NF_SOLIDGEOM		0x0800	// use with STUDIO_NF_MASKED to have solid alpha-test polygones for rigid body collisions
 #define STUDIO_NF_TWOSIDE		0x1000	// render mesh as twosided
 #define STUDIO_NF_HEIGHTMAP		0x2000
 

@@ -249,7 +249,7 @@ void TraceMesh :: ClipBoxToFacet( mfacet_t *facet )
 
 	if( !bIsTraceLine && ptexture )
 	{
-		if( FBitSet( ptexture->flags, STUDIO_NF_MASKED ) && !FBitSet( ptexture->flags, STUDIO_NF_ALPHASOLID ))
+		if( FBitSet( ptexture->flags, STUDIO_NF_MASKED ) && !FBitSet( ptexture->flags, STUDIO_NF_SOLIDGEOM ))
 			return;
 	}
 
@@ -364,7 +364,7 @@ void TraceMesh :: TestBoxInFacet( mfacet_t *facet )
 
 	if( !bIsTraceLine && ptexture )
 	{
-		if( FBitSet( ptexture->flags, STUDIO_NF_MASKED ) && !FBitSet( ptexture->flags, STUDIO_NF_ALPHASOLID ))
+		if( FBitSet( ptexture->flags, STUDIO_NF_MASKED ) && !FBitSet( ptexture->flags, STUDIO_NF_SOLIDGEOM ))
 			return;
 	}
 

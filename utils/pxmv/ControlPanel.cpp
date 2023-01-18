@@ -560,7 +560,7 @@ ControlPanel::handleEvent (mxEvent *event)
 					cbFlatshade->setChecked ((ptexture->flags & STUDIO_NF_FLATSHADE) == STUDIO_NF_FLATSHADE);
 					cbTwoSided->setChecked ((ptexture->flags & STUDIO_NF_TWOSIDE) == STUDIO_NF_TWOSIDE);
 					cbSmooth->setChecked ((ptexture->flags & STUDIO_NF_SMOOTH) == STUDIO_NF_SMOOTH);
-					cbSolidAlpha->setChecked ((ptexture->flags & STUDIO_NF_ALPHASOLID) == STUDIO_NF_ALPHASOLID);
+					cbSolidAlpha->setChecked ((ptexture->flags & STUDIO_NF_SOLIDGEOM) == STUDIO_NF_SOLIDGEOM);
 					leTextureName->setLabel( ptexture->name );
 				}
 				d_GlWindow->redraw ();
@@ -694,9 +694,9 @@ ControlPanel::handleEvent (mxEvent *event)
 			{
 				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + g_viewerSettings.texture;
 				if (cbSolidAlpha->isChecked ())
-					ptexture->flags |= STUDIO_NF_ALPHASOLID;
+					ptexture->flags |= STUDIO_NF_SOLIDGEOM;
 				else
-					ptexture->flags &= ~STUDIO_NF_ALPHASOLID;
+					ptexture->flags &= ~STUDIO_NF_SOLIDGEOM;
 				g_viewerSettings.numModelChanges++;
 			}
 		}
@@ -1903,7 +1903,7 @@ ControlPanel::initTextures ()
 			cbFlatshade->setChecked ((ptextures[0].flags & STUDIO_NF_FLATSHADE) == STUDIO_NF_FLATSHADE);
 			cbTwoSided->setChecked ((ptextures[0].flags & STUDIO_NF_TWOSIDE) == STUDIO_NF_TWOSIDE);
 			cbSmooth->setChecked ((ptextures[0].flags & STUDIO_NF_SMOOTH) == STUDIO_NF_SMOOTH);
-			cbSolidAlpha->setChecked ((ptextures[0].flags & STUDIO_NF_ALPHASOLID) == STUDIO_NF_ALPHASOLID);
+			cbSolidAlpha->setChecked ((ptextures[0].flags & STUDIO_NF_SOLIDGEOM) == STUDIO_NF_SOLIDGEOM);
 			leTextureName->setLabel( ptextures[0].name );
 		}
 #if 0
