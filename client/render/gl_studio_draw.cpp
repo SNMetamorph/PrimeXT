@@ -2927,8 +2927,6 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 	if( FBitSet( mat->flags, STUDIO_NF_CHROME ))
 		GL_AddShaderDirective( options, "HAS_CHROME" );
 
-	GL_CheckTextureAlpha( options, mat->gl_diffuse_id );
-
 	if( RI->currententity->curstate.rendermode == kRenderTransAdd || RI->currententity->curstate.rendermode == kRenderGlow )
 	{
 		// additive and glow is always fullbright
@@ -3120,8 +3118,6 @@ word CStudioModelRenderer :: ShaderLightForward( CDynLight *dl, mstudiomaterial_
 
 	if( FBitSet( mat->flags, STUDIO_NF_HAS_DETAIL ) && CVAR_TO_BOOL( r_detailtextures ))
 		GL_AddShaderDirective( options, "HAS_DETAIL" );
-
-	GL_CheckTextureAlpha( options, mat->gl_diffuse_id );
 
 	if( CVAR_TO_BOOL( cv_bump ) && FBitSet( mat->flags, STUDIO_NF_NORMALMAP ) && !FBitSet( dl->flags, DLF_NOBUMP ))
 	{

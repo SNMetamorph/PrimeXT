@@ -1488,12 +1488,6 @@ const char *GL_PretifyListOptions( const char *options, bool newlines )
 	return output;
 }
 
-void GL_CheckTextureAlpha( char *options, int texturenum )
-{
-	if( RENDER_GET_PARM( PARM_TEX_ENCODE, texturenum ) == DXT_ENCODE_ALPHA_SDF )
-		GL_AddShaderDirective( options, "SIGNED_DISTANCE_FIELD" );
-}
-
 void GL_EncodeNormal( char *options, int texturenum )
 {
 	if( RENDER_GET_PARM( PARM_TEX_GLFORMAT, texturenum ) == GL_COMPRESSED_RED_GREEN_RGTC2_EXT )
