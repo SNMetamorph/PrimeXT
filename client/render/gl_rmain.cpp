@@ -1032,6 +1032,7 @@ int HUD_RenderFrame( const struct ref_viewpass_s *rvp )
 	RefParams refParams = RP_NONE;
 	ref_viewpass_t defVP = *rvp;
 	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
+	bool multisampling = CVAR_GET_FLOAT("gl_msaa") > 0.0f;
 
 	// setup some renderer flags
 	if( !FBitSet( rvp->flags, RF_DRAW_CUBEMAP ))
@@ -1076,8 +1077,14 @@ int HUD_RenderFrame( const struct ref_viewpass_s *rvp )
 	}
 	else
 	{
-		if (hdr_rendering) {
-			GL_BindDrawbuffer(tr.screen_temp_fbo_msaa);
+		if (hdr_rendering) 
+		{
+			if (multisampling) {
+				GL_BindDrawbuffer(tr.screen_multisample_fbo);
+			}
+			else {
+				GL_BindDrawbuffer(tr.screen_hdr_fbo);
+			}
 		}
 		R_RenderScene( &defVP, refParams );
 	}

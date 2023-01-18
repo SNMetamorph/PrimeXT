@@ -727,16 +727,16 @@ void GL_InitModelLightCache( void )
 
 static void GL_InitScreenFBOTextures(int colorFlags, int depthFlags)
 {
-	tr.screen_temp_fbo_msaa_texture_color = CREATE_TEXTURE("*screen_temp_fbo_msaa_texture_color", glState.width, glState.height, NULL, colorFlags);
-	tr.screen_temp_fbo_msaa_texture_depth = CREATE_TEXTURE("*screen_temp_fbo_msaa_texture_depth", glState.width, glState.height, NULL, depthFlags);
+	tr.screen_multisample_fbo_texture_color = CREATE_TEXTURE("*screen_temp_fbo_msaa_texture_color", glState.width, glState.height, NULL, colorFlags);
+	tr.screen_multisample_fbo_texture_depth = CREATE_TEXTURE("*screen_temp_fbo_msaa_texture_depth", glState.width, glState.height, NULL, depthFlags);
 }
 
 static void GL_DestroyScreenFBOTextures()
 {
-	FREE_TEXTURE(tr.screen_temp_fbo_msaa_texture_color);
-	FREE_TEXTURE(tr.screen_temp_fbo_msaa_texture_depth);
-	tr.screen_temp_fbo_msaa_texture_color = 0;
-	tr.screen_temp_fbo_msaa_texture_depth = 0;
+	FREE_TEXTURE(tr.screen_multisample_fbo_texture_color);
+	FREE_TEXTURE(tr.screen_multisample_fbo_texture_depth);
+	tr.screen_multisample_fbo_texture_color = 0;
+	tr.screen_multisample_fbo_texture_depth = 0;
 }
 
 void GL_InitMultisampleScreenFBO()
@@ -746,14 +746,14 @@ void GL_InitMultisampleScreenFBO()
 	int texTarget = GL_TEXTURE_2D_MULTISAMPLE;
 
 	GL_DestroyScreenFBOTextures();
-	for (int i = 0; !tr.screen_temp_fbo_msaa_texture_color && !tr.screen_temp_fbo_msaa_texture_depth; ++i)
+	for (int i = 0; !tr.screen_multisample_fbo_texture_color && !tr.screen_multisample_fbo_texture_depth; ++i)
 	{
 		if (i > 2) {
 			HOST_ERROR("GL_InitMultisampleScreenFBO: failed to create FBO textures\n");
 		}
 
 		GL_InitScreenFBOTextures(texColorFlags, texDepthFlags);
-		if (!tr.screen_temp_fbo_msaa_texture_color || !tr.screen_temp_fbo_msaa_texture_depth)
+		if (!tr.screen_multisample_fbo_texture_color || !tr.screen_multisample_fbo_texture_depth)
 		{
 			texTarget = GL_TEXTURE_2D;
 			ClearBits(texColorFlags, TF_MULTISAMPLE);
@@ -762,14 +762,14 @@ void GL_InitMultisampleScreenFBO()
 		}
 	}
 
-	if (!tr.screen_temp_fbo_msaa)
-		tr.screen_temp_fbo_msaa = GL_AllocDrawbuffer("*screen_temp_fbo_msaa", glState.width, glState.height, 1);
+	if (!tr.screen_multisample_fbo)
+		tr.screen_multisample_fbo = GL_AllocDrawbuffer("*screen_multisample_fbo", glState.width, glState.height, 1);
 	else
-		GL_ResizeDrawbuffer(tr.screen_temp_fbo_msaa, glState.width, glState.height, 1);
+		GL_ResizeDrawbuffer(tr.screen_multisample_fbo, glState.width, glState.height, 1);
 
-	GL_AttachColorTextureToFBO(tr.screen_temp_fbo_msaa, tr.screen_temp_fbo_msaa_texture_color, 0);
-	GL_AttachDepthTextureToFBO(tr.screen_temp_fbo_msaa, tr.screen_temp_fbo_msaa_texture_depth);
-	GL_CheckFBOStatus(tr.screen_temp_fbo_msaa);
+	GL_AttachColorTextureToFBO(tr.screen_multisample_fbo, tr.screen_multisample_fbo_texture_color, 0);
+	GL_AttachDepthTextureToFBO(tr.screen_multisample_fbo, tr.screen_multisample_fbo_texture_depth);
+	GL_CheckFBOStatus(tr.screen_multisample_fbo);
 }
 
 void GL_InitTempScreenFBO()
@@ -779,18 +779,18 @@ void GL_InitTempScreenFBO()
 	if (!GL_Support(R_FRAMEBUFFER_OBJECT) || !GL_Support(R_DRAW_BUFFERS_EXT))
 		return;
 
-	if (!tr.screen_temp_fbo)
-		tr.screen_temp_fbo = GL_AllocDrawbuffer("*screen_temp_fbo", glState.width, glState.height, 1);
+	if (!tr.screen_hdr_fbo)
+		tr.screen_hdr_fbo = GL_AllocDrawbuffer("*screen_temp_fbo", glState.width, glState.height, 1);
 	else
-		GL_ResizeDrawbuffer(tr.screen_temp_fbo, glState.width, glState.height, 1);
+		GL_ResizeDrawbuffer(tr.screen_hdr_fbo, glState.width, glState.height, 1);
 
-	FREE_TEXTURE(tr.screen_temp_fbo_texture_color);
-	FREE_TEXTURE(tr.screen_temp_fbo_texture_depth);
+	FREE_TEXTURE(tr.screen_hdr_fbo_texture_color);
+	FREE_TEXTURE(tr.screen_hdr_fbo_texture_depth);
 
-	tr.screen_temp_fbo_texture_color = CREATE_TEXTURE("*screen_temp_fbo_texture_color", glState.width, glState.height, NULL, TF_HAS_ALPHA | TF_ARB_16BIT | TF_CLAMP | TF_ARB_FLOAT);
-	tr.screen_temp_fbo_texture_depth = CREATE_TEXTURE("*screen_temp_fbo_texture_depth", glState.width, glState.height, NULL, TF_RT_DEPTH | TF_CLAMP);
+	tr.screen_hdr_fbo_texture_color = CREATE_TEXTURE("*screen_temp_fbo_texture_color", glState.width, glState.height, NULL, TF_HAS_ALPHA | TF_ARB_16BIT | TF_CLAMP | TF_ARB_FLOAT);
+	tr.screen_hdr_fbo_texture_depth = CREATE_TEXTURE("*screen_temp_fbo_texture_depth", glState.width, glState.height, NULL, TF_RT_DEPTH | TF_CLAMP);
 
-	GL_Bind(GL_TEXTURE0, tr.screen_temp_fbo_texture_color);
+	GL_Bind(GL_TEXTURE0, tr.screen_hdr_fbo_texture_color);
 	pglGenerateMipmap(GL_TEXTURE_2D);
 	pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -798,17 +798,17 @@ void GL_InitTempScreenFBO()
 	pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	GL_Bind(GL_TEXTURE0, 0);
 
-	GL_AttachColorTextureToFBO(tr.screen_temp_fbo, tr.screen_temp_fbo_texture_color, 0);
-	GL_AttachDepthTextureToFBO(tr.screen_temp_fbo, tr.screen_temp_fbo_texture_depth);
-	GL_CheckFBOStatus(tr.screen_temp_fbo);
+	GL_AttachColorTextureToFBO(tr.screen_hdr_fbo, tr.screen_hdr_fbo_texture_color, 0);
+	GL_AttachDepthTextureToFBO(tr.screen_hdr_fbo, tr.screen_hdr_fbo_texture_depth);
+	GL_CheckFBOStatus(tr.screen_hdr_fbo);
 
 	// generate screen fbo texture mips
 	for (int i = 0; i < 6; i++)
 	{
-		if (tr.screen_temp_fbo_mip[i] <= 0)
-			pglGenFramebuffers(1, &tr.screen_temp_fbo_mip[i]);
-		pglBindFramebuffer(GL_FRAMEBUFFER_EXT, tr.screen_temp_fbo_mip[i]);
-		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, tr.screen_temp_fbo_texture_color, i + 1);
+		if (tr.screen_hdr_fbo_mip[i] <= 0)
+			pglGenFramebuffers(1, &tr.screen_hdr_fbo_mip[i]);
+		pglBindFramebuffer(GL_FRAMEBUFFER_EXT, tr.screen_hdr_fbo_mip[i]);
+		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, tr.screen_hdr_fbo_texture_color, i + 1);
 	}
 
 	pglDrawBuffersARB(ARRAYSIZE(MRTBuffers), MRTBuffers);

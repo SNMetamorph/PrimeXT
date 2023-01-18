@@ -542,13 +542,13 @@ typedef struct
 	word		bilateralShader;	// upscale filter
 
 	// HDR rendering stuff
-	gl_drawbuffer_t *screen_temp_fbo;
-	gl_drawbuffer_t *screen_temp_fbo_msaa;
-	uint	screen_temp_fbo_mip[6];
-	uint	screen_temp_fbo_texture_color;
-	uint	screen_temp_fbo_texture_depth;
-	uint	screen_temp_fbo_msaa_texture_color;
-	uint	screen_temp_fbo_msaa_texture_depth;
+	gl_drawbuffer_t *screen_hdr_fbo;
+	gl_drawbuffer_t *screen_multisample_fbo;
+	uint	screen_hdr_fbo_mip[6];
+	uint	screen_hdr_fbo_texture_color;
+	uint	screen_hdr_fbo_texture_depth;
+	uint	screen_multisample_fbo_texture_color;
+	uint	screen_multisample_fbo_texture_depth;
 
 	// skybox shaders
 	word		skyboxEnv[2];	// skybox & sun

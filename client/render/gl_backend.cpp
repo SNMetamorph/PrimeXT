@@ -189,11 +189,11 @@ static void R_RenderScreenQuad()
 	GL_DEBUG_SCOPE();
 	// copy depth from HDR framebuffer to screen framebuffer
 	pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, FBO_MAIN);
-	pglBindFramebuffer(GL_READ_FRAMEBUFFER, tr.screen_temp_fbo->id);
+	pglBindFramebuffer(GL_READ_FRAMEBUFFER, tr.screen_hdr_fbo->id);
 	pglBlitFramebuffer(0, 0, glState.width, glState.height, 0, 0, glState.width, glState.height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 	GL_BindFBO(FBO_MAIN);
 	GL_Setup2D();
-	GL_Bind(GL_TEXTURE0, tr.screen_temp_fbo->colortarget[0]);
+	GL_Bind(GL_TEXTURE0, tr.screen_hdr_fbo->colortarget[0]);
 	RenderFSQ(glState.width, glState.height);
 	GL_Bind(GL_TEXTURE0, 0);
 }
@@ -463,6 +463,8 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	mstudiolight_t	light;
 	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
 	bool deferred = CVAR_TO_BOOL(cv_deferred);
+	bool multisampling = CVAR_GET_FLOAT("gl_msaa") > 0.0f;
+
 	tr.frametime = tr.saved_frametime;
 
 	// go into 2D mode (in case we draw PlayerSetup between two 2d calls)
@@ -499,11 +501,14 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 
 	if (!deferred && hdr_rendering)
 	{
-		// copy image from multisampling framebuffer to screen framebuffer
-		pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, tr.screen_temp_fbo->id);
-		pglBindFramebuffer(GL_READ_FRAMEBUFFER, tr.screen_temp_fbo_msaa->id);
-		pglBlitFramebuffer(0, 0, glState.width, glState.height, 0, 0, glState.width, glState.height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);  
-		GL_BindFBO(tr.screen_temp_fbo->id);
+		if (multisampling)
+		{
+			// copy image from multisampling framebuffer to screen framebuffer
+			pglBindFramebuffer(GL_DRAW_FRAMEBUFFER, tr.screen_hdr_fbo->id);
+			pglBindFramebuffer(GL_READ_FRAMEBUFFER, tr.screen_multisample_fbo->id);
+			pglBlitFramebuffer(0, 0, glState.width, glState.height, 0, 0, glState.width, glState.height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		}
+		GL_BindFBO(tr.screen_hdr_fbo->id);
 		RenderAverageLuminance();
 	}
 
