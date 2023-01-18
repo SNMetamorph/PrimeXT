@@ -4022,7 +4022,7 @@ void Cmd_TexRenderMode( void )
 	}
 	else if( !Q_stricmp( token, "masked_solid" ))
 	{
-		g_texture[i].flags |= (STUDIO_NF_MASKED|STUDIO_NF_ALPHASOLID);
+		g_texture[i].flags |= (STUDIO_NF_MASKED|STUDIO_NF_SOLIDGEOM);
 	}
 	else if( !Q_stricmp( token, "fullbright" ))
 	{
