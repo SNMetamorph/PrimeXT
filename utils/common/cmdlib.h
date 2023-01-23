@@ -58,8 +58,6 @@ void	SafeWriteExt( int handle, void *buffer, int count, const char *file, const 
 #define SafeRead( file, buffer, count )		SafeReadExt( file, buffer, count, __FILE__, __LINE__ )
 #define SafeWrite( file, buffer, count )	SafeWriteExt( file, buffer, count, __FILE__, __LINE__ )
 
-#define IMAGE_EXISTS( path )			( FS_FileExists( va( "%s.tga", path ), false ) || FS_FileExists( va( "%s.dds", path ), false ))
-
 //
 // zone.cpp
 //

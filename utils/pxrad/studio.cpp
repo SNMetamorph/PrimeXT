@@ -367,23 +367,23 @@ static int StudioCreateMeshFromTriangles( entity_t *ent, studiohdr_t *phdr, cons
 		Q_snprintf( diffuse, sizeof( diffuse ), "textures/%s/%s", mdlname, texname );
 
 #ifdef HLRAD_EXTERNAL_TEXTURES
-		if( FBitSet( tex->flags, STUDIO_NF_ADDITIVE|STUDIO_NF_MASKED ) && IMAGE_EXISTS( diffuse ))
+		if (FBitSet(tex->flags, STUDIO_NF_ADDITIVE | STUDIO_NF_MASKED))
 		{
-			rgbdata_t *test = COM_LoadImage( diffuse );
+			rgbdata_t *test = COM_LoadImage(diffuse);
 
 			// external texture has alpha - use it
-			if( test )
+			if (test)
 			{
-				if( FBitSet( test->flags, IMAGE_HAS_ALPHA ))
+				if (FBitSet(test->flags, IMAGE_HAS_ALPHA))
 				{
-					MsgDev( D_REPORT, "load external texture %s\n", diffuse );
+					MsgDev(D_REPORT, "load external texture %s\n", diffuse);
 					texdata_size += test->width * test->height;
 					external_textures[i] = test;
 				}
 				else
 				{
 					// has no alpha
-					Mem_Free( test );
+					Mem_Free(test);
 				}
 			}
 		}
