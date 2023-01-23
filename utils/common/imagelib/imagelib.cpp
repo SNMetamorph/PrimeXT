@@ -1460,7 +1460,7 @@ rgbdata_t *COM_LoadImage( const char *filename, bool quiet )
 #ifdef ALLOW_WADS_IN_PACKS
 			buf = FS_LoadFile( path, &filesize, false );
 #else
-			buf = COM_LoadFile( path, &filesize );
+			buf = COM_LoadFile( path, &filesize, false );
 #endif
 			if( buf && filesize > 0 )
 			{
