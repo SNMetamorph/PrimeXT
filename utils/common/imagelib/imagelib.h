@@ -213,6 +213,8 @@ typedef struct saveimage_s
 	bool		(*savefunc)( const char *name, rgbdata_t *pix );
 } saveimage_t;
 
+typedef byte* (*pfnLoadFileInternal)(const char*, size_t*, bool);
+
 // image loading
 rgbdata_t *Image_LoadTGA( const char *name, const byte *buffer, size_t filesize );
 rgbdata_t *Image_LoadBMP( const char *name, const byte *buffer, size_t filesize );
@@ -236,7 +238,7 @@ rgbdata_t *Image_Copy( rgbdata_t *src );
 void Image_PackRGB( float flColor[3], uint32_t &icolor );
 void Image_UnpackRGB( uint32_t icolor, float flColor[3] );
 int Image_HintFromSuf( const char *lumpname, bool permissive = false );
-rgbdata_t *COM_LoadImage( const char *filename, bool quiet = false );
+rgbdata_t *COM_LoadImage( const char *filename, bool quiet = false, pfnLoadFileInternal loadFileFunc = nullptr );
 const imgtype_t *Image_ImageTypeFromHint( char value );
 bool COM_SaveImage( const char *filename, rgbdata_t *pix );
 bool Image_ValidSize( const char *name, int width, int height );

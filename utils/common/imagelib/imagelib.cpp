@@ -1424,7 +1424,7 @@ COM_LoadImage
 handle bmp & tga
 ================
 */
-rgbdata_t *COM_LoadImage( const char *filename, bool quiet )
+rgbdata_t *COM_LoadImage(const char *filename, bool quiet, pfnLoadFileInternal loadFileFunc)
 {
 	const char	*ext = COM_FileExtension( filename );
 	char		path[128], loadname[128];
@@ -1457,11 +1457,14 @@ rgbdata_t *COM_LoadImage( const char *filename, bool quiet )
 		if( anyformat || !Q_stricmp( ext, format->ext ))
 		{
 			Q_sprintf( path, format->formatstring, loadname, "", format->ext );
-#ifdef ALLOW_WADS_IN_PACKS
-			buf = FS_LoadFile( path, &filesize, false );
-#else
-			buf = COM_LoadFile( path, &filesize, false );
-#endif
+
+			if (loadFileFunc) {
+				buf = loadFileFunc(path, &filesize, false);
+			}
+			else {
+				buf = COM_LoadFile(path, &filesize, false);
+			}
+
 			if( buf && filesize > 0 )
 			{
 				image = format->loadfunc( path, buf, filesize );
@@ -1471,8 +1474,9 @@ rgbdata_t *COM_LoadImage( const char *filename, bool quiet )
 		}
 	}
 
-	if( !quiet )
-		MsgDev( D_ERROR, "COM_LoadImage: couldn't load \"%s\"\n", loadname );
+	if (!quiet) {
+		MsgDev(D_ERROR, "COM_LoadImage: couldn't load \"%s\"\n", loadname);
+	}
 	return NULL;
 }
 
