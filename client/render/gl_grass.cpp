@@ -898,6 +898,8 @@ void R_RenderGrassOnList( void )
 	if( !FBitSet( RI->params, RP_DEFERREDLIGHT ))
 		GL_AlphaTest( GL_TRUE );
 	else GL_AlphaTest( GL_FALSE );
+
+	GL_DEBUG_SCOPE();
 	pglAlphaFunc( GL_GREATER, r_grass_alpha->value );
 	GL_Cull( GL_NONE );	// grass is double-sided poly
 	GL_DepthMask( GL_TRUE );

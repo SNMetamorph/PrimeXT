@@ -1721,7 +1721,10 @@ void R_RenderDecalsSolidList( drawlist_t drawlist_type )
 
 	if( FBitSet( RI->params, RP_DEFERREDSCENE ))
 		GL_Blend( GL_FALSE );
-	else GL_Blend( GL_TRUE );
+	else 
+		GL_Blend( GL_TRUE );
+
+	GL_DEBUG_SCOPE();
 	GL_AlphaTest( GL_FALSE );
 	GL_DepthMask( GL_FALSE );
 
@@ -1778,6 +1781,7 @@ void R_RenderDecalsTransList( drawlist_t drawlist_type )
 		return;
 	}
 
+	GL_DEBUG_SCOPE();
 	GL_Blend( GL_TRUE );
 	GL_AlphaTest( GL_FALSE );
 	GL_DepthMask( GL_FALSE );
