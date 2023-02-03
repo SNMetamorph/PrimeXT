@@ -1750,6 +1750,7 @@ void CStudioModelRenderer :: DrawDecal( CSolidEntry *entry, GLenum cull_mode )
 		pglPolygonOffset( -1.0f, -r_polyoffset->value );
 	}
 
+	GL_DEBUG_SCOPE();
 	GL_Blend( GL_TRUE );
 	GL_DepthMask( GL_FALSE );
 	GL_AlphaTest( GL_FALSE );

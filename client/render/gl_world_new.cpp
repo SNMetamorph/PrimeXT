@@ -3321,6 +3321,7 @@ void R_RenderDynLightList( bool solid )
 
 	if( R_FullBright( )) return;
 
+	GL_DEBUG_SCOPE();
 	GL_Blend( GL_TRUE );
 	GL_AlphaTest( GL_FALSE );
 	GL_DepthMask( GL_FALSE );

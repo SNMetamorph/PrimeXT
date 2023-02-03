@@ -705,6 +705,7 @@ inline void R_RenderTransMesh( CTransEntry *entry )
 
 inline void R_RenderLightForTransMeshes( void )
 {
+	GL_DEBUG_SCOPE();
 	g_StudioRenderer.RenderDynLightList( false );
 }
 
@@ -715,6 +716,7 @@ inline void R_RenderShadowStudioList( void )
 
 inline void R_RenderDebugStudioList( bool bViewModel )
 {
+	GL_DEBUG_SCOPE();
 	g_StudioRenderer.RenderDebugStudioList( bViewModel );
 }
 
