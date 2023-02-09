@@ -4028,13 +4028,13 @@ void Cmd_TexRenderMode( void )
 	{
 		g_texture[i].flags |= STUDIO_NF_FULLBRIGHT;
 	}
-	else if( !Q_stricmp( token, "smooth" ))
+	else if( !Q_stricmp( token, "alpha2coverage" ))
 	{
-		g_texture[i].flags |= STUDIO_NF_SMOOTH;
+		g_texture[i].flags |= STUDIO_NF_ALPHATOCOVERAGE;
 	}
-	else if( !Q_stricmp( token, "nosmooth" ))
+	else if( !Q_stricmp( token, "noalpha2coverage" ))
 	{
-		g_texture[i].flags &= ~STUDIO_NF_SMOOTH;
+		g_texture[i].flags &= ~STUDIO_NF_ALPHATOCOVERAGE;
 	}
 	else if( !Q_stricmp( token, "twoside" ))
 	{
