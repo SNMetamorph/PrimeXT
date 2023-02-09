@@ -61,8 +61,8 @@
 #define IDC_FULLBRIGHT				4009
 #define IDC_FLATSHADE				4010
 #define IDC_TWO_SIDED				4011
-#define IDC_SMOOTH_TBN				4012
-#define IDC_SOLID_ALPHA				4013
+#define IDC_ALPHA_TO_COVERAGE				4012
+#define IDC_SOLID_GEOM				4013
 #define IDC_EDIT_TEXTURE_NAME				4014
 #define IDC_SET_TEXTURE_NAME				4015
 
@@ -160,8 +160,8 @@ class ControlPanel : public mxWindow
 	mxCheckBox *cbFullbright;
 	mxCheckBox *cbFlatshade;
 	mxCheckBox *cbTwoSided;
-	mxCheckBox *cbSolidAlpha;
-	mxCheckBox *cbSmooth;
+	mxCheckBox *cbSolidGeom;
+	mxCheckBox *cbAlphaToCoverage;
 	mxCheckBox *cbShowUVMap;
 	mxCheckBox *cbOverlayUVMap;
 	mxCheckBox *cbAntiAliasLines;
@@ -261,7 +261,7 @@ public:
 	void setPlaySequence( void );
 
 	void updateDrawnPolys (void);
-
+	void updateTexFlagsCheckBoxes();
 	float getEditStep( void );
 
 	// no ACCESSORS
