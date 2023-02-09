@@ -770,6 +770,7 @@ void GL_FrontFace(GLenum front);
 void GL_ClipPlane(bool enable);
 void GL_BindFBO(GLuint buffer);
 void GL_AlphaTest(GLint enable);
+void GL_AlphaToCoverage(bool enable);
 void GL_DepthTest(GLint enable);
 void GL_CleanupDrawState(void);
 void GL_SetDefaultState(void);
