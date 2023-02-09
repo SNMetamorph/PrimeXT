@@ -2784,7 +2784,7 @@ void CStudioModelRenderer :: DrawLightForMeshList( CDynLight *pl )
 	for( int i = 0; i < RI->frame.light_meshes.Count(); i++ )
 	{
 		CSolidEntry *entry = &RI->frame.light_meshes[i];
-		DrawSingleMesh( entry, ( i == 0 ));
+		DrawSingleMesh(entry, ( i == 0 ), true);
 	}
 
 	GL_Cull( GL_FRONT );
@@ -2882,7 +2882,7 @@ void CStudioModelRenderer :: RenderDeferredStudioList( void )
 			GL_ClipPlane( true );
 		}
 
-		DrawSingleMesh( entry, ( i == 0 ));
+		DrawSingleMesh(entry, (i == 0), false);
 	}
 
 	if( GL_Support( R_SEAMLESS_CUBEMAP ))
@@ -3336,7 +3336,7 @@ word CStudioModelRenderer :: ShaderSceneDepth( mstudiomaterial_t *mat, bool bone
 	return shaderNum;
 }
 
-void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force )
+void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force, bool specialPass )
 {
 	bool	cache_has_changed = false;
 	static int cached_lightmap = -1;
@@ -3836,7 +3836,7 @@ void CStudioModelRenderer :: RenderSolidStudioList( void )
 			GL_ClipPlane( true );
 		}
 
-		DrawSingleMesh( entry, ( i == 0 ));
+		DrawSingleMesh(entry, (i == 0), false);
 	}
 
 	if( GL_Support( R_SEAMLESS_CUBEMAP ))
@@ -3889,7 +3889,7 @@ void CStudioModelRenderer :: RenderTransMesh( CTransEntry *entry )
 	// draw decals behind the glass
 	DrawDecal( entry, GL_BACK );
 
-	DrawSingleMesh( entry, true );
+	DrawSingleMesh( entry, true, false );
 
 	// draw decals that lies on glass
 	DrawDecal( entry, GL_FRONT );
@@ -3912,7 +3912,7 @@ void CStudioModelRenderer :: RenderShadowStudioList( void )
 	for( int i = 0; i < RI->frame.solid_meshes.Count(); i++ )
 	{
 		CSolidEntry *entry = &RI->frame.solid_meshes[i];
-		DrawSingleMesh( entry, ( i == 0 ));
+		DrawSingleMesh(entry, ( i == 0 ), true);
 	}
 
 	GL_AlphaTest( GL_FALSE );
