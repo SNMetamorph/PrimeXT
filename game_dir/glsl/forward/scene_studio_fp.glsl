@@ -89,7 +89,7 @@ void main( void )
 	// kRenderTransColor support
 	result.rgb *= u_RenderColor.rgb;
 
-#if !defined( ALPHA_GLASS )
+#if !defined( ALPHA_BLENDING )
 	result.a *= u_RenderColor.a;
 #endif
 
@@ -197,7 +197,7 @@ lighting.diffuse += var_AmbientLight;
 	result.rgb += texture2D( u_GlowMap, vec_TexDiffuse ).rgb;
 #endif
 
-#if defined( TRANSLUCENT )
+#if defined( USING_SCREENCOPY )
 	result.rgb = mix( GetScreenColor( N, 1.0 ), result.rgb, result.a );
 #endif
 
