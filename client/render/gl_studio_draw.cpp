@@ -2264,8 +2264,8 @@ void CStudioModelRenderer :: AddMeshToDrawList( studiohdr_t *phdr, vbomesh_t *me
 
 	bool flagAdditive = FBitSet(mat->flags, STUDIO_NF_ADDITIVE);
 	bool flagMasked = FBitSet(mat->flags, STUDIO_NF_MASKED);
-	bool texTransparent = flagAdditive || flagMasked;
-	bool solid = (R_OpaqueEntity( RI->currententity ) && !texTransparent) ? true : false;
+	bool texAlphaBlend = (flagAdditive || flagMasked) && FBitSet(mat->flags, STUDIO_NF_HAS_ALPHA);
+	bool solid = (R_OpaqueEntity( RI->currententity ) && !texAlphaBlend) ? true : false;
 
 	// goes into regular arrays
 	if( FBitSet( RI->params, RP_SHADOWVIEW ))
@@ -2906,13 +2906,20 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 {
 	char glname[64];
 	char options[MAX_OPTIONS_LENGTH];
-	bool shader_translucent = false;
+	bool shader_use_screencopy = false;
 	bool using_screenrect = false;
 	bool using_cubemaps = false;
 	bool has_normalmap = false;
 
 	if( mat->forwardScene.IsValid() && mat->lastRenderMode == RI->currententity->curstate.rendermode )
 		return mat->forwardScene.GetHandle(); // valid
+
+	bool flagAdditive = FBitSet(mat->flags, STUDIO_NF_ADDITIVE);
+	bool flagMasked = FBitSet(mat->flags, STUDIO_NF_MASKED);
+	bool texAlphaTest = flagAdditive || flagMasked;
+	bool texAlphaToCoverage = FBitSet(mat->flags, STUDIO_NF_ALPHATOCOVERAGE);
+	bool usingAberrations = mat->aberrationScale > 0.0f;
+	bool usingRefractions = mat->refractScale > 0.0f;
 
 	Q_strncpy( glname, "forward/scene_studio", sizeof( glname ));
 	memset( options, 0, sizeof( options ));
@@ -2932,7 +2939,7 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 		GL_AddShaderDirective( options, "LIGHTING_FULLBRIGHT" );
 
 		if( RI->currententity->curstate.rendermode == kRenderTransAdd )
-			shader_translucent = true;
+			shader_use_screencopy = true;
 	}
 	else if( FBitSet( mat->flags, STUDIO_NF_FULLBRIGHT ) || R_FullBright() || FBitSet( RI->currententity->curstate.effects, EF_FULLBRIGHT ))
 	{
@@ -3006,11 +3013,15 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 			GL_AddShaderDirective( options, "HAS_LUMA" );
 	}
 
-	if (mat->aberrationScale > 0.0f && has_normalmap)
-		GL_AddShaderDirective( options, "APPLY_ABERRATION" );
-
-	if (mat->refractScale > 0.0f && has_normalmap)
-		GL_AddShaderDirective( options, "APPLY_REFRACTION" );
+	if (has_normalmap)
+	{
+		if (usingAberrations) {
+			GL_AddShaderDirective(options, "APPLY_ABERRATION");
+		}
+		if (usingRefractions) {
+			GL_AddShaderDirective(options, "APPLY_REFRACTION");
+		}
+	}
 
 	if(( world->num_cubemaps > 0 ) && CVAR_TO_BOOL( r_cubemap ) && (mat->reflectScale > 0.0f) && !RP_CUBEPASS( ))
 	{
@@ -3022,21 +3033,25 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 		GL_AddShaderDirective( options, "APPLY_FOG_EXP" );
 
 	// mixed mode: solid & transparent controlled by alpha-channel
-	if( FBitSet( mat->flags, STUDIO_NF_ADDITIVE ) && RI->currententity->curstate.rendermode != kRenderGlow )
+	if (texAlphaTest && RI->currententity->curstate.rendermode != kRenderGlow)
 	{
-		shader_translucent = true;
+		if (FBitSet(mat->flags, STUDIO_NF_HAS_ALPHA)) {
+			GL_AddShaderDirective(options, "ALPHA_BLENDING");
+		}
+		if (texAlphaToCoverage) {
+			GL_AddShaderDirective(options, "ALPHA_TO_COVERAGE");
+		}
 	}
 
-	if (FBitSet(mat->flags, STUDIO_NF_HAS_ALPHA)) {
-		GL_AddShaderDirective(options, "ALPHA_GLASS");
-		shader_translucent = true;
+	//if( RI->currententity->curstate.rendermode == kRenderTransColor || RI->currententity->curstate.rendermode == kRenderTransTexture )
+	//	shader_use_screencopy = true;
+
+	if (has_normalmap && (usingAberrations || usingRefractions)) {
+		shader_use_screencopy = true;
 	}
 
-	if( RI->currententity->curstate.rendermode == kRenderTransColor || RI->currententity->curstate.rendermode == kRenderTransTexture )
-		shader_translucent = true;
-
-	if( shader_translucent )
-		GL_AddShaderDirective( options, "TRANSLUCENT" );
+	if( shader_use_screencopy )
+		GL_AddShaderDirective( options, "USING_SCREENCOPY" );
 
 	if( FBitSet( mat->flags, STUDIO_NF_HAS_DETAIL ) && CVAR_TO_BOOL( r_detailtextures ))
 		GL_AddShaderDirective( options, "HAS_DETAIL" );
@@ -3048,7 +3063,7 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 		return 0; // something bad happens
 	}
 
-	if( shader_translucent )
+	if( shader_use_screencopy )
 		GL_AddShaderFeature( shaderNum, SHADER_USE_SCREENCOPY );
 
 	if( using_cubemaps )
@@ -3388,7 +3403,11 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force, boo
 
 	if( mat != m_pCurrentMaterial )
 		cache_has_changed = true;
+
 	m_pCurrentMaterial = mat;
+	bool texHasAlpha = FBitSet(mat->flags, STUDIO_NF_HAS_ALPHA);
+	bool texFlagMasked = FBitSet(mat->flags, STUDIO_NF_MASKED);
+	bool texAlphaToCoverage = FBitSet(mat->flags, STUDIO_NF_ALPHATOCOVERAGE);
 
 	if( FBitSet( RI->params, RP_DEFERREDLIGHT|RP_DEFERREDSCENE ))
 	{
@@ -3408,14 +3427,15 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force, boo
 		cache_has_changed = true;
 	}
 
+	bool screenCopyRequired = ScreenCopyRequired(RI->currentshader);
 	if( FBitSet( RI->params, RP_SHADOWVIEW|RP_DEFERREDSCENE ))
 	{
-		if( FBitSet( mat->flags, STUDIO_NF_MASKED ))
+		if (texFlagMasked)
 		{
 			pglAlphaFunc( GL_GEQUAL, 0.5f );
 			GL_AlphaTest( GL_TRUE );
 		}
-		else if( FBitSet( mat->flags, STUDIO_NF_HAS_ALPHA ))
+		else if (texHasAlpha)
 		{
 			pglAlphaFunc( GL_GEQUAL, 0.999f );
 			GL_AlphaTest( GL_TRUE );
@@ -3423,25 +3443,64 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force, boo
 		else GL_AlphaTest( GL_FALSE );
 	}
 	else
-	{		
-		if( FBitSet( mat->flags, STUDIO_NF_MASKED ))
-			GL_AlphaTest( GL_TRUE );
-		else GL_AlphaTest( GL_FALSE );
+	{
+		if (!specialPass)
+		{
+			if (!screenCopyRequired)
+			{
+				if (texFlagMasked && texHasAlpha && !texAlphaToCoverage)
+				{
+					GL_AlphaTest(GL_FALSE);
+					GL_Blend(GL_TRUE);
+				}
+				else if (texFlagMasked)
+				{
+					GL_AlphaTest(GL_TRUE);
+					GL_Blend(GL_FALSE);
+				}
+				else
+				{
+					GL_AlphaTest(GL_FALSE);
+					GL_Blend(GL_FALSE);
+				}
+			}
+			else
+			{
+				// we don't need alpha test nor alpha blending, because screencopy used for that
+				GL_AlphaTest(GL_FALSE);
+				GL_Blend(GL_FALSE);
+			}
+		}
+		else 
+		{
+			// in shadow/light pass we shouldn't use alpha blending
+			if (FBitSet(mat->flags, STUDIO_NF_MASKED))
+				GL_AlphaTest(GL_TRUE);
+			else
+				GL_AlphaTest(GL_FALSE);
+		}
 	}
 
-	if( !FBitSet( RI->params, RP_SHADOWVIEW ))
+	if (texFlagMasked && texHasAlpha && texAlphaToCoverage) {
+		GL_AlphaToCoverage(true);
+	}
+	else {
+		GL_AlphaToCoverage(false);
+	}
+
+	if (!FBitSet(RI->params, RP_SHADOWVIEW))
 	{
-		if( FBitSet( mat->flags, STUDIO_NF_TWOSIDE ))
-			GL_Cull( GL_NONE );
-		else GL_Cull( GL_FRONT );
+		if (FBitSet(mat->flags, STUDIO_NF_TWOSIDE))
+			GL_Cull(GL_NONE);
+		else
+			GL_Cull(GL_FRONT);
 	}
 
 	// each transparent surfaces reqiured an actual screencopy
-	if( ScreenCopyRequired( RI->currentshader ) && entry->IsTranslucent( ))
+	if (screenCopyRequired && entry->IsTranslucent())
 	{
 		CTransEntry *trans = (CTransEntry *)entry;
-
-		if( trans->m_bScissorReady )
+		if (trans->m_bScissorReady)
 		{
 			trans->RequestScreenColor();
 			cache_has_changed = true; // force to refresh uniforms
@@ -3879,12 +3938,11 @@ void CStudioModelRenderer :: RenderTransMesh( CTransEntry *entry )
 		pglBlendFunc( GL_ONE, GL_ONE );
 		if( FBitSet( entry->m_pParentEntity->curstate.effects, EF_NODEPTHTEST ))
 			pglDisable( GL_DEPTH_TEST );
-		GL_Blend( GL_TRUE );
 	}
 	else
 	{
+		pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 		pglEnable( GL_DEPTH_TEST );
-		GL_Blend( GL_FALSE );
 	}
 
 	// draw decals behind the glass
@@ -3897,6 +3955,7 @@ void CStudioModelRenderer :: RenderTransMesh( CTransEntry *entry )
 
 	pglEnable( GL_DEPTH_TEST );
 	GL_Blend( GL_FALSE );
+	GL_AlphaToCoverage( false );
 	GL_ClipPlane( true );
 }
 
