@@ -2318,17 +2318,15 @@ void CStudioModelRenderer :: AddMeshToDrawList( studiohdr_t *phdr, vbomesh_t *me
 	else
 	{
 		CTransEntry entry;
-
-		entry.SetRenderMesh( mesh, hProgram );
-		if( ScreenCopyRequired( shader ) && mesh->parentbone != 0xFF )
+		entry.SetRenderMesh(mesh, hProgram);
+		if (mesh->parentbone != 0xFF)
 		{
 			Vector mins, maxs;
-			TransformAABB( m_pModelInstance->m_pbones[mesh->parentbone], mesh->mins, mesh->maxs, mins, maxs );
-			// create sentinel border for refractions
-			ExpandBounds( mins, maxs, 0.5f );
-			entry.ComputeScissor( mins, maxs );
+			TransformAABB(m_pModelInstance->m_pbones[mesh->parentbone], mesh->mins, mesh->maxs, mins, maxs);
+			ExpandBounds(mins, maxs, 0.5f); // create sentinel border for refractions
+			entry.ComputeScissor(mins, maxs);
 		}
-		RI->frame.trans_list.AddToTail( entry );
+		RI->frame.trans_list.AddToTail(entry);
 	}
 }
 
