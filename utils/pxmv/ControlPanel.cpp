@@ -109,8 +109,8 @@ ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0,
 	cbFullbright = new mxCheckBox (wTexture, 270, 3, 80, 22, "Fullbright", IDC_FULLBRIGHT);
 	cbFlatshade = new mxCheckBox (wTexture, 270, 23, 80, 22, "Flat Shade", IDC_FLATSHADE);
 	cbTwoSided = new mxCheckBox (wTexture, 270, 43, 80, 22, "Two Sided", IDC_TWO_SIDED);
-	cbSmooth = new mxCheckBox (wTexture, 180, 63, 80, 22, "Smooth TBN", IDC_SMOOTH_TBN);
-	cbSolidAlpha = new mxCheckBox (wTexture, 270, 63, 80, 22, "Alpha Solid", IDC_SOLID_ALPHA);
+	cbAlphaToCoverage = new mxCheckBox (wTexture, 180, 63, 80, 22, "Alpha To Coverage", IDC_ALPHA_TO_COVERAGE);
+	cbSolidGeom = new mxCheckBox (wTexture, 270, 63, 80, 22, "Solid Geometry", IDC_SOLID_GEOM);
 
 	cbShowUVMap = new mxCheckBox (wTexture, 400, 3, 100, 22, "Show UV Map", IDC_SHOW_UV_MAP);
 	cbOverlayUVMap = new mxCheckBox (wTexture, 400, 23, 100, 22, "Overlay UV Map", IDC_OVERLAY_UV_MAP);
@@ -559,9 +559,10 @@ ControlPanel::handleEvent (mxEvent *event)
 					cbFullbright->setChecked ((ptexture->flags & STUDIO_NF_FULLBRIGHT) == STUDIO_NF_FULLBRIGHT);
 					cbFlatshade->setChecked ((ptexture->flags & STUDIO_NF_FLATSHADE) == STUDIO_NF_FLATSHADE);
 					cbTwoSided->setChecked ((ptexture->flags & STUDIO_NF_TWOSIDE) == STUDIO_NF_TWOSIDE);
-					cbSmooth->setChecked ((ptexture->flags & STUDIO_NF_SMOOTH) == STUDIO_NF_SMOOTH);
-					cbSolidAlpha->setChecked ((ptexture->flags & STUDIO_NF_SOLIDGEOM) == STUDIO_NF_SOLIDGEOM);
+					cbAlphaToCoverage->setChecked ((ptexture->flags & STUDIO_NF_ALPHATOCOVERAGE) == STUDIO_NF_ALPHATOCOVERAGE);
+					cbSolidGeom->setChecked ((ptexture->flags & STUDIO_NF_SOLIDGEOM) == STUDIO_NF_SOLIDGEOM);
 					leTextureName->setLabel( ptexture->name );
+					updateTexFlagsCheckBoxes();
 				}
 				d_GlWindow->redraw ();
 			}
@@ -623,6 +624,7 @@ ControlPanel::handleEvent (mxEvent *event)
 				// reload texture in case palette was changed
 				g_studioModel.UploadTexture (ptexture, (byte *) hdr + ptexture->index, (byte *) hdr + ptexture->index + ptexture->width * ptexture->height, TEXTURE_COUNT + g_viewerSettings.texture );
 				g_viewerSettings.numModelChanges++;
+				updateTexFlagsCheckBoxes();
 			}
 		}
 		break;
@@ -672,28 +674,28 @@ ControlPanel::handleEvent (mxEvent *event)
 		}
 		break;
 
-		case IDC_SMOOTH_TBN:
+		case IDC_ALPHA_TO_COVERAGE:
 		{
 			studiohdr_t *hdr = g_studioModel.getTextureHeader ();
 			if (hdr)
 			{
 				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + g_viewerSettings.texture;
-				if (cbSmooth->isChecked ())
-					ptexture->flags |= STUDIO_NF_SMOOTH;
+				if (cbAlphaToCoverage->isChecked ())
+					ptexture->flags |= STUDIO_NF_ALPHATOCOVERAGE;
 				else
-					ptexture->flags &= ~STUDIO_NF_SMOOTH;
+					ptexture->flags &= ~STUDIO_NF_ALPHATOCOVERAGE;
 				g_viewerSettings.numModelChanges++;
 			}
 		}
 		break;
 
-		case IDC_SOLID_ALPHA:
+		case IDC_SOLID_GEOM:
 		{
 			studiohdr_t *hdr = g_studioModel.getTextureHeader ();
 			if (hdr)
 			{
 				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + g_viewerSettings.texture;
-				if (cbSolidAlpha->isChecked ())
+				if (cbSolidGeom->isChecked ())
 					ptexture->flags |= STUDIO_NF_SOLIDGEOM;
 				else
 					ptexture->flags &= ~STUDIO_NF_SOLIDGEOM;
@@ -1794,6 +1796,12 @@ void ControlPanel :: updateDrawnPolys( void )
 	lDrawnPolys2->setLabel( str );
 }
 
+void ControlPanel::updateTexFlagsCheckBoxes()
+{
+	cbSolidGeom->setEnabled(cbTransparent->isChecked());
+	cbAlphaToCoverage->setEnabled(cbTransparent->isChecked());
+}
+
 void ControlPanel::setModelInfo ()
 {
 	static char str[2048];
@@ -1902,9 +1910,10 @@ ControlPanel::initTextures ()
 			cbFullbright->setChecked ((ptextures[0].flags & STUDIO_NF_FULLBRIGHT) == STUDIO_NF_FULLBRIGHT);
 			cbFlatshade->setChecked ((ptextures[0].flags & STUDIO_NF_FLATSHADE) == STUDIO_NF_FLATSHADE);
 			cbTwoSided->setChecked ((ptextures[0].flags & STUDIO_NF_TWOSIDE) == STUDIO_NF_TWOSIDE);
-			cbSmooth->setChecked ((ptextures[0].flags & STUDIO_NF_SMOOTH) == STUDIO_NF_SMOOTH);
-			cbSolidAlpha->setChecked ((ptextures[0].flags & STUDIO_NF_SOLIDGEOM) == STUDIO_NF_SOLIDGEOM);
+			cbAlphaToCoverage->setChecked ((ptextures[0].flags & STUDIO_NF_ALPHATOCOVERAGE) == STUDIO_NF_ALPHATOCOVERAGE);
+			cbSolidGeom->setChecked ((ptextures[0].flags & STUDIO_NF_SOLIDGEOM) == STUDIO_NF_SOLIDGEOM);
 			leTextureName->setLabel( ptextures[0].name );
+			updateTexFlagsCheckBoxes();
 		}
 #if 0
 		if( hdr->numbones <= 0 )
