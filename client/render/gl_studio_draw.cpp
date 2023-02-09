@@ -3864,6 +3864,7 @@ void CStudioModelRenderer :: RenderTransMesh( CTransEntry *entry )
 	if( entry->m_bDrawType != DRAWTYPE_MESH )
 		return;
 
+	GL_DEBUG_SCOPE();
 	pglAlphaFunc( GL_GEQUAL, 0.5f );
 	GL_DepthMask( GL_TRUE );
 
