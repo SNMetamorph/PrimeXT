@@ -480,7 +480,7 @@ private:
 	void ClearInstanceData( bool create );
 
 	// set uniforms data for specified shader
-	void DrawSingleMesh( CSolidEntry *mesh, bool force );
+	void DrawSingleMesh( CSolidEntry *mesh, bool force, bool specialPass );
 
 	void SetupSubmodelVerts( const mstudiomodel_t *pSubModel, const matrix3x4 bones[], void *dml, int lightmode );
 	void MeshCreateBuffer( vbomesh_t *pDst, const mstudiomesh_t *pSrc, const StudioMesh_t *pMeshInfo, int lightmode );
