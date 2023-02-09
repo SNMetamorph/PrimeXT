@@ -859,6 +859,26 @@ void GL_AlphaTest( GLint enable )
 
 /*
 ==============
+GL_AlphaToCoverage
+==============
+*/
+void GL_AlphaToCoverage(bool enable)
+{
+	// TODO do we need to check is it enabled?
+	if (pglIsEnabled(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB) == enable) {
+		return;
+	}
+
+	if (enable) {
+		pglEnable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
+	}
+	else {
+		pglDisable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
+	}
+}
+
+/*
+==============
 GL_DepthTest
 ==============
 */
