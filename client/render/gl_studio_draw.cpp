@@ -2324,7 +2324,12 @@ void CStudioModelRenderer :: AddMeshToDrawList( studiohdr_t *phdr, vbomesh_t *me
 			Vector mins, maxs;
 			TransformAABB(m_pModelInstance->m_pbones[mesh->parentbone], mesh->mins, mesh->maxs, mins, maxs);
 			ExpandBounds(mins, maxs, 0.5f); // create sentinel border for refractions
+			if (ScreenCopyRequired(shader)) {
 			entry.ComputeScissor(mins, maxs);
+		}
+			else {
+				entry.ComputeViewDistance(mins, maxs);
+			}
 		}
 		RI->frame.trans_list.AddToTail(entry);
 	}
