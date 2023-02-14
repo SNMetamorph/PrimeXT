@@ -2696,22 +2696,21 @@ bool R_AddSurfaceToDrawList( msurface_t *surf, drawlist_t drawlist_type )
 		RI->frame.solid_faces.AddToTail( entry_s );
 		break;
 	case DRAWLIST_TRANS:
-		if( FBitSet( surf->flags, SURF_NODRAW ))
+	{
+		if (FBitSet(surf->flags, SURF_NODRAW))
 			return false;
-		hProgram = Mod_ShaderSceneForward( surf );
-		entry_t.SetRenderSurface( surf, hProgram );
 
-		if( ScreenCopyRequired( &glsl_programs[hProgram] ))
-		{
-			Vector mins, maxs;
-			gl_state_t *glm = GL_GetCache( e->hCachedMatrix );
-			TransformAABB( glm->transform, es->mins, es->maxs, mins, maxs );
-			// create sentinel border for refractions
-			ExpandBounds( mins, maxs, 2.0f );
-			entry_t.ComputeScissor( mins, maxs );
-		}
-		RI->frame.trans_list.AddToTail( entry_t );
+		Vector mins, maxs;
+		hProgram = Mod_ShaderSceneForward(surf);
+		entry_t.SetRenderSurface(surf, hProgram);
+
+		gl_state_t *glm = GL_GetCache(e->hCachedMatrix);
+		TransformAABB(glm->transform, es->mins, es->maxs, mins, maxs);
+		ExpandBounds(mins, maxs, 2.0f); // create sentinel border for refractions
+		entry_t.ComputeScissor(mins, maxs);
+		RI->frame.trans_list.AddToTail(entry_t);
 		break;
+	}
 	case DRAWLIST_SHADOW:
 		if( FBitSet( surf->flags, SURF_NODRAW ))
 			return false;
