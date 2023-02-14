@@ -2707,7 +2707,12 @@ bool R_AddSurfaceToDrawList( msurface_t *surf, drawlist_t drawlist_type )
 		gl_state_t *glm = GL_GetCache(e->hCachedMatrix);
 		TransformAABB(glm->transform, es->mins, es->maxs, mins, maxs);
 		ExpandBounds(mins, maxs, 2.0f); // create sentinel border for refractions
+		if (ScreenCopyRequired(&glsl_programs[hProgram])) {
 		entry_t.ComputeScissor(mins, maxs);
+		}
+		else {
+			entry_t.ComputeViewDistance(mins, maxs);
+		}
 		RI->frame.trans_list.AddToTail(entry_t);
 		break;
 	}
