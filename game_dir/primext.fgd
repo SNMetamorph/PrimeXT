@@ -763,9 +763,9 @@
 
 @PointClass iconsprite("sprites/fgd/ambient_generic.spr") base(Targetname, Parent) = ambient_generic : "Universal Ambient"
 [
-	message(sound) : "WAV Name"
+	message(sound) : "Sound File Path"
 	health(integer) : "Volume (10 = loudest)" : 10
-	preset(choices) :"Dynamic Presets" : 0 =
+	preset(choices) : "Dynamic Presets" : 0 =
 	[
 		0: "None"
 		1: "Huge Machine"
