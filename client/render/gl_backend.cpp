@@ -630,6 +630,7 @@ void R_RenderQuadPrimitive( CSolidEntry *entry )
 	if( entry->m_bDrawType != DRAWTYPE_QUAD )
 		return;
 
+	GL_DEBUG_SCOPE();
 	GL_CleanupDrawState();
 
 	// select properly rendermode
