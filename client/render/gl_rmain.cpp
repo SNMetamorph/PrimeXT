@@ -610,14 +610,15 @@ static void R_SetupViewCache( const ref_viewpass_t *rvp )
 				surf = model->surfaces + j;
 				esrf = surf->info;
 
+				// initialize grass for this surface, not matters is it culled or not
+				R_AddGrassToDrawList( surf, DRAWLIST_SOLID );
+
 				// submodel faces already passed through this
 				// operation but world is not
 				if( FBitSet( surf->flags, SURF_OF_SUBMODEL ))
 				{
 					RI->currententity = esrf->parent;
 					RI->currentmodel = RI->currententity->model;
-
-					R_AddGrassToDrawList( surf, DRAWLIST_SOLID );
 				}
 				else
 				{
@@ -625,8 +626,6 @@ static void R_SetupViewCache( const ref_viewpass_t *rvp )
 					RI->currentmodel = RI->currententity->model;
 
 					esrf->parent = RI->currententity; // setup dynamic upcast
-
-					R_AddGrassToDrawList( surf, DRAWLIST_SOLID );
 
 					if( R_CullSurface( surf, GetVieworg(), frustum ))
 					{
@@ -644,18 +643,18 @@ static void R_SetupViewCache( const ref_viewpass_t *rvp )
 				{
 					R_AddSurfaceToDrawList(surf, DRAWLIST_TRANS);
 				}
-				else if( FBitSet( surf->flags, SURF_DRAWSKY ))
+				else if (FBitSet(surf->flags, SURF_DRAWSKY))
 				{
-					SetBits( RI->view.flags, RF_SKYVISIBLE );
-					R_AddSkyBoxSurface( surf );
+					SetBits(RI->view.flags, RF_SKYVISIBLE);
+					R_AddSkyBoxSurface(surf);
 				}
-				else if( R_OpaqueEntity( RI->currententity ))
+				else if (R_OpaqueEntity(RI->currententity))
 				{
-					R_AddSurfaceToDrawList( surf, DRAWLIST_SOLID );
+					R_AddSurfaceToDrawList(surf, DRAWLIST_SOLID);
 				}
 				else
 				{
-					R_AddSurfaceToDrawList( surf, DRAWLIST_TRANS );
+					R_AddSurfaceToDrawList(surf, DRAWLIST_TRANS);
 				}
 
 				// and store faces that required additional pass from another point into separate list
