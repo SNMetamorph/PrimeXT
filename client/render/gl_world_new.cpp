@@ -770,14 +770,18 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 
 	mfaceinfo_t *landscape = landscape = s->texinfo->faceinfo;
 	material_t *mat = R_TextureAnimation( s )->material;
-	bool shader_translucent = false;
+	bool shader_use_screencopy = false;
 	bool shader_additive = false;
 	bool using_cubemaps = false;
+	bool using_normalmap = false;
 	bool fullbright = false;
 	bool cubemaps_available = (world->num_cubemaps > 0) && CVAR_TO_BOOL(r_cubemap);
+	bool using_refractions = mat->refractScale > 0.0f;
+	bool using_aberrations = mat->aberrationScale > 0.0f;
 
-	if(( FBitSet( mat->flags, BRUSH_FULLBRIGHT ) || R_FullBright() || mirror ) && !FBitSet( mat->flags, BRUSH_LIQUID ))
+	if ((FBitSet(mat->flags, BRUSH_FULLBRIGHT) || R_FullBright() || mirror) && !FBitSet(mat->flags, BRUSH_LIQUID)) {
 		fullbright = true;
+	}
 
 	if( e->curstate.rendermode == kRenderTransAdd )
 	{
@@ -847,8 +851,11 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 		// FIXME: all the waternormals should be encoded as first frame
 		if( FBitSet( mat->flags, BRUSH_LIQUID ))
 			GL_EncodeNormal( options, tr.waterTextures[0] );
-		else GL_EncodeNormal( options, mat->gl_normalmap_id );
+		else 
+			GL_EncodeNormal( options, mat->gl_normalmap_id );
+
 		GL_AddShaderDirective( options, "HAS_NORMALMAP" );
+		using_normalmap = true;
 	}
 
 	if (FBitSet(mat->flags, BRUSH_HAS_HEIGHTMAP) && mat->reliefScale > 0.0f)
@@ -866,15 +873,12 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 	if( FBitSet( mat->flags, BRUSH_LIQUID ))
 	{
 		GL_AddShaderDirective( options, "LIQUID_SURFACE" );
-		GL_AddShaderDirective( options, "APPLY_REFRACTION" );
 		if( tr.waterlevel >= 3 )
 			GL_AddShaderDirective( options, "LIQUID_UNDERWATER" );
 
 		// world watery with compiler feature
-		if( !FBitSet( s->flags, SURF_OF_SUBMODEL ) && FBitSet( world->features, WORLD_WATERALPHA ))
-			shader_translucent = true;
-		else if( e->curstate.rendermode == kRenderTransColor || e->curstate.rendermode == kRenderTransTexture )
-			shader_translucent = true;
+		//if (!FBitSet(s->flags, SURF_OF_SUBMODEL) && FBitSet(world->features, WORLD_WATERALPHA))
+		//	shader_use_screencopy = true;
 
 		// apply cubemap reflections for water
 		if (cubemaps_available && !RP_CUBEPASS())
@@ -892,26 +896,34 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 		}
 	}
 
-	if( e->curstate.rendermode == kRenderTransColor || e->curstate.rendermode == kRenderTransTexture )
-		shader_translucent = true;
+	if (using_aberrations || using_refractions) {
+		shader_use_screencopy = true;
+	}
 
-	if( shader_translucent )
-		GL_AddShaderDirective( options, "TRANSLUCENT" );
-	if( shader_additive )
-		GL_AddShaderDirective( options, "ADDITIVE" );
+	if( shader_use_screencopy )
+		GL_AddShaderDirective( options, "USING_SCREENCOPY" );
+
 	if( mirror )
 		GL_AddShaderDirective( options, "PLANAR_REFLECTION" );
-	if( shader_translucent && FBitSet( mat->flags, BRUSH_HAS_ALPHA ))
-		GL_AddShaderDirective( options, "ALPHA_GLASS" );
 
-	if( mat->refractScale > 0.0f && Q_stristr( options, "HAS_NORMALMAP" ))
-		GL_AddShaderDirective( options, "APPLY_REFRACTION" );
+	bool transRenderMode = e->curstate.rendermode == kRenderTransColor || e->curstate.rendermode == kRenderTransTexture;
+	if (FBitSet(mat->flags, BRUSH_TRANSPARENT) && FBitSet(mat->flags, BRUSH_HAS_ALPHA) || transRenderMode) {
+		GL_AddShaderDirective(options, "ALPHA_BLENDING");
+	}
 
-	if( mat->aberrationScale > 0.0f && Q_stristr( options, "HAS_NORMALMAP" ))
-		GL_AddShaderDirective( options, "APPLY_ABERRATION" );
+	if (using_normalmap)
+	{
+		if (using_refractions) {
+			GL_AddShaderDirective(options, "APPLY_REFRACTION");
+		}
+		if (using_aberrations) {
+			GL_AddShaderDirective(options, "APPLY_ABERRATION");
+		}
+	}
 
-	if (tr.fogEnabled && !RP_CUBEPASS())
-		GL_AddShaderDirective( options, "APPLY_FOG_EXP" );
+	if (tr.fogEnabled && !RP_CUBEPASS()) {
+		GL_AddShaderDirective(options, "APPLY_FOG_EXP");
+	}
 
 	word shaderNum = GL_FindUberShader( glname, options );
 
@@ -922,7 +934,7 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 		return 0; // something bad happens
 	}
 
-	if( shader_translucent )
+	if( shader_use_screencopy )
 		GL_AddShaderFeature( shaderNum, SHADER_USE_SCREENCOPY );
 	if( shader_additive )
 		GL_AddShaderFeature( shaderNum, SHADER_ADDITIVE );
@@ -2708,7 +2720,7 @@ bool R_AddSurfaceToDrawList( msurface_t *surf, drawlist_t drawlist_type )
 		TransformAABB(glm->transform, es->mins, es->maxs, mins, maxs);
 		ExpandBounds(mins, maxs, 2.0f); // create sentinel border for refractions
 		if (ScreenCopyRequired(&glsl_programs[hProgram])) {
-		entry_t.ComputeScissor(mins, maxs);
+			entry_t.ComputeScissor(mins, maxs);
 		}
 		else {
 			entry_t.ComputeViewDistance(mins, maxs);
@@ -3634,7 +3646,8 @@ void R_RenderTransSurface( CTransEntry *entry )
 	if( entry->m_bDrawType != DRAWTYPE_SURFACE )
 		return;
 
-	if( !entry->m_hProgram ) return;
+	if( !entry->m_hProgram ) 
+		return;
 
 	mextrasurf_t *es = entry->m_pSurf->info;
 	cl_entity_t *e = RI->currententity = es->parent;
@@ -3643,8 +3656,10 @@ void R_RenderTransSurface( CTransEntry *entry )
 	int startv = MAX_MAP_ELEMS;
 	numTempElems = 0;
 	int endv = 0;
+	bool screenCopyRequired = ScreenCopyRequired(&glsl_programs[entry->m_hProgram]);
 
-	if( ScreenCopyRequired( &glsl_programs[entry->m_hProgram] ))
+	GL_DEBUG_SCOPE();
+	if (screenCopyRequired)
 	{
 		if( !FBitSet( s->flags, SURF_OCCLUDED ))
 		{
@@ -3670,8 +3685,13 @@ void R_RenderTransSurface( CTransEntry *entry )
 	}
 	else
 	{
+		pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 		GL_DepthMask( GL_TRUE );
-		GL_Blend( GL_FALSE );
+
+		if (screenCopyRequired)
+			GL_Blend(GL_FALSE);
+		else
+			GL_Blend(GL_TRUE);
 	}
 	R_DrawSurface( es );
 
