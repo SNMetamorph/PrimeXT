@@ -1509,7 +1509,8 @@ void R_PrecacheGrass( msurface_t *s, mextraleaf_t *leaf )
 ================
 R_AddGrassToDrawList
 
-build the visible grass list
+initializes and assigns grass, linked with speficific surface, to draw list
+TODO: function name isn't intuitive, maybe rename it?
 ================
 */
 void R_AddGrassToDrawList( msurface_t *s, drawlist_t drawlist_type )
