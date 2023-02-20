@@ -2265,7 +2265,9 @@ void CStudioModelRenderer :: AddMeshToDrawList( studiohdr_t *phdr, vbomesh_t *me
 	bool flagAdditive = FBitSet(mat->flags, STUDIO_NF_ADDITIVE);
 	bool flagMasked = FBitSet(mat->flags, STUDIO_NF_MASKED);
 	bool texAlphaBlend = (flagAdditive || flagMasked) && FBitSet(mat->flags, STUDIO_NF_HAS_ALPHA);
-	bool solid = (R_OpaqueEntity( RI->currententity ) && !texAlphaBlend) ? true : false;
+	bool texAlphaToCoverage = FBitSet(mat->flags, STUDIO_NF_ALPHATOCOVERAGE);
+	bool transparent = texAlphaBlend && !texAlphaToCoverage;
+	bool solid = R_OpaqueEntity(RI->currententity) && !transparent ? true : false;
 
 	// goes into regular arrays
 	if( FBitSet( RI->params, RP_SHADOWVIEW ))
@@ -2325,8 +2327,8 @@ void CStudioModelRenderer :: AddMeshToDrawList( studiohdr_t *phdr, vbomesh_t *me
 			TransformAABB(m_pModelInstance->m_pbones[mesh->parentbone], mesh->mins, mesh->maxs, mins, maxs);
 			ExpandBounds(mins, maxs, 0.5f); // create sentinel border for refractions
 			if (ScreenCopyRequired(shader)) {
-			entry.ComputeScissor(mins, maxs);
-		}
+				entry.ComputeScissor(mins, maxs);
+			}
 			else {
 				entry.ComputeViewDistance(mins, maxs);
 			}
@@ -2921,7 +2923,7 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 
 	bool flagAdditive = FBitSet(mat->flags, STUDIO_NF_ADDITIVE);
 	bool flagMasked = FBitSet(mat->flags, STUDIO_NF_MASKED);
-	bool texAlphaTest = flagAdditive || flagMasked;
+	bool texTransparent = flagAdditive || flagMasked;
 	bool texAlphaToCoverage = FBitSet(mat->flags, STUDIO_NF_ALPHATOCOVERAGE);
 	bool usingAberrations = mat->aberrationScale > 0.0f;
 	bool usingRefractions = mat->refractScale > 0.0f;
@@ -2943,8 +2945,8 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 		// additive and glow is always fullbright
 		GL_AddShaderDirective( options, "LIGHTING_FULLBRIGHT" );
 
-		if( RI->currententity->curstate.rendermode == kRenderTransAdd )
-			shader_use_screencopy = true;
+		//if( RI->currententity->curstate.rendermode == kRenderTransAdd )
+		//	shader_use_screencopy = true;
 	}
 	else if( FBitSet( mat->flags, STUDIO_NF_FULLBRIGHT ) || R_FullBright() || FBitSet( RI->currententity->curstate.effects, EF_FULLBRIGHT ))
 	{
@@ -3038,7 +3040,7 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 		GL_AddShaderDirective( options, "APPLY_FOG_EXP" );
 
 	// mixed mode: solid & transparent controlled by alpha-channel
-	if (texAlphaTest && RI->currententity->curstate.rendermode != kRenderGlow)
+	if (texTransparent && RI->currententity->curstate.rendermode != kRenderGlow)
 	{
 		if (FBitSet(mat->flags, STUDIO_NF_HAS_ALPHA)) {
 			GL_AddShaderDirective(options, "ALPHA_BLENDING");
