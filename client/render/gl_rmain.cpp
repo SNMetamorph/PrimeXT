@@ -637,14 +637,12 @@ static void R_SetupViewCache( const ref_viewpass_t *rvp )
 					// surface has passed all visibility checks
 					// and can be update some data (lightmaps, mirror matrix, etc)
 					R_UpdateSurfaceParams( surf );
-                                        }
+                }
 
-				// store world translucent watery (if transparent water is support)
-				if( FBitSet( surf->flags, SURF_DRAWTURB ) && !FBitSet( surf->flags, SURF_OF_SUBMODEL ))
+				// water should be always placed to translucent list
+				if (FBitSet(surf->flags, SURF_DRAWTURB))
 				{
-					if( FBitSet( world->features, WORLD_WATERALPHA ))
-						R_AddSurfaceToDrawList( surf, DRAWLIST_TRANS );
-					else R_AddSurfaceToDrawList( surf, DRAWLIST_SOLID );
+					R_AddSurfaceToDrawList(surf, DRAWLIST_TRANS);
 				}
 				else if( FBitSet( surf->flags, SURF_DRAWSKY ))
 				{
