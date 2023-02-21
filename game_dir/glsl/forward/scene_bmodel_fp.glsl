@@ -154,6 +154,12 @@ void main( void )
 	waterBorderFactor = 1.0 - saturate(exp2( -768.0 * 100.0 * depthDelta ));
 	waterRefractFactor = 1.0 - saturate(exp2( -768.0 * 5.0 * depthDelta ));
 	waterAbsorbFactor = 1.0 - saturate(exp2( -768.0 * waterAbsorbScale * depthDelta ));
+
+	// prohibits displaying in refractions objects, that are closer to camera than surface of the water
+	float distortedDepth = texture2D(u_DepthMap, GetDistortedTexCoords(N, waterRefractFactor)).r;
+	distortedDepth = linearizeDepth(u_zFar, distortedDepth);
+	distortedDepth = RemapVal(distortedDepth, Z_NEAR, u_zFar, 0.0, 1.0);
+	waterRefractFactor *= step(distortedDepth, fOwnDepth);
 #endif // LIQUID_UNDERWATER
 #endif // LIQUID_SURFACE
 
@@ -178,10 +184,7 @@ void main( void )
 #if !defined( LIQUID_SURFACE )
 	result.rgb *= u_RenderColor.rgb;
 #endif
-
-
 	result.a *= u_RenderColor.a;
-
 	vec3 V = normalize( var_ViewDir );
 
 	// lighting the world polys

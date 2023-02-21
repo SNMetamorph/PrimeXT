@@ -21,22 +21,31 @@ uniform vec2		u_ScreenSizeInv;
 uniform float		u_RefractScale;
 uniform float		u_AberrationScale;
 
-vec3 GetScreenColor( const vec3 N, float fade )
+vec2 GetDistortedTexCoords(in vec3 N, float fade)
 {
 	vec2 screenCoord = gl_FragCoord.xy * u_ScreenSizeInv;
-#if defined( APPLY_REFRACTION )	// refracted glass
 	screenCoord.x += N.x * u_RefractScale * screenCoord.x * fade;
 	screenCoord.y -= N.y * u_RefractScale * screenCoord.y * fade;
+
 	// clamp here to avoid NaNs on screen
 	screenCoord.x = clamp( screenCoord.x, 0.01, 0.99 );
 	screenCoord.y = clamp( screenCoord.y, 0.01, 0.99 );
+	return screenCoord;
+}
+
+vec3 GetScreenColor(in vec3 N, float fade)
+{
+#if defined( APPLY_REFRACTION )
+	vec2 screenCoord = GetDistortedTexCoords(N, fade);
+#else
+	vec2 screenCoord = gl_FragCoord.xy * u_ScreenSizeInv;
 #endif
 
 #if defined( APPLY_ABERRATION )
-	return chromemap2D( u_ScreenMap, screenCoord, N, u_AberrationScale * fade );
-#else//APPLY_ABERRATION
-	return texture2D( u_ScreenMap, screenCoord ).rgb;
-#endif//APPLY_ABERRATION
+	return chromemap2D(u_ScreenMap, screenCoord, N, u_AberrationScale * fade);
+#else // !APPLY_ABERRATION
+	return texture2D(u_ScreenMap, screenCoord).rgb;
+#endif // APPLY_ABERRATION
 }
 
-#endif//SCREEN_H
+#endif // SCREEN_H
