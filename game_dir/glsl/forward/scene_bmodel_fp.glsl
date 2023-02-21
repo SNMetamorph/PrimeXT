@@ -179,9 +179,9 @@ void main( void )
 	result.rgb *= u_RenderColor.rgb;
 #endif
 
-#if !defined( ALPHA_GLASS ) && defined( TRANSLUCENT )
-	result.a *= (u_RenderColor.a);
-#endif
+
+	result.a *= u_RenderColor.a;
+
 	vec3 V = normalize( var_ViewDir );
 
 	// lighting the world polys
@@ -230,7 +230,7 @@ void main( void )
 	vec3 reflected = CubemapReflectionProbe( var_Position, u_ViewOrigin, worldNormal, mat.smoothness );
 #endif // REFLECTION_CUBEMAP
 
-#if defined( TRANSLUCENT )
+#if defined( USING_SCREENCOPY )
 	vec3 screenmap = GetScreenColor( N, waterRefractFactor );
 #if defined( PLANAR_REFLECTION )
 	result.a = GetFresnel( saturate(dot(V, N)), WATER_F0_VALUE, FRESNEL_FACTOR );
@@ -252,12 +252,12 @@ void main( void )
 	// for translucent non-liquid stuff (glass, etc.)
 	result.rgb = mix( screenmap, result.rgb, result.a * u_RenderColor.a );
 #endif // LIQUID_SURFACE
-#else // !TRANSLUCENT
+#else // !USING_SCREENCOPY
 #if defined( REFLECTION_CUBEMAP )
 	float fresnel = GetFresnel( V, N, GENERIC_F0_VALUE, FRESNEL_FACTOR );
 	result.rgb += reflected * fresnel * u_ReflectScale * mat.smoothness;
 #endif
-#endif // TRANSLUCENT
+#endif // USING_SCREENCOPY
 
 #if defined( APPLY_FOG_EXP )
 	result.rgb = CalculateFog(result.rgb, u_FogParams, length(u_ViewOrigin - var_Position));
