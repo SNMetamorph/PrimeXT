@@ -83,19 +83,19 @@ typedef struct
 } medge_t;
 
 // brush material flags
-#define BRUSH_TRANSPARENT	0x0001		// alpha-transparent
+#define BRUSH_TRANSPARENT	0x0001		// texture uses alpha-test for transparency
 #define BRUSH_FULLBRIGHT	0x0002		// ignore lightmap for this surface (probably water)
 #define BRUSH_HAS_DETAIL	0x0004		// has detail texture
-#define BRUSH_HAS_BUMP	0x0008		// has normalmap
+#define BRUSH_HAS_BUMP		0x0008		// has normalmap
 #define BRUSH_HAS_SPECULAR	0x0010		// has specular
-#define BRUSH_TWOSIDE	0x0020		// some types of water
-#define BRUSH_CONVEYOR	0x0040		// scrolled texture
+#define BRUSH_TWOSIDE		0x0020		// some types of water
+#define BRUSH_CONVEYOR		0x0040		// scrolled texture
 #define BRUSH_GLOSSPOWER	0x0080		// gloss power stored in alphachannel of gloss map
-#define BRUSH_REFLECT	0x0100		// reflect surface
+#define BRUSH_REFLECT		0x0100		// reflect surface
 #define BRUSH_UNDERWATER	0x0200		// ugly hack to tell GLSL about camera inside water volume
-#define BRUSH_HAS_LUMA	0x0400		// self-illuminate parts
-#define BRUSH_HAS_ALPHA	0x0800		// diffuse texture has alpha-cahhnel
-#define BRUSH_LIQUID	0x1000		// reflective & refractive water
+#define BRUSH_HAS_LUMA		0x0400		// self-illuminate parts
+#define BRUSH_HAS_ALPHA		0x0800		// external albedo texture has alpha-channel
+#define BRUSH_LIQUID		0x1000		// reflective & refractive water
 #define BRUSH_MULTI_LAYERS	0x2000		// this face has multiply layers (random-tiling or landscape)
 #define BRUSH_HAS_HEIGHTMAP	0x4000		// have heightmap
 
