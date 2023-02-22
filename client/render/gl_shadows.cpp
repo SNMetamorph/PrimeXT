@@ -409,25 +409,28 @@ static void R_ShadowPassSetupViewCache( CDynLight *pl, int split = 0 )
 			msurface_t *surf = worldmodel->surfaces + j;
 			mextrasurf_t *esrf = surf->info;
 
-			// add grass which linked with this surface to shadow list too
-			R_AddGrassToDrawList( surf, DRAWLIST_SHADOW );
-
 			// submodel faces already passed through this
 			// operation but world is not
-			if( FBitSet( surf->flags, SURF_OF_SUBMODEL ))
+			if (FBitSet(surf->flags, SURF_OF_SUBMODEL))
 			{
 				RI->currententity = esrf->parent;
 				RI->currentmodel = RI->currententity->model;
 			}
 			else
 			{
-				RI->currententity = GET_ENTITY( 0 );
+				RI->currententity = GET_ENTITY(0);
 				RI->currentmodel = RI->currententity->model;
 				esrf->parent = RI->currententity; // setup dynamic upcast
+			}
 
-				if( R_CullSurface( surf, GetVieworg(), &RI->view.frustum ))
+			// add grass which linked with this surface to shadow list too
+			R_AddGrassToDrawList( surf, DRAWLIST_SHADOW );
+
+			if (!FBitSet(surf->flags, SURF_OF_SUBMODEL))
+			{
+				if (R_CullSurface(surf, GetVieworg(), &RI->view.frustum))
 				{
-					CLEARVISBIT( RI->view.visfaces, j ); // not visible
+					CLEARVISBIT(RI->view.visfaces, j); // not visible
 					continue;
 				}
 			}

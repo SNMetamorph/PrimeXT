@@ -610,9 +610,6 @@ static void R_SetupViewCache( const ref_viewpass_t *rvp )
 				surf = model->surfaces + j;
 				esrf = surf->info;
 
-				// initialize grass for this surface, not matters is it culled or not
-				R_AddGrassToDrawList( surf, DRAWLIST_SOLID );
-
 				// submodel faces already passed through this
 				// operation but world is not
 				if( FBitSet( surf->flags, SURF_OF_SUBMODEL ))
@@ -624,19 +621,24 @@ static void R_SetupViewCache( const ref_viewpass_t *rvp )
 				{
 					RI->currententity = GET_ENTITY( 0 );
 					RI->currentmodel = RI->currententity->model;
-
 					esrf->parent = RI->currententity; // setup dynamic upcast
+                }
 
-					if( R_CullSurface( surf, GetVieworg(), frustum ))
+				// initialize grass for this surface, not matters is it culled or not
+				R_AddGrassToDrawList( surf, DRAWLIST_SOLID );
+
+				if (!FBitSet(surf->flags, SURF_OF_SUBMODEL))
+				{
+					if (R_CullSurface(surf, GetVieworg(), frustum))
 					{
-						CLEARVISBIT( RI->view.visfaces, j ); // not visible
+						CLEARVISBIT(RI->view.visfaces, j); // not visible
 						continue;
 					}
 
 					// surface has passed all visibility checks
 					// and can be update some data (lightmaps, mirror matrix, etc)
-					R_UpdateSurfaceParams( surf );
-                }
+					R_UpdateSurfaceParams(surf);
+				}
 
 				// water should be always placed to translucent list
 				if (FBitSet(surf->flags, SURF_DRAWTURB))
