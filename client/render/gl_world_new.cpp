@@ -3663,8 +3663,7 @@ void R_RenderTransSurface( CTransEntry *entry )
 	{
 		if( !FBitSet( s->flags, SURF_OCCLUDED ))
 		{
-			entry->RequestScreenColor();
-			entry->RequestScreenDepth();
+			entry->RequestScreencopy();
 			r_stats.c_screen_copy++;
 		}
 	}
