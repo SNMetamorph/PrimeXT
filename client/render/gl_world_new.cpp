@@ -3664,9 +3664,6 @@ void R_RenderTransSurface( CTransEntry *entry )
 		if( !FBitSet( s->flags, SURF_OCCLUDED ))
 		{
 			entry->RequestScreenColor();
-
-			// underwater fog
-			if( R_WaterEntity( RI->currentmodel ))
 				entry->RequestScreenDepth();
 			r_stats.c_screen_copy++;
 		}

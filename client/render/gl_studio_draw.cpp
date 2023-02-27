@@ -3510,6 +3510,7 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force, boo
 		if (trans->m_bScissorReady)
 		{
 			trans->RequestScreenColor();
+			trans->RequestScreenDepth();
 			cache_has_changed = true; // force to refresh uniforms
 			r_stats.c_screen_copy++;
 		}
