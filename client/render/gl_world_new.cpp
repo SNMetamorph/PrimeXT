@@ -3664,7 +3664,7 @@ void R_RenderTransSurface( CTransEntry *entry )
 		if( !FBitSet( s->flags, SURF_OCCLUDED ))
 		{
 			entry->RequestScreenColor();
-				entry->RequestScreenDepth();
+			entry->RequestScreenDepth();
 			r_stats.c_screen_copy++;
 		}
 	}
@@ -3674,6 +3674,7 @@ void R_RenderTransSurface( CTransEntry *entry )
 	startv = Q_min( startv, es->firstvertex );
 	endv = Q_max( es->firstvertex + es->numverts, endv );
 
+	GL_AlphaTest(GL_FALSE);
 	if( FBitSet( glsl_programs[entry->m_hProgram].status, SHADER_ADDITIVE ))
 	{
 		GL_DepthMask( GL_FALSE );
