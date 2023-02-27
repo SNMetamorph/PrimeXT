@@ -135,16 +135,15 @@ void main( void )
 	mat.specularIntensity = 1.0;
 #endif // HAS_GLOSSMAP
 
-	float waterBorderFactor = 1.0, waterAbsorbFactor = 1.0, waterRefractFactor = 1.0;
-
 #if defined( LIQUID_SURFACE )
-	float fOwnDepth = gl_FragCoord.z;
-	fOwnDepth = linearizeDepth( u_zFar, fOwnDepth );
-	fOwnDepth = RemapVal( fOwnDepth, Z_NEAR, u_zFar, 0.0, 1.0 );
-
+	float waterBorderFactor = 1.0, waterAbsorbFactor = 1.0, waterRefractFactor = 1.0;
 	float fSampledDepth = texture2D( u_DepthMap, gl_FragCoord.xy * u_ScreenSizeInv ).r;
 	fSampledDepth = linearizeDepth( u_zFar, fSampledDepth );
 	fSampledDepth = RemapVal( fSampledDepth, Z_NEAR, u_zFar, 0.0, 1.0 );
+
+	float fOwnDepth = gl_FragCoord.z;
+	fOwnDepth = linearizeDepth( u_zFar, fOwnDepth );
+	fOwnDepth = RemapVal( fOwnDepth, Z_NEAR, u_zFar, 0.0, 1.0 );
 
 #if defined (LIQUID_UNDERWATER)
 	waterBorderFactor = waterAbsorbFactor = waterRefractFactor = u_RenderColor.a;
@@ -154,12 +153,6 @@ void main( void )
 	waterBorderFactor = 1.0 - saturate(exp2( -768.0 * 100.0 * depthDelta ));
 	waterRefractFactor = 1.0 - saturate(exp2( -768.0 * 5.0 * depthDelta ));
 	waterAbsorbFactor = 1.0 - saturate(exp2( -768.0 * waterAbsorbScale * depthDelta ));
-
-	// prohibits displaying in refractions objects, that are closer to camera than surface of the water
-	float distortedDepth = texture2D(u_DepthMap, GetDistortedTexCoords(N, waterRefractFactor)).r;
-	distortedDepth = linearizeDepth(u_zFar, distortedDepth);
-	distortedDepth = RemapVal(distortedDepth, Z_NEAR, u_zFar, 0.0, 1.0);
-	waterRefractFactor *= step(distortedDepth, fOwnDepth);
 #endif // LIQUID_UNDERWATER
 #endif // LIQUID_SURFACE
 
@@ -184,7 +177,11 @@ void main( void )
 #if !defined( LIQUID_SURFACE )
 	result.rgb *= u_RenderColor.rgb;
 #endif
+
+#if !defined( ALPHA_BLENDING )
 	result.a *= u_RenderColor.a;
+#endif
+
 	vec3 V = normalize( var_ViewDir );
 
 	// lighting the world polys
@@ -234,7 +231,17 @@ void main( void )
 #endif // REFLECTION_CUBEMAP
 
 #if defined( USING_SCREENCOPY )
-	vec3 screenmap = GetScreenColor( N, waterRefractFactor );
+#if defined( LIQUID_SURFACE )
+	float distortScale = waterRefractFactor;
+#else 
+	float distortScale = 1.0;
+#endif
+	// prohibits displaying in refractions objects, that are closer to camera than brush surface
+	float distortedDepth = texture2D(u_DepthMap, GetDistortedTexCoords(N, distortScale)).r;
+	distortScale *= step(gl_FragCoord.z, distortedDepth);
+
+	// fetch color for saved screencopy
+	vec3 screenmap = GetScreenColor( N, distortScale );
 #if defined( PLANAR_REFLECTION )
 	result.a = GetFresnel( saturate(dot(V, N)), WATER_F0_VALUE, FRESNEL_FACTOR );
 #endif // PLANAR_REFLECTION
@@ -253,7 +260,7 @@ void main( void )
 
 #else // !LIQUID_SURFACE
 	// for translucent non-liquid stuff (glass, etc.)
-	result.rgb = mix( screenmap, result.rgb, result.a * u_RenderColor.a );
+	result.rgb = mix( screenmap, result.rgb, result.a );
 #endif // LIQUID_SURFACE
 #else // !USING_SCREENCOPY
 #if defined( REFLECTION_CUBEMAP )

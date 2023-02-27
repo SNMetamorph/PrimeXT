@@ -29,6 +29,7 @@ uniform sampler2D	u_NormalMap;
 uniform sampler2D	u_GlossMap;
 uniform sampler2D	u_GlowMap;
 uniform sampler2D	u_DetailMap;
+uniform sampler2D	u_DepthMap;
 
 uniform vec4	u_RenderColor;
 uniform float	u_Smoothness;
@@ -198,7 +199,10 @@ lighting.diffuse += var_AmbientLight;
 #endif
 
 #if defined( USING_SCREENCOPY )
-	result.rgb = mix( GetScreenColor( N, 1.0 ), result.rgb, result.a );
+	// prohibits displaying in refractions objects, that are closer to camera than this studiomodel
+	float distortedDepth = texture2D(u_DepthMap, GetDistortedTexCoords(N, 1.0)).r;
+	float distortScale = step(gl_FragCoord.z, distortedDepth);
+	result.rgb = mix(GetScreenColor(N, distortScale), result.rgb, result.a);
 #endif
 
 #if defined( APPLY_FOG_EXP )
