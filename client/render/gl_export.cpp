@@ -45,7 +45,7 @@ static dllfunc_t opengl_110funcs[] =
 { "glCullFace"           	, (void **)&pglCullFace },
 { "glDrawBuffer"         	, (void **)&pglDrawBuffer },
 { "glReadBuffer"         	, (void **)&pglReadBuffer },
-{ "glAccum"         	, (void **)&pglAccum },
+{ "glAccum"         		, (void **)&pglAccum },
 { "glEnable"             	, (void **)&pglEnable },
 { "glDisable"            	, (void **)&pglDisable },
 { "glEnableClientState"  	, (void **)&pglEnableClientState },
@@ -64,7 +64,7 @@ static dllfunc_t opengl_110funcs[] =
 { "glDepthRange"         	, (void **)&pglDepthRange },
 { "glFrontFace"          	, (void **)&pglFrontFace },
 { "glDrawElements"       	, (void **)&pglDrawElements },
-{ "glDrawArrays"       	, (void **)&pglDrawArrays },
+{ "glDrawArrays"       		, (void **)&pglDrawArrays },
 { "glColorMask"          	, (void **)&pglColorMask },
 { "glIndexPointer"       	, (void **)&pglIndexPointer },
 { "glVertexPointer"      	, (void **)&pglVertexPointer },
@@ -334,6 +334,12 @@ static dllfunc_t occlusionfunc[] =
 { "glGetQueryivARB"        , (void **)&pglGetQueryivARB },
 { "glGetQueryObjectivARB"  , (void **)&pglGetQueryObjectivARB },
 { "glGetQueryObjectuivARB" , (void **)&pglGetQueryObjectuivARB },
+{ NULL, NULL }
+};
+
+static dllfunc_t nv_dither_control_func[] =
+{
+{ "glAlphaToCoverageDitherControlNV", (void **)&pglAlphaToCoverageDitherControlNV },
 { NULL, NULL }
 };
 
@@ -648,6 +654,7 @@ static void GL_InitExtensions( void )
 
 	GL_CheckExtension("GL_ARB_debug_output", debugoutputfuncs, "gl_debug_output", R_DEBUG_OUTPUT);
 	GL_CheckExtension("GL_KHR_debug", khr_debug_funcs, "gl_khr_debug", R_KHR_DEBUG);
+	GL_CheckExtension("GL_NV_alpha_to_coverage_dither_control", nv_dither_control_func, "gl_a2c_dither_control", R_A2C_DITHER_CONTROL);
 
 	// vp and fp shaders
 	GL_CheckExtension( "GL_ARB_shader_objects", shaderobjectsfuncs, "gl_shaderobjects", R_SHADER_OBJECTS_EXT );
@@ -756,6 +763,12 @@ static void GL_InitExtensions( void )
 		pglEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
 		pglDebugMessageCallbackARB(GL_DebugOutput, NULL);
 		pglDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW_ARB, 0, NULL, true); // enable all the low priority messages
+	}
+
+	if (GL_Support(R_A2C_DITHER_CONTROL))
+	{
+		// we don't need alpha to coverage dithering because we're using alpha sharpening
+		pglAlphaToCoverageDitherControlNV(GL_ALPHA_TO_COVERAGE_DITHER_DISABLE_NV);
 	}
 }
 

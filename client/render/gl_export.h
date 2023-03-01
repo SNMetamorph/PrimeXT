@@ -936,6 +936,12 @@ typedef unsigned int GLhandleARB;
 #define GL_ACTIVE_UNIFORMS			0x8B86
 #define GL_SHADER_SOURCE_LENGTH		0x8B88
 
+// GL_NV_alpha_to_coverage_dither_control
+#define GL_ALPHA_TO_COVERAGE_DITHER_DEFAULT_NV	0x934D
+#define GL_ALPHA_TO_COVERAGE_DITHER_ENABLE_NV	0x934E
+#define GL_ALPHA_TO_COVERAGE_DITHER_DISABLE_NV	0x934F
+#define GL_ALPHA_TO_COVERAGE_DITHER_MODE_NV		0x92BF
+
 // helper opengl functions
 EXTERN GLenum ( APIENTRY *pglGetError )(void);
 EXTERN const GLcharARB * ( APIENTRY *pglGetString )(GLenum name);
@@ -1413,7 +1419,6 @@ EXTERN void ( APIENTRY *pglGetFinalCombinerInputParameterfvNV )( GLenum, GLenum,
 EXTERN void ( APIENTRY *pglGetFinalCombinerInputParameterivNV )( GLenum, GLenum, GLint * );
 EXTERN void ( APIENTRY *pglGenerateMipmap )( GLenum target );
 EXTERN void ( APIENTRY *pglDrawBuffersARB)( GLsizei n, const GLenum *bufs );
-//EXTERN PROC ( WINAPI *pwglGetProcAddress)( const char * );
 
 EXTERN void ( APIENTRY *pglBindVertexArray )( GLuint array );
 EXTERN void ( APIENTRY *pglDeleteVertexArrays )( GLsizei n, const GLuint *arrays );
@@ -1433,4 +1438,6 @@ EXTERN void (APIENTRY *pglObjectPtrLabel)(const void *ptr, GLsizei length, const
 EXTERN void (APIENTRY *pglPopDebugGroup)(void);
 EXTERN void (APIENTRY *pglPushDebugGroup)(GLenum source, GLuint id, GLsizei length, const GLcharARB *message);
 
-#endif//GL_EXPORT_H
+EXTERN void (APIENTRY *pglAlphaToCoverageDitherControlNV)(GLenum mode);
+
+#endif // GL_EXPORT_H
