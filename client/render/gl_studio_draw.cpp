@@ -2897,7 +2897,9 @@ void CStudioModelRenderer :: RenderDeferredStudioList( void )
 
 	if( m_iDrawModelType == DRAWSTUDIO_NORMAL )
 		GL_DepthRange( gldepthmin, gldepthmax );
+
 	GL_CleanupDrawState();
+	GL_AlphaToCoverage( false );
 	GL_AlphaTest( GL_FALSE );
 	GL_ClipPlane( true );
 	GL_Cull( GL_FRONT );
@@ -3488,11 +3490,14 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force, boo
 		}
 	}
 
-	if (texFlagMasked && texHasAlpha && texAlphaToCoverage) {
-		GL_AlphaToCoverage(true);
-	}
-	else {
-		GL_AlphaToCoverage(false);
+	if (!specialPass)
+	{
+		if (texFlagMasked && texHasAlpha && texAlphaToCoverage) {
+			GL_AlphaToCoverage(true);
+		}
+		else {
+			GL_AlphaToCoverage(false);
+		}
 	}
 
 	if (!FBitSet(RI->params, RP_SHADOWVIEW))
@@ -3910,6 +3915,8 @@ void CStudioModelRenderer :: RenderSolidStudioList( void )
 
 	if( m_iDrawModelType == DRAWSTUDIO_NORMAL )
 		GL_DepthRange( gldepthmin, gldepthmax );
+
+	GL_AlphaToCoverage( false );
 	GL_AlphaTest( GL_FALSE );
 	GL_ClipPlane( true );
 	GL_Cull( GL_FRONT );
@@ -3956,13 +3963,13 @@ void CStudioModelRenderer :: RenderTransMesh( CTransEntry *entry )
 	DrawDecal( entry, GL_BACK );
 
 	DrawSingleMesh( entry, true, false );
+	GL_AlphaToCoverage( false );
 
 	// draw decals that lies on glass
 	DrawDecal( entry, GL_FRONT );
 
 	pglEnable( GL_DEPTH_TEST );
 	GL_Blend( GL_FALSE );
-	GL_AlphaToCoverage( false );
 	GL_ClipPlane( true );
 }
 
@@ -3982,6 +3989,7 @@ void CStudioModelRenderer :: RenderShadowStudioList( void )
 		DrawSingleMesh(entry, ( i == 0 ), true);
 	}
 
+	GL_AlphaToCoverage( false );
 	GL_AlphaTest( GL_FALSE );
 	GL_CleanupDrawState();
 }
