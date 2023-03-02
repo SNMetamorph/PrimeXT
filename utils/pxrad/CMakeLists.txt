@@ -21,7 +21,6 @@ list(APPEND DIR_SOURCES
 	"../common/zone.cpp"
 	"../common/crashhandler.cpp"
 	"${CMAKE_SOURCE_DIR}/public/crclib.cpp"
-	"${CMAKE_SOURCE_DIR}/public/build_info.cpp"
 	"alias.cpp"
 	"ambientcube.cpp"
 	"dirtmap.cpp"

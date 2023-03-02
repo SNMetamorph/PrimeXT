@@ -14,7 +14,6 @@ list(APPEND DIR_SOURCES
 	"../common/stringlib.cpp"
 	"../common/virtualfs.cpp"
 	"../common/zone.cpp"
-	"${CMAKE_SOURCE_DIR}/public/build_info.cpp"
 	"${CMAKE_SOURCE_DIR}/public/crclib.cpp"
 	"lmptex.cpp"
     "makewad.cpp"

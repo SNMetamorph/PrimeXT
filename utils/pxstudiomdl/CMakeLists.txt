@@ -16,7 +16,6 @@ list(APPEND DIR_SOURCES
 	"../common/virtualfs.cpp"
 	"../common/zone.cpp"
 	"${CMAKE_SOURCE_DIR}/public/crclib.cpp"
-	"${CMAKE_SOURCE_DIR}/public/build_info.cpp"
 	"image_utils.cpp"
 	"optimize.cpp"
     "simpilfy.cpp"

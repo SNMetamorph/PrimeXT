@@ -17,7 +17,6 @@ list(APPEND DIR_SOURCES
 	"../common/filesystem.cpp"
 	"../common/cmdlib.cpp"
 	"../common/zone.cpp"
-	"${CMAKE_SOURCE_DIR}/public/build_info.cpp"
 	"ControlPanel.cpp"
 	"FileAssociation.cpp"
     "GlWindow.cpp"
