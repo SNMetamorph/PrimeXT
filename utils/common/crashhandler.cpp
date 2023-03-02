@@ -30,56 +30,9 @@ GNU General Public License for more details.
 #include <sys/types.h> // off_t
 #endif
 
-// crash handler (XASH_CRASHHANDLER)
-#define CRASHHANDLER_NULL     0
-#define CRASHHANDLER_UCONTEXT 1
-#define CRASHHANDLER_DBGHELP  2
-#define CRASHHANDLER_WIN32    3
-
-//
-// select crashhandler based on defines
-//
-
-#ifndef XASH_CRASHHANDLER
-#if XASH_WIN32 && defined(DBGHELP)
-#define XASH_CRASHHANDLER CRASHHANDLER_DBGHELP
-#elif XASH_LINUX || XASH_BSD
-#define XASH_CRASHHANDLER CRASHHANDLER_UCONTEXT
-#endif // !(XASH_LINUX || XASH_BSD || XASH_WIN32)
-#endif
-
-/*
-================
-Sys_WaitForDebugger
-
-Useful for debugging things that shutdowns too fast
-================
-*/
-void Sys_WaitForDebugger()
-{
 #if XASH_WIN32
-	Sys_Print("Waiting for debugger...\n");
-	while (!IsDebuggerPresent()) {
-		Sleep(250);
-	}
-#else
-	// TODO implement
-#endif
-}
-
-/*
-================
-Sys_Crash
-
-Crash handler, called from system
-================
-*/
-#if XASH_CRASHHANDLER == CRASHHANDLER_DBGHELP || XASH_CRASHHANDLER == CRASHHANDLER_WIN32
-
-#if XASH_CRASHHANDLER == CRASHHANDLER_DBGHELP
-
+#if DBGHELP
 #pragma comment( lib, "dbghelp" )
-
 #include <winnt.h>
 #include <dbghelp.h>
 #include <psapi.h>
@@ -87,6 +40,8 @@ Crash handler, called from system
 #ifndef XASH_SDL
 typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;
 #endif
+
+static LPTOP_LEVEL_EXCEPTION_FILTER oldFilter;
 
 static int Sys_ModuleName( HANDLE process, char *name, void *address, int len )
 {
@@ -239,12 +194,11 @@ static void Sys_StackTrace( PEXCEPTION_POINTERS pInfo )
 	Sys_Print(message);
 	SymCleanup(process);
 }
-#endif /* XASH_CRASHHANDLER == CRASHHANDLER_DBGHELP */
+#endif /* DBGHELP */
 
-LPTOP_LEVEL_EXCEPTION_FILTER       oldFilter;
 static LONG _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 {
-#if XASH_CRASHHANDLER == CRASHHANDLER_DBGHELP
+#if DBGHELP
 	Sys_StackTrace( pInfo );
 #else
 	Sys_Warn( "Sys_Crash: call %p at address %p", pInfo->ExceptionRecord->ExceptionAddress, pInfo->ExceptionRecord->ExceptionCode );
@@ -276,19 +230,19 @@ void Sys_RestoreCrashHandler( void )
 	if( oldFilter ) SetUnhandledExceptionFilter( oldFilter );
 }
 
-#elif XASH_CRASHHANDLER == CRASHHANDLER_UCONTEXT
-// Posix signal handler
-
-#if XASH_FREEBSD || XASH_NETBSD || XASH_OPENBSD || XASH_ANDROID || XASH_LINUX
-#define HAVE_UCONTEXT_H 1
-#endif
-
-#ifdef HAVE_UCONTEXT_H
+#elif XASH_FREEBSD || XASH_NETBSD || XASH_OPENBSD || XASH_ANDROID || XASH_LINUX
 #include <ucontext.h>
-#endif
-
 #include <signal.h>
 #include <sys/mman.h>
+
+#define STACK_BACKTRACE_STR     "Stack backtrace:\n"
+#define STACK_DUMP_STR          "Stack dump:\n"
+
+#define STACK_BACKTRACE_STR_LEN ( sizeof( STACK_BACKTRACE_STR ) - 1 )
+#define STACK_DUMP_STR_LEN      ( sizeof( STACK_DUMP_STR ) - 1 )
+#define ALIGN( x, y ) (((uintptr_t) ( x ) + (( y ) - 1 )) & ~(( y ) - 1 ))
+
+static struct sigaction oldFilter;
 
 #ifdef XASH_DYNAMIC_DLADDR
 static int d_dladdr( void *sym, Dl_info *info )
@@ -326,21 +280,11 @@ static int Sys_PrintFrame( char *buf, int len, int i, void *addr )
 		return Q_snprintf( buf, len, "%2d: %p\n", i, addr ); // print only address
 }
 
-struct sigaction oldFilter;
-
-#define STACK_BACKTRACE_STR     "Stack backtrace:\n"
-#define STACK_DUMP_STR          "Stack dump:\n"
-
-#define STACK_BACKTRACE_STR_LEN (sizeof( STACK_BACKTRACE_STR ) - 1)
-#define STACK_DUMP_STR_LEN      (sizeof( STACK_DUMP_STR ) - 1)
-#define ALIGN( x, y ) (((uintptr_t) (x) + ((y)-1)) & ~((y)-1))
-
 static void Sys_Crash( int signal, siginfo_t *si, void *context)
 {
 	void *pc = NULL, **bp = NULL, **sp = NULL; // this must be set for every OS!
 	char message[8192];
 	int len, i = 0;
-	size_t pagesize;
 
 #if XASH_OPENBSD
 	struct sigcontext *ucontext = (struct sigcontext*)context;
@@ -403,7 +347,7 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 	len = 0;
 #endif
 
-#if !XASH_BSD
+#if !XASH_FREEBSD && !XASH_NETBSD && !XASH_OPENBSD
 	len += Q_snprintf( message + len, sizeof( message ) - len, "Crash: signal %d errno %d with code %d at %p %p\n", signal, si->si_errno, si->si_code, si->si_addr, si->si_ptr );
 #else
 	len += Q_snprintf( message + len, sizeof( message ) - len, "Crash: signal %d errno %d with code %d at %p\n", signal, si->si_errno, si->si_code, si->si_addr );
@@ -470,7 +414,7 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 
 void Sys_SetupCrashHandler( void )
 {
-	struct sigaction act;
+	struct sigaction act = { 0 };
 	act.sa_sigaction = Sys_Crash;
 	act.sa_flags = SA_SIGINFO | SA_ONSTACK;
 	sigaction( SIGSEGV, &act, &oldFilter );
@@ -487,8 +431,8 @@ void Sys_RestoreCrashHandler( void )
 	sigaction( SIGILL,  &oldFilter, NULL );
 }
 
-#elif XASH_CRASHHANDLER == CRASHHANDLER_NULL
-
+#else
+#warning "Crash handler not implemented for this platform."
 void Sys_SetupCrashHandler( void )
 {
 	// stub
@@ -499,3 +443,22 @@ void Sys_RestoreCrashHandler( void )
 	// stub
 }
 #endif
+
+/*
+================
+Sys_WaitForDebugger
+
+Useful for debugging things that shutdowns too fast
+================
+*/
+void Sys_WaitForDebugger()
+{
+#if XASH_WIN32
+	Sys_Print("Waiting for debugger...\n");
+	while (!IsDebuggerPresent()) {
+		Sleep(250);
+	}
+#else
+	// TODO implement
+#endif
+}
