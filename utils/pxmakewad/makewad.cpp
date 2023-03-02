@@ -518,7 +518,7 @@ int main( int argc, char **argv )
 	char	str[64];
 
 	atexit( Shutdown_Makewad );
-	Sys_SetupCrashHandler();
+	CrashHandler::Setup();
 	PrintTitle();
 
 	SetReplaceLevel( REP_IGNORE );
@@ -739,6 +739,6 @@ int main( int argc, char **argv )
 	}
 
 	WaitForKey();
-	Sys_RestoreCrashHandler();
+	CrashHandler::Restore();
 	return 0;
 }

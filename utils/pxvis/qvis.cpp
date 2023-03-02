@@ -594,7 +594,7 @@ int main( int argc, char **argv )
 	char	str[64];
 
 	atexit( Sys_CloseLog );
-	Sys_SetupCrashHandler();
+	CrashHandler::Setup();
 	source[0] = '\0';
 
 	for( i = 1; i < argc; i++ )
@@ -696,7 +696,7 @@ int main( int argc, char **argv )
 	Mem_Free( g_uncompressed );
 	FreePortals();
 
-	Sys_RestoreCrashHandler();
+	CrashHandler::Restore();
 	SetDeveloperLevel( D_REPORT );
 	Mem_Check();
 

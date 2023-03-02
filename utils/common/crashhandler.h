@@ -15,10 +15,9 @@ GNU General Public License for more details.
 */
 
 #pragma once
-
-//
-// crashhandler.cpp
-//
-void Sys_SetupCrashHandler();
-void Sys_RestoreCrashHandler();
-void Sys_WaitForDebugger();
+namespace CrashHandler
+{
+	void Setup();
+	void Restore();
+	void WaitForDebugger();
+}

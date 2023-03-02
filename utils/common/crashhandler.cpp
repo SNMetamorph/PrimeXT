@@ -211,23 +211,24 @@ static LONG _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 		return EXCEPTION_CONTINUE_EXECUTION;
 	}
 	
-	Sys_WaitForDebugger();
+	CrashHandler::WaitForDebugger();
 
 	if( oldFilter )
 		return oldFilter( pInfo );
 	return EXCEPTION_CONTINUE_EXECUTION;
 }
 
-void Sys_SetupCrashHandler( void )
+void CrashHandler::Setup()
 {
 	SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
 	oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
 }
 
-void Sys_RestoreCrashHandler( void )
+void CrashHandler::Restore()
 {
 	// restore filter
-	if( oldFilter ) SetUnhandledExceptionFilter( oldFilter );
+	if( oldFilter ) 
+		SetUnhandledExceptionFilter( oldFilter );
 }
 
 #elif XASH_FREEBSD || XASH_NETBSD || XASH_OPENBSD || XASH_ANDROID || XASH_LINUX
@@ -412,7 +413,7 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 	exit(1);
 }
 
-void Sys_SetupCrashHandler( void )
+void CrashHandler::Setup()
 {
 	struct sigaction act = { 0 };
 	act.sa_sigaction = Sys_Crash;
@@ -423,7 +424,7 @@ void Sys_SetupCrashHandler( void )
 	sigaction( SIGILL,  &act, &oldFilter );
 }
 
-void Sys_RestoreCrashHandler( void )
+void CrashHandler::Restore()
 {
 	sigaction( SIGSEGV, &oldFilter, NULL );
 	sigaction( SIGABRT, &oldFilter, NULL );
@@ -433,12 +434,12 @@ void Sys_RestoreCrashHandler( void )
 
 #else
 #warning "Crash handler not implemented for this platform."
-void Sys_SetupCrashHandler( void )
+void CrashHandler::Setup()
 {
 	// stub
 }
 
-void Sys_RestoreCrashHandler( void )
+void CrashHandler::Restore()
 {
 	// stub
 }
@@ -446,12 +447,12 @@ void Sys_RestoreCrashHandler( void )
 
 /*
 ================
-Sys_WaitForDebugger
+CrashHandler::WaitForDebugger
 
 Useful for debugging things that shutdowns too fast
 ================
 */
-void Sys_WaitForDebugger()
+void CrashHandler::WaitForDebugger()
 {
 #if XASH_WIN32
 	Sys_Print("Waiting for debugger...\n");

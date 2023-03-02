@@ -683,7 +683,7 @@ int main( int argc, char **argv )
 	int		i;
 
 	atexit( Sys_CloseLog );
-	Sys_SetupCrashHandler();
+	CrashHandler::Setup();
 	source[0] = '\0';
 
 	for( i = 1; i < argc; i++ )
@@ -837,7 +837,7 @@ int main( int argc, char **argv )
 	FreeMapEntities();
 	FreeShaderInfo();
 	FS_Shutdown();
-	Sys_RestoreCrashHandler();
+	CrashHandler::Restore();
 
 	// now check for leaks
 	SetDeveloperLevel( D_REPORT );

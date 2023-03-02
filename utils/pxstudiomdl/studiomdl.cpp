@@ -5460,7 +5460,7 @@ int main( int argc, char **argv )
 
 	atexit( Sys_CloseLog );
 	COM_InitCmdlib( argv, argc );
-	Sys_SetupCrashHandler();
+	CrashHandler::Setup();
 
 	// impicit path
 	Q_strncpy( cddir[0], ".\\", sizeof( cddir[0] ));
@@ -5573,7 +5573,7 @@ int main( int argc, char **argv )
 
 	SetDeveloperLevel( D_REPORT );
 	Mem_Check(); // report leaks
-	Sys_RestoreCrashHandler();
+	CrashHandler::Restore();
 
 	return 0;
 }

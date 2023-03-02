@@ -2521,7 +2521,7 @@ int main( int argc, char **argv )
 	atexit( Sys_CloseLog );
 	source[0] = '\0';
 
-	Sys_SetupCrashHandler();
+	CrashHandler::Setup();
 	g_smoothing_threshold = cos( DEG2RAD( g_smoothvalue )); // Originally zero.
 
 	for( i = 1; i < argc; i++ )
@@ -2727,7 +2727,7 @@ int main( int argc, char **argv )
 	FreeWorldTrace ();
 	FreeEntities ();
 	FS_Shutdown();
-	Sys_RestoreCrashHandler();
+	CrashHandler::Restore();
 
 	SetDeveloperLevel( D_REPORT );
 	Mem_Check();
