@@ -1,5 +1,5 @@
 /*
-crashhandler.h - advanced crashhandler
+crashhandler.h - application-wide advanced crashhandler
 Copyright (C) 2016 Mittorn
 Copyright (C) 2022 SNMetamorph
 
@@ -15,9 +15,11 @@ GNU General Public License for more details.
 */
 
 #pragma once
+
 namespace CrashHandler
 {
 	void Setup();
 	void Restore();
 	void WaitForDebugger();
+	void ToggleMinidumpWrite(bool status);
 }

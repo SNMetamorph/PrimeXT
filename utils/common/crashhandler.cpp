@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "port.h"
 #include "conprint.h"
 #include "stringlib.h"
+#include "build_info.h"
 
 #include <stdio.h>
 #include <stdlib.h> // rand, adbs
@@ -36,12 +37,14 @@ GNU General Public License for more details.
 #include <winnt.h>
 #include <dbghelp.h>
 #include <psapi.h>
+#include <ctime>
+#include <string>
 
 #ifndef XASH_SDL
 typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;
 #endif
 
-static LPTOP_LEVEL_EXCEPTION_FILTER oldFilter;
+static bool g_writeMinidump = true;
 
 static int Sys_ModuleName( HANDLE process, char *name, void *address, int len )
 {
@@ -194,6 +197,81 @@ static void Sys_StackTrace( PEXCEPTION_POINTERS pInfo )
 	Sys_Print(message);
 	SymCleanup(process);
 }
+
+static void Sys_GetProcessFileName(std::string &fileName)
+{
+	fileName.resize(MAX_PATH);
+	GetModuleBaseName(GetCurrentProcess(), NULL, &fileName[0], fileName.capacity() - 1);
+	fileName.assign(fileName.c_str());
+	fileName.shrink_to_fit();
+	fileName.erase(fileName.find_last_of('.'));
+}
+
+static void Sys_GetMinidumpFileName(const std::string &processName, std::string &fileName)
+{
+	std::time_t currentUtcTime = std::time(nullptr);
+	std::tm *currentLocalTime = std::localtime(&currentUtcTime);
+	size_t bufferSize = 0;
+	char *stringBuffer = nullptr;
+
+	for (size_t i = 0; i < 2; ++i)
+	{
+		bufferSize = std::snprintf(stringBuffer, bufferSize, "%s_%s_crash_%d%.2d%.2d_%.2d%.2d%.2d.mdmp",
+			processName.c_str(),				// current process name
+			BuildInfo::GetCommitHash(),			// last commit hash from VCS
+			currentLocalTime->tm_year + 1900,	// year
+			currentLocalTime->tm_mon + 1,		// month
+			currentLocalTime->tm_mday,			// day of month
+			currentLocalTime->tm_hour,			// hour
+			currentLocalTime->tm_min,			// minutes
+			currentLocalTime->tm_sec			// seconds
+		);
+		fileName.resize(bufferSize + 1);
+		stringBuffer = &fileName[0];
+		bufferSize += 1;
+	}
+	fileName.assign(fileName.c_str());
+}
+
+static bool Sys_WriteMinidump(PEXCEPTION_POINTERS exceptionInfo, MINIDUMP_TYPE minidumpType)
+{
+	HRESULT errorCode;
+	std::string processName;
+	std::string minidumpFileName;
+
+	// get process name & minidump file name
+	Sys_GetProcessFileName(processName);
+	Sys_GetMinidumpFileName(processName, minidumpFileName);
+
+	// create minidump file
+	SetLastError(NOERROR);
+	HANDLE minidumpFile = CreateFile(
+		minidumpFileName.c_str(), 
+		GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, 
+		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr
+	);
+
+	errorCode = HRESULT_FROM_WIN32(GetLastError());
+	if (!SUCCEEDED(errorCode)) {
+		CloseHandle(minidumpFile);
+		return false;
+	}
+
+	// write all the data to minidump file
+	MINIDUMP_EXCEPTION_INFORMATION mdmpExceptionInfo;
+	mdmpExceptionInfo.ThreadId = GetCurrentThreadId();
+	mdmpExceptionInfo.ExceptionPointers = exceptionInfo;
+	mdmpExceptionInfo.ClientPointers = FALSE;
+	bool minidumpWritten = MiniDumpWriteDump(
+		GetCurrentProcess(), GetCurrentProcessId(),
+		minidumpFile, minidumpType, &mdmpExceptionInfo,
+		nullptr, nullptr
+	);
+
+	CloseHandle(minidumpFile);
+	return minidumpWritten;
+}
+
 #endif /* DBGHELP */
 
 static LONG _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
@@ -202,6 +280,27 @@ static LONG _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 	Sys_StackTrace( pInfo );
 #else
 	Sys_Warn( "Sys_Crash: call %p at address %p", pInfo->ExceptionRecord->ExceptionAddress, pInfo->ExceptionRecord->ExceptionCode );
+#endif
+
+#if DBGHELP
+	if (g_writeMinidump)
+	{
+		// first try to write as much as possible information, otherwise 
+		// create minidump with minimal information set
+		auto minidumpType = static_cast<MINIDUMP_TYPE>(
+			MiniDumpWithDataSegs | 
+			MiniDumpWithCodeSegs |
+			MiniDumpWithHandleData | 
+			MiniDumpWithFullMemory |
+			MiniDumpWithFullMemoryInfo |
+			MiniDumpWithIndirectlyReferencedMemory |
+			MiniDumpWithThreadInfo |
+			MiniDumpWithModuleHeaders);
+
+		if (!Sys_WriteMinidump(pInfo, minidumpType)) {
+			Sys_WriteMinidump(pInfo, MiniDumpWithDataSegs);
+		}
+	}
 #endif
 
 	if (GetDeveloperLevel() <= D_WARN)
@@ -461,5 +560,20 @@ void CrashHandler::WaitForDebugger()
 	}
 #else
 	// TODO implement
+#endif
+}
+
+/*
+================
+CrashHandler::ToggleMinidumpWrite
+
+Enables/disables writing minidumps when application crashes.
+This feature is Windows-specific.
+================
+*/
+void CrashHandler::ToggleMinidumpWrite(bool status)
+{
+#if XASH_WIN32
+	g_writeMinidump = status;
 #endif
 }
