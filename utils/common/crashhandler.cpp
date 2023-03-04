@@ -45,6 +45,7 @@ typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;
 #endif
 
 static bool g_writeMinidump = true;
+static LPTOP_LEVEL_EXCEPTION_FILTER g_oldFilter;
 
 static int Sys_ModuleName( HANDLE process, char *name, void *address, int len )
 {
@@ -310,24 +311,23 @@ static LONG _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 		return EXCEPTION_CONTINUE_EXECUTION;
 	}
 	
-	CrashHandler::WaitForDebugger();
-
-	if( oldFilter )
-		return oldFilter( pInfo );
+	if (g_oldFilter) {
+		return g_oldFilter(pInfo);
+	}
 	return EXCEPTION_CONTINUE_EXECUTION;
 }
 
 void CrashHandler::Setup()
 {
 	SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
-	oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
+	g_oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
 }
 
 void CrashHandler::Restore()
 {
-	// restore filter
-	if( oldFilter ) 
-		SetUnhandledExceptionFilter( oldFilter );
+	if (g_oldFilter) {
+		SetUnhandledExceptionFilter(g_oldFilter);
+	}
 }
 
 #elif XASH_FREEBSD || XASH_NETBSD || XASH_OPENBSD || XASH_ANDROID || XASH_LINUX
@@ -342,7 +342,7 @@ void CrashHandler::Restore()
 #define STACK_DUMP_STR_LEN      ( sizeof( STACK_DUMP_STR ) - 1 )
 #define ALIGN( x, y ) (((uintptr_t) ( x ) + (( y ) - 1 )) & ~(( y ) - 1 ))
 
-static struct sigaction oldFilter;
+static struct sigaction g_oldFilter;
 
 #ifdef XASH_DYNAMIC_DLADDR
 static int d_dladdr( void *sym, Dl_info *info )
@@ -438,19 +438,14 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 	sp = (void**)ucontext->uc_mcontext.arm_sp;
 #endif
 
-#if 0
-	// TODO print build number, commit hash, build arch
 	// safe actions first, stack and memory may be corrupted
-	len = Q_snprintf( message, sizeof( message ), "Ver: %s %s (build %i-%s, %s-%s)\n",
-		XASH_ENGINE_NAME, XASH_VERSION, Q_buildnum(), Q_buildcommit(), Q_buildos(), Q_buildarch() );
-#else
-	len = 0;
-#endif
+	len = Q_snprintf( message, sizeof( message ), "PrimeXT (%s, commit %s, architecture %s, platform %s)\n",
+		BuildInfo::GetDate(), BuildInfo::GetCommitHash(), BuildInfo::GetArchitecture(), BuildInfo::GetPlatform());
 
 #if !XASH_FREEBSD && !XASH_NETBSD && !XASH_OPENBSD
-	len += Q_snprintf( message + len, sizeof( message ) - len, "Crash: signal %d errno %d with code %d at %p %p\n", signal, si->si_errno, si->si_code, si->si_addr, si->si_ptr );
+	len += Q_snprintf( message + len, sizeof( message ) - len, "Crash: signal %d, errno %d with code %d at %p %p\n", signal, si->si_errno, si->si_code, si->si_addr, si->si_ptr );
 #else
-	len += Q_snprintf( message + len, sizeof( message ) - len, "Crash: signal %d errno %d with code %d at %p\n", signal, si->si_errno, si->si_code, si->si_addr );
+	len += Q_snprintf( message + len, sizeof( message ) - len, "Crash: signal %d, errno %d with code %d at %p\n", signal, si->si_errno, si->si_code, si->si_addr );
 #endif
 
 	write( STDERR_FILENO, message, len );
@@ -517,18 +512,18 @@ void CrashHandler::Setup()
 	struct sigaction act = { 0 };
 	act.sa_sigaction = Sys_Crash;
 	act.sa_flags = SA_SIGINFO | SA_ONSTACK;
-	sigaction( SIGSEGV, &act, &oldFilter );
-	sigaction( SIGABRT, &act, &oldFilter );
-	sigaction( SIGBUS,  &act, &oldFilter );
-	sigaction( SIGILL,  &act, &oldFilter );
+	sigaction( SIGSEGV, &act, &g_oldFilter );
+	sigaction( SIGABRT, &act, &g_oldFilter );
+	sigaction( SIGBUS,  &act, &g_oldFilter );
+	sigaction( SIGILL,  &act, &g_oldFilter );
 }
 
 void CrashHandler::Restore()
 {
-	sigaction( SIGSEGV, &oldFilter, NULL );
-	sigaction( SIGABRT, &oldFilter, NULL );
-	sigaction( SIGBUS,  &oldFilter, NULL );
-	sigaction( SIGILL,  &oldFilter, NULL );
+	sigaction( SIGSEGV, &g_oldFilter, NULL );
+	sigaction( SIGABRT, &g_oldFilter, NULL );
+	sigaction( SIGBUS,  &g_oldFilter, NULL );
+	sigaction( SIGILL,  &g_oldFilter, NULL );
 }
 
 #else
