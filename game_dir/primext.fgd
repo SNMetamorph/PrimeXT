@@ -1049,7 +1049,7 @@
 	]
 ]
 
-@PointClass base(Targetname, Parent, Angles) size(-16 -16 -16, 16 16 16) color(255 0 0) = env_blood : "Blood Effects" 
+@PointClass base(Targetname, Parent, Angles) size(-16 -16 -16, 16 16 16) color(255 0 0) iconsprite("sprites/fgd/env_blood.spr") = env_blood : "Blood Effects" 
 [
 	color(choices) : "Blood Color" : 0 =
 	[
@@ -1386,7 +1386,7 @@
 	rendercolor(color255) : "Fade Color (R G B)" : "0 0 0"
 ]
 
-@PointClass base(Targetname)  iconsprite("sprites/fgd/glow01.spr") = env_postfx_controller : "PostFX Controller" 
+@PointClass base(Targetname)  iconsprite("sprites/fgd/env_postfx.spr") = env_postfx_controller : "PostFX Controller" 
 [
 	spawnflags(flags) =
 	[
@@ -1751,7 +1751,7 @@
 	]
 ]
 
-@PointClass base(Targetname) size(-16 -16 -16, 16 16 16) = env_electrified_wire : "Electrified Wire"
+@PointClass base(Targetname) size(-16 -16 -16, 16 16 16) iconsprite("sprites/fgd/env_electrified.spr") = env_electrified_wire : "Electrified Wire"
 [
   segments(integer) : "Segments" : 16
   sparkfrequency(integer) : "Spark Frequency" : 3
@@ -2645,8 +2645,8 @@
 		1 : "Credits"
 		2 : "Scan Out"
 	]
-	color(color255) : "Color1" : "100 100 100"
-	color2(color255) : "Color2" : "240 110 0"
+	color(color255) : "Color1" : "255 255 255"
+	color2(color255) : "Color2" : "255 255 255"
 	fadein(string) : "Fade in Time (or character scan time)" : "1.5"
 	fadeout(string) : "Fade Out Time" : "0.5"
 	holdtime(string) : "Hold Time" : "1.2"
@@ -2842,7 +2842,7 @@
 	]
 ]
 
-@PointClass base(Targetname, Parent) size(-4 -4 -4, 4 4 4) color(200 100 60) iconsprite("sprites/fgd/info_target.spr") = info_portal_destination : "Portal Exit"
+@PointClass base(Targetname, Parent) size(-4 -4 -4, 4 4 4) color(200 100 60) iconsprite("sprites/fgd/info_portal.spr") = info_portal_destination : "Portal Exit"
 []
 
 // info_smoothvalue
@@ -2879,13 +2879,13 @@
 	]
 ]
 
-@PointClass size(-8 -8 0, 8 8 16) base(PlayerClass, Parent, Targetname) = info_teleport_destination : "Teleport destination" []
+@PointClass size(-8 -8 0, 8 8 16) base(PlayerClass, Parent, Targetname)  = info_teleport_destination : "Teleport destination" []
 
 // info_texlights
 // It defines texture lights.
 // Add any texture name as a key and their brightness as the value.
 // Don't need to set colors because hlrad knows texture colors.
-@PointClass color(255 128 0) iconsprite("sprites/fgd/info_texlight.spr") = info_texlights : "Texture Light Config" []
+@PointClass color(255 128 0) iconsprite("sprites/fgd/info_texlights.spr") = info_texlights : "Texture Light Config" []
 
 //
 // items
@@ -2963,7 +2963,7 @@
 // lights
 //
 
-@PointClass iconsprite("sprites/fgd/lightbulb.spr") base(Targetname, Light, ZHLT_point) = light : "Invisible lightsource"
+@PointClass iconsprite("sprites/fgd/light_bulb.spr") base(Targetname, Light, ZHLT_point) = light : "Invisible lightsource"
 [
 	spawnflags(Flags) = [ 1 : "Initially dark" : 0 ]
 ]
@@ -3043,7 +3043,7 @@
 	]
 ]
 
-@PointClass iconsprite("sprites/fgd/lightspot.spr") base(Targetname, Angles, Light, ZHLT_point) = light_spot : "Spotlight" 
+@PointClass iconsprite("sprites/fgd/light_spot.spr") base(Targetname, Angles, Light, ZHLT_point) = light_spot : "Spotlight" 
 [
 	_cone(integer) : "Inner (bright) angle" : 30
 	_cone2(integer) : "Outer (fading) angle" : 45
@@ -3681,7 +3681,7 @@
 	]
 ]
 @PointClass base(Monster, Sequence) size(-16 -16 0, 16 16 36) studio("models/w_squeak.mdl") = monster_snark : "Armed Snark" []
-@PointClass color(0 200 200) base(Targetname, Global, Parent) iconsprite("sprites/fgd/env_target.spr") size(-16 -16 -16, 16 16 16) = monster_target : "Target for monsters to attack"
+@PointClass color(0 200 200) base(Targetname, Global, Parent) iconsprite("sprites/fgd/monster_target.spr") size(-16 -16 -16, 16 16 16) = monster_target : "Target for monsters to attack"
 [
 	frags(choices) : "Behave as" : 0 =
 	[
@@ -3780,7 +3780,7 @@
 	delay(string) : "Delay"
 ]
 
-@PointClass base(Targetname, Target) size(-16 -16 -16, 16 16 16) color(64 255 64) = multi_switcher : "Logic Switcher"
+@PointClass base(Targetname, Target) size(-16 -16 -16, 16 16 16) color(64 255 64) iconsprite("sprites/fgd/multi_switcher.spr") = multi_switcher : "Logic Switcher"
 [
 	master(target_destination): "Master"
 	delay(integer): "Delay": 0
@@ -3796,7 +3796,7 @@
 	]
 ]
 
-@PointClass base(Targetname) iconsprite("sprites/fgd/watcher.spr") = multi_watcher : "State Watcher"
+@PointClass base(Targetname) iconsprite("sprites/fgd/multi_watcher.spr") = multi_watcher : "State Watcher"
 [
 	target(target_destination) : "Target('SmartEdit' for multiple)"
 	delay(integer): "Delay": 0
@@ -3843,7 +3843,7 @@
 	yaw_speed(integer) : "New Train rot. Speed" : 0
 ]
 
-@PointClass base(Targetname, Parent, Angles) size(16 16 16) iconsprite("sprites/rail.spr") = path_track : "Train Track Path"
+@PointClass base(Targetname, Parent, Angles) size(16 16 16) iconsprite("sprites/fgd/rail.spr") = path_track : "Train Track Path"
 [
 	spawnflags(Flags) =
 	[
@@ -3891,7 +3891,7 @@
 	m_iszKeyReleased(target_destination) : "Fire On Release"
 ]
 
-@PointClass base(Targetname) size(-16 -16 -16, 16 16 16) = player_loadsaved : "Load Auto-Saved game" 
+@PointClass base(Targetname) size(-16 -16 -16, 16 16 16) iconsprite("sprites/fgd/loadsaver.spr") = player_loadsaved : "Load Auto-Saved game" 
 [
 	duration(string) : "Fade Duration (seconds)" : "2"
 	holdtime(string) : "Hold Fade (seconds)" : "0"
@@ -3970,7 +3970,7 @@
 	]
 ]
 
-@PointClass base(Targetname, Targetx, Parent, Angles) size(-2 -2 0, 2 2 8) color(255 0 255) iconsprite("sprites/fgd/scripted_sentence.spr") = scripted_sequence : "Scripted Sequence"
+@PointClass base(Targetname, Targetx, Parent, Angles) size(-2 -2 0, 2 2 8) color(255 0 255) iconsprite("sprites/fgd/scripted_sequence.spr") = scripted_sequence : "Scripted Sequence"
 [
 	m_iszFireOnBegin(string): "Fire On Begin Sequence"
 	m_iszEntity(string) : "Target Monster"
@@ -3997,7 +3997,7 @@
 	]
 ]
 
-@PointClass base(Targetname, Parent, Angles) size(-16 -16 -16, 16 16 16) color(255 0 255) = scripted_trainsequence : "Scripted Train Sequence"
+@PointClass base(Targetname, Parent, Angles) size(-16 -16 -16, 16 16 16) color(255 0 255) iconsprite("sprites/fgd/scripted_trainsequence.spr") = scripted_trainsequence : "Scripted Train Sequence"
 [
 	m_iszEntity(target_destination) : "Func_train to Affect"
 	m_iszDestination(target_destination) : "Destination to Head for"
@@ -4054,7 +4054,7 @@
 	]
 ]
 
-@PointClass base(Targetname) = target_cdaudio : "CD Audio Target"
+@PointClass iconsprite("sprites/fgd/cd_audio.spr" base(Targetname) = target_cdaudio : "CD Audio Target"
 [
 	health(choices) : "Track #" : -1 =
 	[
@@ -4149,7 +4149,7 @@
 	]
 ]
 
-@PointClass base(Targetx, Targetname) iconsprite("sprites/fgd/TriggerCamera.spr") = trigger_camera : "Trigger Camera" 
+@PointClass base(Targetx, Targetname) iconsprite("sprites/fgd/trigger_camera.spr") = trigger_camera : "Trigger Camera" 
 [
 	m_iszViewEntity(target_destination) : "Entity To View From"
 	wait(integer) : "Hold time" : 10
@@ -4222,12 +4222,12 @@
 	]
 ]
 
-@PointClass base(Targetx, Targetname) iconsprite("sprites/fgd/TriggerChangeTarget.spr") = trigger_changetarget : "Trigger Change Target"
+@PointClass base(Targetx, Targetname) iconsprite("sprites/fgd/trigger_changetarget.spr") = trigger_changetarget : "Trigger Change Target"
 [
 	m_iszNewTarget(target_destination) : "New Target (*locus)"
 ]
 
-@PointClass base(Targetname) iconsprite("sprites/fgd/trigger.spr") = trigger_lightstyle : "Trigger Change Lightstyle"
+@PointClass base(Targetname) iconsprite("sprites/fgd/trigger_lightstyle.spr") = trigger_lightstyle : "Trigger Change Lightstyle"
 [
 	target(target_destination) : "Target to affect"
     style(choices) : "New Appearance" : 0 =
@@ -4255,12 +4255,12 @@
 	m_iWait(string) : "Hold time (-1 = permanent)" : -1
 ]
 
-@PointClass base(Targetx, Targetname) = trigger_changeparent : "Trigger Change Parent"
+@PointClass base(Targetx, Targetname) iconsprite("sprites/fgd/trigger_changeparent.spr") = trigger_changeparent : "Trigger Change Parent"
 [
 	m_iszNewParent(target_destination) : "New Parent (*locus)"
 ]
 
-@PointClass base(Targetname) = trigger_command : "Console Command"
+@PointClass base(Targetname) iconsprite("sprites/fgd/trigger_command.spr") = trigger_command : "Console Command"
 [
 	netname(string) : "Command String"
 ]
@@ -4334,7 +4334,7 @@
 	]
 ]
 
-@PointClass base(Targetname) iconsprite("sprites/fgd/trigger.spr") = trigger_impulse : "Trigger impulse"
+@PointClass base(Targetname) iconsprite("sprites/fgd/trigger_impulse.spr") = trigger_impulse : "Trigger impulse"
 [
 	master(target_destination) : "Master" 
 	impulse(string) : "Impulse Filter" 
@@ -4374,7 +4374,7 @@
 
 @SolidClass base(Trigger) = trigger_once : "Trigger: Activate once" []
 
-@PointClass base(Targetname, Parent) iconsprite("sprites/fgd/trigger.spr") = trigger_onsight : "Trigger when A sees B"
+@PointClass base(Targetname, Parent) iconsprite("sprites/fgd/trigger_onsight.spr") = trigger_onsight : "Trigger when A sees B"
 [
 	master(string) : "Master" 
 	netname(string) : "Looking Entity (blank=player)"
@@ -4395,7 +4395,7 @@
 ]
 
 
-@PointClass base(Targetname, Targetx) = trigger_playerfreeze : "Trigger Player Freeze" []
+@PointClass base(Targetname, Targetx) iconsprite("sprites/fgd/player_freez.spr") = trigger_playerfreeze : "Trigger Player Freeze" []
 
 @SolidClass base(Targetname, Angles, Parent) = trigger_push : "Trigger player push"
 [
@@ -4466,7 +4466,7 @@
 	]
 ]
 
-@PointClass base(Targetname) iconsprite("sprites/trigger_startpatrol.spr") = trigger_startpatrol : "Trigger Start Patrol"
+@PointClass base(Targetname) iconsprite("sprites/fgd/trigger_startpatrol.spr") = trigger_startpatrol : "Trigger Start Patrol"
 [
 	target(target_destination) : "Target Monster"
 	m_iszPath(target_destination) : "Patrol Path Start"
