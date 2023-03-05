@@ -26,7 +26,7 @@ void CImGuiPostFxMenu::Think()
 
 void CImGuiPostFxMenu::Draw()
 {
-    ImGuiWindowFlags windowFlags = ImGuiWindowFlags_AlwaysAutoResize;
+    ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None;
     LoadParameters();
     ImGui::Begin("Postprocessing Menu", &m_bVisible, windowFlags);
     if (ImGui::Checkbox("Enable", &m_ParametersCache.enabled)) {
@@ -60,7 +60,7 @@ void CImGuiPostFxMenu::Draw()
         StoreParameters();
     };
     BeginColorPicker();
-    if (ImGui::Button("Reset")) {
+    if (ImGui::Button("Reset", ImVec2(ImGui::GetContentRegionAvail().x, 0.0f))) {
         ResetParameters();
     }
     ImGui::End();
