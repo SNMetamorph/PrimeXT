@@ -759,8 +759,6 @@ void FinishBSPFile( const char *source )
 
 	MsgDev( D_REPORT, "total planes %d, output planes %d\n", g_nummapplanes, g_numplanes );
 
-	if( GetDeveloperLevel() >= D_REPORT )
-		PrintBSPFileSizes ();
-
+	PrintBSPFileSizes();
 	WriteBSPFile( source );
 }
