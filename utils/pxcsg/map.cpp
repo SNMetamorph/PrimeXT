@@ -906,7 +906,7 @@ short GetFaceInfoForEntity( mapent_t *mapent )
 	int	lmscale = TEXTURE_STEP * Q_max( 0, FloatForKey( (entity_t *)mapent, "_lmscale" ));
 	short faceinfo = -1;
 
-	if (!g_compatibility_mode != CompatibilityMode::GoldSrc)
+	if (g_compatibility_mode != CompatibilityMode::GoldSrc)
 	{
 		// TyrUtils: handle _lmscale feature
 		if (lmscale && lmscale != TEXTURE_STEP) {
