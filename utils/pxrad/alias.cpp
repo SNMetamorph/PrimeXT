@@ -312,8 +312,9 @@ void LoadAlias( entity_t *ent, void *extradata, int fileLength, int flags )
 	GetVectorForKey( ent, "origin", origin );
 	GetVectorForKey( ent, "angles", angles );
 
-	// TODO enable this when compatibility with GoldSrc is turned on
-	//angles[0] = -angles[0]; // Stupid quake bug workaround
+	if (g_compatibility_mode == CompatibilityMode::GoldSrc) {
+		angles[0] = -angles[0]; // Stupid quake bug workaround
+	}
 
 	scale = FloatForKey( ent, "scale" );
 	GetVectorForKey( ent, "xform", xform );
