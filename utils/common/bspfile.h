@@ -178,7 +178,7 @@ int CompressVis( const byte *src, const uint src_length, byte *dest, uint dest_l
 
 void LoadBSPFile( const char *filename );
 void WriteBSPFile( const char *filename );
-void PrintBSPFileSizes( void );
+void PrintBSPFileSizes( bool showAllocBlockLimit = false );
 
 const char *ContentsToString( int type );
 int GetSurfaceExtent( const dface_t *f );

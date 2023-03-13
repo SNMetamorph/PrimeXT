@@ -536,6 +536,184 @@ void WriteBSPFile( const char *filename )
 #define ENTRIES(a)		(sizeof(a)/sizeof(*(a)))
 #define ENTRYSIZE(a)	(sizeof(*(a)))
 
+constexpr int BLOCK_WIDTH_GOLDSRC = 128;
+constexpr int BLOCK_HEIGHT_GOLDSRC = 128;
+
+struct lightmapblock_t
+{
+	lightmapblock_t *next;
+	bool used;
+	int allocated[BLOCK_WIDTH_GOLDSRC];
+};
+
+static void GetFaceExtentsSpecial(int facenum, int mins_out[2], int maxs_out[2])
+{
+	dface_t *f;
+	dtexinfo_t *tex;
+	float mins[2], maxs[2];
+	int bmins[2], bmaxs[2];
+
+	f = &g_dfaces[facenum];
+	mins[0] = mins[1] = 999999;
+	maxs[0] = maxs[1] = -999999;
+	tex = &g_texinfo[f->texinfo];
+
+	for (int i = 0; i < f->numedges; i++)
+	{
+		dvertex_t *v;
+		int e = g_dsurfedges[f->firstedge + i];
+		if (e >= 0) {
+			v = &g_dvertexes[g_dedges[e].v[0]];
+		}
+		else {
+			v = &g_dvertexes[g_dedges[-e].v[1]];
+		}
+		for (int j = 0; j < 2; j++)
+		{
+			auto calculatePointVecsProduct = [](const float *point, const float *vecs) {
+				double val, tmp;
+				val = (double)point[0] * (double)vecs[0];
+				tmp = (double)point[1] * (double)vecs[1];
+				val = val + tmp;
+				tmp = (double)point[2] * (double)vecs[2];
+				val = val + tmp;
+				val = val + (double)vecs[3];
+				return (float)val;
+			};
+
+			float val = calculatePointVecsProduct(v->point, tex->vecs[j]);
+			if (val < mins[j])
+			{
+				mins[j] = val;
+			}
+			if (val > maxs[j])
+			{
+				maxs[j] = val;
+			}
+		}
+	}
+
+	for (int i = 0; i < 2; i++)
+	{
+		bmins[i] = (int)floor(mins[i] / TEXTURE_STEP);
+		bmaxs[i] = (int)ceil(maxs[i] / TEXTURE_STEP);
+	}
+
+	for (int i = 0; i < 2; i++)
+	{
+		mins_out[i] = bmins[i];
+		maxs_out[i] = bmaxs[i];
+	}
+}
+
+static void DoAllocBlock(lightmapblock_t *blocks, int w, int h)
+{
+	if (w < 1 || h < 1) {
+		COM_FatalError("DoAllocBlock: internal error");
+	}
+
+	for (lightmapblock_t *block = blocks; block; block = block->next)
+	{
+		int x, y;
+		int best = BLOCK_HEIGHT_GOLDSRC;
+		for (int i = 0; i < BLOCK_WIDTH_GOLDSRC - w; i++)
+		{
+			int j, best2 = 0;
+			for (j = 0; j < w; j++)
+			{
+				if (block->allocated[i + j] >= best)
+					break;
+				if (block->allocated[i + j] > best2)
+					best2 = block->allocated[i + j];
+			}
+			if (j == w)
+			{
+				x = i;
+				y = best = best2;
+			}
+		}
+
+		if (best + h <= BLOCK_HEIGHT_GOLDSRC)
+		{
+			block->used = true;
+			for (int i = 0; i < w; i++)
+			{
+				block->allocated[x + i] = best + h;
+			}
+			return;
+		}
+
+		if (!block->next)
+		{
+			// need to allocate a new block
+			if (!block->used)
+			{
+				MsgDev(D_WARN, "CountBlocks: invalid extents %dx%d", w, h);
+				return;
+			}
+			block->next = (lightmapblock_t *)malloc(sizeof(lightmapblock_t));
+			ASSERT(block->next != NULL);
+			memset(block->next, 0, sizeof(lightmapblock_t));
+		}
+	}
+}
+
+static int CountBlocks()
+{
+	lightmapblock_t *blocks = (lightmapblock_t *)malloc(sizeof(lightmapblock_t));
+	ASSERT(blocks != NULL);
+	memset(blocks, 0, sizeof(lightmapblock_t));
+
+	for (int k = 0; k < g_numfaces; k++)
+	{
+		vec3_t point;
+		int extents[2];
+		int bmins[2], bmaxs[2];
+		dface_t *f = &g_dfaces[k];
+		const char *texname = GetTextureByTexinfo(f->texinfo);
+
+		if (!Q_strncmp(texname, "sky", 3) // sky, no lightmap allocation
+			|| !Q_strncmp(texname, "!", 1) || !Q_strnicmp(texname, "water", 5) || !Q_strnicmp(texname, "laser", 5) // water, no lightmap allocation
+			|| (g_texinfo[f->texinfo].flags & TEX_SPECIAL) // AAATRIGGER or something related
+			)
+		{
+			continue;
+		}
+
+		GetFaceExtentsSpecial(k, bmins, bmaxs);
+		for (int i = 0; i < 2; i++) {
+			extents[i] = (bmaxs[i] - bmins[i]) * TEXTURE_STEP;
+		}
+
+		VectorClear(point);
+		if (f->numedges > 0)
+		{
+			int e = g_dsurfedges[f->firstedge];
+			dvertex_t *v = &g_dvertexes[g_dedges[abs(e)].v[e >= 0 ? 0 : 1]];
+			VectorCopy(v->point, point);
+		}
+
+		if (extents[0] < 0 || extents[1] < 0 || extents[0] > Q_max(512, MAX_SURFACE_EXTENT * TEXTURE_STEP) || extents[1] > Q_max(512, MAX_SURFACE_EXTENT * TEXTURE_STEP))
+			// the default restriction from the engine is 512, but place 'max (512, MAX_SURFACE_EXTENT * TEXTURE_STEP)' here in case someone raise the limit
+		{
+			MsgDev(D_WARN, "Bad surface extents %d/%d at position (%.0f,%.0f,%.0f)", extents[0], extents[1], point[0], point[1], point[2]);
+			continue;
+		}
+		DoAllocBlock(blocks, (extents[0] / TEXTURE_STEP) + 1, (extents[1] / TEXTURE_STEP) + 1);
+	}
+
+	int count = 0;
+	for (lightmapblock_t *next = nullptr; blocks; blocks = next)
+	{
+		if (blocks->used) {
+			count++;
+		}
+		next = blocks->next;
+		free(blocks);
+	}
+	return count;
+}
+
 // =====================================================================================
 //  ArrayUsage
 //      blah
@@ -569,46 +747,51 @@ PrintBSPFileSizes
 Dumps info about current file
 =============
 */
-void PrintBSPFileSizes (void)
+void PrintBSPFileSizes(bool showAllocBlockLimit)
 {
 	int	numtextures = g_texdatasize ? ((dmiptexlump_t*)g_dtexdata)->nummiptex : 0;
 	int	totalmemory = 0;
 
-	Msg( "\n");
-	Msg( "Object names  Objects/Maxobjs  Memory / Maxmem  Fullness\n" );
-	Msg( "------------  ---------------  ---------------  --------\n" );
+	Msg("\n");
+	Msg("Object names  Objects/Maxobjs  Memory / Maxmem  Fullness\n");
+	Msg("------------  ---------------  ---------------  --------\n");
 
-	totalmemory += ArrayUsage( "models",		g_nummodels,	ENTRIES( g_dmodels ),	ENTRYSIZE( g_dmodels ));
-	totalmemory += ArrayUsage( "planes",		g_numplanes,	ENTRIES( g_dplanes ),	ENTRYSIZE( g_dplanes ));
-	totalmemory += ArrayUsage( "vertexes",		g_numvertexes,	ENTRIES( g_dvertexes ),	ENTRYSIZE( g_dvertexes ));
-	totalmemory += ArrayUsage( "nodes",		g_numnodes,	ENTRIES( g_dnodes ),	ENTRYSIZE( g_dnodes ));
-	totalmemory += ArrayUsage( "texinfos",		g_numtexinfo,	ENTRIES( g_texinfo ),	ENTRYSIZE( g_texinfo ));
-	totalmemory += ArrayUsage( "faces",		g_numfaces,	ENTRIES( g_dfaces ),	ENTRYSIZE( g_dfaces ));
-	totalmemory += ArrayUsage( "clipnodes",		g_numclipnodes,	ENTRIES( g_dclipnodes ),	ENTRYSIZE( g_dclipnodes ));
-	totalmemory += ArrayUsage( "leaves",		g_numleafs,	ENTRIES( g_dleafs ),	ENTRYSIZE( g_dleafs ));
-	totalmemory += ArrayUsage( "marksurfaces",	g_nummarksurfaces,	ENTRIES( g_dmarksurfaces ),	ENTRYSIZE( g_dmarksurfaces ));
-	totalmemory += ArrayUsage( "surfedges",		g_numsurfedges,	ENTRIES( g_dsurfedges ),	ENTRYSIZE( g_dsurfedges ));
-	totalmemory += ArrayUsage( "edges",		g_numedges,	ENTRIES( g_dedges ),	ENTRYSIZE( g_dedges ));
+	totalmemory += ArrayUsage("models", g_nummodels, ENTRIES(g_dmodels), ENTRYSIZE(g_dmodels));
+	totalmemory += ArrayUsage("planes", g_numplanes, ENTRIES(g_dplanes), ENTRYSIZE(g_dplanes));
+	totalmemory += ArrayUsage("vertexes", g_numvertexes, ENTRIES(g_dvertexes), ENTRYSIZE(g_dvertexes));
+	totalmemory += ArrayUsage("nodes", g_numnodes, ENTRIES(g_dnodes), ENTRYSIZE(g_dnodes));
+	totalmemory += ArrayUsage("texinfos", g_numtexinfo, ENTRIES(g_texinfo), ENTRYSIZE(g_texinfo));
+	totalmemory += ArrayUsage("faces", g_numfaces, ENTRIES(g_dfaces), ENTRYSIZE(g_dfaces));
+	totalmemory += ArrayUsage("clipnodes", g_numclipnodes, ENTRIES(g_dclipnodes), ENTRYSIZE(g_dclipnodes));
+	totalmemory += ArrayUsage("leaves", g_numleafs, ENTRIES(g_dleafs), ENTRYSIZE(g_dleafs));
+	totalmemory += ArrayUsage("marksurfaces", g_nummarksurfaces, ENTRIES(g_dmarksurfaces), ENTRYSIZE(g_dmarksurfaces));
+	totalmemory += ArrayUsage("surfedges", g_numsurfedges, ENTRIES(g_dsurfedges), ENTRYSIZE(g_dsurfedges));
+	totalmemory += ArrayUsage("edges", g_numedges, ENTRIES(g_dedges), ENTRYSIZE(g_dedges));
 
-	totalmemory += GlobUsage( "texdata",		g_texdatasize,	MAX_MAP_MIPTEX );
-	totalmemory += GlobUsage( "lightdata",		g_lightdatasize,	MAX_MAP_LIGHTING );
-	totalmemory += GlobUsage( "visdata",		g_visdatasize,	sizeof( g_dvisdata ));
-	totalmemory += GlobUsage( "entdata",		g_entdatasize,	sizeof( g_dentdata ));
-
-	if( g_found_extradata )
-	{
-		totalmemory += GlobUsage( "normals", g_normaldatasize, MAX_MAP_LIGHTING );
-		totalmemory += GlobUsage( "deluxdata", g_deluxdatasize, MAX_MAP_LIGHTING );
-		totalmemory += ArrayUsage( "cubemaps", g_numcubemaps, ENTRIES( g_dcubemaps ), ENTRYSIZE( g_dcubemaps ));
-		totalmemory += ArrayUsage( "faceinfo", g_numfaceinfo, ENTRIES( g_dfaceinfo ), ENTRYSIZE( g_dfaceinfo ));
-		totalmemory += ArrayUsage( "direct lights", g_numworldlights, ENTRIES( g_dworldlights ), ENTRYSIZE( g_dworldlights ));
-		totalmemory += ArrayUsage( "ambient cubes", g_numleaflights, ENTRIES( g_dleaflights ), ENTRYSIZE( g_dleaflights ));
-		totalmemory += GlobUsage( "occlusion", g_shadowdatasize, MAX_MAP_LIGHTING / 3 );
-		totalmemory += GlobUsage( "vertexlight", g_vlightdatasize, MAX_MAP_LIGHTING );
-		totalmemory += GlobUsage( "vislightdata", g_vislightdatasize, MAX_MAP_VISLIGHTDATA );
+	// alloc block limit presented only for GoldSrc engine
+	if (showAllocBlockLimit) {
+		ArrayUsage("alloc block", CountBlocks(), 64, 0);
 	}
 
-	Msg( "=== Total BSP file data space used: %s ===\n", Q_memprint( totalmemory ));
+	totalmemory += GlobUsage("texdata", g_texdatasize, MAX_MAP_MIPTEX);
+	totalmemory += GlobUsage("lightdata", g_lightdatasize, MAX_MAP_LIGHTING);
+	totalmemory += GlobUsage("visdata", g_visdatasize, sizeof(g_dvisdata));
+	totalmemory += GlobUsage("entdata", g_entdatasize, sizeof(g_dentdata));
+
+	if (g_found_extradata)
+	{
+		totalmemory += GlobUsage("normals", g_normaldatasize, MAX_MAP_LIGHTING);
+		totalmemory += GlobUsage("deluxdata", g_deluxdatasize, MAX_MAP_LIGHTING);
+		totalmemory += ArrayUsage("cubemaps", g_numcubemaps, ENTRIES(g_dcubemaps), ENTRYSIZE(g_dcubemaps));
+		totalmemory += ArrayUsage("faceinfo", g_numfaceinfo, ENTRIES(g_dfaceinfo), ENTRYSIZE(g_dfaceinfo));
+		totalmemory += ArrayUsage("direct lights", g_numworldlights, ENTRIES(g_dworldlights), ENTRYSIZE(g_dworldlights));
+		totalmemory += ArrayUsage("ambient cubes", g_numleaflights, ENTRIES(g_dleaflights), ENTRYSIZE(g_dleaflights));
+		totalmemory += GlobUsage("occlusion", g_shadowdatasize, MAX_MAP_LIGHTING / 3);
+		totalmemory += GlobUsage("vertexlight", g_vlightdatasize, MAX_MAP_LIGHTING);
+		totalmemory += GlobUsage("vislightdata", g_vislightdatasize, MAX_MAP_VISLIGHTDATA);
+	}
+
+	Msg("=== Total BSP file data space used: %s ===\n", Q_memprint(totalmemory));
 }
 
 int GetSurfaceExtent( const dtexinfo_t *tex )

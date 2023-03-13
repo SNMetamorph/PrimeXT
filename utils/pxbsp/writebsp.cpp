@@ -759,6 +759,6 @@ void FinishBSPFile( const char *source )
 
 	MsgDev( D_REPORT, "total planes %d, output planes %d\n", g_nummapplanes, g_numplanes );
 
-	PrintBSPFileSizes();
+	PrintBSPFileSizes(g_compatibility_mode == CompatibilityMode::GoldSrc);
 	WriteBSPFile( source );
 }
