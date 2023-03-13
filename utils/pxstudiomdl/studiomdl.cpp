@@ -5456,6 +5456,7 @@ static void WaitForKey()
 int main( int argc, char **argv )
 {
 	int	i;
+	char str[64];
 	static char path[1024];
 
 	atexit( Sys_CloseLog );
@@ -5564,12 +5565,18 @@ int main( int argc, char **argv )
 	COM_StripExtension( outname );
 	LoadScriptFile( path );
 
-	// parse it
+	double start = I_FloatTime();
 	ParseScript ();
 	SetSkinValues ();
 	SimplifyModel ();
 	WriteFile ();
 	ClearModel ();
+	double end = I_FloatTime();
+
+	Q_timestring((int)(end - start), str);
+	MsgDev(D_INFO, "\n");
+	MsgDev(D_INFO, "%s elapsed\n", str);
+	MsgDev(D_INFO, "\n");
 
 	SetDeveloperLevel( D_REPORT );
 	Mem_Check(); // report leaks
