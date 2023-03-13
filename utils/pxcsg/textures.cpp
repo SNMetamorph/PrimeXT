@@ -186,7 +186,7 @@ bool TEX_LoadMiptex( const char *name, mipentry_t *tex )
 		return true;
 	}
 
-	MsgDev( D_WARN, "%s failed to load\n", name );
+	Msg("Texture \"%s\" failed to load\n", name);
 	return false;
 }
 
