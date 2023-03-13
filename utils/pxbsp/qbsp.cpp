@@ -26,6 +26,7 @@ bool	g_forcevis = DEFAULT_FORCEVIS;
 int	g_maxnode_size = DEFAULT_MAXNODE_SIZE;
 int	g_merge_level = DEFAULT_MERGE_LEVEL;
 vec_t	g_prtepsilon = PRTCHOP_EPSILON;
+size_t	g_compatibility_mode = DEFAULT_COMPAT_MODE;
 
 char	g_pointfilename[1024];
 char	g_linefilename[1024];
@@ -507,6 +508,8 @@ static void PrintBspSettings( void )
 	Msg( "nofill                [ %7s ] [ %7s ]\n", g_nofill ? "on" : "off", DEFAULT_NOFILL ? "on" : "off" );
 	Msg( "portal chop epsilon   [ %.6f] [ %.6f]\n", g_prtepsilon, PRTCHOP_EPSILON );
 	Msg( "force vis             [ %7s ] [ %7s ]\n", g_forcevis ? "on" : "off", DEFAULT_FORCEVIS ? "on" : "off" );
+	Msg( "compatibility mode    [ %7s ] [ %7s ]\n", 
+		CompatibilityMode::GetString(g_compatibility_mode), CompatibilityMode::GetString(DEFAULT_COMPAT_MODE));
 	Msg( "\n" );
 }
 
@@ -528,6 +531,7 @@ static void PrintBspUsage( void )
  	Msg( "    -noforcevis      : don't make a .prt if the map leaks\n" );
 	Msg( "    -merge           : merge together chopped faces on nodes (merging depth level)\n" );
 	Msg( "    -maxnodesize val : sets the maximum portal node size\n" );
+	Msg( "    -compat <type>   : enable compatibility mode (goldsrc/xashxt)\n" );
 	Msg( "    -epsilon         : portal chop precision epsilon\n" );
 	Msg( "    mapfile          : the mapfile to compile\n\n" );
 }
@@ -588,6 +592,18 @@ int main( int argc, char **argv )
 			g_maxnode_size = atoi( argv[i+1] );
 			g_maxnode_size = bound( 256, g_maxnode_size, 65536 );
 			i++;
+		}
+		else if (!Q_strcmp(argv[i], "-compat"))
+		{
+			i++;
+			if (!Q_strcmp(argv[i], "goldsrc")) {
+				g_compatibility_mode = CompatibilityMode::GoldSrc;
+			}
+			else 
+			{
+				MsgDev(D_ERROR, "\nUnknown compatibility mode parameter \"%s\"\n", argv[i]);
+				break;
+			}
 		}
 		else if( !Q_strcmp( argv[i], "-epsilon" ))
 		{

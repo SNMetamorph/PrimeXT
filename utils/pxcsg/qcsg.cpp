@@ -10,6 +10,7 @@
 
 #include "csg.h"
 #include "crashhandler.h"
+#include "compatibility_mode.h"
 #include "app_info.h"
 #include "build_info.h"
 
@@ -18,7 +19,7 @@
 #define DEFAULT_NULLIFYTRIGGER	true
 #define DEFAULT_WADTEXTURES		true
 #define DEFAULT_NOCLIP			false
-#define DEFAULT_COMPAT_GOLDSRC	false
+#define DEFAULT_COMPAT_MODE		CompatibilityMode::PrimeXT
 //#define ENABLE_TESTMAP
 
 // actual compiler settings
@@ -26,8 +27,8 @@ bool		g_onlyents = DEFAULT_ONLYENTS;
 bool		g_wadtextures = DEFAULT_WADTEXTURES;
 bool		g_nullifytrigger = DEFAULT_NULLIFYTRIGGER;
 bool		g_noclip = DEFAULT_NOCLIP;
-bool		g_compatibility_goldsrc = DEFAULT_COMPAT_GOLDSRC;
 vec_t		g_csgepsilon = CSGCHOP_EPSILON;
+size_t		g_compatibility_mode = DEFAULT_COMPAT_MODE;
 
 static FILE	*out_surfaces[MAX_MAP_HULLS];
 static FILE	*out_detbrush[MAX_MAP_HULLS];
@@ -628,7 +629,8 @@ static void PrintCsgSettings( void )
 	Msg( "noclip                [ %7s ] [ %7s ]\n", g_noclip ? "on" : "off", DEFAULT_NOCLIP ? "on" : "off" );
 	Msg( "onlyents              [ %7s ] [ %7s ]\n", g_onlyents ? "on" : "off", DEFAULT_ONLYENTS ? "on" : "off" );
 	Msg( "CSG chop epsilon      [ %.6f] [ %.6f]\n", g_csgepsilon, CSGCHOP_EPSILON );
-	Msg( "GoldSrc compatible    [ %7s ] [ %7s ]\n", g_compatibility_goldsrc ? "on" : "off", DEFAULT_COMPAT_GOLDSRC ? "on" : "off" );
+	Msg( "compatibility mode    [ %7s ] [ %7s ]\n", 
+		CompatibilityMode::GetString(g_compatibility_mode), CompatibilityMode::GetString(DEFAULT_COMPAT_MODE));
 	Msg( "\n" );
 }
 
@@ -690,13 +692,18 @@ int main( int argc, char **argv )
 	{
 		if (CheckDeprecatedParameter(argv[i]))
 		{
-			// compatibility issues, does nothing
+			// legacy issues, does nothing
 		}
 		else if (!Q_strcmp(argv[i], "-compat"))
 		{
 			i++;
 			if (!Q_strcmp(argv[i], "goldsrc")) {
-				g_compatibility_goldsrc = true;
+				g_compatibility_mode = CompatibilityMode::GoldSrc;
+			}
+			else 
+			{
+				MsgDev(D_ERROR, "\nUnknown compatibility mode parameter \"%s\"\n", argv[i]);
+				break;
 			}
 		}
 		else if( !Q_strcmp( argv[i], "-dev" ))

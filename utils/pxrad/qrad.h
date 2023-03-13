@@ -18,6 +18,7 @@
 #include "stringlib.h"
 #include "filesystem.h"
 #include "utlarray.h"
+#include "compatibility_mode.h"
 
 #define DEFAULT_FASTMODE		false
 #define DEFAULT_EXTRAMODE		false
@@ -37,6 +38,7 @@
 #define DEFAULT_SMOOTHVALUE		50.0
 #define DEFAULT_INDIRECT_SUN		1.0
 #define DEFAULT_GAMMA		0.5
+#define DEFAULT_COMPAT_MODE		CompatibilityMode::PrimeXT
 #define DLIGHT_THRESHOLD		10.0
 	
 // worldcraft predefined angles
@@ -381,6 +383,7 @@ extern int		g_numdlights;
 extern uint		g_gammamode;
 extern vec_t		g_gamma;
 extern vec_t		g_blur;
+extern size_t	g_compatibility_mode;
 
 //
 // ambientcube.c

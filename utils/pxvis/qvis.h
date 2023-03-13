@@ -16,11 +16,13 @@
 #include "bspfile.h"
 #include "stringlib.h"
 #include "filesystem.h"
+#include "compatibility_mode.h"
 
 #define DEFAULT_FASTVIS	false
 #define DEFAULT_TESTLEVEL	2
 #define DEFAULT_NOSORT	false
 #define DEFAULT_FARPLANE	0
+#define DEFAULT_COMPAT_MODE	CompatibilityMode::PrimeXT
 
 #define MAX_PORTALS		MAX_MAP_PORTALS
 #define VIS_EPSILON		ON_EPSILON
@@ -113,6 +115,7 @@ extern byte	*g_uncompressed;
 extern int	g_bitbytes;
 extern int	g_bitlongs;
 extern vec_t	g_farplane;
+extern size_t	g_compatibility_mode;
 
 void LeafFlow( int leafnum );
 void BasePortalVis( int threadnum );

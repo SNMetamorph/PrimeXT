@@ -71,6 +71,7 @@ bool		g_onlylights = false;
 float		g_smoothing_threshold;		// cosine of smoothing angle(in radians)
 char		source[MAX_PATH] = "";
 uint		g_gammamode = DEFAULT_GAMMAMODE;
+size_t		g_compatibility_mode = DEFAULT_COMPAT_MODE;
 
 static char	global_lights[MAX_PATH] = "";
 static char	level_lights[MAX_PATH] = "";
@@ -2467,6 +2468,8 @@ static void PrintRadSettings( void )
 	Q_snprintf( buf2, sizeof( buf2 ), "%3.3f", DEFAULT_INDIRECT_SUN );
 	Msg( "global sky diffusion  [ %7s ] [ %7s ]\n", buf1, buf2 );
 	Msg( "dirtmapping           [ %7s ] [ %7s ]\n", g_dirtmapping ? "on" : "off", DEFAULT_DIRTMAPPING ? "on" : "off" );
+	Msg( "compatibility mode    [ %7s ] [ %7s ]\n", 
+		CompatibilityMode::GetString(g_compatibility_mode), CompatibilityMode::GetString(DEFAULT_COMPAT_MODE));
 #ifdef HLRAD_PARANOIA_BUMP
 	Msg( "gamma mode            [ %7d ] [ %7d ]\n", g_gammamode, DEFAULT_GAMMAMODE );
 #endif
@@ -2499,6 +2502,7 @@ static void PrintRadUsage( void )
 	Msg( "    -balance       : -dscale will be interpret as global scaling factor\n" );
 	Msg( "    -dirty         : enable dirtmapping (baked AO)\n" );
 	Msg( "    -onlylights    : update only worldlights lump\n" );
+	Msg( "    -compat <type> : enable compatibility mode (goldsrc/xashxt)\n" );
 #ifdef HLRAD_PARANOIA_BUMP
 	Msg( "    -gammamode #   : gamma correction mode (0, 1, 2)\n" );
 #endif
@@ -2632,6 +2636,18 @@ int main( int argc, char **argv )
 		else if( !Q_strcmp( argv[i], "-dirty" ))
 		{
 			g_dirtmapping = !g_fastmode;
+		}
+		else if (!Q_strcmp(argv[i], "-compat"))
+		{
+			i++;
+			if (!Q_strcmp(argv[i], "goldsrc")) {
+				g_compatibility_mode = CompatibilityMode::GoldSrc;
+			}
+			else 
+			{
+				MsgDev(D_ERROR, "\nUnknown compatibility mode parameter \"%s\"\n", argv[i]);
+				break;
+			}
 		}
 #ifdef HLRAD_PARANOIA_BUMP
 		else if( !Q_strcmp( argv[i], "-gammamode" ))

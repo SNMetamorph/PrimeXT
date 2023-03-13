@@ -18,6 +18,7 @@
 #include "stringlib.h"
 #include "filesystem.h"
 #include "port.h"
+#include "compatibility_mode.h"
 
 #ifndef DOUBLEVEC_T
 #error you must add -dDOUBLEVEC_T to the project!
@@ -29,7 +30,8 @@
 #define DEFAULT_NOFILL		false
 #define DEFAULT_NOTJUNC		false
 #define DEFAULT_NOCLIP		false
-#define DEFAULT_FORCEVIS		true
+#define DEFAULT_FORCEVIS	true
+#define DEFAULT_COMPAT_MODE	CompatibilityMode::PrimeXT
 #define BSPCHOP_EPSILON		( Q_min( g_prtepsilon * 4.0, ON_EPSILON ))
 
 // the exact bounding box of the brushes is expanded some for the headnode
@@ -270,6 +272,7 @@ extern bool	g_forcevis;
 extern int	g_maxnode_size;
 extern int	g_merge_level;
 extern vec_t	g_prtepsilon;
+extern size_t	g_compatibility_mode;
 
 extern int	valid;
 extern int	c_splitnodes;

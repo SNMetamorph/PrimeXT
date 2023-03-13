@@ -40,6 +40,7 @@ bool	g_fastvis = DEFAULT_FASTVIS;
 bool	g_nosort = DEFAULT_NOSORT;
 int	g_testlevel = DEFAULT_TESTLEVEL;
 vec_t	g_farplane = DEFAULT_FARPLANE;
+size_t	g_compatibility_mode = DEFAULT_COMPAT_MODE;
 
 //=============================================================================
 void prl( leaf_t *l )
@@ -544,6 +545,8 @@ static void PrintVisSettings( void )
 	Msg( "fast vis              [ %7s ] [ %7s ]\n", g_fastvis ? "on" : "off", DEFAULT_FASTVIS ? "on" : "off" );
 	Msg( "no sort portals       [ %7s ] [ %7s ]\n", g_nosort ? "on" : "off", DEFAULT_NOSORT ? "on" : "off" );
 	Msg( "maxdistance           [ %7d ] [ %7d ]\n", (int)g_farplane, (int)DEFAULT_FARPLANE );
+	Msg( "compatibility mode    [ %7s ] [ %7s ]\n", 
+		CompatibilityMode::GetString(g_compatibility_mode), CompatibilityMode::GetString(DEFAULT_COMPAT_MODE));
 	Msg( "\n" );
 }
 
@@ -562,6 +565,7 @@ static void PrintVisUsage( void )
  	Msg( "    -fast          : only do first quick pass on vis calculations\n" );
 	Msg( "    -nosort        : don't sort portals (disable optimization)\n" );
 	Msg( "    -maxdistance   : limit visible distance (e.g. for fogged levels)\n" );
+	Msg( "    -compat <type> : enable compatibility mode (goldsrc/xashxt)\n" );
 	Msg( "    bspfile        : The bspfile to compile\n\n" );
 }
 
@@ -626,6 +630,18 @@ int main( int argc, char **argv )
 			g_farplane = atof( argv[i+1] );
 			g_farplane = bound( 64.0, g_farplane, 65536.0 * 1.73 );
 			i++;
+		}
+		else if (!Q_strcmp(argv[i], "-compat"))
+		{
+			i++;
+			if (!Q_strcmp(argv[i], "goldsrc")) {
+				g_compatibility_mode = CompatibilityMode::GoldSrc;
+			}
+			else 
+			{
+				MsgDev(D_ERROR, "\nUnknown compatibility mode parameter \"%s\"\n", argv[i]);
+				break;
+			}
 		}
 		else if( argv[i][0] == '-' )
 		{

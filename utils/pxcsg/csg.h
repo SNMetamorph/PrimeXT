@@ -170,7 +170,7 @@ typedef struct
 extern CUtlArray<mapent_t>	g_mapentities;
 extern plane_t		g_mapplanes[MAX_INTERNAL_MAP_PLANES];
 extern int		g_nummapplanes;
-extern brush_t		g_mapbrushes[MAX_MAP_BRUSHES];
+extern brush_t	g_mapbrushes[MAX_MAP_BRUSHES];
 extern int		g_nummapbrushes;
 extern int		g_numparsedentities;
 extern int		g_numparsedbrushes;
@@ -179,9 +179,9 @@ extern int		g_world_luxels;
 extern bool		g_noclip;
 extern bool		g_wadtextures;
 extern bool		g_nullifytrigger;
-extern bool		g_compatibility_goldsrc;
 extern bool		g_onlyents;
 extern vec_t	g_csgepsilon;
+extern size_t	g_compatibility_mode;
 
 extern char		g_pszWadInclude[MAX_TEXFILES][64];
 extern int		g_nWadInclude;

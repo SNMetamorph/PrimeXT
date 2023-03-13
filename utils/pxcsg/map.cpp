@@ -9,6 +9,7 @@
 ****/
 
 #include "csg.h"
+#include "compatibility_mode.h"
 #include "build_info.h"
 
 CUtlArray<mapent_t>	g_mapentities;
@@ -868,6 +869,26 @@ static void ParseBrush( mapent_t *mapent, short entindex, short faceinfo, short 
 	}
 }
 
+static int GetDefaultTextureStep(mapent_t *mapent)
+{
+	if (g_compatibility_mode == CompatibilityMode::GoldSrc) {
+		return TEXTURE_STEP;
+	}
+	else {
+		return Q_max(0, IntForKey((entity_t *)mapent, "zhlt_texturestep"));
+	}
+}
+
+static int GetDefaultSurfaceExtent(mapent_t *mapent)
+{
+	if (g_compatibility_mode == CompatibilityMode::GoldSrc) {
+		return MAX_SURFACE_EXTENT;
+	}
+	else {
+		return Q_max(0, IntForKey((entity_t *)mapent, "zhlt_texturestep"));
+	}
+}
+
 /*
 ================
 ParseMapEntity
@@ -879,17 +900,18 @@ short GetFaceInfoForEntity( mapent_t *mapent )
 
 	// NOTE: we guranteed what this function called only for non-point entities
 	const char *landname = ValueForKey( (entity_t *)mapent, "zhlt_landscape" );
-	int	texture_step = g_compatibility_goldsrc ? TEXTURE_STEP : Q_max( 0, IntForKey( (entity_t *)mapent, "zhlt_texturestep" ));
-	int	max_extent = g_compatibility_goldsrc ? MAX_SURFACE_EXTENT : Q_max( 0, IntForKey( (entity_t *)mapent, "zhlt_maxextent" ));
+	int	texture_step = GetDefaultTextureStep(mapent);
+	int	max_extent = GetDefaultSurfaceExtent(mapent);
 	int	global_texture_step = TEXTURE_STEP, global_max_extent = MAX_SURFACE_EXTENT;
 	int	lmscale = TEXTURE_STEP * Q_max( 0, FloatForKey( (entity_t *)mapent, "_lmscale" ));
 	short faceinfo = -1;
 
-	if (!g_compatibility_goldsrc)
+	if (!g_compatibility_mode != CompatibilityMode::GoldSrc)
 	{
 		// TyrUtils: handle _lmscale feature
-		if (lmscale && lmscale != TEXTURE_STEP)
+		if (lmscale && lmscale != TEXTURE_STEP) {
 			texture_step = lmscale;
+		}
 	}
 
 	// update global settings
@@ -903,7 +925,7 @@ short GetFaceInfoForEntity( mapent_t *mapent )
 	if( g_mapentities.Count() == 1 )
 	{
 		// get defaults
-		if (g_compatibility_goldsrc)
+		if (g_compatibility_mode == CompatibilityMode::GoldSrc)
 		{
 			if (!max_extent) {
 				max_extent = MAX_SURFACE_EXTENT;
