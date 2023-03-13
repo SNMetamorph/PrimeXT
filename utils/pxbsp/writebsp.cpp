@@ -749,16 +749,15 @@ void BeginBSPFile (void)
 FinishBSPFile
 ==================
 */
-void FinishBSPFile( const char *source )
+void FinishBSPFile(const char *source)
 {
-	MsgDev( D_REPORT, "--- FinishBSPFile ---\n" );
+	MsgDev(D_REPORT, "--- FinishBSPFile ---\n");
 
-	memcpy( g_texinfo, g_maptexinfo, sizeof( dtexinfo_t ) * g_nummaptexinfo );
-	MsgDev( D_REPORT, "total texinfo %d, output texinfo %d\n", g_numtexinfo, g_nummaptexinfo );
+	memcpy(g_texinfo, g_maptexinfo, sizeof(dtexinfo_t) * g_nummaptexinfo);
+	MsgDev(D_REPORT, "total texinfo %d, output texinfo %d\n", g_numtexinfo, g_nummaptexinfo);
 	g_numtexinfo = g_nummaptexinfo;
 
-	MsgDev( D_REPORT, "total planes %d, output planes %d\n", g_nummapplanes, g_numplanes );
+	MsgDev(D_REPORT, "total planes %d, output planes %d\n", g_nummapplanes, g_numplanes);
 
-	PrintBSPFileSizes(g_compatibility_mode == CompatibilityMode::GoldSrc);
-	WriteBSPFile( source );
+	WriteBSPFile(source);
 }

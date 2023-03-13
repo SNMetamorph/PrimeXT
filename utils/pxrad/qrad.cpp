@@ -2738,6 +2738,7 @@ int main( int argc, char **argv )
 
 	RadWorld ();
 
+	PrintBSPFileSizes();
 	WriteBSPFile( source );
 	TEX_FreeTextures ();
 	FreeWorldTrace ();
