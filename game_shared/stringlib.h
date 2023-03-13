@@ -37,6 +37,7 @@ int Q_vsnprintf( char *buffer, size_t buffersize, const char *format, va_list ar
 int Q_snprintf( char *buffer, size_t buffersize, const char *format, ... );
 int Q_sprintf( char *buffer, const char *format, ... );
 char *Q_pretifymem( float value, int digitsafterdecimal );
+void _Q_timestring( int seconds, char *msg, size_t size );
 char *va( const char *format, ... );
 
 #define Q_strupr( in, out ) Q_strnupr( in, out, 99999 )
@@ -47,6 +48,7 @@ char *va( const char *format, ... );
 #define Q_strcmp( s1, s2 ) Q_strncmp( s1, s2, 99999 )
 #define Q_vsprintf( buffer, format, args ) Q_vsnprintf( buffer, 99999, format, args )
 #define Q_memprint( val) Q_pretifymem( val, 2 )
+#define Q_timestring( a, b ) _Q_timestring( a, b, sizeof( b ))
 
 //
 // common.cpp

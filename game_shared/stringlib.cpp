@@ -592,3 +592,19 @@ char *Q_pretifymem( float value, int digitsafterdecimal )
 
 	return out;
 }
+
+void _Q_timestring( int seconds, char *msg, size_t size )
+{
+	int	nMin = seconds / 60;
+	int	nSec = seconds - nMin * 60;
+	int	nHour = nMin / 60;
+	char	*ext[2] = { "", "s" };
+
+	nMin -= nHour * 60;
+	
+	if( nHour > 0 ) 
+		Q_snprintf( msg, size, "%d hour%s, %d minute%s, %d second%s", nHour, ext[nHour != 1], nMin, ext[nMin != 1], nSec, ext[nSec != 1] );
+	else if ( nMin > 0 )
+		Q_snprintf( msg, size, "%d minute%s, %d second%s", nMin, ext[nMin != 1], nSec, ext[nSec != 1] );
+	else Q_snprintf( msg, size, "%d second%s", nSec, ext[nSec != 1] );
+}
