@@ -35,7 +35,7 @@ static mipentry_t	g_miptex[MAX_MAP_TEXTURES];
 static int	g_nummiptex;
 static wadentry_t	g_wadlist[MAX_TEXFILES];
 static int	g_wadcount;
-static std::unordered_map<int, std::string> g_hashToMiptexName;
+static std::unordered_map<int32_t, std::string> g_hashToMiptexName;
 char		g_pszWadInclude[MAX_TEXFILES][64];
 int		g_nWadInclude;
 
@@ -232,14 +232,14 @@ void TEX_FreeTextures( void )
 	}
 }
 
-int TEX_AddMiptexNameToHashTable(const char *name)
+int32_t TEX_AddMiptexNameToHashTable(const char *name)
 {
 	uint32_t hash, i;
-	size_t len = strlen(name);
+	size_t length = std::strlen(name);
 	
-	for (hash = i = 0; i < len; ++i)
+	for (hash = i = 0; i < length; ++i)
 	{
-		hash += (uint8_t)(name[i]);
+		hash += static_cast<uint8_t>(std::tolower(name[i]));
 		hash += (hash << 10);
 		hash ^= (hash >> 6);
 	}
@@ -247,11 +247,11 @@ int TEX_AddMiptexNameToHashTable(const char *name)
 	hash ^= (hash >> 11);
 	hash += (hash << 15);
 
-	g_hashToMiptexName.insert({ (int)hash, name });
-	return (int)hash;
+	g_hashToMiptexName.insert({ static_cast<int32_t>(hash), name });
+	return static_cast<int32_t>(hash);
 }
 
-const char *TEX_GetMiptexNameByHash(int hash)
+const char *TEX_GetMiptexNameByHash(int32_t hash)
 {
 	return g_hashToMiptexName[hash].c_str();
 }
