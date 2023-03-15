@@ -2408,7 +2408,9 @@ void RadWorld( void )
 	ReduceLightmap();
 #endif
 #ifdef HLRAD_AMBIENTCUBES
+	if (g_compatibility_mode != CompatibilityMode::GoldSrc) {
 	ComputeLeafAmbientLighting();
+	}
 #endif
 #ifdef HLRAD_LIGHTMAPMODELS
 	WriteModelLighting();
