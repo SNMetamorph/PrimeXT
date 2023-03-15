@@ -11,6 +11,7 @@
 #include "csg.h"
 #include "compatibility_mode.h"
 #include <string>
+#include <cstring>
 #include <unordered_map>
 
 #define FWAD_USED		BIT( 0 )
@@ -37,7 +38,7 @@ static int	g_nummiptex;
 static wadentry_t	g_wadlist[MAX_TEXFILES];
 static int	g_wadcount;
 static std::unordered_map<int32_t, std::string> g_hashToMiptexName;
-char		g_pszWadInclude[MAX_TEXFILES][64];
+char	g_pszWadInclude[MAX_TEXFILES][64];
 int		g_nWadInclude;
 
 void TEX_LoadTextures( CUtlArray<mapent_t> *entities, bool merge )
