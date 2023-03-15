@@ -9,6 +9,7 @@
 ****/
 
 #include "csg.h"
+#include "compatibility_mode.h"
 #include <string>
 #include <unordered_map>
 
@@ -385,6 +386,31 @@ bool CheckSpecialTexture( const char *name )
 
 /*
 ==================
+FixSkyMiptex
+
+for the mystery reason, 'sky' texture name should be in lowercase for GoldSrc.
+otherwise it will cause terrible bug with displaying lightmap on sky surfaces
+and crashing when trying to illuminate sky surfaces with dlight
+==================
+*/
+static void FixSkyMiptex(dmiptexlump_t *miptexLump)
+{
+	ptrdiff_t miptexLumpAddress = reinterpret_cast<ptrdiff_t>(miptexLump);
+	for (size_t i = 0; i < miptexLump->nummiptex; ++i)
+	{
+		miptex_t *miptex = reinterpret_cast<miptex_t*>(miptexLumpAddress + miptexLump->dataofs[i]);
+		if (!Q_strnicmp(miptex->name, "sky", 3)) 
+		{
+			size_t length = std::strlen(miptex->name);
+			for (size_t i = 0; i < length; ++i) {
+				miptex->name[i] = std::tolower(miptex->name[i]);
+			}
+		}
+	}
+}
+
+/*
+==================
 WriteMiptex
 ==================
 */
@@ -445,6 +471,10 @@ void WriteMiptex( void )
 
 	if( totaldatasize != g_texdatasize )
 		COM_FatalError( "WriteMiptex: memory corrupted\n" );
+
+	if (g_compatibility_mode == CompatibilityMode::GoldSrc) {
+		FixSkyMiptex((dmiptexlump_t *)g_dtexdata);
+	}
 
 	for( i = 0; i < g_wadcount; i++ )
 	{
