@@ -26,6 +26,8 @@
 #include "studio.h"
 #include "gamerules.h"
 #include "trains.h"
+#include "monsterevent.h"
+#include "scriptevent.h"
 
 #define SF_GIBSHOOTER_REPEATABLE	1 // allows a gibshooter to be refired
 #define SF_FUNNEL_REVERSE		1 // funnel effect repels particles instead of attracting them.
@@ -3271,10 +3273,6 @@ void CBaseParticle :: KeyValue( KeyValueData *pkvd )
 void CBaseParticle :: StartMessage( CBasePlayer *pPlayer )
 {
 	UTIL_CreateAuroraSystem(pPlayer, this, STRING(pev->message), pev->impulse);
-		WRITE_ENTITY( entindex() );
-		WRITE_STRING( STRING( pev->message ));
-		WRITE_BYTE( pev->impulse );
-	MESSAGE_END();
 }
 
 void CBaseParticle::Spawn( void )
@@ -3508,6 +3506,7 @@ public:
 	void Precache();
 	void EXPORT Think();
 	void KeyValue(KeyValueData *pkvd);
+	void HandleAnimEvent(MonsterEvent_t *pEvent);
 	STATE GetState();
 	void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
 	virtual int	ObjectCaps() { return CBaseEntity::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
@@ -3605,6 +3604,64 @@ void CEnvModel::Precache(void)
 	PRECACHE_MODEL(GetModel());
 }
 
+void CEnvModel::HandleAnimEvent(MonsterEvent_t *pEvent) 
+{
+	switch (pEvent->event)
+	{
+		case SCRIPT_EVENT_SOUND:			// Play a named wave file
+			EMIT_SOUND(edict(), CHAN_BODY, pEvent->options, 1.0, ATTN_IDLE);
+			break;
+		case SCRIPT_EVENT_SOUND_VOICE:
+			EMIT_SOUND(edict(), CHAN_VOICE, pEvent->options, 1.0, ATTN_IDLE);
+			break;
+		case SCRIPT_EVENT_SENTENCE_RND1:		// Play a named sentence group 33% of the time
+			if (RANDOM_LONG(0, 2) == 0)
+				break;
+			// fall through...
+		case SCRIPT_EVENT_SENTENCE:			// Play a named sentence group
+			SENTENCEG_PlayRndSz(edict(), pEvent->options, 1.0, ATTN_IDLE, 0, 100);
+			break;
+		case SCRIPT_EVENT_FIREEVENT:		// Fire a trigger
+			UTIL_FireTargets(pEvent->options, this, this, USE_TOGGLE, 0);
+			break;
+		case MONSTER_EVENT_BODYDROP_HEAVY:
+			if (pev->flags & FL_ONGROUND)
+			{
+				if (RANDOM_LONG(0, 1) == 0)
+				{
+					EMIT_SOUND_DYN(ENT(pev), CHAN_BODY, "common/bodydrop3.wav", 1, ATTN_NORM, 0, 90);
+				}
+				else
+				{
+					EMIT_SOUND_DYN(ENT(pev), CHAN_BODY, "common/bodydrop4.wav", 1, ATTN_NORM, 0, 90);
+				}
+			}
+			break;
+		case MONSTER_EVENT_BODYDROP_LIGHT:
+			if (pev->flags & FL_ONGROUND)
+			{
+				if (RANDOM_LONG(0, 1) == 0)
+				{
+					EMIT_SOUND(ENT(pev), CHAN_BODY, "common/bodydrop3.wav", 1, ATTN_NORM);
+				}
+				else
+				{
+					EMIT_SOUND(ENT(pev), CHAN_BODY, "common/bodydrop4.wav", 1, ATTN_NORM);
+				}
+			}
+			break;
+		case MONSTER_EVENT_SWISHSOUND:
+		{
+			// NO MONSTER may use this anim event unless that monster's precache precaches this sound!!!
+			EMIT_SOUND(ENT(pev), CHAN_BODY, "zombie/claw_miss2.wav", 1, ATTN_NORM);
+			break;
+		}
+		default:
+			ALERT(at_aiconsole, "Unhandled animation event %d for %s\n", pEvent->event, STRING(pev->classname));
+			break;
+	}
+}
+
 STATE CEnvModel::GetState(void)
 {
 	if (pev->spawnflags & SF_ENVMODEL_OFF)
@@ -3627,13 +3684,10 @@ void CEnvModel::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useT
 	}
 }
 
-void CEnvModel::Think(void)
+void CEnvModel::Think()
 {
-	int iTemp;
-
-	//	ALERT(at_console, "env_model Think fr=%f\n", pev->framerate);
-
-	StudioFrameAdvance(); // set m_fSequenceFinished if necessary
+	float flInterval = StudioFrameAdvance(); // set m_fSequenceFinished if necessary
+	DispatchAnimEvents(flInterval);
 
 //	if (m_fSequenceLoops)
 //	{
@@ -3642,6 +3696,8 @@ void CEnvModel::Think(void)
 //	}
 	if (m_fSequenceFinished && !m_fSequenceLoops)
 	{
+		int iTemp;
+
 		if (pev->spawnflags & SF_ENVMODEL_OFF)
 			iTemp = m_iAction_Off;
 		else
