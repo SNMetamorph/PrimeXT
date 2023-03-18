@@ -1409,7 +1409,7 @@ void UTIL_ParticleEffect( const Vector &vecOrigin, const Vector &vecDirection, U
 
 void UTIL_CreateAuroraSystem(CBaseEntity *pPlayer, CBaseEntity *pParent, const char *aurFile, int attachment)
 {
-	MESSAGE_BEGIN(MSG_ONE, gmsgParticle, NULL, pPlayer->pev);
+	MESSAGE_BEGIN(pPlayer ? MSG_ONE : MSG_ALL, gmsgParticle, NULL, pPlayer ? pPlayer->pev : NULL);
 	WRITE_ENTITY(pParent->entindex());
 	WRITE_STRING(aurFile);
 	WRITE_BYTE(attachment);

@@ -3624,38 +3624,9 @@ void CEnvModel::HandleAnimEvent(MonsterEvent_t *pEvent)
 		case SCRIPT_EVENT_FIREEVENT:		// Fire a trigger
 			UTIL_FireTargets(pEvent->options, this, this, USE_TOGGLE, 0);
 			break;
-		case MONSTER_EVENT_BODYDROP_HEAVY:
-			if (pev->flags & FL_ONGROUND)
-			{
-				if (RANDOM_LONG(0, 1) == 0)
-				{
-					EMIT_SOUND_DYN(ENT(pev), CHAN_BODY, "common/bodydrop3.wav", 1, ATTN_NORM, 0, 90);
-				}
-				else
-				{
-					EMIT_SOUND_DYN(ENT(pev), CHAN_BODY, "common/bodydrop4.wav", 1, ATTN_NORM, 0, 90);
-				}
-			}
+		case MONSTER_EVENT_AURORA_PARTICLE:
+			UTIL_CreateAuroraSystem(NULL, this, pEvent->options, 0);
 			break;
-		case MONSTER_EVENT_BODYDROP_LIGHT:
-			if (pev->flags & FL_ONGROUND)
-			{
-				if (RANDOM_LONG(0, 1) == 0)
-				{
-					EMIT_SOUND(ENT(pev), CHAN_BODY, "common/bodydrop3.wav", 1, ATTN_NORM);
-				}
-				else
-				{
-					EMIT_SOUND(ENT(pev), CHAN_BODY, "common/bodydrop4.wav", 1, ATTN_NORM);
-				}
-			}
-			break;
-		case MONSTER_EVENT_SWISHSOUND:
-		{
-			// NO MONSTER may use this anim event unless that monster's precache precaches this sound!!!
-			EMIT_SOUND(ENT(pev), CHAN_BODY, "zombie/claw_miss2.wav", 1, ATTN_NORM);
-			break;
-		}
 		default:
 			ALERT(at_aiconsole, "Unhandled animation event %d for %s\n", pEvent->event, STRING(pev->classname));
 			break;
