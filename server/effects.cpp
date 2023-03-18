@@ -3270,7 +3270,7 @@ void CBaseParticle :: KeyValue( KeyValueData *pkvd )
 
 void CBaseParticle :: StartMessage( CBasePlayer *pPlayer )
 {
-	MESSAGE_BEGIN( MSG_ONE, gmsgParticle, NULL, pPlayer->pev );
+	UTIL_CreateAuroraSystem(pPlayer, this, STRING(pev->message), pev->impulse);
 		WRITE_ENTITY( entindex() );
 		WRITE_STRING( STRING( pev->message ));
 		WRITE_BYTE( pev->impulse );

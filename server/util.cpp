@@ -1407,6 +1407,14 @@ void UTIL_ParticleEffect( const Vector &vecOrigin, const Vector &vecDirection, U
 	PARTICLE_EFFECT( vecOrigin, vecDirection, (float)ulColor, (float)ulCount );
 }
 
+void UTIL_CreateAuroraSystem(CBaseEntity *pPlayer, CBaseEntity *pParent, const char *aurFile, int attachment)
+{
+	MESSAGE_BEGIN(MSG_ONE, gmsgParticle, NULL, pPlayer->pev);
+	WRITE_ENTITY(pParent->entindex());
+	WRITE_STRING(aurFile);
+	WRITE_BYTE(attachment);
+	MESSAGE_END();
+}
 
 float UTIL_Approach( float target, float value, float speed )
 {

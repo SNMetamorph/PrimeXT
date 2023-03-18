@@ -352,6 +352,7 @@ extern void UTIL_SetOrigin		( CBaseEntity *pEnt, const Vector &vecOrigin );
 extern void UTIL_SetAngles		( CBaseEntity *pEnt, const Vector &vecAngles );
 extern void UTIL_EmitAmbientSound	( edict_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch );
 extern void UTIL_ParticleEffect		( const Vector &vecOrigin, const Vector &vecDirection, ULONG ulColor, ULONG ulCount );
+extern void UTIL_CreateAuroraSystem ( CBaseEntity *pPlayer, CBaseEntity *pParent, const char *aurFile, int attachment );
 extern void UTIL_ScreenShake		( const Vector &center, float amplitude, float frequency, float duration, float radius, bool bAllowInAir = false );
 extern void UTIL_ScreenShakeAll		( const Vector &center, float amplitude, float frequency, float duration );
 extern void UTIL_ShowMessage		( const char *pString, CBaseEntity *pPlayer );
