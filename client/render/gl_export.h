@@ -73,6 +73,7 @@ typedef unsigned int GLhandleARB;
 #define GL_DEPTH_TEST			0x0B71
 
 #define GL_CULL_FACE			0x0B44
+#define GL_POLYGON_MODE         0x0B40
 #define GL_CW				0x0900
 #define GL_CCW				0x0901
 #define GL_BLEND				0x0BE2
