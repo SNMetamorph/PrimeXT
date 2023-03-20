@@ -43,6 +43,7 @@ void CImGuiManager::NewFrame()
     m_pBackend->NewFrame();
     UpdateMouseState();
     UpdateKeyModifiers();
+    UpdateTextInputState();
     ImGui::NewFrame();
     m_WindowSystem.NewFrame();
     ImGui::Render();
@@ -117,6 +118,19 @@ void CImGuiManager::UpdateCursorState()
         g_VguiApiFuncs->CursorSelect(dc_none);
     }
     m_bWasCursorRequired = cursorRequired;
+}
+
+void CImGuiManager::UpdateTextInputState()
+{
+    // check function pointer for compatibility with
+    // older Xash3D FWGS builds (before 6 Feb 2023)
+    if (g_VguiApiFuncs->EnableTextInput != nullptr)
+    {
+        ImGuiIO &io = ImGui::GetIO();
+        if (io.WantTextInput) {
+            g_VguiApiFuncs->EnableTextInput(true, false);
+        }
+    }
 }
 
 void CImGuiManager::UpdateKeyModifiers()

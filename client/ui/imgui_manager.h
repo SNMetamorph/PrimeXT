@@ -36,6 +36,7 @@ private:
     void ApplyStyles();
     void UpdateMouseState();
     void UpdateCursorState();
+    void UpdateTextInputState();
     void UpdateKeyModifiers();
     void HandleKeyInput(bool keyDown, int keyNumber);
     bool HandleMouseInput(bool keyDown, int keyNumber);
