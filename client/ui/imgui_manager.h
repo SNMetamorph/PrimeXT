@@ -2,6 +2,10 @@
 #include "imgui_window_system.h"
 #include "cursor_type.h"
 #include <map>
+#include <memory>
+
+// use forward declaration to avoid exposing ImGui headers to global namespace
+class CImGuiBackend;
 
 class CImGuiManager
 {
@@ -23,8 +27,8 @@ private:
         bool right = false;
     };
 
-    CImGuiManager() {};
-    ~CImGuiManager() {};
+    CImGuiManager();
+    ~CImGuiManager();
     CImGuiManager(const CImGuiManager &) = delete;
     CImGuiManager &operator=(const CImGuiManager &) = delete;
 
@@ -46,6 +50,7 @@ private:
     MouseButtonsState m_MouseButtonsState;
     std::map<int, int> m_KeysMapping;
     std::map<int, VGUI_DefaultCursor> m_CursorMapping;
+    std::unique_ptr<CImGuiBackend> m_pBackend;
     CImGuiWindowSystem m_WindowSystem;
 };
 extern CImGuiManager &g_ImGuiManager;

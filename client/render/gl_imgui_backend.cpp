@@ -1,14 +1,25 @@
+/*
+gl_imgui_backend.cpp - implementation of OpenGL backend for ImGui
+Copyright (C) 2023 SNMetamorph
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+*/
+
 #include "imgui.h"
 #include "gl_imgui_backend.h"
 #include "gl_local.h"
 #include "gl_export.h"
-
+#include "build_info.h"
 #include <stdio.h>
-#if defined(_MSC_VER) && _MSC_VER <= 1500 // MSVC 2008 or earlier
-#include <stddef.h>     // intptr_t
-#else
-#include <stdint.h>     // intptr_t
-#endif
+#include <stdint.h> // intptr_t
 
 // OpenGL Data
 struct ImGui_ImplOpenGL3_Data
@@ -38,7 +49,15 @@ static ImGui_ImplOpenGL3_Data *ImGui_ImplOpenGL3_GetBackendData()
 }
 
 // Functions
-bool ImGui_ImplOpenGL3_Init(const char *glsl_version)
+CImGuiBackend::CImGuiBackend()
+{
+}
+
+CImGuiBackend::~CImGuiBackend()
+{
+}
+
+bool CImGuiBackend::Init(const char *glsl_version)
 {
     ImGuiIO &io = ImGui::GetIO();
     IM_ASSERT(io.BackendRendererUserData == NULL && "Already initialized a renderer backend!");
@@ -46,7 +65,8 @@ bool ImGui_ImplOpenGL3_Init(const char *glsl_version)
     // Setup backend capabilities flags
     ImGui_ImplOpenGL3_Data *bd = IM_NEW(ImGui_ImplOpenGL3_Data)();
     io.BackendRendererUserData = (void *)bd;
-    io.BackendRendererName = "imgui_impl_opengl3";
+    io.BackendRendererName = "imgui_impl_primext_opengl3";
+    io.BackendPlatformName = BuildInfo::GetPlatform();
 
     // Query for GL version (e.g. 320 for GL 3.2)
     GLint major = 0;
@@ -86,26 +106,27 @@ bool ImGui_ImplOpenGL3_Init(const char *glsl_version)
     return true;
 }
 
-void ImGui_ImplOpenGL3_Shutdown()
+void CImGuiBackend::Shutdown()
 {
     ImGui_ImplOpenGL3_Data *bd = ImGui_ImplOpenGL3_GetBackendData();
     IM_ASSERT(bd != NULL && "No renderer backend to shutdown, or already shutdown?");
     ImGuiIO &io = ImGui::GetIO();
 
-    ImGui_ImplOpenGL3_DestroyDeviceObjects();
+    DestroyDeviceObjects();
     io.BackendRendererName = NULL;
     io.BackendRendererUserData = NULL;
     IM_DELETE(bd);
 }
 
-void ImGui_ImplOpenGL3_NewFrame()
+void CImGuiBackend::NewFrame()
 {
     ImGuiIO &io = ImGui::GetIO();
     ImGui_ImplOpenGL3_Data *bd = ImGui_ImplOpenGL3_GetBackendData();
-    IM_ASSERT(bd != NULL && "Did you call ImGui_ImplOpenGL3_Init()?");
+    IM_ASSERT(bd != NULL && "Did you call CImGuiBackend::Init()?");
 
-    if (!bd->ShaderHandle)
-        ImGui_ImplOpenGL3_CreateDeviceObjects();
+    if (!bd->ShaderHandle) {
+        CreateDeviceObjects();
+    }
 
     // Setup display size (every frame to accommodate for window resizing)
     io.DisplaySize = ImVec2(glState.width, glState.height);
@@ -184,7 +205,7 @@ static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData *draw_data, int fb_wid
 // OpenGL3 Render function.
 // Note that this implementation is little overcomplicated because we are saving/setting up/restoring every OpenGL state explicitly.
 // This is in order to be able to run within an OpenGL engine that doesn't do so.
-void ImGui_ImplOpenGL3_RenderDrawData(ImDrawData *draw_data)
+void CImGuiBackend::RenderDrawData(ImDrawData *draw_data)
 {
     // Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
     int fb_width = (int)(draw_data->DisplaySize.x * draw_data->FramebufferScale.x);
@@ -320,7 +341,7 @@ void ImGui_ImplOpenGL3_RenderDrawData(ImDrawData *draw_data)
     (void)bd; // Not all compilation paths use this
 }
 
-bool ImGui_ImplOpenGL3_CreateFontsTexture()
+bool CImGuiBackend::CreateFontsTexture()
 {
     ImGuiIO &io = ImGui::GetIO();
     ImGui_ImplOpenGL3_Data *bd = ImGui_ImplOpenGL3_GetBackendData();
@@ -351,7 +372,7 @@ bool ImGui_ImplOpenGL3_CreateFontsTexture()
     return true;
 }
 
-void ImGui_ImplOpenGL3_DestroyFontsTexture()
+void CImGuiBackend::DestroyFontsTexture()
 {
     ImGuiIO &io = ImGui::GetIO();
     ImGui_ImplOpenGL3_Data *bd = ImGui_ImplOpenGL3_GetBackendData();
@@ -401,7 +422,7 @@ static bool ImGui_CheckProgram(GLuint handle, const char *desc)
     return (GLboolean)status == GL_TRUE;
 }
 
-bool ImGui_ImplOpenGL3_CreateDeviceObjects()
+bool CImGuiBackend::CreateDeviceObjects()
 {
     ImGui_ImplOpenGL3_Data *bd = ImGui_ImplOpenGL3_GetBackendData();
 
@@ -575,7 +596,7 @@ bool ImGui_ImplOpenGL3_CreateDeviceObjects()
     pglGenBuffersARB(1, &bd->VboHandle);
     pglGenBuffersARB(1, &bd->ElementsHandle);
 
-    ImGui_ImplOpenGL3_CreateFontsTexture();
+    CreateFontsTexture();
 
     // Restore modified GL state
     pglBindTexture(GL_TEXTURE_2D, last_texture);
@@ -585,11 +606,11 @@ bool ImGui_ImplOpenGL3_CreateDeviceObjects()
     return true;
 }
 
-void ImGui_ImplOpenGL3_DestroyDeviceObjects()
+void CImGuiBackend::DestroyDeviceObjects()
 {
     ImGui_ImplOpenGL3_Data *bd = ImGui_ImplOpenGL3_GetBackendData();
     if (bd->VboHandle) { pglDeleteBuffersARB(1, &bd->VboHandle); bd->VboHandle = 0; }
     if (bd->ElementsHandle) { pglDeleteBuffersARB(1, &bd->ElementsHandle); bd->ElementsHandle = 0; }
     if (bd->ShaderHandle) { pglDeleteProgram(bd->ShaderHandle); bd->ShaderHandle = 0; }
-    ImGui_ImplOpenGL3_DestroyFontsTexture();
+    DestroyFontsTexture();
 }

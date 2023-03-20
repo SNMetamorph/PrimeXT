@@ -1,10 +1,10 @@
 #include "imgui_manager.h"
-#include "gl_imgui_backend.h"
 #include "imgui.h"
 #include "keydefs.h"
 #include "utils.h"
 #include "enginecallback.h"
 #include "vgui_support_int.h"
+#include "gl_imgui_backend.h"
 
 CImGuiManager &g_ImGuiManager = CImGuiManager::GetInstance();
 
@@ -22,7 +22,7 @@ void CImGuiManager::Initialize()
     ApplyStyles();
     SetupKeyboardMapping();
     SetupCursorMapping();
-    ImGui_ImplOpenGL3_Init(nullptr);
+    m_pBackend->Init(nullptr);
     m_WindowSystem.Initialize();
 }
 
@@ -34,19 +34,19 @@ void CImGuiManager::VidInitialize()
 void CImGuiManager::Terminate()
 {
     m_WindowSystem.Terminate();
-    ImGui_ImplOpenGL3_Shutdown();
+    m_pBackend->Shutdown();
 }
 
 void CImGuiManager::NewFrame()
 {
     CheckVguiApiPresence();
-    ImGui_ImplOpenGL3_NewFrame();
+    m_pBackend->NewFrame();
     UpdateMouseState();
     UpdateKeyModifiers();
     ImGui::NewFrame();
     m_WindowSystem.NewFrame();
     ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    m_pBackend->RenderDrawData(ImGui::GetDrawData());
 }
 
 /*
@@ -59,6 +59,15 @@ bool CImGuiManager::KeyInput(bool keyDown, int keyNumber, const char *bindName)
         HandleKeyInput(keyDown, keyNumber);
     }
     return m_WindowSystem.KeyInput(keyDown, keyNumber, bindName);
+}
+
+CImGuiManager::CImGuiManager()
+{
+    m_pBackend = std::make_unique<CImGuiBackend>();
+}
+
+CImGuiManager::~CImGuiManager()
+{
 }
 
 void CImGuiManager::LoadFonts()
