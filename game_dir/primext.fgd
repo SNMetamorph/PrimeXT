@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 04 Janyary 2023)
+// PrimeXT FGD (last updated 04 April 2023)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -967,6 +967,8 @@
 @PointClass base(Parent) size(-16 -16 -16, 16 16 16) studio() = cycler_weapon : "Weapon Cycler" 
 [
 	model(studio) : "Model"
+	skin(integer) : "Skin"
+	body(integer) : "Body"
 	deploy(integer) : "Deploy Anim Num"
 	holster(integer) : "Holster Anim Num"
 	primary(integer) : "Primary Attack Anim Num"
