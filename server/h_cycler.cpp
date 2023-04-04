@@ -289,6 +289,11 @@ private:
 	string_t	m_iPlayerModel;
 	string_t	m_iWorldModel;
 	string_t	m_iViewModel;
+
+	struct {
+		bool primary = false;
+		bool secondary = false;
+	} m_bActiveAnims;
 };
 LINK_ENTITY_TO_CLASS( cycler_weapon, CWeaponCycler );
 LINK_ENTITY_TO_CLASS( weapon_question, CWeaponCycler );	// saverestore issues
@@ -371,11 +376,13 @@ void CWeaponCycler::KeyValue( KeyValueData *pkvd )
 	else if (FStrEq(pkvd->szKeyName, "primary"))
 	{
 		pev->sequence = atoi(pkvd->szValue);
+		m_bActiveAnims.primary = strlen(pkvd->szKeyName) > 0;
 		pkvd->fHandled = TRUE;
 	}
 	else if (FStrEq(pkvd->szKeyName, "secondary"))
 	{
 		pev->team = atoi(pkvd->szValue);
+		m_bActiveAnims.secondary = strlen(pkvd->szKeyName) > 0;
 		pkvd->fHandled = TRUE;
 	}
 	else CBasePlayerWeapon::KeyValue( pkvd );
@@ -411,17 +418,20 @@ void CWeaponCycler::Holster( )
 
 void CWeaponCycler::PrimaryAttack()
 {
-	SendWeaponAnim( pev->sequence );
-
-	m_flNextPrimaryAttack = gpGlobals->time + 0.5;
+	if (m_bActiveAnims.primary)
+	{
+		SendWeaponAnim(pev->sequence);
+		m_flNextPrimaryAttack = gpGlobals->time + 3.0;
+	}
 }
-
 
 void CWeaponCycler::SecondaryAttack( void )
 {
-	SendWeaponAnim( pev->team );
-
-	m_flNextSecondaryAttack = gpGlobals->time + 0.5;
+	if (m_bActiveAnims.secondary)
+	{
+		SendWeaponAnim(pev->team);
+		m_flNextSecondaryAttack = gpGlobals->time + 3.0;
+	}
 }
 
 // Flaming Wreakage
