@@ -70,6 +70,7 @@ cvar_t *cv_deferred_full;
 cvar_t *cv_deferred_maxlights;
 cvar_t *cv_deferred_tracebmodels;
 cvar_t *cv_cube_lod_bias;
+cvar_t *gl_alpha2coverage;
 cvar_t *cv_gamma;
 cvar_t *cv_brightness;
 cvar_t *cv_water;
@@ -170,6 +171,7 @@ void R_InitializeConVars()
 	cv_deferred_maxlights = CVAR_REGISTER("gl_deferred_maxlights", "8", FCVAR_ARCHIVE | FCVAR_LATCH);
 	cv_deferred_tracebmodels = CVAR_REGISTER("gl_deferred_tracebmodels", "0", FCVAR_ARCHIVE);
 	cv_cube_lod_bias = CVAR_REGISTER("gl_cube_lod_bias", "3", FCVAR_ARCHIVE);
+	gl_alpha2coverage = CVAR_REGISTER("gl_alpha2coverage", "1", FCVAR_GLCONFIG);
 	cv_water = CVAR_REGISTER("gl_waterblur", "1", FCVAR_ARCHIVE);
 	cv_decalsdebug = CVAR_REGISTER("gl_decals_debug", "0", FCVAR_ARCHIVE);
 	cv_realtime_puddles = CVAR_REGISTER("gl_realtime_puddles", "0", FCVAR_ARCHIVE);

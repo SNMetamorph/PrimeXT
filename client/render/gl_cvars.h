@@ -72,6 +72,7 @@ extern cvar_t *cv_deferred_full;
 extern cvar_t *cv_deferred_maxlights;
 extern cvar_t *cv_deferred_tracebmodels;
 extern cvar_t *cv_cube_lod_bias;
+extern cvar_t *gl_alpha2coverage;
 extern cvar_t *cv_gamma;
 extern cvar_t *cv_brightness;
 extern cvar_t *cv_water;
