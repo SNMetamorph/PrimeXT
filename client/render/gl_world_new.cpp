@@ -906,16 +906,20 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 	if( mirror )
 		GL_AddShaderDirective( options, "PLANAR_REFLECTION" );
 
-	bool transRenderMode = e->curstate.rendermode == kRenderTransColor || e->curstate.rendermode == kRenderTransTexture;
-	if (FBitSet(mat->flags, BRUSH_TRANSPARENT)) 
+	if (FBitSet(mat->flags, BRUSH_TRANSPARENT) || e->curstate.rendermode == kRenderTransTexture) 
 	{
-		if (FBitSet(mat->flags, BRUSH_HAS_ALPHA) || transRenderMode) {
+		// don't need alpha blending when using screen copy
+		if (e->curstate.rendermode == kRenderTransTexture && !shader_use_screencopy) {
 			GL_AddShaderDirective(options, "ALPHA_BLENDING");
 		}
-		else if (GL_UsingAlphaToCoverage() && GL_Support(R_A2C_DITHER_CONTROL)) 
+		else if (e->curstate.rendermode == kRenderTransAlpha)
 		{
-			// enable macro only when we're disabled dithering for A2C
-			GL_AddShaderDirective(options, "ALPHA_TO_COVERAGE");
+			// case when using textures with prefix '{'
+			if (GL_UsingAlphaToCoverage() && GL_Support(R_A2C_DITHER_CONTROL))
+			{
+				// enable macro only when we're disabled dithering for A2C
+				GL_AddShaderDirective(options, "ALPHA_TO_COVERAGE");
+			}
 		}
 	}
 
