@@ -166,7 +166,7 @@ void main( void )
 	albedo = colormap2D( u_ColorMap, vec_TexDiffuse );
 #endif
 
-#if !defined( ALPHA_BLENDING )
+#if !defined( ALPHA_BLENDING ) && !defined( USING_SCREENCOPY )
 	albedo.a = AlphaRescaling( u_ColorMap, vec_TexDiffuse, albedo.a );
 #endif
 #if defined( ALPHA_TO_COVERAGE )
@@ -187,7 +187,7 @@ void main( void )
 	result.rgb *= u_RenderColor.rgb;
 #endif
 
-#if !defined( ALPHA_BLENDING )
+#if defined( ALPHA_BLENDING ) || defined( USING_SCREENCOPY )
 	result.a *= u_RenderColor.a;
 #endif
 
