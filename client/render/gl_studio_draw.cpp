@@ -2927,6 +2927,7 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 	bool flagMasked = FBitSet(mat->flags, STUDIO_NF_MASKED);
 	bool texTransparent = flagAdditive || flagMasked;
 	bool texAlphaToCoverage = FBitSet(mat->flags, STUDIO_NF_ALPHATOCOVERAGE);
+	bool usingAlphaBlend = texTransparent && FBitSet(mat->flags, STUDIO_NF_HAS_ALPHA) && !texAlphaToCoverage;
 	bool usingAberrations = mat->aberrationScale > 0.0f;
 	bool usingRefractions = mat->refractScale > 0.0f;
 
@@ -3044,11 +3045,16 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 	// mixed mode: solid & transparent controlled by alpha-channel
 	if (texTransparent && RI->currententity->curstate.rendermode != kRenderGlow)
 	{
-		if (FBitSet(mat->flags, STUDIO_NF_HAS_ALPHA)) {
+		if (usingAlphaBlend) {
 			GL_AddShaderDirective(options, "ALPHA_BLENDING");
 		}
-		if (texAlphaToCoverage) {
-			GL_AddShaderDirective(options, "ALPHA_TO_COVERAGE");
+		else if (texAlphaToCoverage && GL_UsingAlphaToCoverage()) 
+		{
+			if (GL_Support(R_A2C_DITHER_CONTROL)) 
+			{
+				// enable macro only when we're disabled dithering for A2C
+				GL_AddShaderDirective(options, "ALPHA_TO_COVERAGE");
+			}
 		}
 	}
 
