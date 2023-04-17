@@ -907,8 +907,16 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 		GL_AddShaderDirective( options, "PLANAR_REFLECTION" );
 
 	bool transRenderMode = e->curstate.rendermode == kRenderTransColor || e->curstate.rendermode == kRenderTransTexture;
-	if (FBitSet(mat->flags, BRUSH_TRANSPARENT) && FBitSet(mat->flags, BRUSH_HAS_ALPHA) || transRenderMode) {
-		GL_AddShaderDirective(options, "ALPHA_BLENDING");
+	if (FBitSet(mat->flags, BRUSH_TRANSPARENT)) 
+	{
+		if (FBitSet(mat->flags, BRUSH_HAS_ALPHA) || transRenderMode) {
+			GL_AddShaderDirective(options, "ALPHA_BLENDING");
+		}
+		else if (GL_UsingAlphaToCoverage() && GL_Support(R_A2C_DITHER_CONTROL)) 
+		{
+			// enable macro only when we're disabled dithering for A2C
+			GL_AddShaderDirective(options, "ALPHA_TO_COVERAGE");
+		}
 	}
 
 	if (using_normalmap)
