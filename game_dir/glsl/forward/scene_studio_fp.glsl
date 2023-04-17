@@ -88,7 +88,7 @@ void main( void )
 #endif
 #if defined( ALPHA_TO_COVERAGE )
 	// TODO should be cutoff value hardcoded?
-	albedo.a = AlphaSharpening( albedo.a, 0.95 );
+	albedo.a = AlphaSharpening( albedo.a, 0.5 );
 #endif
 	result = albedo;
 

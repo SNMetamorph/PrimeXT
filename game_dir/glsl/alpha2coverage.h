@@ -13,19 +13,20 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#extension GL_ARB_texture_query_lod : enable
+//#extension GL_ARB_texture_query_lod : enable
 
 float CalcMipLevel(sampler2D tex, in vec2 texCoords)
 {
-#ifdef GL_ARB_texture_query_lod
-    return textureQueryLOD(tex, texCoords).x;
-#else
+    // TODO don't use it until figuring out how the fuck it works
+//#ifdef GL_ARB_texture_query_lod
+//    return textureQueryLOD(tex, texCoords).x;
+//#else
     // fallback method for case when textureQueryLOD() is unavailable
     vec2 dx = dFdx(texCoords);
     vec2 dy = dFdy(texCoords);
     float deltaMaxSqr = max(dot(dx, dx), dot(dy, dy));
     return max(0.0, 0.5 * log2(deltaMaxSqr));
-#endif
+//#endif
 }
 
 float AlphaSharpening(in float alpha, in float cutoff)
