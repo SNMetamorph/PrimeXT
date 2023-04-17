@@ -23,6 +23,7 @@ GNU General Public License for more details.
 #include "material.h"
 #include "parallax.h"
 #include "fog.h"
+#include "alpha2coverage.h"
 
 uniform sampler2D	u_ColorMap;
 uniform sampler2D	u_NormalMap;
@@ -82,6 +83,13 @@ void main( void )
 	vec_TexDiffuse = var_TexDiffuse;
 #endif
 	albedo = colormap2D( u_ColorMap, vec_TexDiffuse );
+#if !defined( ALPHA_BLENDING )
+	albedo.a = AlphaRescaling( u_ColorMap, vec_TexDiffuse, albedo.a );
+#endif
+#if defined( ALPHA_TO_COVERAGE )
+	// TODO should be cutoff value hardcoded?
+	albedo.a = AlphaSharpening( albedo.a, 0.95 );
+#endif
 	result = albedo;
 
 #if defined( HAS_DETAIL )

@@ -25,6 +25,7 @@ GNU General Public License for more details.
 #include "parallax.h"
 #include "material.h"
 #include "fog.h"
+#include "alpha2coverage.h"
 
 // texture units
 #if defined( APPLY_TERRAIN )
@@ -163,6 +164,14 @@ void main( void )
 	albedo = TerrainMixDiffuse( u_ColorMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 #else
 	albedo = colormap2D( u_ColorMap, vec_TexDiffuse );
+#endif
+
+#if !defined( ALPHA_BLENDING )
+	albedo.a = AlphaRescaling( u_ColorMap, vec_TexDiffuse, albedo.a );
+#endif
+#if defined( ALPHA_TO_COVERAGE )
+	// TODO should be cutoff value hardcoded?
+	albedo.a = AlphaSharpening( albedo.a, 0.95 );
 #endif
 	result = albedo;
 
