@@ -15,36 +15,44 @@ GNU General Public License for more details.
 
 #pragma once
 #include "build.h"
+#include "build_enums.h"
+#include <stdint.h>
 
 namespace BuildInfo
 {
 	// Returns current name of operating system without any spaces.
 	constexpr const char *GetPlatform()
 	{
-#if XASH_MINGW
-		return "win32-mingw";
-#elif XASH_WIN32
+#if PLATFORM_WIN32
 		return "win32";
-#elif XASH_ANDROID
+#elif PLATFORM_ANDROID
 		return "android";
-#elif XASH_LINUX
+#elif PLATFORM_LINUX_UNKNOWN
+		return "linuxunkabi";
+#elif PLATFORM_LINUX
 		return "linux";
-#elif XASH_APPLE
+#elif PLATFORM_APPLE
 		return "apple";
-#elif XASH_FREEBSD
+#elif PLATFORM_FREEBSD
 		return "freebsd";
-#elif XASH_NETBSD
+#elif PLATFORM_NETBSD
 		return "netbsd";
-#elif XASH_OPENBSD
+#elif PLATFORM_OPENBSD
 		return "openbsd";
-#elif XASH_EMSCRIPTEN
+#elif PLATFORM_EMSCRIPTEN
 		return "emscripten";
-#elif XASH_DOS4GW
+#elif PLATFORM_DOS4GW
 		return "dos4gw";
-#elif XASH_HAIKU
+#elif PLATFORM_HAIKU
 		return "haiku";
-#elif XASH_SERENITY
+#elif PLATFORM_SERENITY
 		return "serenityos";
+#elif PLATFORM_IRIX
+		return "irix";
+#elif PLATFORM_NSWITCH
+		return "nswitch";
+#elif PLATFORM_PSVITA
+		return "psvita";
 #else
 #error "Place your operating system name here! If this is a mistake, try to fix conditions above and report a bug"
 #endif
@@ -54,62 +62,70 @@ namespace BuildInfo
 	// Returns current name of the architecture without any spaces.
 	constexpr const char *GetArchitecture()
 	{
-#if XASH_AMD64
-		return "amd64";
-#elif XASH_X86
-		return "i386";
-#elif XASH_ARM && XASH_64BIT
-		return "arm64";
-#elif XASH_ARM
-		return "armv"
-	#if XASH_ARM == 8
-		"8_32" // for those who (mis)using 32-bit OS on 64-bit CPU
-	#elif XASH_ARM == 7
-		"7"
-	#elif XASH_ARM == 6
-		"6"
-	#elif XASH_ARM == 5
-		"5"
-	#elif XASH_ARM == 4
-		"4"
-	#endif
-
-	#if XASH_ARM_HARDFP
-		"hf"
-	#else
-		"l"
-	#endif
-	;
-#elif XASH_MIPS && XASH_BIG_ENDIAN
-		return "mips"
-	#if XASH_64BIT
-		"64"
-	#endif
-	#if XASH_LITTLE_ENDIAN
-		"el"
-	#endif
-	;
-#elif XASH_RISCV
-		return "riscv"
-	#if XASH_64BIT
-		"64"
-	#else
-		"32"
-	#endif
-	#if XASH_RISCV_SINGLEFP
-		"d"
-	#elif XASH_RISCV_DOUBLEFP
-		"f"
-	#endif
-	;
-#elif XASH_JS
-		return "javascript";
-#elif XASH_E2K
-		return "e2k";
+		constexpr uint32_t arch = XASH_ARCHITECTURE;
+		constexpr uint32_t abi = XASH_ARCHITECTURE_ABI;
+		constexpr uint32_t endianness = XASH_ENDIANNESS;
+#if XASH_64BIT
+		constexpr uint32_t is64 = true;
 #else
-#error "Place your architecture name here! If this is a mistake, try to fix conditions above and report a bug"
+		constexpr uint32_t is64 = false;
 #endif
-		return "unknown";
+
+		switch( arch )
+		{
+		case ARCHITECTURE_AMD64:
+			return "amd64";
+		case ARCHITECTURE_X86:
+			return "i386";
+		case ARCHITECTURE_E2K:
+			return "e2k";
+		case ARCHITECTURE_JS:
+			return "javascript";
+		case ARCHITECTURE_MIPS:
+			return endianness == ENDIANNESS_LITTLE ?
+				( is64 ? "mips64el" : "mipsel" ):
+				( is64 ? "mips64" : "mips" );
+		case ARCHITECTURE_ARM:
+			// no support for big endian ARM here
+			if( endianness == ENDIANNESS_LITTLE )
+			{
+				constexpr uint32_t ver = ( abi >> ARCH_ARM_VER_SHIFT ) & ARCH_ARM_VER_MASK;
+				constexpr bool hardfp = ( abi & ARCH_ARM_HARDFP ) != 0;
+
+				if( is64 )
+					return "arm64"; // keep as arm64, it's not aarch64!
+
+				switch( ver )
+				{
+				case 8:
+					return hardfp ? "armv8_32hf" : "armv8_32l";
+				case 7:
+					return hardfp ? "armv7hf" : "armv7l";
+				case 6:
+					return "armv6l";
+				case 5:
+					return "armv5l";
+				case 4:
+					return "armv4l";
+				}
+			}
+			break;
+		case ARCHITECTURE_RISCV:
+			switch( abi )
+			{
+			case ARCH_RISCV_FP_SOFT:
+				return is64 ? "riscv64" : "riscv32";
+			case ARCH_RISCV_FP_SINGLE:
+				return is64 ? "riscv64f" : "riscv32f";
+			case ARCH_RISCV_FP_DOUBLE:
+				return is64 ? "riscv64d" : "riscv64f";
+			}
+			break;
+		}
+
+		return is64 ?
+			( endianness == ENDIANNESS_LITTLE ? "unknown64el" : "unknownel" ) :
+			( endianness == ENDIANNESS_LITTLE ? "unknown64be" : "unknownbe" );
 	}
 
 	// Returns a short hash of current commit in VCS as string.
