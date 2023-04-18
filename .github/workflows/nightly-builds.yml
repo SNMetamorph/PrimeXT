@@ -182,11 +182,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload new release
-        uses: svenstaro/upload-release-action@2.3.0
+        uses: softprops/action-gh-release@v0.1.15
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file_glob: true
-          file: PrimeXT-*
-          tag: continious
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: PrimeXT-*
+          tag_name: continious
+          draft: false
           prerelease: true
-          release_name: PrimeXT Continious Build
+          name: PrimeXT Continuous Build
