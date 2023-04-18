@@ -47,7 +47,7 @@ GNU General Public License for more details.
 #define MAX_SORTED_MESHES	2048			// studio only
 #define MAX_MOVIES			16			// max various movies per level
 #define MAX_MOVIE_TEXTURES	64			// max # of unique video textures per level
-#define MAX_LIGHTSTYLES		64			// a byte limit, don't modify
+#define MAX_LIGHTSTYLES		256			// increased from 64 to 256, according to Xash3D FWGS
 #define MAX_LIGHTMAPS		256			// Xash3D supports up to 256 lightmaps
 #define MAX_DLIGHTS 		64			// per one frame. unsigned int limit
 #define MAX_ENGINE_DLIGHTS 	32
