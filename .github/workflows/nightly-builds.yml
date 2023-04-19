@@ -164,15 +164,6 @@ jobs:
       - name: Fetch artifacts
         uses: actions/download-artifact@v3.0.1
 
-      - name: Repackage binaries
-        run: |
-          cd Windows
-          zip -r ../PrimeXT-Windows-x86.zip *
-          cd ../Linux
-          tar -czvf ../PrimeXT-Linux-i386.tar.gz *
-          #cd ../Android
-          #zip -r ../PrimeXT-Android.zip *
-
       - name: Remove old release
         uses: dev-drprasad/delete-tag-and-release@v0.2.1
         with:
@@ -180,6 +171,16 @@ jobs:
           tag_name: continious
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Repackage binaries and allow GitHub to process removed release for few seconds
+        run: |
+          cd Windows
+          zip -r ../PrimeXT-Windows-x86.zip *
+          cd ../Linux
+          tar -czvf ../PrimeXT-Linux-i386.tar.gz *
+          #cd ../Android
+          #zip -r ../PrimeXT-Android.zip *
+          sleep 20s
 
       - name: Upload new release
         uses: softprops/action-gh-release@v0.1.15
