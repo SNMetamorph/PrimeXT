@@ -774,7 +774,7 @@ ControlPanel::handleEvent (mxEvent *event)
 			if (mx_strcasecmp (ext, ".bmp"))
 				strcat (filename, ".bmp");
 
-			mxImage *image = mxBmpRead (filename);
+			mxImage *image = d_GlWindow->readBmpFromFile(filename);
 			if (!image)
 			{
 				mxMessageBox (this, "Error loading .BMP texture.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
@@ -783,7 +783,7 @@ ControlPanel::handleEvent (mxEvent *event)
 
 			if (!image->palette)
 			{
-				delete image;
+				d_GlWindow->imageFree(image);
 				mxMessageBox (this, "Error loading .BMP texture.  Must be 8-bit!", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 				return 1;
 			}
@@ -804,7 +804,7 @@ ControlPanel::handleEvent (mxEvent *event)
 					mxMessageBox (this, "Texture must be of same size.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 			}
 
-			delete image;
+			d_GlWindow->imageFree(image);
 			d_GlWindow->redraw ();
 		}
 		break;
