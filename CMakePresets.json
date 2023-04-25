@@ -69,6 +69,35 @@
       }
     },
     {
+      "name": "linux-debug",
+      "displayName": "Linux Debug",
+      "description": " ",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_PHYSX": "OFF"
+      },
+      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
+    },
+    {
+      "name": "utils-termux-debug",
+      "displayName": "Termux Debug (Utils Only)",
+      "description": " ",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "ENABLE_PHYSX": "OFF",
+        "BUILD_SERVER": "OFF",
+        "BUILD_CLIENT": "OFF",
+        "BUILD_GAME_LAUNCHER": "OFF",
+        "BUILD_PXMV": "OFF",
+        "ENABLE_STATIC_LINKING": "OFF",
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
+    },
+    {
       "name": "ci-windows-x86",
       "displayName": "CI Windows x86",
       "description": " ",
