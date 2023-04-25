@@ -2,7 +2,7 @@
   "version": 2,
   "configurePresets": [
     {
-      "name": "Windows-Common-Base",
+      "name": "windows-common-base",
       "displayName": "Windows Common Base Preset",
       "description": " ",
       "hidden": true,
@@ -11,10 +11,10 @@
       "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
     },
     {
-      "name": "Windows-x86-Base",
+      "name": "windows-x86-base",
       "displayName": "Windows x86 Base Preset",
       "description": " ",
-      "inherits": [ "Windows-Common-Base" ],
+      "inherits": [ "windows-common-base" ],
       "hidden": true,
       "architecture": {
         "value": "x86",
@@ -22,28 +22,28 @@
       }
     },
     {
-      "name": "Windows-x86-Debug",
+      "name": "windows-x86-debug",
       "displayName": "Windows x86 Debug",
       "description": " ",
-      "inherits": [ "Windows-x86-Base" ],
+      "inherits": [ "windows-x86-base" ],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "Windows-x86-Release",
+      "name": "windows-x86-release",
       "displayName": "Windows x86 Release",
       "description": " ",
-      "inherits": [ "Windows-x86-Base" ],
+      "inherits": [ "windows-x86-base" ],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
     },
     {
-      "name": "Windows-x64-Base",
+      "name": "windows-x64-base",
       "displayName": "Windows x64 Base Preset",
       "description": " ",
-      "inherits": [ "Windows-Common-Base" ],
+      "inherits": [ "windows-common-base" ],
       "hidden": true,
       "architecture": {
         "value": "x64",
@@ -51,24 +51,48 @@
       }
     },
     {
-      "name": "Windows-x64-Debug",
+      "name": "windows-x64-debug",
       "displayName": "Windows x64 Debug",
       "description": " ",
-      "inherits": [ "Windows-x64-Base" ],
+      "inherits": [ "windows-x64-base" ],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "windows-x64-release",
+      "displayName": "Windows x64 Release",
+      "description": " ",
+      "inherits": [ "windows-x64-base" ],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "ci-windows-x86",
+      "displayName": "CI Windows x86",
+      "description": " ",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build",
+      "architecture": {
+        "value": "win32",
+        "strategy": "set"
       },
+      "cacheVariables": {},
       "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
     },
     {
-      "name": "Windows-x64-Release",
-      "displayName": "Windows x64 Release",
+      "name": "ci-linux-x86",
+      "displayName": "CI Linux x86",
       "description": " ",
-      "inherits": [ "Windows-x64-Base" ],
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+        "CMAKE_C_FLAGS": "-m32",
+        "CMAKE_CXX_FLAGS": "-m32",
+        "ENABLE_PHYSX": "OFF"
       },
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
+      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
     }
   ]
 }

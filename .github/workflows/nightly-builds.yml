@@ -6,12 +6,14 @@ on:
 
 jobs:
   build-windows:
-    runs-on: windows-2019
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        conf: [Debug]
-    env:
-      BUILD_TYPE: ${{ matrix.conf }}
+        include:
+          - os: windows-latest
+            cmake_preset: ci-windows-x86
+            build_conf: Debug
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -31,13 +33,13 @@ jobs:
         # Note the current convention is to use the -S and -B options here to specify source
         # and build directories, but this is only available with CMake 3.13 and higher.
         # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-        run: cmake $GITHUB_WORKSPACE -G "Visual Studio 16 2019" -A win32
+        run: cmake $GITHUB_WORKSPACE --preset ${{ matrix.cmake_preset }} -DCMAKE_BUILD_TYPE=${{ matrix.build_conf }}
 
       - name: Build
         working-directory: ${{github.workspace}}/build
         shell: bash
-        # Execute the build.  You can specify a specific target with "--target <NAME>"
-        run: cmake --build . --config $BUILD_TYPE --parallel 8
+        # Execute the build. You can specify a specific target with "--target <NAME>"
+        run: cmake --build . --config ${{ matrix.build_conf }} --parallel 8
 
       - name: Prepare artifacts
         run: |
@@ -45,7 +47,7 @@ jobs:
           mkdir publish\primext
           mkdir publish\primext\bin
           mkdir publish\primext\devkit
-          move build\${{env.BUILD_TYPE}}\* publish\
+          move build\${{ matrix.build_conf }}\* publish\
           move game_dir\* publish\primext
 
       - name: Upload artifacts
@@ -56,12 +58,14 @@ jobs:
             publish/*
 
   build-linux:
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        conf: [Debug]
-    env:
-      BUILD_TYPE: ${{ matrix.conf }}
+        include:
+          - os: ubuntu-22.04
+            cmake_preset: ci-linux-x86
+            build_conf: Debug
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -77,7 +81,7 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install gcc-multilib g++-multilib cmake
+          sudo apt-get install gcc-multilib g++-multilib cmake ninja-build
           sudo apt-get install qtbase5-dev:i386
 
       - name: Configure CMake
@@ -88,13 +92,13 @@ jobs:
         # Note the current convention is to use the -S and -B options here to specify source
         # and build directories, but this is only available with CMake 3.13 and higher.
         # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-        run: cmake $GITHUB_WORKSPACE -DCMAKE_C_FLAGS="-m32" -DCMAKE_CXX_FLAGS="-m32" -DENABLE_PHYSX=OFF
+        run: cmake $GITHUB_WORKSPACE --preset ${{ matrix.cmake_preset }} -DCMAKE_BUILD_TYPE=${{ matrix.build_conf }}
 
       - name: Build
         working-directory: ${{github.workspace}}/build
         shell: bash
         # Execute the build.  You can specify a specific target with "--target <NAME>"
-        run: cmake --build . --config $BUILD_TYPE --parallel 8
+        run: cmake --build . --config ${{ matrix.build_conf }} --parallel 8
  
       - name: Prepare artifacts
         run: |
@@ -102,8 +106,8 @@ jobs:
           mkdir publish/primext
           mkdir publish/primext/bin
           mkdir publish/primext/devkit
-          cp -r build/primext/* publish/primext/
-          cp build/primext_run publish/
+          cp -r build/${{ matrix.build_conf }}/primext/* publish/primext/
+          cp build/${{ matrix.build_conf }}/primext_run publish/
           cp -r game_dir/* publish/primext
 
       - name: Upload artifacts
