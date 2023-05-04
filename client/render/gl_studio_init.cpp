@@ -29,6 +29,8 @@ GNU General Public License for more details.
 #include "entity_types.h"
 #include "gl_shader.h"
 #include "gl_world.h"
+#include <vector>
+#include <algorithm>
 
 // Global engine <-> studio model rendering code interface
 engine_studio_api_t IEngineStudio;
@@ -1438,98 +1440,110 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 	// compute tangent space for all submodel meshes to avoid seams
 	if( m_iTBNState == TBNSTATE_GENERATE )
 	{
-		// build a map from vertex to a list of triangles that share the vert.
-		CUtlArray<CIntVector> vertToTriMap;
-
-		vertToTriMap.AddMultipleToTail( m_nNumArrayVerts );
-		int triID;
-
-		for( triID = 0; triID < (m_nNumArrayElems / 3); triID++ )
-		{
-			vertToTriMap[m_arrayelems[triID*3+0]].AddToTail( triID );
-			vertToTriMap[m_arrayelems[triID*3+1]].AddToTail( triID );
-			vertToTriMap[m_arrayelems[triID*3+2]].AddToTail( triID );
+		for (int vertID = 0; vertID < m_nNumArrayVerts; vertID++) {
+			m_arrayxvert[vertID].tangent = m_arrayxvert[vertID].binormal = g_vecZero;
 		}
 
-		// calculate the tangent space for each triangle.
-		CUtlArray<Vector> triSVect, triTVect;
-		triSVect.AddMultipleToTail( (m_nNumArrayElems / 3) );
-		triTVect.AddMultipleToTail( (m_nNumArrayElems / 3) );
-
-		float	*v[3], *tc[3];
-
-		for( triID = 0; triID < (m_nNumArrayElems / 3); triID++ )
+		float *v[3], *tc[3];
+		Vector triSVect, triTVect;
+		for (int triID = 0; triID < (m_nNumArrayElems / 3); triID++)
 		{
-			for( int i = 0; i < 3; i++ )
+			for (int i = 0; i < 3; i++)
 			{
-				v[i] = (float *)&m_arrayverts[m_arrayelems[triID*3+i]]; // transformed to global pose to avoid seams
-				tc[i] = (float *)&m_arrayxvert[m_arrayelems[triID*3+i]].stcoord;
+				v[i] = (float *)&m_arrayverts[m_arrayelems[triID * 3 + i]]; // transformed to global pose to avoid seams
+				tc[i] = (float *)&m_arrayxvert[m_arrayelems[triID * 3 + i]].stcoord;
 			}
 
-			CalcTBN( v[0], v[1], v[2], tc[0], tc[1], tc[2], triSVect[triID], triTVect[triID] );
-		}	
+			CalcTBN(v[0], v[1], v[2], tc[0], tc[1], tc[2], triSVect, triTVect);
+
+			for (int i = 0; i < 3; i++)
+			{
+				m_arrayxvert[m_arrayelems[triID * 3 + i]].tangent += triSVect;
+				m_arrayxvert[m_arrayelems[triID * 3 + i]].binormal += triTVect;
+			}
+		}
+
+		std::vector<int> sort_IDs;
+		sort_IDs.reserve(m_nNumArrayVerts);
+		for (int i = 0; i < m_nNumArrayVerts; i++) {
+			sort_IDs.push_back(i);
+		}
+
+		auto compareVertsFunc = [&](int a, int b) {
+			if (m_arrayverts[a].x > m_arrayverts[b].x) return  1;
+			if (m_arrayverts[a].x < m_arrayverts[b].x) return -1;
+			if (m_arrayverts[a].y > m_arrayverts[b].y) return  1;
+			if (m_arrayverts[a].y < m_arrayverts[b].y) return -1;
+			if (m_arrayverts[a].z > m_arrayverts[b].z) return  1;
+			if (m_arrayverts[a].z < m_arrayverts[b].z) return -1;
+
+			if (m_arrayxvert[a].normal.x > m_arrayxvert[b].normal.x) return  1;
+			if (m_arrayxvert[a].normal.x < m_arrayxvert[b].normal.x) return -1;
+			if (m_arrayxvert[a].normal.y > m_arrayxvert[b].normal.y) return  1;
+			if (m_arrayxvert[a].normal.y < m_arrayxvert[b].normal.y) return -1;
+			if (m_arrayxvert[a].normal.z > m_arrayxvert[b].normal.z) return  1;
+			if (m_arrayxvert[a].normal.z < m_arrayxvert[b].normal.z) return -1;
+
+			if (m_arrayxvert[a].stcoord[0] > m_arrayxvert[b].stcoord[0]) return  1;
+			if (m_arrayxvert[a].stcoord[0] < m_arrayxvert[b].stcoord[0]) return -1;
+			if (m_arrayxvert[a].stcoord[1] > m_arrayxvert[b].stcoord[1]) return  1;
+			if (m_arrayxvert[a].stcoord[1] < m_arrayxvert[b].stcoord[1]) return -1;
+
+			return 0;
+		};
+		std::sort(sort_IDs.begin(), sort_IDs.end(), [&](const int &a, const int &b){
+			return compareVertsFunc(a, b) < 0;
+		});
+
+		int dups = 0;
+		for (i = 1; i < m_nNumArrayVerts; i++)
+		{
+			if (compareVertsFunc(sort_IDs[i], sort_IDs[i - 1]) == 0)
+			{
+				dups++;
+				m_arrayxvert[sort_IDs[i]].tangent += m_arrayxvert[sort_IDs[i - 1]].tangent;
+				m_arrayxvert[sort_IDs[i]].binormal += m_arrayxvert[sort_IDs[i - 1]].binormal;
+			}
+			else
+			{
+				if (dups > 0)
+				{
+					for (int j = i - dups - 1; j < i - 1; j++)
+					{
+						m_arrayxvert[sort_IDs[j]].tangent = m_arrayxvert[sort_IDs[i - 1]].tangent;
+						m_arrayxvert[sort_IDs[j]].binormal = m_arrayxvert[sort_IDs[i - 1]].binormal;
+					}
+					dups = 0;
+				}
+			}
+		}
+		if (dups > 0)
+		{
+			for (int j = i - dups - 1; j < i - 1; j++)
+			{
+				m_arrayxvert[sort_IDs[j]].tangent = m_arrayxvert[sort_IDs[i - 1]].tangent;
+				m_arrayxvert[sort_IDs[j]].binormal = m_arrayxvert[sort_IDs[i - 1]].binormal;
+			}
+		}
 
 		// calculate an average tangent space for each vertex
-		// this is naive implementation, that can be slow on hi-poly models
+		// optimized implementation by ncuxonaT
 		for (int vertID = 0; vertID < m_nNumArrayVerts; vertID++)
 		{
-			svert_t *v = &m_arrayxvert[vertID];
-			const Vector &normal = v->normal;
-			Vector &finalSVect = v->tangent;
-			Vector &finalTVect = v->binormal;
-			Vector sVect, tVect;
+			Vector tangent = m_arrayxvert[vertID].tangent.Normalize();
+			Vector binormal = m_arrayxvert[vertID].binormal.Normalize();
+			Vector normal = m_arrayxvert[vertID].normal;
 
-			sVect = tVect = g_vecZero;
+			ComputeSkinMatrix(&m_arrayxvert[vertID], bones, skinMat);
+			tangent = skinMat.VectorIRotate(tangent);
+			binormal = skinMat.VectorIRotate(binormal);
 
-			for( triID = 0; triID < vertToTriMap[vertID].Size(); triID++ )
-			{
-				sVect += triSVect[vertToTriMap[vertID][triID]];
-				tVect += triTVect[vertToTriMap[vertID][triID]];
-			}
+			// orthogonalization		
+			tangent = tangent - normal * DotProduct(normal, tangent);
+			binormal = CrossProduct(normal, tangent) * Q_sign(DotProduct(CrossProduct(normal, tangent), binormal));
 
-			// smooth TBN
-			Vector vertPos1 = m_arrayverts[vertID]; // transformed to global pose to avoid seams
-			Vector4D vertUV1 = m_arrayxvert[vertID].stcoord;
-			Vector vertNorm1 = m_arrayxvert[vertID].normal;
-
-			for (int vertID2 = 0; vertID2 < m_nNumArrayVerts; vertID2++)
-			{
-				if (vertID2 == vertID)
-					continue;
-				
-				Vector vertPos2 = m_arrayverts[vertID2]; // transformed to global pose to avoid seams
-				if (vertPos1 != vertPos2)
-					continue;
-				
-				Vector4D vertUV2 = m_arrayxvert[vertID2].stcoord;
-				if (vertUV1 != vertUV2)
-					continue;
-				
-				Vector vertNorm2 = m_arrayxvert[vertID2].normal;
-				if (vertNorm1 != vertNorm2)
-					continue;	
-					
-				for( int triID2 = 0; triID2 < vertToTriMap[vertID2].Size(); triID2++ )
-				{
-					sVect += triSVect[vertToTriMap[vertID2][triID2]];
-					tVect += triTVect[vertToTriMap[vertID2][triID2]];
-				}				
-			}			
-
-			// rotate tangent and binormal back to bone space
-			ComputeSkinMatrix( &m_arrayxvert[vertID], bones, skinMat );
-
-			sVect = skinMat.VectorIRotate( sVect );
-			tVect = skinMat.VectorIRotate( tVect );
-
-			// orthogonalization
-			sVect = sVect.Normalize();
-			tVect = tVect.Normalize();			
-			sVect = sVect - normal * DotProduct(normal, sVect);
-			tVect = CrossProduct(normal, sVect) * Q_sign(DotProduct(CrossProduct(normal, sVect), tVect));	
-
-			finalSVect = sVect.Normalize();
-			finalTVect = tVect.Normalize();
+			m_arrayxvert[vertID].tangent = tangent.Normalize();
+			m_arrayxvert[vertID].binormal = binormal.Normalize();
 		}
 
 		// search for submodel offset
