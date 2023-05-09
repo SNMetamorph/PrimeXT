@@ -16,7 +16,7 @@ GNU General Public License for more details.
 #ifndef SCREEN_H
 #define SCREEN_H
 
-uniform sampler2D		u_ScreenMap;
+uniform sampler2D	u_ScreenMap;
 uniform vec2		u_ScreenSizeInv;
 uniform float		u_RefractScale;
 uniform float		u_AberrationScale;
@@ -26,10 +26,6 @@ vec2 GetDistortedTexCoords(in vec3 N, float fade)
 	vec2 screenCoord = gl_FragCoord.xy * u_ScreenSizeInv;
 	screenCoord.x += N.x * u_RefractScale * screenCoord.x * fade;
 	screenCoord.y -= N.y * u_RefractScale * screenCoord.y * fade;
-
-	// clamp here to avoid NaNs on screen
-	screenCoord.x = clamp( screenCoord.x, 0.01, 0.99 );
-	screenCoord.y = clamp( screenCoord.y, 0.01, 0.99 );
 	return screenCoord;
 }
 
@@ -40,12 +36,15 @@ vec3 GetScreenColor(in vec3 N, float fade)
 #else
 	vec2 screenCoord = gl_FragCoord.xy * u_ScreenSizeInv;
 #endif
+	// clamp here to avoid NaNs on screen
+	screenCoord.x = clamp( screenCoord.x, 0.01, 0.99 );
+	screenCoord.y = clamp( screenCoord.y, 0.01, 0.99 );
 
 #if defined( APPLY_ABERRATION )
 	return chromemap2D(u_ScreenMap, screenCoord, N, u_AberrationScale * fade);
-#else // !APPLY_ABERRATION
+#else
 	return texture2D(u_ScreenMap, screenCoord).rgb;
-#endif // APPLY_ABERRATION
+#endif
 }
 
 #endif // SCREEN_H
