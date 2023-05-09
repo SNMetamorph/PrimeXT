@@ -767,7 +767,7 @@ void R_ResetGLstate( void )
 R_Clear
 =============
 */
-void R_Clear( int bitMask )
+void R_Clear( int bitMask, bool skyPortalRendered )
 {
 	GL_DEBUG_SCOPE();
 
@@ -780,7 +780,8 @@ void R_Clear( int bitMask )
 	else pglClearColor( 0.5f, 0.5f, 0.5f, 1.0f );
 
 	// force to clearing screen to avoid ugly blur
-	if (tr.fClearScreen || CVAR_TO_BOOL(r_clear)) {
+	bool forceClear = CVAR_TO_BOOL(r_clear) && !skyPortalRendered;
+	if (tr.fClearScreen || forceClear) {
 		bits |= GL_COLOR_BUFFER_BIT;
 	}
 
@@ -951,7 +952,7 @@ void R_RenderScene( const ref_viewpass_t *rvp, RefParams params )
 	R_RenderShadowmaps(); // draw all the shadowmaps
 
 	R_SetupGLstate();
-	R_Clear( ~0 );
+	R_Clear(~0, tr.ignore_2d_skybox);
 
 	R_DrawSkyBox();
 	R_RenderSolidBrushList();

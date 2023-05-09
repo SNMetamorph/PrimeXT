@@ -878,7 +878,7 @@ void R_DrawParticles( qboolean trans );
 void R_SetupGLstate( void );
 void R_RenderTransList( void );
 void R_SetupFrustum( void );
-void R_Clear( int bitMask );
+void R_Clear( int bitMask, bool skyPortalRendered = false );
 
 //
 // gl_rmisc.cpp
