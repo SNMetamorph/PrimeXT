@@ -3061,7 +3061,7 @@ word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lig
 	//if( RI->currententity->curstate.rendermode == kRenderTransColor || RI->currententity->curstate.rendermode == kRenderTransTexture )
 	//	shader_use_screencopy = true;
 
-	if (has_normalmap && (usingAberrations || usingRefractions)) {
+	if (has_normalmap && texTransparent && (usingAberrations || usingRefractions)) {
 		shader_use_screencopy = true;
 	}
 

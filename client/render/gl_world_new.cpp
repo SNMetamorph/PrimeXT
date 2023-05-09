@@ -778,6 +778,7 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 	bool cubemaps_available = (world->num_cubemaps > 0) && CVAR_TO_BOOL(r_cubemap);
 	bool using_refractions = mat->refractScale > 0.0f;
 	bool using_aberrations = mat->aberrationScale > 0.0f;
+	bool surf_transparent = false;
 
 	if ((FBitSet(mat->flags, BRUSH_FULLBRIGHT) || R_FullBright() || mirror) && !FBitSet(mat->flags, BRUSH_LIQUID)) {
 		fullbright = true;
@@ -872,6 +873,7 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 	// and finally select the render-mode
 	if( FBitSet( mat->flags, BRUSH_LIQUID ))
 	{
+		surf_transparent = true; // obviously, liquids always transparent
 		GL_AddShaderDirective( options, "LIQUID_SURFACE" );
 		if( tr.waterlevel >= 3 )
 			GL_AddShaderDirective( options, "LIQUID_UNDERWATER" );
@@ -900,12 +902,6 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 		shader_use_screencopy = true;
 	}
 
-	if( shader_use_screencopy )
-		GL_AddShaderDirective( options, "USING_SCREENCOPY" );
-
-	if( mirror )
-		GL_AddShaderDirective( options, "PLANAR_REFLECTION" );
-
 	if (FBitSet(mat->flags, BRUSH_TRANSPARENT) || e->curstate.rendermode == kRenderTransTexture) 
 	{
 		// don't need alpha blending when using screen copy
@@ -921,9 +917,18 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 				GL_AddShaderDirective(options, "ALPHA_TO_COVERAGE");
 			}
 		}
+		surf_transparent = true;
 	}
 
-	if (using_normalmap)
+	if (shader_use_screencopy && surf_transparent) {
+		GL_AddShaderDirective(options, "USING_SCREENCOPY");
+	}
+
+	if (mirror) {
+		GL_AddShaderDirective(options, "PLANAR_REFLECTION");
+	}
+
+	if (using_normalmap && surf_transparent)
 	{
 		if (using_refractions) {
 			GL_AddShaderDirective(options, "APPLY_REFRACTION");
