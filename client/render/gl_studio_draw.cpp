@@ -3506,12 +3506,11 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force, boo
 		}
 	}
 
-	if (!FBitSet(RI->params, RP_SHADOWVIEW))
-	{
-		if (FBitSet(mat->flags, STUDIO_NF_TWOSIDE))
-			GL_Cull(GL_NONE);
-		else
-			GL_Cull(GL_FRONT);
+	if (FBitSet(mat->flags, STUDIO_NF_TWOSIDE)) {
+		GL_Cull(GL_NONE);
+	}
+	else {
+		GL_Cull(GL_FRONT);
 	}
 
 	// each transparent surfaces reqiured an actual screencopy
