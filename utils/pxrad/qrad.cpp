@@ -2740,7 +2740,7 @@ int main( int argc, char **argv )
 
 	RadWorld ();
 
-	PrintBSPFileSizes();
+	PrintBSPFileSizes(g_compatibility_mode == CompatibilityMode::GoldSrc);
 	WriteBSPFile( source );
 	TEX_FreeTextures ();
 	FreeWorldTrace ();

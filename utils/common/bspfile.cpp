@@ -747,7 +747,7 @@ PrintBSPFileSizes
 Dumps info about current file
 =============
 */
-void PrintBSPFileSizes(bool showAllocBlockLimit)
+void PrintBSPFileSizes(bool goldsrcCompatibility)
 {
 	int	numtextures = g_texdatasize ? ((dmiptexlump_t*)g_dtexdata)->nummiptex : 0;
 	int	totalmemory = 0;
@@ -756,20 +756,20 @@ void PrintBSPFileSizes(bool showAllocBlockLimit)
 	Msg("Object names  Objects/Maxobjs  Memory / Maxmem  Fullness\n");
 	Msg("------------  ---------------  ---------------  --------\n");
 
-	totalmemory += ArrayUsage("models", g_nummodels, ENTRIES(g_dmodels), ENTRYSIZE(g_dmodels));
-	totalmemory += ArrayUsage("planes", g_numplanes, ENTRIES(g_dplanes), ENTRYSIZE(g_dplanes));
+	totalmemory += ArrayUsage("models", g_nummodels, goldsrcCompatibility ? 400 : ENTRIES(g_dmodels), ENTRYSIZE(g_dmodels));
+	totalmemory += ArrayUsage("planes", g_numplanes, goldsrcCompatibility ? 32767 : ENTRIES(g_dplanes), ENTRYSIZE(g_dplanes));
 	totalmemory += ArrayUsage("vertexes", g_numvertexes, ENTRIES(g_dvertexes), ENTRYSIZE(g_dvertexes));
 	totalmemory += ArrayUsage("nodes", g_numnodes, ENTRIES(g_dnodes), ENTRYSIZE(g_dnodes));
-	totalmemory += ArrayUsage("texinfos", g_numtexinfo, ENTRIES(g_texinfo), ENTRYSIZE(g_texinfo));
+	totalmemory += ArrayUsage("texinfos", g_numtexinfo, goldsrcCompatibility ? 8192 : ENTRIES(g_texinfo), ENTRYSIZE(g_texinfo));
 	totalmemory += ArrayUsage("faces", g_numfaces, ENTRIES(g_dfaces), ENTRYSIZE(g_dfaces));
 	totalmemory += ArrayUsage("clipnodes", g_numclipnodes, ENTRIES(g_dclipnodes), ENTRYSIZE(g_dclipnodes));
-	totalmemory += ArrayUsage("leaves", g_numleafs, ENTRIES(g_dleafs), ENTRYSIZE(g_dleafs));
+	totalmemory += ArrayUsage("leaves", g_numleafs, goldsrcCompatibility ? 8192 : ENTRIES(g_dleafs), ENTRYSIZE(g_dleafs));
 	totalmemory += ArrayUsage("marksurfaces", g_nummarksurfaces, ENTRIES(g_dmarksurfaces), ENTRYSIZE(g_dmarksurfaces));
-	totalmemory += ArrayUsage("surfedges", g_numsurfedges, ENTRIES(g_dsurfedges), ENTRYSIZE(g_dsurfedges));
-	totalmemory += ArrayUsage("edges", g_numedges, ENTRIES(g_dedges), ENTRYSIZE(g_dedges));
+	totalmemory += ArrayUsage("surfedges", g_numsurfedges, goldsrcCompatibility ? 512000 : ENTRIES(g_dsurfedges), ENTRYSIZE(g_dsurfedges));
+	totalmemory += ArrayUsage("edges", g_numedges, goldsrcCompatibility ? 256000 : ENTRIES(g_dedges), ENTRYSIZE(g_dedges));
 
-	// alloc block limit presented only for GoldSrc engine
-	if (showAllocBlockLimit) {
+	if (goldsrcCompatibility) {
+		// alloc block limit presented only for GoldSrc engine
 		ArrayUsage("alloc block", CountBlocks(), 64, 0);
 	}
 
