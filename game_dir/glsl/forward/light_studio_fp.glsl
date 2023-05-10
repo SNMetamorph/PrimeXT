@@ -104,20 +104,21 @@ void main( void )
 	float spotCos = cos( fov + fov );
 	if( spotDot < spotCos ) 
 		discard;
+
 #elif defined( LIGHT_OMNI )
 	L = normalize( var_LightVec );
 #elif defined( LIGHT_PROJ )
 	L = normalize( u_LightDir.xyz );
 #endif
-	// two side materials support
-	if( bool( gl_FrontFacing )) L = -L, V = -V;
-
 #if defined( HAS_NORMALMAP )
 	vec3 N = normalmap2D( u_NormalMap, vec_TexDiffuse );
 	N = normalize( var_WorldMat * N ); // rotate normal to worldspace
 #else
 	vec3 N = normalize( var_Normal );
 #endif
+	// two-sided textures support
+	if( bool( gl_FrontFacing )) N = -N;
+
 	// compute the diffuse term
 	vec4 diffuse = colormap2D( u_ColorMap, vec_TexDiffuse );
 
