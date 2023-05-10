@@ -239,8 +239,18 @@ static int EmitLeaf( node_t *node, const node_t *portalleaf )
 	int	leafnum = g_numleafs;
 	vec3_t	mins, maxs;
 
-	if( g_numleafs == MAX_MAP_LEAFS )
-		COM_FatalError( "MAX_MAP_LEAFS limit exceeded\n" );
+	if (g_compatibility_mode == CompatibilityMode::GoldSrc)
+	{
+		if (g_numleafs == 8192) {
+			COM_FatalError("MAX_MAP_LEAFS limit exceeded. You can use Xash3D to support much larger maps.\n");
+		}
+	}
+	else
+	{
+		if (g_numleafs == MAX_MAP_LEAFS) {
+			COM_FatalError("MAX_MAP_LEAFS limit exceeded\n");
+		}
+	}
 
 	leaf_p = &g_dleafs[g_numleafs++];	// emit a leaf
 	leaf_p->contents = portalleaf->contents;
