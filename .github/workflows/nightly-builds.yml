@@ -163,7 +163,7 @@ jobs:
     name: release-builds
     runs-on: ubuntu-latest
     needs: [build-windows, build-linux]
-    if: ${{ github.ref == 'refs/heads/master' }}
+    if: ${{ always() && github.ref == 'refs/heads/master' }}
     steps:
       - name: Fetch artifacts
         uses: actions/download-artifact@v3.0.1
@@ -177,6 +177,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Repackage binaries and allow GitHub to process removed release for few seconds
+        continue-on-error: true
         run: |
           cd Windows
           zip -r ../PrimeXT-Windows-x86.zip *
