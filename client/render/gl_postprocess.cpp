@@ -19,8 +19,7 @@ void V_RenderPostEffect(word hProgram);
 
 void CBasePostEffects::InitializeTextures()
 {
-	InitScreenColor();
-	InitScreenDepth();
+	InitScreencopyFramebuffer();
 	InitTargetColor(0);
 	InitDepthOfField();
 	InitAutoExposure();
@@ -67,7 +66,7 @@ void CBasePostEffects::InitializeShaders()
 	bloomShader = GL_FindShader("postfx/bloom", "postfx/generic", "postfx/bloom");
 }
 
-void CBasePostEffects :: InitScreenColor( void )
+void CBasePostEffects :: InitScreencopyFramebuffer()
 {
 	int tex_flags = 0;
 	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
@@ -78,29 +77,18 @@ void CBasePostEffects :: InitScreenColor( void )
 		tex_flags = TF_COLORBUFFER;
 
 	FREE_TEXTURE(tr.screen_color);
+	FREE_TEXTURE(tr.screen_depth);
 	tr.screen_color = CREATE_TEXTURE( "*screencolor", glState.width, glState.height, NULL, tex_flags);
+	tr.screen_depth = CREATE_TEXTURE( "*screendepth", glState.width, glState.height, NULL, TF_DEPTHBUFFER ); 
+
 	if (hdr_rendering)
 	{
 		GL_FreeDrawbuffer(tr.screencopy_fbo);
 		tr.screencopy_fbo = GL_AllocDrawbuffer("*screencopy_fbo", glState.width, glState.height, 1);
-
 		GL_AttachColorTextureToFBO(tr.screencopy_fbo, tr.screen_color, 0);
-		GL_CheckFBOStatus(tr.screencopy_fbo);
-	}
-}
-
-void CBasePostEffects :: InitScreenDepth( void )
-{
-	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
-
-	FREE_TEXTURE(tr.screen_depth);
-	tr.screen_depth = CREATE_TEXTURE( "*screendepth", glState.width, glState.height, NULL, TF_DEPTHBUFFER ); 
-	if (hdr_rendering)
-	{
 		GL_AttachDepthTextureToFBO(tr.screencopy_fbo, tr.screen_depth, 0);
 		GL_CheckFBOStatus(tr.screencopy_fbo);
 	}
-
 }
 
 void CBasePostEffects :: InitTargetColor( int slot )

@@ -68,8 +68,7 @@ public:
 	int RenderExposureStorage();
 
 private:
-	void InitScreenColor();
-	void InitScreenDepth();
+	void InitScreencopyFramebuffer();
 	void InitTargetColor(int slot);
 	void InitDepthOfField();
 	void InitAutoExposure();
