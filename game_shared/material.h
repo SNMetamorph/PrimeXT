@@ -35,8 +35,6 @@ struct matdef_t
 	const char	*impact_parts[MAX_MAT_SOUNDS+1];	// for terminator
 	const char	*impact_sounds[MAX_MAT_SOUNDS+1];
 	const char	*step_sounds[MAX_MAT_SOUNDS+1];
-	char		detailName[64];			// shared detail texture for materials
-	vec2_t		detailScale;			// detail texture scales x, y
 };
 
 // NOTE: if this is changed it must be changed in studio.h and com_model.h too!!!
@@ -49,13 +47,13 @@ struct matdesc_t
 	float		aberrationScale;	// chromatic abberation
 	float		reliefScale;		// relief-mapping
 	matdef_t	*effects;			// hit, impact, particle effects etc
-	char		name[64];
-	unsigned short	dt_texturenum;	// detail texture load directly from material specific
+	char		name[64];			// just a name of material
 	uint32_t	hash;
 
 	char		diffusemap[64];
 	char		normalmap[64];
 	char		glossmap[64];
+	char		detailmap[64];
 };
 
 // matdef is physical properties description

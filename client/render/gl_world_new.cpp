@@ -156,6 +156,7 @@ static void Mod_LoadWorldMaterials( void )
 		Q_snprintf( glowmap, sizeof( glowmap ), "textures/%s_luma", tx->name );
 		Q_snprintf( heightmap, sizeof( heightmap ), "textures/%s_hmap", tx->name );
 
+		// albedo/diffuse map loading
 		if( IMAGE_EXISTS( diffuse ))
 		{
 			mat->gl_diffuse_id = LOAD_TEXTURE( diffuse, NULL, 0, 0 );
@@ -175,6 +176,7 @@ static void Mod_LoadWorldMaterials( void )
 			mat->gl_diffuse_id = tx->gl_texturenum;
 		}
 
+		// normal map loading
 		if( IMAGE_EXISTS( bumpmap ))
 		{
 			mat->gl_normalmap_id = LOAD_TEXTURE( bumpmap, NULL, 0, TF_NORMALMAP );
@@ -188,6 +190,7 @@ static void Mod_LoadWorldMaterials( void )
 			else mat->gl_normalmap_id = tr.normalmapTexture; // blank bumpy
         }
 
+		// gloss/PBR map loading
 		if( IMAGE_EXISTS( glossmap ))
 		{
 			mat->gl_specular_id = LOAD_TEXTURE( glossmap, NULL, 0, 0 );
@@ -201,6 +204,7 @@ static void Mod_LoadWorldMaterials( void )
 			else mat->gl_specular_id = tr.blackTexture;
 		}
 
+		// height map loading
 		if( IMAGE_EXISTS( heightmap ))
 		{
 			mat->gl_heightmap_id = LOAD_TEXTURE( heightmap, NULL, 0, 0 );
@@ -214,9 +218,21 @@ static void Mod_LoadWorldMaterials( void )
 			else mat->gl_heightmap_id = tr.blackTexture;
 		}
 
-		if( IMAGE_EXISTS( glowmap ))
-			mat->gl_glowmap_id = LOAD_TEXTURE( glowmap, NULL, 0, 0 );
-		else mat->gl_glowmap_id = tr.blackTexture;
+		// luma/emission map loading
+		if (IMAGE_EXISTS(glowmap)) {
+			mat->gl_glowmap_id = LOAD_TEXTURE(glowmap, NULL, 0, 0);
+		}
+		else {
+			mat->gl_glowmap_id = tr.blackTexture;
+		}
+
+		// detail map loading
+		if (IMAGE_EXISTS(desc->detailmap)) {
+			mat->gl_detailmap_id = LOAD_TEXTURE(desc->detailmap, NULL, 0, TF_FORCE_COLOR);
+		}
+		else {
+			mat->gl_detailmap_id = tr.grayTexture;
+		}
 
 		// setup material flags
 		if( mat->gl_normalmap_id > 0 && mat->gl_normalmap_id != tr.normalmapTexture )
@@ -230,6 +246,9 @@ static void Mod_LoadWorldMaterials( void )
 
 		if( mat->gl_heightmap_id > 0 && mat->gl_heightmap_id != tr.blackTexture )
 			SetBits( mat->flags, BRUSH_HAS_HEIGHTMAP );
+
+		if( mat->gl_detailmap_id > 0 && mat->gl_detailmap_id != tr.grayTexture )
+			SetBits( mat->flags, BRUSH_HAS_DETAIL );
 
 		if( tx->name[0] == '{' )
 			SetBits( mat->flags, BRUSH_TRANSPARENT );
@@ -260,11 +279,6 @@ static void Mod_LoadWorldMaterials( void )
 
 		if( !Q_strncmp( tx->name, "sky", 3 ))
 			SetBits( world->features, WORLD_HAS_SKYBOX );
-
-		mat->gl_detailmap_id = desc->dt_texturenum;
-
-		if( mat->gl_detailmap_id > 0 && mat->gl_detailmap_id != tr.grayTexture )
-			SetBits( mat->flags, BRUSH_HAS_DETAIL );
 	}
 }
 

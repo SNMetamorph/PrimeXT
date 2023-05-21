@@ -602,7 +602,7 @@ void CStudioModelRenderer :: LoadStudioMaterials( void )
 			if( IMAGE_EXISTS( bumpmap ))
 				pmaterial->gl_normalmap_id = LOAD_TEXTURE( bumpmap, NULL, 0, TF_NORMALMAP );
 			else pmaterial->gl_normalmap_id = tr.normalmapTexture; // blank bumpy
-                   	}
+         }
 
 		if( IMAGE_EXISTS( glossmap ))
 		{
@@ -634,6 +634,14 @@ void CStudioModelRenderer :: LoadStudioMaterials( void )
 			else pmaterial->gl_heightmap_id = tr.blackTexture;
 		}
 
+		// detail map loading
+		if (IMAGE_EXISTS(desc->detailmap)) {
+			pmaterial->gl_detailmap_id = LOAD_TEXTURE(desc->detailmap, NULL, 0, TF_FORCE_COLOR);
+		}
+		else {
+			pmaterial->gl_detailmap_id = tr.grayTexture;
+		}
+
 		// current model has bumpmapping effect
 		if( pmaterial->gl_normalmap_id > 0 && pmaterial->gl_normalmap_id != tr.normalmapTexture )
 			SetBits( m_pStudioHeader->flags, STUDIO_HAS_BUMP );
@@ -647,7 +655,6 @@ void CStudioModelRenderer :: LoadStudioMaterials( void )
 		if( pmaterial->gl_heightmap_id != tr.blackTexture )
 			SetBits( pmaterial->flags, STUDIO_NF_HEIGHTMAP );
 
-		pmaterial->gl_detailmap_id = desc->dt_texturenum;
 		pmaterial->smoothness = desc->smoothness;
 		pmaterial->detailScale[0] = desc->detailScale[0];
 		pmaterial->detailScale[1] = desc->detailScale[1];

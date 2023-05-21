@@ -16,7 +16,7 @@ GNU General Public License for more details.
 #include "material.h"
 
 #ifndef CLIENT_DLL
-#include"extdll.h"
+#include "extdll.h"
 #include "util.h"
 #else
 #include "hud.h"
@@ -51,8 +51,6 @@ matdef_t *COM_CreateDefaultMatdef( void )
 		return &mat; // already created
 
 	Q_strcpy( mat.name, "default" );
-	mat.detailName[0] = '\0';
-
 	mat.impact_decal = COM_CopyString( "shot" ); // default Paranoia decal
 	mat.impact_sounds[0] = COM_CopyString( "debris/concrete1.wav" );
 	mat.impact_sounds[1] = COM_CopyString( "debris/concrete2.wav" );
@@ -209,10 +207,6 @@ void COM_InitMatdef()
 		// read the material name
 		Q_strncpy( mat->name, token, sizeof( mat->name ));
 
-		// detail scale default values
-		mat->detailScale[0] = 10.0f;
-		mat->detailScale[1] = 10.0f;
-
 		// read opening brace
 		pfile = COM_ParseFile( pfile, token );
 		if( !pfile ) break;
@@ -297,31 +291,6 @@ void COM_InitMatdef()
 					}
 				}
 			}
-			else if( !Q_stricmp( token, "detailScale" ))
-			{
-				pfile = COM_ParseFile( pfile, token );
-				if( !pfile )
-				{
-					ALERT( at_error, "hit EOF while parsing 'detailScale'\n" );
-					goto getout;
-				}
-
-				mat->detailScale = Q_atov2(token);
-				mat->detailScale[0] = bound( 0.01f, mat->detailScale[0], 100.0f );
-				mat->detailScale[1] = bound( 0.01f, mat->detailScale[0], 100.0f );
-			}
-			else if( !Q_stricmp( token, "detailmap" ))
-			{
-				pfile = COM_ParseFile( pfile, token );
-				if( !pfile )
-				{
-					ALERT( at_error, "hit EOF while parsing 'detailmap'\n" );
-					goto getout;
-				}
-
-				COM_FixSlashes( token );
-				Q_strncpy( mat->detailName, token, sizeof( mat->detailName ));
-			}
 			else ALERT( at_warning, "Unknown material token %s\n", token );
 		}
 	}
@@ -356,11 +325,7 @@ matdesc_t *COM_DefaultMatdesc()
 	{
 		// initialize default material
 		Q_strncpy( defmat.name, "*default", sizeof( defmat.name ));
-#ifdef CLIENT_DLL
-		defmat.dt_texturenum = tr.grayTexture;
-#else
-		defmat.dt_texturenum = 0;
-#endif
+		defmat.detailmap[0] = '\0';
 		defmat.detailScale[0] = 10.0f;
 		defmat.detailScale[1] = 10.0f;
 		defmat.aberrationScale = 0.0f;
@@ -456,11 +421,6 @@ void COM_LoadMaterials(const char *path)
 		}
 
 		// set defaults
-#ifdef CLIENT_DLL
-		mat->dt_texturenum = tr.grayTexture;
-#else
-		mat->dt_texturenum = 0;
-#endif
 		mat->detailScale[0] = 10.0f;
 		mat->detailScale[1] = 10.0f;
 		mat->smoothness = DEFAULT_SMOOTHNESS;
@@ -528,7 +488,6 @@ void COM_LoadMaterials(const char *path)
 				mat->detailScale[0] = bound(0.01f, mat->detailScale[0], 100.0f);
 				mat->detailScale[1] = bound(0.01f, mat->detailScale[0], 100.0f);
 			}
-#ifdef CLIENT_DLL
 			else if (!Q_stricmp(token, "detailmap"))
 			{
 				pfile = COM_ParseFile(pfile, token);
@@ -539,9 +498,8 @@ void COM_LoadMaterials(const char *path)
 				}
 
 				COM_FixSlashes(token);
-				mat->dt_texturenum = LOAD_TEXTURE(token, NULL, 0, TF_FORCE_COLOR);
+				Q_strncpy(mat->detailmap, token, sizeof(mat->detailmap));
 			}
-#endif
 			else if (!Q_stricmp(token, "diffuseMap"))
 			{
 				pfile = COM_ParseFile(pfile, token);
@@ -643,20 +601,6 @@ void COM_LoadMaterials(const char *path)
 		// apply default values
 		if (!mat->effects)
 			mat->effects = COM_DefaultMatdef();
-
-#ifdef CLIENT_DLL
-		if (mat->dt_texturenum == tr.grayTexture && mat->effects->detailName[0])
-		{
-			mat->dt_texturenum = LOAD_TEXTURE(mat->effects->detailName, NULL, 0, TF_FORCE_COLOR);
-			mat->detailScale[0] = mat->effects->detailScale[0];
-			mat->detailScale[1] = mat->effects->detailScale[0];
-		}
-
-		// if detail texture was missed
-		if (mat->dt_texturenum == 0)
-			mat->dt_texturenum = tr.grayTexture;
-#endif
-
 	}
 getout:
 
