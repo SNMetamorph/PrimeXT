@@ -1161,7 +1161,6 @@ bool CMeshDesc :: StudioConstructMesh( void )
 		for( i = 0; i < psubmodel->numverts; i++ )
 			m_verts[i] = bonetransform[pvertbone[i]].VectorTransform( pstudioverts[i] );
 
-		mstudiomaterial_t *pmaterial = (m_pModel) ? (mstudiomaterial_t *)m_pModel->materials : NULL;
 		mstudiotexture_t *ptexture = (mstudiotexture_t *)((byte *)phdr + phdr->textureindex);
 		short *pskinref = (short *)((byte *)phdr + phdr->skinindex);
 		if( m_skinnum != 0 && m_skinnum < phdr->numskinfamilies )
