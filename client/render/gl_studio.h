@@ -31,6 +31,7 @@ GNU General Public License for more details.
 #include "ikcontext.h"
 #include "jigglebones.h"
 #include "tbnfile.h"
+#include "studio_material.h"
 
 #define EVENT_CLIENT	5000		// less than this value it's a server-side studio events
 #define MAX_MODEL_MESHES	(MAXSTUDIOBODYPARTS * MAXSTUDIOMODELS)

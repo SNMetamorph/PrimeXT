@@ -710,40 +710,6 @@ typedef struct vbomesh_s
 	unsigned int	cacheSize;		// debug info: uploaded cache size for this buffer
 } vbomesh_t;
 
-// each mstudiotexture_t has a material
-typedef struct mstudiomat_s
-{
-	mstudiotexture_t	*pSource;			// pointer to original texture
-
-	unsigned short	gl_diffuse_id;		// diffuse texture
-	unsigned short	gl_detailmap_id;		// detail texture
-	unsigned short	gl_normalmap_id;		// normalmap
-	unsigned short	gl_specular_id;		// specular
-	unsigned short	gl_glowmap_id;		// self-illuminate parts
-	unsigned short	gl_heightmap_id;		// parallax stuff
-
-	// this part is shared with matdesc_t
-	float		smoothness;		// smoothness factor
-	float		detailScale[2];		// detail texture scales x, y
-	float		reflectScale;		// reflection scale for translucent water
-	float		refractScale;		// refraction scale for mirrors, windows, water
-	float		aberrationScale;		// chromatic abberation
-	float		reliefScale;		// relief-mapping
-	struct matdef_t	*effects;			// hit, impact, particle effects etc
-	int		flags;			// mstudiotexture_t->flags
-
-	// cached shadernums
-	shader_t		forwardScene;
-	shader_t		forwardLightSpot;
-	shader_t		forwardLightOmni[2];
-	shader_t		forwardLightProj;
-	shader_t		deferredScene;
-	shader_t		deferredLight;
-	shader_t		forwardDepth;
-
-	unsigned short	lastRenderMode;		// for catch change render modes
-} mstudiomaterial_t;
-
 typedef struct mstudiosurface_s
 {
 	int		flags;			// match with msurface_t->flags
