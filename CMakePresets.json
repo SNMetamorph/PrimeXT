@@ -23,7 +23,7 @@
     },
     {
       "name": "windows-x86-debug",
-      "displayName": "Windows x86 Debug",
+      "displayName": "Windows / x86 / Debug",
       "description": " ",
       "inherits": [ "windows-x86-base" ],
       "cacheVariables": {
@@ -32,7 +32,7 @@
     },
     {
       "name": "windows-x86-release",
-      "displayName": "Windows x86 Release",
+      "displayName": "Windows / x86 / Release",
       "description": " ",
       "inherits": [ "windows-x86-base" ],
       "cacheVariables": {
@@ -52,7 +52,7 @@
     },
     {
       "name": "windows-x64-debug",
-      "displayName": "Windows x64 Debug",
+      "displayName": "Windows / x64 / Debug",
       "description": " ",
       "inherits": [ "windows-x64-base" ],
       "cacheVariables": {
@@ -61,7 +61,7 @@
     },
     {
       "name": "windows-x64-release",
-      "displayName": "Windows x64 Release",
+      "displayName": "Windows / x64 / Release",
       "description": " ",
       "inherits": [ "windows-x64-base" ],
       "cacheVariables": {
@@ -70,7 +70,7 @@
     },
     {
       "name": "linux-debug",
-      "displayName": "Linux Debug",
+      "displayName": "Linux / Debug",
       "description": " ",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
@@ -82,7 +82,7 @@
     },
     {
       "name": "utils-termux-debug",
-      "displayName": "Termux Debug (Utils Only)",
+      "displayName": "Termux / Debug (Utils Only)",
       "description": " ",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
@@ -99,7 +99,7 @@
     },
     {
       "name": "ci-windows-x86",
-      "displayName": "CI Windows x86",
+      "displayName": "CI / Windows / x86",
       "description": " ",
       "generator": "Visual Studio 17 2022",
       "binaryDir": "${sourceDir}/build",
@@ -111,14 +111,38 @@
       "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
     },
     {
+      "name": "ci-windows-x64",
+      "displayName": "CI / Windows / x64",
+      "description": " ",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {},
+      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
+    },
+    {
       "name": "ci-linux-x86",
-      "displayName": "CI Linux x86",
+      "displayName": "CI / Linux / x86",
       "description": " ",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_C_FLAGS": "-m32",
         "CMAKE_CXX_FLAGS": "-m32",
+        "ENABLE_PHYSX": "OFF"
+      },
+      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
+    },
+    {
+      "name": "ci-linux-x64",
+      "displayName": "CI / Linux / x64",
+      "description": " ",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
         "ENABLE_PHYSX": "OFF"
       },
       "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
