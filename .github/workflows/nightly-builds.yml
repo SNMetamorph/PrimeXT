@@ -63,7 +63,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-22.04
-            cmake_preset: ci-linux-x86
+            cmake_preset: ci-linux-x64
             build_conf: Debug
 
     steps:
@@ -79,10 +79,9 @@ jobs:
       
       - name: Install dependencies
         run: |
-          sudo dpkg --add-architecture i386
           sudo apt-get update
           sudo apt-get install gcc-multilib g++-multilib cmake ninja-build
-          sudo apt-get install qtbase5-dev:i386
+          sudo apt-get install qtbase5-dev
 
       - name: Configure CMake
         # Use a bash shell so we can use the same syntax for environment variable
