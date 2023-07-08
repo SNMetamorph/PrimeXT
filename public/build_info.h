@@ -23,35 +23,35 @@ namespace BuildInfo
 	// Returns current name of operating system without any spaces.
 	constexpr const char *GetPlatform()
 	{
-#if PLATFORM_WIN32
+#if XASH_PLATFORM == PLATFORM_WIN32
 		return "win32";
-#elif PLATFORM_ANDROID
+#elif XASH_PLATFORM == PLATFORM_ANDROID
 		return "android";
-#elif PLATFORM_LINUX_UNKNOWN
+#elif XASH_PLATFORM == PLATFORM_LINUX_UNKNOWN
 		return "linuxunkabi";
-#elif PLATFORM_LINUX
+#elif XASH_PLATFORM == PLATFORM_LINUX
 		return "linux";
-#elif PLATFORM_APPLE
+#elif XASH_PLATFORM == PLATFORM_APPLE
 		return "apple";
-#elif PLATFORM_FREEBSD
+#elif XASH_PLATFORM == PLATFORM_FREEBSD
 		return "freebsd";
-#elif PLATFORM_NETBSD
+#elif XASH_PLATFORM == PLATFORM_NETBSD
 		return "netbsd";
-#elif PLATFORM_OPENBSD
+#elif XASH_PLATFORM == PLATFORM_OPENBSD
 		return "openbsd";
-#elif PLATFORM_EMSCRIPTEN
+#elif XASH_PLATFORM == PLATFORM_EMSCRIPTEN
 		return "emscripten";
-#elif PLATFORM_DOS4GW
+#elif XASH_PLATFORM == PLATFORM_DOS4GW
 		return "dos4gw";
-#elif PLATFORM_HAIKU
+#elif XASH_PLATFORM == PLATFORM_HAIKU
 		return "haiku";
-#elif PLATFORM_SERENITY
+#elif XASH_PLATFORM == PLATFORM_SERENITY
 		return "serenityos";
-#elif PLATFORM_IRIX
+#elif XASH_PLATFORM == PLATFORM_IRIX
 		return "irix";
-#elif PLATFORM_NSWITCH
+#elif XASH_PLATFORM == PLATFORM_NSWITCH
 		return "nswitch";
-#elif PLATFORM_PSVITA
+#elif XASH_PLATFORM == PLATFORM_PSVITA
 		return "psvita";
 #else
 #error "Place your operating system name here! If this is a mistake, try to fix conditions above and report a bug"
