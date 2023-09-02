@@ -1082,9 +1082,9 @@ bool CMeshDesc :: StudioConstructMesh( void )
 		return false;
 
 	studiohdr_t *phdr = (studiohdr_t *)m_pModel->cache.data;
-	if( !phdr ) return false;
-
-	int body = 0, skin = 0; // FIXME: allow to use body
+	if (!phdr) {
+		return false;
+	}
 
 	if( StudioLoadCache( m_pModel->name ))
 	{
@@ -1136,7 +1136,7 @@ bool CMeshDesc :: StudioConstructMesh( void )
 	{
 		mstudiobodyparts_t *pbodypart = (mstudiobodyparts_t *)((byte *)phdr + phdr->bodypartindex) + i;
 
-		int index = body / pbodypart->base;
+		int index = m_iBodyNumber / pbodypart->base;
 		index = index % pbodypart->nummodels;
 
 		mstudiomodel_t *psubmodel = (mstudiomodel_t *)((byte *)phdr + pbodypart->modelindex) + index;
@@ -1154,9 +1154,9 @@ bool CMeshDesc :: StudioConstructMesh( void )
 	{
 		mstudiobodyparts_t *pbodypart = (mstudiobodyparts_t *)((byte *)phdr + phdr->bodypartindex) + k;
 
-		int index = body / pbodypart->base;
+		int index = m_iBodyNumber / pbodypart->base;
 		index = index % pbodypart->nummodels;
-		int m_skinnum = bound( 0, skin, MAXSTUDIOSKINS );
+		int m_skinnum = bound( 0, m_iSkinNumber, MAXSTUDIOSKINS );
 
 		mstudiomodel_t *psubmodel = (mstudiomodel_t *)((byte *)phdr + pbodypart->modelindex) + index;
 		Vector *pstudioverts = (Vector *)((byte *)phdr + psubmodel->vertindex);
