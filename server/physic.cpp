@@ -296,15 +296,8 @@ void SV_ProcessModelData(model_t *mod, qboolean create, const byte *buffer)
 			CRC32_PROCESS_BUFFER(&ulCrc, (byte *)buffer, src->length);
 			mod->modelCRC = CRC32_FINAL(ulCrc);
 		}
-		else
-		{
-			// release collision mesh
-			if (mod->bodymesh != NULL)
-			{
-				mod->bodymesh->CMeshDesc::~CMeshDesc();
-				Mem_Free(mod->bodymesh);
-				mod->bodymesh = NULL;
-			}
+		else {
+			// here you can deallocate stuff which contained in model_t
 		}
 	}
 }

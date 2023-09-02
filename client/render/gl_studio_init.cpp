@@ -2168,15 +2168,7 @@ void CStudioModelRenderer :: ProcessUserData( model_t *mod, qboolean create, con
 		r_buildstats.create_buffer_object += (end - start);
 		r_buildstats.total_buildtime += (end - start);
 	}
-	else
-	{
-		// release collision mesh
-		if( mod->bodymesh != NULL )
-		{
-			mod->bodymesh->CMeshDesc::~CMeshDesc();
-			Mem_Free( mod->bodymesh );
-			mod->bodymesh = NULL;
-		}
+	else {
 		DestroyMeshCache();
 	}
 }

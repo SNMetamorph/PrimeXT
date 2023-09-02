@@ -426,11 +426,7 @@ typedef struct model_s
 	msurface_t	*surfaces;
 
 	int		numsurfedges;
-	union
-	{
 	int		*surfedges;
-	CMeshDesc		*bodymesh;	// collision mesh for studiomodel
-	};
 
 	int		numclipnodes;
 	dclipnode_t	*clipnodes;

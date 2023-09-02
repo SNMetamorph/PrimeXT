@@ -548,9 +548,8 @@ void OnFreeEntPrivateData( edict_s *pEdict )
 	{
 		if( pEdict && pEdict->pvPrivateData )
 		{
-			CBaseEntity *pEntity = CBaseEntity::Instance( pEdict );
-			pEntity->m_CookedMesh.FreeMesh(); // release all local copy of meshes
-			pEntity->m_OriginalMesh.FreeMesh();
+			// here you can deallocate stuff which contained in CBaseEntity
+			//CBaseEntity *pEntity = CBaseEntity::Instance( pEdict );
 		}
 
 		if( GET_SERVER_STATE() == SERVER_DEAD )
@@ -560,8 +559,6 @@ void OnFreeEntPrivateData( edict_s *pEdict )
 	if( pEdict && pEdict->pvPrivateData )
 	{
 		CBaseEntity *pEntity = CBaseEntity::Instance( pEdict );
-		pEntity->m_CookedMesh.FreeMesh();
-		pEntity->m_OriginalMesh.FreeMesh();
 		pEntity->UpdateOnRemove();
 	}
 }
