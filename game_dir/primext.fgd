@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 04 April 2023)
+// PrimeXT FGD (last updated 06 September 2023)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -4030,7 +4030,7 @@
 	]
 ]
 
-@PointClass iconsprite("sprites/fgd/speaker_ent.spr") base(Targetname, Parent) = speaker : "Announcement Speaker"
+@PointClass base(Targetname, Parent) iconsprite("sprites/fgd/speaker_ent.spr") = speaker : "Announcement Speaker"
 [
 	preset(choices) :"Announcement Presets" : 0 =
 	[
@@ -4056,7 +4056,7 @@
 	]
 ]
 
-@PointClass iconsprite("sprites/fgd/cd_audio.spr" base(Targetname) = target_cdaudio : "CD Audio Target"
+@PointClass base(Targetname) iconsprite("sprites/fgd/cd_audio.spr") = target_cdaudio : "CD Audio Target"
 [
 	health(choices) : "Track #" : -1 =
 	[
@@ -4141,7 +4141,7 @@
 	]
 ]
 
-@SolidClass base(Trigger, TriggerCond, Angles, ) = trigger_bounce : "Bouncey area"
+@SolidClass base(Trigger, TriggerCond, Angles) = trigger_bounce : "Bouncey area"
 [
 	frags(string) : "Factor (0=stop, 1=perfect bounce)" : "0.9"
 	armorvalue(string) : "Minimum Speed" : "100"
