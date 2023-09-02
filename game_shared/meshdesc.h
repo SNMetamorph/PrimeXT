@@ -18,6 +18,8 @@ GNU General Public License for more details.
 
 #include "studio.h"
 #include "areanode.h"
+#include "clipfile.h"
+#include <string>
 #include <stdint.h>
 
 #define MAX_AREA_DEPTH	5
@@ -34,12 +36,6 @@ typedef struct hashplane_s
 	mplane_t		pl;
 	struct hashplane_s	*hash;
 } hashplane_t;
-
-typedef struct mvert_s
-{
-	Vector		point;
-	float		st[2];			// for alpha-texture test
-} mvert_t;
 
 typedef struct mfacet_s
 {
@@ -73,20 +69,25 @@ public:
 
 	void SetDebugName(const char *name) { m_debugName = name; }
 	void SetModel(const model_t *mod, int32_t body, int32_t skin);
+	void SetGeometryType(clipfile::GeometryType geomType);
+	bool Matches(const std::string &name, int32_t body, int32_t skin, clipfile::GeometryType geomType);
 	void PrintMeshInfo();
 	bool StudioConstructMesh();
 	void FreeMesh();
+	void SaveToCacheFile();
+	bool LoadFromCacheFile();
+	bool PresentInCache() const;
 
 	// mesh construction
 	bool InitMeshBuild(int numTrinagles);
 	bool FinishMeshBuild();
+	void FreeMeshBuild();
+
 	// accepts triangles in model local space
 	bool AddMeshTrinagle(const mvert_t triangle[3], int skinref);
 	bool AddMeshTrinagle(const Vector triangle[3]);
 
 private:
-	void FreeMeshBuild();
-
 	// pacifier stuff
 	void StartPacifier();
 	void UpdatePacifier(float percent);
@@ -98,7 +99,7 @@ private:
 	bool StudioLoadCache(const char *pCacheName);
 	bool StudioSaveCache(const char *pszModelName);
 	bool StudioCreateCache(const char *pCacheName);
-	bool CheckCacheFileExists(const char *pszModelName);
+	bool CacheFileExists(const char *pszModelName) const;
 
 	// linked list operations
 	void InsertLinkBefore(link_t *l, link_t *before);
@@ -131,6 +132,7 @@ private:
 	model_t		*m_pModel;			// parent model pointer
 	int32_t		m_iBodyNumber;		// bodygroup number for current model state
 	int32_t		m_iSkinNumber;		// skin number for current model state
+	clipfile::GeometryType m_iGeometryType;
 
 	// used only while mesh is constructing
 	mfacet_t	*m_srcFacets;
@@ -144,6 +146,4 @@ private:
 	int			m_iOldPercent;
 };
 
-CMeshDesc *UTIL_GetCollisionMesh( int32_t modelindex, int32_t body, int32_t skin );
-
-#endif//MESHDESC_H
+#endif // MESHDESC_H

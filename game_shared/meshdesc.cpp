@@ -22,9 +22,9 @@ GNU General Public License for more details.
 #include "mathlib.h"
 #include "stringlib.h"
 #include "virtualfs.h"
-#include "clipfile.h"
 #include "port.h"
 #include "filesystem_utils.h"
+#include "meshdesc_factory.h"
 
 #ifdef CLIENT_DLL
 #include "utils.h"
@@ -33,10 +33,9 @@ GNU General Public License for more details.
 #include "edict.h"
 #include "eiface.h"
 #include "physcallback.h"
+#include "enginecallback.h"
 #endif
 
-#include "enginecallback.h"
-#include <new> // placement
 #include <vector>
 
 template<typename T, int boundary>
@@ -47,44 +46,10 @@ constexpr T AlignTo(T x)
 	return (x + (boundary - 1)) & ~(boundary - 1);
 }
 
-CMeshDesc *UTIL_GetCollisionMesh( int32_t modelindex, int32_t body, int32_t skin )
+CMeshDesc::CMeshDesc()
 {
-	model_t *mod = (model_t *)MODEL_HANDLE( modelindex );
-
-	if( !mod || mod->type != mod_studio )
-		return NULL;
-
-	// see if already cached
-	if( mod->bodymesh )
-		return mod->bodymesh;
-
-	// no studiodata ???
-	if( !mod->cache.data )
-		return NULL;
-
-	CMeshDesc *bodyMesh = new (Mem_Alloc( sizeof( CMeshDesc )) ) CMeshDesc();
-	if( !bodyMesh ) return NULL;
-
-//	bodyMesh->CMeshDesc();
-	bodyMesh->SetDebugName( mod->name );
-	bodyMesh->SetModel( mod, body, skin );
-	 
-	if( bodyMesh->StudioConstructMesh( ))
-	{
-		// now cached
-		mod->bodymesh = bodyMesh;
-		return bodyMesh;
-	}
-
-	// failed to build
-	delete bodyMesh;
-
-	return NULL;
-}
-
-CMeshDesc :: CMeshDesc( void )
-{
-	memset( &m_mesh, 0, sizeof( m_mesh ));
+	memset(&m_mesh, 0, sizeof(m_mesh));
+	mesh_size = 0;
 	m_debugName = NULL;
 	m_srcPlaneElems = NULL;
 	m_curPlaneElems = NULL;
@@ -93,12 +58,19 @@ CMeshDesc :: CMeshDesc( void )
 	m_srcFacets = NULL;
 	m_pModel = NULL;
 	m_bMeshBuilt = false;
+	has_tree = false;
+	ClearBounds( m_mesh.mins, m_mesh.maxs );
+	memset( areanodes, 0, sizeof( areanodes ));
+	numareanodes = 0;
 	m_iNumTris = 0;
+	m_iBodyNumber = 0;
+	m_iSkinNumber = 0;
+	m_iGeometryType = clipfile::GeometryType::Unknown;
 }
 
-CMeshDesc :: ~CMeshDesc( void )
+CMeshDesc::~CMeshDesc()
 {
-	FreeMesh ();
+	FreeMesh();
 }
 
 void CMeshDesc::SetModel(const model_t *mod, int32_t body, int32_t skin) 
@@ -106,6 +78,25 @@ void CMeshDesc::SetModel(const model_t *mod, int32_t body, int32_t skin)
 	m_pModel = (model_t *)mod; 
 	m_iBodyNumber = body;
 	m_iSkinNumber = skin;
+}
+
+void CMeshDesc::SetGeometryType(clipfile::GeometryType geomType)
+{
+	m_iGeometryType = geomType;
+}
+
+bool CMeshDesc::Matches(const std::string &name, int32_t body, int32_t skin, clipfile::GeometryType geomType)
+{
+	if (!m_debugName || name.compare(m_debugName) != 0)
+		return false;
+	if (m_iBodyNumber != body)
+		return false;
+	if (m_iSkinNumber != skin)
+		return false;
+	if (m_iGeometryType != geomType)
+		return false;
+
+	return true;
 }
 
 void CMeshDesc :: InsertLinkBefore( link_t *l, link_t *before )
@@ -883,7 +874,7 @@ bool CMeshDesc :: StudioLoadCache( const char *pszModelName )
 	for (size_t i = 0; i < entriesCount; i++)
 	{
 		const clipfile::CacheEntry &entry = entriesList[i];
-		if (entry.body == m_iBodyNumber && entry.skin == m_iSkinNumber) {
+		if (entry.body == m_iBodyNumber && entry.skin == m_iSkinNumber && entry.geometryType == m_iGeometryType) {
 			desiredEntry = &entry;
 			break;
 		}
@@ -891,7 +882,7 @@ bool CMeshDesc :: StudioLoadCache( const char *pszModelName )
 
 	if (!desiredEntry)
 	{
-		ALERT(at_console, "%s doesn't contain required cache entry (body %d / skin %d)\n", szFilename, m_iBodyNumber, m_iSkinNumber);
+		ALERT(at_console, "%s doesn't contain required cache entry (body %d / skin %d / geom. type %d)\n", szFilename, m_iBodyNumber, m_iSkinNumber, m_iGeometryType);
 		goto cleanup;
 	}
 
@@ -918,9 +909,9 @@ bool CMeshDesc :: StudioLoadCache( const char *pszModelName )
 
 	// read unique planes array (hash is unused)
 	lump = &data.lumps[clipfile::kDataLumpPlanes];
-	m_mesh.numplanes = lump->filelen / sizeof( dplane_t );
+	m_mesh.numplanes = lump->filelen / sizeof( clipfile::Plane );
 
-	if( lump->filelen <= 0 || lump->filelen % sizeof( dplane_t ))
+	if( lump->filelen <= 0 || lump->filelen % sizeof( clipfile::Plane ))
 	{
 		ALERT( at_warning, "%s has funny size of LUMP_CLIP_PLANES\n", szFilename );
 		goto cleanup;
@@ -1066,6 +1057,7 @@ bool CMeshDesc::StudioSaveCache(const char *pszModelName)
 	auto &currentEntry = cacheEntries.emplace_back();
 	currentEntry.body = m_iBodyNumber;
 	currentEntry.skin = m_iSkinNumber;
+	currentEntry.geometryType = m_iGeometryType;
 	currentEntry.dataOffset = fs::Tell(cacheFile);
 	
 	// write lumps 
@@ -1136,6 +1128,7 @@ bool CMeshDesc :: StudioCreateCache( const char *pszModelName )
 	table.entriesCount = 1;
 	table.entries[0].body = m_iBodyNumber;
 	table.entries[0].skin = m_iSkinNumber;
+	table.entries[0].geometryType = m_iGeometryType;
 	table.entries[0].dataOffset = file.Tell();
 	file.Write(&data, sizeof(data));
 
@@ -1213,16 +1206,14 @@ bool CMeshDesc :: StudioCreateCache( const char *pszModelName )
 	return false;
 }
 
-bool CMeshDesc::CheckCacheFileExists(const char *pszModelName)
+bool CMeshDesc::CacheFileExists(const char *pszModelName) const
 {
-	char szFilename[MAX_PATH];
-	char szModelname[MAX_PATH];
+	std::string fileName = m_pModel->name;
+	fileName.erase(0, fileName.find_first_of("/\\") + 1);
+	fileName.erase(fileName.find_last_of("."));
+	fs::Path filePath = "cache/" + fileName + ".clip";
 
-	Q_strncpy( szModelname, pszModelName + Q_strlen( "models/" ), sizeof( szModelname ));
-	COM_StripExtension( szModelname );
-	Q_snprintf( szFilename, sizeof( szFilename ), "cache/%s.clip", szModelname );
-
-	if (fs::FileExists(szFilename)) {
+	if (fs::FileExists(filePath)) {
 		return true;
 	}
 	return false;
@@ -1252,7 +1243,6 @@ bool CMeshDesc :: InitMeshBuild( int numTriangles )
 	else has_tree = false;
 
 	ClearBounds( m_mesh.mins, m_mesh.maxs );
-
 	memset( areanodes, 0, sizeof( areanodes ));
 	numareanodes = 0;
 
@@ -1284,7 +1274,7 @@ bool CMeshDesc :: StudioConstructMesh( void )
 		return false;
 	}
 
-	if (StudioLoadCache(m_pModel->name))
+	if (LoadFromCacheFile())
 	{
 		if (!FinishMeshBuild())
 			return false;
@@ -1505,13 +1495,7 @@ bool CMeshDesc :: StudioConstructMesh( void )
 	if( !FinishMeshBuild( ))
 		return false;
 
-	// now dump the collision into cachefile
-	if (CheckCacheFileExists(m_pModel->name)) {
-		StudioSaveCache(m_pModel->name);
-	}
-	else {
-		StudioCreateCache(m_pModel->name);
-	}
+	SaveToCacheFile();
 	FreeMeshBuild();
 
 	if( !m_bShowPacifier )
@@ -1625,4 +1609,64 @@ void CMeshDesc :: FreeMeshBuild( void )
 	m_srcPlaneHash = NULL;
 	m_srcPlanePool = NULL;
 	m_srcFacets = NULL;
+}
+
+void CMeshDesc::SaveToCacheFile()
+{
+	// now dump the collision into cachefile
+	if (CacheFileExists(m_pModel->name)) {
+		StudioSaveCache(m_pModel->name);
+	}
+	else {
+		StudioCreateCache(m_pModel->name);
+	}
+}
+
+bool CMeshDesc::LoadFromCacheFile()
+{
+	return StudioLoadCache(m_pModel->name);
+}
+
+bool CMeshDesc::PresentInCache() const
+{
+	clipfile::Header hdr;
+	clipfile::CacheTable table;
+	std::vector<clipfile::CacheEntry> entriesList;
+	const clipfile::CacheEntry *desiredEntry = nullptr;
+
+	std::string fileName = m_pModel->name;
+	fileName.erase(0, fileName.find_first_of("/\\") + 1);
+	fileName.erase(fileName.find_last_of("."));
+
+	fs::Path filePath = "cache/" + fileName + ".clip";
+	fs::FileHandle cacheFile = fs::Open(filePath, "rb");
+	if (!fs::FileExists(filePath) || !cacheFile) {
+		return false;
+	}
+
+	// read header
+	fs::Read(&hdr, sizeof(hdr), cacheFile);
+
+	// read cache entries table
+	uint32_t entriesCount;
+	fs::Seek(cacheFile, hdr.tableOffset, fs::SeekType::Set);
+	fs::Read(&entriesCount, sizeof(entriesCount), cacheFile);
+
+	// read cache entries list
+	entriesList.reserve(entriesCount);
+	for (size_t i = 0; i < entriesCount; i++)
+	{
+		auto &entry = entriesList.emplace_back();
+		fs::Read(&entry, sizeof(table.entries), cacheFile);
+	}
+	fs::Close(cacheFile);
+
+	for (size_t i = 0; i < entriesCount; i++)
+	{
+		const clipfile::CacheEntry &entry = entriesList[i];
+		if (entry.body == m_iBodyNumber && entry.skin == m_iSkinNumber && entry.geometryType == m_iGeometryType) {
+			return true;
+		}
+	}
+	return false;
 }
