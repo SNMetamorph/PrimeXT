@@ -2394,6 +2394,7 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 			NxBox	obb;
 
 			// each box shape contain 12 triangles
+			pTouch->m_CookedMesh.SetModel(mod, pTouch->pev->body, pTouch->pev->skin);
 			pTouch->m_CookedMesh.SetDebugName(pTouch->GetModel());
 			pTouch->m_CookedMesh.InitMeshBuild(pActor->getNbShapes() * 12);
 
@@ -2432,35 +2433,19 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 		}
 		else
 		{
-			NxMat33 absRot = pShape->getGlobalOrientation();
-			NxVec3 absPos = pShape->getGlobalPosition();
-
+			pTouch->m_CookedMesh.SetModel(mod, pTouch->pev->body, pTouch->pev->skin);
 			pTouch->m_CookedMesh.SetDebugName(pTouch->GetModel());
 			pTouch->m_CookedMesh.InitMeshBuild(NbTris);
 
-			// NOTE: we compute triangles in abs coords because player AABB
-			// can't be transformed as done for not axial cases
-			// FIXME: store all meshes as local and use capsule instead of bbox
 			while( NbTris-- )
 			{
 				NxU32 i0 = *indices++;
 				NxU32 i1 = *indices++;
 				NxU32 i2 = *indices++;
-				NxVec3 v0 = verts[i0];
-				NxVec3 v1 = verts[i1];
-				NxVec3 v2 = verts[i2];
 
-				absRot.multiply( v0, v0 );
-				absRot.multiply( v1, v1 );
-				absRot.multiply( v2, v2 );
-				triangle[0] = v0 + absPos;
-				triangle[1] = v1 + absPos;
-				triangle[2] = v2 + absPos;
-
-				// transform from world to model space
-				triangle[0] = worldToLocalMat.VectorTransform(triangle[0]);
-				triangle[1] = worldToLocalMat.VectorTransform(triangle[1]);
-				triangle[2] = worldToLocalMat.VectorTransform(triangle[2]);
+				triangle[0] = verts[i0];
+				triangle[1] = verts[i1];
+				triangle[2] = verts[i2];
 				pTouch->m_CookedMesh.AddMeshTrinagle( triangle );
 			}
 		}
@@ -2475,8 +2460,8 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 		if (mod && mod->type == mod_studio)
 		{
  			pTouch->m_OriginalMesh.CMeshDesc::CMeshDesc();
+			pTouch->m_OriginalMesh.SetModel(mod, pTouch->pev->body, pTouch->pev->skin);
 			pTouch->m_OriginalMesh.SetDebugName(pTouch->GetModel());
-			pTouch->m_OriginalMesh.SetModel(mod);
 			pTouch->m_OriginalMesh.StudioConstructMesh();
 
 			if (!pTouch->m_OriginalMesh.GetMesh())

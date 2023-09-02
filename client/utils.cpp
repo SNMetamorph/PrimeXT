@@ -224,7 +224,7 @@ void Physic_SweepTest(cl_entity_t *pTouch, const Vector &start, const Vector &mi
 		return;
 	}
 
-	CMeshDesc *bodyMesh = UTIL_GetCollisionMesh(pTouch->curstate.modelindex);
+	CMeshDesc *bodyMesh = UTIL_GetCollisionMesh(pTouch->curstate.modelindex, pTouch->curstate.body, pTouch->curstate.skin);
 
 	if (!bodyMesh)
 	{
