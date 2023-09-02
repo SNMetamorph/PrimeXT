@@ -313,7 +313,7 @@ bool CQuakePart :: Evaluate( float gravity )
 		rendermode = kRenderTransTexture;
 	}
 
-	entry.SetRenderPrimitive( verts, partColor, m_hTexture, rendermode );
+	entry.SetRenderPrimitive( verts, partColor, m_hTexture, rendermode);
 	entry.ComputeViewDistance( absmin, absmax );
 	RI->frame.trans_list.AddToTail( entry );
 #endif
@@ -429,7 +429,7 @@ void CQuakePartSystem :: CreateEffect( const char *name, const Vector &origin, c
 		return;
 
 	CQuakePartInfo *pInfo = FindPartInfo( name );
-	int m_hTexture = m_hDefaultParticle;
+	TextureHandle hTexture = m_hDefaultParticle;
 	CQuakePart src;
 
 	if( !pInfo )
@@ -452,9 +452,13 @@ void CQuakePartSystem :: CreateEffect( const char *name, const Vector &origin, c
 		{
 			int frame = bound( 0, pInfo->frame.Random(), pInfo->m_pSprite->numframes - 1 );
 			mspriteframe_t *pframe = R_GetSpriteFrame( pInfo->m_pSprite, frame );
-			if( pframe ) m_hTexture = pframe->gl_texturenum;
+			if (pframe) {
+				hTexture = TextureHandle(pframe);
+			}
 		}
-		else m_hTexture = pInfo->m_hTexture;
+		else {
+			hTexture = pInfo->m_hTexture;
+		}
 
 		if( pInfo->normal == NORMAL_OFFSET || pInfo->normal == NORMAL_OFS_DIR )
 		{
@@ -500,7 +504,7 @@ void CQuakePartSystem :: CreateEffect( const char *name, const Vector &origin, c
 		src.m_flRotation = pInfo->rotation.Random();
 		src.m_flBounceFactor = pInfo->bounce.Random();
 
-		if( !AddParticle( &src, m_hTexture, flags ))
+		if( !AddParticle( &src, hTexture, flags ))
 			return; // out of particles?
 	}
 }
@@ -589,7 +593,7 @@ bool CQuakePartSystem :: ParsePartInfo( CQuakePartInfo *info, char *&pfile )
 			else if( !Q_stricmp( ext, "spr" ))
 				info->m_pSprite = (model_t *)gEngfuncs.GetSpritePointer( SPR_Load( token ));
 
-			if( !info->m_hTexture && !info->m_pSprite )
+			if( !info->m_hTexture.Initialized() && !info->m_pSprite)
 			{
 				ALERT( at_error, "couldn't load texture for effect %s. using default particle\n", info->m_szName );
 				info->m_hTexture = m_hDefaultParticle;
@@ -855,7 +859,7 @@ void CQuakePartSystem :: Update( void )
 	m_pActiveParticles = pActive;
 }
 
-bool CQuakePartSystem :: AddParticle( CQuakePart *src, int texture, int flags )
+bool CQuakePartSystem :: AddParticle( CQuakePart *src, TextureHandle texture, int flags )
 {
 	if( !src ) return false;
 
@@ -863,8 +867,13 @@ bool CQuakePartSystem :: AddParticle( CQuakePart *src, int texture, int flags )
 
 	if( !dst ) return false;
 
-	if( texture ) dst->m_hTexture = texture;
-	else dst->m_hTexture = m_hDefaultParticle;
+	if (texture != TextureHandle::Null()) {
+		dst->m_hTexture = texture;
+	}
+	else {
+		dst->m_hTexture = m_hDefaultParticle;
+	}
+
 	dst->m_flTime = tr.time;
 	dst->m_iFlags = flags;
 
@@ -927,7 +936,7 @@ void CQuakePartSystem :: ExplosionParticles( const Vector &pos )
 		src.m_flRotation = 0;
 		src.m_flBounceFactor = 0.2;
 
-		if( !AddParticle( &src, m_hSparks, flags ))
+		if( !AddParticle( &src, m_hSparks, flags))
 			return;
 	}
 
@@ -953,7 +962,7 @@ void CQuakePartSystem :: ExplosionParticles( const Vector &pos )
 		src.m_flLengthVelocity = 0;
 		src.m_flRotation = RANDOM_LONG( 0, 360 );
 
-		if( !AddParticle( &src, m_hSmoke, flags ))
+		if( !AddParticle( &src, m_hSmoke, flags))
 			return;
 	}
 }
@@ -994,7 +1003,7 @@ void CQuakePartSystem :: SparkParticles( const Vector &org, const Vector &dir )
 		src.m_flRotation = 0;
 		src.m_flBounceFactor = 0.2;
 
-		if( !AddParticle( &src, m_hSparks, flags ))
+		if( !AddParticle( &src, m_hSparks, flags))
 			return;
 	}
 }
@@ -1035,7 +1044,7 @@ void CQuakePartSystem :: RicochetSparks( const Vector &org, float scale )
 		src.m_flRotation = 0;
 		src.m_flBounceFactor = 0.2;
 
-		if( !AddParticle( &src, m_hSparks, flags ))
+		if( !AddParticle( &src, m_hSparks, flags))
 			return;
 	}
 }
@@ -1069,7 +1078,7 @@ void CQuakePartSystem :: SmokeParticles( const Vector &pos, int count )
 		src.m_flLengthVelocity = 0;
 		src.m_flRotation = RANDOM_LONG( 0, 360 );
 
-		if( !AddParticle( &src, m_hSmoke, flags ))
+		if( !AddParticle( &src, m_hSmoke, flags))
 			return;
 	}
 }
@@ -1103,7 +1112,7 @@ void CQuakePartSystem :: GunSmoke( const Vector &pos, int count )
 		src.m_flLengthVelocity = 0;
 		src.m_flRotation = RANDOM_LONG( 0, 360 );
 
-		if( !AddParticle( &src, m_hSmoke, flags ))
+		if( !AddParticle( &src, m_hSmoke, flags))
 			return;
 	}
 }
@@ -1152,7 +1161,7 @@ void CQuakePartSystem :: BulletParticles( const Vector &org, const Vector &dir )
 		src.m_flRotation = 0;
 		src.m_flBounceFactor = 0.2;
 
-		if( !AddParticle( &src, m_hSparks, flags ))
+		if( !AddParticle( &src, m_hSparks, flags))
 			return;
 	}
 
@@ -1178,7 +1187,7 @@ void CQuakePartSystem :: BulletParticles( const Vector &org, const Vector &dir )
 		src.m_flLengthVelocity = 0;
 		src.m_flRotation = RANDOM_LONG( 0, 360 );
 
-		if( !AddParticle( &src, m_hSmoke, flags ))
+		if( !AddParticle( &src, m_hSmoke, flags))
 			return;
 	}
 }

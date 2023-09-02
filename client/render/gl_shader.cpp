@@ -109,7 +109,7 @@ void uniform_t :: SetValue( const void *pdata, int count )
 	// set texture unit
 	if( FBitSet( flags, UFL_TEXTURE_UNIT ) && unit >= 0 )
 	{
-		GL_Bind( unit, check->iValue[0] );
+		(*gRenderfuncs.GL_Bind)( unit, check->iValue[0] );
 	}
 	else if( size > 1 )
 	{
@@ -1488,25 +1488,25 @@ const char *GL_PretifyListOptions( const char *options, bool newlines )
 	return output;
 }
 
-void GL_EncodeNormal( char *options, int texturenum )
+void GL_EncodeNormal( char *options, TextureHandle texture )
 {
-	if( RENDER_GET_PARM( PARM_TEX_GLFORMAT, texturenum ) == GL_COMPRESSED_RED_GREEN_RGTC2_EXT )
+	if (texture.GetGlFormat() == GL_COMPRESSED_RED_GREEN_RGTC2_EXT)
 	{
-		GL_AddShaderDirective( options, "NORMAL_RG_PARABOLOID" );
+		GL_AddShaderDirective(options, "NORMAL_RG_PARABOLOID");
 	}
-	else if( RENDER_GET_PARM( PARM_TEX_GLFORMAT, texturenum ) == GL_COMPRESSED_LUMINANCE_ALPHA_3DC_ATI )
+	else if (texture.GetGlFormat() == GL_COMPRESSED_LUMINANCE_ALPHA_3DC_ATI)
 	{
-		GL_AddShaderDirective( options, "NORMAL_3DC_PARABOLOID" );
+		GL_AddShaderDirective(options, "NORMAL_3DC_PARABOLOID");
 	}
-	else if( RENDER_GET_PARM( PARM_TEX_ENCODE, texturenum ) == DXT_ENCODE_NORMAL_AG_PARABOLOID )
+	else if (texture.GetDxtEncodeType() == DXT_ENCODE_NORMAL_AG_PARABOLOID)
 	{
-		GL_AddShaderDirective( options, "NORMAL_AG_PARABOLOID" );
+		GL_AddShaderDirective(options, "NORMAL_AG_PARABOLOID");
 	}
-	else if( RENDER_GET_PARM( PARM_TEX_GLFORMAT, texturenum ) == GL_COMPRESSED_RGBA_S3TC_DXT5_EXT )
+	else if (texture.GetGlFormat() == GL_COMPRESSED_RGBA_S3TC_DXT5_EXT)
 	{
 		// implicit DXT5NM format (Paranoia2 v 1.2 old stuff)
-		if( FBitSet( RENDER_GET_PARM( PARM_TEX_FLAGS, texturenum ), TF_HAS_ALPHA ))
-			GL_AddShaderDirective( options, "NORMAL_AG_PARABOLOID" );
+		if (FBitSet(texture.GetFlags(), TF_HAS_ALPHA))
+			GL_AddShaderDirective(options, "NORMAL_AG_PARABOLOID");
 	}
 }
 

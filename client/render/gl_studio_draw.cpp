@@ -3544,119 +3544,119 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force, boo
 		switch( u->type )
 		{
 		case UT_COLORMAP:
-			u->SetValue( mat->gl_diffuse_id );
+			u->SetValue( mat->gl_diffuse_id.GetGlHandle() );
 			break;
 		case UT_NORMALMAP:
-			u->SetValue( mat->gl_normalmap_id );
+			u->SetValue( mat->gl_normalmap_id.GetGlHandle() );
 			break;
 		case UT_GLOSSMAP:
-			u->SetValue( mat->gl_specular_id );
+			u->SetValue( mat->gl_specular_id.GetGlHandle() );
 			break;
 		case UT_DETAILMAP:
-			u->SetValue( mat->gl_detailmap_id );
+			u->SetValue( mat->gl_detailmap_id.GetGlHandle() );
 			break;
 		case UT_PROJECTMAP:
 			if( pl && pl->type == LIGHT_SPOT )
-				u->SetValue( pl->spotlightTexture );
-			else u->SetValue( tr.whiteTexture );
+				u->SetValue( pl->spotlightTexture.GetGlHandle() );
+			else u->SetValue( tr.whiteTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP:
 		case UT_SHADOWMAP0:
-			if( pl ) u->SetValue( pl->shadowTexture[0] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) u->SetValue( pl->shadowTexture[0].GetGlHandle() );
+			else u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP1:
-			if( pl ) u->SetValue( pl->shadowTexture[1] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) u->SetValue( pl->shadowTexture[1].GetGlHandle() );
+			else u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP2:
-			if( pl ) u->SetValue( pl->shadowTexture[2] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) u->SetValue( pl->shadowTexture[2].GetGlHandle() );
+			else u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP3:
-			if( pl ) u->SetValue( pl->shadowTexture[3] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) u->SetValue( pl->shadowTexture[3].GetGlHandle() );
+			else u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_LIGHTMAP:
 			if( pMesh->lightmapnum != -1 )
-				u->SetValue( tr.lightmaps[pMesh->lightmapnum].lightmap );
-			else u->SetValue( tr.whiteTexture );
+				u->SetValue( tr.lightmaps[pMesh->lightmapnum].lightmap.GetGlHandle() );
+			else u->SetValue( tr.whiteTexture.GetGlHandle() );
 			break;
 		case UT_DELUXEMAP:
 			if( pMesh->lightmapnum != -1 )
-				u->SetValue( tr.lightmaps[pMesh->lightmapnum].deluxmap );
-			else u->SetValue( tr.whiteTexture );
+				u->SetValue( tr.lightmaps[pMesh->lightmapnum].deluxmap.GetGlHandle() );
+			else u->SetValue( tr.whiteTexture.GetGlHandle() );
 			break;
 		case UT_DECALMAP:
 			// unacceptable for studiomodels
-			u->SetValue( tr.whiteTexture );
+			u->SetValue( tr.whiteTexture.GetGlHandle() );
 			break;
 		case UT_SCREENMAP:
-			u->SetValue( tr.screen_color );
+			u->SetValue( tr.screen_color.GetGlHandle() );
 			break;
 		case UT_DEPTHMAP:
-			u->SetValue( tr.screen_depth );
+			u->SetValue( tr.screen_depth.GetGlHandle() );
 			break;
 		case UT_ENVMAP0:
 		case UT_ENVMAP:
 			if (!RP_CUBEPASS() && inst->cubemap[0] != NULL) {
-				u->SetValue(inst->cubemap[0]->texture);
+				u->SetValue(inst->cubemap[0]->texture.GetGlHandle());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.texture);
+				u->SetValue(world->defaultCubemap.texture.GetGlHandle());
 			}
 			break;
 		case UT_ENVMAP1:
 			if (!RP_CUBEPASS() && inst->cubemap[1] != NULL) {
-				u->SetValue(inst->cubemap[1]->texture);
+				u->SetValue(inst->cubemap[1]->texture.GetGlHandle());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.texture);
+				u->SetValue(world->defaultCubemap.texture.GetGlHandle());
 			}
 			break;
 		case UT_SPECULARMAPIBL0:
 			if (!RP_CUBEPASS() && inst->cubemap[0] != NULL) {
-				u->SetValue(inst->cubemap[0]->textureSpecularIBL);
+				u->SetValue(inst->cubemap[0]->textureSpecularIBL.GetGlHandle());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.textureSpecularIBL);
+				u->SetValue(world->defaultCubemap.textureSpecularIBL.GetGlHandle());
 			}
 			break;
 		case UT_SPECULARMAPIBL1:
 			if (!RP_CUBEPASS() && inst->cubemap[1] != NULL) {
-				u->SetValue(inst->cubemap[1]->textureSpecularIBL);
+				u->SetValue(inst->cubemap[1]->textureSpecularIBL.GetGlHandle());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.textureSpecularIBL);
+				u->SetValue(world->defaultCubemap.textureSpecularIBL.GetGlHandle());
 			}
 			break;
 		case UT_BRDFAPPROXMAP:
-			u->SetValue(tr.brdfApproxTexture);
+			u->SetValue(tr.brdfApproxTexture.GetGlHandle());
 			break;
 		case UT_GLOWMAP:
-			u->SetValue( mat->gl_glowmap_id );
+			u->SetValue( mat->gl_glowmap_id.GetGlHandle() );
 			break;
 		case UT_HEIGHTMAP:
-			u->SetValue( mat->gl_heightmap_id );
+			u->SetValue( mat->gl_heightmap_id.GetGlHandle() );
 			break;
 		case UT_RELIEFPARAMS:
 		{
-			float width = RENDER_GET_PARM(PARM_TEX_WIDTH, mat->gl_heightmap_id);
-			float height = RENDER_GET_PARM(PARM_TEX_HEIGHT, mat->gl_heightmap_id);
+			float width = mat->gl_heightmap_id.GetWidth();
+			float height = mat->gl_heightmap_id.GetHeight();
 			u->SetValue(width, height, mat->reliefScale, cv_shadow_offset->value);
 			break;
 		}
 		case UT_BSPPLANESMAP:
-			u->SetValue( tr.packed_planes_texture );
+			u->SetValue( tr.packed_planes_texture.GetGlHandle() );
 			break;
 		case UT_BSPNODESMAP:
-			u->SetValue( tr.packed_nodes_texture );
+			u->SetValue( tr.packed_nodes_texture.GetGlHandle() );
 			break;
 		case UT_BSPLIGHTSMAP:
-			u->SetValue( tr.packed_lights_texture );
+			u->SetValue( tr.packed_lights_texture.GetGlHandle() );
 			break;
 		case UT_FITNORMALMAP:
-			u->SetValue( tr.normalsFitting );
+			u->SetValue( tr.normalsFitting.GetGlHandle() );
 			break;
 		case UT_MODELMATRIX:
 			u->SetValue( &inst->m_glmatrix[0] );
@@ -3706,8 +3706,8 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force, boo
 		case UT_SHADOWPARMS:
 			if( pl != NULL )
 			{
-				float shadowWidth = 1.0f / (float)RENDER_GET_PARM( PARM_TEX_WIDTH, pl->shadowTexture[0] );
-				float shadowHeight = 1.0f / (float)RENDER_GET_PARM( PARM_TEX_HEIGHT, pl->shadowTexture[0] );
+				float shadowWidth = 1.0f / (float)pl->shadowTexture[0].GetWidth();
+				float shadowHeight = 1.0f / (float)pl->shadowTexture[0].GetHeight();
 				// depth scale and bias and shadowmap resolution
 				u->SetValue( shadowWidth, shadowHeight, -pl->projectionMatrix[2][2], pl->projectionMatrix[3][2] );
 			}

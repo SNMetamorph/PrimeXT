@@ -294,7 +294,7 @@ static void GL_DrawSkySide( word hProgram, int skyside )
 		switch( u->type )
 		{
 		case UT_COLORMAP:
-			u->SetValue( tr.skyboxTextures[r_skyTexOrder[skyside]] );
+			u->SetValue( tr.skyboxTextures[r_skyTexOrder[skyside]].GetGlHandle() );
 			break;
 		case UT_LIGHTDIR:
 			u->SetValue( sky_vec.x, sky_vec.y, sky_vec.z );

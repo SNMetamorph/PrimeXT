@@ -37,12 +37,12 @@ enum
 void GL_InitDefSceneFBO( void )
 {
 	GLenum	MRTBuffers[5] = { GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_COLOR_ATTACHMENT2_EXT, GL_COLOR_ATTACHMENT3_EXT, GL_COLOR_ATTACHMENT4_EXT };
-	int	albedo_buffer;
-	int	normal_buffer;
-	int	smooth_buffer;
-	int	light0_buffer;
-	int	light1_buffer;
-	int	depth_buffer;
+	TextureHandle	albedo_buffer;
+	TextureHandle	normal_buffer;
+	TextureHandle	smooth_buffer;
+	TextureHandle	light0_buffer;
+	TextureHandle	light1_buffer;
+	TextureHandle	depth_buffer;
 
 	if( !GL_Support( R_FRAMEBUFFER_OBJECT ) || !GL_Support( R_DRAW_BUFFERS_EXT ))
 		return;
@@ -58,7 +58,7 @@ void GL_InitDefSceneFBO( void )
 	light1_buffer = CREATE_TEXTURE( "*light1_rt", glState.width, glState.height, NULL, TF_RT_COLOR|TF_HAS_ALPHA );
 	depth_buffer = CREATE_TEXTURE( "*depth_rt", glState.width, glState.height, NULL, TF_RT_DEPTH );
 
-	GL_AttachColorTextureToFBO( tr.defscene_fbo, albedo_buffer, 0 );
+	GL_AttachColorTextureToFBO( tr.defscene_fbo, albedo_buffer, 0);
 	GL_AttachColorTextureToFBO( tr.defscene_fbo, normal_buffer, 1 );
 	GL_AttachColorTextureToFBO( tr.defscene_fbo, smooth_buffer, 2 );
 	GL_AttachColorTextureToFBO( tr.defscene_fbo, light0_buffer, 3 );
@@ -87,10 +87,10 @@ void GL_VidInitDefSceneFBO( void )
 void GL_InitDefLightFBO( void )
 {
 	GLenum	MRTBuffers[3] = { GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_COLOR_ATTACHMENT2_EXT };
-	int	normal_buffer;
-	int	light0_buffer;
-	int	light1_buffer;
-	int	depth_buffer;
+	TextureHandle	normal_buffer;
+	TextureHandle	light0_buffer;
+	TextureHandle	light1_buffer;
+	TextureHandle	depth_buffer;
 
 	if( !GL_Support( R_FRAMEBUFFER_OBJECT ) || !GL_Support( R_DRAW_BUFFERS_EXT ))
 		return;
@@ -104,9 +104,9 @@ void GL_InitDefLightFBO( void )
 	light1_buffer = CREATE_TEXTURE( "*light1_rs", glState.defWidth, glState.defHeight, NULL, TF_RT_COLOR|TF_HAS_ALPHA );
 	depth_buffer = CREATE_TEXTURE( "*depth_rs", glState.defWidth, glState.defHeight, NULL, TF_RT_DEPTH );
 
-	GL_AttachColorTextureToFBO( tr.deflight_fbo, normal_buffer, 0 );
-	GL_AttachColorTextureToFBO( tr.deflight_fbo, light0_buffer, 1 );
-	GL_AttachColorTextureToFBO( tr.deflight_fbo, light1_buffer, 2 );
+	GL_AttachColorTextureToFBO( tr.deflight_fbo, normal_buffer, 0);
+	GL_AttachColorTextureToFBO( tr.deflight_fbo, light0_buffer, 1);
+	GL_AttachColorTextureToFBO( tr.deflight_fbo, light1_buffer, 2);
 	GL_AttachDepthTextureToFBO( tr.deflight_fbo, depth_buffer );
 
 	pglDrawBuffersARB( ARRAYSIZE( MRTBuffers ), MRTBuffers );
@@ -243,67 +243,82 @@ static void GL_DrawDeferred( word hProgram, int pass )
 		switch( u->type )
 		{
 		case UT_COLORMAP:
-			u->SetValue( tr.defscene_fbo->colortarget[0] );
+			u->SetValue( tr.defscene_fbo->colortarget[0].GetGlHandle() );
 			break;
 		case UT_NORMALMAP:
 			if( pass == LIGHT_PASS )
-				u->SetValue( tr.deflight_fbo->colortarget[0] );
-			else u->SetValue( tr.defscene_fbo->colortarget[1] );
+				u->SetValue( tr.deflight_fbo->colortarget[0].GetGlHandle() );
+			else 
+				u->SetValue( tr.defscene_fbo->colortarget[1].GetGlHandle() );
 			break;
 		case UT_GLOSSMAP:
-			u->SetValue( tr.defscene_fbo->colortarget[2] );
+			u->SetValue( tr.defscene_fbo->colortarget[2].GetGlHandle() );
 			break;
 		case UT_VISLIGHTMAP0:
 			if( pass == LIGHT_PASS )
-				u->SetValue( tr.deflight_fbo->colortarget[1] );
-			else u->SetValue( tr.defscene_fbo->colortarget[3] );
+				u->SetValue( tr.deflight_fbo->colortarget[1].GetGlHandle() );
+			else 
+				u->SetValue( tr.defscene_fbo->colortarget[3].GetGlHandle() );
 			break;
 		case UT_VISLIGHTMAP1:
 			if( pass == LIGHT_PASS )
-				u->SetValue( tr.deflight_fbo->colortarget[2] );
-			else u->SetValue( tr.defscene_fbo->colortarget[4] );
+				u->SetValue( tr.deflight_fbo->colortarget[2].GetGlHandle() );
+			else 
+				u->SetValue( tr.defscene_fbo->colortarget[4].GetGlHandle() );
 			break;
 		case UT_DEPTHMAP:
 			if( pass == LIGHT_PASS )
-				u->SetValue( tr.deflight_fbo->depthtarget );
-			else u->SetValue( tr.defscene_fbo->depthtarget );
+				u->SetValue( tr.deflight_fbo->depthtarget.GetGlHandle() );
+			else 
+				u->SetValue( tr.defscene_fbo->depthtarget.GetGlHandle() );
 			break;
 		case UT_BSPPLANESMAP:
-			u->SetValue( tr.packed_planes_texture );
+			u->SetValue( tr.packed_planes_texture.GetGlHandle() );
 			break;
 		case UT_BSPNODESMAP:
-			u->SetValue( tr.packed_nodes_texture );
+			u->SetValue( tr.packed_nodes_texture.GetGlHandle() );
 			break;
 		case UT_BSPLIGHTSMAP:
-			u->SetValue( tr.packed_lights_texture );
+			u->SetValue( tr.packed_lights_texture.GetGlHandle() );
 			break;
 		case UT_BSPMODELSMAP:
-			u->SetValue( tr.packed_models_texture );
+			u->SetValue( tr.packed_models_texture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP:
-			if( pl ) u->SetValue( pl->shadowTexture[0] );
-			else u->SetValue( tr.fbo_light.GetTexture() );
+			if( pl ) 
+				u->SetValue( pl->shadowTexture[0].GetGlHandle() );
+			else 
+				u->SetValue( tr.fbo_light.GetTexture().GetGlHandle() );
 			break;
 		case UT_SHADOWMAP0:
-			if( pl ) u->SetValue( pl->shadowTexture[0] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) 
+				u->SetValue( pl->shadowTexture[0].GetGlHandle() );
+			else 
+				u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP1:
-			if( pl ) u->SetValue( pl->shadowTexture[1] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) 
+				u->SetValue(pl->shadowTexture[1].GetGlHandle() );
+			else 
+				u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP2:
-			if( pl ) u->SetValue( pl->shadowTexture[2] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) 
+				u->SetValue( pl->shadowTexture[2].GetGlHandle() );
+			else 
+				u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP3:
-			if( pl ) u->SetValue( pl->shadowTexture[3] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) 
+				u->SetValue( pl->shadowTexture[3].GetGlHandle() );
+			else 
+				u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_PROJECTMAP:
 			if( pl && pl->type == LIGHT_SPOT )
-				u->SetValue( pl->spotlightTexture );
-			else u->SetValue( tr.whiteTexture );
+				u->SetValue( pl->spotlightTexture.GetGlHandle() );
+			else 
+				u->SetValue( tr.whiteTexture.GetGlHandle() );
 			break;
 		case UT_VIEWORIGIN:
 			u->SetValue( RI->view.matrix[3][0], RI->view.matrix[3][1], RI->view.matrix[3][2] );
@@ -346,8 +361,8 @@ static void GL_DrawDeferred( word hProgram, int pass )
 		case UT_SHADOWPARMS:
 			if( pl != NULL )
 			{
-				float shadowWidth = 1.0f / (float)RENDER_GET_PARM( PARM_TEX_WIDTH, pl->shadowTexture[0] );
-				float shadowHeight = 1.0f / (float)RENDER_GET_PARM( PARM_TEX_HEIGHT, pl->shadowTexture[0] );
+				float shadowWidth = 1.0f / (float)pl->shadowTexture[0].GetWidth();
+				float shadowHeight = 1.0f / (float)pl->shadowTexture[0].GetHeight();
 				// depth scale and bias and shadowmap resolution
 				u->SetValue( shadowWidth, shadowHeight, -pl->projectionMatrix[2][2], pl->projectionMatrix[3][2] );
 			}
@@ -422,13 +437,14 @@ static void GL_DrawBilateralFilter( word hProgram, int pass )
 		{
 		case UT_COLORMAP:
 			if( pass == BILATERAL_PASS0 )
-				u->SetValue( tr.fbo_light.GetTexture() );
+				u->SetValue( tr.fbo_light.GetTexture().GetGlHandle() );
 			else if( pass == BILATERAL_PASS1 )
-				u->SetValue( tr.fbo_filter.GetTexture() );
-			else u->SetValue( tr.defscene_fbo->colortarget[0] );
+				u->SetValue( tr.fbo_filter.GetTexture().GetGlHandle() );
+			else 
+				u->SetValue( tr.defscene_fbo->colortarget[0].GetGlHandle() );
 			break;
 		case UT_DEPTHMAP:
-			u->SetValue( tr.defscene_fbo->depthtarget );
+			u->SetValue( tr.defscene_fbo->depthtarget.GetGlHandle() );
 			break;
 		case UT_ZFAR:
 			u->SetValue( RI->view.farClip );
@@ -454,7 +470,7 @@ static void GL_DrawBilateralFilter( word hProgram, int pass )
 
 void GL_SetupWorldLightPass( void )
 {
-	tr.fbo_shadow.Bind(); // <- render to shadow texture
+	tr.fbo_shadow.Bind(TextureHandle::Null()); // <- render to shadow texture
 
 	// FIXME! modelview isn't be changed anyway until current pass!!!
 //	pglMatrixMode( GL_MODELVIEW );
@@ -464,7 +480,7 @@ void GL_SetupWorldLightPass( void )
 	GL_CleanupAllTextureUnits();
 
 	GL_Setup2D();
-	tr.fbo_light.Bind();	// <- copy to fbo_light result of works complex light shader
+	tr.fbo_light.Bind(TextureHandle::Null());	// <- copy to fbo_light result of works complex light shader
 	GL_BindShader( NULL );
 	GL_Bind( GL_TEXTURE0, tr.fbo_shadow.GetTexture() );
 	RenderFSQ( glState.width, glState.height );
@@ -472,10 +488,10 @@ void GL_SetupWorldLightPass( void )
 	if( tr.bilateralShader )
 	{
 		// apply bilateral filter
-		tr.fbo_filter.Bind();	// <- bilateral pass0, filtering by width, store to fbo_filter
+		tr.fbo_filter.Bind(TextureHandle::Null());	// <- bilateral pass0, filtering by width, store to fbo_filter
 		GL_DrawBilateralFilter( tr.bilateralShader, BILATERAL_PASS0 );
 
-		tr.fbo_light.Bind();	// <- bilateral pass1, filtering by height, store back to fbo_light
+		tr.fbo_light.Bind(TextureHandle::Null());	// <- bilateral pass1, filtering by height, store back to fbo_light
 		GL_DrawBilateralFilter( tr.bilateralShader, BILATERAL_PASS1 );
 	}
 }

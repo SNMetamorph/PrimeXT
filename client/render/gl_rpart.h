@@ -18,6 +18,7 @@ GNU General Public License for more details.
 #define GL_RPART_H
 
 #include "randomrange.h"
+#include "texture_handle.h"
 
 #define MAX_PARTICLES		8192
 #define MAX_PARTINFOS		256	// various types of part-system
@@ -52,10 +53,10 @@ public:
 	float		m_flBounceFactor;
 
 	CQuakePart	*pNext;		// linked list
-	int		m_hTexture;
+	TextureHandle	m_hTexture;
 
 	float		m_flTime;
-	int		m_iFlags;
+	int			m_iFlags;
 
 	bool		Evaluate( float gravity );
 };
@@ -74,7 +75,7 @@ public:
 	char		m_szName[32];	// effect name
 
 	struct model_s	*m_pSprite;	// sprite
-	int		m_hTexture;	// tga texture
+	TextureHandle	m_hTexture;	// tga texture
 
 	RandomRange	offset[3];
 	RandomRange	velocity[3];
@@ -106,10 +107,10 @@ class CQuakePartSystem
 	int		m_iNumPartInfo;
 
 	// private partsystem shaders
-	int		m_hDefaultParticle;
-	int		m_hSparks;
-	int		m_hSmoke;
-	int		m_hWaterSplash;
+	TextureHandle	m_hDefaultParticle;
+	TextureHandle	m_hSparks;
+	TextureHandle	m_hSmoke;
+	TextureHandle	m_hWaterSplash;
 
 	cvar_t		*m_pAllowParticles;
 	cvar_t		*m_pParticleLod;
@@ -121,7 +122,7 @@ public:
 	void		Update( void );
 	void		FreeParticle( CQuakePart *pCur );
 	CQuakePart	*AllocParticle( void );
-	bool		AddParticle( CQuakePart *src, int texture = 0, int flags = 0 );
+	bool		AddParticle(CQuakePart *src, TextureHandle texture, int flags = 0);
 	void		ParsePartInfos( const char *filename );
 	bool		ParsePartInfo( CQuakePartInfo *info, char *&pfile );
 	bool		ParseRandomVector( char *&pfile, RandomRange out[3] );

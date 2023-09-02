@@ -1156,10 +1156,10 @@ void CParticleSystem :: DrawParticle( CParticle *part, const vec3_t &right, cons
 			pglVertex3fv( point[3] );
 		pglEnd();
 #else
-		int hTexture;
-
-		if(( hTexture = R_GetSpriteTexture( pModel, pDraw->frame )) == 0 )
+		TextureHandle hTexture = R_GetSpriteTexture( pModel, pDraw->frame );
+		if (hTexture == TextureHandle::Null()) {
 			continue;
+		}
 
 		CTransEntry entry;
 		entry.SetRenderPrimitive( point, partColor, hTexture, pDraw->pType->m_iRenderMode );

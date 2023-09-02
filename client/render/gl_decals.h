@@ -16,16 +16,17 @@ GNU General Public License for more details.
 
 #ifndef GL_DECALS_H
 #define GL_DECALS_H
+#include "texture_handle.h"
 
 class DecalGroup;
 class DecalGroupEntry
 {
 public:
 	char		m_DecalName[64];
-	unsigned short	gl_diffuse_id;
-	unsigned short	gl_normalmap_id;
-	unsigned short	gl_heightmap_id;
-	unsigned short	gl_specular_id;		// specular
+	TextureHandle	gl_diffuse_id;
+	TextureHandle	gl_normalmap_id;
+	TextureHandle	gl_heightmap_id;
+	TextureHandle	gl_specular_id;		// specular
 	int		xsize, ysize;
 	matdesc_t		*matdesc;	// pointer to settings
 	float		overlay;

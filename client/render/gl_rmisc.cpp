@@ -78,16 +78,18 @@ to real layer count
 */
 bool LoadHeightMap( indexMap_t *im, int numLayers )
 {
-	unsigned int	*src;
-	int		i, tex;
-	int		depth = 1;
+	unsigned int *src;
+	TextureHandle tex;
+	int	i, depth = 1;
 
 	if( !GL_Support( R_TEXTURE_ARRAY_EXT ) || numLayers <= 0 )
 		return false;
 
 	// loading heightmap and keep the source pixels
-	if( !( tex = LOAD_TEXTURE( im->name, NULL, 0, TF_KEEP_SOURCE|TF_EXPAND_SOURCE )))
+	tex = LOAD_TEXTURE(im->name, NULL, 0, TF_KEEP_SOURCE | TF_EXPAND_SOURCE);
+	if (!tex.Initialized()) {
 		return false;
+	}
 
 	if(( src = (unsigned int *)GET_TEXTURE_DATA( tex )) == NULL )
 	{
@@ -98,8 +100,8 @@ bool LoadHeightMap( indexMap_t *im, int numLayers )
 
 	im->gl_diffuse_id = LOAD_TEXTURE( im->diffuse, NULL, 0, 0 );
 
-	int width = RENDER_GET_PARM( PARM_TEX_SRC_WIDTH, tex );
-	int height = RENDER_GET_PARM( PARM_TEX_SRC_HEIGHT, tex );
+	int width = tex.GetWidth();
+	int height = tex.GetHeight();
 
 	im->pixels = (byte *)Mem_Alloc( width * height );
 	im->numLayers = bound( 1, numLayers, 255 );
@@ -227,8 +229,10 @@ bool LoadTerrainLayers( layerMap_t *lm, int numLayers )
 		lm->smoothness[i] = lm->material[i]->smoothness;
 	}
 
-	if(( lm->gl_diffuse_id = LOAD_TEXTURE_ARRAY( (const char **)texnames, 0 )) == 0 )
+	lm->gl_diffuse_id = LOAD_TEXTURE_ARRAY((const char **)texnames, 0);
+	if (!lm->gl_diffuse_id.Initialized()) {
 		return false;
+	}
 
 	memset( buffer, 0, sizeof( buffer )); // list must be null terminated
 
@@ -259,7 +263,9 @@ bool LoadTerrainLayers( layerMap_t *lm, int numLayers )
 	}
 
 	if( i == numLayers ) lm->gl_normalmap_id = LOAD_TEXTURE_ARRAY( (const char **)texnames, TF_NORMALMAP );
-	if( !lm->gl_normalmap_id ) lm->gl_normalmap_id = tr.normalmapTexture;
+	if (!lm->gl_normalmap_id.Initialized()) {
+		lm->gl_normalmap_id = tr.normalmapTexture;
+	}
 
 	memset( buffer, 0, sizeof( buffer )); // list must be null terminated
 
@@ -289,8 +295,12 @@ bool LoadTerrainLayers( layerMap_t *lm, int numLayers )
 		}
 	}
 
-	if( i == numLayers ) lm->gl_specular_id = LOAD_TEXTURE_ARRAY( (const char **)texnames, 0 );
-	if( !lm->gl_specular_id ) lm->gl_specular_id = tr.blackTexture;
+	if (i == numLayers) {
+		lm->gl_specular_id = LOAD_TEXTURE_ARRAY((const char **)texnames, 0);
+	}
+	if (!lm->gl_specular_id.Initialized()) {
+		lm->gl_specular_id = tr.blackTexture;
+	}
 
 	return true;
 }
@@ -311,7 +321,7 @@ void R_FreeLandscapes( void )
 		if( im->pixels ) Mem_Free( im->pixels );
 		layerMap_t *lm = &terra->layermap;
 
-		if( lm->gl_diffuse_id )
+		if( lm->gl_diffuse_id.Initialized() )
 			FREE_TEXTURE( lm->gl_diffuse_id );
 
 		if( lm->gl_normalmap_id != tr.normalmapTexture )
@@ -320,7 +330,7 @@ void R_FreeLandscapes( void )
 		if( lm->gl_specular_id != tr.blackTexture )
 			FREE_TEXTURE( lm->gl_specular_id );
 
-		if( im->gl_diffuse_id != 0 )
+		if( im->gl_diffuse_id != TextureHandle::Null() )
 			FREE_TEXTURE( im->gl_diffuse_id );
 
 		FREE_TEXTURE( im->gl_heightmap_id );
@@ -540,13 +550,13 @@ void R_InitShadowTextures( void )
 
 	for( i = 0; i < MAX_SHADOWS; i++ )
 	{
-		if( !tr.shadowTextures[i] ) break;
+		if( !tr.shadowTextures[i].Initialized() ) break;
 		FREE_TEXTURE( tr.shadowTextures[i] );
 	}
 
 	for( i = 0; i < MAX_SHADOWS; i++ )
 	{
-		if( !tr.shadowCubemaps[i] ) break;
+		if( !tr.shadowCubemaps[i].Initialized() ) break;
 		FREE_TEXTURE( tr.shadowCubemaps[i] );
 	}
 
@@ -580,7 +590,7 @@ void R_InitCommonTextures( void )
 	// release old subview textures
 	for( i = 0; i < MAX_SUBVIEW_TEXTURES; i++ )
 	{
-		if( !tr.subviewTextures[i].texturenum ) break;
+		if( !tr.subviewTextures[i].texturenum.Initialized() ) break;
 		FREE_TEXTURE( tr.subviewTextures[i].texturenum );
 	}
 
@@ -604,7 +614,7 @@ void R_InitCommonTextures( void )
 
 	// setup the skybox sides
 	for( i = 0; i < 6; i++ )
-		tr.skyboxTextures[i] = RENDER_GET_PARM( PARM_TEX_SKYBOX, i );
+		tr.skyboxTextures[i] = TextureHandle::GetSkyboxTextures(i);
 
 	tr.num_framebuffers = 0;
 	tr.num_subview_used = 0;
@@ -735,8 +745,8 @@ static void GL_DestroyScreenFBOTextures()
 {
 	FREE_TEXTURE(tr.screen_multisample_fbo_texture_color);
 	FREE_TEXTURE(tr.screen_multisample_fbo_texture_depth);
-	tr.screen_multisample_fbo_texture_color = 0;
-	tr.screen_multisample_fbo_texture_depth = 0;
+	tr.screen_multisample_fbo_texture_color = TextureHandle::Null();
+	tr.screen_multisample_fbo_texture_depth = TextureHandle::Null();
 }
 
 void GL_InitMultisampleScreenFBO()
@@ -746,14 +756,14 @@ void GL_InitMultisampleScreenFBO()
 	int texTarget = GL_TEXTURE_2D_MULTISAMPLE;
 
 	GL_DestroyScreenFBOTextures();
-	for (int i = 0; !tr.screen_multisample_fbo_texture_color && !tr.screen_multisample_fbo_texture_depth; ++i)
+	for (int i = 0; !tr.screen_multisample_fbo_texture_color.Initialized() && !tr.screen_multisample_fbo_texture_depth.Initialized(); ++i)
 	{
 		if (i > 2) {
 			HOST_ERROR("GL_InitMultisampleScreenFBO: failed to create FBO textures\n");
 		}
 
 		GL_InitScreenFBOTextures(texColorFlags, texDepthFlags);
-		if (!tr.screen_multisample_fbo_texture_color || !tr.screen_multisample_fbo_texture_depth)
+		if (!tr.screen_multisample_fbo_texture_color.Initialized() || !tr.screen_multisample_fbo_texture_depth.Initialized())
 		{
 			texTarget = GL_TEXTURE_2D;
 			ClearBits(texColorFlags, TF_MULTISAMPLE);
@@ -796,7 +806,7 @@ void GL_InitTempScreenFBO()
 	pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	GL_Bind(GL_TEXTURE0, 0);
+	GL_Bind(GL_TEXTURE0, TextureHandle::Null());
 
 	GL_AttachColorTextureToFBO(tr.screen_hdr_fbo, tr.screen_hdr_fbo_texture_color, 0);
 	GL_AttachDepthTextureToFBO(tr.screen_hdr_fbo, tr.screen_hdr_fbo_texture_depth);
@@ -805,10 +815,11 @@ void GL_InitTempScreenFBO()
 	// generate screen fbo texture mips
 	for (int i = 0; i < 6; i++)
 	{
-		if (tr.screen_hdr_fbo_mip[i] <= 0)
+		if (tr.screen_hdr_fbo_mip[i] <= 0) {
 			pglGenFramebuffers(1, &tr.screen_hdr_fbo_mip[i]);
+		}
 		pglBindFramebuffer(GL_FRAMEBUFFER_EXT, tr.screen_hdr_fbo_mip[i]);
-		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, tr.screen_hdr_fbo_texture_color, i + 1);
+		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, tr.screen_hdr_fbo_texture_color.GetGlHandle(), i + 1);
 	}
 
 	pglDrawBuffersARB(ARRAYSIZE(MRTBuffers), MRTBuffers);

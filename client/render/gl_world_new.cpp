@@ -26,6 +26,7 @@ GNU General Public License for more details.
 #include "gl_occlusion.h"
 #include "gl_cvars.h"
 #include "vertex_fmt.h"
+#include "brush_material.h"
 
 static gl_world_t	worlddata;
 gl_world_t *world = &worlddata;
@@ -108,13 +109,13 @@ to real material struct
 */
 static void Mod_CopyMaterialDesc( material_t *mat, const matdesc_t *desc )
 {
-	mat->smoothness = desc->smoothness;
-	mat->detailScale[0] = desc->detailScale[0];
-	mat->detailScale[1] = desc->detailScale[1];
-	mat->reflectScale = desc->reflectScale;
-	mat->refractScale = desc->refractScale;
-	mat->aberrationScale = desc->aberrationScale;
-	mat->reliefScale = desc->reliefScale;
+	mat->impl->smoothness = desc->smoothness;
+	mat->impl->detailScale[0] = desc->detailScale[0];
+	mat->impl->detailScale[1] = desc->detailScale[1];
+	mat->impl->reflectScale = desc->reflectScale;
+	mat->impl->refractScale = desc->refractScale;
+	mat->impl->aberrationScale = desc->aberrationScale;
+	mat->impl->reliefScale = desc->reliefScale;
 	mat->effects = desc->effects;
 }
 
@@ -139,11 +140,13 @@ static void Mod_LoadWorldMaterials( void )
 		material_t *mat = &world->materials[i];
 
 		// bad texture? 
-		if( !tx || !tx->name[0] ) continue;
+		if( !tx || !tx->name[0] ) 
+			continue;
 
 		// make cross-links for consistency
 		tx->material = mat;
 		mat->pSource = tx;
+		mat->impl = std::make_shared<mbrushmaterial_t>();
 
 		// setup material constants
 		matdesc_t *desc = CL_FindMaterial(tx->name);
@@ -157,97 +160,100 @@ static void Mod_LoadWorldMaterials( void )
 		Q_snprintf( heightmap, sizeof( heightmap ), "textures/%s_hmap", tx->name );
 
 		// albedo/diffuse map loading
+		TextureHandle wadTexture = tx;
 		if( IMAGE_EXISTS( diffuse ))
 		{
-			mat->gl_diffuse_id = LOAD_TEXTURE( diffuse, NULL, 0, 0 );
+			mat->impl->gl_diffuse_id = LOAD_TEXTURE( diffuse, NULL, 0, 0 );
+			if (wadTexture != tr.defaultTexture) {
+				FREE_TEXTURE(wadTexture); // release wad-texture
+			}
 
-			if( tx->gl_texturenum != tr.defaultTexture )
-				FREE_TEXTURE( tx->gl_texturenum ); // release wad-texture
 			// so engine can be draw HQ image for gl_renderer 0
 			// FIXME: what about detail texture scales ?
-			tx->gl_texturenum = mat->gl_diffuse_id;
+			tx->gl_texturenum = mat->impl->gl_diffuse_id.ToInt();
 
-			if( RENDER_GET_PARM( PARM_TEX_FLAGS, tx->gl_texturenum ) & TF_HAS_ALPHA )
+			if (RENDER_GET_PARM(PARM_TEX_FLAGS, tx->gl_texturenum) & TF_HAS_ALPHA) {
 				mat->flags |= BRUSH_HAS_ALPHA;
+			}
 		}
 		else
 		{
 			// use texture from wad
-			mat->gl_diffuse_id = tx->gl_texturenum;
+			mat->impl->gl_diffuse_id = wadTexture;
 		}
 
 		// normal map loading
 		if( IMAGE_EXISTS( bumpmap ))
 		{
-			mat->gl_normalmap_id = LOAD_TEXTURE( bumpmap, NULL, 0, TF_NORMALMAP );
+			mat->impl->gl_normalmap_id = LOAD_TEXTURE( bumpmap, NULL, 0, TF_NORMALMAP );
 		}
 		else
 		{
 			// try alternate suffix
 			Q_snprintf( bumpmap, sizeof( bumpmap ), "textures/%s_local", tx->name );
 			if( IMAGE_EXISTS( bumpmap ))
-				mat->gl_normalmap_id = LOAD_TEXTURE( bumpmap, NULL, 0, TF_NORMALMAP );
-			else mat->gl_normalmap_id = tr.normalmapTexture; // blank bumpy
+				mat->impl->gl_normalmap_id = LOAD_TEXTURE( bumpmap, NULL, 0, TF_NORMALMAP );
+			else mat->impl->gl_normalmap_id = tr.normalmapTexture; // blank bumpy
         }
 
 		// gloss/PBR map loading
 		if( IMAGE_EXISTS( glossmap ))
 		{
-			mat->gl_specular_id = LOAD_TEXTURE( glossmap, NULL, 0, 0 );
+			mat->impl->gl_specular_id = LOAD_TEXTURE( glossmap, NULL, 0, 0 );
 		}
 		else
 		{
 			// try alternate suffix
 			Q_snprintf( glossmap, sizeof( glossmap ), "textures/%s_spec", tx->name );
 			if( IMAGE_EXISTS( glossmap ))
-				mat->gl_specular_id = LOAD_TEXTURE( glossmap, NULL, 0, 0 );
-			else mat->gl_specular_id = tr.blackTexture;
+				mat->impl->gl_specular_id = LOAD_TEXTURE( glossmap, NULL, 0, 0 );
+			else mat->impl->gl_specular_id = tr.blackTexture;
 		}
 
 		// height map loading
 		if( IMAGE_EXISTS( heightmap ))
 		{
-			mat->gl_heightmap_id = LOAD_TEXTURE( heightmap, NULL, 0, 0 );
+			mat->impl->gl_heightmap_id = LOAD_TEXTURE( heightmap, NULL, 0, 0 );
 		}
 		else
 		{
 			// try alternate suffix
 			Q_snprintf( heightmap, sizeof( heightmap ), "textures/%s_bump", tx->name );
 			if( IMAGE_EXISTS( heightmap ))
-				mat->gl_heightmap_id = LOAD_TEXTURE( heightmap, NULL, 0, 0 );
-			else mat->gl_heightmap_id = tr.blackTexture;
+				mat->impl->gl_heightmap_id = LOAD_TEXTURE( heightmap, NULL, 0, 0 );
+			else mat->impl->gl_heightmap_id = tr.blackTexture;
 		}
 
 		// luma/emission map loading
 		if (IMAGE_EXISTS(glowmap)) {
-			mat->gl_glowmap_id = LOAD_TEXTURE(glowmap, NULL, 0, 0);
+			mat->impl->gl_glowmap_id = LOAD_TEXTURE(glowmap, NULL, 0, 0);
 		}
 		else {
-			mat->gl_glowmap_id = tr.blackTexture;
+			mat->impl->gl_glowmap_id = tr.blackTexture;
 		}
 
 		// detail map loading
 		if (IMAGE_EXISTS(desc->detailmap)) {
-			mat->gl_detailmap_id = LOAD_TEXTURE(desc->detailmap, NULL, 0, TF_FORCE_COLOR);
+			mat->impl->gl_detailmap_id = LOAD_TEXTURE(desc->detailmap, NULL, 0, TF_FORCE_COLOR);
 		}
 		else {
-			mat->gl_detailmap_id = tr.grayTexture;
+			mat->impl->gl_detailmap_id = tr.grayTexture;
 		}
 
 		// setup material flags
-		if( mat->gl_normalmap_id > 0 && mat->gl_normalmap_id != tr.normalmapTexture )
+		if( mat->impl->gl_normalmap_id.Initialized() && mat->impl->gl_normalmap_id != tr.normalmapTexture)
 			SetBits( mat->flags, BRUSH_HAS_BUMP );
 
-		if( mat->gl_specular_id > 0 && mat->gl_specular_id != tr.blackTexture )
+		if( mat->impl->gl_specular_id.Initialized() && mat->impl->gl_specular_id != tr.blackTexture )
 			SetBits( mat->flags, BRUSH_HAS_SPECULAR );
 
-		if( mat->gl_glowmap_id > 0 && mat->gl_glowmap_id != tr.blackTexture )
+		if( mat->impl->gl_glowmap_id.Initialized() && mat->impl->gl_glowmap_id != tr.blackTexture )
 			SetBits( mat->flags, BRUSH_HAS_LUMA );
 
-		if( mat->gl_heightmap_id > 0 && mat->gl_heightmap_id != tr.blackTexture )
+		if( mat->impl->gl_heightmap_id.Initialized() && mat->impl->gl_heightmap_id != tr.blackTexture )
 			SetBits( mat->flags, BRUSH_HAS_HEIGHTMAP );
 
-		if( mat->gl_detailmap_id > 0 && mat->gl_detailmap_id != tr.grayTexture )
+		if( mat->impl->gl_detailmap_id.Initialized() && mat->impl->gl_detailmap_id != tr.grayTexture )
 			SetBits( mat->flags, BRUSH_HAS_DETAIL );
 
 		if( tx->name[0] == '{' )
@@ -269,12 +275,13 @@ static void Mod_LoadWorldMaterials( void )
 		{
 			// liquid surface should be smooth and reflective
 			SetBits(mat->flags, BRUSH_REFLECT | BRUSH_LIQUID);
-			mat->smoothness = 1.0f;
-			mat->reflectScale = 1.0f; 
-			mat->refractScale = 2.5f;
+			mat->impl->smoothness = 1.0f;
+			mat->impl->reflectScale = 1.0f; 
+			mat->impl->refractScale = 2.5f;
 			
-			if( tr.waterTextures[0] )
-				SetBits( mat->flags, BRUSH_HAS_BUMP );
+			if (tr.waterTextures[0].Initialized()) {
+				SetBits(mat->flags, BRUSH_HAS_BUMP);
+			}
 		}
 
 		if( !Q_strncmp( tx->name, "sky", 3 ))
@@ -790,8 +797,8 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 	bool using_normalmap = false;
 	bool fullbright = false;
 	bool cubemaps_available = (world->num_cubemaps > 0) && CVAR_TO_BOOL(r_cubemap);
-	bool using_refractions = mat->refractScale > 0.0f;
-	bool using_aberrations = mat->aberrationScale > 0.0f;
+	bool using_refractions = mat->impl->refractScale > 0.0f;
+	bool using_aberrations = mat->impl->aberrationScale > 0.0f;
 	bool surf_transparent = false;
 
 	if ((FBitSet(mat->flags, BRUSH_FULLBRIGHT) || R_FullBright() || mirror) && !FBitSet(mat->flags, BRUSH_LIQUID)) {
@@ -852,7 +859,7 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 		GL_AddShaderDirective( options, va( "TERRAIN_NUM_LAYERS %i", landscape->terrain->numLayers ));
 		GL_AddShaderDirective( options, "APPLY_TERRAIN" );
 
-		if( landscape->terrain->indexmap.gl_diffuse_id != 0 && CVAR_TO_BOOL( r_detailtextures ))
+		if( landscape->terrain->indexmap.gl_diffuse_id.Initialized() && CVAR_TO_BOOL(r_detailtextures))
 			GL_AddShaderDirective( options, "HAS_DETAIL" );
 	}
 	else
@@ -867,15 +874,15 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 		if( FBitSet( mat->flags, BRUSH_LIQUID ))
 			GL_EncodeNormal( options, tr.waterTextures[0] );
 		else 
-			GL_EncodeNormal( options, mat->gl_normalmap_id );
+			GL_EncodeNormal( options, mat->impl->gl_normalmap_id );
 
 		GL_AddShaderDirective( options, "HAS_NORMALMAP" );
 		using_normalmap = true;
 	}
 
-	if (FBitSet(mat->flags, BRUSH_HAS_HEIGHTMAP) && mat->reliefScale > 0.0f)
+	if (FBitSet(mat->flags, BRUSH_HAS_HEIGHTMAP) && mat->impl->reliefScale > 0.0f)
 	{
-		if ((mat->gl_heightmap_id != tr.blackTexture) && (cv_parallax->value > 0.0f))
+		if ((mat->impl->gl_heightmap_id != tr.blackTexture) && (cv_parallax->value > 0.0f))
 		{
 			if (cv_parallax->value == 1.0f)
 				GL_AddShaderDirective(options, "PARALLAX_SIMPLE");
@@ -903,7 +910,7 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 			using_cubemaps = true;
 		}
 	}
-	else if (cubemaps_available && (mat->reflectScale > 0.0f) && !RP_CUBEPASS( ))
+	else if (cubemaps_available && (mat->impl->reflectScale > 0.0f) && !RP_CUBEPASS( ))
 	{
 		if( !FBitSet( mat->flags, BRUSH_REFLECT ))
 		{
@@ -1045,7 +1052,7 @@ static word Mod_ShaderLightForward( CDynLight *dl, msurface_t *s )
 			// FIXME: all the waternormals should be encoded as first frame
 			if( FBitSet( mat->flags, BRUSH_LIQUID ))
 				GL_EncodeNormal( options, tr.waterTextures[0] );
-			else GL_EncodeNormal( options, mat->gl_normalmap_id );
+			else GL_EncodeNormal( options, mat->impl->gl_normalmap_id );
 			GL_AddShaderDirective( options, "HAS_NORMALMAP" );
 			GL_AddShaderDirective( options, "COMPUTE_TBN" );
 		}
@@ -1056,9 +1063,9 @@ static word Mod_ShaderLightForward( CDynLight *dl, msurface_t *s )
 		GL_AddShaderDirective(options, "HAS_GLOSSMAP");
 	}
 
-	if (FBitSet(mat->flags, BRUSH_HAS_HEIGHTMAP) && mat->reliefScale > 0.0f)
+	if (FBitSet(mat->flags, BRUSH_HAS_HEIGHTMAP) && mat->impl->reliefScale > 0.0f)
 	{
-		if ((mat->gl_heightmap_id != tr.blackTexture) && (cv_parallax->value > 0.0f))
+		if ((mat->impl->gl_heightmap_id != tr.blackTexture) && (cv_parallax->value > 0.0f))
 		{
 			if (cv_parallax->value == 1.0f)
 				GL_AddShaderDirective(options, "PARALLAX_SIMPLE");
@@ -1072,7 +1079,7 @@ static word Mod_ShaderLightForward( CDynLight *dl, msurface_t *s )
 		GL_AddShaderDirective( options, va( "TERRAIN_NUM_LAYERS %i", landscape->terrain->numLayers ));
 		GL_AddShaderDirective( options, "APPLY_TERRAIN" );
 
-		if( landscape->terrain->indexmap.gl_diffuse_id != 0 && CVAR_TO_BOOL( r_detailtextures ) && glConfig.max_varying_floats > 48 )
+		if( landscape->terrain->indexmap.gl_diffuse_id.Initialized() && CVAR_TO_BOOL(r_detailtextures) && glConfig.max_varying_floats > 48)
 			GL_AddShaderDirective( options, "HAS_DETAIL" );
 	}
 	else
@@ -1173,7 +1180,7 @@ static word Mod_ShaderSceneDeferred( msurface_t *s )
 		GL_AddShaderDirective( options, va( "TERRAIN_NUM_LAYERS %i", landscape->terrain->numLayers ));
 		GL_AddShaderDirective( options, "APPLY_TERRAIN" );
 
-		if( landscape->terrain->indexmap.gl_diffuse_id != 0 && CVAR_TO_BOOL( r_detailtextures ))
+		if( landscape->terrain->indexmap.gl_diffuse_id != TextureHandle::Null() && CVAR_TO_BOOL(r_detailtextures))
 			GL_AddShaderDirective( options, "HAS_DETAIL" );
 	}
 	else
@@ -1191,13 +1198,13 @@ static word Mod_ShaderSceneDeferred( msurface_t *s )
 	if( !RP_CUBEPASS() && ( FBitSet( mat->flags, BRUSH_HAS_BUMP ) && CVAR_TO_BOOL( cv_bump )))
 	{
 		GL_AddShaderDirective( options, "HAS_NORMALMAP" );
-		GL_EncodeNormal( options, mat->gl_normalmap_id );
+		GL_EncodeNormal( options, mat->impl->gl_normalmap_id );
 		GL_AddShaderDirective( options, "COMPUTE_TBN" );
 	}
 
-	if (FBitSet(mat->flags, BRUSH_HAS_HEIGHTMAP) && mat->reliefScale > 0.0f)
+	if (FBitSet(mat->flags, BRUSH_HAS_HEIGHTMAP) && mat->impl->reliefScale > 0.0f)
 	{
-		if ((mat->gl_heightmap_id != tr.blackTexture) && (cv_parallax->value > 0.0f))
+		if ((mat->impl->gl_heightmap_id != tr.blackTexture) && (cv_parallax->value > 0.0f))
 		{
 			if (cv_parallax->value == 1.0f)
 				GL_AddShaderDirective(options, "PARALLAX_SIMPLE");
@@ -1600,23 +1607,22 @@ static void Mod_MappingLandscapes( msurface_t *surf, mextrasurf_t *esrf )
 
 		ASSERT( mat != NULL );
 
-		mat->gl_diffuse_id = terra->layermap.gl_diffuse_id;
-		mat->gl_normalmap_id = terra->layermap.gl_normalmap_id;
-		mat->gl_specular_id = terra->layermap.gl_specular_id;
-
-		mat->gl_glowmap_id = tr.blackTexture;
+		mat->impl->gl_diffuse_id = terra->layermap.gl_diffuse_id;
+		mat->impl->gl_normalmap_id = terra->layermap.gl_normalmap_id;
+		mat->impl->gl_specular_id = terra->layermap.gl_specular_id;
+		mat->impl->gl_glowmap_id = tr.blackTexture;
 		mat->flags |= BRUSH_MULTI_LAYERS;
 
-		if( mat->gl_normalmap_id > 0 && mat->gl_normalmap_id != tr.normalmapTexture )
+		if( mat->impl->gl_normalmap_id.Initialized() && mat->impl->gl_normalmap_id != tr.normalmapTexture )
 			mat->flags |= BRUSH_HAS_BUMP;
 
-		if( mat->gl_specular_id > 0 && mat->gl_specular_id != tr.blackTexture )
+		if( mat->impl->gl_specular_id.Initialized() && mat->impl->gl_specular_id != tr.blackTexture )
 			mat->flags |= BRUSH_HAS_SPECULAR;
 
-		if( mat->gl_glowmap_id > 0 && mat->gl_glowmap_id != tr.blackTexture )
+		if( mat->impl->gl_glowmap_id.Initialized() && mat->impl->gl_glowmap_id != tr.blackTexture )
 			mat->flags |= BRUSH_HAS_LUMA;
 
-		if( RENDER_GET_PARM( PARM_TEX_FLAGS, mat->gl_specular_id ) & TF_HAS_ALPHA )
+		if( mat->impl->gl_specular_id.GetFlags() & TF_HAS_ALPHA)
 			mat->flags |= BRUSH_GLOSSPOWER;
 
 		// refresh material constants
@@ -1901,7 +1907,7 @@ void Mod_InitBSPModelsTexture( void )
 	}
 
 	// if texture already present - update it
-	if( tr.packed_models_texture != 0 )
+	if( tr.packed_models_texture.Initialized() )
 		SetBits( flags, TF_UPDATE );
 
 	// it will automatically called glSubImage on next calls
@@ -2443,28 +2449,28 @@ static void Mod_FreeWorld( model_t *mod )
 	// free landscapes
 	R_FreeLandscapes();
 
-	if( tr.packed_lights_texture )
+	if( tr.packed_lights_texture.Initialized() )
 	{
 		FREE_TEXTURE( tr.packed_lights_texture );
-		tr.packed_lights_texture = 0;
+		tr.packed_lights_texture = TextureHandle::Null();
 	}
 
-	if( tr.packed_planes_texture )
+	if( tr.packed_planes_texture.Initialized() )
 	{
 		FREE_TEXTURE( tr.packed_planes_texture );
-		tr.packed_planes_texture = 0;
+		tr.packed_planes_texture = TextureHandle::Null();
 	}
 
-	if( tr.packed_nodes_texture )
+	if( tr.packed_nodes_texture.Initialized() )
 	{
 		FREE_TEXTURE( tr.packed_nodes_texture );
-		tr.packed_nodes_texture = 0;
+		tr.packed_nodes_texture = TextureHandle::Null();
 	}
 
-	if( tr.packed_models_texture )
+	if( tr.packed_models_texture.Initialized() )
 	{
 		FREE_TEXTURE( tr.packed_models_texture );
-		tr.packed_models_texture = 0;
+		tr.packed_models_texture = TextureHandle::Null();
 	}
 
 	if( world->materials )
@@ -2473,23 +2479,24 @@ static void Mod_FreeWorld( model_t *mod )
 		{
 			texture_t *tx = worldmodel->textures[i];
 			material_t *mat = &world->materials[i];
+			TextureHandle texHandle = tx;
 
 			if( !mat->pSource ) continue;	// not initialized?
 
 			if( !FBitSet( mat->flags, BRUSH_MULTI_LAYERS ))
 			{
-				if( tx->gl_texturenum != mat->gl_diffuse_id )
-					FREE_TEXTURE( mat->gl_diffuse_id );
+				if( texHandle != mat->impl->gl_diffuse_id )
+					FREE_TEXTURE( mat->impl->gl_diffuse_id );
 
-				if( mat->gl_normalmap_id != tr.normalmapTexture )
-					FREE_TEXTURE( mat->gl_normalmap_id );
+				if( mat->impl->gl_normalmap_id != tr.normalmapTexture )
+					FREE_TEXTURE( mat->impl->gl_normalmap_id );
 
-				if( mat->gl_specular_id != tr.blackTexture )
-					FREE_TEXTURE( mat->gl_specular_id );
-                              }
+				if( mat->impl->gl_specular_id != tr.blackTexture )
+					FREE_TEXTURE( mat->impl->gl_specular_id );
+            }
 
-			if( mat->gl_glowmap_id != tr.blackTexture )
-				FREE_TEXTURE( mat->gl_glowmap_id );
+			if( mat->impl->gl_glowmap_id != tr.blackTexture )
+				FREE_TEXTURE( mat->impl->gl_glowmap_id );
 		}
 
 		Mem_Free( world->materials );
@@ -2868,129 +2875,129 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 		{
 		case UT_COLORMAP:
 			if( Surf_CheckSubview( es ))
-				u->SetValue( Surf_GetSubview( es )->texturenum );
+				u->SetValue( Surf_GetSubview( es )->texturenum.GetGlHandle() );
 			else if( FBitSet( s->flags, SURF_MOVIE ) && RI->currententity->curstate.body )
-				u->SetValue( tr.cinTextures[es->cintexturenum-1] );
-			else u->SetValue( mat->gl_diffuse_id );
+				u->SetValue( tr.cinTextures[es->cintexturenum-1].GetGlHandle() );
+			else u->SetValue( mat->impl->gl_diffuse_id.GetGlHandle() );
 			break;
 		case UT_NORMALMAP:
-			if( FBitSet( mat->flags, BRUSH_LIQUID ) && tr.waterTextures[0] > 0 )
-				u->SetValue( tr.waterTextures[(int)( tr.time * WATER_ANIMTIME ) % WATER_TEXTURES] );
-			else u->SetValue( mat->gl_normalmap_id );
+			if( FBitSet( mat->flags, BRUSH_LIQUID ) && tr.waterTextures[0].Initialized() )
+				u->SetValue( tr.waterTextures[(int)( tr.time * WATER_ANIMTIME ) % WATER_TEXTURES].GetGlHandle() );
+			else u->SetValue( mat->impl->gl_normalmap_id.GetGlHandle() );
 			break;
 		case UT_GLOSSMAP:
-			u->SetValue( mat->gl_specular_id );
+			u->SetValue( mat->impl->gl_specular_id.GetGlHandle() );
 			break;
 		case UT_DETAILMAP:
-			if( land && land->terrain && land->terrain->indexmap.gl_diffuse_id != 0 )
-				u->SetValue( land->terrain->indexmap.gl_diffuse_id );
-			else u->SetValue( mat->gl_detailmap_id );
+			if( land && land->terrain && land->terrain->indexmap.gl_diffuse_id.Initialized() )
+				u->SetValue( land->terrain->indexmap.gl_diffuse_id.GetGlHandle() );
+			else u->SetValue( mat->impl->gl_detailmap_id.GetGlHandle() );
 			break;
 		case UT_PROJECTMAP:
 			if( pl && pl->type == LIGHT_SPOT )
-				u->SetValue( pl->spotlightTexture );
-			else u->SetValue( tr.whiteTexture );
+				u->SetValue( pl->spotlightTexture.GetGlHandle() );
+			else u->SetValue( tr.whiteTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP:
 		case UT_SHADOWMAP0:
-			if( pl ) u->SetValue( pl->shadowTexture[0] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) u->SetValue( pl->shadowTexture[0].GetGlHandle() );
+			else u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP1:
-			if( pl ) u->SetValue( pl->shadowTexture[1] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) u->SetValue( pl->shadowTexture[1].GetGlHandle() );
+			else u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP2:
-			if( pl ) u->SetValue( pl->shadowTexture[2] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) u->SetValue( pl->shadowTexture[2].GetGlHandle() );
+			else u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP3:
-			if( pl ) u->SetValue( pl->shadowTexture[3] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) u->SetValue( pl->shadowTexture[3].GetGlHandle() );
+			else u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_LIGHTMAP:
-			if( R_FullBright( )) u->SetValue( tr.grayTexture );
-			else u->SetValue( tr.lightmaps[es->lightmaptexturenum].lightmap );
+			if( R_FullBright( )) u->SetValue( tr.grayTexture.GetGlHandle() );
+			else u->SetValue( tr.lightmaps[es->lightmaptexturenum].lightmap.GetGlHandle() );
 			break;
 		case UT_DELUXEMAP:
-			if( R_FullBright( )) u->SetValue( tr.deluxemapTexture );
-			else u->SetValue( tr.lightmaps[es->lightmaptexturenum].deluxmap );
+			if( R_FullBright( )) u->SetValue( tr.deluxemapTexture.GetGlHandle() );
+			else u->SetValue( tr.lightmaps[es->lightmaptexturenum].deluxmap.GetGlHandle() );
 			break;
 		case UT_DECALMAP:
 			// unacceptable for brushmodels
-			u->SetValue( tr.whiteTexture );
+			u->SetValue( tr.whiteTexture.GetGlHandle() );
 			break;
 		case UT_SCREENMAP:
-			u->SetValue( tr.screen_color );
+			u->SetValue( tr.screen_color.GetGlHandle() );
 			break;
 		case UT_DEPTHMAP:
-			u->SetValue( tr.screen_depth );
+			u->SetValue( tr.screen_depth.GetGlHandle() );
 			break;
 		case UT_ENVMAP0:
 		case UT_ENVMAP:
 			if (!RP_CUBEPASS() && es->cubemap[0] != NULL) {
-				u->SetValue(es->cubemap[0]->texture);
+				u->SetValue(es->cubemap[0]->texture.GetGlHandle());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.texture);
+				u->SetValue(world->defaultCubemap.texture.GetGlHandle());
 			}
 			break;
 		case UT_ENVMAP1:
 			if (!RP_CUBEPASS() && es->cubemap[1] != NULL) {
-				u->SetValue(es->cubemap[1]->texture);
+				u->SetValue(es->cubemap[1]->texture.GetGlHandle());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.texture);
+				u->SetValue(world->defaultCubemap.texture.GetGlHandle());
 			}
 			break;
 		case UT_SPECULARMAPIBL0:
 			if (!RP_CUBEPASS() && es->cubemap[0] != NULL) {
-				u->SetValue(es->cubemap[0]->textureSpecularIBL);
+				u->SetValue(es->cubemap[0]->textureSpecularIBL.GetGlHandle());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.textureSpecularIBL);
+				u->SetValue(world->defaultCubemap.textureSpecularIBL.GetGlHandle());
 			}
 			break;
 		case UT_SPECULARMAPIBL1:
 			if (!RP_CUBEPASS() && es->cubemap[1] != NULL) {
-				u->SetValue(es->cubemap[1]->textureSpecularIBL);
+				u->SetValue(es->cubemap[1]->textureSpecularIBL.GetGlHandle());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.textureSpecularIBL);
+				u->SetValue(world->defaultCubemap.textureSpecularIBL.GetGlHandle());
 			}
 			break;
 		case UT_BRDFAPPROXMAP:
-			u->SetValue(tr.brdfApproxTexture);
+			u->SetValue(tr.brdfApproxTexture.GetGlHandle());
 			break;
 		case UT_GLOWMAP:
-			u->SetValue( mat->gl_glowmap_id );
+			u->SetValue( mat->impl->gl_glowmap_id.GetGlHandle() );
 			break;
 		case UT_LAYERMAP:
 			if( FBitSet( mat->flags, BRUSH_MULTI_LAYERS ) && land && land->terrain )
-				u->SetValue( land->terrain->indexmap.gl_heightmap_id );
-			else u->SetValue( tr.whiteTexture );
+				u->SetValue( land->terrain->indexmap.gl_heightmap_id.GetGlHandle() );
+			else u->SetValue( tr.whiteTexture.GetGlHandle() );
 			break;
 		case UT_HEIGHTMAP:
-			u->SetValue( mat->gl_heightmap_id );
+			u->SetValue( mat->impl->gl_heightmap_id.GetGlHandle() );
 			break;
 		case UT_RELIEFPARAMS: 
 		{
-			float width = RENDER_GET_PARM(PARM_TEX_WIDTH, mat->gl_heightmap_id);
-			float height = RENDER_GET_PARM(PARM_TEX_HEIGHT, mat->gl_heightmap_id);
-			u->SetValue(width, height, mat->reliefScale, cv_shadow_offset->value);
+			float width = mat->impl->gl_heightmap_id.GetWidth();
+			float height = mat->impl->gl_heightmap_id.GetHeight();
+			u->SetValue(width, height, mat->impl->reliefScale, cv_shadow_offset->value);
 			break;
 		}
 		case UT_BSPPLANESMAP:
-			u->SetValue( tr.packed_planes_texture );
+			u->SetValue( tr.packed_planes_texture.GetGlHandle() );
 			break;
 		case UT_BSPNODESMAP:
-			u->SetValue( tr.packed_nodes_texture );
+			u->SetValue( tr.packed_nodes_texture.GetGlHandle() );
 			break;
 		case UT_BSPLIGHTSMAP:
-			u->SetValue( tr.packed_lights_texture );
+			u->SetValue( tr.packed_lights_texture.GetGlHandle() );
 			break;
 		case UT_FITNORMALMAP:
-			u->SetValue( tr.normalsFitting );
+			u->SetValue( tr.normalsFitting.GetGlHandle() );
 			break;
 		case UT_MODELMATRIX:
 			u->SetValue( &glm->modelMatrix[0] );
@@ -3023,7 +3030,7 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 			u->SetValue( (float)tr.time );
 			break;
 		case UT_DETAILSCALE:
-			u->SetValue( mat->detailScale[0], mat->detailScale[1] );
+			u->SetValue( mat->impl->detailScale[0], mat->impl->detailScale[1] );
 			break;
 		case UT_FOGPARAMS:
 			u->SetValue( tr.fogColor[0], tr.fogColor[1], tr.fogColor[2], tr.fogDensity );
@@ -3031,8 +3038,8 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 		case UT_SHADOWPARMS:
 			if( pl != NULL )
 			{
-				float shadowWidth = 1.0f / (float)RENDER_GET_PARM( PARM_TEX_WIDTH, pl->shadowTexture[0] );
-				float shadowHeight = 1.0f / (float)RENDER_GET_PARM( PARM_TEX_HEIGHT, pl->shadowTexture[0] );
+				float shadowWidth = 1.0f / (float)pl->shadowTexture[0].GetWidth();
+				float shadowHeight = 1.0f / (float)pl->shadowTexture[0].GetHeight();
 				// depth scale and bias and shadowmap resolution
 				u->SetValue( shadowWidth, shadowHeight, -pl->projectionMatrix[2][2], pl->projectionMatrix[3][2] );
 			}
@@ -3083,7 +3090,7 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 				terrain_t *terra = land->terrain;
 				u->SetValue( &terra->layermap.smoothness[0], terra->numLayers );
 			}
-			else u->SetValue( mat->smoothness );
+			else u->SetValue( mat->impl->smoothness );
 			break;
 		case UT_SHADOWMATRIX:
 			if( pl ) u->SetValue( &pl->gl_shadowMatrix[0][0], MAX_SHADOWMAPS );
@@ -3132,13 +3139,13 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 			u->SetValue( es->lerpFactor );
 			break;
 		case UT_REFRACTSCALE:
-			u->SetValue( bound( 0.0f, mat->refractScale, 1.0f ));
+			u->SetValue( bound( 0.0f, mat->impl->refractScale, 1.0f ));
 			break;
 		case UT_REFLECTSCALE:
-			u->SetValue( bound( 0.0f, mat->reflectScale, 1.0f ));
+			u->SetValue( bound( 0.0f, mat->impl->reflectScale, 1.0f ));
 			break;
 		case UT_ABERRATIONSCALE:
-			u->SetValue( bound( 0.0f, mat->aberrationScale, 1.0f ));
+			u->SetValue( bound( 0.0f, mat->impl->aberrationScale, 1.0f ));
 			break;
 		case UT_BOXMINS:
 			if( world->num_cubemaps > 0 )

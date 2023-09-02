@@ -115,7 +115,7 @@ void R_FreeCinematics( void )
 
 	for( i = 0; i < MAX_MOVIE_TEXTURES; i++ )
 	{
-		if( !tr.cinTextures[i] ) break;
+		if( !tr.cinTextures[i].Initialized() ) break;
 		FREE_TEXTURE( tr.cinTextures[i] );
 	}
 
@@ -133,7 +133,7 @@ int R_AllocateCinematicTexture( unsigned int txFlags )
 	}
 	tr.num_cin_used++;
 
-	if( !tr.cinTextures[i] )
+	if( !tr.cinTextures[i].Initialized() )
 	{
 		char txName[16];
 

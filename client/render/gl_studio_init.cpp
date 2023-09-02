@@ -568,7 +568,7 @@ void CStudioModelRenderer :: LoadStudioMaterials( void )
 			// semi-transparent textures must have additive flag to invoke renderer insert supposed mesh into translist
 			if( FBitSet( pmaterial->flags, STUDIO_NF_ADDITIVE ))
 			{
-				if( RENDER_GET_PARM( PARM_TEX_FLAGS, pmaterial->gl_diffuse_id ) & TF_HAS_ALPHA )
+				if( pmaterial->gl_diffuse_id.GetFlags() & TF_HAS_ALPHA)
 					SetBits( pmaterial->flags, STUDIO_NF_HAS_ALPHA );
 			}
 
@@ -576,24 +576,27 @@ void CStudioModelRenderer :: LoadStudioMaterials( void )
 				SetBits( pmaterial->flags, STUDIO_NF_HAS_ALPHA );
 		}
 
-		if( pmaterial->gl_diffuse_id != 0 )
+		TextureHandle embeddedTexture = ptexture;
+		if (pmaterial->gl_diffuse_id != TextureHandle::Null())
 		{
 			// so engine can be draw HQ image for gl_renderer 0
-			if( ptexture->index != tr.defaultTexture )
-				FREE_TEXTURE( ptexture->index );
-			ptexture->index = pmaterial->gl_diffuse_id;
+			if (embeddedTexture != tr.defaultTexture) {
+				FREE_TEXTURE(embeddedTexture);
+			}
+			ptexture->index = pmaterial->gl_diffuse_id.ToInt();
 		}
 		else
 		{
 			// reuse original texture
-			pmaterial->gl_diffuse_id = ptexture->index;
+			pmaterial->gl_diffuse_id = embeddedTexture;
 		}
 
 		if( IMAGE_EXISTS( bumpmap ))
 		{
 			pmaterial->gl_normalmap_id = LOAD_TEXTURE( bumpmap, NULL, 0, TF_NORMALMAP );
-			if( pmaterial->gl_normalmap_id > 0 )
-				SetBits( pmaterial->flags, STUDIO_NF_NORMALMAP );
+			if (pmaterial->gl_normalmap_id.Initialized()) {
+				SetBits(pmaterial->flags, STUDIO_NF_NORMALMAP);
+			}
 		}
 		else
 		{
@@ -643,7 +646,7 @@ void CStudioModelRenderer :: LoadStudioMaterials( void )
 		}
 
 		// current model has bumpmapping effect
-		if( pmaterial->gl_normalmap_id > 0 && pmaterial->gl_normalmap_id != tr.normalmapTexture )
+		if( pmaterial->gl_normalmap_id.Initialized() && pmaterial->gl_normalmap_id != tr.normalmapTexture)
 			SetBits( m_pStudioHeader->flags, STUDIO_HAS_BUMP );
 
 		if( pmaterial->gl_specular_id != tr.blackTexture )
@@ -664,7 +667,7 @@ void CStudioModelRenderer :: LoadStudioMaterials( void )
 		pmaterial->reliefScale = desc->reliefScale;
 		pmaterial->effects = desc->effects;
 
-		if( pmaterial->gl_detailmap_id > 0 && pmaterial->gl_detailmap_id != tr.grayTexture )
+		if( pmaterial->gl_detailmap_id.Initialized() && pmaterial->gl_detailmap_id != tr.grayTexture)
 			SetBits( pmaterial->flags, STUDIO_NF_HAS_DETAIL );
 
 		// time to precache shaders
@@ -685,7 +688,7 @@ void CStudioModelRenderer :: FreeStudioMaterials( void )
 	// release textures for current model
 	for( int i = 0; i < m_pStudioHeader->numtextures; i++, pmaterial++ )
 	{
-		if( pmaterial->pSource->index != pmaterial->gl_diffuse_id )
+		if( TextureHandle(pmaterial->pSource) != pmaterial->gl_diffuse_id )
 			FREE_TEXTURE( pmaterial->gl_diffuse_id );
 
 		if( pmaterial->gl_normalmap_id != tr.normalmapTexture )

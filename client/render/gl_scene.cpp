@@ -408,7 +408,8 @@ static bool R_HandleLightEntity(cl_entity_t *ent)
 
 	CDynLight *dlight = CL_AllocDlight(ent->curstate.number);
 	CEntityEnvDynlight entity(ent);
-	int tex = 0, flags = 0, type = 0;
+	TextureHandle tex = TextureHandle::Null();
+	int flags = 0, type = 0;
 	
 	if (!entity.Cinematic()) // dynamic light
 	{

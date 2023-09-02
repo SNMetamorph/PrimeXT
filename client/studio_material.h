@@ -17,18 +17,19 @@ GNU General Public License for more details.
 #include "studio.h"
 #include "material.h"
 #include "shader.h"
+#include "texture_handle.h"
 
 // each mstudiotexture_t has a material
 typedef struct mstudiomat_s
 {
 	mstudiotexture_t	*pSource;			// pointer to original texture
 
-	unsigned short	gl_diffuse_id;		// diffuse texture
-	unsigned short	gl_detailmap_id;		// detail texture
-	unsigned short	gl_normalmap_id;		// normalmap
-	unsigned short	gl_specular_id;		// specular
-	unsigned short	gl_glowmap_id;		// self-illuminate parts
-	unsigned short	gl_heightmap_id;		// parallax stuff
+	TextureHandle	gl_diffuse_id;		// diffuse texture
+	TextureHandle	gl_detailmap_id;	// detail texture
+	TextureHandle	gl_normalmap_id;	// normalmap
+	TextureHandle	gl_specular_id;		// specular
+	TextureHandle	gl_glowmap_id;		// self-illuminate parts
+	TextureHandle	gl_heightmap_id;	// parallax stuff
 
 	// this part is shared with matdesc_t
 	float		smoothness;		// smoothness factor

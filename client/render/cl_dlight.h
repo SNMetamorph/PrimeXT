@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "enginecallback.h"
 #include "vector.h"
 #include "mathlib.h"
+#include "texture_handle.h"
 
 #define NUM_SHADOW_SPLITS	3 // four splits
 #define MAX_SHADOWMAPS	(NUM_SHADOW_SPLITS + 1)
@@ -63,12 +64,12 @@ public:
 	float		x, y, w, h;
 
 	// spotlight specific:
-	int		spotlightTexture;			// spotlights only
-	int		shadowTexture[MAX_SHADOWMAPS];	// shadowmap for this light
-	int		cinTexturenum;			// not gltexturenum!
+	TextureHandle	spotlightTexture; // spotlights only
+	TextureHandle	shadowTexture[MAX_SHADOWMAPS]; // shadowmap for this light
+	int		cinTexturenum; // not gltexturenum!
 	int		lastframe;			// cinematic lastframe
 	int		flags;
-	float		fov;
+	float	fov;
 
 	// TODO move it to cl_dlight.cpp
 	bool Expired( void )

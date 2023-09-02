@@ -562,7 +562,7 @@ void CSpriteModelRenderer :: AddSpriteModelToDrawList( cl_entity_t *e, bool upda
 		AddPointToBounds( point[i], absmin, absmax );
 
 	CTransEntry entry;
-	entry.SetRenderPrimitive( point, spriteColor, frame->gl_texturenum, rendermode );
+	entry.SetRenderPrimitive( point, spriteColor, TextureHandle(frame), rendermode);
 	entry.ComputeViewDistance( absmin, absmax );
 	RI->frame.trans_list.AddToTail( entry );
 }

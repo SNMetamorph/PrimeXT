@@ -794,7 +794,9 @@ void GL_SetDefaultState( void )
 
 void R_CreateSpotLightTexture( void )
 {
-	if( tr.defaultProjTexture ) return;
+	if (tr.defaultProjTexture.Initialized()) {
+		return;
+	}
 
 	byte data[PROJ_SIZE*PROJ_SIZE*4];
 	byte *p = data;
@@ -970,7 +972,9 @@ static void GL_InitTextures( void )
 
 	// best fit normals
 	tr.normalsFitting = LOAD_TEXTURE( "gfx/normalsfitting.dds", NULL, 0, TF_KEEP_SOURCE|TF_CLAMP|TF_NEAREST );
-	if( !tr.normalsFitting ) tr.normalsFitting = tr.whiteTexture; // fallback
+	if (!tr.normalsFitting.Initialized()) {
+		tr.normalsFitting = tr.whiteTexture; // fallback
+	}
 
 	// load water animation
 	for( int i = 0; i < WATER_TEXTURES; i++ )
@@ -983,13 +987,15 @@ static void GL_InitTextures( void )
 	R_CreateSpotLightTexture ();
 
 	// initialize spotlights
-	if( !tr.spotlightTexture[0] )
+	if( !tr.spotlightTexture[0].Initialized() )
 	{
 		char path[256];
 
 		tr.spotlightTexture[0] = tr.defaultProjTexture;	// always present
 		tr.flashlightTexture = LOAD_TEXTURE( "gfx/flashlight", NULL, 0, TF_SPOTLIGHT );
-		if( !tr.flashlightTexture ) tr.flashlightTexture = tr.defaultProjTexture;
+		if (!tr.flashlightTexture.Initialized()) {
+			tr.flashlightTexture = tr.defaultProjTexture; // fallback
+		}
 
 		// 7 custom textures allowed
 		for( int i = 1; i < 8; i++ )
@@ -999,8 +1005,9 @@ static void GL_InitTextures( void )
 			if( IMAGE_EXISTS( path ))
 				tr.spotlightTexture[i] = LOAD_TEXTURE( path, NULL, 0, TF_SPOTLIGHT );
 
-			if( !tr.spotlightTexture[i] )
+			if (!tr.spotlightTexture[i].Initialized()) {
 				tr.spotlightTexture[i] = tr.defaultProjTexture; // make default if missed
+			}
 		}
 	}
 }

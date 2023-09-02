@@ -33,20 +33,20 @@ GNU General Public License for more details.
 
 =============================================================
 */
-int R_AllocateShadowTexture( bool copyToImage = true )
+TextureHandle R_AllocateShadowTexture( bool copyToImage = true )
 {
 	int i = tr.num_2D_shadows_used;
 
 	if( i >= MAX_SHADOWS )
 	{
 		ALERT( at_error, "R_AllocateShadowTexture: shadow textures limit exceeded!\n" );
-		return 0; // disable
+		return TextureHandle::Null(); // disable
 	}
 
-	int texture = tr.shadowTextures[i];
+	TextureHandle texture = tr.shadowTextures[i];
 	tr.num_2D_shadows_used++;
 
-	if( !tr.shadowTextures[i] )
+	if( !tr.shadowTextures[i].Initialized() )
 	{
 		char txName[16];
 
@@ -65,9 +65,9 @@ int R_AllocateShadowTexture( bool copyToImage = true )
 	return texture;
 }
 
-int R_AllocateShadowCubemap( int side, bool copyToImage = true )
+TextureHandle R_AllocateShadowCubemap( int side, bool copyToImage = true )
 {
-	int texture = 0;
+	TextureHandle texture = TextureHandle::Null();
 
 	if( side != 0 )
 	{
@@ -76,15 +76,15 @@ int R_AllocateShadowCubemap( int side, bool copyToImage = true )
 		if( i >= MAX_SHADOWS )
 		{
 			ALERT( at_error, "R_AllocateShadowCubemap: shadow cubemaps limit exceeded!\n" );
-			return 0; // disable
+			return TextureHandle::Null(); // disable
 		}
 
 		texture = tr.shadowCubemaps[i];
 
-		if( !tr.shadowCubemaps[i] )
+		if( !tr.shadowCubemaps[i].Initialized() )
 		{
 			ALERT( at_error, "R_AllocateShadowCubemap: cubemap not initialized!\n" );
-			return 0; // disable
+			return TextureHandle::Null(); // disable
 		}
 	}
 	else
@@ -94,13 +94,13 @@ int R_AllocateShadowCubemap( int side, bool copyToImage = true )
 		if( i >= MAX_SHADOWS )
 		{
 			ALERT( at_error, "R_AllocateShadowCubemap: shadow cubemaps limit exceeded!\n" );
-			return 0; // disable
+			return TextureHandle::Null(); // disable
 		}
 
 		texture = tr.shadowCubemaps[i];
 		tr.num_CM_shadows_used++;
 
-		if( !tr.shadowCubemaps[i] )
+		if( !tr.shadowCubemaps[i].Initialized() )
 		{
 			char txName[16];
 
@@ -514,8 +514,10 @@ void R_RenderShadowScene( CDynLight *pl, int split = 0 )
 			pl->shadowTexture[split] = tr.sunShadowFBO[split].GetTexture();
 			tr.sunShadowFBO[split].Bind();
 			using_fbo = true;
-                    }
-		else RI->view.port[2] = RI->view.port[3] = 512; // simple size if FBO was missed
+        }
+		else {
+			RI->view.port[2] = RI->view.port[3] = 512; // simple size if FBO was missed
+		}
 	}
 	else
 	{

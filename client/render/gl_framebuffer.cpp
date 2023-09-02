@@ -86,13 +86,13 @@ void GL_ResizeDrawbuffer(gl_drawbuffer_t *fbo, int width, int height, int depth)
 GL_AttachColorTextureToFBO
 ==================
 */
-void GL_AttachColorTextureToFBO(gl_drawbuffer_t *fbo, int texture, int colorIndex, int index, int mipLevel)
+void GL_AttachColorTextureToFBO(gl_drawbuffer_t *fbo, TextureHandle texture, int colorIndex, int index, int mipLevel)
 {
-	GLuint	target = RENDER_GET_PARM(PARM_TEX_TARGET, texture);
-	GLuint	format = RENDER_GET_PARM(PARM_TEX_GLFORMAT, texture);
-	GLint	width = RENDER_GET_PARM(PARM_TEX_WIDTH, texture);
-	GLint	height = RENDER_GET_PARM(PARM_TEX_HEIGHT, texture);
-	GLint	depth = RENDER_GET_PARM(PARM_TEX_DEPTH, texture);
+	GLuint	target = texture.GetGlTarget();
+	GLuint	format = texture.GetGlFormat();
+	GLint	width = texture.GetWidth();
+	GLint	height = texture.GetHeight();
+	GLint	depth = texture.GetDepth();
 
 	if (target == GL_TEXTURE_2D || target == GL_TEXTURE_2D_MULTISAMPLE)
 	{
@@ -112,8 +112,8 @@ void GL_AttachColorTextureToFBO(gl_drawbuffer_t *fbo, int texture, int colorInde
 			GL_Bind(GL_KEEP_UNIT, texture);
 
 			// need to refresh real FBO size with possible hardware limitations
-			fbo->width = RENDER_GET_PARM(PARM_TEX_WIDTH, texture);
-			fbo->height = RENDER_GET_PARM(PARM_TEX_HEIGHT, texture);
+			fbo->width = texture.GetWidth();
+			fbo->height = texture.GetHeight();
 
 			pglTexImage2D(target, 0, format, fbo->width, fbo->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		}
@@ -122,7 +122,7 @@ void GL_AttachColorTextureToFBO(gl_drawbuffer_t *fbo, int texture, int colorInde
 		GL_BindDrawbuffer(fbo);
 
 		// Set up the color attachment
-		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + colorIndex, target, texture, mipLevel);
+		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + colorIndex, target, texture.GetGlHandle(), mipLevel);
 	}
 	else if (target == GL_TEXTURE_CUBE_MAP_ARB)
 	{
@@ -142,8 +142,8 @@ void GL_AttachColorTextureToFBO(gl_drawbuffer_t *fbo, int texture, int colorInde
 			GL_Bind(GL_KEEP_UNIT, texture);
 
 			// need to refresh real FBO size with possible hardware limitations
-			fbo->width = RENDER_GET_PARM(PARM_TEX_WIDTH, texture);
-			fbo->height = RENDER_GET_PARM(PARM_TEX_HEIGHT, texture);
+			fbo->width = texture.GetWidth();
+			fbo->height = texture.GetHeight();
 
 			pglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB, 0, format, fbo->width, fbo->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 			pglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB, 0, format, fbo->width, fbo->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
@@ -157,7 +157,7 @@ void GL_AttachColorTextureToFBO(gl_drawbuffer_t *fbo, int texture, int colorInde
 		GL_BindDrawbuffer(fbo);
 
 		// set up the color attachment
-		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + colorIndex, GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + index, texture, mipLevel);
+		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + colorIndex, GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + index, texture.GetGlHandle(), mipLevel);
 	}
 	else if (target == GL_TEXTURE_2D_ARRAY_EXT)
 	{
@@ -177,9 +177,9 @@ void GL_AttachColorTextureToFBO(gl_drawbuffer_t *fbo, int texture, int colorInde
 			GL_Bind(GL_KEEP_UNIT, texture);
 
 			// need to refresh real FBO size with possible hardware limitations
-			fbo->width = RENDER_GET_PARM(PARM_TEX_WIDTH, texture);
-			fbo->height = RENDER_GET_PARM(PARM_TEX_HEIGHT, texture);
-			fbo->depth = RENDER_GET_PARM(PARM_TEX_DEPTH, texture);
+			fbo->width = texture.GetWidth();
+			fbo->height = texture.GetHeight();
+			fbo->depth = texture.GetDepth();
 
 			pglTexImage3D(target, mipLevel, format, fbo->width, fbo->height, fbo->depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		}
@@ -188,7 +188,7 @@ void GL_AttachColorTextureToFBO(gl_drawbuffer_t *fbo, int texture, int colorInde
 		GL_BindDrawbuffer(fbo);
 
 		// Set up the color attachment
-		pglFramebufferTextureLayer(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + colorIndex, texture, 0, index);
+		pglFramebufferTextureLayer(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + colorIndex, texture.GetGlHandle(), 0, index);
 	}
 	else if (target == GL_TEXTURE_3D)
 	{
@@ -208,9 +208,9 @@ void GL_AttachColorTextureToFBO(gl_drawbuffer_t *fbo, int texture, int colorInde
 			GL_Bind(GL_KEEP_UNIT, texture);
 
 			// need to refresh real FBO size with possible hardware limitations
-			fbo->width = RENDER_GET_PARM(PARM_TEX_WIDTH, texture);
-			fbo->height = RENDER_GET_PARM(PARM_TEX_HEIGHT, texture);
-			fbo->depth = RENDER_GET_PARM(PARM_TEX_DEPTH, texture);
+			fbo->width = texture.GetWidth();
+			fbo->height = texture.GetHeight();
+			fbo->depth = texture.GetDepth();
 
 			pglTexImage3D(target, mipLevel, format, fbo->width, fbo->height, fbo->depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		}
@@ -219,7 +219,7 @@ void GL_AttachColorTextureToFBO(gl_drawbuffer_t *fbo, int texture, int colorInde
 		GL_BindDrawbuffer(fbo);
 
 		// Set up the color attachment
-		pglFramebufferTexture3D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + colorIndex, GL_TEXTURE_3D, texture, mipLevel, index);
+		pglFramebufferTexture3D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + colorIndex, GL_TEXTURE_3D, texture.GetGlHandle(), mipLevel, index);
 	}
 	else
 	{
@@ -232,13 +232,13 @@ void GL_AttachColorTextureToFBO(gl_drawbuffer_t *fbo, int texture, int colorInde
 GL_AttachDepthTextureToFBO
 ==================
 */
-void GL_AttachDepthTextureToFBO(gl_drawbuffer_t *fbo, int texture, int index)
+void GL_AttachDepthTextureToFBO(gl_drawbuffer_t *fbo, TextureHandle texture, int index)
 {
-	GLuint	target = RENDER_GET_PARM(PARM_TEX_TARGET, texture);
-	GLuint	format = RENDER_GET_PARM(PARM_TEX_GLFORMAT, texture);
-	GLint	width = RENDER_GET_PARM(PARM_TEX_WIDTH, texture);
-	GLint	height = RENDER_GET_PARM(PARM_TEX_HEIGHT, texture);
-	GLint	depth = RENDER_GET_PARM(PARM_TEX_DEPTH, texture);
+	GLuint	target = texture.GetGlTarget();
+	GLuint	format = texture.GetGlFormat();
+	GLint	width = texture.GetWidth();
+	GLint	height = texture.GetHeight();
+	GLint	depth = texture.GetDepth();
 
 	if (target == GL_TEXTURE_2D || target == GL_TEXTURE_2D_MULTISAMPLE)
 	{
@@ -258,8 +258,8 @@ void GL_AttachDepthTextureToFBO(gl_drawbuffer_t *fbo, int texture, int index)
 			GL_Bind(GL_KEEP_UNIT, texture);
 
 			// need to refresh real FBO size with possible hardware limitations
-			fbo->width = RENDER_GET_PARM(PARM_TEX_WIDTH, texture);
-			fbo->height = RENDER_GET_PARM(PARM_TEX_HEIGHT, texture);
+			fbo->width = texture.GetWidth();
+			fbo->height = texture.GetHeight();
 
 			pglTexImage2D(target, 0, format, fbo->width, fbo->height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
 		}
@@ -268,7 +268,7 @@ void GL_AttachDepthTextureToFBO(gl_drawbuffer_t *fbo, int texture, int index)
 		GL_BindDrawbuffer(fbo);
 
 		// Set up the color attachment
-		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, target, texture, 0);
+		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, target, texture.GetGlHandle(), 0);
 	}
 	else if (target == GL_TEXTURE_CUBE_MAP_ARB)
 	{
@@ -288,8 +288,8 @@ void GL_AttachDepthTextureToFBO(gl_drawbuffer_t *fbo, int texture, int index)
 			GL_Bind(GL_KEEP_UNIT, texture);
 
 			// need to refresh real FBO size with possible hardware limitations
-			fbo->width = RENDER_GET_PARM(PARM_TEX_WIDTH, texture);
-			fbo->height = RENDER_GET_PARM(PARM_TEX_HEIGHT, texture);
+			fbo->width = texture.GetWidth();
+			fbo->height = texture.GetHeight();
 
 			pglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB, 0, format, fbo->width, fbo->height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
 			pglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB, 0, format, fbo->width, fbo->height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
@@ -303,7 +303,7 @@ void GL_AttachDepthTextureToFBO(gl_drawbuffer_t *fbo, int texture, int index)
 		GL_BindDrawbuffer(fbo);
 
 		// set up the color attachment
-		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + index, texture, 0);
+		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + index, texture.GetGlHandle(), 0);
 	}
 	else if (target == GL_TEXTURE_2D_ARRAY_EXT)
 	{
@@ -323,9 +323,9 @@ void GL_AttachDepthTextureToFBO(gl_drawbuffer_t *fbo, int texture, int index)
 			GL_Bind(GL_KEEP_UNIT, texture);
 
 			// need to refresh real FBO size with possible hardware limitations
-			fbo->width = RENDER_GET_PARM(PARM_TEX_WIDTH, texture);
-			fbo->height = RENDER_GET_PARM(PARM_TEX_HEIGHT, texture);
-			fbo->depth = RENDER_GET_PARM(PARM_TEX_DEPTH, texture);
+			fbo->width = texture.GetWidth();
+			fbo->height = texture.GetHeight();
+			fbo->depth = texture.GetDepth();
 
 			pglTexImage3D(target, 0, format, fbo->width, fbo->height, fbo->depth, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
 		}
@@ -334,7 +334,7 @@ void GL_AttachDepthTextureToFBO(gl_drawbuffer_t *fbo, int texture, int index)
 		GL_BindDrawbuffer(fbo);
 
 		// Set up the color attachment
-		pglFramebufferTextureLayer(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, texture, 0, index);
+		pglFramebufferTextureLayer(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, texture.GetGlHandle(), 0, index);
 	}
 	else
 	{
@@ -409,7 +409,7 @@ void GL_FreeDrawbuffer(gl_drawbuffer_t *fbo)
 		fbo->width = 0;
 		fbo->height = 0;
 		fbo->depth = 0;
-		fbo->depthtarget = 0;
+		fbo->depthtarget = TextureHandle::Null();
 		fbo->name[0] = '\0'; // important to set this, see according logic in GL_AllocDrawbuffer
 		memset(fbo->colortarget, 0, sizeof(fbo->colortarget));
 	}
@@ -443,8 +443,8 @@ CFrameBuffer::CFrameBuffer(void)
 {
 	m_iFrameWidth = m_iFrameHeight = 0;
 	m_iFrameBuffer = m_iDepthBuffer = 0;
-	m_iTexture = m_iAttachment = 0;
-
+	m_iTexture = TextureHandle::Null();
+	m_iAttachment = 0;
 	m_bAllowFBO = false;
 }
 
@@ -546,10 +546,10 @@ bool CFrameBuffer::Init(FramebufferType type, GLuint width, GLuint height, GLuin
 			pglReadBuffer(m_iAttachment);
 		}
 
-		if (m_iTexture != 0)
+		if (m_iTexture.Initialized())
 		{
-			GLuint target = RENDER_GET_PARM(PARM_TEX_TARGET, m_iTexture);
-			GLuint texnum = RENDER_GET_PARM(PARM_TEX_TEXNUM, m_iTexture);
+			GLuint target = m_iTexture.GetGlTarget();
+			GLuint texnum = m_iTexture.GetGlHandle();
 
 			if (target == GL_TEXTURE_CUBE_MAP_ARB)
 			{
@@ -571,7 +571,7 @@ void CFrameBuffer::Free(void)
 {
 	if (!m_bAllowFBO) return;
 
-	if (!FBitSet(m_iFlags, FBO_NOTEXTURE) && m_iTexture != 0)
+	if (!FBitSet(m_iFlags, FBO_NOTEXTURE) && m_iTexture.Initialized())
 		FREE_TEXTURE(m_iTexture);
 
 	pglDeleteRenderbuffers(1, &m_iDepthBuffer);
@@ -579,8 +579,8 @@ void CFrameBuffer::Free(void)
 
 	m_iFrameWidth = m_iFrameHeight = 0;
 	m_iFrameBuffer = m_iDepthBuffer = 0;
-	m_iTexture = m_iAttachment = 0;
-
+	m_iTexture = TextureHandle::Null();
+	m_iAttachment = 0;
 	m_bAllowFBO = false;
 }
 
@@ -623,7 +623,7 @@ bool CFrameBuffer::ValidateFBO(void)
 	}
 }
 
-void CFrameBuffer::Bind(GLuint texture, GLuint side, GLuint mipLevel)
+void CFrameBuffer::Bind(TextureHandle texture, GLuint side, GLuint mipLevel)
 {
 	if (!m_bAllowFBO) return;
 
@@ -634,12 +634,12 @@ void CFrameBuffer::Bind(GLuint texture, GLuint side, GLuint mipLevel)
 	}
 
 	// change texture if needs
-	if (FBitSet(m_iFlags, FBO_NOTEXTURE) && texture != 0)
+	if (FBitSet(m_iFlags, FBO_NOTEXTURE) && texture.Initialized())
 	{
 		m_iTexture = texture;
 
-		GLuint target = RENDER_GET_PARM(PARM_TEX_TARGET, m_iTexture);
-		GLuint texnum = RENDER_GET_PARM(PARM_TEX_TEXNUM, m_iTexture);
+		GLuint target = m_iTexture.GetGlTarget();
+		GLuint texnum = m_iTexture.GetGlHandle();
 
 		if (target == GL_TEXTURE_CUBE_MAP_ARB)
 			target = GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + side;

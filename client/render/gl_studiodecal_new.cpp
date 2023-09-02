@@ -1373,7 +1373,7 @@ void CStudioModelRenderer :: StudioDecalShoot( const Vector &vecNormal, const Ve
 	// time to cache decal textures
 	entry->PreloadTextures();
 
-	if( entry->gl_diffuse_id == 0 )
+	if( entry->gl_diffuse_id == TextureHandle::Null() )
 	{
 		ALERT( at_warning, "StudioDecal: decal texture '%s' was missed\n", entry->m_DecalName );
 		return; // decal texture was missed.
@@ -1541,97 +1541,97 @@ void CStudioModelRenderer :: SetDecalUniforms( studiodecal_t *pDecal )
 		switch( u->type )
 		{
 		case UT_COLORMAP:
-			u->SetValue( pmaterial->gl_diffuse_id );
+			u->SetValue( pmaterial->gl_diffuse_id.GetGlHandle() );
 			break;
 		case UT_DECALMAP:
-			u->SetValue( pDecal->texinfo->gl_diffuse_id );
+			u->SetValue( pDecal->texinfo->gl_diffuse_id.GetGlHandle() );
 			break;
 		case UT_NORMALMAP:
-			u->SetValue( pDecal->texinfo->gl_normalmap_id );
+			u->SetValue( pDecal->texinfo->gl_normalmap_id.GetGlHandle() );
 			break;
 		case UT_GLOSSMAP:
-			u->SetValue( pDecal->texinfo->gl_specular_id );
+			u->SetValue( pDecal->texinfo->gl_specular_id.GetGlHandle() );
 			break;
 		case UT_HEIGHTMAP:
-			u->SetValue( pDecal->texinfo->gl_heightmap_id );
+			u->SetValue( pDecal->texinfo->gl_heightmap_id.GetGlHandle() );
 			break;
 		case UT_PROJECTMAP:
 			if( pl && pl->type == LIGHT_SPOT )
-				u->SetValue( pl->spotlightTexture );
-			else u->SetValue( tr.whiteTexture );
+				u->SetValue( pl->spotlightTexture.GetGlHandle() );
+			else u->SetValue( tr.whiteTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP:
 		case UT_SHADOWMAP0:
-			if( pl ) u->SetValue( pl->shadowTexture[0] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) u->SetValue( pl->shadowTexture[0].GetGlHandle() );
+			else u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP1:
-			if( pl ) u->SetValue( pl->shadowTexture[1] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) u->SetValue( pl->shadowTexture[1].GetGlHandle() );
+			else u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP2:
-			if( pl ) u->SetValue( pl->shadowTexture[2] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) u->SetValue( pl->shadowTexture[2].GetGlHandle() );
+			else u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP3:
-			if( pl ) u->SetValue( pl->shadowTexture[3] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) u->SetValue( pl->shadowTexture[3].GetGlHandle() );
+			else u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_LIGHTMAP:
 		case UT_DELUXEMAP:
 			// unacceptable for studiomodels
-			u->SetValue( tr.whiteTexture );
+			u->SetValue( tr.whiteTexture.GetGlHandle() );
 			break;
 		case UT_SCREENMAP:
-			u->SetValue( tr.screen_color );
+			u->SetValue( tr.screen_color.GetGlHandle() );
 			break;
 		case UT_DEPTHMAP:
-			u->SetValue( tr.screen_depth );
+			u->SetValue( tr.screen_depth.GetGlHandle() );
 			break;
 		case UT_ENVMAP0:
 		case UT_ENVMAP:
 			if (!RP_CUBEPASS() && inst->cubemap[0] != NULL) {
-				u->SetValue(inst->cubemap[0]->texture);
+				u->SetValue(inst->cubemap[0]->texture.GetGlHandle());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.texture);
+				u->SetValue(world->defaultCubemap.texture.GetGlHandle());
 			}
 			break;
 		case UT_ENVMAP1:
 			if (!RP_CUBEPASS() && inst->cubemap[1] != NULL) {
-				u->SetValue(inst->cubemap[1]->texture);
+				u->SetValue(inst->cubemap[1]->texture.GetGlHandle());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.texture);
+				u->SetValue(world->defaultCubemap.texture.GetGlHandle());
 			}
 			break;
 		case UT_SPECULARMAPIBL0:
 			if (!RP_CUBEPASS() && inst->cubemap[0] != NULL) {
-				u->SetValue(inst->cubemap[0]->textureSpecularIBL);
+				u->SetValue(inst->cubemap[0]->textureSpecularIBL.GetGlHandle());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.textureSpecularIBL);
+				u->SetValue(world->defaultCubemap.textureSpecularIBL.GetGlHandle());
 			}
 			break;
 		case UT_SPECULARMAPIBL1:
 			if (!RP_CUBEPASS() && inst->cubemap[1] != NULL) {
-				u->SetValue(inst->cubemap[1]->textureSpecularIBL);
+				u->SetValue(inst->cubemap[1]->textureSpecularIBL.GetGlHandle());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.textureSpecularIBL);
+				u->SetValue(world->defaultCubemap.textureSpecularIBL.GetGlHandle());
 			}
 			break;
 		case UT_BRDFAPPROXMAP:
-			u->SetValue(tr.brdfApproxTexture);
+			u->SetValue(tr.brdfApproxTexture.GetGlHandle());
 			break;
 		case UT_BSPPLANESMAP:
-			u->SetValue( tr.packed_planes_texture );
+			u->SetValue(tr.packed_planes_texture.GetGlHandle());
 			break;
 		case UT_BSPNODESMAP:
-			u->SetValue( tr.packed_nodes_texture );
+			u->SetValue(tr.packed_nodes_texture.GetGlHandle());
 			break;
 		case UT_BSPLIGHTSMAP:
-			u->SetValue( tr.packed_lights_texture );
+			u->SetValue(tr.packed_lights_texture.GetGlHandle());
 			break;
 		case UT_RENDERALPHA:
 			if( e->curstate.rendermode == kRenderTransTexture || e->curstate.rendermode == kRenderTransAdd )
@@ -1719,8 +1719,8 @@ void CStudioModelRenderer :: SetDecalUniforms( studiodecal_t *pDecal )
 			u->SetValue( pDecal->texinfo->matdesc->smoothness );
 			break;
 		case UT_RELIEFPARAMS:
-			width = RENDER_GET_PARM( PARM_TEX_WIDTH, pDecal->texinfo->gl_heightmap_id );
-			height = RENDER_GET_PARM( PARM_TEX_HEIGHT, pDecal->texinfo->gl_heightmap_id );
+			width = pDecal->texinfo->gl_heightmap_id.GetWidth();
+			height = pDecal->texinfo->gl_heightmap_id.GetHeight();
 			u->SetValue( (float)width, (float)height, pDecal->texinfo->matdesc->reliefScale, cv_shadow_offset->value );
 			break;
 		default:

@@ -269,7 +269,7 @@ allocate cubemap texture and FBO
 static bool Mod_AllocateCubemap(mcubemap_t *cubemap)
 {
 	int flags = TF_CUBEMAP;
-	if (!cubemap->texture)
+	if (!cubemap->texture.Initialized())
 	{
 		if (GL_Support(R_SEAMLESS_CUBEMAP)) {
 			SetBits(flags, TF_BORDER);	// seamless cubemaps have support for border
@@ -289,7 +289,7 @@ static bool Mod_AllocateCubemap(mcubemap_t *cubemap)
 	}
 
 	cubemap->framebuffer.Init(FBO_CUBE, cubemap->size, cubemap->size, FBO_NOTEXTURE);
-	bool textureTargetValid = RENDER_GET_PARM(PARM_TEX_TARGET, cubemap->texture) == GL_TEXTURE_CUBE_MAP_ARB;
+	bool textureTargetValid = cubemap->texture.GetGlTarget() == GL_TEXTURE_CUBE_MAP_ARB;
 	return textureTargetValid && cubemap->framebuffer.ValidateFBO();
 }
 
@@ -302,11 +302,10 @@ unload a given cubemap
 */
 static void Mod_FreeCubemap(mcubemap_t *cubemap)
 {
-	if (cubemap->valid && cubemap->texture && cubemap->texture != tr.whiteCubeTexture) {
+	if (cubemap->valid && cubemap->texture.Initialized() && cubemap->texture != tr.whiteCubeTexture) {
 		FREE_TEXTURE(cubemap->texture);
 	}
 
-	cubemap->texture = 0;
 	cubemap->valid = false;
 	cubemap->numMips = 0;
 	ClearBounds(cubemap->mins, cubemap->maxs);
@@ -433,6 +432,7 @@ static void CL_LinkCubemapsWithSurfaces()
 static void GL_CreateCubemap(dcubemap_t *src, mcubemap_t *dest, int index)
 {
 	// build a cubemap name like enum
+	new (dest) mcubemap_t();
 	Q_snprintf(dest->name, sizeof(dest->name), "cubemap_%i", index);
 	VectorCopy(src->origin, dest->origin);
 	ClearBounds(dest->mins, dest->maxs);
@@ -441,17 +441,14 @@ static void GL_CreateCubemap(dcubemap_t *src, mcubemap_t *dest, int index)
 	if (dest->size <= 0)
 		dest->size = DEFAULT_CUBEMAP_SIZE;
 
-	dest->texture = 0;
 	dest->valid = false;
-	dest->size = bound(1, dest->size, 512);
-	dest->size = NearestPOW(dest->size, false);
+	dest->size = NearestPOW(bound(1, dest->size, 512), false);
 }
 
 static void GL_CreateSkyboxCubemap(mcubemap_t *cubemap)
 {
 	Q_snprintf(cubemap->name, sizeof(cubemap->name), "cubemap_%s", world->name);
 	cubemap->origin = (worldmodel->mins + worldmodel->maxs) * 0.5f;
-	cubemap->texture = 0;
 	cubemap->valid = false;
 	cubemap->size = 256; // default cubemap larger than others
 }
@@ -470,7 +467,7 @@ static void GL_CreateCubemapSpecularIBL(mcubemap_t *cubemap)
 {
 	int flags = TF_CUBEMAP;
 	const int resolution = 128;
-	if (!cubemap->textureSpecularIBL)
+	if (!cubemap->textureSpecularIBL.Initialized())
 	{
 		if (GL_Support(R_SEAMLESS_CUBEMAP)) {
 			SetBits(flags, TF_BORDER);	// seamless cubemaps have support for border
@@ -486,7 +483,7 @@ static void GL_CreateCubemapSpecularIBL(mcubemap_t *cubemap)
 	}
 
 	// allocate GPU memory for texture, enable trilinear filtering and generate mip-maps
-	pglBindTexture(GL_TEXTURE_CUBE_MAP_ARB, cubemap->textureSpecularIBL);
+	pglBindTexture(GL_TEXTURE_CUBE_MAP_ARB, cubemap->textureSpecularIBL.GetGlHandle());
 	for (int i = 0; i < 6; ++i) {
 		pglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + i, 0, GL_RGB16F, resolution, resolution, 0, GL_RGB, GL_FLOAT, nullptr);
 	}
@@ -580,7 +577,7 @@ static void GL_FilterCubemapSpecularIBL(mcubemap_t *cubemap)
 				switch (u->type)
 				{
 					case UT_ENVMAP0:
-						u->SetValue(cubemap->texture);
+						u->SetValue(cubemap->texture.GetGlHandle());
 						break;
 					case UT_SCREENWIDTH: // size of source cubemap
 						u->SetValue((float)cubemap->size);
@@ -626,7 +623,7 @@ static void GL_RenderCubemap(mcubemap_t *cubemap)
 		}
 
 		// enable trilinear filtering and generate mip-maps
-		pglBindTexture(GL_TEXTURE_CUBE_MAP_ARB, cubemap->texture);
+		pglBindTexture(GL_TEXTURE_CUBE_MAP_ARB, cubemap->texture.GetGlHandle());
 		pglTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		pglGenerateMipmap(GL_TEXTURE_CUBE_MAP_ARB);
 		pglBindTexture(GL_TEXTURE_CUBE_MAP_ARB, 0);

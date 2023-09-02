@@ -23,7 +23,7 @@ public:
 	word	blurMipShader;
 	word	bloomShader;
 
-	int		target_rgb[2];
+	TextureHandle	target_rgb[2];
 	float	blurFactor[2];
 	bool	m_bUseTarget;
 	CPostFxParameters fxParameters;
@@ -43,8 +43,8 @@ public:
 	// automatic exposure 
 	gl_drawbuffer_t	*avg_luminance_fbo[11];
 	gl_drawbuffer_t *exposure_storage_fbo[2];
-	int	avg_luminance_texture = 0;
-	int exposure_storage_texture[2] = { 0 };
+	TextureHandle	avg_luminance_texture = TextureHandle::Null();
+	TextureHandle exposure_storage_texture[2] = { TextureHandle::Null() };
 
 	// sunshafts variables
 	Vector	m_vecSunLightColor;
@@ -65,7 +65,7 @@ public:
 
 	void PrintLuminanceValue();
 	void RenderAverageLuminance();
-	int RenderExposureStorage();
+	TextureHandle RenderExposureStorage();
 
 private:
 	void InitScreencopyFramebuffer();

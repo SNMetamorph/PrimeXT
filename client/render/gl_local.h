@@ -30,6 +30,7 @@ GNU General Public License for more details.
 #include "gl_shader.h"
 #include "cl_dlight.h"
 #include "cl_entity.h"
+#include "texture_handle.h"
 #include "xash3d_features.h"
 #include <utlarray.h>
 #include "vector.h"
@@ -210,13 +211,13 @@ typedef void (*pfnShaderCallback)( struct glsl_prog_s *shader );
 // multiple output draw buffers
 typedef struct
 {
-	char		name[32];
-	int		width;
-	int		height;
-	int		depth;
-	int		colortarget[MAX_FBO_ATTACHMENTS];
-	int		depthtarget;
-	uint		id;
+	char name[32];
+	int	width;
+	int	height;
+	int	depth;
+	uint id;
+	TextureHandle	colortarget[MAX_FBO_ATTACHMENTS];
+	TextureHandle	depthtarget;
 } gl_drawbuffer_t;
 
 typedef struct gl_fbo_s
@@ -224,7 +225,7 @@ typedef struct gl_fbo_s
 	GLboolean		init;
 	GLuint		framebuffer;
 	GLuint		renderbuffer;
-	int		texture;
+	TextureHandle	texture;
 } gl_fbo_t;
 
 typedef struct gl_movie_s
@@ -237,10 +238,10 @@ typedef struct gl_movie_s
 
 typedef struct gl_texbuffer_s
 {
-	int		framebuffer;
-	int		texturenum;
-	int		texframe;		// this frame texture was used
-	matrix4x4		matrix;		// texture matrix
+	int	framebuffer;
+	int	texframe;		// this frame texture was used
+	TextureHandle	texturenum;
+	matrix4x4 matrix;		// texture matrix
 } gl_texbuffer_t;
 
 class gl_state_t
@@ -262,8 +263,8 @@ typedef struct
 {
 	lmstate_t		state;
 	unsigned short	allocated[BLOCK_SIZE_MAX];
-	int		lightmap;
-	int		deluxmap;	
+	TextureHandle	lightmap;
+	TextureHandle	deluxmap;	
 } gl_lightmap_t;
 
 typedef struct
@@ -286,8 +287,8 @@ typedef struct
 {
 	char		name[64];
 	char		diffuse[64];
-	unsigned short	gl_diffuse_id;	// diffuse texture
-	unsigned short	gl_heightmap_id;
+	TextureHandle	gl_diffuse_id;	// diffuse texture
+	TextureHandle	gl_heightmap_id;
 	unsigned short	width, height;
 	byte		maxHeight;
 	byte		numLayers;	// layers that specified on heightmap
@@ -300,10 +301,10 @@ typedef struct
 	char		names[MAX_LANDSCAPE_LAYERS][64];	// basenames
 	matdesc_t		*material[MAX_LANDSCAPE_LAYERS];	// layer settings
 	float		smoothness[MAX_LANDSCAPE_LAYERS];	// shader params
-	unsigned short	gl_diffuse_id;			// diffuse texture array
-	unsigned short	gl_detail_id;			// detail texture
-	unsigned short	gl_normalmap_id;			// normalmap array
-	unsigned short	gl_specular_id;			// specular array
+	TextureHandle	gl_diffuse_id;			// diffuse texture array
+	TextureHandle	gl_detail_id;			// detail texture
+	TextureHandle	gl_normalmap_id;			// normalmap array
+	TextureHandle	gl_specular_id;			// specular array
 } layerMap_t;
 
 typedef struct terrain_s
@@ -482,47 +483,47 @@ typedef struct
 	cl_entity_t	*draw_entities[MAX_VISIBLE_ENTS];	// list of all pending entities for current frame
 	int		num_draw_entities;			// count for actual rendering frame
 
-	int		defaultTexture;   	// use for bad textures
-	int		skyboxTextures[6];	// skybox sides
-	int		normalmapTexture;	// default normalmap
-	int		deluxemapTexture;	// default deluxemap
-	int		vsdctCubeTexture;	// Virtual Shadow Depth Cubemap Texture
-	int		whiteCubeTexture;	// stub
-	int		blackCubeTexture;	// stub
-	int		depthTexture;	// stub
-	int		depthCubemap;	// stub
-	int		normalsFitting;	// best fit normals
-	int		brdfApproxTexture; // BRDF look-up table texture for PBR lighting
-	int		defaultProjTexture;	// fallback for missed textures
-	int		flashlightTexture;	// flashlight projection texture
-	int		spotlightTexture[8];// reserve for eight textures
-	int		cinTextures[MAX_MOVIE_TEXTURES];
+	TextureHandle		defaultTexture;   	// use for bad textures
+	TextureHandle		skyboxTextures[6];	// skybox sides
+	TextureHandle		normalmapTexture;	// default normalmap
+	TextureHandle		deluxemapTexture;	// default deluxemap
+	TextureHandle		vsdctCubeTexture;	// Virtual Shadow Depth Cubemap Texture
+	TextureHandle		whiteCubeTexture;	// stub
+	TextureHandle		blackCubeTexture;	// stub
+	TextureHandle		depthTexture;	// stub
+	TextureHandle		depthCubemap;	// stub
+	TextureHandle		normalsFitting;	// best fit normals
+	TextureHandle		brdfApproxTexture; // BRDF look-up table texture for PBR lighting
+	TextureHandle		defaultProjTexture;	// fallback for missed textures
+	TextureHandle		flashlightTexture;	// flashlight projection texture
+	TextureHandle		spotlightTexture[8];// reserve for eight textures
+	TextureHandle		cinTextures[MAX_MOVIE_TEXTURES];
 	gl_texbuffer_t	subviewTextures[MAX_SUBVIEW_TEXTURES];
-	int		shadowTextures[MAX_SHADOWS];
-	int		shadowCubemaps[MAX_SHADOWS];
-	int		waterTextures[WATER_TEXTURES];
+	TextureHandle		shadowTextures[MAX_SHADOWS];
+	TextureHandle		shadowCubemaps[MAX_SHADOWS];
+	TextureHandle		waterTextures[WATER_TEXTURES];
 	int		num_2D_shadows_used;	// used shadow textures per full frame
 	int		num_CM_shadows_used;	// used shadow textures per full frame
 	int		num_subview_used;		// used mirror textures per full frame
 	int		num_cin_used;		// used movie textures per full frame
 
-	int		screen_color;
-	int		screen_depth;
+	TextureHandle		screen_color;
+	TextureHandle		screen_depth;
 	gl_drawbuffer_t *screencopy_fbo;
 
-	int		grayTexture;
-	int		whiteTexture;
-	int		blackTexture;
-	int		screenTexture;
+	TextureHandle		grayTexture;
+	TextureHandle		whiteTexture;
+	TextureHandle		blackTexture;
+	TextureHandle		screenTexture;
 
 	CUtlArray<gl_state_t>	cached_state;
 
 	gl_lightmap_t	lightmaps[MAX_LIGHTMAPS];
 	byte		current_lightmap_texture;
-	int		packed_lights_texture;
-	int		packed_planes_texture;
-	int		packed_nodes_texture;
-	int		packed_models_texture;
+	TextureHandle	packed_lights_texture;
+	TextureHandle	packed_planes_texture;
+	TextureHandle	packed_nodes_texture;
+	TextureHandle	packed_models_texture;
 
 	gl_shadowmap_t	shadowmap;	// single atlas
 
@@ -545,11 +546,11 @@ typedef struct
 	// HDR rendering stuff
 	gl_drawbuffer_t *screen_hdr_fbo;
 	gl_drawbuffer_t *screen_multisample_fbo;
-	uint	screen_hdr_fbo_mip[6];
-	uint	screen_hdr_fbo_texture_color;
-	uint	screen_hdr_fbo_texture_depth;
-	uint	screen_multisample_fbo_texture_color;
-	uint	screen_multisample_fbo_texture_depth;
+	uint32_t screen_hdr_fbo_mip[6];
+	TextureHandle	screen_hdr_fbo_texture_color;
+	TextureHandle	screen_hdr_fbo_texture_depth;
+	TextureHandle	screen_multisample_fbo_texture_color;
+	TextureHandle	screen_multisample_fbo_texture_depth;
 
 	// skybox shaders
 	word		skyboxEnv[2];	// skybox & sun
@@ -751,14 +752,14 @@ ref_instance_t *R_GetPrevInstance(void);
 void CompressNormalizedVector(char outVec[3], const Vector &inVec);
 bool GL_BackendStartFrame(ref_viewpass_t *rvp, RefParams params);
 void GL_BackendEndFrame(ref_viewpass_t *rvp, RefParams params);
-int R_GetSpriteTexture(const model_t *m_pSpriteModel, int frame);
+TextureHandle R_GetSpriteTexture(const model_t *m_pSpriteModel, int frame);
 void GL_BindDrawbuffer(gl_drawbuffer_t *framebuffer);
 void GL_DepthRange(GLfloat depthmin, GLfloat depthmax);
 void R_RenderQuadPrimitive(CSolidEntry *entry);
 int GL_TextureMipCount(int width, int height);
 void GL_LoadMatrix(const matrix4x4 &source);
 void GL_LoadTexMatrix(const matrix4x4 &source);
-void GL_BindFrameBuffer(int buffer, int texture);
+void GL_BindFrameBuffer(int buffer, TextureHandle texture);
 void R_Speeds_Printf(const char *msg, ...);
 int R_AllocFrameBuffer(const CViewport &viewport);
 void GL_CheckVertexArrayBinding(void);
@@ -819,8 +820,8 @@ void GL_DrawDeferredPass( void );
 //
 gl_drawbuffer_t *GL_AllocDrawbuffer(const char *name, int width, int height, int depth = 1);
 void GL_ResizeDrawbuffer(gl_drawbuffer_t *fbo, int width, int height, int depth = 1);
-void GL_AttachColorTextureToFBO(gl_drawbuffer_t *fbo, int texture, int colorIndex, int cubemapSide = 0, int mipLevel = 0);
-void GL_AttachDepthTextureToFBO(gl_drawbuffer_t *fbo, int texture, int side = 0);
+void GL_AttachColorTextureToFBO(gl_drawbuffer_t *fbo, TextureHandle texture, int colorIndex, int cubemapSide = 0, int mipLevel = 0);
+void GL_AttachDepthTextureToFBO(gl_drawbuffer_t *fbo, TextureHandle texture, int side = 0);
 void GL_CheckFBOStatus(gl_drawbuffer_t *fbo);
 void GL_VidInitDrawBuffers();
 void GL_FreeDrawbuffers();
@@ -852,7 +853,7 @@ void R_PointAmbientFromLeaf( const Vector &point, mstudiolight_t *light );
 void R_LightForSky( const Vector &point, mstudiolight_t *light );
 void R_LightVec( const Vector &point, mstudiolight_t *light, bool ambient );
 Vector R_LightsForPoint( const Vector &point, float radius );
-void R_SetupLightTexture( CDynLight *pl, int texture );
+void R_SetupLightTexture( CDynLight *pl, TextureHandle texture );
 void R_SetupDynamicLights( void );
 void CL_ClearDlights( void );
 void R_AnimateLight( void );
@@ -909,7 +910,7 @@ word GL_FindShader( const char *glname, const char *vpname, const char *fpname, 
 void GL_SetShaderDirective( char *options, const char *directive );
 void GL_AddShaderDirective( char *options, const char *directive );
 void GL_AddShaderFeature( word shaderNum, int feature );
-void GL_EncodeNormal( char *options, int texturenum );
+void GL_EncodeNormal( char *options, TextureHandle texture );
 void GL_BindShader( struct glsl_prog_s *shader );
 void GL_FreeUberShaders( void );
 void GL_InitGPUShaders( void );

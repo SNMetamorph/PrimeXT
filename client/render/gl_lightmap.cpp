@@ -101,7 +101,7 @@ static void LM_UploadPages( bool lightmap, bool deluxmap )
 	{
 		gl_lightmap_t	*lms = &tr.lightmaps[i];
 
-		if( lightmap && !lms->lightmap )
+		if( lightmap && !lms->lightmap.Initialized() )
 		{
 			Q_snprintf( lmName, sizeof( lmName ), "*diffuse%i", i );
 			lms->lightmap = CREATE_TEXTURE( lmName, BLOCK_SIZE, BLOCK_SIZE, NULL, TF_LIGHTMAP ); 
@@ -111,7 +111,7 @@ static void LM_UploadPages( bool lightmap, bool deluxmap )
 			pglTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, lightBuf );
 		}
 
-		if( deluxmap && !lms->deluxmap )
+		if( deluxmap && !lms->deluxmap.Initialized() )
 		{
 			Q_snprintf( lmName, sizeof( lmName ), "*normals%i", i );
 			lms->deluxmap = CREATE_TEXTURE( lmName, BLOCK_SIZE, BLOCK_SIZE, NULL, TF_DELUXMAP );

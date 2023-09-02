@@ -17,6 +17,7 @@ GNU General Public License for more details.
 #ifndef GL_FRAMEBUFFER_H
 #define GL_FRAMEBUFFER_H
 #include "gl_export.h"
+#include "texture_handle.h"
 
 typedef enum
 {
@@ -42,19 +43,19 @@ public:
 	~CFrameBuffer();
 
 	bool Init(FramebufferType type, GLuint width, GLuint height, GLuint flags = 0);
-	void Bind(GLuint texture = 0, GLuint side = 0, GLuint mipLevel = 0);
+	void Bind(TextureHandle texture = TextureHandle::Null(), GLuint side = 0, GLuint mipLevel = 0);
 	bool ValidateFBO();
 	void Free();
 
 	unsigned int GetWidth() const	{ return m_iFrameWidth; }
 	unsigned int GetHeight() const	{ return m_iFrameHeight; }
-	int GetTexture() const			{ return m_iTexture; }
+	TextureHandle GetTexture() const	{ return m_iTexture; }
 	bool Active() const				{ return m_bAllowFBO; }
 
 private:
 	GLuint		m_iFrameWidth;
 	GLuint		m_iFrameHeight;
-	GLint		m_iTexture;
+	TextureHandle	m_iTexture;
 
 	GLuint		m_iFrameBuffer;
 	GLuint		m_iDepthBuffer;

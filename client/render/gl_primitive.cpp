@@ -24,7 +24,7 @@ GNU General Public License for more details.
 #include "gl_grass.h"
 #include "gl_cvars.h"
 
-void CSolidEntry :: SetRenderPrimitive( const Vector verts[4], const Vector4D &color, int texture, int rendermode )
+void CSolidEntry :: SetRenderPrimitive( const Vector verts[4], const Vector4D &color, TextureHandle texture, int rendermode )
 {
 	m_bDrawType = DRAWTYPE_QUAD;
 	m_iStartVertex = RI->frame.primverts.Count();

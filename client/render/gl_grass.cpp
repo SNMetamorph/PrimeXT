@@ -558,8 +558,8 @@ bool R_BuildGrassMesh( msurface_t *surf, mextrasurf_t *es, grassentry_t *entry, 
 
 	m_iNumVertex = m_iNumIndex = m_iVertexState = 0;
 
-	m_iTextureWidth = RENDER_GET_PARM( PARM_TEX_WIDTH, grasstexs[entry->texture].gl_texturenum );
-	m_iTextureHeight = RENDER_GET_PARM( PARM_TEX_HEIGHT, grasstexs[entry->texture].gl_texturenum );
+	m_iTextureWidth = grasstexs[entry->texture].gl_texturenum.GetWidth();
+	m_iTextureHeight = grasstexs[entry->texture].gl_texturenum.GetHeight();
 
 	// turn the face into a bunch of polygons, and compute the area of each
 	v0 = &world->vertexes[es->firstvertex];
@@ -726,44 +726,44 @@ void R_SetGrassUniforms( word hProgram, grass_t *grass )
 		switch( u->type )
 		{
 		case UT_COLORMAP:
-			u->SetValue( grasstexs[grass->texture].gl_texturenum );
+			u->SetValue( grasstexs[grass->texture].gl_texturenum.GetGlHandle() );
 			break;
 		case UT_PROJECTMAP:
 			if( pl && pl->type == LIGHT_SPOT )
-				u->SetValue( pl->spotlightTexture );
-			else u->SetValue( tr.whiteTexture );
+				u->SetValue( pl->spotlightTexture.GetGlHandle() );
+			else u->SetValue( tr.whiteTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP:
 		case UT_SHADOWMAP0:
-			if( pl ) u->SetValue( pl->shadowTexture[0] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) u->SetValue( pl->shadowTexture[0].GetGlHandle() );
+			else u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP1:
-			if( pl ) u->SetValue( pl->shadowTexture[1] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) u->SetValue( pl->shadowTexture[1].GetGlHandle() );
+			else u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP2:
-			if( pl ) u->SetValue( pl->shadowTexture[2] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) u->SetValue( pl->shadowTexture[2].GetGlHandle() );
+			else u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_SHADOWMAP3:
-			if( pl ) u->SetValue( pl->shadowTexture[3] );
-			else u->SetValue( tr.depthTexture );
+			if( pl ) u->SetValue( pl->shadowTexture[3].GetGlHandle() );
+			else u->SetValue( tr.depthTexture.GetGlHandle() );
 			break;
 		case UT_LIGHTMAP:
 		case UT_DELUXEMAP:
 		case UT_DECALMAP:
 			// unacceptable for grass
-			u->SetValue( tr.whiteTexture );
+			u->SetValue( tr.whiteTexture.GetGlHandle() );
 			break;
 		case UT_SCREENMAP:
-			u->SetValue( tr.screen_color );
+			u->SetValue( tr.screen_color.GetGlHandle() );
 			break;
 		case UT_DEPTHMAP:
-			u->SetValue( tr.screen_depth );
+			u->SetValue( tr.screen_depth.GetGlHandle() );
 			break;
 		case UT_FITNORMALMAP:
-			u->SetValue( tr.normalsFitting );
+			u->SetValue( tr.normalsFitting.GetGlHandle() );
 			break;
 		case UT_MODELMATRIX:
 			u->SetValue( &glm->modelMatrix[0] );
@@ -786,8 +786,8 @@ void R_SetGrassUniforms( word hProgram, grass_t *grass )
 		case UT_SHADOWPARMS:
 			if( pl != NULL )
 			{
-				float shadowWidth = 1.0f / (float)RENDER_GET_PARM( PARM_TEX_WIDTH, pl->shadowTexture[0] );
-				float shadowHeight = 1.0f / (float)RENDER_GET_PARM( PARM_TEX_HEIGHT, pl->shadowTexture[0] );
+				float shadowWidth = 1.0f / (float)pl->shadowTexture[0].GetWidth();
+				float shadowHeight = 1.0f / (float)pl->shadowTexture[0].GetHeight();
 				// depth scale and bias and shadowmap resolution
 				u->SetValue( shadowWidth, shadowHeight, -pl->projectionMatrix[2][2], pl->projectionMatrix[3][2] );
 			}
@@ -1122,7 +1122,7 @@ byte R_GrassTextureForName( const char *name )
 	Q_strncpy( grasstexs[i].name, name, sizeof( grasstexs[i].name ));
 	grasstexs[i].gl_texturenum = LOAD_TEXTURE( name, NULL, 0, TF_GRASS );
 
-	if( !grasstexs[i].gl_texturenum )
+	if( !grasstexs[i].gl_texturenum.Initialized() )
 	{
 		ALERT( at_warning, "couldn't load %s\n", name );
 		grasstexs[i].gl_texturenum = tr.defaultTexture;
@@ -1754,7 +1754,7 @@ void R_GrassShutdown( void )
 	// release all grass textures
 	for( int i = 0; i < GRASS_TEXTURES; i++ )
 	{
-		if( !grasstexs[i].gl_texturenum )
+		if( !grasstexs[i].gl_texturenum.Initialized() )
 			continue;
 
 		FREE_TEXTURE( grasstexs[i].gl_texturenum );

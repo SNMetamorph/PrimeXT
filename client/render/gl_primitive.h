@@ -16,6 +16,8 @@ GNU General Public License for more details.
 
 #ifndef GL_PRIMITIVE_H
 #define GL_PRIMITIVE_H
+#include "texture_handle.h"
+#include <stdint.h>
 
 #define DRAWTYPE_UNKNOWN	0
 #define DRAWTYPE_SURFACE	1
@@ -27,7 +29,7 @@ GNU General Public License for more details.
 class CSolidEntry
 {
 public:
-	void SetRenderPrimitive( const Vector verts[4], const Vector4D &color, int texture, int rendermode );
+	void SetRenderPrimitive( const Vector verts[4], const Vector4D &color, TextureHandle texture, int rendermode );
 	void SetRenderSurface( msurface_t *surface, word hProgram );
 	void SetRenderMesh( struct vbomesh_s *mesh, word hProgram );
 	virtual bool IsTranslucent( void ) { return false; }
@@ -47,11 +49,8 @@ public:
 		int		m_iStartVertex;	// offset in global heap
 	};
 
-	union
-	{
-		unsigned short	m_hProgram;	// handle to glsl program (may be 0)
-		unsigned short	m_hTexture;	// texture for primitive
-	};
+	uint32_t m_hProgram;			// handle to glsl program (may be 0)
+	TextureHandle	m_hTexture;	// texture for primitive (OpenGL texture handle)
 
 	union
 	{

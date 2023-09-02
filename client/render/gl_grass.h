@@ -16,6 +16,7 @@ GNU General Public License for more details.
 
 #ifndef GL_GRASS_H
 #define GL_GRASS_H
+#include "texture_handle.h"
 
 #define GRASS_TEXTURES	256			// unique textures for grass (a byte limit, don't change)
 #define GRASS_ANIM_DIST	512.0f			// if this is changed it must be changed in glsl too!
@@ -37,7 +38,7 @@ typedef struct grassentry_s
 typedef struct grasstexture_s
 {
 	char	name[256];	// path to grass texture
-	int	gl_texturenum;	// gl-texture
+	TextureHandle	gl_texturenum;	// gl-texture
 } grasstexture_t;
 
 typedef struct gvert_s

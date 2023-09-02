@@ -324,7 +324,7 @@ R_SetupLightTexture
 Must be called after R_SetupLightParams
 ================
 */
-void R_SetupLightTexture( CDynLight *pl, int texture )
+void R_SetupLightTexture( CDynLight *pl, TextureHandle texture )
 {
 	ASSERT( pl != NULL );
 

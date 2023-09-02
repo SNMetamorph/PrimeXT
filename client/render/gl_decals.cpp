@@ -22,6 +22,7 @@
 #include "gl_studio.h"
 #include "gl_occlusion.h"
 #include "gl_cvars.h"
+#include "brush_material.h"
 
 #define MAX_CLIPVERTS		64	// don't change this
 #define MAX_GROUPENTRIES		512
@@ -82,9 +83,10 @@ void DecalGroupEntry :: PreloadTextures( void )
 	if( m_DecalName[0] == '#' )
 		Q_strncpy( name, m_DecalName + 1, sizeof( name ));
 	else Q_strncpy( name, m_DecalName, sizeof( name ));
+
 	Q_snprintf( path, sizeof( path ), "gfx/decals/%s", name );
-	int id = LOAD_TEXTURE( path, NULL, 0, TF_CLAMP );
-	if( !id )
+	TextureHandle id = LOAD_TEXTURE( path, NULL, 0, TF_CLAMP );
+	if (!id.Initialized())
 	{
 		// decal was completely missed
 		m_init = true;
@@ -92,8 +94,7 @@ void DecalGroupEntry :: PreloadTextures( void )
 	}
 
 	gl_diffuse_id = id;
-
-	if( FBitSet( RENDER_GET_PARM( PARM_TEX_FLAGS, gl_diffuse_id ), TF_HAS_ALPHA ))
+	if (FBitSet(gl_diffuse_id.GetFlags(), TF_HAS_ALPHA))
 		opaque = true;
 
 	Q_snprintf( path, sizeof( path ), "gfx/decals/%s_norm", name );
@@ -136,7 +137,7 @@ DecalGroup :: ~DecalGroup( void )
 {
 	for( int i = 0; i < size; i++ )
 	{
-		if( pEntryArray[i].gl_diffuse_id != 0 )
+		if( pEntryArray[i].gl_diffuse_id.Initialized() )
 			FREE_TEXTURE( pEntryArray[i].gl_diffuse_id );
 		if( pEntryArray[i].gl_normalmap_id != tr.normalmapTexture )
 			FREE_TEXTURE( pEntryArray[i].gl_normalmap_id );
@@ -686,7 +687,7 @@ static void R_AddDecal( decalClip_t *clip, msurface_t *surf )
 
 	entry->PreloadTextures(); // time to cache decal textures
 
-	if( !entry->gl_diffuse_id )
+	if( !entry->gl_diffuse_id.Initialized() )
 	{
 		// decal texture was missed?
 		R_ClearDecalClip( clip );
@@ -1348,83 +1349,87 @@ void R_SetDecalUniforms( brushdecal_t *decal )
 		{
 		case UT_COLORMAP:
 			if( Surf_CheckSubview( es, true ) && FBitSet( decal->flags, FDECAL_PUDDLE ))
-				u->SetValue( Surf_GetSubview( es )->texturenum );
-			else u->SetValue( mat->gl_diffuse_id );
+				u->SetValue( Surf_GetSubview( es )->texturenum.GetGlHandle() );
+			else u->SetValue( mat->impl->gl_diffuse_id.GetGlHandle() );
 			break;
 		case UT_NORMALMAP:
-			u->SetValue( decal->texinfo->gl_normalmap_id );
+			u->SetValue( decal->texinfo->gl_normalmap_id.GetGlHandle() );
 			break;
 		case UT_GLOSSMAP:
-			u->SetValue( decal->texinfo->gl_specular_id );
+			u->SetValue( decal->texinfo->gl_specular_id.GetGlHandle() );
 			break;
 		case UT_LIGHTMAP:
-			if( R_FullBright( )) u->SetValue( tr.deluxemapTexture );
-			else u->SetValue( tr.lightmaps[es->lightmaptexturenum].lightmap );
+			if( R_FullBright( )) 
+				u->SetValue( tr.deluxemapTexture.GetGlHandle() );
+			else 
+				u->SetValue( tr.lightmaps[es->lightmaptexturenum].lightmap.GetGlHandle() );
 			break;
 		case UT_DELUXEMAP:
-			if( R_FullBright( )) u->SetValue( tr.grayTexture );
-			else u->SetValue( tr.lightmaps[es->lightmaptexturenum].deluxmap );
+			if( R_FullBright( )) 
+				u->SetValue( tr.grayTexture.GetGlHandle() );
+			else 
+				u->SetValue( tr.lightmaps[es->lightmaptexturenum].deluxmap.GetGlHandle() );
 			break;
 		case UT_DECALMAP:
-			u->SetValue( decal->texinfo->gl_diffuse_id );
+			u->SetValue( decal->texinfo->gl_diffuse_id.GetGlHandle() );
 			break;
 		case UT_SCREENMAP:
-			u->SetValue( tr.screen_color );
+			u->SetValue( tr.screen_color.GetGlHandle() );
 			break;
 		case UT_DEPTHMAP:
-			u->SetValue( tr.screen_depth );
+			u->SetValue( tr.screen_depth.GetGlHandle() );
 			break;
 		case UT_HEIGHTMAP:
-			u->SetValue( decal->texinfo->gl_heightmap_id );
+			u->SetValue( decal->texinfo->gl_heightmap_id.GetGlHandle() );
 			break;
 		case UT_ENVMAP0:
 		case UT_ENVMAP:
 			if (!RP_CUBEPASS() && es->cubemap[0] != NULL)
 			{
-				u->SetValue(es->cubemap[0]->texture);
+				u->SetValue(es->cubemap[0]->texture.GetGlHandle());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.texture);
+				u->SetValue(world->defaultCubemap.texture.GetGlHandle());
 			}
 			break;
 		case UT_ENVMAP1:
 			if (!RP_CUBEPASS() && es->cubemap[1] != NULL) {
-				u->SetValue(es->cubemap[1]->texture);
+				u->SetValue(es->cubemap[1]->texture.GetGlHandle());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.texture);
+				u->SetValue(world->defaultCubemap.texture.GetGlHandle());
 			}
 			break;
 		case UT_SPECULARMAPIBL0:
 			if (!RP_CUBEPASS() && es->cubemap[0] != NULL) {
-				u->SetValue(es->cubemap[0]->textureSpecularIBL);
+				u->SetValue(es->cubemap[0]->textureSpecularIBL.GetGlHandle());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.textureSpecularIBL);
+				u->SetValue(world->defaultCubemap.textureSpecularIBL.GetGlHandle());
 			}
 			break;
 		case UT_SPECULARMAPIBL1:
 			if (!RP_CUBEPASS() && es->cubemap[1] != NULL) {
-				u->SetValue(es->cubemap[1]->textureSpecularIBL);
+				u->SetValue(es->cubemap[1]->textureSpecularIBL.GetGlHandle());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.textureSpecularIBL);
+				u->SetValue(world->defaultCubemap.textureSpecularIBL.GetGlHandle());
 			}
 			break;
 		case UT_BRDFAPPROXMAP:
-			u->SetValue(tr.brdfApproxTexture);
+			u->SetValue( tr.brdfApproxTexture.GetGlHandle() );
 			break;
 		case UT_FITNORMALMAP:
-			u->SetValue( tr.normalsFitting );
+			u->SetValue( tr.normalsFitting.GetGlHandle() );
 			break;
 		case UT_FRAGDATA0:
-			u->SetValue( tr.defscene_fbo->colortarget[0] );
+			u->SetValue( tr.defscene_fbo->colortarget[0].GetGlHandle() );
 			break;
 		case UT_FRAGDATA1:
-			u->SetValue( tr.defscene_fbo->colortarget[1] );
+			u->SetValue( tr.defscene_fbo->colortarget[1].GetGlHandle() );
 			break;
 		case UT_FRAGDATA2:
-			u->SetValue( tr.defscene_fbo->colortarget[2] );
+			u->SetValue( tr.defscene_fbo->colortarget[2].GetGlHandle() );
 			break;
 		case UT_MODELMATRIX:
 			u->SetValue( &glm->modelMatrix[0] );
@@ -1528,8 +1533,8 @@ void R_SetDecalUniforms( brushdecal_t *decal )
 			u->SetValue( (float)es->lights[4], (float)es->lights[5], (float)es->lights[6], (float)es->lights[7] );
 			break;
 		case UT_RELIEFPARAMS:
-			width = RENDER_GET_PARM( PARM_TEX_WIDTH, decal->texinfo->gl_heightmap_id );
-			height = RENDER_GET_PARM( PARM_TEX_HEIGHT, decal->texinfo->gl_heightmap_id );
+			width = decal->texinfo->gl_heightmap_id.GetWidth();
+			height = decal->texinfo->gl_heightmap_id.GetHeight();
 			u->SetValue( (float)width, (float)height, desc->reliefScale, cv_shadow_offset->value );
 			break;
 		default:
@@ -1951,7 +1956,7 @@ void DecalsInit( void )
 			tempentries[numtemp].gl_normalmap_id = tr.normalmapTexture;
 			tempentries[numtemp].gl_specular_id = tr.blackTexture;
 			tempentries[numtemp].gl_heightmap_id = tr.whiteTexture;
-			tempentries[numtemp].gl_diffuse_id = 0;	// assume no texture
+			tempentries[numtemp].gl_diffuse_id = TextureHandle::Null(); // assume no texture
 			numtemp++;
 		}
 

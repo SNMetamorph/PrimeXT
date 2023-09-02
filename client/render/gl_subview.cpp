@@ -380,14 +380,14 @@ int R_AllocateSubviewTexture(const CViewport &viewport, texFlags_t texFlags)
 		if( tr.subviewTextures[i].texframe == tr.realframecount )
 			continue;	// already used for this frame
 
-		if( viewport.GetWidth() != RENDER_GET_PARM( PARM_TEX_WIDTH, tr.subviewTextures[i].texturenum ))
+		if( viewport.GetWidth() != tr.subviewTextures[i].texturenum.GetWidth())
 			continue;	// width mismatched
 
-		if( viewport.GetHeight() != RENDER_GET_PARM( PARM_TEX_HEIGHT, tr.subviewTextures[i].texturenum ))
+		if( viewport.GetHeight() != tr.subviewTextures[i].texturenum.GetHeight())
 			continue;	// height mismatched
 
 		// screens don't want textures with 'clamp' modifier
-		if( FBitSet( texFlags, TF_CLAMP ) != FBitSet( RENDER_GET_PARM( PARM_TEX_FLAGS, tr.subviewTextures[i].texturenum ), TF_CLAMP ))
+		if( FBitSet( texFlags, TF_CLAMP ) != FBitSet(tr.subviewTextures[i].texturenum.GetFlags(), TF_CLAMP))
 			continue;	// mismatch texture flags
 
 		// found a valid spot

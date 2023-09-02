@@ -195,7 +195,7 @@ static void R_RenderScreenQuad()
 	GL_Setup2D();
 	GL_Bind(GL_TEXTURE0, tr.screen_hdr_fbo->colortarget[0]);
 	RenderFSQ(glState.width, glState.height);
-	GL_Bind(GL_TEXTURE0, 0);
+	GL_Bind(GL_TEXTURE0, TextureHandle::Null());
 }
 
 /*
@@ -617,12 +617,12 @@ R_GetSpriteTexture
 
 =============
 */
-int R_GetSpriteTexture( const model_t *m_pSpriteModel, int frame )
+TextureHandle R_GetSpriteTexture( const model_t *m_pSpriteModel, int frame )
 {
-	if( !m_pSpriteModel || m_pSpriteModel->type != mod_sprite || !m_pSpriteModel->cache.data )
-		return 0;
-
-	return R_GetSpriteFrame( m_pSpriteModel, frame )->gl_texturenum;
+	if (!m_pSpriteModel || m_pSpriteModel->type != mod_sprite || !m_pSpriteModel->cache.data) {
+		return TextureHandle::Null();
+	}
+	return TextureHandle(R_GetSpriteFrame( m_pSpriteModel, frame ));
 }
 
 void R_RenderQuadPrimitive( CSolidEntry *entry )
@@ -662,7 +662,7 @@ void R_RenderQuadPrimitive( CSolidEntry *entry )
 	int	r, g, b, a;
 
 	// draw the particle
-	GL_Bind( GL_TEXTURE0, entry->m_hTexture );
+	GL_Bind(GL_TEXTURE0, entry->m_hTexture);
 	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 	UnpackRGBA( r, g, b, a, entry->m_iColor );
 	pglColor4ub( r, g, b, a );
@@ -740,7 +740,7 @@ void R_FreeFrameBuffer( int buffer )
 	memset( fbo, 0, sizeof( *fbo ));
 }
 
-void GL_BindFrameBuffer( int buffer, int texture )
+void GL_BindFrameBuffer( int buffer, TextureHandle texture )
 {
 	gl_fbo_t *fbo = NULL;
 
@@ -764,7 +764,7 @@ void GL_BindFrameBuffer( int buffer, int texture )
 	if( fbo->texture != texture )
 	{
 		// change texture attachment
-		GLuint texnum = RENDER_GET_PARM( PARM_TEX_TEXNUM, texture );
+		GLuint texnum = texture.GetGlHandle();
 		pglFramebufferTexture2D( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, texnum, 0 );
 		fbo->texture = texture;
 	}
@@ -1117,8 +1117,8 @@ void CompressNormalizedVector( char outVec[3], const Vector &inVec )
 		float maxNAbs = uNorm.MaxCoord();	// get the main axis for cubemap lookup
 
 		// get texture dimensions (probably always equal 512)
-		uint width = RENDER_GET_PARM( PARM_TEX_SRC_WIDTH, tr.normalsFitting );
-		uint height = RENDER_GET_PARM( PARM_TEX_SRC_HEIGHT, tr.normalsFitting );
+		uint width = tr.normalsFitting.GetWidth();
+		uint height = tr.normalsFitting.GetHeight();
 
 		// get texture coordinates in a collapsed cubemap
 		float u = (uNorm.z < maxNAbs ? (uNorm.y < maxNAbs ? uNorm.y : uNorm.x) : uNorm.x);

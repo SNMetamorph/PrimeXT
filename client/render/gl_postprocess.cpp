@@ -96,10 +96,10 @@ void CBasePostEffects :: InitTargetColor( int slot )
 	int tex_flags = 0;
 	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
 
-	if( target_rgb[slot] )
+	if( target_rgb[slot].Initialized() )
 	{
 		FREE_TEXTURE( target_rgb[slot] );
-		target_rgb[slot] = 0;
+		target_rgb[slot] = TextureHandle::Null();
 	}
 
 	if (hdr_rendering)
@@ -155,8 +155,8 @@ void CBasePostEffects::PrintLuminanceValue()
 
 	float luminance;
 	char valueString[32];
-	int	width = RENDER_GET_PARM(PARM_TEX_WIDTH, avg_luminance_texture);
-	int	height = RENDER_GET_PARM(PARM_TEX_HEIGHT, avg_luminance_texture);
+	int	width = avg_luminance_texture.GetWidth();
+	int	height = avg_luminance_texture.GetHeight();
 	const int mipCount = GL_TextureMipCount(width, height);
 
 	pglBindFramebuffer(GL_READ_FRAMEBUFFER, avg_luminance_fbo[0]->id);
@@ -192,7 +192,7 @@ void CBasePostEffects::RenderAverageLuminance()
 			switch (u->type)
 			{
 				case UT_SCREENMAP:
-					u->SetValue(avg_luminance_texture);
+					u->SetValue(avg_luminance_texture.GetGlHandle());
 					break;
 				case UT_SCREENSIZEINV:
 					u->SetValue(1.0f / (float)w, 1.0f / (float)h);
@@ -217,7 +217,7 @@ void CBasePostEffects::RenderAverageLuminance()
 	pglBindFramebuffer(GL_FRAMEBUFFER_EXT, glState.frameBuffer);
 }
 
-int CBasePostEffects::RenderExposureStorage()
+TextureHandle CBasePostEffects::RenderExposureStorage()
 {
 	static int fboIndex = 0;
 	const int sourceIndex = fboIndex % 2;
@@ -235,10 +235,10 @@ int CBasePostEffects::RenderExposureStorage()
 		switch (u->type)
 		{
 			case UT_SCREENMAP:
-				u->SetValue(avg_luminance_texture);
+				u->SetValue(avg_luminance_texture.GetGlHandle());
 				break;
 			case UT_NORMALMAP:
-				u->SetValue(exposure_storage_texture[sourceIndex]);
+				u->SetValue(exposure_storage_texture[sourceIndex].GetGlHandle());
 				break;
 			case UT_MIPLOD:
 				u->SetValue(mipCount - 1);
@@ -288,7 +288,7 @@ void CBasePostEffects::InitAutoExposure()
 	GL_Bind(GL_TEXTURE0, avg_luminance_texture);
 	pglGenerateMipmap(GL_TEXTURE_2D);
 	pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	GL_Bind(GL_TEXTURE0, 0);
+	GL_Bind(GL_TEXTURE0, TextureHandle::Null());
 
 	for (int i = 0; i < mipCount; ++i)
 	{
@@ -305,7 +305,7 @@ void CBasePostEffects::InitAutoExposure()
 		exposure_storage_texture[i] = CREATE_TEXTURE(va("*exposure_storage%d", i), 1, 1, NULL, TF_ARB_16BIT | TF_ARB_FLOAT);
 		GL_Bind(GL_TEXTURE0, exposure_storage_texture[i]);
 		pglTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGB, GL_FLOAT, &colorBlack.x);
-		GL_Bind(GL_TEXTURE0, 0);
+		GL_Bind(GL_TEXTURE0, TextureHandle::Null());
 		exposure_storage_fbo[i] = GL_AllocDrawbuffer("*exposure_storage_fbo", 1, 1, 1);
 		GL_AttachColorTextureToFBO(exposure_storage_fbo[i], exposure_storage_texture[i], 0);
 		GL_CheckFBOStatus(exposure_storage_fbo[i]);
@@ -551,14 +551,14 @@ void V_RenderPostEffect( word hProgram )
 		{
 		case UT_SCREENMAP:
 			if( post.m_bUseTarget ) // HACKHACK
-				u->SetValue( post.target_rgb[0] );
-			else u->SetValue( tr.screen_color );
+				u->SetValue( post.target_rgb[0].GetGlHandle() );
+			else u->SetValue( tr.screen_color.GetGlHandle() );
 			break;
 		case UT_DEPTHMAP:
-			u->SetValue( tr.screen_depth );
+			u->SetValue( tr.screen_depth.GetGlHandle() );
 			break;
 		case UT_COLORMAP:
-			u->SetValue( post.target_rgb[0] );
+			u->SetValue( post.target_rgb[0].GetGlHandle() );
 			break;
 		case UT_BRIGHTNESS:
 			u->SetValue(post.fxParameters.GetBrightness());
@@ -859,7 +859,7 @@ void RenderTonemap()
 	GL_DEBUG_SCOPE();
 	GL_Setup2D();
 	post.RequestScreenColor();
-	int exposureTexture = post.RenderExposureStorage();
+	TextureHandle exposureTexture = post.RenderExposureStorage();
 
 	GL_BindShader(&glsl_programs[post.tonemapShader]);
 	glsl_program_t *shader = RI->currentshader;
@@ -870,12 +870,12 @@ void RenderTonemap()
 		{
 			case UT_SCREENMAP:
 				if (post.m_bUseTarget) // HACKHACK
-					u->SetValue(post.target_rgb[0]);
+					u->SetValue(post.target_rgb[0].GetGlHandle());
 				else 
-					u->SetValue(tr.screen_color);
+					u->SetValue(tr.screen_color.GetGlHandle());
 				break;
 			case UT_COLORMAP:
-				u->SetValue(exposureTexture);
+				u->SetValue(exposureTexture.GetGlHandle());
 				break;
 		}
 	}
