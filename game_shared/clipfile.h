@@ -27,7 +27,14 @@ CLIP FILES
 */
 
 #include "bspfile.h"
+#include "vector.h"
 #include <stdint.h>
+
+typedef struct mvert_s
+{
+	Vector		point;
+	float		st[2];			// for alpha-texture test
+} mvert_t;
 
 namespace clipfile
 {
@@ -38,6 +45,15 @@ namespace clipfile
 	constexpr uint32_t kDataLumpPlanes = 1;
 	constexpr uint32_t kDataLumpPlaneIndexes = 2;
 	constexpr uint32_t kDataLumpCount = 16; // for future expansions
+
+	enum class GeometryType : uint32_t
+	{
+		Unknown = 0,
+		Original,
+		CookedBox,
+		CookedConvexHull,
+		CookedTriangleMesh,
+	};
 
 #pragma pack(push, 1)
 	struct Header
@@ -63,8 +79,9 @@ namespace clipfile
 	{
 		uint32_t dataLength;
 		uint32_t dataOffset;
-		uint32_t body;
-		uint32_t skin;
+		int32_t body;
+		int32_t skin;
+		GeometryType geometryType;
 	};
 
 	struct CacheTable
