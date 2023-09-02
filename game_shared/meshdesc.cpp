@@ -1087,8 +1087,6 @@ bool CMeshDesc::StudioSaveCache(const char *pszModelName)
 	fs::Write(m_srcPlaneElems, AlignTo<size_t, 4>(lump->filelen), cacheFile);
 
 	currentEntry.dataLength = fs::Tell(cacheFile) - currentEntry.dataOffset;
-	fs::Seek(cacheFile, currentEntry.dataOffset, fs::SeekType::Set);
-	fs::Write(&data, sizeof(data), cacheFile);
 
 	// write cache table back to file
 	fileHeader.tableOffset = fs::Tell(cacheFile);
@@ -1105,6 +1103,10 @@ bool CMeshDesc::StudioSaveCache(const char *pszModelName)
 	cacheFile = fs::Open(szFilename, "r+b");
 	fs::Seek(cacheFile, 0, fs::SeekType::Set);
 	fs::Write(&fileHeader, sizeof(fileHeader), cacheFile);
+
+	// update lumps
+	fs::Seek(cacheFile, currentEntry.dataOffset, fs::SeekType::Set);
+	fs::Write(&data, sizeof(data), cacheFile);
 	fs::Close(cacheFile);
 
 	return true;
