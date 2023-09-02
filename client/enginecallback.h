@@ -21,6 +21,7 @@ GNU General Public License for more details.
 #include "event_api.h"
 #include "pm_defs.h"
 #include "mobility_int.h"
+#include "texture_handle.h"
 
 extern cl_enginefunc_t gEngfuncs;
 extern mobile_engfuncs_t gMobileAPI;
@@ -81,23 +82,12 @@ inline void PlaySound( char *szSound, float vol ) { gEngfuncs.pfnPlaySoundByName
 inline void PlaySound( int iSound, float vol ) { gEngfuncs.pfnPlaySoundByIndex( iSound, vol ); }
 
 // render api callbacks
-inline int CREATE_TEXTURE(const char *name, int width, int height, const void *buffer, int flags)
-{
-	return (*gRenderfuncs.GL_CreateTexture)(name, width, height, buffer, static_cast<texFlags_t>(flags));
-}
-inline int CREATE_TEXTURE_ARRAY(const char *name, int width, int height, int depth, const void *buffer, int flags)
-{
-	return (*gRenderfuncs.GL_CreateTextureArray)(name, width, height, depth, buffer, static_cast<texFlags_t>(flags));
-}
-
 #define COMPARE_FILE_TIME		(*gRenderfuncs.COM_CompareFileTime)
 #define DECAL_SETUP_VERTS		(*gRenderfuncs.R_DecalSetupVerts)
 #define DRAW_PARTICLES		(*gRenderfuncs.GL_DrawParticles)
 #define DRAW_SINGLE_DECAL		(*gRenderfuncs.DrawSingleDecal)
 #define ENGINE_SET_PVS		(*gRenderfuncs.R_FatPVS)
 #define ENV_SHOT			(*gRenderfuncs.EnvShot)
-#define FIND_TEXTURE		(*gRenderfuncs.GL_FindTexture)
-#define FREE_TEXTURE		(*gRenderfuncs.GL_FreeTexture)
 #define FS_SEARCH			(*gRenderfuncs.pfnGetFilesList)
 #define GET_DETAIL_SCALE		(*gRenderfuncs.GetDetailScaleForTexture)
 #define GET_DYNAMIC_LIGHT		(*gRenderfuncs.GetDynamicLight)
@@ -107,7 +97,6 @@ inline int CREATE_TEXTURE_ARRAY(const char *name, int width, int height, int dep
 #define GET_FRAMETIME		(*gRenderfuncs.GetFrameTime)
 #define GET_LIGHTSTYLE		(*gRenderfuncs.GetLightStyle)
 #define GET_OVERVIEW_PARMS		(*gRenderfuncs.GetOverviewParms)
-#define GET_TEXTURE_DATA		(*gRenderfuncs.GL_TextureData)
 #define GET_TEXTURE_NAME		(*gRenderfuncs.GL_TextureName)
 #define HOST_ERROR			(*gRenderfuncs.Host_Error)
 #define INIT_BEAMCHAINS		(*gRenderfuncs.GetBeamChains)
@@ -121,9 +110,6 @@ inline int CREATE_TEXTURE_ARRAY(const char *name, int width, int height, int dep
 #define STUDIO_GET_TEXTURE		(*gRenderfuncs.StudioGetTexture)
 #define TEXTURE_TO_TEXGAMMA		(*gRenderfuncs.LightToTexGamma)
 
-#define LOAD_TEXTURE		(*gRenderfuncs.GL_LoadTexture)
-#define LOAD_TEXTURE_ARRAY		(*gRenderfuncs.GL_LoadTextureArray)
-
 // AVIKit interface
 #define OPEN_CINEMATIC		(*gRenderfuncs.AVI_LoadVideo)
 #define FREE_CINEMATIC		(*gRenderfuncs.AVI_FreeVideo)
@@ -131,11 +117,9 @@ inline int CREATE_TEXTURE_ARRAY(const char *name, int width, int height, int dep
 #define CIN_GET_VIDEO_INFO		(*gRenderfuncs.AVI_GetVideoInfo)
 #define CIN_GET_FRAME_NUMBER		(*gRenderfuncs.AVI_GetVideoFrameNumber)
 #define CIN_GET_FRAMEDATA		(*gRenderfuncs.AVI_GetVideoFrame)
-#define CIN_UPLOAD_FRAME		(*gRenderfuncs.AVI_UploadRawFrame)
 #define CIN_UPDATE_SOUND		(*gRenderfuncs.AVI_StreamSound)
 
 // glcommands
-#define GL_Bind			(*gRenderfuncs.GL_Bind)
 #define GL_SelectTexture		(*gRenderfuncs.GL_SelectTexture)
 #define GL_TexGen			(*gRenderfuncs.GL_TexGen)
 #define GL_LoadTextureMatrix		(*gRenderfuncs.GL_LoadTextureMatrix)
@@ -143,16 +127,66 @@ inline int CREATE_TEXTURE_ARRAY(const char *name, int width, int height, int dep
 #define GL_CleanUpTextureUnits	(*gRenderfuncs.GL_CleanUpTextureUnits)
 #define GL_TexCoordArrayMode		(*gRenderfuncs.GL_TexCoordArrayMode)
 #define GL_TextureTarget		(*gRenderfuncs.GL_TextureTarget)
-#define GL_UpdateTexSize		(*gRenderfuncs.GL_UpdateTexSize)
 
 #define RANDOM_SEED			(*gRenderfuncs.SetRandomSeed)
 #define MUSIC_FADE_VOLUME		(*gRenderfuncs.S_FadeMusicVolume)
 
 #define GL_GetProcAddress		(*gRenderfuncs.GL_GetProcAddress)
 
+inline TextureHandle CREATE_TEXTURE(const char *name, int width, int height, const void *buffer, int flags)
+{
+	return (*gRenderfuncs.GL_CreateTexture)(name, width, height, buffer, static_cast<texFlags_t>(flags));
+}
+
+inline TextureHandle CREATE_TEXTURE_ARRAY(const char *name, int width, int height, int depth, const void *buffer, int flags)
+{
+	return (*gRenderfuncs.GL_CreateTextureArray)(name, width, height, depth, buffer, static_cast<texFlags_t>(flags));
+}
+
+inline void GL_Bind(int32_t tmu, TextureHandle texnum)
+{
+	(*gRenderfuncs.GL_Bind)(tmu, texnum.ToInt());
+}
+
+inline void FREE_TEXTURE(TextureHandle texHandle)
+{
+	(*gRenderfuncs.GL_FreeTexture)(texHandle.ToInt());
+	texHandle = 0;
+}
+	
+inline const uint8_t *GET_TEXTURE_DATA(TextureHandle texHandle)
+{
+	return (*gRenderfuncs.GL_TextureData)(texHandle.ToInt());
+}
+
+inline TextureHandle LOAD_TEXTURE(const char *name, const uint8_t *buf, size_t size, int flags)
+{
+	return (*gRenderfuncs.GL_LoadTexture)(name, buf, size, flags);
+}
+
+inline TextureHandle LOAD_TEXTURE_ARRAY(const char **names, int flags)
+{
+	return (*gRenderfuncs.GL_LoadTextureArray)(names, flags);
+}
+
+inline TextureHandle FIND_TEXTURE(const char *name)
+{
+	return (*gRenderfuncs.GL_FindTexture)(name);
+}
+
 inline model_t *MODEL_HANDLE(int modelindex)
 {
 	return reinterpret_cast<model_t*>((*gRenderfuncs.pfnGetModel)(modelindex));
+}
+
+inline void CIN_UPLOAD_FRAME(TextureHandle texture, int cols, int rows, int width, int height, const byte *data)
+{
+	(*gRenderfuncs.AVI_UploadRawFrame)(texture.ToInt(), cols, rows, width, height, data);
+}
+
+inline void GL_UpdateTexSize(TextureHandle texture, int width, int height, int depth)
+{
+	(*gRenderfuncs.GL_UpdateTexSize)(texture.ToInt(), width, height, depth);
 }
 
 //#define R_LightVec( p0, p1 )		(*gRenderfuncs.LightVec)( p0, p1, NULL )
