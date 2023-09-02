@@ -31,6 +31,7 @@ GNU General Public License for more details.
 #include "trace.h"
 #include "game.h"
 #include "build.h"
+#include "meshdesc_factory.h"
 
 #if defined (HAS_PHYSIC_VEHICLE)
 #include "NxVehicle.h"
@@ -572,6 +573,17 @@ void CPhysicNovodex :: StudioCalcBonePosition( mstudiobone_t *pbone, mstudioanim
 			panimvalue = (mstudioanimvalue_t *)((byte *)panim + panim->offset[j]);
 			pos[j] += panimvalue[1].value * pbone->scale[j];
 		}
+	}
+}
+
+clipfile::GeometryType CPhysicNovodex::ShapeTypeToGeomType(NxShapeType shapeType)
+{
+	switch (shapeType)
+	{
+		case NX_SHAPE_CONVEX: return clipfile::GeometryType::CookedConvexHull;
+		case NX_SHAPE_MESH: return clipfile::GeometryType::CookedTriangleMesh;
+		case NX_SHAPE_BOX: return clipfile::GeometryType::CookedBox;
+		default: return clipfile::GeometryType::Unknown;
 	}
 }
 
@@ -2345,141 +2357,150 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 		return;
 	}
 
-	mmesh_t *pMesh;
-	areanode_t *pHeadNode;
 	vec3_t scale = pTouch->pev->startpos.Length() < 0.001f ? vec3_t(1.0f) : pTouch->pev->startpos;
 	matrix4x4 worldToLocalMat = matrix4x4(pTouch->pev->origin, pTouch->pev->angles, scale).InvertFull();
 	model_t *mod = (model_t *)MODEL_HANDLE(pTouch->pev->modelindex);
+	NxShape *pShape = pActor->getShapes()[0];
+	NxShapeType shapeType = pShape->getType();
+	clipfile::GeometryType geomType = ShapeTypeToGeomType(shapeType);
 
-	if (!pTouch->m_CookedMesh.GetMesh())
+	if (geomType == clipfile::GeometryType::Unknown)
 	{
-		// update cache or build from scratch
-		NxShape *pShape = pActor->getShapes()[0];
-		int shapeType = pShape->getType();
-		const NxU32 *indices;
-		const NxVec3 *verts;
-		Vector triangle[3];
-		NxU32 NbTris;
+		// unsupported mesh type, so skip them
+		tr->allsolid = false;
+		return;
+	}
 
-		if( shapeType == NX_SHAPE_CONVEX )
+	auto &meshDescFactory = CMeshDescFactory::Instance();
+	CMeshDesc &cookedMesh = meshDescFactory.CreateObject(pTouch->pev->modelindex, pTouch->pev->body, pTouch->pev->skin, geomType);
+	if (!cookedMesh.GetMesh())
+	{
+		const bool presentInCache = cookedMesh.PresentInCache();
+		if (!presentInCache) 
 		{
-			NxConvexShape *pConvexShape = (NxConvexShape *)pShape;
-			NxConvexMesh& cm = pConvexShape->getConvexMesh();
+			// update cache or build from scratch
+			const NxU32 *indices;
+			const NxVec3 *verts;
+			Vector triangle[3];
+			NxU32 NbTris;
 
-			NbTris = cm.getCount( 0, NX_ARRAY_TRIANGLES );
-			indices = (const NxU32 *)cm.getBase( 0, NX_ARRAY_TRIANGLES );
-			verts = (const NxVec3 *)cm.getBase( 0, NX_ARRAY_VERTICES );
-		}
-		else if( shapeType == NX_SHAPE_MESH )
-		{
-			NxTriangleMeshShape *pTriangleMeshShape = (NxTriangleMeshShape *)pShape;
-			NxTriangleMesh& trm = pTriangleMeshShape->getTriangleMesh();
-
-			NbTris = trm.getCount( 0, NX_ARRAY_TRIANGLES );
-			indices = (const NxU32 *)trm.getBase( 0, NX_ARRAY_TRIANGLES );
-			verts = (const NxVec3 *)trm.getBase( 0, NX_ARRAY_VERTICES );
-		}
-		else if( shapeType != NX_SHAPE_BOX )
-		{
-			// unsupported mesh type, so skip them
-			tr->allsolid = false;
-			return;
-		}
-
-		if( shapeType == NX_SHAPE_BOX )
-		{
-			NxVec3	points[8];
-			NxVec3	ext, cnt;
-			NxBounds3	bounds;
-			NxBox	obb;
-
-			// each box shape contain 12 triangles
-			pTouch->m_CookedMesh.SetModel(mod, pTouch->pev->body, pTouch->pev->skin);
-			pTouch->m_CookedMesh.SetDebugName(pTouch->GetModel());
-			pTouch->m_CookedMesh.InitMeshBuild(pActor->getNbShapes() * 12);
-
-			for( uint i = 0; i < pActor->getNbShapes(); i++ )
+			if( shapeType == NX_SHAPE_CONVEX )
 			{
-				NxBoxShape *pBoxShape = (NxBoxShape *)pActor->getShapes()[i];
-				NxMat33 absRot = pBoxShape->getGlobalOrientation();
-				NxVec3 absPos = pBoxShape->getGlobalPosition();
+				NxConvexShape *pConvexShape = (NxConvexShape *)pShape;
+				NxConvexMesh& cm = pConvexShape->getConvexMesh();
 
-				// don't use pBoxShape->getWorldAABB it's caused to broke suspension and deadlocks !!!
-				pBoxShape->getWorldBounds( bounds );
-				bounds.getExtents( ext );
-				bounds.getCenter( cnt );
-				obb = NxBox( cnt, ext, absRot );
+				NbTris = cm.getCount( 0, NX_ARRAY_TRIANGLES );
+				indices = (const NxU32 *)cm.getBase( 0, NX_ARRAY_TRIANGLES );
+				verts = (const NxVec3 *)cm.getBase( 0, NX_ARRAY_VERTICES );
+			}
+			else if( shapeType == NX_SHAPE_MESH )
+			{
+				NxTriangleMeshShape *pTriangleMeshShape = (NxTriangleMeshShape *)pShape;
+				NxTriangleMesh& trm = pTriangleMeshShape->getTriangleMesh();
 
-				indices = (const NxU32 *)m_pUtils->NxGetBoxTriangles();
-				m_pUtils->NxComputeBoxPoints( obb, points );
-				verts = (const NxVec3 *)points;
+				NbTris = trm.getCount( 0, NX_ARRAY_TRIANGLES );
+				indices = (const NxU32 *)trm.getBase( 0, NX_ARRAY_TRIANGLES );
+				verts = (const NxVec3 *)trm.getBase( 0, NX_ARRAY_VERTICES );
+			}
 
-				for( int j = 0; j < 12; j++ )
+			if( shapeType == NX_SHAPE_BOX )
+			{
+				NxVec3	points[8];
+				NxVec3	ext, cnt;
+				NxBounds3	bounds;
+				NxBox	obb;
+
+				// each box shape contain 12 triangles
+				cookedMesh.InitMeshBuild(pActor->getNbShapes() * 12);
+
+				for( uint i = 0; i < pActor->getNbShapes(); i++ )
+				{
+					NxBoxShape *pBoxShape = (NxBoxShape *)pActor->getShapes()[i];
+					NxMat33 absRot = pBoxShape->getGlobalOrientation();
+					NxVec3 absPos = pBoxShape->getGlobalPosition();
+
+					// don't use pBoxShape->getWorldAABB it's caused to broke suspension and deadlocks !!!
+					pBoxShape->getWorldBounds( bounds );
+					bounds.getExtents( ext );
+					bounds.getCenter( cnt );
+					obb = NxBox( cnt, ext, absRot );
+
+					indices = (const NxU32 *)m_pUtils->NxGetBoxTriangles();
+					m_pUtils->NxComputeBoxPoints( obb, points );
+					verts = (const NxVec3 *)points;
+
+					for( int j = 0; j < 12; j++ )
+					{
+						NxU32 i0 = *indices++;
+						NxU32 i1 = *indices++;
+						NxU32 i2 = *indices++;
+						triangle[0] = verts[i0];
+						triangle[1] = verts[i1];
+						triangle[2] = verts[i2];
+
+						// transform from world to model space
+						triangle[0] = worldToLocalMat.VectorTransform(triangle[0]);
+						triangle[1] = worldToLocalMat.VectorTransform(triangle[1]);
+						triangle[2] = worldToLocalMat.VectorTransform(triangle[2]);
+						cookedMesh.AddMeshTrinagle( triangle );
+					}
+				}
+			}
+			else
+			{
+				cookedMesh.InitMeshBuild(NbTris);
+				while( NbTris-- )
 				{
 					NxU32 i0 = *indices++;
 					NxU32 i1 = *indices++;
 					NxU32 i2 = *indices++;
+
 					triangle[0] = verts[i0];
 					triangle[1] = verts[i1];
 					triangle[2] = verts[i2];
-
-					// transform from world to model space
-					triangle[0] = worldToLocalMat.VectorTransform(triangle[0]);
-					triangle[1] = worldToLocalMat.VectorTransform(triangle[1]);
-					triangle[2] = worldToLocalMat.VectorTransform(triangle[2]);
-					pTouch->m_CookedMesh.AddMeshTrinagle( triangle );
+					cookedMesh.AddMeshTrinagle( triangle );
 				}
 			}
 		}
-		else
-		{
-			pTouch->m_CookedMesh.SetModel(mod, pTouch->pev->body, pTouch->pev->skin);
-			pTouch->m_CookedMesh.SetDebugName(pTouch->GetModel());
-			pTouch->m_CookedMesh.InitMeshBuild(NbTris);
-
-			while( NbTris-- )
-			{
-				NxU32 i0 = *indices++;
-				NxU32 i1 = *indices++;
-				NxU32 i2 = *indices++;
-
-				triangle[0] = verts[i0];
-				triangle[1] = verts[i1];
-				triangle[2] = verts[i2];
-				pTouch->m_CookedMesh.AddMeshTrinagle( triangle );
-			}
+		else {
+			cookedMesh.LoadFromCacheFile();
 		}
 
-		if( !pTouch->m_CookedMesh.FinishMeshBuild( ))
+		if (!cookedMesh.FinishMeshBuild())
 		{
 			ALERT(at_error, "failed to build cooked mesh from %s\n", pTouch->GetModel());
 			tr->allsolid = false;
 			return;
 		}
-
-		if (mod && mod->type == mod_studio)
+		else 
 		{
- 			pTouch->m_OriginalMesh.CMeshDesc::CMeshDesc();
-			pTouch->m_OriginalMesh.SetModel(mod, pTouch->pev->body, pTouch->pev->skin);
-			pTouch->m_OriginalMesh.SetDebugName(pTouch->GetModel());
-			pTouch->m_OriginalMesh.StudioConstructMesh();
-
-			if (!pTouch->m_OriginalMesh.GetMesh())
-			{
-				ALERT(at_error, "failed to build original mesh from %s\n", pTouch->GetModel());
+			if (!presentInCache) {
+				cookedMesh.SaveToCacheFile();
 			}
+			cookedMesh.FreeMeshBuild();
 		}
 	}
 
+	mmesh_t *pMesh;
+	areanode_t *pHeadNode;
 	if (mod->type == mod_studio && FBitSet(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE))
 	{
-		pMesh = pTouch->m_OriginalMesh.GetMesh();
-		pHeadNode = pTouch->m_OriginalMesh.GetHeadNode();
+		CMeshDesc &originalMesh = meshDescFactory.CreateObject(pTouch->pev->modelindex, pTouch->pev->body, pTouch->pev->skin, clipfile::GeometryType::Original);
+		if (!originalMesh.GetMesh())
+		{
+			originalMesh.StudioConstructMesh();
+			if (!originalMesh.GetMesh()) {
+				ALERT(at_error, "failed to build original mesh from %s\n", pTouch->GetModel());
+			}
+		}
+
+		pMesh = originalMesh.GetMesh();
+		pHeadNode = originalMesh.GetHeadNode();
 	} 
 	else
 	{
-		pMesh = pTouch->m_CookedMesh.GetMesh();
-		pHeadNode = pTouch->m_CookedMesh.GetHeadNode();
+		pMesh = cookedMesh.GetMesh();
+		pHeadNode = cookedMesh.GetHeadNode();
 	}
 
 	TraceMesh trm;

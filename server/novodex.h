@@ -35,6 +35,7 @@ GNU General Public License for more details.
 #include "NxCooking.h"
 #include "NxTriangle.h"
 #include "PhysXLoader.h"
+#include "clipfile.h"
 
 #define DENSITY_FACTOR		0.0013f
 #define PADDING_FACTOR		0.49f
@@ -131,6 +132,6 @@ private:
 
 	void		StudioCalcBoneQuaterion( mstudiobone_t *pbone, mstudioanim_t *panim, Vector4D &q );
 	void		StudioCalcBonePosition( mstudiobone_t *pbone, mstudioanim_t *panim, Vector &pos );
-
+	clipfile::GeometryType ShapeTypeToGeomType(NxShapeType shapeType);
 	bool		P_SpeedsMessage( char *out, size_t size );
 };
