@@ -28,6 +28,7 @@
 #include	"game.h"
 #include	"gamerules.h"
 #include	"build.h"
+#include	"filesystem_utils.h"
 
 // Holds engine functionality callbacks
 enginefuncs_t g_engfuncs;
@@ -130,37 +131,43 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 }
 #endif
 
-int GetEntityAPI( DLL_FUNCTIONS *pFunctionTable, int interfaceVersion )
+int GetEntityAPI(DLL_FUNCTIONS *pFunctionTable, int interfaceVersion)
 {
-	if ( !pFunctionTable || interfaceVersion != INTERFACE_VERSION )
+	if (!pFunctionTable || interfaceVersion != INTERFACE_VERSION)
 	{
 		return FALSE;
 	}
 
-	if( !CVAR_GET_POINTER( "host_gameloaded" ) )
+	if (!CVAR_GET_POINTER("host_gameloaded"))
 		return FALSE; // not a Xash3D
 
-	memcpy( pFunctionTable, &gFunctionTable, sizeof( DLL_FUNCTIONS ) );
+	if (!fs::Initialize())
+	{
+		g_engfuncs.pfnAlertMessage(at_error, "Failed to initialize filesystem interface in server library\n");
+		return FALSE;
+	}
+
+	memcpy(pFunctionTable, &gFunctionTable, sizeof(DLL_FUNCTIONS));
 	return TRUE;
 }
 
-int GetEntityAPI2( DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion )
+int GetEntityAPI2(DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion)
 {
-	if ( !pFunctionTable || *interfaceVersion != INTERFACE_VERSION )
+	if (!pFunctionTable || *interfaceVersion != INTERFACE_VERSION)
 	{
 		// Tell engine what version we had, so it can figure out who is out of date.
 		*interfaceVersion = INTERFACE_VERSION;
 		return FALSE;
 	}
 
-	if( !CVAR_GET_POINTER( "host_gameloaded" ) )
+	if (!CVAR_GET_POINTER("host_gameloaded"))
 	{
 		// Tell engine what version we had, so it can figure out who is out of date.
 		*interfaceVersion = INTERFACE_VERSION;
 		return FALSE; // not a Xash3D
-	}	
+	}
 
-	memcpy( pFunctionTable, &gFunctionTable, sizeof( DLL_FUNCTIONS ) );
+	memcpy(pFunctionTable, &gFunctionTable, sizeof(DLL_FUNCTIONS));
 	return TRUE;
 }
 
@@ -172,7 +179,7 @@ int GetNewDLLFunctions( NEW_DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion
 		return FALSE;
 	}
 
-	if( !CVAR_GET_POINTER( "host_gameloaded" ) )
+	if (!CVAR_GET_POINTER("host_gameloaded"))
 	{
 		// Tell engine what version we had, so it can figure out who is out of date.
 		*interfaceVersion = NEW_DLL_FUNCTIONS_VERSION;
