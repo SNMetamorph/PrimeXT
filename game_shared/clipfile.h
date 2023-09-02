@@ -1,6 +1,7 @@
 /*
 clipfile.h - studio cached clip geometry
 Copyright (C) 2019 Uncle Mike
+Copyright (C) 2023 SNMetamorph
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,40 +26,64 @@ CLIP FILES
 ==============================================================================
 */
 
+#include "bspfile.h"
 #include <stdint.h>
 
-#define IDCLIPHEADER		(('P'<<24)+('I'<<16)+('L'<<8)+'C') // little-endian "CLIP"
-#define CLIP_VERSION		1
-
-// quake lump ordering
-#define LUMP_CLIP_FACETS		0
-#define LUMP_CLIP_PLANES		1
-#define LUMP_CLIP_PLANE_INDEXES	2
-// for future expansions
-#define LUMP_COUNT			8
-
-typedef struct
+namespace clipfile
 {
-	int32_t	fileofs;
-	int32_t	filelen;
-} dcachelump_t;
+	constexpr uint32_t kFormatVersion = 2;
+	constexpr uint32_t kFileMagic = (('P' << 24) + ('I' << 16) + ('L' << 8) + 'C'); // little-endian "CLIP"
 
-typedef struct
-{
-	int32_t		id;		// must be little endian STCH
-	int32_t		version;
-	uint32_t	modelCRC;		// catch for model changes
-	dcachelump_t lumps[LUMP_COUNT];	
-} dcachehdr_t;
+	constexpr uint32_t kDataLumpFacets = 0;
+	constexpr uint32_t kDataLumpPlanes = 1;
+	constexpr uint32_t kDataLumpPlaneIndexes = 2;
+	constexpr uint32_t kDataLumpCount = 16; // for future expansions
 
-typedef struct
-{
-	int16_t		skinref;		// pointer to texture for special effects
-	mvert_t		triangle[3];	// store triangle points
-	vec3_t		mins, maxs;	// an individual size of each facet
-	vec3_t		edge1, edge2;	// new trace stuff
-	uint8_t		numplanes;	// because numplanes for each facet can't exceeds MAX_FACET_PLANES!
-	uint32_t	firstindex;	// first index into CLIP_PLANE_INDEXES lump
-} dfacet_t;
+#pragma pack(push, 1)
+	struct Header
+	{
+		uint32_t id;			// must be little endian "CLIP"
+		uint32_t version;
+		uint32_t modelCRC;	// catch for model changes
+		uint32_t tableOffset;
+	};
 
-#endif//CLIPFILE_H
+	struct CacheDataLump
+	{
+		uint32_t fileofs;
+		uint32_t filelen;
+	};
+
+	struct CacheData
+	{
+		CacheDataLump lumps[kDataLumpCount];
+	};
+
+	struct CacheEntry
+	{
+		uint32_t dataLength;
+		uint32_t dataOffset;
+		uint32_t body;
+		uint32_t skin;
+	};
+
+	struct CacheTable
+	{
+		uint32_t entriesCount;
+		CacheEntry entries[1];		// [entriesCount];
+	};
+
+	using Plane = dplane_t;
+	struct Facet
+	{
+		int16_t		skinref;		// pointer to texture for special effects
+		mvert_t		triangle[3];	// store triangle points
+		vec3_t		mins, maxs;		// an individual size of each facet
+		vec3_t		edge1, edge2;	// new trace stuff
+		uint8_t		numplanes;		// because numplanes for each facet can't exceeds MAX_FACET_PLANES!
+		uint32_t	firstindex;		// first index into CLIP_PLANE_INDEXES lump
+	};
+#pragma pack(pop)
+};
+
+#endif // CLIPFILE_H

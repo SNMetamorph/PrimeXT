@@ -13,8 +13,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-//#define WIN32_LEAN_AND_MEAN
-//#include "windows.h"
 #include <alert.h>
 #include "vector.h"
 #include "matrix.h"
@@ -26,6 +24,7 @@ GNU General Public License for more details.
 #include "virtualfs.h"
 #include "clipfile.h"
 #include "port.h"
+#include "filesystem_utils.h"
 
 #ifdef CLIENT_DLL
 #include "utils.h"
@@ -38,6 +37,7 @@ GNU General Public License for more details.
 
 #include "enginecallback.h"
 #include <new> // placement
+#include <vector>
 
 template<typename T, int boundary>
 constexpr T AlignTo(T x)
@@ -47,7 +47,7 @@ constexpr T AlignTo(T x)
 	return (x + (boundary - 1)) & ~(boundary - 1);
 }
 
-CMeshDesc *UTIL_GetCollisionMesh( int modelindex )
+CMeshDesc *UTIL_GetCollisionMesh( int32_t modelindex, int32_t body, int32_t skin )
 {
 	model_t *mod = (model_t *)MODEL_HANDLE( modelindex );
 
@@ -67,7 +67,7 @@ CMeshDesc *UTIL_GetCollisionMesh( int modelindex )
 
 //	bodyMesh->CMeshDesc();
 	bodyMesh->SetDebugName( mod->name );
-	bodyMesh->SetModel( mod );
+	bodyMesh->SetModel( mod, body, skin );
 	 
 	if( bodyMesh->StudioConstructMesh( ))
 	{
@@ -99,6 +99,13 @@ CMeshDesc :: CMeshDesc( void )
 CMeshDesc :: ~CMeshDesc( void )
 {
 	FreeMesh ();
+}
+
+void CMeshDesc::SetModel(const model_t *mod, int32_t body, int32_t skin) 
+{ 
+	m_pModel = (model_t *)mod; 
+	m_iBodyNumber = body;
+	m_iSkinNumber = skin;
 }
 
 void CMeshDesc :: InsertLinkBefore( link_t *l, link_t *before )
@@ -828,22 +835,26 @@ bool CMeshDesc :: StudioLoadCache( const char *pszModelName )
 	if( !aMemFile ) return false;
 
 	CVirtualFS file( aMemFile, length );
-	dcachelump_t *lump;
-	dcachehdr_t hdr;
-	dfacet_t facet;
-	dplane_t plane;
+	clipfile::CacheDataLump *lump;
+	clipfile::Header hdr;
+	clipfile::Facet facet;
+	clipfile::Plane plane;
+	clipfile::CacheTable table;
+	clipfile::CacheData data;
+	std::vector<clipfile::CacheEntry> entriesList;
+	const clipfile::CacheEntry *desiredEntry = nullptr;
 
 	file.Read( &hdr, sizeof( hdr ));
 
-	if( hdr.id != IDCLIPHEADER )
+	if( hdr.id != clipfile::kFileMagic )
 	{
-		ALERT( at_warning, "%s has wrong id (%X should be %X)\n", szFilename, hdr.id, IDCLIPHEADER );
+		ALERT( at_warning, "%s has wrong file signature %X\n", szFilename, hdr.id );
 		goto cleanup;
 	}
 
-	if( hdr.version != CLIP_VERSION )
+	if( hdr.version != clipfile::kFormatVersion )
 	{
-		ALERT( at_warning, "%s has wrong version (%i should be %i)\n", szFilename, hdr.version, CLIP_VERSION );
+		ALERT( at_warning, "%s has wrong version (%i should be %i)\n", szFilename, hdr.version, clipfile::kFormatVersion );
 		goto cleanup;
 	}
 
@@ -857,8 +868,39 @@ bool CMeshDesc :: StudioLoadCache( const char *pszModelName )
 	memset( areanodes, 0, sizeof( areanodes ));
 	numareanodes = 0;
 
+	// read cache entries table
+	uint32_t entriesCount;
+	file.Seek(hdr.tableOffset, SEEK_SET);
+	file.Read(&entriesCount, sizeof(entriesCount));
+
+	entriesList.reserve(entriesCount);
+	for (size_t i = 0; i < entriesCount; i++)
+	{
+		auto &entry = entriesList.emplace_back();
+		file.Read(&entry, sizeof(table.entries));
+	}
+
+	for (size_t i = 0; i < entriesCount; i++)
+	{
+		const clipfile::CacheEntry &entry = entriesList[i];
+		if (entry.body == m_iBodyNumber && entry.skin == m_iSkinNumber) {
+			desiredEntry = &entry;
+			break;
+		}
+	}
+
+	if (!desiredEntry)
+	{
+		ALERT(at_console, "%s doesn't contain required cache entry (body %d / skin %d)\n", szFilename, m_iBodyNumber, m_iSkinNumber);
+		goto cleanup;
+	}
+
+	// read needed cache data lumps
+	file.Seek(desiredEntry->dataOffset, SEEK_SET);
+	file.Read(&data, sizeof(data));
+
 	// read plane representation table
-	lump = &hdr.lumps[LUMP_CLIP_PLANE_INDEXES];
+	lump = &data.lumps[clipfile::kDataLumpPlaneIndexes];
 	m_iAllocPlanes = m_iTotalPlanes = lump->filelen / sizeof( uint32_t );
 
 	if( lump->filelen <= 0 || lump->filelen % sizeof( uint32_t ))
@@ -875,7 +917,7 @@ bool CMeshDesc :: StudioLoadCache( const char *pszModelName )
 	file.Read( m_srcPlaneElems, lump->filelen );
 
 	// read unique planes array (hash is unused)
-	lump = &hdr.lumps[LUMP_CLIP_PLANES];
+	lump = &data.lumps[clipfile::kDataLumpPlanes];
 	m_mesh.numplanes = lump->filelen / sizeof( dplane_t );
 
 	if( lump->filelen <= 0 || lump->filelen % sizeof( dplane_t ))
@@ -897,10 +939,10 @@ bool CMeshDesc :: StudioLoadCache( const char *pszModelName )
 		CategorizePlane( &m_srcPlanePool[i].pl );
 	}
 
-	lump = &hdr.lumps[LUMP_CLIP_FACETS];
-	m_mesh.numfacets = m_iNumTris = lump->filelen / sizeof( dfacet_t );
+	lump = &data.lumps[clipfile::kDataLumpFacets];
+	m_mesh.numfacets = m_iNumTris = lump->filelen / sizeof( clipfile::Facet );
 
-	if( lump->filelen <= 0 || lump->filelen % sizeof( dfacet_t ))
+	if( lump->filelen <= 0 || lump->filelen % sizeof( clipfile::Facet ))
 	{
 		ALERT( at_warning, "%s has funny size of LUMP_CLIP_FACETS\n", szFilename );
 		goto cleanup;
@@ -948,12 +990,134 @@ cleanup:
 	return false;
 }
 
-bool CMeshDesc :: StudioSaveCache( const char *pszModelName )
+bool CMeshDesc::StudioSaveCache(const char *pszModelName)
 {
 	char szFilename[MAX_PATH];
 	char szModelname[MAX_PATH];
-	dcachelump_t *lump;
-	dcachehdr_t hdr;
+	clipfile::Header fileHeader;
+	clipfile::CacheData data;
+	clipfile::CacheDataLump *lump;
+	uint32_t entriesCount;
+	std::vector<clipfile::CacheEntry> cacheEntries;
+
+	Q_strncpy(szModelname, pszModelName + Q_strlen("models/"), sizeof(szModelname));
+	COM_StripExtension(szModelname);
+	Q_snprintf(szFilename, sizeof(szFilename), "cache/%s.clip", szModelname);
+
+	fs::FileHandle cacheFile = fs::Open(szFilename, "a+b");
+	if (!cacheFile) {
+		// msg
+		return false;
+	}
+
+	fs::Seek(cacheFile, 0, fs::SeekType::Set);
+	fs::Read(&fileHeader, sizeof(fileHeader), cacheFile);
+	fs::Seek(cacheFile, fileHeader.tableOffset, fs::SeekType::Set);
+	fs::Read(&entriesCount, sizeof(entriesCount), cacheFile);
+
+	// store all entries in local buffer
+	cacheEntries.reserve(entriesCount);
+	for (size_t i = 0; i < entriesCount; i++)
+	{
+		clipfile::CacheEntry &entry = cacheEntries.emplace_back();
+		fs::Read(&entry, sizeof(entry), cacheFile);
+	}
+
+	std::vector<clipfile::Facet> facets;
+	std::vector<clipfile::Plane> planes;
+	facets.resize(m_mesh.numfacets);
+	planes.resize(m_mesh.numplanes);
+	clipfile::Facet *out_facets = facets.data();
+	clipfile::Plane *out_planes = planes.data();
+	
+	// copy planes into mesh array (probably aligned block)
+	int32_t curIndex = 0;
+	for (size_t i = 0; i < m_mesh.numfacets; i++)
+	{
+		out_facets[i].mins = m_srcFacets[i].mins;
+		out_facets[i].maxs = m_srcFacets[i].maxs;
+		out_facets[i].edge1 = m_srcFacets[i].edge1;
+		out_facets[i].edge2 = m_srcFacets[i].edge2;
+		out_facets[i].numplanes = m_srcFacets[i].numplanes;
+		out_facets[i].skinref = m_srcFacets[i].skinref;
+		out_facets[i].firstindex = curIndex;
+		curIndex += m_srcFacets[i].numplanes;
+
+		for (int k = 0; k < 3; k++) {
+			out_facets[i].triangle[k] = m_srcFacets[i].triangle[k];
+		}
+	}
+
+	if (curIndex != m_iTotalPlanes) {
+		ALERT(at_error, "StudioSaveCache: invalid planecount! %d != %d\n", curIndex, m_iTotalPlanes);
+	}
+
+	for (size_t i = 0; i < m_mesh.numplanes; i++)
+	{
+		VectorCopy(m_srcPlanePool[i].pl.normal, out_planes[i].normal);
+		out_planes[i].dist = m_srcPlanePool[i].pl.dist;
+		out_planes[i].type = m_srcPlanePool[i].pl.type;
+	}
+
+	// goto end of file
+	fs::Seek(cacheFile, 0, fs::SeekType::End);
+
+	// add new data entry to list
+	auto &currentEntry = cacheEntries.emplace_back();
+	currentEntry.body = m_iBodyNumber;
+	currentEntry.skin = m_iSkinNumber;
+	currentEntry.dataOffset = fs::Tell(cacheFile);
+	
+	// write lumps 
+	fs::Write(&data, sizeof(data), cacheFile);
+
+	lump = &data.lumps[clipfile::kDataLumpFacets];
+	lump->fileofs = fs::Tell(cacheFile);
+	lump->filelen = sizeof(clipfile::Facet) * m_mesh.numfacets;
+	fs::Write(out_facets, AlignTo<size_t, 4>(lump->filelen), cacheFile);
+
+	lump = &data.lumps[clipfile::kDataLumpPlanes];
+	lump->fileofs = fs::Tell(cacheFile);
+	lump->filelen = sizeof(clipfile::Plane) * m_mesh.numplanes;
+	fs::Write(out_planes, AlignTo<size_t, 4>(lump->filelen), cacheFile);
+
+	lump = &data.lumps[clipfile::kDataLumpPlaneIndexes];
+	lump->fileofs = fs::Tell(cacheFile);
+	lump->filelen = sizeof(uint32_t) * m_iTotalPlanes;
+	fs::Write(m_srcPlaneElems, AlignTo<size_t, 4>(lump->filelen), cacheFile);
+
+	currentEntry.dataLength = fs::Tell(cacheFile) - currentEntry.dataOffset;
+	fs::Seek(cacheFile, currentEntry.dataOffset, fs::SeekType::Set);
+	fs::Write(&data, sizeof(data), cacheFile);
+
+	// write cache table back to file
+	fileHeader.tableOffset = fs::Tell(cacheFile);
+	entriesCount += 1;
+	fs::Write(&entriesCount, sizeof(entriesCount), cacheFile);
+
+	for (size_t i = 0; i < cacheEntries.size(); i++) {
+		clipfile::CacheEntry &entry = cacheEntries[i];
+		fs::Write(&entry, sizeof(entry), cacheFile);
+	}
+	fs::Close(cacheFile);
+
+	// update file header
+	cacheFile = fs::Open(szFilename, "r+b");
+	fs::Seek(cacheFile, 0, fs::SeekType::Set);
+	fs::Write(&fileHeader, sizeof(fileHeader), cacheFile);
+	fs::Close(cacheFile);
+
+	return true;
+}
+
+bool CMeshDesc :: StudioCreateCache( const char *pszModelName )
+{
+	char szFilename[MAX_PATH];
+	char szModelname[MAX_PATH];
+	clipfile::CacheDataLump *lump;
+	clipfile::Header hdr;
+	clipfile::CacheTable table;
+	clipfile::CacheData data;
 	CVirtualFS file;
 	int i, curIndex;
 
@@ -961,15 +1125,24 @@ bool CMeshDesc :: StudioSaveCache( const char *pszModelName )
 	if( m_mesh.numfacets <= 0 )
 		return false;
 
-	memset( &hdr, 0, sizeof( hdr ));
-	hdr.id = IDCLIPHEADER;
-	hdr.version = CLIP_VERSION;
+	memset(&hdr, 0, sizeof(hdr));
+	hdr.id = clipfile::kFileMagic;
+	hdr.version = clipfile::kFormatVersion;
 	hdr.modelCRC = m_pModel->modelCRC;
 
-	file.Write( &hdr, sizeof( hdr ));
+	file.Write(&hdr, sizeof(hdr));
+	table.entriesCount = 1;
+	table.entries[0].body = m_iBodyNumber;
+	table.entries[0].skin = m_iSkinNumber;
+	table.entries[0].dataOffset = file.Tell();
+	file.Write(&data, sizeof(data));
 
-	dfacet_t *out_facets = (dfacet_t *)Mem_Alloc( sizeof( dfacet_t ) * m_mesh.numfacets );
-	dplane_t *out_planes = (dplane_t *)Mem_Alloc( sizeof( dplane_t ) * m_mesh.numplanes );
+	std::vector<clipfile::Facet> facets;
+	std::vector<clipfile::Plane> planes;
+	facets.resize(m_mesh.numfacets);
+	planes.resize(m_mesh.numplanes);
+	clipfile::Facet *out_facets = facets.data();
+	clipfile::Plane *out_planes = planes.data();
 
 	// copy planes into mesh array (probably aligned block)
 	for( i = 0, curIndex = 0; i < m_mesh.numfacets; i++ )
@@ -988,7 +1161,7 @@ bool CMeshDesc :: StudioSaveCache( const char *pszModelName )
 	}
 
 	if( curIndex != m_iTotalPlanes ) 
-		ALERT( at_error, "StudioSaveCache: invalid planecount! %d != %d\n", curIndex, m_iTotalPlanes );
+		ALERT( at_error, "StudioCreateCache: invalid planecount! %d != %d\n", curIndex, m_iTotalPlanes );
 
 	for( i = 0; i < m_mesh.numplanes; i++ )
 	{
@@ -997,27 +1170,35 @@ bool CMeshDesc :: StudioSaveCache( const char *pszModelName )
 		out_planes[i].type = m_srcPlanePool[i].pl.type;
 	}
 
-	lump = &hdr.lumps[LUMP_CLIP_FACETS];
+	lump = &data.lumps[clipfile::kDataLumpFacets];
 	lump->fileofs = file.Tell();
-	lump->filelen = sizeof(dfacet_t) * m_mesh.numfacets;
+	lump->filelen = sizeof(clipfile::Facet) * m_mesh.numfacets;
 	file.Write(out_facets, AlignTo<size_t, 4>(lump->filelen));
 
-	lump = &hdr.lumps[LUMP_CLIP_PLANES];
+	lump = &data.lumps[clipfile::kDataLumpPlanes];
 	lump->fileofs = file.Tell();
-	lump->filelen = sizeof(dplane_t) * m_mesh.numplanes;
+	lump->filelen = sizeof(clipfile::Plane) * m_mesh.numplanes;
 	file.Write(out_planes, AlignTo<size_t, 4>(lump->filelen));
 
-	lump = &hdr.lumps[LUMP_CLIP_PLANE_INDEXES];
+	lump = &data.lumps[clipfile::kDataLumpPlaneIndexes];
 	lump->fileofs = file.Tell();
 	lump->filelen = sizeof(uint32_t) * m_iTotalPlanes;
 	file.Write(m_srcPlaneElems, AlignTo<size_t, 4>(lump->filelen));
 
+	// fill valid data length for cache table entry
+	table.entries[0].dataLength = file.Tell() - table.entries[0].dataOffset;
+
+	// write cache table to file & write offset to table in header
+	hdr.tableOffset = file.Tell();
+	file.Write(&table, sizeof(table));
+
+	// update data lumps
+	file.Seek(table.entries[0].dataOffset, SEEK_SET);
+	file.Write(&data, sizeof(data));
+
 	// update header
 	file.Seek(0, SEEK_SET);
 	file.Write(&hdr, sizeof(hdr));
-
-	Mem_Free(out_facets);
-	Mem_Free(out_planes);
 
 	Q_strncpy( szModelname, pszModelName + Q_strlen( "models/" ), sizeof( szModelname ));
 	COM_StripExtension( szModelname );
@@ -1026,7 +1207,22 @@ bool CMeshDesc :: StudioSaveCache( const char *pszModelName )
 	if( SAVE_FILE( szFilename, file.GetBuffer(), file.GetSize( )))
 		return true;
 
-	ALERT( at_error, "StudioSaveCache: couldn't store %s\n", szFilename );
+	ALERT( at_error, "StudioCreateCache: couldn't store %s\n", szFilename );
+	return false;
+}
+
+bool CMeshDesc::CheckCacheFileExists(const char *pszModelName)
+{
+	char szFilename[MAX_PATH];
+	char szModelname[MAX_PATH];
+
+	Q_strncpy( szModelname, pszModelName + Q_strlen( "models/" ), sizeof( szModelname ));
+	COM_StripExtension( szModelname );
+	Q_snprintf( szFilename, sizeof( szFilename ), "cache/%s.clip", szModelname );
+
+	if (fs::FileExists(szFilename)) {
+		return true;
+	}
 	return false;
 }
 
@@ -1078,7 +1274,7 @@ bool CMeshDesc :: StudioConstructMesh( void )
 {
 	float start_time = Sys_DoubleTime();
 
-	if( !m_pModel || m_pModel->type != mod_studio )
+	if (!m_pModel || m_pModel->type != mod_studio)
 		return false;
 
 	studiohdr_t *phdr = (studiohdr_t *)m_pModel->cache.data;
@@ -1086,20 +1282,21 @@ bool CMeshDesc :: StudioConstructMesh( void )
 		return false;
 	}
 
-	if( StudioLoadCache( m_pModel->name ))
+	if (StudioLoadCache(m_pModel->name))
 	{
-		if( !FinishMeshBuild( ))
+		if (!FinishMeshBuild())
 			return false;
 
 		FreeMeshBuild();
-		ALERT( at_aiconsole, "%s: load  time %g secs, size %s\n", m_debugName, Sys_DoubleTime() - start_time, Q_memprint( mesh_size ));
+		ALERT(at_aiconsole, "%s: load  time %g secs, size %s\n", m_debugName, Sys_DoubleTime() - start_time, Q_memprint(mesh_size));
 		PrintMeshInfo();
 
 		return true;
 	}
 
-	if( phdr->numbones < 1 )
+	if (phdr->numbones < 1) {
 		return false;
+	}
 
 	// compute default pose for building mesh from
 	mstudioseqdesc_t *pseqdesc = (mstudioseqdesc_t *)((byte *)phdr + phdr->seqindex);
@@ -1307,7 +1504,12 @@ bool CMeshDesc :: StudioConstructMesh( void )
 		return false;
 
 	// now dump the collision into cachefile
-	StudioSaveCache( m_pModel->name );
+	if (CheckCacheFileExists(m_pModel->name)) {
+		StudioSaveCache(m_pModel->name);
+	}
+	else {
+		StudioCreateCache(m_pModel->name);
+	}
 	FreeMeshBuild();
 
 	if( !m_bShowPacifier )

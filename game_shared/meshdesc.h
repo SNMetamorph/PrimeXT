@@ -72,7 +72,7 @@ public:
 	areanode_t *GetHeadNode() { return (has_tree) ? areanodes : NULL; }
 
 	void SetDebugName(const char *name) { m_debugName = name; }
-	void SetModel(const model_t *mod) { m_pModel = (model_t *)mod; }
+	void SetModel(const model_t *mod, int32_t body, int32_t skin);
 	void PrintMeshInfo();
 	bool StudioConstructMesh();
 	void FreeMesh();
@@ -96,7 +96,9 @@ private:
 	void ExtractAnimValue(int frame, mstudioanim_t *panim, int dof, float scale, float &v1);
 	void StudioCalcBoneTransform(int frame, mstudiobone_t *pbone, mstudioanim_t *panim, Vector &pos, Vector4D &q);
 	bool StudioLoadCache(const char *pCacheName);
-	bool StudioSaveCache(const char *pCacheName);
+	bool StudioSaveCache(const char *pszModelName);
+	bool StudioCreateCache(const char *pCacheName);
+	bool CheckCacheFileExists(const char *pszModelName);
 
 	// linked list operations
 	void InsertLinkBefore(link_t *l, link_t *before);
@@ -127,6 +129,8 @@ private:
 	int			m_iNumTris;			// if > 0 we are in build mode
 	size_t		mesh_size;			// mesh total size
 	model_t		*m_pModel;			// parent model pointer
+	int32_t		m_iBodyNumber;		// bodygroup number for current model state
+	int32_t		m_iSkinNumber;		// skin number for current model state
 
 	// used only while mesh is constructing
 	mfacet_t	*m_srcFacets;
@@ -140,6 +144,6 @@ private:
 	int			m_iOldPercent;
 };
 
-CMeshDesc *UTIL_GetCollisionMesh( int modelindex );
+CMeshDesc *UTIL_GetCollisionMesh( int32_t modelindex, int32_t body, int32_t skin );
 
 #endif//MESHDESC_H
