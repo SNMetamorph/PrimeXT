@@ -38,6 +38,15 @@ GNU General Public License for more details.
 
 #include "enginecallback.h"
 #include <new> // placement
+
+template<typename T, int boundary>
+constexpr T AlignTo(T x)
+{
+	constexpr bool powerOfTwo = !(boundary == 0) && !(boundary & (boundary - 1));
+	static_assert(powerOfTwo, "Boundary number is not power of 2");
+	return (x + (boundary - 1)) & ~(boundary - 1);
+}
+
 CMeshDesc *UTIL_GetCollisionMesh( int modelindex )
 {
 	model_t *mod = (model_t *)MODEL_HANDLE( modelindex );
@@ -978,7 +987,7 @@ bool CMeshDesc :: StudioSaveCache( const char *pszModelName )
 			out_facets[i].triangle[k] = m_srcFacets[i].triangle[k];
 	}
 
-	if( curIndex != m_iTotalPlanes )
+	if( curIndex != m_iTotalPlanes ) 
 		ALERT( at_error, "StudioSaveCache: invalid planecount! %d != %d\n", curIndex, m_iTotalPlanes );
 
 	for( i = 0; i < m_mesh.numplanes; i++ )
@@ -988,30 +997,27 @@ bool CMeshDesc :: StudioSaveCache( const char *pszModelName )
 		out_planes[i].type = m_srcPlanePool[i].pl.type;
 	}
 
-	if( curIndex != m_iTotalPlanes )
-		ALERT( at_error, "StudioSaveCache: invalid planecount! %d != %d\n", curIndex, m_iTotalPlanes );
-
 	lump = &hdr.lumps[LUMP_CLIP_FACETS];
 	lump->fileofs = file.Tell();
-	lump->filelen = sizeof( dfacet_t ) * m_mesh.numfacets;
-	file.Write( out_facets, (lump->filelen + 3) & ~3 );
+	lump->filelen = sizeof(dfacet_t) * m_mesh.numfacets;
+	file.Write(out_facets, AlignTo<size_t, 4>(lump->filelen));
 
 	lump = &hdr.lumps[LUMP_CLIP_PLANES];
 	lump->fileofs = file.Tell();
-	lump->filelen = sizeof( dplane_t ) * m_mesh.numplanes;
-	file.Write( out_planes, (lump->filelen + 3) & ~3 );
+	lump->filelen = sizeof(dplane_t) * m_mesh.numplanes;
+	file.Write(out_planes, AlignTo<size_t, 4>(lump->filelen));
 
 	lump = &hdr.lumps[LUMP_CLIP_PLANE_INDEXES];
 	lump->fileofs = file.Tell();
-	lump->filelen = sizeof( uint32_t ) * m_iTotalPlanes;
-	file.Write( m_srcPlaneElems, (lump->filelen + 3) & ~3 );
+	lump->filelen = sizeof(uint32_t) * m_iTotalPlanes;
+	file.Write(m_srcPlaneElems, AlignTo<size_t, 4>(lump->filelen));
 
 	// update header
-	file.Seek( 0, SEEK_SET );
-	file.Write( &hdr, sizeof( hdr ));
+	file.Seek(0, SEEK_SET);
+	file.Write(&hdr, sizeof(hdr));
 
-	Mem_Free( out_facets );
-	Mem_Free( out_planes );
+	Mem_Free(out_facets);
+	Mem_Free(out_planes);
 
 	Q_strncpy( szModelname, pszModelName + Q_strlen( "models/" ), sizeof( szModelname ));
 	COM_StripExtension( szModelname );
