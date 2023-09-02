@@ -505,7 +505,10 @@ bool TraceMesh :: ClipRayToFacet( const mfacet_t *facet )
 	if( it > ptexture->height - 1 )
 		it = ptexture->height - 1;
 
-	byte *pixels = (byte *)GET_TEXTURE_DATA( ptexture->index );
+	// TODO this should be refactored to use texture pixels DIRECTLY from studiomodel 
+	// structure, without relying on physics/client APIs since it's not reliable
+	// also correct implementation will work fully similar, both on client and server
+	byte *pixels = nullptr;
 
 	// test pixel
 	if( pixels && pixels[it * ptexture->width + is] == 0xFF )
