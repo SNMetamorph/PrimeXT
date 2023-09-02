@@ -236,11 +236,8 @@ public:
 	// local entity matrix position
 	matrix4x4		m_local;
 
-	void		*m_pUserData;	// pointer to rigid body. may be NULL
-	CMeshDesc	m_CookedMesh;	// local copy of body mesh for internal trace. built from cooked geometry (no need to save\restore. it will be rebuild automatically)
-	CMeshDesc	m_OriginalMesh;	// local copy of body mesh for tracing studiomodel textures. built directly from studiomodel geometry
-
 	// PhysX description
+	void		*m_pUserData;	// pointer to rigid body. may be NULL
 	unsigned char	m_iActorType;	// static, kinetic or dynamic
 	int		m_iActorFlags;	// NxActor->flags
 	int		m_iBodyFlags;	// NxBodyDesc->flags
