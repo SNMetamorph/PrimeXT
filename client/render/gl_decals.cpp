@@ -1349,87 +1349,87 @@ void R_SetDecalUniforms( brushdecal_t *decal )
 		{
 		case UT_COLORMAP:
 			if( Surf_CheckSubview( es, true ) && FBitSet( decal->flags, FDECAL_PUDDLE ))
-				u->SetValue( Surf_GetSubview( es )->texturenum.GetGlHandle() );
-			else u->SetValue( mat->impl->gl_diffuse_id.GetGlHandle() );
+				u->SetValue( Surf_GetSubview( es )->texturenum.ToInt() );
+			else u->SetValue( mat->impl->gl_diffuse_id.ToInt() );
 			break;
 		case UT_NORMALMAP:
-			u->SetValue( decal->texinfo->gl_normalmap_id.GetGlHandle() );
+			u->SetValue( decal->texinfo->gl_normalmap_id.ToInt() );
 			break;
 		case UT_GLOSSMAP:
-			u->SetValue( decal->texinfo->gl_specular_id.GetGlHandle() );
+			u->SetValue( decal->texinfo->gl_specular_id.ToInt() );
 			break;
 		case UT_LIGHTMAP:
 			if( R_FullBright( )) 
-				u->SetValue( tr.deluxemapTexture.GetGlHandle() );
+				u->SetValue( tr.deluxemapTexture.ToInt() );
 			else 
-				u->SetValue( tr.lightmaps[es->lightmaptexturenum].lightmap.GetGlHandle() );
+				u->SetValue( tr.lightmaps[es->lightmaptexturenum].lightmap.ToInt() );
 			break;
 		case UT_DELUXEMAP:
 			if( R_FullBright( )) 
-				u->SetValue( tr.grayTexture.GetGlHandle() );
+				u->SetValue( tr.grayTexture.ToInt() );
 			else 
-				u->SetValue( tr.lightmaps[es->lightmaptexturenum].deluxmap.GetGlHandle() );
+				u->SetValue( tr.lightmaps[es->lightmaptexturenum].deluxmap.ToInt() );
 			break;
 		case UT_DECALMAP:
-			u->SetValue( decal->texinfo->gl_diffuse_id.GetGlHandle() );
+			u->SetValue( decal->texinfo->gl_diffuse_id.ToInt() );
 			break;
 		case UT_SCREENMAP:
-			u->SetValue( tr.screen_color.GetGlHandle() );
+			u->SetValue( tr.screen_color.ToInt() );
 			break;
 		case UT_DEPTHMAP:
-			u->SetValue( tr.screen_depth.GetGlHandle() );
+			u->SetValue( tr.screen_depth.ToInt() );
 			break;
 		case UT_HEIGHTMAP:
-			u->SetValue( decal->texinfo->gl_heightmap_id.GetGlHandle() );
+			u->SetValue( decal->texinfo->gl_heightmap_id.ToInt() );
 			break;
 		case UT_ENVMAP0:
 		case UT_ENVMAP:
 			if (!RP_CUBEPASS() && es->cubemap[0] != NULL)
 			{
-				u->SetValue(es->cubemap[0]->texture.GetGlHandle());
+				u->SetValue(es->cubemap[0]->texture.ToInt());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.texture.GetGlHandle());
+				u->SetValue(world->defaultCubemap.texture.ToInt());
 			}
 			break;
 		case UT_ENVMAP1:
 			if (!RP_CUBEPASS() && es->cubemap[1] != NULL) {
-				u->SetValue(es->cubemap[1]->texture.GetGlHandle());
+				u->SetValue(es->cubemap[1]->texture.ToInt());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.texture.GetGlHandle());
+				u->SetValue(world->defaultCubemap.texture.ToInt());
 			}
 			break;
 		case UT_SPECULARMAPIBL0:
 			if (!RP_CUBEPASS() && es->cubemap[0] != NULL) {
-				u->SetValue(es->cubemap[0]->textureSpecularIBL.GetGlHandle());
+				u->SetValue(es->cubemap[0]->textureSpecularIBL.ToInt());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.textureSpecularIBL.GetGlHandle());
+				u->SetValue(world->defaultCubemap.textureSpecularIBL.ToInt());
 			}
 			break;
 		case UT_SPECULARMAPIBL1:
 			if (!RP_CUBEPASS() && es->cubemap[1] != NULL) {
-				u->SetValue(es->cubemap[1]->textureSpecularIBL.GetGlHandle());
+				u->SetValue(es->cubemap[1]->textureSpecularIBL.ToInt());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.textureSpecularIBL.GetGlHandle());
+				u->SetValue(world->defaultCubemap.textureSpecularIBL.ToInt());
 			}
 			break;
 		case UT_BRDFAPPROXMAP:
-			u->SetValue( tr.brdfApproxTexture.GetGlHandle() );
+			u->SetValue( tr.brdfApproxTexture.ToInt() );
 			break;
 		case UT_FITNORMALMAP:
-			u->SetValue( tr.normalsFitting.GetGlHandle() );
+			u->SetValue( tr.normalsFitting.ToInt() );
 			break;
 		case UT_FRAGDATA0:
-			u->SetValue( tr.defscene_fbo->colortarget[0].GetGlHandle() );
+			u->SetValue( tr.defscene_fbo->colortarget[0].ToInt() );
 			break;
 		case UT_FRAGDATA1:
-			u->SetValue( tr.defscene_fbo->colortarget[1].GetGlHandle() );
+			u->SetValue( tr.defscene_fbo->colortarget[1].ToInt() );
 			break;
 		case UT_FRAGDATA2:
-			u->SetValue( tr.defscene_fbo->colortarget[2].GetGlHandle() );
+			u->SetValue( tr.defscene_fbo->colortarget[2].ToInt() );
 			break;
 		case UT_MODELMATRIX:
 			u->SetValue( &glm->modelMatrix[0] );

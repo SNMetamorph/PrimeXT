@@ -243,82 +243,82 @@ static void GL_DrawDeferred( word hProgram, int pass )
 		switch( u->type )
 		{
 		case UT_COLORMAP:
-			u->SetValue( tr.defscene_fbo->colortarget[0].GetGlHandle() );
+			u->SetValue( tr.defscene_fbo->colortarget[0].ToInt() );
 			break;
 		case UT_NORMALMAP:
 			if( pass == LIGHT_PASS )
-				u->SetValue( tr.deflight_fbo->colortarget[0].GetGlHandle() );
+				u->SetValue( tr.deflight_fbo->colortarget[0].ToInt() );
 			else 
-				u->SetValue( tr.defscene_fbo->colortarget[1].GetGlHandle() );
+				u->SetValue( tr.defscene_fbo->colortarget[1].ToInt() );
 			break;
 		case UT_GLOSSMAP:
-			u->SetValue( tr.defscene_fbo->colortarget[2].GetGlHandle() );
+			u->SetValue( tr.defscene_fbo->colortarget[2].ToInt() );
 			break;
 		case UT_VISLIGHTMAP0:
 			if( pass == LIGHT_PASS )
-				u->SetValue( tr.deflight_fbo->colortarget[1].GetGlHandle() );
+				u->SetValue( tr.deflight_fbo->colortarget[1].ToInt() );
 			else 
-				u->SetValue( tr.defscene_fbo->colortarget[3].GetGlHandle() );
+				u->SetValue( tr.defscene_fbo->colortarget[3].ToInt() );
 			break;
 		case UT_VISLIGHTMAP1:
 			if( pass == LIGHT_PASS )
-				u->SetValue( tr.deflight_fbo->colortarget[2].GetGlHandle() );
+				u->SetValue( tr.deflight_fbo->colortarget[2].ToInt() );
 			else 
-				u->SetValue( tr.defscene_fbo->colortarget[4].GetGlHandle() );
+				u->SetValue( tr.defscene_fbo->colortarget[4].ToInt() );
 			break;
 		case UT_DEPTHMAP:
 			if( pass == LIGHT_PASS )
-				u->SetValue( tr.deflight_fbo->depthtarget.GetGlHandle() );
+				u->SetValue( tr.deflight_fbo->depthtarget.ToInt() );
 			else 
-				u->SetValue( tr.defscene_fbo->depthtarget.GetGlHandle() );
+				u->SetValue( tr.defscene_fbo->depthtarget.ToInt() );
 			break;
 		case UT_BSPPLANESMAP:
-			u->SetValue( tr.packed_planes_texture.GetGlHandle() );
+			u->SetValue( tr.packed_planes_texture.ToInt() );
 			break;
 		case UT_BSPNODESMAP:
-			u->SetValue( tr.packed_nodes_texture.GetGlHandle() );
+			u->SetValue( tr.packed_nodes_texture.ToInt() );
 			break;
 		case UT_BSPLIGHTSMAP:
-			u->SetValue( tr.packed_lights_texture.GetGlHandle() );
+			u->SetValue( tr.packed_lights_texture.ToInt() );
 			break;
 		case UT_BSPMODELSMAP:
-			u->SetValue( tr.packed_models_texture.GetGlHandle() );
+			u->SetValue( tr.packed_models_texture.ToInt() );
 			break;
 		case UT_SHADOWMAP:
 			if( pl ) 
-				u->SetValue( pl->shadowTexture[0].GetGlHandle() );
+				u->SetValue( pl->shadowTexture[0].ToInt() );
 			else 
-				u->SetValue( tr.fbo_light.GetTexture().GetGlHandle() );
+				u->SetValue( tr.fbo_light.GetTexture().ToInt() );
 			break;
 		case UT_SHADOWMAP0:
 			if( pl ) 
-				u->SetValue( pl->shadowTexture[0].GetGlHandle() );
+				u->SetValue( pl->shadowTexture[0].ToInt() );
 			else 
-				u->SetValue( tr.depthTexture.GetGlHandle() );
+				u->SetValue( tr.depthTexture.ToInt() );
 			break;
 		case UT_SHADOWMAP1:
 			if( pl ) 
-				u->SetValue(pl->shadowTexture[1].GetGlHandle() );
+				u->SetValue(pl->shadowTexture[1].ToInt() );
 			else 
-				u->SetValue( tr.depthTexture.GetGlHandle() );
+				u->SetValue( tr.depthTexture.ToInt() );
 			break;
 		case UT_SHADOWMAP2:
 			if( pl ) 
-				u->SetValue( pl->shadowTexture[2].GetGlHandle() );
+				u->SetValue( pl->shadowTexture[2].ToInt() );
 			else 
-				u->SetValue( tr.depthTexture.GetGlHandle() );
+				u->SetValue( tr.depthTexture.ToInt() );
 			break;
 		case UT_SHADOWMAP3:
 			if( pl ) 
-				u->SetValue( pl->shadowTexture[3].GetGlHandle() );
+				u->SetValue( pl->shadowTexture[3].ToInt() );
 			else 
-				u->SetValue( tr.depthTexture.GetGlHandle() );
+				u->SetValue( tr.depthTexture.ToInt() );
 			break;
 		case UT_PROJECTMAP:
 			if( pl && pl->type == LIGHT_SPOT )
-				u->SetValue( pl->spotlightTexture.GetGlHandle() );
+				u->SetValue( pl->spotlightTexture.ToInt() );
 			else 
-				u->SetValue( tr.whiteTexture.GetGlHandle() );
+				u->SetValue( tr.whiteTexture.ToInt() );
 			break;
 		case UT_VIEWORIGIN:
 			u->SetValue( RI->view.matrix[3][0], RI->view.matrix[3][1], RI->view.matrix[3][2] );
@@ -437,14 +437,14 @@ static void GL_DrawBilateralFilter( word hProgram, int pass )
 		{
 		case UT_COLORMAP:
 			if( pass == BILATERAL_PASS0 )
-				u->SetValue( tr.fbo_light.GetTexture().GetGlHandle() );
+				u->SetValue( tr.fbo_light.GetTexture().ToInt() );
 			else if( pass == BILATERAL_PASS1 )
-				u->SetValue( tr.fbo_filter.GetTexture().GetGlHandle() );
+				u->SetValue( tr.fbo_filter.GetTexture().ToInt() );
 			else 
-				u->SetValue( tr.defscene_fbo->colortarget[0].GetGlHandle() );
+				u->SetValue( tr.defscene_fbo->colortarget[0].ToInt() );
 			break;
 		case UT_DEPTHMAP:
-			u->SetValue( tr.defscene_fbo->depthtarget.GetGlHandle() );
+			u->SetValue( tr.defscene_fbo->depthtarget.ToInt() );
 			break;
 		case UT_ZFAR:
 			u->SetValue( RI->view.farClip );

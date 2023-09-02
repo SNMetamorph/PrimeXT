@@ -192,7 +192,7 @@ void CBasePostEffects::RenderAverageLuminance()
 			switch (u->type)
 			{
 				case UT_SCREENMAP:
-					u->SetValue(avg_luminance_texture.GetGlHandle());
+					u->SetValue(avg_luminance_texture.ToInt());
 					break;
 				case UT_SCREENSIZEINV:
 					u->SetValue(1.0f / (float)w, 1.0f / (float)h);
@@ -235,10 +235,10 @@ TextureHandle CBasePostEffects::RenderExposureStorage()
 		switch (u->type)
 		{
 			case UT_SCREENMAP:
-				u->SetValue(avg_luminance_texture.GetGlHandle());
+				u->SetValue(avg_luminance_texture.ToInt());
 				break;
 			case UT_NORMALMAP:
-				u->SetValue(exposure_storage_texture[sourceIndex].GetGlHandle());
+				u->SetValue(exposure_storage_texture[sourceIndex].ToInt());
 				break;
 			case UT_MIPLOD:
 				u->SetValue(mipCount - 1);
@@ -551,14 +551,14 @@ void V_RenderPostEffect( word hProgram )
 		{
 		case UT_SCREENMAP:
 			if( post.m_bUseTarget ) // HACKHACK
-				u->SetValue( post.target_rgb[0].GetGlHandle() );
-			else u->SetValue( tr.screen_color.GetGlHandle() );
+				u->SetValue( post.target_rgb[0].ToInt() );
+			else u->SetValue( tr.screen_color.ToInt() );
 			break;
 		case UT_DEPTHMAP:
-			u->SetValue( tr.screen_depth.GetGlHandle() );
+			u->SetValue( tr.screen_depth.ToInt() );
 			break;
 		case UT_COLORMAP:
-			u->SetValue( post.target_rgb[0].GetGlHandle() );
+			u->SetValue( post.target_rgb[0].ToInt() );
 			break;
 		case UT_BRIGHTNESS:
 			u->SetValue(post.fxParameters.GetBrightness());
@@ -870,12 +870,12 @@ void RenderTonemap()
 		{
 			case UT_SCREENMAP:
 				if (post.m_bUseTarget) // HACKHACK
-					u->SetValue(post.target_rgb[0].GetGlHandle());
+					u->SetValue(post.target_rgb[0].ToInt());
 				else 
-					u->SetValue(tr.screen_color.GetGlHandle());
+					u->SetValue(tr.screen_color.ToInt());
 				break;
 			case UT_COLORMAP:
-				u->SetValue(exposureTexture.GetGlHandle());
+				u->SetValue(exposureTexture.ToInt());
 				break;
 		}
 	}

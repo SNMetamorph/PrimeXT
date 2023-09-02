@@ -109,6 +109,7 @@ void uniform_t :: SetValue( const void *pdata, int count )
 	// set texture unit
 	if( FBitSet( flags, UFL_TEXTURE_UNIT ) && unit >= 0 )
 	{
+		// we should pass engine texture handles to uniform_t->SetValue
 		(*gRenderfuncs.GL_Bind)( unit, check->iValue[0] );
 	}
 	else if( size > 1 )

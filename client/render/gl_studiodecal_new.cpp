@@ -1541,97 +1541,97 @@ void CStudioModelRenderer :: SetDecalUniforms( studiodecal_t *pDecal )
 		switch( u->type )
 		{
 		case UT_COLORMAP:
-			u->SetValue( pmaterial->gl_diffuse_id.GetGlHandle() );
+			u->SetValue( pmaterial->gl_diffuse_id.ToInt() );
 			break;
 		case UT_DECALMAP:
-			u->SetValue( pDecal->texinfo->gl_diffuse_id.GetGlHandle() );
+			u->SetValue( pDecal->texinfo->gl_diffuse_id.ToInt() );
 			break;
 		case UT_NORMALMAP:
-			u->SetValue( pDecal->texinfo->gl_normalmap_id.GetGlHandle() );
+			u->SetValue( pDecal->texinfo->gl_normalmap_id.ToInt() );
 			break;
 		case UT_GLOSSMAP:
-			u->SetValue( pDecal->texinfo->gl_specular_id.GetGlHandle() );
+			u->SetValue( pDecal->texinfo->gl_specular_id.ToInt() );
 			break;
 		case UT_HEIGHTMAP:
-			u->SetValue( pDecal->texinfo->gl_heightmap_id.GetGlHandle() );
+			u->SetValue( pDecal->texinfo->gl_heightmap_id.ToInt() );
 			break;
 		case UT_PROJECTMAP:
 			if( pl && pl->type == LIGHT_SPOT )
-				u->SetValue( pl->spotlightTexture.GetGlHandle() );
-			else u->SetValue( tr.whiteTexture.GetGlHandle() );
+				u->SetValue( pl->spotlightTexture.ToInt() );
+			else u->SetValue( tr.whiteTexture.ToInt() );
 			break;
 		case UT_SHADOWMAP:
 		case UT_SHADOWMAP0:
-			if( pl ) u->SetValue( pl->shadowTexture[0].GetGlHandle() );
-			else u->SetValue( tr.depthTexture.GetGlHandle() );
+			if( pl ) u->SetValue( pl->shadowTexture[0].ToInt() );
+			else u->SetValue( tr.depthTexture.ToInt() );
 			break;
 		case UT_SHADOWMAP1:
-			if( pl ) u->SetValue( pl->shadowTexture[1].GetGlHandle() );
-			else u->SetValue( tr.depthTexture.GetGlHandle() );
+			if( pl ) u->SetValue( pl->shadowTexture[1].ToInt() );
+			else u->SetValue( tr.depthTexture.ToInt() );
 			break;
 		case UT_SHADOWMAP2:
-			if( pl ) u->SetValue( pl->shadowTexture[2].GetGlHandle() );
-			else u->SetValue( tr.depthTexture.GetGlHandle() );
+			if( pl ) u->SetValue( pl->shadowTexture[2].ToInt() );
+			else u->SetValue( tr.depthTexture.ToInt() );
 			break;
 		case UT_SHADOWMAP3:
-			if( pl ) u->SetValue( pl->shadowTexture[3].GetGlHandle() );
-			else u->SetValue( tr.depthTexture.GetGlHandle() );
+			if( pl ) u->SetValue( pl->shadowTexture[3].ToInt() );
+			else u->SetValue( tr.depthTexture.ToInt() );
 			break;
 		case UT_LIGHTMAP:
 		case UT_DELUXEMAP:
 			// unacceptable for studiomodels
-			u->SetValue( tr.whiteTexture.GetGlHandle() );
+			u->SetValue( tr.whiteTexture.ToInt() );
 			break;
 		case UT_SCREENMAP:
-			u->SetValue( tr.screen_color.GetGlHandle() );
+			u->SetValue( tr.screen_color.ToInt() );
 			break;
 		case UT_DEPTHMAP:
-			u->SetValue( tr.screen_depth.GetGlHandle() );
+			u->SetValue( tr.screen_depth.ToInt() );
 			break;
 		case UT_ENVMAP0:
 		case UT_ENVMAP:
 			if (!RP_CUBEPASS() && inst->cubemap[0] != NULL) {
-				u->SetValue(inst->cubemap[0]->texture.GetGlHandle());
+				u->SetValue(inst->cubemap[0]->texture.ToInt());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.texture.GetGlHandle());
+				u->SetValue(world->defaultCubemap.texture.ToInt());
 			}
 			break;
 		case UT_ENVMAP1:
 			if (!RP_CUBEPASS() && inst->cubemap[1] != NULL) {
-				u->SetValue(inst->cubemap[1]->texture.GetGlHandle());
+				u->SetValue(inst->cubemap[1]->texture.ToInt());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.texture.GetGlHandle());
+				u->SetValue(world->defaultCubemap.texture.ToInt());
 			}
 			break;
 		case UT_SPECULARMAPIBL0:
 			if (!RP_CUBEPASS() && inst->cubemap[0] != NULL) {
-				u->SetValue(inst->cubemap[0]->textureSpecularIBL.GetGlHandle());
+				u->SetValue(inst->cubemap[0]->textureSpecularIBL.ToInt());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.textureSpecularIBL.GetGlHandle());
+				u->SetValue(world->defaultCubemap.textureSpecularIBL.ToInt());
 			}
 			break;
 		case UT_SPECULARMAPIBL1:
 			if (!RP_CUBEPASS() && inst->cubemap[1] != NULL) {
-				u->SetValue(inst->cubemap[1]->textureSpecularIBL.GetGlHandle());
+				u->SetValue(inst->cubemap[1]->textureSpecularIBL.ToInt());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.textureSpecularIBL.GetGlHandle());
+				u->SetValue(world->defaultCubemap.textureSpecularIBL.ToInt());
 			}
 			break;
 		case UT_BRDFAPPROXMAP:
-			u->SetValue(tr.brdfApproxTexture.GetGlHandle());
+			u->SetValue(tr.brdfApproxTexture.ToInt());
 			break;
 		case UT_BSPPLANESMAP:
-			u->SetValue(tr.packed_planes_texture.GetGlHandle());
+			u->SetValue(tr.packed_planes_texture.ToInt());
 			break;
 		case UT_BSPNODESMAP:
-			u->SetValue(tr.packed_nodes_texture.GetGlHandle());
+			u->SetValue(tr.packed_nodes_texture.ToInt());
 			break;
 		case UT_BSPLIGHTSMAP:
-			u->SetValue(tr.packed_lights_texture.GetGlHandle());
+			u->SetValue(tr.packed_lights_texture.ToInt());
 			break;
 		case UT_RENDERALPHA:
 			if( e->curstate.rendermode == kRenderTransTexture || e->curstate.rendermode == kRenderTransAdd )

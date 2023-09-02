@@ -726,44 +726,44 @@ void R_SetGrassUniforms( word hProgram, grass_t *grass )
 		switch( u->type )
 		{
 		case UT_COLORMAP:
-			u->SetValue( grasstexs[grass->texture].gl_texturenum.GetGlHandle() );
+			u->SetValue( grasstexs[grass->texture].gl_texturenum.ToInt() );
 			break;
 		case UT_PROJECTMAP:
 			if( pl && pl->type == LIGHT_SPOT )
-				u->SetValue( pl->spotlightTexture.GetGlHandle() );
-			else u->SetValue( tr.whiteTexture.GetGlHandle() );
+				u->SetValue( pl->spotlightTexture.ToInt() );
+			else u->SetValue( tr.whiteTexture.ToInt() );
 			break;
 		case UT_SHADOWMAP:
 		case UT_SHADOWMAP0:
-			if( pl ) u->SetValue( pl->shadowTexture[0].GetGlHandle() );
-			else u->SetValue( tr.depthTexture.GetGlHandle() );
+			if( pl ) u->SetValue( pl->shadowTexture[0].ToInt() );
+			else u->SetValue( tr.depthTexture.ToInt() );
 			break;
 		case UT_SHADOWMAP1:
-			if( pl ) u->SetValue( pl->shadowTexture[1].GetGlHandle() );
-			else u->SetValue( tr.depthTexture.GetGlHandle() );
+			if( pl ) u->SetValue( pl->shadowTexture[1].ToInt() );
+			else u->SetValue( tr.depthTexture.ToInt() );
 			break;
 		case UT_SHADOWMAP2:
-			if( pl ) u->SetValue( pl->shadowTexture[2].GetGlHandle() );
-			else u->SetValue( tr.depthTexture.GetGlHandle() );
+			if( pl ) u->SetValue( pl->shadowTexture[2].ToInt() );
+			else u->SetValue( tr.depthTexture.ToInt() );
 			break;
 		case UT_SHADOWMAP3:
-			if( pl ) u->SetValue( pl->shadowTexture[3].GetGlHandle() );
-			else u->SetValue( tr.depthTexture.GetGlHandle() );
+			if( pl ) u->SetValue( pl->shadowTexture[3].ToInt() );
+			else u->SetValue( tr.depthTexture.ToInt() );
 			break;
 		case UT_LIGHTMAP:
 		case UT_DELUXEMAP:
 		case UT_DECALMAP:
 			// unacceptable for grass
-			u->SetValue( tr.whiteTexture.GetGlHandle() );
+			u->SetValue( tr.whiteTexture.ToInt() );
 			break;
 		case UT_SCREENMAP:
-			u->SetValue( tr.screen_color.GetGlHandle() );
+			u->SetValue( tr.screen_color.ToInt() );
 			break;
 		case UT_DEPTHMAP:
-			u->SetValue( tr.screen_depth.GetGlHandle() );
+			u->SetValue( tr.screen_depth.ToInt() );
 			break;
 		case UT_FITNORMALMAP:
-			u->SetValue( tr.normalsFitting.GetGlHandle() );
+			u->SetValue( tr.normalsFitting.ToInt() );
 			break;
 		case UT_MODELMATRIX:
 			u->SetValue( &glm->modelMatrix[0] );

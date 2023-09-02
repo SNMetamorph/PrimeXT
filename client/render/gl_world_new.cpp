@@ -2875,110 +2875,110 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 		{
 		case UT_COLORMAP:
 			if( Surf_CheckSubview( es ))
-				u->SetValue( Surf_GetSubview( es )->texturenum.GetGlHandle() );
+				u->SetValue( Surf_GetSubview( es )->texturenum.ToInt() );
 			else if( FBitSet( s->flags, SURF_MOVIE ) && RI->currententity->curstate.body )
-				u->SetValue( tr.cinTextures[es->cintexturenum-1].GetGlHandle() );
-			else u->SetValue( mat->impl->gl_diffuse_id.GetGlHandle() );
+				u->SetValue( tr.cinTextures[es->cintexturenum-1].ToInt() );
+			else u->SetValue( mat->impl->gl_diffuse_id.ToInt() );
 			break;
 		case UT_NORMALMAP:
 			if( FBitSet( mat->flags, BRUSH_LIQUID ) && tr.waterTextures[0].Initialized() )
-				u->SetValue( tr.waterTextures[(int)( tr.time * WATER_ANIMTIME ) % WATER_TEXTURES].GetGlHandle() );
-			else u->SetValue( mat->impl->gl_normalmap_id.GetGlHandle() );
+				u->SetValue( tr.waterTextures[(int)( tr.time * WATER_ANIMTIME ) % WATER_TEXTURES].ToInt() );
+			else u->SetValue( mat->impl->gl_normalmap_id.ToInt() );
 			break;
 		case UT_GLOSSMAP:
-			u->SetValue( mat->impl->gl_specular_id.GetGlHandle() );
+			u->SetValue( mat->impl->gl_specular_id.ToInt() );
 			break;
 		case UT_DETAILMAP:
 			if( land && land->terrain && land->terrain->indexmap.gl_diffuse_id.Initialized() )
-				u->SetValue( land->terrain->indexmap.gl_diffuse_id.GetGlHandle() );
-			else u->SetValue( mat->impl->gl_detailmap_id.GetGlHandle() );
+				u->SetValue( land->terrain->indexmap.gl_diffuse_id.ToInt() );
+			else u->SetValue( mat->impl->gl_detailmap_id.ToInt() );
 			break;
 		case UT_PROJECTMAP:
 			if( pl && pl->type == LIGHT_SPOT )
-				u->SetValue( pl->spotlightTexture.GetGlHandle() );
-			else u->SetValue( tr.whiteTexture.GetGlHandle() );
+				u->SetValue( pl->spotlightTexture.ToInt() );
+			else u->SetValue( tr.whiteTexture.ToInt() );
 			break;
 		case UT_SHADOWMAP:
 		case UT_SHADOWMAP0:
-			if( pl ) u->SetValue( pl->shadowTexture[0].GetGlHandle() );
-			else u->SetValue( tr.depthTexture.GetGlHandle() );
+			if( pl ) u->SetValue( pl->shadowTexture[0].ToInt() );
+			else u->SetValue( tr.depthTexture.ToInt() );
 			break;
 		case UT_SHADOWMAP1:
-			if( pl ) u->SetValue( pl->shadowTexture[1].GetGlHandle() );
-			else u->SetValue( tr.depthTexture.GetGlHandle() );
+			if( pl ) u->SetValue( pl->shadowTexture[1].ToInt() );
+			else u->SetValue( tr.depthTexture.ToInt() );
 			break;
 		case UT_SHADOWMAP2:
-			if( pl ) u->SetValue( pl->shadowTexture[2].GetGlHandle() );
-			else u->SetValue( tr.depthTexture.GetGlHandle() );
+			if( pl ) u->SetValue( pl->shadowTexture[2].ToInt() );
+			else u->SetValue( tr.depthTexture.ToInt() );
 			break;
 		case UT_SHADOWMAP3:
-			if( pl ) u->SetValue( pl->shadowTexture[3].GetGlHandle() );
-			else u->SetValue( tr.depthTexture.GetGlHandle() );
+			if( pl ) u->SetValue( pl->shadowTexture[3].ToInt() );
+			else u->SetValue( tr.depthTexture.ToInt() );
 			break;
 		case UT_LIGHTMAP:
-			if( R_FullBright( )) u->SetValue( tr.grayTexture.GetGlHandle() );
-			else u->SetValue( tr.lightmaps[es->lightmaptexturenum].lightmap.GetGlHandle() );
+			if( R_FullBright( )) u->SetValue( tr.grayTexture.ToInt() );
+			else u->SetValue( tr.lightmaps[es->lightmaptexturenum].lightmap.ToInt() );
 			break;
 		case UT_DELUXEMAP:
-			if( R_FullBright( )) u->SetValue( tr.deluxemapTexture.GetGlHandle() );
-			else u->SetValue( tr.lightmaps[es->lightmaptexturenum].deluxmap.GetGlHandle() );
+			if( R_FullBright( )) u->SetValue( tr.deluxemapTexture.ToInt() );
+			else u->SetValue( tr.lightmaps[es->lightmaptexturenum].deluxmap.ToInt() );
 			break;
 		case UT_DECALMAP:
 			// unacceptable for brushmodels
-			u->SetValue( tr.whiteTexture.GetGlHandle() );
+			u->SetValue( tr.whiteTexture.ToInt() );
 			break;
 		case UT_SCREENMAP:
-			u->SetValue( tr.screen_color.GetGlHandle() );
+			u->SetValue( tr.screen_color.ToInt() );
 			break;
 		case UT_DEPTHMAP:
-			u->SetValue( tr.screen_depth.GetGlHandle() );
+			u->SetValue( tr.screen_depth.ToInt() );
 			break;
 		case UT_ENVMAP0:
 		case UT_ENVMAP:
 			if (!RP_CUBEPASS() && es->cubemap[0] != NULL) {
-				u->SetValue(es->cubemap[0]->texture.GetGlHandle());
+				u->SetValue(es->cubemap[0]->texture.ToInt());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.texture.GetGlHandle());
+				u->SetValue(world->defaultCubemap.texture.ToInt());
 			}
 			break;
 		case UT_ENVMAP1:
 			if (!RP_CUBEPASS() && es->cubemap[1] != NULL) {
-				u->SetValue(es->cubemap[1]->texture.GetGlHandle());
+				u->SetValue(es->cubemap[1]->texture.ToInt());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.texture.GetGlHandle());
+				u->SetValue(world->defaultCubemap.texture.ToInt());
 			}
 			break;
 		case UT_SPECULARMAPIBL0:
 			if (!RP_CUBEPASS() && es->cubemap[0] != NULL) {
-				u->SetValue(es->cubemap[0]->textureSpecularIBL.GetGlHandle());
+				u->SetValue(es->cubemap[0]->textureSpecularIBL.ToInt());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.textureSpecularIBL.GetGlHandle());
+				u->SetValue(world->defaultCubemap.textureSpecularIBL.ToInt());
 			}
 			break;
 		case UT_SPECULARMAPIBL1:
 			if (!RP_CUBEPASS() && es->cubemap[1] != NULL) {
-				u->SetValue(es->cubemap[1]->textureSpecularIBL.GetGlHandle());
+				u->SetValue(es->cubemap[1]->textureSpecularIBL.ToInt());
 			}
 			else {
-				u->SetValue(world->defaultCubemap.textureSpecularIBL.GetGlHandle());
+				u->SetValue(world->defaultCubemap.textureSpecularIBL.ToInt());
 			}
 			break;
 		case UT_BRDFAPPROXMAP:
-			u->SetValue(tr.brdfApproxTexture.GetGlHandle());
+			u->SetValue(tr.brdfApproxTexture.ToInt());
 			break;
 		case UT_GLOWMAP:
-			u->SetValue( mat->impl->gl_glowmap_id.GetGlHandle() );
+			u->SetValue( mat->impl->gl_glowmap_id.ToInt() );
 			break;
 		case UT_LAYERMAP:
 			if( FBitSet( mat->flags, BRUSH_MULTI_LAYERS ) && land && land->terrain )
-				u->SetValue( land->terrain->indexmap.gl_heightmap_id.GetGlHandle() );
-			else u->SetValue( tr.whiteTexture.GetGlHandle() );
+				u->SetValue( land->terrain->indexmap.gl_heightmap_id.ToInt() );
+			else u->SetValue( tr.whiteTexture.ToInt() );
 			break;
 		case UT_HEIGHTMAP:
-			u->SetValue( mat->impl->gl_heightmap_id.GetGlHandle() );
+			u->SetValue( mat->impl->gl_heightmap_id.ToInt() );
 			break;
 		case UT_RELIEFPARAMS: 
 		{
@@ -2988,16 +2988,16 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 			break;
 		}
 		case UT_BSPPLANESMAP:
-			u->SetValue( tr.packed_planes_texture.GetGlHandle() );
+			u->SetValue( tr.packed_planes_texture.ToInt() );
 			break;
 		case UT_BSPNODESMAP:
-			u->SetValue( tr.packed_nodes_texture.GetGlHandle() );
+			u->SetValue( tr.packed_nodes_texture.ToInt() );
 			break;
 		case UT_BSPLIGHTSMAP:
-			u->SetValue( tr.packed_lights_texture.GetGlHandle() );
+			u->SetValue( tr.packed_lights_texture.ToInt() );
 			break;
 		case UT_FITNORMALMAP:
-			u->SetValue( tr.normalsFitting.GetGlHandle() );
+			u->SetValue( tr.normalsFitting.ToInt() );
 			break;
 		case UT_MODELMATRIX:
 			u->SetValue( &glm->modelMatrix[0] );

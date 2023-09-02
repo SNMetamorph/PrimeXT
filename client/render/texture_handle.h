@@ -44,7 +44,7 @@ public:
 	bool operator==(const TextureHandle& operand) const;
 
 	bool Initialized() const;
-	int GetGlHandle() const;
+	int32_t GetGlHandle() const;
 	int32_t GetGlFormat() const;
 	int32_t GetDxtEncodeType() const;
 	texFlags_t GetFlags() const;
@@ -57,7 +57,7 @@ public:
 	}
 
 private:
-	TextureHandle(int internalHandle) {
+	TextureHandle(int32_t internalHandle) {
 		m_iInternalIndex = internalHandle;
 	};
 
