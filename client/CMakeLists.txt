@@ -56,6 +56,8 @@ list(APPEND CLDLL_SOURCES
 	"${CMAKE_SOURCE_DIR}/game_shared/stringlib.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/virtualfs.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/trace.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/filesystem_utils.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/filesystem_manager.cpp"
 	"${CMAKE_SOURCE_DIR}/public/crclib.cpp"
 )
 

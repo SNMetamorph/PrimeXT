@@ -30,6 +30,7 @@
 #include "imgui_manager.h"
 #include "utils.h"
 #include "pm_shared.h"
+#include "filesystem_utils.h"
 #include "build_info.h"
 
 int developer_level;
@@ -135,6 +136,12 @@ int Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion )
 	g_iXashEngineBuildNumber = (int)CVAR_GET_FLOAT( "build" ); // 0 for old builds or GoldSrc
 	if( g_iXashEngineBuildNumber <= 0 )
 		g_iXashEngineBuildNumber = (int)CVAR_GET_FLOAT( "buildnum" );
+
+	if (!fs::Initialize())
+	{
+		ALERT(at_error, "Failed to initialize filesystem inteface in client library\n");
+		return 0;
+	}
 
 	ALERT(at_console, "Running PrimeXT: built ^1%s^7, commit ^2%s^7, architecture ^3%s^7, platform ^5%s\n", 
 		BuildInfo::GetDate(),
