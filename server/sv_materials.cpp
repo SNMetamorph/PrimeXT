@@ -353,13 +353,6 @@ to real material struct
 */
 static void Mod_CopyMaterialDesc(material_t *mat, const matdesc_t *desc)
 {
-	mat->smoothness = desc->smoothness;
-	mat->detailScale[0] = desc->detailScale[0];
-	mat->detailScale[1] = desc->detailScale[1];
-	mat->reflectScale = desc->reflectScale;
-	mat->refractScale = desc->refractScale;
-	mat->aberrationScale = desc->aberrationScale;
-	mat->reliefScale = desc->reliefScale;
 	mat->effects = desc->effects;
 }
 

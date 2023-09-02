@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #include "const.h"
 #include "vector.h"
 #include "basetypes.h"
+#include <memory>
 
 /*
 ==============================================================================
@@ -102,26 +103,10 @@ typedef struct
 // each texture_t has a material
 typedef struct material_s
 {
-	// this part is shared with matdesc_t
-	float		smoothness;		// smoothness factor
-	float		detailScale[2];		// detail texture scales x, y
-	float		reflectScale;		// reflection scale for translucent water
-	float		refractScale;		// refraction scale for mirrors, windows, water
-	float		aberrationScale;		// chromatic abberation
-	float		reliefScale;		// relief-mapping
-	struct matdef_t	*effects;			// hit, impact, particle effects etc
-
-	// this part is world-specific params
-	struct texture_s	*pSource;			// pointer to original texture
-
-	unsigned short	gl_diffuse_id;		// diffuse texture
-	unsigned short	gl_detailmap_id;		// detail texture
-	unsigned short	gl_normalmap_id;		// normalmap
-	unsigned short	gl_specular_id;		// specular
-	unsigned short	gl_glowmap_id;		// self-illuminate parts
-	unsigned short	gl_heightmap_id;		// parallax bumpmap
-
-	int		flags;			// brush material flags
+	struct matdef_t	*effects;		// hit, impact, particle effects etc		
+	struct texture_s *pSource;		// pointer to original texture
+	std::shared_ptr<struct mbrushmat_s> impl; // client-side renderer internal material representation
+	int	flags;						// brush material flags
 } material_t;
 
 typedef struct texture_s
