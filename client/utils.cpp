@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #include "r_efx.h"
 #include "trace.h"
 #include "gl_studio.h"
+#include "meshdesc_factory.h"
 
 /*
 =============
@@ -201,7 +202,7 @@ SpriteHandle LoadSprite( const char *pszName )
 
 void Physic_SweepTest(cl_entity_t *pTouch, const Vector &start, const Vector &mins, const Vector &maxs, const Vector &end, trace_t *tr)
 {
-	if (!pTouch->model || !pTouch->model->cache.data)
+	if (!pTouch->model || !pTouch->model->cache.data || pTouch->model->type != mod_studio)
 	{
 		// bad model?
 		tr->allsolid = false;
@@ -224,16 +225,16 @@ void Physic_SweepTest(cl_entity_t *pTouch, const Vector &start, const Vector &mi
 		return;
 	}
 
-	CMeshDesc *bodyMesh = UTIL_GetCollisionMesh(pTouch->curstate.modelindex, pTouch->curstate.body, pTouch->curstate.skin);
+	auto &meshDescFactory = CMeshDescFactory::Instance();
+	CMeshDesc &bodyMesh = meshDescFactory.CreateObject(pTouch->curstate.modelindex, pTouch->curstate.body, pTouch->curstate.skin, clipfile::GeometryType::Original);
+	mmesh_t *pMesh = bodyMesh.GetMesh();
 
-	if (!bodyMesh)
-	{
-		tr->allsolid = false;
-		return;
+	if (!pMesh) {
+		bodyMesh.StudioConstructMesh();
+		pMesh = bodyMesh.GetMesh();
 	}
 
-	mmesh_t *pMesh = bodyMesh->GetMesh();
-	areanode_t *pHeadNode = bodyMesh->GetHeadNode();
+	areanode_t *pHeadNode = bodyMesh.GetHeadNode();
 	entity_state_t *pev = &pTouch->curstate;
 
 	if (!pMesh)

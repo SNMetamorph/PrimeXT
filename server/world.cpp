@@ -34,6 +34,7 @@
 #include "gamerules.h"
 #include "teamplay_gamerules.h"
 #include "physcallback.h"
+#include "meshdesc_factory.h"
 
 extern CGraph WorldGraph;
 extern CSoundEnt *pSoundEnt;
@@ -637,6 +638,10 @@ void CWorld :: Spawn( void )
 	g_fGameOver = FALSE;
 	Precache();
 	SetModel(GetModel());
+
+	// flush collision meshes cache on serverside
+	auto &meshDescFactory = CMeshDescFactory::Instance();
+	meshDescFactory.ClearCache();
 }
 
 void CWorld :: Precache( void )
