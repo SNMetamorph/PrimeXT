@@ -50,6 +50,10 @@ extern "C"
 		if (g_iXashEngineBuildNumber <= 0)
 			g_iXashEngineBuildNumber = (int)CVAR_GET_FLOAT("buildnum");
 		gpGlobals = pGlobals;
+
+		if (!fs::Initialize()) {
+			g_engfuncs.pfnAlertMessage(at_error, "Failed to initialize filesystem interface in server library\n");
+		}
 	}
 }
 
@@ -140,12 +144,6 @@ int GetEntityAPI(DLL_FUNCTIONS *pFunctionTable, int interfaceVersion)
 
 	if (!CVAR_GET_POINTER("host_gameloaded"))
 		return FALSE; // not a Xash3D
-
-	if (!fs::Initialize())
-	{
-		g_engfuncs.pfnAlertMessage(at_error, "Failed to initialize filesystem interface in server library\n");
-		return FALSE;
-	}
 
 	memcpy(pFunctionTable, &gFunctionTable, sizeof(DLL_FUNCTIONS));
 	return TRUE;
