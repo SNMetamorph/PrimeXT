@@ -308,8 +308,9 @@ static void Mod_FreeCubemap(mcubemap_t *cubemap)
 
 	cubemap->valid = false;
 	cubemap->numMips = 0;
-	ClearBounds(cubemap->mins, cubemap->maxs);
+	cubemap->texture = TextureHandle::Null();
 	cubemap->framebuffer.Free();
+	ClearBounds(cubemap->mins, cubemap->maxs);
 }
 
 /*
@@ -577,7 +578,7 @@ static void GL_FilterCubemapSpecularIBL(mcubemap_t *cubemap)
 				switch (u->type)
 				{
 					case UT_ENVMAP0:
-						u->SetValue(cubemap->texture.GetGlHandle());
+						u->SetValue(cubemap->texture.ToInt());
 						break;
 					case UT_SCREENWIDTH: // size of source cubemap
 						u->SetValue((float)cubemap->size);
