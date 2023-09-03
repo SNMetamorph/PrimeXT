@@ -166,7 +166,7 @@ void main( void )
 	albedo = colormap2D( u_ColorMap, vec_TexDiffuse );
 #endif
 
-#if !defined( ALPHA_BLENDING ) && !defined( USING_SCREENCOPY )
+#if !defined( ALPHA_BLENDING ) && !defined( USING_SCREENCOPY ) && !defined( APPLY_TERRAIN )
 	albedo.a = AlphaRescaling( u_ColorMap, vec_TexDiffuse, albedo.a );
 #endif
 #if defined( ALPHA_TO_COVERAGE )
