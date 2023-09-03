@@ -631,24 +631,34 @@ static int GL_GetSourceUnitIndex(glsl_program_t *program, const char *filename)
 	return -1;
 }
 
-static int GL_ParseErrorSourceLine(const char *errorLog)
+static bool GL_CheckLineForError(const char *line, int32_t &lineNumber)
 {
 	// TODO test it with other GPUs and drivers, because PROBABLY format may be different
+	if (sscanf(line, "0(%d)", &lineNumber) == 1) {
+		return true;
+	}
+	if (sscanf(line, "ERROR: 0:%d", &lineNumber) == 1) {
+		return true;
+	}
+	return false;
+}
+
+static void GL_ParseErrorSourceLines(const char *errorLog, std::vector<int32_t> &errorLineNumbers)
+{
 	int lineNumber = 0;
 	int lineStart = 0;
 	int lineEnd = 0;
 	const char *currChar = errorLog;
 	std::string lineBuffer;
 
+	errorLineNumbers.clear();
 	while (true)
 	{
 		if (currChar[0] == '\n' || currChar[0] == '\0') 
 		{
 			lineBuffer.assign(errorLog + lineStart, lineEnd - lineStart);
-			if (sscanf(lineBuffer.c_str(), "0(%d)", &lineNumber) == 1 ||
-				sscanf(lineBuffer.c_str(), "ERROR: 0:%d", &lineNumber) == 1) 
-			{
-				return lineNumber;
+			if (GL_CheckLineForError(lineBuffer.c_str(), lineNumber)) {
+				errorLineNumbers.push_back(lineNumber);
 			}
 			lineStart = lineEnd + 1;
 		}
@@ -661,8 +671,9 @@ static int GL_ParseErrorSourceLine(const char *errorLog)
 		lineEnd++;
 	}
 
-	ALERT(at_warning, "GL_ParseErrorSourceLine: failed to parse error line from shader compiling log\n");
-	return 0;
+	if (errorLineNumbers.empty()) {
+		ALERT(at_warning, "GL_ParseErrorSourceLines: failed to parse error lines from shader compiling log\n");
+	}
 }
 
 static int GL_TraceShaderErrorFile(glsl_program_t *program, int sourceLine, int unitIndex, std::string &fileName)
@@ -802,15 +813,21 @@ static bool GL_LoadGPUShader( glsl_program_t *shader, const char *name, GLenum s
 
 	if( !compiled )
 	{
+		std::vector<int32_t> sourceLines;
 		const char *shaderLog = GL_PrintShaderInfoLog(shaderHandle);
 		int unitIndex = GL_GetSourceUnitIndex(shader, filename);
-		int sourceLine = GL_ParseErrorSourceLine(shaderLog);
-		int errorLine = GL_TraceShaderErrorFile(shader, sourceLine, unitIndex, errorFile);
+		GL_ParseErrorSourceLines(shaderLog, sourceLines);
 
 		ALERT(at_error, "^1GL_LoadGPUShader: ^7couldn't compile \"%s\" from file \"%s\"\n", name, filename);
-		if (developer_level) Msg("%s", shaderLog);
-		if (developer_level) Msg("Shader options:%s\n", GL_PretifyListOptions(defines));
-		if (developer_level) Msg("Source file: %s at line %d\n", errorFile.c_str(), errorLine);
+		if (developer_level) {
+			Msg("%s", shaderLog);
+			Msg("Shader options:%s\n", GL_PretifyListOptions(defines));
+		}
+		
+		for (size_t i = 0; i < sourceLines.size(); i++) {
+			int errorLine = GL_TraceShaderErrorFile(shader, sourceLines[i], unitIndex, errorFile);
+			Msg("Shader compiling error: file %s, line %d\n", errorFile.c_str(), errorLine);
+		}
 		return false;
 	}
 
