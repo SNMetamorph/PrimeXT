@@ -53,8 +53,8 @@ void CMeshDescFactory::ClearCache()
 CMeshDesc &CMeshDescFactory::CreateObject(int32_t modelIndex, int32_t body, int32_t skin, clipfile::GeometryType geomType)
 {
     model_t *mod = static_cast<model_t*>(MODEL_HANDLE(modelIndex));
-	if (!mod || mod->type != mod_studio || !mod->cache.data) {
-		throw std::runtime_error("invalid model type");
+	if (!mod) {
+		throw std::runtime_error("invalid model index");
 	}
 
     auto initializeMeshDesc = [&](CMeshDesc &desc) {

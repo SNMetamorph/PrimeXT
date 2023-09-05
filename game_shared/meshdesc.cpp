@@ -1613,12 +1613,16 @@ void CMeshDesc :: FreeMeshBuild( void )
 
 void CMeshDesc::SaveToCacheFile()
 {
-	// now dump the collision into cachefile
-	if (CacheFileExists(m_pModel->name)) {
-		StudioSaveCache(m_pModel->name);
-	}
-	else {
-		StudioCreateCache(m_pModel->name);
+	if (m_pModel->type == mod_studio)
+	{
+		// only studio models can be cached
+		// now dump the collision into cachefile
+		if (CacheFileExists(m_pModel->name)) {
+			StudioSaveCache(m_pModel->name);
+		}
+		else {
+			StudioCreateCache(m_pModel->name);
+		}
 	}
 }
 
@@ -1633,6 +1637,10 @@ bool CMeshDesc::PresentInCache() const
 	clipfile::CacheTable table;
 	std::vector<clipfile::CacheEntry> entriesList;
 	const clipfile::CacheEntry *desiredEntry = nullptr;
+
+	if (m_pModel->type != mod_studio) {
+		return false; // only studio model can be cached
+	}
 
 	std::string fileName = m_pModel->name;
 	fileName.erase(0, fileName.find_first_of("/\\") + 1);
