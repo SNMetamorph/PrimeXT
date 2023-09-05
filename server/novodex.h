@@ -36,6 +36,7 @@ GNU General Public License for more details.
 #include "NxTriangle.h"
 #include "PhysXLoader.h"
 #include "clipfile.h"
+#include "filesystem_utils.h"
 
 #define DENSITY_FACTOR		0.0013f
 #define PADDING_FACTOR		0.49f
@@ -117,18 +118,18 @@ private:
 	// misc routines
 	int		ConvertEdgeToIndex( model_t *model, int edge );
 	NxConvexMesh	*ConvexMeshFromBmodel( entvars_t *pev, int modelindex );
-	NxConvexMesh	*ConvexMeshFromStudio( entvars_t *pev, int modelindex );
+	NxConvexMesh	*ConvexMeshFromStudio( entvars_t *pev, int modelindex, int32_t body, int32_t skin );
 	NxConvexMesh	*ConvexMeshFromEntity( CBaseEntity *pObject );
 	NxTriangleMesh	*TriangleMeshFromBmodel( entvars_t *pev, int modelindex );
-	NxTriangleMesh	*TriangleMeshFromStudio( entvars_t *pev, int modelindex );
+	NxTriangleMesh	*TriangleMeshFromStudio( entvars_t *pev, int modelindex, int32_t body, int32_t skin );
 	NxTriangleMesh	*TriangleMeshFromEntity( CBaseEntity *pObject );
 	NxActor		*ActorFromEntity( CBaseEntity *pObject );
 	CBaseEntity	*EntityFromActor( NxActor *pObject );
 	void		*CreateForceField( CBaseEntity *pEntity, const Vector &force );
 
 	int		CheckFileTimes( const char *szFile1, const char *szFile2 );
-	void		HullNameForModel( const char *model, char *hullfile, size_t size );
-	void		MeshNameForModel( const char *model, char *hullfile, size_t size );
+	void		CacheNameForModel( model_t *model, fs::Path &hullfile, uint32_t hash, const char *suffix );
+	uint32_t	GetHashForModelState( model_t *model, int32_t body, int32_t skin );
 
 	void		StudioCalcBoneQuaterion( mstudiobone_t *pbone, mstudioanim_t *panim, Vector4D &q );
 	void		StudioCalcBonePosition( mstudiobone_t *pbone, mstudioanim_t *panim, Vector &pos );

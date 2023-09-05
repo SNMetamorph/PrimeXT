@@ -32,6 +32,8 @@ GNU General Public License for more details.
 #include "game.h"
 #include "build.h"
 #include "meshdesc_factory.h"
+#include "crclib.h"
+#include <sstream>
 
 #if defined (HAS_PHYSIC_VEHICLE)
 #include "NxVehicle.h"
@@ -587,13 +589,13 @@ clipfile::GeometryType CPhysicNovodex::ShapeTypeToGeomType(NxShapeType shapeType
 	}
 }
 
-NxConvexMesh *CPhysicNovodex :: ConvexMeshFromStudio( entvars_t *pev, int modelindex )
+NxConvexMesh *CPhysicNovodex :: ConvexMeshFromStudio( entvars_t *pev, int modelindex, int32_t body, int32_t skin )
 {
 	if( UTIL_GetModelType( modelindex ) != mod_studio )
 	{
 		ALERT( at_error, "CollisionFromStudio: not a studio model\n" );
 		return NULL;
-          }
+    }
 
 	model_t *smodel = (model_t *)MODEL_HANDLE( modelindex );
 	studiohdr_t *phdr = (studiohdr_t *)smodel->cache.data;
@@ -604,15 +606,15 @@ NxConvexMesh *CPhysicNovodex :: ConvexMeshFromStudio( entvars_t *pev, int modeli
 		return NULL;
 	}
 
-	char szHullFilename[MAX_PATH];
 	NxConvexMesh *pHull = NULL;
+	fs::Path cacheFileName;
+	uint32_t modelStateHash = GetHashForModelState(smodel, body, skin);
+	CacheNameForModel(smodel, cacheFileName, modelStateHash, ".hull");
 
-	HullNameForModel( smodel->name, szHullFilename, sizeof( szHullFilename ));
-
-	if( CheckFileTimes( smodel->name, szHullFilename ))
+	if (CheckFileTimes(smodel->name, cacheFileName.string().c_str()))
 	{
 		// hull is never than studiomodel. Trying to load it
-		pHull = m_pPhysics->createConvexMesh( UserStream( szHullFilename, true ));
+		pHull = m_pPhysics->createConvexMesh( UserStream( cacheFileName.string().c_str(), true ));
 
 		if( !pHull )
 		{
@@ -759,7 +761,7 @@ NxConvexMesh *CPhysicNovodex :: ConvexMeshFromStudio( entvars_t *pev, int modeli
 	meshDesc.flags |= NX_CF_COMPUTE_CONVEX;
 
 	m_pCooking->NxInitCooking();
-	bool status = m_pCooking->NxCookConvexMesh( meshDesc, UserStream( szHullFilename, false ));
+	bool status = m_pCooking->NxCookConvexMesh( meshDesc, UserStream( cacheFileName.string().c_str(), false ));
 
 	delete [] verts;
 	delete [] m_verts;
@@ -771,13 +773,13 @@ NxConvexMesh *CPhysicNovodex :: ConvexMeshFromStudio( entvars_t *pev, int modeli
 		return NULL;
 	}
 
-	pHull = m_pPhysics->createConvexMesh( UserStream( szHullFilename, true ));
+	pHull = m_pPhysics->createConvexMesh( UserStream( cacheFileName.string().c_str(), true ));
 	if( !pHull ) ALERT( at_error, "failed to create convex mesh from %s\n", smodel->name );
 
 	return pHull;
 }
 
-NxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int modelindex)
+NxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int modelindex, int32_t body, int32_t skin)
 {
 	if (UTIL_GetModelType(modelindex) != mod_studio)
 	{
@@ -812,15 +814,15 @@ NxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int model
 		return NULL;
 	}
 
-	char szMeshFilename[MAX_PATH];
 	NxTriangleMesh *pMesh = NULL;
+	fs::Path cacheFilePath;
+	uint32_t modelStateHash = GetHashForModelState(smodel, body, skin);
+	CacheNameForModel(smodel, cacheFilePath, modelStateHash, ".mesh");
 
-	MeshNameForModel(smodel->name, szMeshFilename, sizeof(szMeshFilename));
-
-	if (CheckFileTimes(smodel->name, szMeshFilename) && !m_fWorldChanged)
+	if (CheckFileTimes(smodel->name, cacheFilePath.string().c_str()) && !m_fWorldChanged)
 	{
 		// hull is never than studiomodel. Trying to load it
-		pMesh = m_pPhysics->createTriangleMesh(UserStream(szMeshFilename, true));
+		pMesh = m_pPhysics->createTriangleMesh(UserStream(cacheFilePath.string().c_str(), true));
 
 		if (!pMesh)
 		{
@@ -999,7 +1001,7 @@ NxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int model
 	meshDesc.flags = 0;
 
 	m_pCooking->NxInitCooking();
-	bool status = m_pCooking->NxCookTriangleMesh(meshDesc, UserStream(szMeshFilename, false));
+	bool status = m_pCooking->NxCookTriangleMesh(meshDesc, UserStream(cacheFilePath.string().c_str(), false));
 
 	delete[] verts;
 	delete[] indices;
@@ -1010,7 +1012,7 @@ NxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int model
 		return NULL;
 	}
 
-	pMesh = m_pPhysics->createTriangleMesh(UserStream(szMeshFilename, true));
+	pMesh = m_pPhysics->createTriangleMesh(UserStream(cacheFilePath.string().c_str(), true));
 	if (!pMesh) ALERT(at_error, "failed to create triangle mesh from %s\n", smodel->name);
 
 	return pMesh;
@@ -1039,7 +1041,7 @@ NxConvexMesh *CPhysicNovodex :: ConvexMeshFromEntity( CBaseEntity *pObject )
 		pCollision = ConvexMeshFromBmodel( pObject->pev, pObject->pev->modelindex );	
 		break;
 	case mod_studio:
-		pCollision = ConvexMeshFromStudio( pObject->pev, pObject->pev->modelindex );	
+		pCollision = ConvexMeshFromStudio( pObject->pev, pObject->pev->modelindex, pObject->pev->body, pObject->pev->skin );	
 		break;
 	}
 
@@ -1073,7 +1075,7 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromEntity( CBaseEntity *pObject )
 		pCollision = TriangleMeshFromBmodel( pObject->pev, pObject->pev->modelindex );	
 		break;
 	case mod_studio:
-		pCollision = TriangleMeshFromStudio( pObject->pev, pObject->pev->modelindex );	
+		pCollision = TriangleMeshFromStudio( pObject->pev, pObject->pev->modelindex, pObject->pev->body, pObject->pev->skin );	
 		break;
 	}
 
@@ -1949,42 +1951,27 @@ int CPhysicNovodex :: CheckBINFile( char *szMapName )
 	return retValue;
 }
 
-void CPhysicNovodex :: HullNameForModel( const char *model, char *hullfile, size_t size )
+void CPhysicNovodex::CacheNameForModel( model_t *model, fs::Path &hullfile, uint32_t hash, const char *suffix )
 {
-	if( !model || !*model || !hullfile )
+	if (!model->name || model->name[0] == '\0')
 		return;
 
-	size_t baseFolderLength = Q_strlen( "models/" );
-
-	char szModelBasename[MAX_PATH];
-	char szModelFilepath[MAX_PATH];
-
-	COM_ExtractFilePath( model + baseFolderLength, szModelFilepath );
-	COM_FileBase( model, szModelBasename );
-
-	if( szModelFilepath[0] )
-		Q_snprintf( hullfile, size, "cache/%s/%s.hull", szModelFilepath, szModelBasename );
-	else
-		Q_snprintf( hullfile, size, "cache/%s.hull", szModelBasename );
+	std::stringstream stream;
+	std::string pathStr = model->name;
+	pathStr.erase(0, pathStr.find_first_of("/\\") + 1);
+	fs::Path modelPath = pathStr;
+	stream << std::nouppercase << std::setfill('0') << std::setw(8) << std::hex << hash;
+	hullfile = "cache" / modelPath.parent_path() / (modelPath.stem().string() + "_" + stream.str() + suffix);
 }
 
-void CPhysicNovodex :: MeshNameForModel( const char *model, char *hullfile, size_t size )
+uint32_t CPhysicNovodex::GetHashForModelState( model_t *model, int32_t body, int32_t skin )
 {
-	if( !model || !*model || !hullfile )
-		return;
-
-	size_t baseFolderLength = Q_strlen( "models/" );
-
-	char szModelBasename[MAX_PATH];
-	char szModelFilepath[MAX_PATH];
-
-	COM_ExtractFilePath( model + baseFolderLength, szModelFilepath );
-	COM_FileBase( model, szModelBasename );
-
-	if( szModelFilepath[0] )
-		Q_snprintf( hullfile, size, "cache/%s/%s.mesh", szModelFilepath, szModelBasename );
-	else
-		Q_snprintf( hullfile, size, "cache/%s.mesh", szModelBasename );
+	uint32_t hash;
+	CRC32_Init(&hash);
+	CRC32_ProcessBuffer(&hash, &body, sizeof(body));
+	CRC32_ProcessBuffer(&hash, &skin, sizeof(skin));
+	CRC32_ProcessBuffer(&hash, &model->modelCRC, sizeof(model->modelCRC));
+	return CRC32_Final(hash);
 }
 
 //-----------------------------------------------------------------------------
