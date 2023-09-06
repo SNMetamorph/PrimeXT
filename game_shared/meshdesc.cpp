@@ -801,29 +801,24 @@ void CMeshDesc :: RelinkFacet( mfacet_t *facet )
 	InsertLinkBefore( &facet->area, &node->solid_edicts );
 }
 
-bool CMeshDesc :: StudioLoadCache( const char *pszModelName )
+CMeshDesc::LoadStatus CMeshDesc::StudioLoadCache()
 {
-	char	szFilename[MAX_PATH];
-	char	szModelname[MAX_PATH];
 	int	i, length, iCompare;
+	std::string filePath;
 
-	Q_strncpy( szModelname, pszModelName + Q_strlen( "models/" ), sizeof( szModelname ));
-	COM_StripExtension( szModelname );
-	Q_snprintf( szFilename, sizeof( szFilename ), "cache/%s.clip", szModelname );
-
-	if( COMPARE_FILE_TIME( m_pModel->name, szFilename, &iCompare ))
+	GetCacheFilePath(filePath);
+	if( COMPARE_FILE_TIME( m_pModel->name, const_cast<char*>(filePath.c_str()), &iCompare))
 	{
 		// MDL file is newer.
 		if( iCompare > 0 )
-			return false;
+			return LoadStatus::Error;
 	}
-	else
-	{
-		return false;
+	else {
+		return LoadStatus::Error;
 	}
 
-	byte *aMemFile = LOAD_FILE( szFilename, &length );
-	if( !aMemFile ) return false;
+	byte *aMemFile = LOAD_FILE( filePath.c_str(), &length );
+	if( !aMemFile ) return LoadStatus::Error;
 
 	CVirtualFS file( aMemFile, length );
 	clipfile::CacheDataLump *lump;
@@ -835,24 +830,24 @@ bool CMeshDesc :: StudioLoadCache( const char *pszModelName )
 	std::vector<clipfile::CacheEntry> entriesList;
 	const clipfile::CacheEntry *desiredEntry = nullptr;
 
+	FREE_FILE( aMemFile );
 	file.Read( &hdr, sizeof( hdr ));
-
 	if( hdr.id != clipfile::kFileMagic )
 	{
-		ALERT( at_warning, "%s has wrong file signature %X\n", szFilename, hdr.id );
-		goto cleanup;
+		ALERT( at_warning, "%s has wrong file signature %X\n", filePath.c_str(), hdr.id );
+		return LoadStatus::Error;
 	}
 
 	if( hdr.version != clipfile::kFormatVersion )
 	{
-		ALERT( at_warning, "%s has wrong version (%i should be %i)\n", szFilename, hdr.version, clipfile::kFormatVersion );
-		goto cleanup;
+		ALERT( at_warning, "%s has wrong version (%i should be %i)\n", filePath.c_str(), hdr.version, clipfile::kFormatVersion );
+		return LoadStatus::Error;
 	}
 
 	if( hdr.modelCRC != m_pModel->modelCRC )
 	{
-		ALERT( at_console, "%s was changed, CLIP cache will be updated\n", szFilename );
-		goto cleanup;
+		ALERT( at_console, "%s was changed, CLIP cache will be updated\n", filePath.c_str() );
+		return LoadStatus::Error;
 	}
 
 	ClearBounds( m_mesh.mins, m_mesh.maxs );
@@ -882,8 +877,8 @@ bool CMeshDesc :: StudioLoadCache( const char *pszModelName )
 
 	if (!desiredEntry)
 	{
-		ALERT(at_console, "%s doesn't contain required cache entry (body %d / skin %d / geom. type %d)\n", szFilename, m_iBodyNumber, m_iSkinNumber, m_iGeometryType);
-		goto cleanup;
+		ALERT(at_console, "%s doesn't contain required cache entry (body %d / skin %d / geom. type %d)\n", filePath.c_str(), m_iBodyNumber, m_iSkinNumber, m_iGeometryType);
+		return LoadStatus::EntryNotFound;
 	}
 
 	// read needed cache data lumps
@@ -896,8 +891,8 @@ bool CMeshDesc :: StudioLoadCache( const char *pszModelName )
 
 	if( lump->filelen <= 0 || lump->filelen % sizeof( uint32_t ))
 	{
-		ALERT( at_warning, "%s has funny size of LUMP_CLIP_PLANE_INDEXES\n", szFilename );
-		goto cleanup;
+		ALERT( at_warning, "%s has funny size of LUMP_CLIP_PLANE_INDEXES\n", filePath.c_str() );
+		return LoadStatus::Error;
 	}
 
 	m_srcPlaneElems = (uint *)calloc( sizeof( uint32_t ), m_iAllocPlanes );
@@ -913,8 +908,8 @@ bool CMeshDesc :: StudioLoadCache( const char *pszModelName )
 
 	if( lump->filelen <= 0 || lump->filelen % sizeof( clipfile::Plane ))
 	{
-		ALERT( at_warning, "%s has funny size of LUMP_CLIP_PLANES\n", szFilename );
-		goto cleanup;
+		ALERT( at_warning, "%s has funny size of LUMP_CLIP_PLANES\n", filePath.c_str() );
+		return LoadStatus::Error;
 	}
 
 	m_srcPlanePool = (hashplane_t *)calloc( sizeof( hashplane_t ), m_mesh.numplanes );
@@ -935,8 +930,8 @@ bool CMeshDesc :: StudioLoadCache( const char *pszModelName )
 
 	if( lump->filelen <= 0 || lump->filelen % sizeof( clipfile::Facet ))
 	{
-		ALERT( at_warning, "%s has funny size of LUMP_CLIP_FACETS\n", szFilename );
-		goto cleanup;
+		ALERT( at_warning, "%s has funny size of LUMP_CLIP_FACETS\n", filePath.c_str() );
+		return LoadStatus::Error;
 	}
 
 	m_srcFacets = (mfacet_t *)calloc( sizeof( mfacet_t ), m_iNumTris );
@@ -971,31 +966,20 @@ bool CMeshDesc :: StudioLoadCache( const char *pszModelName )
 		has_tree = true;	// too many triangles invoke to build AABB tree
 	else has_tree = false;
 
-	// all done
-	FREE_FILE( aMemFile );
-	return true;
-cleanup:
-	FREE_FILE( aMemFile );
-	FreeMeshBuild();
-
-	return false;
+	return LoadStatus::Success;
 }
 
-bool CMeshDesc::StudioSaveCache(const char *pszModelName)
+bool CMeshDesc::StudioSaveCache()
 {
-	char szFilename[MAX_PATH];
-	char szModelname[MAX_PATH];
+	std::string filePath;
 	clipfile::Header fileHeader;
 	clipfile::CacheData data;
 	clipfile::CacheDataLump *lump;
 	uint32_t entriesCount;
 	std::vector<clipfile::CacheEntry> cacheEntries;
 
-	Q_strncpy(szModelname, pszModelName + Q_strlen("models/"), sizeof(szModelname));
-	COM_StripExtension(szModelname);
-	Q_snprintf(szFilename, sizeof(szFilename), "cache/%s.clip", szModelname);
-
-	fs::FileHandle cacheFile = fs::Open(szFilename, "a+b");
+	GetCacheFilePath(filePath);
+	fs::FileHandle cacheFile = fs::Open(filePath, "a+b");
 	if (!cacheFile) {
 		// msg
 		return false;
@@ -1092,7 +1076,7 @@ bool CMeshDesc::StudioSaveCache(const char *pszModelName)
 	fs::Close(cacheFile);
 
 	// update file header
-	cacheFile = fs::Open(szFilename, "r+b");
+	cacheFile = fs::Open(filePath, "r+b");
 	fs::Seek(cacheFile, 0, fs::SeekType::Set);
 	fs::Write(&fileHeader, sizeof(fileHeader), cacheFile);
 
@@ -1104,10 +1088,8 @@ bool CMeshDesc::StudioSaveCache(const char *pszModelName)
 	return true;
 }
 
-bool CMeshDesc :: StudioCreateCache( const char *pszModelName )
+bool CMeshDesc :: StudioCreateCache()
 {
-	char szFilename[MAX_PATH];
-	char szModelname[MAX_PATH];
 	clipfile::CacheDataLump *lump;
 	clipfile::Header hdr;
 	clipfile::CacheTable table;
@@ -1195,24 +1177,27 @@ bool CMeshDesc :: StudioCreateCache( const char *pszModelName )
 	file.Seek(0, SEEK_SET);
 	file.Write(&hdr, sizeof(hdr));
 
-	Q_strncpy( szModelname, pszModelName + Q_strlen( "models/" ), sizeof( szModelname ));
-	COM_StripExtension( szModelname );
-	Q_snprintf( szFilename, sizeof( szFilename ), "cache/%s.clip", szModelname );
-
-	if( SAVE_FILE( szFilename, file.GetBuffer(), file.GetSize( )))
+	std::string filePath;
+	GetCacheFilePath(filePath);
+	if( SAVE_FILE( filePath.c_str(), file.GetBuffer(), file.GetSize()))
 		return true;
 
-	ALERT( at_error, "StudioCreateCache: couldn't store %s\n", szFilename );
+	ALERT( at_error, "StudioCreateCache: couldn't store %s\n", filePath.c_str() );
 	return false;
 }
 
-bool CMeshDesc::CacheFileExists(const char *pszModelName) const
+void CMeshDesc::GetCacheFilePath(std::string &filePath) const
 {
 	std::string fileName = m_pModel->name;
 	fileName.erase(0, fileName.find_first_of("/\\") + 1);
 	fileName.erase(fileName.find_last_of("."));
-	fs::Path filePath = "cache/" + fileName + ".clip";
+	filePath = "cache/" + fileName + ".clip";
+}
 
+bool CMeshDesc::CacheFileExists() const
+{
+	std::string filePath;
+	GetCacheFilePath(filePath);
 	if (fs::FileExists(filePath)) {
 		return true;
 	}
@@ -1617,18 +1602,26 @@ void CMeshDesc::SaveToCacheFile()
 	{
 		// only studio models can be cached
 		// now dump the collision into cachefile
-		if (CacheFileExists(m_pModel->name)) {
-			StudioSaveCache(m_pModel->name);
+		if (CacheFileExists()) {
+			StudioSaveCache();
 		}
 		else {
-			StudioCreateCache(m_pModel->name);
+			StudioCreateCache();
 		}
 	}
 }
 
 bool CMeshDesc::LoadFromCacheFile()
 {
-	return StudioLoadCache(m_pModel->name);
+	LoadStatus status = StudioLoadCache();
+	if (status == LoadStatus::Error && CacheFileExists()) 
+	{
+		// remove legacy/incompatible cache file
+		std::string filePath;
+		GetCacheFilePath(filePath);
+		fs::RemoveFile(filePath);
+	}
+	return status == LoadStatus::Success;
 }
 
 bool CMeshDesc::PresentInCache() const
