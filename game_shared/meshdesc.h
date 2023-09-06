@@ -88,6 +88,13 @@ public:
 	bool AddMeshTrinagle(const Vector triangle[3]);
 
 private:
+	enum class LoadStatus
+	{
+		Success,
+		Error,
+		EntryNotFound,
+	};
+
 	// pacifier stuff
 	void StartPacifier();
 	void UpdatePacifier(float percent);
@@ -96,10 +103,11 @@ private:
 	// studio models processing
 	void ExtractAnimValue(int frame, mstudioanim_t *panim, int dof, float scale, float &v1);
 	void StudioCalcBoneTransform(int frame, mstudiobone_t *pbone, mstudioanim_t *panim, Vector &pos, Vector4D &q);
-	bool StudioLoadCache(const char *pCacheName);
-	bool StudioSaveCache(const char *pszModelName);
-	bool StudioCreateCache(const char *pCacheName);
-	bool CacheFileExists(const char *pszModelName) const;
+	LoadStatus StudioLoadCache();
+	bool StudioSaveCache();
+	bool StudioCreateCache();
+	void GetCacheFilePath(std::string &filePath) const;
+	bool CacheFileExists() const;
 
 	// linked list operations
 	void InsertLinkBefore(link_t *l, link_t *before);
