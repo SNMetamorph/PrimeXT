@@ -26,9 +26,6 @@ GNU General Public License for more details.
 #include "enginecallback.h"
 #endif
 
-#include <stdexcept>
-#include <algorithm>
-
 CMeshDescFactory::CMeshDescFactory()
 {
     // TODO we can't use std::vector for m_meshDescList
@@ -54,7 +51,7 @@ CMeshDesc &CMeshDescFactory::CreateObject(int32_t modelIndex, int32_t body, int3
 {
     model_t *mod = static_cast<model_t*>(MODEL_HANDLE(modelIndex));
 	if (!mod) {
-		throw std::runtime_error("invalid model index");
+        HOST_ERROR("CMeshDescFactory: invalid model index in CreateObject");
 	}
 
     auto initializeMeshDesc = [&](CMeshDesc &desc) {
