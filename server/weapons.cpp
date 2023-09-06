@@ -168,9 +168,7 @@ void DecalGunshot( TraceResult *pTrace, int iBulletType, const vec3_t &origin, c
 
 	if (UTIL_GetModelType(pTarget->pev->modelindex) == mod_brush)
 	{
-		SetBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
 		msurface_t *surf = TRACE_SURFACE(pTrace->pHit, origin, vecEnd);
-		ClearBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
 		pMaterial = COM_MatDefFromSurface(surf, pTrace->vecEndPos);
 		if (pMaterial) {
 			UTIL_TraceCustomDecal(pTrace, pMaterial->impact_decal, RANDOM_FLOAT(0.0f, 360.0f));
@@ -203,19 +201,9 @@ void DecalGunshot( TraceResult *pTrace, int iBulletType, const vec3_t &origin, c
 	}
 	else if (studiomodelEntity)
 	{
-		// repeat tracing with material trace flag
-		TraceResult tr;
-		SetBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
-		UTIL_TraceLine(
-			pTrace->vecEndPos + (pTrace->vecPlaneNormal * 0.15f),
-			pTrace->vecEndPos + (pTrace->vecPlaneNormal * -0.15f),
-			ignore_monsters, INDEXENT(0), &tr
-		);
- 		ClearBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
-
-		if (tr.materialHash)
+		if (pTrace->materialHash)
 		{
-			matdesc_t *mat = COM_FindMaterial(tr.materialHash);
+			matdesc_t *mat = COM_FindMaterial(pTrace->materialHash);
 			pMaterial = mat ? mat->effects : nullptr;
 			if (pMaterial) {
 				UTIL_StudioDecalTrace(pTrace, pMaterial->impact_decal);

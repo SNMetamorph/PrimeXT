@@ -1788,20 +1788,9 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr, Vector vecSrc, Vector vecEnd, int 
 	}
 	else if (pEntity->pev->solid == SOLID_CUSTOM)
 	{
-		// repeat tracing with material trace flag
-		TraceResult tr;
-		SetBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
-		UTIL_TraceLine(
-			ptr->vecEndPos + ptr->vecPlaneNormal * 0.15f,
-			ptr->vecEndPos + ptr->vecPlaneNormal * -0.15f,
-			ignore_monsters, NULL, &tr
-		);
-		ClearBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
-
-		if (tr.materialHash) {
-			matdesc_t *mat = COM_FindMaterial(tr.materialHash);
-			if (mat)
-			{
+		if (ptr->materialHash) {
+			matdesc_t *mat = COM_FindMaterial(ptr->materialHash);
+			if (mat) {
 				pMat = mat->effects;
 				impactType = IMPACT_MATERIAL;
 			}

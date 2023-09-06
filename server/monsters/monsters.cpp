@@ -2618,7 +2618,9 @@ void CBaseMonster :: StepSound( void )
 	int fWalking;
 	int cnt = 0;
 
+	SetBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
 	UTIL_TraceLine(pev->origin + Vector(0, 0, 8), pev->origin - Vector(0, 0, 16), ignore_monsters, ENT(pev), &ptr);
+	ClearBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
 	CBaseEntity *pEntity = CBaseEntity::Instance(ptr.pHit);
 	memset(rgsz, 0, sizeof(rgsz));
 
@@ -2631,18 +2633,9 @@ void CBaseMonster :: StepSound( void )
 	}
 	else if (pEntity->pev->solid == SOLID_CUSTOM)
 	{
-		// repeat tracing with material trace flag
-		TraceResult tr;
-		SetBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
-		UTIL_TraceLine(
-			ptr.vecEndPos + (ptr.vecPlaneNormal * 0.5f),
-			ptr.vecEndPos + (ptr.vecPlaneNormal * -0.5f),
-			ignore_monsters, NULL, &tr
-		);
-		ClearBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
-		if (tr.materialHash) 
+		if (ptr.materialHash) 
 		{
-			matdesc_t *mat = COM_FindMaterial(tr.materialHash);
+			matdesc_t *mat = COM_FindMaterial(ptr.materialHash);
 			pMaterial = mat ? mat->effects : nullptr;
 		}
 	}

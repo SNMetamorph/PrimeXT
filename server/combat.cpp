@@ -1427,7 +1427,9 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 		Vector vecEnd;
 
 		vecEnd = vecSrc + vecDir * flDistance;
+		SetBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
 		UTIL_TraceLine(vecSrc, vecEnd, dont_ignore_monsters, ENT(pev)/*pentIgnore*/, &tr);
+		ClearBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
 
 		tracer = 0;
 		if (iTracerFreq != 0 && (tracerCount++ % iTracerFreq) == 0)
