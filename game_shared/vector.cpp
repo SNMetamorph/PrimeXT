@@ -14,16 +14,22 @@ GNU General Public License for more details.
 */
 #ifdef USE_PHYSICS_ENGINE
 #include "vector.h"
-#include "NxVec3.h"
+#include "PxVec3.h"
 
-Vector :: Vector( const NxVec3& v )
+Vector::Vector(const physx::PxVec3& v)
 {
 	x = v.x; y = v.y; z = v.z;
 }
 
-const Vector& Vector :: operator = ( const NxVec3& v )
+const Vector& Vector::operator=(const physx::PxVec3& v)
 {
 	x = v.x; y = v.y; z = v.z;
 	return *this;
 }
+
+Vector::operator physx::PxVec3() const
+{
+	return physx::PxVec3(x, y, z);
+}
+
 #endif

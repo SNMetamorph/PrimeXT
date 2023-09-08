@@ -31,7 +31,9 @@
 #pragma warning( disable : 4244 )	// disable 'possible loss of data converting float to int' warning message
 #pragma warning( disable : 4305 )	// disable 'truncation from 'const double' to 'float' warning message
 
-class NxVec3;
+namespace physx {
+	class PxVec3;
+};
 class Radian;
 
 inline void SinCos( float angle, float *sine, float *cosine ) 
@@ -126,8 +128,6 @@ typedef Vector2D vec2_t;
 inline float DotProduct(const Vector2D& a, const Vector2D& b) { return( a.x*b.x + a.y*b.y ); }
 inline Vector2D operator*(float fl, const Vector2D& v) { return v * fl; }
 
-class NxVec3;
-
 //=========================================================
 // 3D Vector
 //=========================================================
@@ -141,7 +141,7 @@ public:
 	inline Vector( const float *rgfl )		{ x = rgfl[0]; y = rgfl[1]; z = rgfl[2];   }
 	inline Vector(float rgfl[3])			{ x = rgfl[0]; y = rgfl[1]; z = rgfl[2];   }
 	inline Vector( float fill )			{ x = fill; y = fill; z = fill;            }
-	Vector(const NxVec3& v);
+	Vector(const physx::PxVec3& v);
 
 	// Initialization
 	void Init(float ix=0.0f, float iy=0.0f, float iz=0.0f){ x = ix; y = iy; z = iz; }
@@ -157,8 +157,11 @@ public:
 	inline Vector operator*(float fl) const		{ return Vector(x*fl, y*fl, z*fl);	   }
 	inline Vector operator/(float fl) const		{ return Vector(x/fl, y/fl, z/fl);	   }
 	inline Vector operator*(const Vector& v) const	{ return Vector(x*v.x, y*v.y, z*v.z);	   }
-	const Vector& operator=(const NxVec3& v);
-	
+	operator float *()								{ return &x; } // Vectors will now automatically convert to float * when needed
+	operator const float *() const					{ return &x; } 
+	const Vector& operator=(const physx::PxVec3& v);
+	operator physx::PxVec3() const;
+
 	_forceinline Vector& operator+=(const Vector &v)
 	{
 		x+=v.x; y+=v.y; z += v.z;	
@@ -255,8 +258,6 @@ public:
 	inline float Length(void) const					{ return sqrt( x*x + y*y + z*z ); }
 	inline float LengthSqr(void) const				{ return (x*x + y*y + z*z); }
 	inline float MaxCoord() const					{ return Q_max(x, Q_max(y, z)); }
-	operator float *()								{ return &x; } // Vectors will now automatically convert to float * when needed
-	operator const float *() const					{ return &x; } 
 		
 	inline Vector Normalize() const
 	{
@@ -437,7 +438,7 @@ public:
 	inline Radian operator*(float fl) const		{ return Radian(x*fl, y*fl, z*fl);	   }
 	inline Radian operator/(float fl) const		{ return Radian(x/fl, y/fl, z/fl);	   }
 	inline Radian operator*(const Radian& v) const	{ return Radian(x*v.x, y*v.y, z*v.z);	   }
-	const Radian& operator=(const NxVec3& v);
+	const Radian& operator=(const physx::PxVec3& v);
 	
 	_forceinline Radian& operator+=(const Radian &v)
 	{
