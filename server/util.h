@@ -12,9 +12,7 @@
 *   without written permission from Valve LLC.
 *
 ****/
-//
-// Misc utility code
-//
+#pragma once
 #include "stringlib.h"
 
 #ifndef ACTIVITY_H
