@@ -36,6 +36,7 @@ GNU General Public License for more details.
 class CPhysicNovodex : public IPhysicLayer
 {
 public:
+	CPhysicNovodex();
 	void	InitPhysic( void );
 	void	FreePhysic( void );
 	void	Update( float flTime );

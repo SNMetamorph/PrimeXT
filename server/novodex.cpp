@@ -53,6 +53,30 @@ using namespace physx;
 CPhysicNovodex	NovodexPhysic;
 IPhysicLayer	*WorldPhysic = &NovodexPhysic;
 
+CPhysicNovodex::CPhysicNovodex()
+{
+	m_pPhysics = nullptr;
+	m_pFoundation = nullptr;
+	m_pDispatcher = nullptr;
+	m_pScene = nullptr;	
+	m_pWorldModel = nullptr;
+	m_pSceneMesh = nullptr;
+	m_pSceneActor = nullptr;
+	m_pDefaultMaterial = nullptr;
+	m_pConveyorMaterial = nullptr;
+	m_pCooking = nullptr;
+	m_pVisualDebugger = nullptr;
+	
+	m_fLoaded = false;
+	m_fDisableWarning = false;
+	m_fWorldChanged = false;
+	m_fNeedFetchResults = false;
+
+	m_szMapName[0] = '\0';
+	p_speeds_msg[0] = '\0';
+	fps_max = nullptr;
+}
+
 void CPhysicNovodex :: InitPhysic( void )
 {
 	if( m_pPhysics )
