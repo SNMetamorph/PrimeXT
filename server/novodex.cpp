@@ -44,9 +44,8 @@ GNU General Public License for more details.
 #include "vehicles/NxParser.h"
 #endif
 
-#define DENSITY_FACTOR			0.0013f
-#define PADDING_FACTOR			0.49f
-#define SOLVER_ITERATION_COUNT	16
+constexpr float k_PaddingFactor = 0.49f;
+constexpr uint32_t k_SolverIterationCount = 4;
 
 using namespace physx;
 
@@ -134,7 +133,6 @@ void CPhysicNovodex :: InitPhysic( void )
 	//sceneDesc.bounceThresholdVelocity = 0.2 * scale.speed;
 	sceneDesc.flags = PxSceneFlag::eENABLE_CCD;
 	//sceneDesc.broadPhaseType = PxBroadPhaseType::eMBP;
-	//sceneDesc.maxIter = SOLVER_ITERATION_COUNT;
 	//sceneDesc.dynamicStructure = PxPruningStructureType::eDYNAMIC_AABB_TREE;
 	sceneDesc.cpuDispatcher = m_pDispatcher;
 	sceneDesc.filterShader = [](
@@ -1075,7 +1073,7 @@ void *CPhysicNovodex :: CreateBodyFromEntity( CBaseEntity *pObject )
 
 	pActor->setGlobalPose(pose);
 	pActor->setName(pObject->GetClassname());
-	//pActor->setSolverIterationCounts(SOLVER_ITERATION_COUNT);
+	pActor->setSolverIterationCounts(k_SolverIterationCount);
 	pActor->setRigidBodyFlag(PxRigidBodyFlag::eENABLE_CCD, true);
 	pActor->setLinearVelocity(pObject->GetLocalVelocity());
 	pActor->setAngularVelocity(pObject->GetLocalAvelocity());
@@ -1100,9 +1098,9 @@ void *CPhysicNovodex :: CreateBoxFromEntity( CBaseEntity *pObject )
 {
 	PxBoxGeometry boxGeometry;
 	boxGeometry.halfExtents = PxVec3(
-		pObject->pev->size.x * PADDING_FACTOR / 2.f,
-		pObject->pev->size.y * PADDING_FACTOR / 2.f,
-		pObject->pev->size.z * PADDING_FACTOR / 2.f
+		pObject->pev->size.x * k_PaddingFactor / 2.f,
+		pObject->pev->size.y * k_PaddingFactor / 2.f,
+		pObject->pev->size.z * k_PaddingFactor / 2.f
 	);
 
 	PxRigidDynamic *pActor = m_pPhysics->createRigidDynamic(PxTransform(PxIdentity));
@@ -1154,7 +1152,7 @@ void *CPhysicNovodex :: CreateKinematicBodyFromEntity( CBaseEntity *pObject )
 	PxTransform pose = PxTransform(PxMat44(mat));
 	pActor->setName(pObject->GetClassname());
 	pActor->setGlobalPose( pose );
-	//pActor->setSolverIterationCounts(SOLVER_ITERATION_COUNT);
+	pActor->setSolverIterationCounts(k_SolverIterationCount);
 	pActor->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 	pActor->userData = pObject->edict();
 	//m_ErrorCallback.hideWarning(true);
@@ -1657,7 +1655,7 @@ void *CPhysicNovodex :: RestoreBody( CBaseEntity *pEntity )
 		case ACTOR_CHARACTER:
 		{
 			PxBoxGeometry box;
-			box.halfExtents = pEntity->pev->size * PADDING_FACTOR;
+			box.halfExtents = pEntity->pev->size * k_PaddingFactor;
 			pShape = PxRigidActorExt::createExclusiveShape(*pActor, box, *m_pDefaultMaterial);
 			break;
 		}
@@ -1690,7 +1688,7 @@ void *CPhysicNovodex :: RestoreBody( CBaseEntity *pEntity )
 	{
 		pActor->setRigidBodyFlags(static_cast<PxRigidBodyFlags>(pEntity->m_iBodyFlags));
 		pActor->setMass(pEntity->m_flBodyMass);
-		pActor->setSolverIterationCounts(SOLVER_ITERATION_COUNT);
+		pActor->setSolverIterationCounts(k_SolverIterationCount);
 
 		if (pEntity->m_iActorType != ACTOR_KINEMATIC)
 		{
@@ -2185,7 +2183,7 @@ void CPhysicNovodex :: TeleportCharacter( CBaseEntity *pEntity )
 	{
 		PxBoxGeometry &box = pShape->getGeometry().box();
 		PxTransform pose = pRigidBody->getGlobalPose();
-		box.halfExtents = PxVec3(pEntity->pev->size * PADDING_FACTOR);
+		box.halfExtents = PxVec3(pEntity->pev->size * k_PaddingFactor);
 		pose.p = (pEntity->GetAbsOrigin() + vecOffset);
 		pRigidBody->setGlobalPose(pose);
 	}
@@ -2232,7 +2230,7 @@ void CPhysicNovodex :: MoveCharacter( CBaseEntity *pEntity )
 			ToggleCollision(pRigidBody, true);
 
 		Vector vecOffset = (pEntity->IsMonster()) ? Vector( 0, 0, pEntity->pev->maxs.z / 2.0f ) : g_vecZero;
-		box.halfExtents = ( pEntity->pev->size * PADDING_FACTOR );
+		box.halfExtents = ( pEntity->pev->size * k_PaddingFactor );
 		pShape->setGeometry(box); // should we do this?
 		PxTransform pose = pRigidBody->getGlobalPose();
 		pose.p = (pEntity->GetAbsOrigin() + vecOffset);
