@@ -16,49 +16,16 @@ GNU General Public License for more details.
 #ifndef NX_ERROR_STREAM_H
 #define NX_ERROR_STREAM_H
 
-class NxErrorStream : public NxUserOutputStream
+#include "PxErrorCallback.h"
+
+class ErrorCallback : public physx::PxErrorCallback
 {
-	bool	m_fHideWarning;
 public:
-	void reportError( NxErrorCode e, const char *message, const char* file, int line )
-	{
-		switch( e )
-		{
-		case NXE_INVALID_PARAMETER:
-			ALERT( at_error, "invalid parameter: %s\n", message );
-			break;
-		case NXE_INVALID_OPERATION:
-			ALERT( at_error, "invalid operation: %s\n", message );
-			break;
-		case NXE_OUT_OF_MEMORY:
-			ALERT( at_error, "out of memory: %s\n", message );
-			break;
-		case NXE_DB_INFO:
-			ALERT( at_console, "%s\n", message );
-			break;
-		case NXE_DB_WARNING:
-			if( !m_fHideWarning )
-				ALERT( at_warning, "%s\n", message );
-			break;
-		default:
-			ALERT( at_error, "unknown error: %s\n", message );
-			break;
-		}
-	}
+	virtual void reportError(physx::PxErrorCode::Enum code, const char* message, const char* file, int line);\
+	void hideWarning(bool bHide) { m_fHideWarning = bHide; }
 
-	NxAssertResponse reportAssertViolation( const char *message, const char *file, int line )
-	{
-		ALERT( at_aiconsole, "access violation : %s (%s line %d)\n", message, file, line );
-		return NX_AR_BREAKPOINT;		
-	}
-
-	void print( const char *message )
-	{
-		ALERT( at_console, "%s\n", message );
-	}
-
-	// hide warning: "createActor: Dynamic triangle mesh instantiated!"
-	void hideWarning( bool bHide ) { m_fHideWarning = bHide; }
+private:
+	bool m_fHideWarning = false;
 };
 
-#endif//NX_ERROR_STREAM
+#endif // NX_ERROR_STREAM

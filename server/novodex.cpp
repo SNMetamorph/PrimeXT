@@ -13,12 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "physic.h"		// must be first!
 #ifdef USE_PHYSICS_ENGINE
-
-#include "extdll.h"
-#include "util.h"
-#include "cbase.h"
+#include "novodex.h"
 #include "saverestore.h"
 #include "client.h"
 #include "bspfile.h"
@@ -31,8 +27,16 @@ GNU General Public License for more details.
 #include "trace.h"
 #include "game.h"
 #include "build.h"
+#include "NxErrorStream.h"
+#include "PxMat33.h"
+#include "PxMat44.h"
+#include "contact_report.h"
+#include "debug_renderer.h"
+#include "decomposed_shape.h"
 #include "meshdesc_factory.h"
 #include "crclib.h"
+#include <vector>
+#include <thread>
 #include <sstream>
 
 #if defined (HAS_PHYSIC_VEHICLE)
@@ -40,127 +44,14 @@ GNU General Public License for more details.
 #include "vehicles/NxParser.h"
 #endif
 
+#define DENSITY_FACTOR			0.0013f
+#define PADDING_FACTOR			0.49f
+#define SOLVER_ITERATION_COUNT	16
+
+using namespace physx;
+
 CPhysicNovodex	NovodexPhysic;
 IPhysicLayer	*WorldPhysic = &NovodexPhysic;
-
-// exports given from physics SDK
-static NxPhysicsSDK* (__cdecl *pNxCreatePhysicsSDK)( 
-	NxU32 sdkVersion, 
-	NxUserAllocator* allocator, 
-	NxUserOutputStream* outputStream,
-	const NxPhysicsSDKDesc& desc, 
-	NxSDKCreateError *errorCode
-);
-static NxCookingInterface *(__cdecl *pNxGetCookingLib)( NxU32 sdk_version_number );
-static void *(__cdecl *pNxReleasePhysicsSDK)( NxPhysicsSDK *sdk );
-static NxUtilLib* (__cdecl *pNxGetUtilLib)( void );
-
-static dllfunc_t NxPhysics[] =
-{
-{ "NxCreatePhysicsSDK",	(void **)&pNxCreatePhysicsSDK },
-{ "NxReleasePhysicsSDK",	(void **)&pNxReleasePhysicsSDK },
-{ "NxGetCookingLib",	(void **)&pNxGetCookingLib },
-{ "NxGetUtilLib",		(void **)&pNxGetUtilLib },
-{ NULL, NULL },
-};
-
-static dllhandle_t hPhysics = NULL;
-
-class DebugRenderer
-{
-public:
-	NX_INLINE void setupColor( NxU32 color ) const
-	{
-		NxF32 Blue = NxF32((color) & 0xff) / 255.0f;
-		NxF32 Green = NxF32((color>>8) & 0xff) / 255.0f;
-		NxF32 Red	= NxF32((color>>16) & 0xff) / 255.0f;
-		Tri->Color4f( Red, Green, Blue, 1.0f );
-	}
-
-	void renderData( const NxDebugRenderable& data ) const
-	{
-		// Render points
-		NxU32 NbPoints = data.getNbPoints();
-		const NxDebugPoint* Points = data.getPoints();
-
-		Tri->Begin( TRI_POINTS );
-		while( NbPoints-- )
-		{
-			setupColor( Points->color );
-			Tri->Vertex3fv( (float *)&Points->p.x );
-			Points++;
-		}
-		Tri->End();
-
-		// Render lines
-		NxU32 NbLines = data.getNbLines();
-		const NxDebugLine* Lines = data.getLines();
-
-		Tri->Begin( TRI_LINES );
-		while( NbLines-- )
-		{
-			setupColor( Lines->color );
-			Tri->Vertex3fv( (float *)&Lines->p0.x );
-			Tri->Vertex3fv( (float *)&Lines->p1.x );
-			Lines++;
-		}
-		Tri->End();
-
-		// Render triangles
-		NxU32 NbTris = data.getNbTriangles();
-		const NxDebugTriangle* Triangles = data.getTriangles();
-
-		Tri->Begin( TRI_TRIANGLES );
-		while( NbTris-- )
-		{
-			setupColor( Triangles->color );
-			Tri->Vertex3fv( (float *)&Triangles->p0.x );
-			Tri->Vertex3fv( (float *)&Triangles->p1.x );
-			Tri->Vertex3fv( (float *)&Triangles->p2.x );
-			Triangles++;
-		}
-		Tri->End();
-	}
-} gDebugRenderer;
-
-class ContactReport : public NxUserContactReport
-{
-public:
-	virtual void onContactNotify( NxContactPair& pair, NxU32 events )
-	{
-		if( !FBitSet( events, NX_NOTIFY_ON_TOUCH ))
-			return;
-
-		edict_t *e1 = (edict_t *)pair.actors[0]->userData;
-		edict_t *e2 = (edict_t *)pair.actors[1]->userData;
-
-		if( !e1 || !e2 ) return;
-
-		if( e1->v.flags & FL_CONVEYOR )
-		{
-			Vector basevelocity = e1->v.movedir * e1->v.speed * CONVEYOR_SCALE_FACTOR;
-			pair.actors[1]->setLinearMomentum( basevelocity );
-		}
-
-		if( e2->v.flags & FL_CONVEYOR )
-		{
-			Vector basevelocity = e2->v.movedir * e2->v.speed * CONVEYOR_SCALE_FACTOR;
-			pair.actors[0]->setLinearMomentum( basevelocity );
-		}
-
-		if( e1 && e1->v.solid != SOLID_NOT )
-		{
-			// FIXME: build trace info
-			DispatchTouch( e1, e2 );
-		}
-
-		if( e2 && e2->v.solid != SOLID_NOT )
-		{
-			// FIXME: build trace info
-			DispatchTouch( e1, e2 );
-		}
-	}
-} gContactReport;
 
 void CPhysicNovodex :: InitPhysic( void )
 {
@@ -177,122 +68,112 @@ void CPhysicNovodex :: InitPhysic( void )
 		return;
 	}
 
-#if !XASH_64BIT
-	const char *libraryName = "PhysXLoader.dll";
-	const char *libraryGlobalName = "*PhysXLoader.dll";
-#else
-	const char *libraryName = "PhysXLoader64.dll";
-	const char *libraryGlobalName = "*PhysXLoader64.dll";
-#endif
-
-	// trying to load dlls from mod-folder
-	if (!Sys_LoadLibrary(libraryName, &hPhysics, NxPhysics))
+	m_pFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, m_Allocator, m_ErrorCallback);
+	if (!m_pFoundation)
 	{
-		// NOTE: using '*' symbol to force loading dll from system path not game folder (Nvidia PhysX drivers)
-		if (!Sys_LoadLibrary(libraryGlobalName, &hPhysics, NxPhysics))
-		{
-			ALERT(at_error, "InitPhysic: failed to loading \"%s\"\nPhysics abstraction layer will be disabled.\n", libraryName);
-			GameInitNullPhysics();
-			return;
-		}
-	}
-
-	m_pPhysics = pNxCreatePhysicsSDK( NX_PHYSICS_SDK_VERSION, NULL, &m_ErrorStream, NxPhysicsSDKDesc(), NULL );
-
-	if( !m_pPhysics )
-	{
-		ALERT( at_error, "InitPhysic: failed to initalize physics engine\n" );
-		Sys_FreeLibrary( &hPhysics );
-		GameInitNullPhysics ();
+		ALERT(at_error, "InitPhysic: failed to create foundation\n");
+		GameInitNullPhysics();
 		return;
 	}
 
-	m_pCooking = pNxGetCookingLib( NX_PHYSICS_SDK_VERSION );
+	PxTolerancesScale scale;
+	scale.length = 39.3701;   // typical length of an object
+	scale.speed = 800.0;   // typical speed of an object, gravity*1s is a reasonable choice
+	
+	m_pVisualDebugger = PxCreatePvd(*m_pFoundation);
+	PxPvdTransport *transport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 1000);
+	m_pVisualDebugger->connect(*transport, PxPvdInstrumentationFlag::eALL);
 
-	if( !m_pCooking )
+	m_pPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *m_pFoundation, scale, false, m_pVisualDebugger);
+	m_pDispatcher = PxDefaultCpuDispatcherCreate(std::thread::hardware_concurrency());
+	if (!m_pPhysics)
+	{
+		ALERT( at_error, "InitPhysic: failed to initalize physics engine\n" );
+		GameInitNullPhysics();
+		return;
+	}
+
+	m_pCooking = PxCreateCooking(PX_PHYSICS_VERSION, *m_pFoundation, PxCookingParams(scale));
+	if (!m_pCooking)
 	{
 		ALERT( at_warning, "InitPhysic: failed to initalize cooking library\n" );
 	}
 
-	m_pUtils = pNxGetUtilLib();
-
-	if( !m_pUtils )
-	{
-		ALERT( at_warning, "InitPhysic: failed to initalize util library\n" );
+	if (!PxInitExtensions(*m_pPhysics, m_pVisualDebugger)) {
+		ALERT( at_warning, "InitPhysic: failed to initalize extensions\n" );
 	}
 
-	float maxSpeed = CVAR_GET_FLOAT( "sv_maxspeed" );
-
-	m_pPhysics->setParameter( NX_SKIN_WIDTH, 0.25f );
-
-	m_pPhysics->setParameter( NX_VISUALIZATION_SCALE, 1.0f );
-	m_pPhysics->setParameter( NX_VISUALIZE_COLLISION_SHAPES, 1 );
-	m_pPhysics->setParameter( NX_VISUALIZE_CONTACT_POINT, 1 );
-	m_pPhysics->setParameter( NX_VISUALIZE_CONTACT_NORMAL, 1 );
-	m_pPhysics->setParameter( NX_MAX_ANGULAR_VELOCITY, maxSpeed );
-	m_pPhysics->setParameter( NX_CONTINUOUS_CD, 1 );
-	m_pPhysics->setParameter( NX_VISUALIZE_BODY_AXES, 1 );
-	m_pPhysics->setParameter( NX_DEFAULT_SLEEP_LIN_VEL_SQUARED, 5.0f );
-	m_pPhysics->setParameter( NX_DEFAULT_SLEEP_ANG_VEL_SQUARED, 5.0f );
-	m_pPhysics->setParameter( NX_VISUALIZE_FORCE_FIELDS, 1.0f );
-	m_pPhysics->setParameter( NX_ADAPTIVE_FORCE, 0.0f );
-
 	// create a scene
-	NxSceneDesc sceneDesc;
+	PxSceneDesc sceneDesc(scale);
+	sceneDesc.simulationEventCallback = &ContactReport::getInstance();
+	sceneDesc.gravity = PxVec3(0.0f, 0.0f, -800.0f);
+	//sceneDesc.bounceThresholdVelocity = 0.2 * scale.speed;
+	sceneDesc.flags = PxSceneFlag::eENABLE_CCD;
+	//sceneDesc.broadPhaseType = PxBroadPhaseType::eMBP;
+	//sceneDesc.maxIter = SOLVER_ITERATION_COUNT;
+	//sceneDesc.dynamicStructure = PxPruningStructureType::eDYNAMIC_AABB_TREE;
+	sceneDesc.cpuDispatcher = m_pDispatcher;
+	sceneDesc.filterShader = [](
+		PxFilterObjectAttributes attributes0, PxFilterData filterData0,
+		PxFilterObjectAttributes attributes1, PxFilterData filterData1,
+		PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize) -> PxFilterFlags {
+			pairFlags = PxPairFlag::eCONTACT_DEFAULT
+					  | PxPairFlag::eDETECT_CCD_CONTACT
+					  | PxPairFlag::eNOTIFY_TOUCH_CCD
+					  |	PxPairFlag::eNOTIFY_TOUCH_FOUND
+					  |	PxPairFlag::eNOTIFY_TOUCH_PERSISTS
+					  | PxPairFlag::eNOTIFY_CONTACT_POINTS
+					  | PxPairFlag::eCONTACT_EVENT_POSE;
+			return PxFilterFlag::eDEFAULT;
+	};
 
-	sceneDesc.userContactReport = &gContactReport;
-	sceneDesc.gravity = NxVec3( 0.0f, 0.0f, -800.0f );
-	sceneDesc.maxTimestep = (1.0f / 150.0f);
-	sceneDesc.bpType = NX_BP_TYPE_SAP_MULTI;
-	sceneDesc.maxIter = SOLVER_ITERATION_COUNT;
-	sceneDesc.dynamicStructure = NX_PRUNING_DYNAMIC_AABB_TREE;
+	m_worldBounds.minimum = PxVec3(-32768, -32768, -32768);
+	m_worldBounds.maximum = PxVec3(32768, 32768, 32768);
+	sceneDesc.sanityBounds = m_worldBounds;
 
-	worldBounds.min = NxVec3( -32768, -32768, -32768 );
-	worldBounds.max = NxVec3(  32768,  32768,  32768 );
-	sceneDesc.maxBounds = &worldBounds;
-	sceneDesc.nbGridCellsX = 8;
-	sceneDesc.nbGridCellsY = 8;
-	sceneDesc.upAxis = 2;
+	m_pScene = m_pPhysics->createScene(sceneDesc);
+	m_pScene->setVisualizationParameter(PxVisualizationParameter::eSCALE, 1.0f); // disable on release build because performance impact
+	m_pScene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_SHAPES, 1.0f);
+	m_pScene->setVisualizationParameter(PxVisualizationParameter::eCONTACT_POINT, 1.0f);
+	m_pScene->setVisualizationParameter(PxVisualizationParameter::eCONTACT_NORMAL, 1.0f);
+	m_pScene->setVisualizationParameter(PxVisualizationParameter::eBODY_AXES, 1.0f);
 
-	m_pScene = m_pPhysics->createScene( sceneDesc );
+	PxPvdSceneClient *pvdClient = m_pScene->getScenePvdClient();
+	if (pvdClient)
+	{
+		pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONSTRAINTS, true);
+		pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONTACTS, true);
+		pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
+	}
 
-	// notify on all contacts:
-	m_pScene->setActorGroupPairFlags( 0, 0, NX_NOTIFY_ON_TOUCH );
-
-	NxMaterial *defaultMaterial = m_pScene->getMaterialFromIndex( 0 ); 
-	defaultMaterial->setStaticFriction( 0.5f );
-	defaultMaterial->setDynamicFriction( 0.5f );
-	defaultMaterial->setRestitution( 0.0f );
-
-	NxMaterialDesc conveyorMat;
-	NxMaterial *conveyorMaterial = m_pScene->createMaterial( conveyorMat ); 
-	conveyorMaterial->setStaticFriction( 1.0f );
-	conveyorMaterial->setDynamicFriction( 1.0f );
-	conveyorMaterial->setRestitution( 0.0f );
-	conveyorMaterial->setDirOfAnisotropy( NxVec3( 0, 0, 1 ));
-	conveyorMaterial->setFlags( NX_MF_ANISOTROPIC );
-
+	m_pDefaultMaterial = m_pPhysics->createMaterial(0.5f, 0.5f, 0.0f);
+	m_pConveyorMaterial = m_pPhysics->createMaterial(1.0f, 1.0f, 0.0f);
 	m_fNeedFetchResults = FALSE;
 }
 
 void CPhysicNovodex :: FreePhysic( void )
 {
-	if( !m_pPhysics ) return;
+	if (m_pScene) m_pScene->release();
+	if (m_pCooking) m_pCooking->release();
+	if (m_pDispatcher) m_pDispatcher->release();
+	if (m_pPhysics) m_pPhysics->release();
+	if (m_pVisualDebugger) 
+	{
+		PxPvdTransport *transport = m_pVisualDebugger->getTransport();
+		m_pVisualDebugger->release();
+		if (transport) {
+			transport->release();
+		}
+	}
 
-	if( m_pCooking )
-		m_pCooking->NxCloseCooking();
+	PxCloseExtensions();
+	if (m_pFoundation) m_pFoundation->release();
 
-	m_pPhysics->releaseScene( *m_pScene );
-	pNxReleasePhysicsSDK( m_pPhysics );
-
-	Sys_FreeLibrary( &hPhysics );
-	m_pPhysics = NULL;
-	m_pScene = NULL;
-}
-
-void *CPhysicNovodex :: GetUtilLibrary( void )
-{
-	return (void *)m_pUtils;
+	m_pScene = nullptr;
+	m_pCooking = nullptr;
+	m_pPhysics = nullptr;
+	m_pVisualDebugger = nullptr;
+	m_pFoundation = nullptr;
 }
 
 void CPhysicNovodex :: Update( float flTime )
@@ -300,6 +181,7 @@ void CPhysicNovodex :: Update( float flTime )
 	if( !m_pScene || GET_SERVER_STATE() != SERVER_ACTIVE )
 		return;
 
+	const float timeDelta = Q_min(flTime, 1.0f / 20.f);
 	if( g_psv_gravity )
 	{
 		// clamp gravity
@@ -308,9 +190,7 @@ void CPhysicNovodex :: Update( float flTime )
 		if( g_psv_gravity->value > 800.0f )
 			CVAR_SET_FLOAT( "sv_gravity", 800.0f );
 
-		NxVec3 gravity;
-		m_pScene->getGravity( gravity );
-
+		PxVec3 gravity = m_pScene->getGravity();
 		if( gravity.z != -( g_psv_gravity->value ))
 		{
 			ALERT( at_aiconsole, "gravity changed from %g to %g\n", gravity.z, -(g_psv_gravity->value));
@@ -321,16 +201,16 @@ void CPhysicNovodex :: Update( float flTime )
 
 	if( g_sync_physic.value )
 	{
-		m_pScene->simulate( flTime );
-		m_pScene->flushStream();
-		m_pScene->fetchResults( NX_RIGID_BODY_FINISHED, true );
+		m_pScene->simulate( timeDelta );
+		//m_pScene->flushStream();
+		m_pScene->fetchResults( true );
 	}
 	else
 	{
 		if( m_fNeedFetchResults )
 			return; // waiting
 
-		m_pScene->simulate( flTime );
+		m_pScene->simulate( timeDelta );
 		m_fNeedFetchResults = TRUE;
 	}
 }
@@ -342,8 +222,8 @@ void CPhysicNovodex :: EndFrame( void )
 
 	if( m_fNeedFetchResults )
 	{
-		m_pScene->flushStream();
-		m_pScene->fetchResults( NX_RIGID_BODY_FINISHED, true );
+		//m_pScene->flushStream();
+		m_pScene->fetchResults( true );
 		m_fNeedFetchResults = FALSE;
 	}
 
@@ -351,31 +231,36 @@ void CPhysicNovodex :: EndFrame( void )
 	if( !p_speeds || p_speeds->value <= 0.0f )
 		return;
 
-	NxSceneStats stats;
-	m_pScene->getStats( stats );
+	PxSimulationStatistics stats;
+	m_pScene->getSimulationStatistics( stats );
 
 	switch( (int)p_speeds->value )
 	{
 	case 1:
-		Q_snprintf( p_speeds_msg, sizeof( p_speeds_msg ), "%3i active bodies, %3i actors\n%3i static shapes, %3i dynamic shapes",
-		stats.numDynamicActorsInAwakeGroups, stats.numActors, stats.numStaticShapes, stats.numDynamicShapes );
+		Q_snprintf(p_speeds_msg, sizeof(p_speeds_msg), 
+			"%3i active dynamic bodies\n%3i static bodies\n%3i dynamic bodies",
+			stats.nbActiveDynamicBodies, 
+			stats.nbStaticBodies, 
+			stats.nbDynamicBodies
+		);
 		break;		
 	}
 }
 
-void CPhysicNovodex :: RemoveBody( struct edict_s *pEdict )
+void CPhysicNovodex :: RemoveBody( edict_t *pEdict )
 {
 	if( !m_pScene || !pEdict || pEdict->free )
 		return; // scene purge all the objects automatically
 
 	CBaseEntity *pEntity = CBaseEntity::Instance( pEdict );
-	NxActor *pActor = ActorFromEntity( pEntity );
+	PxActor *pActor = ActorFromEntity( pEntity );
 
-	if( pActor ) m_pScene->releaseActor( *pActor );
+	if( pActor ) 
+		pActor->release();
 	pEntity->m_pUserData = NULL;
 }
 
-NxConvexMesh *CPhysicNovodex :: ConvexMeshFromBmodel( entvars_t *pev, int modelindex )
+PxConvexMesh *CPhysicNovodex :: ConvexMeshFromBmodel( entvars_t *pev, int modelindex )
 {
 	if( !m_pCooking )
 		return NULL; // don't spam console about missed NxCooking.dll
@@ -403,7 +288,7 @@ NxConvexMesh *CPhysicNovodex :: ConvexMeshFromBmodel( entvars_t *pev, int modeli
 	}
 
 	int numVerts = 0, totalVerts = 0;
-	NxConvexMesh *pHull = NULL;
+	PxConvexMesh *pHull = NULL;
 	msurface_t *psurf;
 	Vector *verts;
 	int i, j;
@@ -427,15 +312,14 @@ NxConvexMesh *CPhysicNovodex :: ConvexMeshFromBmodel( entvars_t *pev, int modeli
 		}
 	}
 
-	NxConvexMeshDesc meshDesc;
-	meshDesc.points = verts;
-	meshDesc.pointStrideBytes = sizeof(Vector);
-	meshDesc.numVertices = numVerts;
-	meshDesc.flags |= NX_CF_COMPUTE_CONVEX;
-	m_pCooking->NxInitCooking();
+	PxConvexMeshDesc meshDesc;
+	meshDesc.points.data = verts;
+	meshDesc.points.stride = sizeof(Vector);
+	meshDesc.points.count = numVerts;
+	meshDesc.flags = PxConvexFlag::eCOMPUTE_CONVEX;
 
 	MemoryWriteBuffer buf;
-	bool status = m_pCooking->NxCookConvexMesh( meshDesc, buf );
+	bool status = m_pCooking->cookConvexMesh( meshDesc, buf );
 	delete [] verts;
 
 	if( !status )
@@ -450,7 +334,7 @@ NxConvexMesh *CPhysicNovodex :: ConvexMeshFromBmodel( entvars_t *pev, int modeli
 	return pHull;
 }
 
-NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromBmodel( entvars_t *pev, int modelindex )
+PxTriangleMesh *CPhysicNovodex :: TriangleMeshFromBmodel( entvars_t *pev, int modelindex )
 {
 	if( !m_pCooking )
 		return NULL; // don't spam console about missed NxCooking.dll
@@ -485,7 +369,7 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromBmodel( entvars_t *pev, int mo
 	}
 
 	int i, numElems = 0, totalElems = 0;
-	NxTriangleMesh *pMesh = NULL;
+	PxTriangleMesh *pMesh = NULL;
 	msurface_t *psurf;
 
 	// compute vertexes count
@@ -496,7 +380,7 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromBmodel( entvars_t *pev, int mo
 	}
 
 	// create a temp indices array
-	NxU32 *indices = new NxU32[totalElems * 3];
+	PxU32 *indices = new PxU32[totalElems * 3];
 
 	for( i = 0; i < bmodel->nummodelsurfaces; i++ )
 	{
@@ -514,18 +398,23 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromBmodel( entvars_t *pev, int mo
 		}
 	}
 
-	NxTriangleMeshDesc meshDesc;
-	meshDesc.points = (const NxPoint*)&(bmodel->vertexes[0].position);	// pointer to all vertices in the map
-	meshDesc.pointStrideBytes = sizeof( mvertex_t );
-	meshDesc.triangleStrideBytes = 3 * sizeof( NxU32 );
-	meshDesc.numVertices = bmodel->numvertexes;
-	meshDesc.numTriangles = numElems;
-	meshDesc.triangles = indices;
-	meshDesc.flags = 0;
-	m_pCooking->NxInitCooking();
+	PxTriangleMeshDesc meshDesc;
+	meshDesc.points.count = bmodel->numvertexes;
+	meshDesc.points.stride = sizeof(mvertex_t);
+	meshDesc.points.data = (const PxVec3*)&(bmodel->vertexes[0].position);	// pointer to all vertices in the map
+	meshDesc.triangles.count = numElems;
+	meshDesc.triangles.stride = 3 * sizeof(PxU32);
+	meshDesc.triangles.data = indices;
+	meshDesc.flags = (PxMeshFlags)0;
+
+#ifdef _DEBUG
+	// mesh should be validated before cooked without the mesh cleaning
+	bool res = m_pCooking->validateTriangleMesh(meshDesc);
+	PX_ASSERT(res);
+#endif
 
 	MemoryWriteBuffer buf;
-	bool status = m_pCooking->NxCookTriangleMesh( meshDesc, buf );
+	bool status = m_pCooking->cookTriangleMesh( meshDesc, buf );
 	delete [] indices;
 
 	if( !status )
@@ -535,7 +424,8 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromBmodel( entvars_t *pev, int mo
 	}
 
 	pMesh = m_pPhysics->createTriangleMesh( MemoryReadBuffer( buf.data ));
-	if( !pMesh ) ALERT( at_error, "failed to create triangle mesh from %s\n", bmodel->name );
+	if( !pMesh ) 
+		ALERT( at_error, "failed to create triangle mesh from %s\n", bmodel->name );
 
 	return pMesh;
 }
@@ -578,18 +468,18 @@ void CPhysicNovodex :: StudioCalcBonePosition( mstudiobone_t *pbone, mstudioanim
 	}
 }
 
-clipfile::GeometryType CPhysicNovodex::ShapeTypeToGeomType(NxShapeType shapeType)
+clipfile::GeometryType CPhysicNovodex::ShapeTypeToGeomType(PxGeometryType::Enum geomType)
 {
-	switch (shapeType)
+	switch (geomType)
 	{
-		case NX_SHAPE_CONVEX: return clipfile::GeometryType::CookedConvexHull;
-		case NX_SHAPE_MESH: return clipfile::GeometryType::CookedTriangleMesh;
-		case NX_SHAPE_BOX: return clipfile::GeometryType::CookedBox;
+		case PxGeometryType::eCONVEXMESH: return clipfile::GeometryType::CookedConvexHull;
+		case PxGeometryType::eTRIANGLEMESH: return clipfile::GeometryType::CookedTriangleMesh;
+		case PxGeometryType::eBOX: return clipfile::GeometryType::CookedBox;
 		default: return clipfile::GeometryType::Unknown;
 	}
 }
 
-NxConvexMesh *CPhysicNovodex :: ConvexMeshFromStudio( entvars_t *pev, int modelindex, int32_t body, int32_t skin )
+PxConvexMesh *CPhysicNovodex :: ConvexMeshFromStudio( entvars_t *pev, int modelindex, int32_t body, int32_t skin )
 {
 	if( UTIL_GetModelType( modelindex ) != mod_studio )
 	{
@@ -606,7 +496,7 @@ NxConvexMesh *CPhysicNovodex :: ConvexMeshFromStudio( entvars_t *pev, int modeli
 		return NULL;
 	}
 
-	NxConvexMesh *pHull = NULL;
+	PxConvexMesh *pHull = NULL;
 	fs::Path cacheFileName;
 	uint32_t modelStateHash = GetHashForModelState(smodel, body, skin);
 	CacheNameForModel(smodel, cacheFileName, modelStateHash, ".hull");
@@ -686,7 +576,7 @@ NxConvexMesh *CPhysicNovodex :: ConvexMeshFromStudio( entvars_t *pev, int modeli
 	Vector *m_verts = new Vector[psubmodel->numverts];
 	byte *pvertbone = ((byte *)phdr + psubmodel->vertinfoindex);
 	Vector *verts = new Vector[psubmodel->numverts * 8];	// allocate temporary vertices array
-	NxU32 *indices = new NxU32[psubmodel->numverts * 24];
+	PxU32 *indices = new PxU32[psubmodel->numverts * 24];
 	int numVerts = 0, numElems = 0;
 	Vector tmp;
 
@@ -751,17 +641,16 @@ NxConvexMesh *CPhysicNovodex :: ConvexMeshFromStudio( entvars_t *pev, int modeli
 		}
 	}
 
-	NxConvexMeshDesc meshDesc;
-	meshDesc.numTriangles = numElems / 3;
-	meshDesc.pointStrideBytes = sizeof(Vector);
-	meshDesc.triangleStrideBytes	= 3 * sizeof( NxU32 );
-	meshDesc.points = verts;
-	meshDesc.triangles = indices;
-	meshDesc.numVertices = numVerts;
-	meshDesc.flags |= NX_CF_COMPUTE_CONVEX;
+	PxConvexMeshDesc meshDesc;
+	meshDesc.indices.count = numElems / 3;
+	meshDesc.indices.data = indices;
+	meshDesc.indices.stride = 3 * sizeof( PxU32 );
+	meshDesc.points.count = numVerts;
+	meshDesc.points.data = verts;
+	meshDesc.points.stride = sizeof(Vector);
+	meshDesc.flags = PxConvexFlag::eCOMPUTE_CONVEX;
 
-	m_pCooking->NxInitCooking();
-	bool status = m_pCooking->NxCookConvexMesh( meshDesc, UserStream( cacheFileName.string().c_str(), false ));
+	bool status = m_pCooking->cookConvexMesh( meshDesc, UserStream( cacheFileName.string().c_str(), false ));
 
 	delete [] verts;
 	delete [] m_verts;
@@ -779,7 +668,7 @@ NxConvexMesh *CPhysicNovodex :: ConvexMeshFromStudio( entvars_t *pev, int modeli
 	return pHull;
 }
 
-NxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int modelindex, int32_t body, int32_t skin)
+PxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int modelindex, int32_t body, int32_t skin)
 {
 	if (UTIL_GetModelType(modelindex) != mod_studio)
 	{
@@ -814,7 +703,7 @@ NxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int model
 		return NULL;
 	}
 
-	NxTriangleMesh *pMesh = NULL;
+	PxTriangleMesh *pMesh = NULL;
 	fs::Path cacheFilePath;
 	uint32_t modelStateHash = GetHashForModelState(smodel, body, skin);
 	CacheNameForModel(smodel, cacheFilePath, modelStateHash, ".mesh");
@@ -901,7 +790,7 @@ NxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int model
 	}
 
 	Vector *verts = new Vector[totalVertSize * 8]; // allocate temporary vertices array
-	NxU32 *indices = new NxU32[totalVertSize * 24];
+	PxU32 *indices = new PxU32[totalVertSize * 24];
 	int numVerts = 0, numElems = 0;
 	Vector tmp;
 
@@ -991,18 +880,22 @@ NxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int model
 		delete[] m_verts;
 	}
 
-	NxTriangleMeshDesc meshDesc;
-	meshDesc.numTriangles = numElems / 3;
-	meshDesc.pointStrideBytes = sizeof(Vector);
-	meshDesc.triangleStrideBytes = 3 * sizeof(NxU32);
-	meshDesc.points = verts;
-	meshDesc.triangles = indices;
-	meshDesc.numVertices = numVerts;
-	meshDesc.flags = 0;
+	PxTriangleMeshDesc meshDesc;
+	meshDesc.triangles.data = indices;
+	meshDesc.triangles.count = numElems / 3;
+	meshDesc.triangles.stride = 3 * sizeof(PxU32);
+	meshDesc.points.data = verts;
+	meshDesc.points.count = numVerts;
+	meshDesc.points.stride = sizeof(Vector);
+	meshDesc.flags = (PxMeshFlags)0;
 
-	m_pCooking->NxInitCooking();
-	bool status = m_pCooking->NxCookTriangleMesh(meshDesc, UserStream(cacheFilePath.string().c_str(), false));
+#ifdef _DEBUG
+	// mesh should be validated before cooked without the mesh cleaning
+	bool res = m_pCooking->validateTriangleMesh(meshDesc);
+	PX_ASSERT(res);
+#endif
 
+	bool status = m_pCooking->cookTriangleMesh(meshDesc, UserStream(cacheFilePath.string().c_str(), false));
 	delete[] verts;
 	delete[] indices;
 
@@ -1018,7 +911,7 @@ NxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int model
 	return pMesh;
 }
 
-NxConvexMesh *CPhysicNovodex :: ConvexMeshFromEntity( CBaseEntity *pObject )
+PxConvexMesh *CPhysicNovodex :: ConvexMeshFromEntity( CBaseEntity *pObject )
 {
 	if( !pObject || !m_pPhysics )
 		return NULL;
@@ -1032,7 +925,7 @@ NxConvexMesh *CPhysicNovodex :: ConvexMeshFromEntity( CBaseEntity *pObject )
 		return NULL;
 	}
 
-	NxConvexMesh *pCollision = NULL;
+	PxConvexMesh *pCollision = NULL;
 
 	// call the apropriate loader
 	switch( model->type )
@@ -1052,7 +945,7 @@ NxConvexMesh *CPhysicNovodex :: ConvexMeshFromEntity( CBaseEntity *pObject )
 	return pCollision;
 }
 
-NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromEntity( CBaseEntity *pObject )
+PxTriangleMesh *CPhysicNovodex :: TriangleMeshFromEntity( CBaseEntity *pObject )
 {
 	if( !pObject || !m_pPhysics )
 		return NULL;
@@ -1066,7 +959,7 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromEntity( CBaseEntity *pObject )
 		return NULL;
 	}
 
-	NxTriangleMesh *pCollision = NULL;
+	PxTriangleMesh *pCollision = NULL;
 
 	// call the apropriate loader
 	switch( model->type )
@@ -1086,7 +979,7 @@ NxTriangleMesh *CPhysicNovodex :: TriangleMeshFromEntity( CBaseEntity *pObject )
 	return pCollision;
 }
 
-NxActor *CPhysicNovodex :: ActorFromEntity( CBaseEntity *pObject )
+PxActor *CPhysicNovodex :: ActorFromEntity( CBaseEntity *pObject )
 {
 	if( FNullEnt( pObject ) || !pObject->m_pUserData )
 		return NULL;
@@ -1097,10 +990,10 @@ NxActor *CPhysicNovodex :: ActorFromEntity( CBaseEntity *pObject )
 		return pVehicle->getActor();
 	}
 #endif
-	return (NxActor *)pObject->m_pUserData;
+	return (PxActor *)pObject->m_pUserData;
 }
 
-CBaseEntity *CPhysicNovodex :: EntityFromActor( NxActor *pObject )
+CBaseEntity *CPhysicNovodex :: EntityFromActor( PxActor *pObject )
 {
 	if( !pObject || !pObject->userData )
 		return NULL;
@@ -1108,44 +1001,67 @@ CBaseEntity *CPhysicNovodex :: EntityFromActor( NxActor *pObject )
 	return CBaseEntity::Instance( (edict_t *)pObject->userData );
 }
 
+bool CPhysicNovodex::CheckCollision(physx::PxRigidBody *pActor)
+{
+	std::vector<PxShape*> shapes;
+	if (pActor->getNbShapes() > 0)
+	{
+		shapes.resize(pActor->getNbShapes());
+		pActor->getShapes(&shapes[0], shapes.size());
+		for (PxShape *shape : shapes) 
+		{
+			if (shape->getFlags() & PxShapeFlag::eSIMULATION_SHAPE) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+void CPhysicNovodex::ToggleCollision(physx::PxRigidBody *pActor, bool enabled)
+{
+	std::vector<PxShape*> shapes;
+	shapes.resize(pActor->getNbShapes());
+	pActor->getShapes(&shapes[0], shapes.size());
+
+	for (PxShape *shape : shapes) {
+		shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, enabled);
+	}
+}
+
 void *CPhysicNovodex :: CreateBodyFromEntity( CBaseEntity *pObject )
 {
-	NxConvexMesh *pCollision = ConvexMeshFromEntity( pObject );
-	if( !pCollision ) return NULL;
+	PxConvexMesh *pCollision = ConvexMeshFromEntity(pObject);
+	if (!pCollision)
+		return NULL;
 
-	NxBodyDesc BodyDesc;
-	NxActorDesc ActorDesc;
-	NxConvexShapeDesc meshShapeDesc;
-	BodyDesc.flags = NX_BF_VISUALIZATION|NX_BF_FILTER_SLEEP_VEL;
-	BodyDesc.solverIterationCount = SOLVER_ITERATION_COUNT;
+	PxRigidDynamic *pActor = m_pPhysics->createRigidDynamic(PxTransform(PxIdentity));
+	PxShape *pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxConvexMeshGeometry(pCollision), *m_pDefaultMaterial);
 
-	ActorDesc.body = &BodyDesc;
-	ActorDesc.density = DENSITY_FACTOR;
-	ActorDesc.userData = pObject->edict();
-
-	meshShapeDesc.meshData = pCollision;
-	ActorDesc.shapes.pushBack( &meshShapeDesc );
-	NxActor *pActor = m_pScene->createActor( ActorDesc );
-
-	if( !pActor )
+	if (!pActor)
 	{
-		ALERT( at_error, "failed to create rigidbody from entity %s\n", pObject->GetClassname( ));
+		ALERT(at_error, "failed to create rigidbody from entity %s\n", pObject->GetClassname());
 		return NULL;
 	}
 
-	pActor->setName( pObject->GetClassname( ));
-
-	NxMat34 pose;
 	float mat[16];
-	matrix4x4( pObject->GetAbsOrigin(), pObject->GetAbsAngles(), 1.0f ).CopyToArray( mat );
+	float maxSpeed = CVAR_GET_FLOAT("sv_maxspeed");
+	matrix4x4(pObject->GetAbsOrigin(), pObject->GetAbsAngles(), 1.0f).CopyToArray(mat);
+	PxTransform pose = PxTransform(PxMat44(mat));
 
-	pose.setColumnMajor44( mat );
-	pActor->setGlobalPose( pose );
-	pActor->setLinearVelocity( pObject->GetLocalVelocity() );
-	pActor->setAngularVelocity( pObject->GetLocalAvelocity() );
+	pActor->setGlobalPose(pose);
+	pActor->setName(pObject->GetClassname());
+	//pActor->setSolverIterationCounts(SOLVER_ITERATION_COUNT);
+	pActor->setRigidBodyFlag(PxRigidBodyFlag::eENABLE_CCD, true);
+	pActor->setLinearVelocity(pObject->GetLocalVelocity());
+	pActor->setAngularVelocity(pObject->GetLocalAvelocity());
+	pActor->setMaxLinearVelocity(maxSpeed);
+	pActor->setMaxAngularVelocity(720.0);
+	pActor->userData = pObject->edict();
+
+	m_pScene->addActor(*pActor);
 	pObject->m_iActorType = ACTOR_DYNAMIC;
 	pObject->m_pUserData = pActor;
-
 	return pActor;
 }
 
@@ -1158,30 +1074,32 @@ used for characters: clients and monsters
 */
 void *CPhysicNovodex :: CreateBoxFromEntity( CBaseEntity *pObject )
 {
-	NxBodyDesc BodyDesc;
-	BodyDesc.flags |= NX_BF_KINEMATIC|NX_BF_VISUALIZATION;
+	PxBoxGeometry boxGeometry;
+	boxGeometry.halfExtents = PxVec3(
+		pObject->pev->size.x * PADDING_FACTOR / 2.f,
+		pObject->pev->size.y * PADDING_FACTOR / 2.f,
+		pObject->pev->size.z * PADDING_FACTOR / 2.f
+	);
 
-	NxActorDesc ActorDesc;
-	NxBoxShapeDesc boxDesc;
-	boxDesc.dimensions = pObject->pev->size * PADDING_FACTOR;
+	PxRigidDynamic *pActor = m_pPhysics->createRigidDynamic(PxTransform(PxIdentity));
+	PxShape *pShape = PxRigidActorExt::createExclusiveShape(*pActor, boxGeometry, *m_pDefaultMaterial);
 
-	ActorDesc.body = &BodyDesc;
-	ActorDesc.density = DENSITY_FACTOR;
-	ActorDesc.userData = pObject->edict();
-	ActorDesc.shapes.pushBack( &boxDesc );
-
-	NxActor *pActor = m_pScene->createActor( ActorDesc );
-
-	if( !pActor )
+	if (!pActor)
 	{
-		ALERT( at_error, "failed to create rigidbody from entity %s\n", pObject->GetClassname( ));
+		ALERT( at_error, "failed to create rigidbody from entity %s\n", pObject->GetClassname());
 		return NULL;
 	}
 
-	Vector vecOffset = (pObject->IsMonster()) ? Vector( 0, 0, pObject->pev->maxs.z / 2.0f ) : g_vecZero;
+	Vector origin = (pObject->IsMonster()) ? Vector( 0, 0, pObject->pev->maxs.z / 2.0f ) : g_vecZero;
+	origin += pObject->GetAbsOrigin();
+	PxTransform pose = PxTransform(origin);
 
-	pActor->setName( pObject->GetClassname( ));
-	pActor->setGlobalPosition( pObject->GetAbsOrigin() + vecOffset );
+	pActor->setName(pObject->GetClassname());
+	pActor->setGlobalPose(pose);
+	pActor->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+	pActor->userData = pObject->edict();
+	m_pScene->addActor(*pActor);
+
 	pObject->m_iActorType = ACTOR_CHARACTER;
 	pObject->m_pUserData = pActor;
 
@@ -1190,27 +1108,15 @@ void *CPhysicNovodex :: CreateBoxFromEntity( CBaseEntity *pObject )
 
 void *CPhysicNovodex :: CreateKinematicBodyFromEntity( CBaseEntity *pObject )
 {
-	NxTriangleMesh *pCollision = TriangleMeshFromEntity( pObject );
-	if( !pCollision ) return NULL;
+	PxTriangleMesh *pCollision = TriangleMeshFromEntity( pObject );
+	if (!pCollision) 
+		return NULL;
 
-	NxBodyDesc BodyDesc;
-	NxActorDesc ActorDesc;
-	NxTriangleMeshShapeDesc meshShapeDesc;
-	BodyDesc.flags = NX_BF_VISUALIZATION|NX_BF_KINEMATIC|NX_BF_FILTER_SLEEP_VEL;
-	BodyDesc.solverIterationCount = SOLVER_ITERATION_COUNT;
+	//if( !UTIL_CanRotate( pObject ))
+	//	BodyDesc.flags |= NX_BF_FROZEN_ROT; // entity missed origin-brush
 
-	if( !UTIL_CanRotate( pObject ))
-		BodyDesc.flags |= NX_BF_FROZEN_ROT; // entity missed origin-brush
-
-	ActorDesc.body = &BodyDesc;
-	ActorDesc.density = DENSITY_FACTOR;
-	ActorDesc.userData = pObject->edict();
-
-	meshShapeDesc.meshData = pCollision;
-	ActorDesc.shapes.pushBack( &meshShapeDesc );
-	m_ErrorStream.hideWarning( true );
-	NxActor *pActor = m_pScene->createActor( ActorDesc );
-	m_ErrorStream.hideWarning( false );
+	PxRigidDynamic *pActor = m_pPhysics->createRigidDynamic(PxTransform(PxIdentity));
+	PxShape *pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxTriangleMeshGeometry(pCollision), *m_pDefaultMaterial);
 
 	if( !pActor )
 	{
@@ -1218,42 +1124,37 @@ void *CPhysicNovodex :: CreateKinematicBodyFromEntity( CBaseEntity *pObject )
 		return NULL;
 	}
 
-	pActor->setName( pObject->GetClassname( ));
-
-	NxMat34 pose;
 	float mat[16];
 	matrix4x4( pObject->GetAbsOrigin(), pObject->GetAbsAngles(), 1.0f ).CopyToArray( mat );
 
-	pose.setColumnMajor44( mat );
+	PxTransform pose = PxTransform(PxMat44(mat));
+	pActor->setName(pObject->GetClassname());
 	pActor->setGlobalPose( pose );
+	//pActor->setSolverIterationCounts(SOLVER_ITERATION_COUNT);
+	pActor->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+	pActor->userData = pObject->edict();
+	//m_ErrorCallback.hideWarning(true);
+	m_pScene->addActor(*pActor);
+	//m_ErrorCallback.hideWarning(false);
 	pObject->m_iActorType = ACTOR_KINEMATIC;
 	pObject->m_pUserData = pActor;
-
+	
 	return pActor;
 }
 
 void *CPhysicNovodex :: CreateStaticBodyFromEntity( CBaseEntity *pObject )
 {
-	NxTriangleMesh *pCollision = TriangleMeshFromEntity( pObject );
-	if( !pCollision ) return NULL;
+	PxTriangleMesh *pCollision = TriangleMeshFromEntity( pObject );
+	if( !pCollision ) 
+		return NULL;
 
-	NxMat34 pose;
 	float mat[16];
-	matrix4x4( pObject->GetAbsOrigin(), pObject->GetAbsAngles(), 1.0f ).CopyToArray( mat );
+	matrix4x4(pObject->GetAbsOrigin(), pObject->GetAbsAngles(), 1.0f).CopyToArray(mat);
 
-	pose.setColumnMajor44( mat );
-
-	NxActorDesc ActorDesc;
-	NxTriangleMeshShapeDesc meshShapeDesc;
-	ActorDesc.density = DENSITY_FACTOR;
-	ActorDesc.userData = pObject->edict();
-	ActorDesc.globalPose = pose;
-
-	if( pObject->pev->flags & FL_CONVEYOR )
-		meshShapeDesc.materialIndex = 1;
-	meshShapeDesc.meshData = pCollision;
-	ActorDesc.shapes.pushBack( &meshShapeDesc );
-	NxActor *pActor = m_pScene->createActor( ActorDesc );
+	PxTransform pose = PxTransform(PxMat44(mat));
+	PxMaterial *material = (pObject->pev->flags & FL_CONVEYOR) ? m_pConveyorMaterial : m_pDefaultMaterial;
+	PxRigidStatic *pActor = m_pPhysics->createRigidStatic(pose);
+	PxShape *pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxTriangleMeshGeometry(pCollision), *material);
 
 	if( !pActor )
 	{
@@ -1262,7 +1163,9 @@ void *CPhysicNovodex :: CreateStaticBodyFromEntity( CBaseEntity *pObject )
 	}
 
 	pActor->setName( pObject->GetClassname( ));
-//	pActor->setGlobalPose( pose );
+	pActor->userData = pObject->edict();
+	m_pScene->addActor(*pActor);
+
 	pObject->m_iActorType = ACTOR_STATIC;
 	pObject->m_pUserData = pActor;
 
@@ -1289,7 +1192,7 @@ void *CPhysicNovodex :: CreateVehicle( CBaseEntity *pObject, string_t scriptName
 	{
 		ALERT( at_error, "CreateVehicle: couldn't load %s\n", STRING( scriptName ));
 		return NULL;
-          }
+    }
 
 	model_t *smodel = (model_t *)MODEL_HANDLE( pObject->pev->modelindex );
 	studiohdr_t *phdr = (studiohdr_t *)smodel->cache.data;
@@ -1498,25 +1401,25 @@ void CPhysicNovodex :: UpdateVehicle( CBaseEntity *pObject )
 #endif
 }
 
-bool CPhysicNovodex :: UpdateEntityPos( CBaseEntity *pEntity )
+bool CPhysicNovodex::UpdateEntityPos( CBaseEntity *pEntity )
 {
-	NxActor *pActor = ActorFromEntity( pEntity );
-
-	if( !pActor || pActor->isSleeping( ))
+	PxActor *pActor = ActorFromEntity(pEntity);
+	if (!pActor)
 		return false;
 
-	NxMat34 pose = pActor->getGlobalPose();
-	float mat[16];
+	PxRigidDynamic *pDynamicActor = pActor->is<PxRigidDynamic>();
+	if (!pDynamicActor || pDynamicActor->isSleeping())
+		return false;
 
-	pose.getColumnMajor44( mat );
-	matrix4x4	m( mat );
+	PxTransform pose = pDynamicActor->getGlobalPose();
+	matrix4x4 m( PxMat44(pose).front() );
 
 	Vector angles = m.GetAngles();
 	Vector origin = m.GetOrigin();
 
 	// store actor velocities too
-	pEntity->SetLocalVelocity( pActor->getLinearVelocity() );
-	pEntity->SetLocalAvelocity( pActor->getAngularVelocity() );
+	pEntity->SetLocalVelocity( pDynamicActor->getLinearVelocity() );
+	pEntity->SetLocalAvelocity( pDynamicActor->getAngularVelocity() );
 	Vector vecPrevOrigin = pEntity->GetAbsOrigin();
 
 	pEntity->SetLocalAngles( angles );
@@ -1528,22 +1431,22 @@ bool CPhysicNovodex :: UpdateEntityPos( CBaseEntity *pEntity )
 
 bool CPhysicNovodex :: UpdateActorPos( CBaseEntity *pEntity )
 {
-	NxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor ) return false;
+	PxRigidActor *pActor = ActorFromEntity( pEntity )->is<PxRigidActor>();
+	if( !pActor ) 
+		return false;
 
-	NxMat34 pose;
 	float mat[16];
-
-	matrix4x4	m( pEntity->GetAbsOrigin(), pEntity->GetAbsAngles(), 1.0f );
+	matrix4x4 m( pEntity->GetAbsOrigin(), pEntity->GetAbsAngles(), 1.0f );
 	m.CopyToArray( mat );
 
-	pose.setColumnMajor44( mat );
+	PxTransform pose = PxTransform(PxMat44(mat));
 	pActor->setGlobalPose( pose );
 
-	if( !pActor->readBodyFlag( NX_BF_KINEMATIC ))
+	PxRigidDynamic *pRigidDynamic = ActorFromEntity(pEntity)->is<PxRigidDynamic>();
+	if (!(pRigidDynamic->getRigidBodyFlags() & PxRigidBodyFlag::eKINEMATIC))
 	{
-		pActor->setLinearVelocity( pEntity->GetLocalVelocity() );
-		pActor->setAngularVelocity( pEntity->GetLocalAvelocity() );
+		pRigidDynamic->setLinearVelocity( pEntity->GetLocalVelocity() );
+		pRigidDynamic->setAngularVelocity( pEntity->GetLocalAvelocity() );
 	}
 
 	return true;
@@ -1551,30 +1454,37 @@ bool CPhysicNovodex :: UpdateActorPos( CBaseEntity *pEntity )
 
 bool CPhysicNovodex :: IsBodySleeping( CBaseEntity *pEntity )
 {
-	NxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor ) return false;
-	return pActor->isSleeping();
+	PxActor *pActor = ActorFromEntity(pEntity);
+	if (!pActor)
+		return false;
+
+	PxRigidDynamic *pDynamicActor = ActorFromEntity(pEntity)->is<PxRigidDynamic>();
+	if (!pDynamicActor)
+		return false;
+
+	return pDynamicActor->isSleeping();
 }
 
 void CPhysicNovodex :: UpdateEntityAABB( CBaseEntity *pEntity )
 {
-	NxActor *pActor = ActorFromEntity( pEntity );
+	PxU32 boundsCount;
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if (!pActor)
+		return;
 
-	if( !pActor || pActor->getNbShapes() <= 0 )
+	PxRigidActor *pRigidActor = pActor->is<PxRigidActor>();
+	if (!pRigidActor || pRigidActor->getNbShapes() <= 0)
 		return;
 
 	ClearBounds( pEntity->pev->absmin, pEntity->pev->absmax );
-
-	for( uint i = 0; i < pActor->getNbShapes(); i++ )
+	PxTransform globalPose = pRigidActor->getGlobalPose();
+	PxBounds3 *boundsList = PxRigidActorExt::getRigidActorShapeLocalBoundsList(*pRigidActor, boundsCount);
+	
+	for (PxU32 i = 0; i < boundsCount; i++)
 	{
-		NxShape *pShape = pActor->getShapes()[i];
-		NxBounds3 bbox;
-
-		// already transformed as OBB
-		pShape->getWorldBounds( bbox );
-
-		AddPointToBounds( bbox.min, pEntity->pev->absmin, pEntity->pev->absmax );
-		AddPointToBounds( bbox.max, pEntity->pev->absmin, pEntity->pev->absmax );
+		const PxBounds3 &bbox = boundsList[i];
+		AddPointToBounds( globalPose.transform(bbox.minimum), pEntity->pev->absmin, pEntity->pev->absmax );
+		AddPointToBounds( globalPose.transform(bbox.maximum), pEntity->pev->absmin, pEntity->pev->absmax );
 	}
 
 	// shrink AABB by 1 units in each axis
@@ -1643,7 +1553,7 @@ collect all the info from generic actor
 */
 void CPhysicNovodex :: SaveBody( CBaseEntity *pEntity )
 {
-	NxActor *pActor = ActorFromEntity( pEntity );
+	PxRigidDynamic *pActor = ActorFromEntity( pEntity )->is<PxRigidDynamic>();
 
 	if( !pActor )
 	{
@@ -1651,16 +1561,20 @@ void CPhysicNovodex :: SaveBody( CBaseEntity *pEntity )
 		return;
 	}
 
-	NxActorDesc actorDesc;
-	NxBodyDesc bodyDesc;
+	PxShape *shape;
+	pActor->getShapes(&shape, 1);
+	PxFilterData filterData = shape->getSimulationFilterData();
 
-	pActor->saveToDesc( actorDesc );
-	pActor->saveBodyToDesc( bodyDesc );
+	// filter data get and stored only for one shape, but it can be more than one
+	// assumed that all attached shapes have same filter data
+	pEntity->m_iFilterData[0] = filterData.word0;
+	pEntity->m_iFilterData[1] = filterData.word1;
+	pEntity->m_iFilterData[2] = filterData.word2;
+	pEntity->m_iFilterData[3] = filterData.word3;
 
-	pEntity->m_iActorFlags = actorDesc.flags;
-	pEntity->m_iBodyFlags = bodyDesc.flags;
-	pEntity->m_usActorGroup = actorDesc.group;
-	pEntity->m_flBodyMass = bodyDesc.mass;
+	pEntity->m_iActorFlags = pActor->getActorFlags();
+	pEntity->m_iBodyFlags = pActor->getRigidBodyFlags();
+	pEntity->m_flBodyMass = pActor->getMass();
 	pEntity->m_fFreezed = pActor->isSleeping();
 
 	if( pEntity->m_iActorType == ACTOR_DYNAMIC )
@@ -1680,208 +1594,221 @@ re-create shape, apply physic params
 void *CPhysicNovodex :: RestoreBody( CBaseEntity *pEntity )
 {
 	// physics not initialized?
-	if( !m_pScene ) return NULL;
+	if (!m_pScene) 
+		return NULL;
 
-	NxConvexShapeDesc meshShapeDesc;
-	NxTriangleMeshShapeDesc triMeshShapeDesc;
-	NxBoxShapeDesc boxDesc;
-	NxActorDesc ActorDesc;
-	NxBodyDesc BodyDesc;
+	PxShape *pShape;
+	PxRigidDynamic *pActor;
+	PxTransform pose;
+	Vector angles = pEntity->GetAbsAngles();
+
+	if (pEntity->m_iActorType == ACTOR_CHARACTER) {
+		angles = g_vecZero;	// no angles for NPC and client
+	}
+
+	float mat[16];
+	matrix4x4 m(pEntity->GetAbsOrigin(), angles, 1.0f);
+	m.CopyToArray(mat);
+
+	pose = PxTransform(PxMat44(mat));
+	pActor = m_pPhysics->createRigidDynamic(pose);
+
+	if (!pActor)
+	{
+		ALERT(at_error, "RestoreBody: unbale to create actor with type (%i)\n", pEntity->m_iActorType);
+		return NULL;
+	}
 
 	switch( pEntity->m_iActorType )
 	{
-	case ACTOR_DYNAMIC:
-		meshShapeDesc.meshData = ConvexMeshFromEntity( pEntity );
-		if( !meshShapeDesc.meshData ) return NULL;
-		ActorDesc.shapes.pushBack( &meshShapeDesc );
-		break;
-	case ACTOR_CHARACTER:
-		boxDesc.dimensions = pEntity->pev->size * PADDING_FACTOR;
-		ActorDesc.shapes.pushBack( &boxDesc );
-		break;
-	case ACTOR_KINEMATIC:
-	case ACTOR_STATIC:
-		triMeshShapeDesc.meshData = TriangleMeshFromEntity( pEntity );
-		if( !triMeshShapeDesc.meshData ) return NULL;
-		if( pEntity->pev->flags & FL_CONVEYOR )
-			triMeshShapeDesc.materialIndex = 1;
-		ActorDesc.shapes.pushBack( &triMeshShapeDesc );
-		break;
-	default:
-		ALERT( at_error, "RestoreBody: invalid actor type %i\n", pEntity->m_iActorType );
-		return NULL;
+		case ACTOR_DYNAMIC:
+		{
+			PxConvexMesh *convexMesh = ConvexMeshFromEntity(pEntity);
+			if (!convexMesh)
+				return NULL;
+
+			pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxConvexMeshGeometry(convexMesh), *m_pDefaultMaterial);
+			break;
+		}
+		case ACTOR_CHARACTER:
+		{
+			PxBoxGeometry box;
+			box.halfExtents = pEntity->pev->size * PADDING_FACTOR;
+			pShape = PxRigidActorExt::createExclusiveShape(*pActor, box, *m_pDefaultMaterial);
+			break;
+		}
+		case ACTOR_KINEMATIC:
+		case ACTOR_STATIC:
+		{
+			PxTriangleMesh *triangleMesh = TriangleMeshFromEntity(pEntity);
+			if (!triangleMesh)
+				return NULL;
+
+			PxMaterial *pMaterial = m_pDefaultMaterial;
+			if (pEntity->pev->flags & FL_CONVEYOR) {
+				pMaterial = m_pConveyorMaterial;
+			}
+			pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxTriangleMeshGeometry(triangleMesh), *pMaterial);
+			break;
+		}
+		default: 
+		{
+			ALERT(at_error, "RestoreBody: invalid actor type %i\n", pEntity->m_iActorType);
+			return NULL;
+		}
 	}
 
-	if( ActorDesc.shapes.size() <= 0 )
+	if (!pShape)
 		return NULL; // failed to create shape
 
-	NxMat34 pose;
-	float mat[16];
-
-	Vector angles = pEntity->GetAbsAngles();
-
-	if( pEntity->m_iActorType == ACTOR_CHARACTER )
-		angles = g_vecZero;	// no angles for NPC and client
-
-	matrix4x4	m( pEntity->GetAbsOrigin(), angles, 1.0f );
-	m.CopyToArray( mat );
-	pose.setColumnMajor44( mat );
-
 	// fill in actor description
-	if( pEntity->m_iActorType != ACTOR_STATIC )
+	if (pEntity->m_iActorType != ACTOR_STATIC)
 	{
-		BodyDesc.flags = pEntity->m_iBodyFlags;
-//		BodyDesc.mass = pEntity->m_flBodyMass;
-		BodyDesc.solverIterationCount = SOLVER_ITERATION_COUNT;
+		pActor->setRigidBodyFlags(static_cast<PxRigidBodyFlags>(pEntity->m_iBodyFlags));
+		pActor->setMass(pEntity->m_flBodyMass);
+		pActor->setSolverIterationCounts(SOLVER_ITERATION_COUNT);
 
-		if( pEntity->m_iActorType != ACTOR_KINEMATIC )
+		if (pEntity->m_iActorType != ACTOR_KINEMATIC)
 		{
-			BodyDesc.linearVelocity = pEntity->GetAbsVelocity(); 
-			BodyDesc.angularVelocity = pEntity->GetAbsAvelocity();
+			pActor->setLinearVelocity(pEntity->GetAbsVelocity());
+			pActor->setAngularVelocity(pEntity->GetAbsAvelocity());
 		}
-
-		ActorDesc.body = &BodyDesc;
-          }
+    }
   
-	ActorDesc.density = DENSITY_FACTOR;
-	ActorDesc.userData = pEntity->edict();
-	ActorDesc.flags = pEntity->m_iActorFlags;
-	ActorDesc.group = pEntity->m_usActorGroup;
-	ActorDesc.globalPose = pose; // saved pose
+	//ActorDesc.density = DENSITY_FACTOR;
+	pActor->userData = pEntity->edict();
+	pActor->setActorFlags(static_cast<PxActorFlags>(pEntity->m_iActorFlags));
 
-	if( pEntity->m_iActorType == ACTOR_KINEMATIC )
-		m_ErrorStream.hideWarning( true );
+	//if( pEntity->m_iActorType == ACTOR_KINEMATIC )
+	//	m_ErrorCallback.hideWarning( true );
 
-	NxActor *pActor = m_pScene->createActor( ActorDesc );
-
-	if( pEntity->m_iActorType == ACTOR_KINEMATIC )
-		m_ErrorStream.hideWarning( false );
-
-	if( !pActor )
-	{
-		ALERT( at_error, "RestoreBody: unbale to create actor with type (%i)\n", pEntity->m_iActorType );
-		return NULL;
-	}
+	//if( pEntity->m_iActorType == ACTOR_KINEMATIC )
+	//	m_ErrorCallback.hideWarning( false );
 
 	// apply specific actor params
-	pActor->setName( pEntity->GetClassname( ));
+	pActor->setName( pEntity->GetClassname() );
 	pEntity->m_pUserData = pActor;
 
-	if( pEntity->m_fFreezed && pEntity->m_iActorType == ACTOR_DYNAMIC )
+	if (pEntity->m_fFreezed && pEntity->m_iActorType == ACTOR_DYNAMIC) {
 		pActor->putToSleep();
+	}
 
+	m_pScene->addActor(*pActor);
 	return pActor;
 }
 
 void CPhysicNovodex :: SetAngles( CBaseEntity *pEntity, const Vector &angles )
 {
-	NxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor ) return;
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if( !pActor ) 
+		return;
 
-	NxMat33 rot;
-	matrix3x3	m( angles );
-	rot.setRowMajor( (float *)m );
-	pActor->setGlobalOrientation( rot );
+	float mat[9];
+	matrix3x3 m(angles);
+	m.CopyToArray(mat);
+
+	PxRigidDynamic *pRigidDynamic = pActor->is<PxRigidDynamic>();
+	PxTransform transform = pRigidDynamic->getGlobalPose();
+	transform.q = PxQuat(PxMat33( mat ));
+	pRigidDynamic->setGlobalPose(transform);
 }
 
 void CPhysicNovodex :: SetOrigin( CBaseEntity *pEntity, const Vector &origin )
 {
-	NxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor ) return;
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if( !pActor ) 
+		return;
 
-	pActor->setGlobalPosition( origin );
+	PxRigidDynamic *pRigidDynamic = pActor->is<PxRigidDynamic>();
+	PxTransform transform = pRigidDynamic->getGlobalPose();
+	transform.p = origin;
+	pRigidDynamic->setGlobalPose(transform);
 }
 
 void CPhysicNovodex :: SetVelocity( CBaseEntity *pEntity, const Vector &velocity )
 {
-	NxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor ) return;
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if( !pActor ) 
+		return;
 
-	pActor->setLinearVelocity( velocity );
+	PxRigidDynamic *pRigidDynamic = pActor->is<PxRigidDynamic>();
+	pRigidDynamic->setLinearVelocity( velocity );
 }
 
 void CPhysicNovodex :: SetAvelocity( CBaseEntity *pEntity, const Vector &velocity )
 {
-	NxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor ) return;
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if( !pActor ) 
+		return;
 
-	pActor->setAngularVelocity( velocity );
+	PxRigidDynamic *pRigidDynamic = pActor->is<PxRigidDynamic>();
+	pRigidDynamic->setAngularVelocity( velocity );
 }
 
 void CPhysicNovodex :: MoveObject( CBaseEntity *pEntity, const Vector &finalPos )
 {
-	NxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor ) return;
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if( !pActor ) 
+		return;
 
-	pActor->moveGlobalPosition( finalPos );
+	PxRigidDynamic *pRigidDynamic = pActor->is<PxRigidDynamic>();
+	PxTransform pose = pRigidDynamic->getGlobalPose();
+	pose.p = finalPos;
+	pRigidDynamic->setKinematicTarget(pose);
 }
 
 void CPhysicNovodex :: RotateObject( CBaseEntity *pEntity, const Vector &finalAngle )
 {
-	NxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor ) return;
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if( !pActor ) 
+		return;
 
-	NxMat33 rot;
-	matrix3x3	m( finalAngle );
-	rot.setRowMajor( (float *)m );
-	pActor->moveGlobalOrientation( rot );
+	PxRigidDynamic *pRigidDynamic = pActor->is<PxRigidDynamic>();
+	PxTransform pose = pRigidDynamic->getGlobalPose();
+	matrix3x3 m(finalAngle);
+	pose.q = PxQuat(PxMat33(m));
+	pRigidDynamic->setKinematicTarget(pose);
 }
 
 void CPhysicNovodex :: SetLinearMomentum( CBaseEntity *pEntity, const Vector &velocity )
 {
-	NxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor ) return;
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if( !pActor ) 
+		return;
 
-	pActor->setLinearMomentum( velocity );
+	// TODO modern PhysX SDK doesn't have method setLinearMomentum for dynamic bodies
+	// so maybe we just can replace it with setLinearVelocity(velocity * mass)?
+	// i'm not sure in this since so weak at physics theory and terminology
+	PxRigidDynamic *pRigidDynamic = pActor->is<PxRigidDynamic>();
+	pRigidDynamic->setLinearVelocity( velocity * pRigidDynamic->getMass() );
 }
 
 void CPhysicNovodex :: AddImpulse( CBaseEntity *pEntity, const Vector &impulse, const Vector &position, float factor )
 {
-	NxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor ) return;
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if (!pActor) 
+		return;
 
-	NxF32 coeff = (1000.0f / pActor->getMass()) * factor;
+	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
+	PxF32 coeff = (1000.0f / pRigidBody->getMass()) * factor;
 
 	// prevent to apply too much impulse
-	if( pActor->getMass() < 8.0f )
+	if (pRigidBody->getMass() < 8.0f)
 	{
 		coeff *= 0.0001f;
 	}
 
-	pActor->addForceAtPos( NxVec3(impulse * coeff), (NxVec3)position, NX_IMPULSE );
+	PxRigidBodyExt::addForceAtPos(*pRigidBody, PxVec3(impulse * coeff), position, PxForceMode::eIMPULSE);
 }
 
 void CPhysicNovodex :: AddForce( CBaseEntity *pEntity, const Vector &force )
 {
-	NxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor ) return;
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if( !pActor ) 
+		return;
 
-	pActor->addForce( force, NX_FORCE );
-}
-
-void *CPhysicNovodex :: CreateForceField( CBaseEntity *pEntity, const Vector &force )
-{
-	// create a forcefield kernel
-	NxForceFieldLinearKernelDesc	linearKernelDesc;
-
-	linearKernelDesc.constant = NxVec3( 1, 0, 0.2 );//force;
-//	linearKernelDesc.velocityTarget = NxVec3( 0.5, 0, 0.2 );
-//	linearKernelDesc.falloffLinear = NxVec3( 100, 0, 0.2 );
-	NxForceFieldLinearKernel *pLinearKernel;
-	pLinearKernel = m_pScene->createForceFieldLinearKernel( linearKernelDesc );
-
-	// The forcefield descriptor
-	NxForceFieldDesc fieldDesc;
-	fieldDesc.kernel = pLinearKernel;
-	fieldDesc.rigidBodyType = NX_FF_TYPE_OTHER;
-
-	// A box forcefield shape descriptor
-	NxBoxForceFieldShapeDesc box;
-	box.dimensions = (pEntity->pev->size - Vector( 2, 2, 2 )) * 0.5f;
-	box.pose.t = pEntity->Center() + Vector( 0, 0, pEntity->pev->size.z - 2 );
-
-	fieldDesc.includeGroupShapes.push_back( &box );
-	return m_pScene->createForceField( fieldDesc );
+	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
+	pRigidBody->addForce(force);
 }
 
 int CPhysicNovodex :: FLoadTree( char *szMapName )
@@ -1897,12 +1824,12 @@ int CPhysicNovodex :: FLoadTree( char *szMapName )
 			return 1;
 		}
 
-		if( m_pSceneActor )
-			m_pScene->releaseActor( *m_pSceneActor );
+		if (m_pSceneActor)
+			m_pSceneActor->release();
 		m_pSceneActor = NULL;
 
-		if( m_pSceneMesh )
-			m_pPhysics->releaseTriangleMesh( *m_pSceneMesh );
+		if (m_pSceneMesh)
+			m_pSceneMesh->release();
 		m_pSceneMesh = NULL;
 
 		m_fLoaded = FALSE; // trying to load new collision tree 
@@ -2023,12 +1950,12 @@ int CPhysicNovodex :: BuildCollisionTree( char *szMapName )
 		return FALSE;
 	}
 
-	if( m_pSceneActor )
-		m_pScene->releaseActor( *m_pSceneActor );
+	if (m_pSceneActor)
+		m_pSceneActor->release();
 	m_pSceneActor = NULL;
 
-	if( m_pSceneMesh )
-		m_pPhysics->releaseTriangleMesh( *m_pSceneMesh );
+	if (m_pSceneMesh)
+		m_pSceneMesh->release();
 	m_pSceneMesh = NULL;
 
 	// save off mapname
@@ -2051,7 +1978,7 @@ int CPhysicNovodex :: BuildCollisionTree( char *szMapName )
 		totalElems += (psurf->numedges - 2);
 	}
 
-	NxU32 *indices = new NxU32[totalElems * 3];
+	PxU32 *indices = new PxU32[totalElems * 3];
 
 	for( i = 0; i < m_pWorldModel->nummodelsurfaces; i++ )
 	{
@@ -2071,26 +1998,25 @@ int CPhysicNovodex :: BuildCollisionTree( char *szMapName )
 		}
 	}
 
-	NX_ASSERT( totalElems == numElems );
+	PX_ASSERT( totalElems == numElems );
 
 	// build physical model
-	NxTriangleMeshDesc levelDesc;
-	levelDesc.pointStrideBytes = sizeof( mvertex_t );
-	levelDesc.triangleStrideBytes	= 3 * sizeof( NxU32 );
-	levelDesc.points = (const NxPoint*)&(m_pWorldModel->vertexes[0].position);
-	levelDesc.numVertices = m_pWorldModel->numvertexes;
-	levelDesc.numTriangles = numElems;
-	levelDesc.triangles = indices;
-	levelDesc.flags = 0;
+	PxTriangleMeshDesc levelDesc;
+	levelDesc.points.count = m_pWorldModel->numvertexes;
+	levelDesc.points.data = (const PxVec3*)&(m_pWorldModel->vertexes[0].position);
+	levelDesc.points.stride = sizeof(mvertex_t);
+	levelDesc.triangles.count = numElems;
+	levelDesc.triangles.data = indices;
+	levelDesc.triangles.stride = 3 * sizeof(PxU32);
+	levelDesc.flags = (PxMeshFlags)0;
 
 	char szHullFilename[MAX_PATH];
 	Q_snprintf( szHullFilename, sizeof( szHullFilename ), "cache/maps/%s.bin", szMapName );
 
 	if( m_pCooking )
 	{
-		m_pCooking->NxInitCooking();
-		bool status = m_pCooking->NxCookTriangleMesh( levelDesc, UserStream( szHullFilename, false ));
-          }
+		bool status = m_pCooking->cookTriangleMesh( levelDesc, UserStream( szHullFilename, false ));
+    }
 
 	delete [] indices;
 
@@ -2100,36 +2026,36 @@ int CPhysicNovodex :: BuildCollisionTree( char *szMapName )
 	return (m_pSceneMesh != NULL) ? TRUE : FALSE;
 }
 
-void CPhysicNovodex :: SetupWorld( void )
+void CPhysicNovodex::SetupWorld(void)
 {
-	if( m_pSceneActor )
+	if (m_pSceneActor)
 		return;	// already loaded
 
-	if( !m_pSceneMesh )
+	if (!m_pSceneMesh)
 	{
-		ALERT( at_error, "*collision tree not ready!\n" );
+		ALERT(at_error, "*collision tree not ready!\n");
 		return;
 	}
 
 	// get a world struct
-	if(( m_pWorldModel = (model_t *)MODEL_HANDLE( 1 )) == NULL )
+	if ((m_pWorldModel = (model_t *)MODEL_HANDLE(1)) == NULL)
 	{
-		ALERT( at_error, "SetupWorld: unbale to fetch world pointer %s\n", m_szMapName );
+		ALERT(at_error, "SetupWorld: unbale to fetch world pointer %s\n", m_szMapName);
 		return;
 	}
 
-	NxTriangleMeshShapeDesc levelShapeDesc;
-	NxActorDesc ActorDesc;
+	PxRigidStatic *pActor = m_pPhysics->createRigidStatic(PxTransform(PxVec3(PxZero), PxQuat(PxIdentity)));
+	PxShape *pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxTriangleMeshGeometry(m_pSceneMesh), *m_pDefaultMaterial);
 
-	ActorDesc.userData = g_pWorld->edict();
-	levelShapeDesc.meshData = m_pSceneMesh;
-	ActorDesc.shapes.pushBack( &levelShapeDesc );
-	m_pSceneActor = m_pScene->createActor( ActorDesc );
+	pActor->setName(g_pWorld->GetClassname());
+	pActor->userData = g_pWorld->edict();
+	m_pScene->addActor(*pActor);
+	m_pSceneActor = pActor;
 	m_fLoaded = true;
 
-	// update the world bounds for NX_BP_TYPE_SAP_MULTI
-	NxShape *pSceneShape = m_pSceneActor->getShapes()[0];
-	pSceneShape->getWorldBounds( worldBounds );
+	PxU32 boundsCount;
+	PxBounds3 *boundsList = PxRigidActorExt::getRigidActorShapeLocalBoundsList(*pActor, boundsCount);
+	m_worldBounds = boundsList[0];
 }
 	
 void CPhysicNovodex :: DebugDraw( void )
@@ -2137,7 +2063,7 @@ void CPhysicNovodex :: DebugDraw( void )
 	if( !m_pPhysics || !m_pScene )
 		return;
 
-	gDebugRenderer.renderData( *m_pScene->getDebugRenderable( ));
+	DebugRenderer::GetInstance().RenderData(m_pScene->getRenderBuffer());
 }
 
 /*
@@ -2194,50 +2120,66 @@ void CPhysicNovodex :: DrawPSpeeds( void )
 	}
 }
 
-void CPhysicNovodex :: FreeAllBodies( void )
+void CPhysicNovodex :: FreeAllBodies()
 {
-	if( !m_pScene ) return;
+	if( !m_pScene ) 
+		return;
+
+	PxActorTypeFlags actorFlags = (
+		PxActorTypeFlag::eRIGID_STATIC |
+		PxActorTypeFlag::eRIGID_DYNAMIC
+	);
+
+	std::vector<PxActor*> actors;
+	actors.assign(m_pScene->getNbActors(actorFlags), nullptr);
+	m_pScene->getActors(actorFlags, actors.data(), actors.size() * sizeof(actors[0]));
 
 	// throw all bodies
-	while( m_pScene->getNbActors())
+	for (PxActor *actor : actors)
 	{
-		NxActor *actor = m_pScene->getActors()[0];
-		m_pScene->releaseActor( *actor );
+		m_pScene->removeActor(*actor);
+		actor->release();
 	}
 	m_pSceneActor = NULL;
 }
 
 void CPhysicNovodex :: TeleportCharacter( CBaseEntity *pEntity )
 {
-	NxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor || pActor->getNbShapes() <= 0 )
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if( !pActor )
 		return;
 
-	if( m_fNeedFetchResults )
+	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
+	if(pRigidBody->getNbShapes() <= 0 || m_fNeedFetchResults )
 		return;
 
-	NxBoxShape *pShape = (NxBoxShape *)pActor->getShapes()[0];
+	PxShape *pShape;
+	pRigidBody->getShapes(&pShape, sizeof(pShape)); // get only first shape, but it can be several
 	Vector vecOffset = (pEntity->IsMonster()) ? Vector( 0, 0, pEntity->pev->maxs.z / 2.0f ) : g_vecZero;
 
-	pShape->setDimensions( pEntity->pev->size * PADDING_FACTOR );
-	pActor->setGlobalPosition( pEntity->GetAbsOrigin() + vecOffset );
+	if (pShape->getGeometryType() == PxGeometryType::eBOX)
+	{
+		PxBoxGeometry &box = pShape->getGeometry().box();
+		PxTransform pose = pRigidBody->getGlobalPose();
+		box.halfExtents = PxVec3(pEntity->pev->size * PADDING_FACTOR);
+		pose.p = (pEntity->GetAbsOrigin() + vecOffset);
+		pRigidBody->setGlobalPose(pose);
+	}
+	else {
+		ALERT(at_error, "TeleportCharacter: shape geometry type is not a box\n");
+	}
 }
 
 void CPhysicNovodex :: TeleportActor( CBaseEntity *pEntity )
 {
-	NxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor || pActor->getNbShapes() <= 0 )
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if (!pActor)
 		return;
 
-	NxMat34 pose;
-	float mat[16];
-
-	matrix4x4	m( pEntity->GetAbsOrigin(), pEntity->GetAbsAngles( ), 1.0f );
-	m.CopyToArray( mat );
-
-	// complex move for kinematic entities
-	pose.setColumnMajor44( mat );
-	pActor->setGlobalPose( pose );
+	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
+	matrix4x4 m(pEntity->GetAbsOrigin(), pEntity->GetAbsAngles(), 1.0f);
+	PxTransform pose = PxTransform(PxMat44(m));
+	pRigidBody->setGlobalPose( pose );
 }
 
 void CPhysicNovodex :: MoveCharacter( CBaseEntity *pEntity )
@@ -2245,25 +2187,34 @@ void CPhysicNovodex :: MoveCharacter( CBaseEntity *pEntity )
 	if( !pEntity || pEntity->m_vecOldPosition == pEntity->pev->origin )
 		return;
 
-	NxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor || pActor->getNbShapes() <= 0 )
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if( !pActor )
 		return;
 
-	if( m_fNeedFetchResults )
+	PxRigidDynamic *pRigidBody = pActor->is<PxRigidDynamic>();
+	if( m_fNeedFetchResults || pRigidBody->getNbShapes() <= 0)
 		return;
 
-	NxBoxShape *pShape = (NxBoxShape *)pActor->getShapes()[0];
+	PxShape *pShape;
+	pRigidBody->getShapes(&pShape, sizeof(pShape)); // get only first shape, but it can be several
+	if (pShape->getGeometryType() == PxGeometryType::eBOX)
+	{
+		PxBoxGeometry &box = pShape->getGeometry().box();
 
-	// if were in NOCLIP or FLY (ladder climbing) mode - disable collisions
-	if( pEntity->pev->movetype != MOVETYPE_WALK )
-		pActor->raiseActorFlag( NX_AF_DISABLE_COLLISION );
-	else pActor->clearActorFlag( NX_AF_DISABLE_COLLISION );
+		// if were in NOCLIP or FLY (ladder climbing) mode - disable collisions
+		if (pEntity->pev->movetype != MOVETYPE_WALK)
+			ToggleCollision(pRigidBody, false);
+		else 
+			ToggleCollision(pRigidBody, true);
 
-	Vector vecOffset = (pEntity->IsMonster()) ? Vector( 0, 0, pEntity->pev->maxs.z / 2.0f ) : g_vecZero;
-
-	pShape->setDimensions( pEntity->pev->size * PADDING_FACTOR );
-	pActor->moveGlobalPosition( pEntity->GetAbsOrigin() + vecOffset );
-	pEntity->m_vecOldPosition = pEntity->GetAbsOrigin(); // update old position
+		Vector vecOffset = (pEntity->IsMonster()) ? Vector( 0, 0, pEntity->pev->maxs.z / 2.0f ) : g_vecZero;
+		box.halfExtents = ( pEntity->pev->size * PADDING_FACTOR );
+		pShape->setGeometry(box); // should we do this?
+		PxTransform pose = pRigidBody->getGlobalPose();
+		pose.p = (pEntity->GetAbsOrigin() + vecOffset);
+		pRigidBody->setKinematicTarget(pose);
+		pEntity->m_vecOldPosition = pEntity->GetAbsOrigin(); // update old position
+	}
 }
 
 void CPhysicNovodex :: MoveKinematic( CBaseEntity *pEntity )
@@ -2271,63 +2222,77 @@ void CPhysicNovodex :: MoveKinematic( CBaseEntity *pEntity )
 	if( !pEntity || ( pEntity->pev->movetype != MOVETYPE_PUSH && pEntity->pev->movetype != MOVETYPE_PUSHSTEP ))
 		return;	// probably not a mover
 
-	NxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor || pActor->getNbShapes() <= 0 )
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if( !pActor )
 		return;
 
-	if( m_fNeedFetchResults )
+	PxRigidDynamic *pRigidBody = pActor->is<PxRigidDynamic>();
+	if( m_fNeedFetchResults || pRigidBody->getNbShapes() <= 0)
 		return;
 
 	if( pEntity->pev->solid == SOLID_NOT || pEntity->pev->solid == SOLID_TRIGGER )
-		pActor->raiseActorFlag( NX_AF_DISABLE_COLLISION );
-	else pActor->clearActorFlag( NX_AF_DISABLE_COLLISION );
+		ToggleCollision(pRigidBody, false);
+	else 
+		ToggleCollision(pRigidBody, true);
 
-	NxMat34 pose;
-	float mat[16];
-
-	matrix4x4	m( pEntity->GetAbsOrigin(), pEntity->GetAbsAngles( ), 1.0f );
-	m.CopyToArray( mat );
+	PxTransform pose;
+	matrix4x4 m( pEntity->GetAbsOrigin(), pEntity->GetAbsAngles( ), 1.0f );
 
 	// complex move for kinematic entities
-	pose.setColumnMajor44( mat );
-	pActor->moveGlobalPose( pose );
+	pose = PxTransform(PxMat44(m));
+	pRigidBody->setKinematicTarget( pose );
 }
 
 void CPhysicNovodex :: EnableCollision( CBaseEntity *pEntity, int fEnable )
 {
-	NxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor || pActor->getNbShapes() <= 0 )
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if( !pActor )
+		return;
+
+	PxRigidDynamic *pRigidBody = pActor->is<PxRigidDynamic>();
+	if (pRigidBody->getNbShapes() <= 0)
 		return;
 
 	if( fEnable )
 	{
-		pActor->clearActorFlag( NX_AF_DISABLE_COLLISION );
-		pActor->raiseBodyFlag( NX_BF_VISUALIZATION );
+		ToggleCollision(pRigidBody, false);
+		pActor->setActorFlag(PxActorFlag::eVISUALIZATION, true);
 	}
 	else
 	{
-		pActor->raiseActorFlag( NX_AF_DISABLE_COLLISION );
-		pActor->clearBodyFlag( NX_BF_VISUALIZATION );
+		ToggleCollision(pRigidBody, true);
+		pActor->setActorFlag(PxActorFlag::eVISUALIZATION, false);
 	}
 }
 
 void CPhysicNovodex :: MakeKinematic( CBaseEntity *pEntity, int fEnable )
 {
-	NxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor || pActor->getNbShapes() <= 0 )
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if (!pActor)
 		return;
 
-	if( fEnable )
-		pActor->raiseBodyFlag( NX_BF_KINEMATIC );
+	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
+	if (!pRigidBody || pRigidBody->getNbShapes() <= 0)
+		return;
+
+	if (fEnable)
+		pRigidBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 	else
-		pActor->clearBodyFlag( NX_BF_KINEMATIC );
+		pRigidBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, false);
 }
 
 void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, const Vector &mins, const Vector &maxs, const Vector &end, trace_t *tr )
 {
-	NxActor *pActor = ActorFromEntity( pTouch );
+	PxActor *pActor = ActorFromEntity( pTouch );
+	if (!pActor)
+	{
+		// bad actor?
+		tr->allsolid = false;
+		return;
+	}
 
-	if( !pActor || pActor->getNbShapes() <= 0 || pActor->readActorFlag( NX_AF_DISABLE_COLLISION ))
+	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
+	if (!pRigidBody || pRigidBody->getNbShapes() <= 0 || !CheckCollision(pRigidBody))
 	{
 		// bad actor?
 		tr->allsolid = false;
@@ -2335,118 +2300,55 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 	}
 
 	Vector trace_mins, trace_maxs;
-	UTIL_MoveBounds( start, mins, maxs, end, trace_mins, trace_maxs );
+	UTIL_MoveBounds(start, mins, maxs, end, trace_mins, trace_maxs);
 
 	// NOTE: pmove code completely ignore a bounds checking. So we need to do it here
-	if( !BoundsIntersect( trace_mins, trace_maxs, pTouch->pev->absmin, pTouch->pev->absmax ))
+	if (!BoundsIntersect(trace_mins, trace_maxs, pTouch->pev->absmin, pTouch->pev->absmax))
 	{
 		tr->allsolid = false;
 		return;
 	}
 
+	DecomposedShape shape;
 	vec3_t scale = pTouch->pev->startpos.Length() < 0.001f ? vec3_t(1.0f) : pTouch->pev->startpos;
-	matrix4x4 worldToLocalMat = matrix4x4(pTouch->pev->origin, pTouch->pev->angles, scale).InvertFull();
 	model_t *mod = (model_t *)MODEL_HANDLE(pTouch->pev->modelindex);
-	NxShape *pShape = pActor->getShapes()[0];
-	NxShapeType shapeType = pShape->getType();
-	clipfile::GeometryType geomType = ShapeTypeToGeomType(shapeType);
-
-	if (geomType == clipfile::GeometryType::Unknown)
-	{
-		// unsupported mesh type, so skip them
-		tr->allsolid = false;
-		return;
-	}
 
 	auto &meshDescFactory = CMeshDescFactory::Instance();
+	clipfile::GeometryType geomType = ShapeTypeToGeomType(shape.GetGeometryType(pRigidBody));
 	CMeshDesc &cookedMesh = meshDescFactory.CreateObject(pTouch->pev->modelindex, pTouch->pev->body, pTouch->pev->skin, geomType);
+
 	if (!cookedMesh.GetMesh())
 	{
 		const bool presentInCache = cookedMesh.PresentInCache();
-		if (!presentInCache) 
+		if (!presentInCache)
 		{
 			// update cache or build from scratch
-			const NxU32 *indices;
-			const NxVec3 *verts;
 			Vector triangle[3];
-			NxU32 NbTris;
-
-			if( shapeType == NX_SHAPE_CONVEX )
+			if (!shape.Triangulate(pRigidBody))
 			{
-				NxConvexShape *pConvexShape = (NxConvexShape *)pShape;
-				NxConvexMesh& cm = pConvexShape->getConvexMesh();
-
-				NbTris = cm.getCount( 0, NX_ARRAY_TRIANGLES );
-				indices = (const NxU32 *)cm.getBase( 0, NX_ARRAY_TRIANGLES );
-				verts = (const NxVec3 *)cm.getBase( 0, NX_ARRAY_VERTICES );
-			}
-			else if( shapeType == NX_SHAPE_MESH )
-			{
-				NxTriangleMeshShape *pTriangleMeshShape = (NxTriangleMeshShape *)pShape;
-				NxTriangleMesh& trm = pTriangleMeshShape->getTriangleMesh();
-
-				NbTris = trm.getCount( 0, NX_ARRAY_TRIANGLES );
-				indices = (const NxU32 *)trm.getBase( 0, NX_ARRAY_TRIANGLES );
-				verts = (const NxVec3 *)trm.getBase( 0, NX_ARRAY_VERTICES );
+				// failed to triangulate, unsupported mesh type, so skip them
+				tr->allsolid = false;
+				return;
 			}
 
-			if( shapeType == NX_SHAPE_BOX )
+			cookedMesh.SetDebugName(pTouch->GetModel());
+			cookedMesh.InitMeshBuild(shape.GetTrianglesCount());
+
+			// FIXME: store all meshes as local and use capsule instead of bbox
+			const auto &indexBuffer = shape.GetIndexBuffer();
+			const auto &vertexBuffer = shape.GetVertexBuffer();
+			for (size_t i = 0; i < shape.GetTrianglesCount(); i++)
 			{
-				NxVec3	points[8];
-				NxVec3	ext, cnt;
-				NxBounds3	bounds;
-				NxBox	obb;
-
-				// each box shape contain 12 triangles
-				cookedMesh.InitMeshBuild(pActor->getNbShapes() * 12);
-
-				for( uint i = 0; i < pActor->getNbShapes(); i++ )
-				{
-					NxBoxShape *pBoxShape = (NxBoxShape *)pActor->getShapes()[i];
-					NxMat33 absRot = pBoxShape->getGlobalOrientation();
-					NxVec3 absPos = pBoxShape->getGlobalPosition();
-
-					// don't use pBoxShape->getWorldAABB it's caused to broke suspension and deadlocks !!!
-					pBoxShape->getWorldBounds( bounds );
-					bounds.getExtents( ext );
-					bounds.getCenter( cnt );
-					obb = NxBox( cnt, ext, absRot );
-
-					indices = (const NxU32 *)m_pUtils->NxGetBoxTriangles();
-					m_pUtils->NxComputeBoxPoints( obb, points );
-					verts = (const NxVec3 *)points;
-
-					for( int j = 0; j < 12; j++ )
-					{
-						NxU32 i0 = *indices++;
-						NxU32 i1 = *indices++;
-						NxU32 i2 = *indices++;
-						triangle[0] = verts[i0];
-						triangle[1] = verts[i1];
-						triangle[2] = verts[i2];
-
-						// transform from world to model space
-						triangle[0] = worldToLocalMat.VectorTransform(triangle[0]);
-						triangle[1] = worldToLocalMat.VectorTransform(triangle[1]);
-						triangle[2] = worldToLocalMat.VectorTransform(triangle[2]);
-						cookedMesh.AddMeshTrinagle( triangle );
-					}
-				}
-			}
-			else
-			{
-				cookedMesh.InitMeshBuild(NbTris);
-				while( NbTris-- )
-				{
-					NxU32 i0 = *indices++;
-					NxU32 i1 = *indices++;
-					NxU32 i2 = *indices++;
-
-					triangle[0] = verts[i0];
-					triangle[1] = verts[i1];
-					triangle[2] = verts[i2];
-					cookedMesh.AddMeshTrinagle( triangle );
-				}
+				uint32_t i0 = indexBuffer[3 * i];
+				uint32_t i1 = indexBuffer[3 * i + 1];
+				uint32_t i2 = indexBuffer[3 * i + 2];
+				vec3_t v0 = vertexBuffer[i0];
+				vec3_t v1 = vertexBuffer[i1];
+				vec3_t v2 = vertexBuffer[i2];
+				triangle[0] = v0;
+				triangle[1] = v1;
+				triangle[2] = v2;
+				cookedMesh.AddMeshTrinagle(triangle);
 			}
 		}
 		else {
@@ -2510,127 +2412,47 @@ void CPhysicNovodex :: SweepEntity( CBaseEntity *pEntity, const Vector &start, c
 	tr->flFraction = 1.0f;
 	tr->vecEndPos = end;
 
-	NxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor || pActor->getNbShapes() <= 0 || pEntity->pev->solid == SOLID_NOT )
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if (!pActor)
+		return;
+
+	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
+	if (!pRigidBody || pRigidBody->getNbShapes() <= 0 || pEntity->pev->solid == SOLID_NOT)
 		return; // only dynamic solid objects can be traced
 
-	NxBox testBox;
-
-	// setup trace box
-	testBox.center = pEntity->Center();
-	testBox.rot = pActor->getGlobalOrientation();
-	testBox.extents = (pEntity->pev->size * 0.5f);
-
 	// test for stuck entity into another
-	if( start == end )
+	if (start == end)
 	{
-		// update cache or build from scratch
-		NxShape *pShape = pActor->getShapes()[0];
-		int shapeType = pShape->getType();
 		Vector triangle[3], dirs[3];
-		const NxU32 *indices;
-		const NxVec3 *verts;
-		NxU32 NbTris;
-
-		if( shapeType == NX_SHAPE_CONVEX )
-		{
-			NxConvexShape *pConvexShape = (NxConvexShape *)pShape;
-			NxConvexMesh& cm = pConvexShape->getConvexMesh();
-
-			NbTris = cm.getCount( 0, NX_ARRAY_TRIANGLES );
-			indices = (const NxU32 *)cm.getBase( 0, NX_ARRAY_TRIANGLES );
-			verts = (const NxVec3 *)cm.getBase( 0, NX_ARRAY_VERTICES );
-		}
-		else if( shapeType == NX_SHAPE_MESH )
-		{
-			NxTriangleMeshShape *pTriangleMeshShape = (NxTriangleMeshShape *)pShape;
-			NxTriangleMesh& trm = pTriangleMeshShape->getTriangleMesh();
-
-			NbTris = trm.getCount( 0, NX_ARRAY_TRIANGLES );
-			indices = (const NxU32 *)trm.getBase( 0, NX_ARRAY_TRIANGLES );
-			verts = (const NxVec3 *)trm.getBase( 0, NX_ARRAY_VERTICES );
-		}
-		else if( shapeType != NX_SHAPE_BOX )
-		{
-			// unsupported mesh type, so skip them
-			return;
+		PxTransform globalPose = pRigidBody->getGlobalPose();
+		DecomposedShape shape;
+		if (!shape.Triangulate(pRigidBody)) {
+			return; // failed to triangulate
 		}
 
-		if( shapeType == NX_SHAPE_BOX )
+		const auto &indexBuffer = shape.GetIndexBuffer();
+		const auto &vertexBuffer = shape.GetVertexBuffer();
+		for (size_t i = 0; i < shape.GetTrianglesCount(); i++)
 		{
-			NxVec3	points[8];
-			NxVec3	ext, cnt;
-			NxBounds3	bounds;
-			NxBox	obb;
+			uint32_t i0 = indexBuffer[3 * i];
+			uint32_t i1 = indexBuffer[3 * i + 1];
+			uint32_t i2 = indexBuffer[3 * i + 2];
+			vec3_t v0 = vertexBuffer[i0];
+			vec3_t v1 = vertexBuffer[i1];
+			vec3_t v2 = vertexBuffer[i2];
 
-			for( uint i = 0; i < pActor->getNbShapes(); i++ )
+			// transform triangles from local to world space
+			triangle[0] = globalPose.transform(v0);
+			triangle[1] = globalPose.transform(v1);
+			triangle[2] = globalPose.transform(v2);
+
+			for (size_t j = 0; j < 3; j++)
 			{
-				NxBoxShape *pBoxShape = (NxBoxShape *)pActor->getShapes()[i];
-				NxMat33 absRot = pBoxShape->getGlobalOrientation();
-				NxVec3 absPos = pBoxShape->getGlobalPosition();
-
-				// don't use pBoxShape->getWorldAABB it's caused to broke suspension and deadlocks !!!
-				pBoxShape->getWorldBounds( bounds );
-				bounds.getExtents( ext );
-				bounds.getCenter( cnt );
-				obb = NxBox( cnt, ext, absRot );
-
-				indices = (const NxU32 *)m_pUtils->NxGetBoxTriangles();
-				m_pUtils->NxComputeBoxPoints( obb, points );
-				verts = (const NxVec3 *)points;
-
-				for( int j = 0; j < 12; j++ )
-				{
-					NxU32 i0 = *indices++;
-					NxU32 i1 = *indices++;
-					NxU32 i2 = *indices++;
-					triangle[0] = verts[i0];
-					triangle[1] = verts[i1];
-					triangle[2] = verts[i2];
-
-					for( int k = 0; k < 3; k++ )
-					{
-						dirs[k] = absPos - triangle[k];
-						triangle[k] += dirs[k] * -2.0f;
-
-						UTIL_TraceLine( triangle[k], triangle[k], ignore_monsters, pEntity->edict(), tr );
-						if( tr->fStartSolid ) return;	// one of points in solid
-					}
-				}
-			}
-		}
-		else
-		{
-			NxMat33 absRot = pShape->getGlobalOrientation();
-			NxVec3 absPos = pShape->getGlobalPosition();
-
-			// NOTE: we compute triangles in abs coords because player AABB
-			// can't be transformed as done for not axial cases
-			// FIXME: store all meshes as local and use capsule instead of bbox
-			while( NbTris-- )
-			{
-				NxU32 i0 = *indices++;
-				NxU32 i1 = *indices++;
-				NxU32 i2 = *indices++;
-				NxVec3 v0 = verts[i0];
-				NxVec3 v1 = verts[i1];
-				NxVec3 v2 = verts[i2];
-
-				absRot.multiply( v0, v0 );
-				absRot.multiply( v1, v1 );
-				absRot.multiply( v2, v2 );
-				triangle[0] = v0 + absPos;
-				triangle[1] = v1 + absPos;
-				triangle[2] = v2 + absPos;
-
-				for( int i = 0; i < 3; i++ )
-				{
-					dirs[i] = absPos - triangle[i];
-					triangle[i] += dirs[i] * -2.0f;
-
-					UTIL_TraceLine( triangle[i], triangle[i], ignore_monsters, pEntity->edict(), tr );
-					if( tr->fStartSolid ) return;	// one of points in solid
-				}
+				dirs[j] = globalPose.p - triangle[j];
+				triangle[j] += dirs[j] * -2.0f;
+				UTIL_TraceLine(triangle[j], triangle[j], ignore_monsters, pEntity->edict(), tr);
+				if (tr->fStartSolid) 
+					return;	// one of points in solid
 			}
 		}
 		return;
@@ -2640,25 +2462,37 @@ void CPhysicNovodex :: SweepEntity( CBaseEntity *pEntity, const Vector &start, c
 	Vector vecDir = end - start;
 	float flLength = vecDir.Length();
 	vecDir = vecDir.Normalize();
-	testBox.extents = (pEntity->pev->size * 0.5f);
-	NxSweepQueryHit result;
+
+	// setup trace box
+	PxBoxGeometry testBox;
+	PxTransform initialPose = pRigidBody->getGlobalPose();
+	initialPose.p = pEntity->Center(); // does we really need to do this?
+	testBox.halfExtents = pEntity->pev->size * 0.5f;
 
 	// make a linear sweep through the world
-	pActor->raiseActorFlag( NX_AF_DISABLE_COLLISION );
-	int numHits = m_pScene->linearOBBSweep( testBox, vecDir * flLength, NX_SF_STATICS|NX_SF_DYNAMICS, NULL, 1, &result, NULL );
-	pActor->clearActorFlag( NX_AF_DISABLE_COLLISION );
-	if( !numHits || !result.hitShape || result.t > flLength )
+	PxSweepBuffer sweepResult;
+	ToggleCollision(pRigidBody, false);
+	bool hitOccured = m_pScene->sweep(testBox, initialPose, vecDir, flLength, sweepResult, PxHitFlag::eNORMAL);
+	ToggleCollision(pRigidBody, true);
+
+	if (!hitOccured || !sweepResult.getNbTouches())
 		return; // no intersection
 
+	const PxSweepHit &hit = sweepResult.getTouch(0);
+	if (hit.distance > flLength || !hit.actor)
+		return; // hit missed
+
 	// compute fraction
-	tr->flFraction = (result.t / flLength);
+	tr->flFraction = (hit.distance / flLength);
 	tr->flFraction = bound( 0.0f, tr->flFraction, 1.0f );
 	VectorLerp( start, tr->flFraction, end, tr->vecEndPos );
 
-	CBaseEntity *pHit = EntityFromActor( &result.hitShape->getActor( ));
-	if( pHit ) tr->pHit = pHit->edict();
+	CBaseEntity *pHit = EntityFromActor( hit.actor );
+	if (pHit) {
+		tr->pHit = pHit->edict();
+	}
 
-	tr->vecPlaneNormal = result.normal;
+	tr->vecPlaneNormal = hit.normal;
 	tr->flPlaneDist = DotProduct( tr->vecEndPos, tr->vecPlaneNormal );
 	float flDot = DotProduct( vecDir, tr->vecPlaneNormal );
 	float moveDot = Q_round( flDot, 0.1f );
@@ -2668,4 +2502,4 @@ void CPhysicNovodex :: SweepEntity( CBaseEntity *pEntity, const Vector &start, c
 		tr->fAllSolid = true;
 }
 
-#endif//USE_PHYSICS_ENGINE
+#endif // USE_PHYSICS_ENGINE
