@@ -1134,9 +1134,6 @@ void *CPhysicNovodex :: CreateKinematicBodyFromEntity( CBaseEntity *pObject )
 	if (!pCollision) 
 		return NULL;
 
-	//if( !UTIL_CanRotate( pObject ))
-	//	BodyDesc.flags |= NX_BF_FROZEN_ROT; // entity missed origin-brush
-
 	PxRigidDynamic *pActor = m_pPhysics->createRigidDynamic(PxTransform(PxIdentity));
 	PxShape *pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxTriangleMeshGeometry(pCollision), *m_pDefaultMaterial);
 
@@ -1144,6 +1141,15 @@ void *CPhysicNovodex :: CreateKinematicBodyFromEntity( CBaseEntity *pObject )
 	{
 		ALERT( at_error, "failed to create kinematic from entity %s\n", pObject->GetClassname( ));
 		return NULL;
+	}
+
+	if (!UTIL_CanRotate(pObject)) 
+	{ 
+		// entity missed origin-brush
+		pActor->setRigidDynamicLockFlags(
+			PxRigidDynamicLockFlag::eLOCK_ANGULAR_X | 
+			PxRigidDynamicLockFlag::eLOCK_ANGULAR_Y | 
+			PxRigidDynamicLockFlag::eLOCK_ANGULAR_Z);
 	}
 
 	float mat[16];
