@@ -677,7 +677,7 @@ public:
 	}
 
 	// init from OpenGl matrix
-	matrix4x4( float *opengl_matrix )
+	matrix4x4( const float *opengl_matrix )
 	{
 		mat[0][0] = opengl_matrix[0];
 		mat[0][1] = opengl_matrix[1];
