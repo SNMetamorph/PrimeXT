@@ -15,8 +15,6 @@ GNU General Public License for more details.
 #ifndef PHYSIC_H
 #define PHYSIC_H
 
-//#define USE_PHYSICS_ENGINE
-
 class Vector;
 class CBaseEntity;
 
@@ -27,7 +25,6 @@ public:
 	virtual void	FreePhysic( void ) = 0;
 	virtual void	Update( float flTime ) = 0;
 	virtual void	EndFrame( void ) = 0;
-	virtual void	*GetUtilLibrary( void ) = 0;
 	virtual bool	Initialized( void ) = 0;
 	virtual void	RemoveBody( struct edict_s *pEdict ) = 0;
 	virtual void	*CreateBodyFromEntity( CBaseEntity *pEntity ) = 0;
@@ -49,9 +46,9 @@ public:
 	virtual void	EnableCollision( CBaseEntity *pEntity, int fEnable ) = 0;
 	virtual void	MakeKinematic( CBaseEntity *pEntity, int fEnable ) = 0;
 	virtual void	UpdateVehicle( CBaseEntity *pObject ) = 0;
-	virtual int	FLoadTree( char *szMapName ) = 0;
-	virtual int	CheckBINFile( char *szMapName ) = 0;
-	virtual int	BuildCollisionTree( char *szMapName ) = 0;
+	virtual int		FLoadTree( char *szMapName ) = 0;
+	virtual int		CheckBINFile( char *szMapName ) = 0;
+	virtual int		BuildCollisionTree( char *szMapName ) = 0;
 	virtual bool	UpdateEntityPos( CBaseEntity *pEntity ) = 0;
 	virtual void	UpdateEntityAABB( CBaseEntity *pEntity ) = 0;
 	virtual bool	UpdateActorPos( CBaseEntity *pEntity ) = 0;
@@ -73,4 +70,4 @@ public:
 extern void GameInitNullPhysics( void ); // shutdown simulation for some reasons
 extern IPhysicLayer	*WorldPhysic;
 
-#endif//PHYSIC_H
+#endif // PHYSIC_H
