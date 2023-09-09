@@ -76,7 +76,6 @@ CPhysicNovodex::CPhysicNovodex()
 
 	m_szMapName[0] = '\0';
 	p_speeds_msg[0] = '\0';
-	fps_max = nullptr;
 }
 
 void CPhysicNovodex :: InitPhysic( void )
@@ -107,8 +106,10 @@ void CPhysicNovodex :: InitPhysic( void )
 	scale.speed = 800.0;   // typical speed of an object, gravity*1s is a reasonable choice
 	
 	m_pVisualDebugger = PxCreatePvd(*m_pFoundation);
+	if (DebugEnabled()) {
 	PxPvdTransport *transport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 1000);
 	m_pVisualDebugger->connect(*transport, PxPvdInstrumentationFlag::eALL);
+	}
 
 	m_pPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *m_pFoundation, scale, false, m_pVisualDebugger);
 	m_pDispatcher = PxDefaultCpuDispatcherCreate(std::thread::hardware_concurrency());
@@ -155,20 +156,23 @@ void CPhysicNovodex :: InitPhysic( void )
 	m_worldBounds.minimum = PxVec3(-32768, -32768, -32768);
 	m_worldBounds.maximum = PxVec3(32768, 32768, 32768);
 	sceneDesc.sanityBounds = m_worldBounds;
-
 	m_pScene = m_pPhysics->createScene(sceneDesc);
+
+	if (DebugEnabled())
+	{
+		PxPvdSceneClient *pvdClient = m_pScene->getScenePvdClient();
 	m_pScene->setVisualizationParameter(PxVisualizationParameter::eSCALE, 1.0f); // disable on release build because performance impact
 	m_pScene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_SHAPES, 1.0f);
 	m_pScene->setVisualizationParameter(PxVisualizationParameter::eCONTACT_POINT, 1.0f);
 	m_pScene->setVisualizationParameter(PxVisualizationParameter::eCONTACT_NORMAL, 1.0f);
 	m_pScene->setVisualizationParameter(PxVisualizationParameter::eBODY_AXES, 1.0f);
 
-	PxPvdSceneClient *pvdClient = m_pScene->getScenePvdClient();
 	if (pvdClient)
 	{
 		pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONSTRAINTS, true);
 		pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONTACTS, true);
 		pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
+	}
 	}
 
 	m_pDefaultMaterial = m_pPhysics->createMaterial(0.5f, 0.5f, 0.0f);
@@ -1941,6 +1945,15 @@ int CPhysicNovodex :: CheckFileTimes( const char *szFile1, const char *szFile2 )
 	}
 
 	return retValue;
+}
+
+bool CPhysicNovodex::DebugEnabled() const
+{
+#ifdef _DEBUG
+	return true;
+#else
+	return false;
+#endif
 }
 
 //-----------------------------------------------------------------------------
