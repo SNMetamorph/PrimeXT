@@ -45,6 +45,7 @@ GNU General Public License for more details.
 #endif
 
 constexpr float k_PaddingFactor = 0.49f;
+constexpr float k_DensityFactor = 2.00f;
 constexpr uint32_t k_SolverIterationCount = 4;
 constexpr double k_SimulationStepSize = 1.0 / 100.0;
 
@@ -1067,6 +1068,7 @@ void *CPhysicNovodex :: CreateBodyFromEntity( CBaseEntity *pObject )
 	pActor->setMaxLinearVelocity(maxSpeed);
 	pActor->setMaxAngularVelocity(720.0);
 	pActor->userData = pObject->edict();
+	PxRigidBodyExt::updateMassAndInertia(*pActor, k_DensityFactor);
 
 	m_pScene->addActor(*pActor);
 	pObject->m_iActorType = ACTOR_DYNAMIC;
