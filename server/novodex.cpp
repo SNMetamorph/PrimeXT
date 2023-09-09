@@ -1800,15 +1800,12 @@ void CPhysicNovodex :: RotateObject( CBaseEntity *pEntity, const Vector &finalAn
 
 void CPhysicNovodex :: SetLinearMomentum( CBaseEntity *pEntity, const Vector &velocity )
 {
-	PxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor ) 
+	PxActor *pActor = ActorFromEntity(pEntity);
+	if (!pActor)
 		return;
 
-	// TODO modern PhysX SDK doesn't have method setLinearMomentum for dynamic bodies
-	// so maybe we just can replace it with setLinearVelocity(velocity * mass)?
-	// i'm not sure in this since so weak at physics theory and terminology
 	PxRigidDynamic *pRigidDynamic = pActor->is<PxRigidDynamic>();
-	pRigidDynamic->setLinearVelocity( velocity * pRigidDynamic->getMass() );
+	pRigidDynamic->setForceAndTorque(velocity, PxVec3(0.f), PxForceMode::eIMPULSE);
 }
 
 void CPhysicNovodex :: AddImpulse( CBaseEntity *pEntity, const Vector &impulse, const Vector &position, float factor )
