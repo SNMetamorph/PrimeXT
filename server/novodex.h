@@ -120,7 +120,6 @@ private:
 	bool m_fLoaded;	// collision tree is loaded and actual
 	bool m_fDisableWarning;	// some warnings will be swallowed
 	bool m_fWorldChanged;	// world is changed refresh the statics in case their scale was changed too
-	bool m_fNeedFetchResults;
 	double m_flAccumulator;
 
 	physx::PxTriangleMesh *m_pSceneMesh;
@@ -135,6 +134,4 @@ private:
 	physx::PxCooking *m_pCooking;
 	physx::PxDefaultAllocator m_Allocator;
 	physx::PxPvd *m_pVisualDebugger;
-
-	cvar_t		*fps_max;
 };
