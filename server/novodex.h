@@ -39,7 +39,7 @@ public:
 	CPhysicNovodex();
 	void	InitPhysic( void );
 	void	FreePhysic( void );
-	void	Update( float flTime );
+	void	Update( float flTimeDelta );
 	void	EndFrame( void );
 	void	RemoveBody( edict_t *pEdict );
 	void	*CreateBodyFromEntity( CBaseEntity *pEntity );
@@ -120,6 +120,7 @@ private:
 	bool m_fDisableWarning;	// some warnings will be swallowed
 	bool m_fWorldChanged;	// world is changed refresh the statics in case their scale was changed too
 	bool m_fNeedFetchResults;
+	double m_flAccumulator;
 
 	physx::PxTriangleMesh *m_pSceneMesh;
 	physx::PxActor *m_pSceneActor;	// scene with installed shape
