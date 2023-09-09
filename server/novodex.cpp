@@ -71,7 +71,6 @@ CPhysicNovodex::CPhysicNovodex()
 	m_fLoaded = false;
 	m_fDisableWarning = false;
 	m_fWorldChanged = false;
-	m_fNeedFetchResults = false;
 	m_flAccumulator = 0.0;
 
 	m_szMapName[0] = '\0';
@@ -107,8 +106,8 @@ void CPhysicNovodex :: InitPhysic( void )
 	
 	m_pVisualDebugger = PxCreatePvd(*m_pFoundation);
 	if (DebugEnabled()) {
-	PxPvdTransport *transport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 1000);
-	m_pVisualDebugger->connect(*transport, PxPvdInstrumentationFlag::eALL);
+		PxPvdTransport *transport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 1000);
+		m_pVisualDebugger->connect(*transport, PxPvdInstrumentationFlag::eALL);
 	}
 
 	m_pPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *m_pFoundation, scale, false, m_pVisualDebugger);
@@ -134,10 +133,7 @@ void CPhysicNovodex :: InitPhysic( void )
 	PxSceneDesc sceneDesc(scale);
 	sceneDesc.simulationEventCallback = &ContactReport::getInstance();
 	sceneDesc.gravity = PxVec3(0.0f, 0.0f, -800.0f);
-	//sceneDesc.bounceThresholdVelocity = 0.2 * scale.speed;
 	sceneDesc.flags = PxSceneFlag::eENABLE_CCD;
-	//sceneDesc.broadPhaseType = PxBroadPhaseType::eMBP;
-	//sceneDesc.dynamicStructure = PxPruningStructureType::eDYNAMIC_AABB_TREE;
 	sceneDesc.cpuDispatcher = m_pDispatcher;
 	sceneDesc.filterShader = [](
 		PxFilterObjectAttributes attributes0, PxFilterData filterData0,
@@ -161,23 +157,22 @@ void CPhysicNovodex :: InitPhysic( void )
 	if (DebugEnabled())
 	{
 		PxPvdSceneClient *pvdClient = m_pScene->getScenePvdClient();
-	m_pScene->setVisualizationParameter(PxVisualizationParameter::eSCALE, 1.0f); // disable on release build because performance impact
-	m_pScene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_SHAPES, 1.0f);
-	m_pScene->setVisualizationParameter(PxVisualizationParameter::eCONTACT_POINT, 1.0f);
-	m_pScene->setVisualizationParameter(PxVisualizationParameter::eCONTACT_NORMAL, 1.0f);
-	m_pScene->setVisualizationParameter(PxVisualizationParameter::eBODY_AXES, 1.0f);
+		m_pScene->setVisualizationParameter(PxVisualizationParameter::eSCALE, 1.0f); // disable on release build because performance impact
+		m_pScene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_SHAPES, 1.0f);
+		m_pScene->setVisualizationParameter(PxVisualizationParameter::eCONTACT_POINT, 1.0f);
+		m_pScene->setVisualizationParameter(PxVisualizationParameter::eCONTACT_NORMAL, 1.0f);
+		m_pScene->setVisualizationParameter(PxVisualizationParameter::eBODY_AXES, 1.0f);
 
-	if (pvdClient)
-	{
-		pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONSTRAINTS, true);
-		pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONTACTS, true);
-		pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
-	}
+		if (pvdClient)
+		{
+			pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONSTRAINTS, true);
+			pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONTACTS, true);
+			pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
+		}
 	}
 
 	m_pDefaultMaterial = m_pPhysics->createMaterial(0.5f, 0.5f, 0.0f);
 	m_pConveyorMaterial = m_pPhysics->createMaterial(1.0f, 1.0f, 0.0f);
-	m_fNeedFetchResults = FALSE;
 }
 
 void CPhysicNovodex :: FreePhysic( void )
@@ -2177,7 +2172,7 @@ void CPhysicNovodex :: TeleportCharacter( CBaseEntity *pEntity )
 		return;
 
 	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
-	if(pRigidBody->getNbShapes() <= 0 || m_fNeedFetchResults )
+	if (pRigidBody->getNbShapes() <= 0)
 		return;
 
 	PxShape *pShape;
@@ -2219,7 +2214,7 @@ void CPhysicNovodex :: MoveCharacter( CBaseEntity *pEntity )
 		return;
 
 	PxRigidDynamic *pRigidBody = pActor->is<PxRigidDynamic>();
-	if( m_fNeedFetchResults || pRigidBody->getNbShapes() <= 0)
+	if (pRigidBody->getNbShapes() <= 0)
 		return;
 
 	PxShape *pShape;
@@ -2254,7 +2249,7 @@ void CPhysicNovodex :: MoveKinematic( CBaseEntity *pEntity )
 		return;
 
 	PxRigidDynamic *pRigidBody = pActor->is<PxRigidDynamic>();
-	if( m_fNeedFetchResults || pRigidBody->getNbShapes() <= 0)
+	if (pRigidBody->getNbShapes() <= 0)
 		return;
 
 	if( pEntity->pev->solid == SOLID_NOT || pEntity->pev->solid == SOLID_TRIGGER )
