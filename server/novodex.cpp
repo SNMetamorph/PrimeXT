@@ -46,6 +46,7 @@ GNU General Public License for more details.
 
 constexpr float k_PaddingFactor = 0.49f;
 constexpr uint32_t k_SolverIterationCount = 4;
+constexpr double k_SimulationStepSize = 1.0 / 100.0;
 
 using namespace physx;
 
@@ -70,6 +71,7 @@ CPhysicNovodex::CPhysicNovodex()
 	m_fDisableWarning = false;
 	m_fWorldChanged = false;
 	m_fNeedFetchResults = false;
+	m_flAccumulator = 0.0;
 
 	m_szMapName[0] = '\0';
 	p_speeds_msg[0] = '\0';
@@ -198,12 +200,11 @@ void CPhysicNovodex :: FreePhysic( void )
 	m_pFoundation = nullptr;
 }
 
-void CPhysicNovodex :: Update( float flTime )
+void CPhysicNovodex :: Update( float flTimeDelta )
 {
 	if( !m_pScene || GET_SERVER_STATE() != SERVER_ACTIVE )
 		return;
 
-	const float timeDelta = Q_min(flTime, 1.0f / 20.f);
 	if( g_psv_gravity )
 	{
 		// clamp gravity
@@ -221,19 +222,12 @@ void CPhysicNovodex :: Update( float flTime )
 		}
 	}
 
-	if( g_sync_physic.value )
+	m_flAccumulator += flTimeDelta;
+	while (m_flAccumulator > k_SimulationStepSize)
 	{
-		m_pScene->simulate( timeDelta );
-		//m_pScene->flushStream();
-		m_pScene->fetchResults( true );
-	}
-	else
-	{
-		if( m_fNeedFetchResults )
-			return; // waiting
-
-		m_pScene->simulate( timeDelta );
-		m_fNeedFetchResults = TRUE;
+		m_flAccumulator -= k_SimulationStepSize;
+		m_pScene->simulate(k_SimulationStepSize);
+		m_pScene->fetchResults(true);
 	}
 }
 
@@ -241,13 +235,6 @@ void CPhysicNovodex :: EndFrame( void )
 {
 	if( !m_pScene || GET_SERVER_STATE() != SERVER_ACTIVE )
 		return;
-
-	if( m_fNeedFetchResults )
-	{
-		//m_pScene->flushStream();
-		m_pScene->fetchResults( true );
-		m_fNeedFetchResults = FALSE;
-	}
 
 	// fill physics stats
 	if( !p_speeds || p_speeds->value <= 0.0f )
