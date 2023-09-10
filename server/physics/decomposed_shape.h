@@ -23,16 +23,16 @@ class CPhysicNovodex::DecomposedShape
 public:
 	DecomposedShape() = default;
 
-	bool Triangulate(physx::PxRigidBody *rigidBody);
-	physx::PxGeometryType::Enum GetGeometryType(physx::PxRigidBody *rigidBody) const;
+	bool Triangulate(physx::PxRigidActor *rigidBody);
+	physx::PxGeometryType::Enum GetGeometryType(physx::PxRigidActor *rigidBody) const;
 	size_t GetTrianglesCount() const;
 	const std::vector<uint32_t>& GetIndexBuffer() const;
 	const std::vector<physx::PxVec3>& GetVertexBuffer() const;
 
 private:
-	void DecomposeBox(physx::PxRigidBody *rigidBody);
-	void DecomposeConvexMesh(physx::PxRigidBody *rigidBody, physx::PxShape *shape);
-	void DecomposeTriangleMesh(physx::PxRigidBody *rigidBody, physx::PxShape *shape);
+	void DecomposeBox(physx::PxRigidActor *rigidBody);
+	void DecomposeConvexMesh(physx::PxRigidActor *rigidBody, physx::PxShape *shape);
+	void DecomposeTriangleMesh(physx::PxRigidActor *rigidBody, physx::PxShape *shape);
 	void DebugDummyBox();
 
 	size_t m_trianglesCount = 0;

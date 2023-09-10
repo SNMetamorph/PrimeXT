@@ -16,7 +16,7 @@ GNU General Public License for more details.
 
 using namespace physx;
 
-bool CPhysicNovodex::DecomposedShape::Triangulate(PxRigidBody *rigidBody)
+bool CPhysicNovodex::DecomposedShape::Triangulate(PxRigidActor *rigidBody)
 {
 	PxShape *pShape;
 	rigidBody->getShapes(&pShape, 1);
@@ -38,7 +38,7 @@ bool CPhysicNovodex::DecomposedShape::Triangulate(PxRigidBody *rigidBody)
 	return true;
 }
 
-physx::PxGeometryType::Enum CPhysicNovodex::DecomposedShape::GetGeometryType(PxRigidBody *rigidBody) const
+physx::PxGeometryType::Enum CPhysicNovodex::DecomposedShape::GetGeometryType(PxRigidActor *rigidBody) const
 {
 	PxShape *pShape;
 	rigidBody->getShapes(&pShape, 1);
@@ -60,7 +60,7 @@ const std::vector<physx::PxVec3>& CPhysicNovodex::DecomposedShape::GetVertexBuff
 	return m_vertexBuffer;
 }
 
-void CPhysicNovodex::DecomposedShape::DecomposeBox(physx::PxRigidBody *rigidBody)
+void CPhysicNovodex::DecomposedShape::DecomposeBox(physx::PxRigidActor *rigidBody)
 {
 	PxBoxGeometry box;
 	constexpr size_t vertsPerShape = 8;
@@ -113,7 +113,7 @@ void CPhysicNovodex::DecomposedShape::DecomposeBox(physx::PxRigidBody *rigidBody
 	}
 }
 
-void CPhysicNovodex::DecomposedShape::DecomposeConvexMesh(physx::PxRigidBody *rigidBody, physx::PxShape *shape)
+void CPhysicNovodex::DecomposedShape::DecomposeConvexMesh(physx::PxRigidActor *rigidBody, physx::PxShape *shape)
 {
 	PxConvexMesh *convexMesh = shape->getGeometry().convexMesh().convexMesh;
 	PxU32 nbVerts = convexMesh->getNbVertices();
@@ -157,7 +157,7 @@ void CPhysicNovodex::DecomposedShape::DecomposeConvexMesh(physx::PxRigidBody *ri
 	}
 }
 
-void CPhysicNovodex::DecomposedShape::DecomposeTriangleMesh(physx::PxRigidBody *rigidBody, physx::PxShape *shape)
+void CPhysicNovodex::DecomposedShape::DecomposeTriangleMesh(physx::PxRigidActor *rigidBody, physx::PxShape *shape)
 {
 	PxTriangleMesh *mesh = shape->getGeometry().triangleMesh().triangleMesh;
 	const PxU32 nbVerts = mesh->getNbVertices();
