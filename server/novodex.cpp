@@ -793,13 +793,14 @@ PxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int model
 	for (int i = 0; i < phdr->numbodyparts; i++)
 	{
 		mstudiobodyparts_t *pbodypart = (mstudiobodyparts_t *)((byte *)phdr + phdr->bodypartindex) + i;
-		int index = (colliderBodygroup / pbodypart->base) % pbodypart->nummodels;
+		int32_t index = (pev->body / pbodypart->base) % pbodypart->nummodels;
 		mstudiomodel_t *psubmodel = (mstudiomodel_t *)((byte *)phdr + pbodypart->modelindex) + index;
 		totalVertSize += psubmodel->numverts;
 	}
 
 	Vector *verts = new Vector[totalVertSize * 8]; // allocate temporary vertices array
 	PxU32 *indices = new PxU32[totalVertSize * 24];
+	int32_t skinNumber = bound( 0, pev->skin, phdr->numskinfamilies );
 	int numVerts = 0, numElems = 0;
 	Vector tmp;
 
@@ -807,7 +808,7 @@ PxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int model
 	{
 		int i;
 		mstudiobodyparts_t *pbodypart = (mstudiobodyparts_t *)((byte *)phdr + phdr->bodypartindex) + k;
-		int index = (colliderBodygroup / pbodypart->base) % pbodypart->nummodels;
+		int32_t index = (pev->body / pbodypart->base) % pbodypart->nummodels;
 		mstudiomodel_t *psubmodel = (mstudiomodel_t *)((byte *)phdr + pbodypart->modelindex) + index;
 		Vector *pstudioverts = (Vector *)((byte *)phdr + psubmodel->vertindex);
 		Vector *m_verts = new Vector[psubmodel->numverts];
@@ -820,6 +821,8 @@ PxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int model
 
 		ptexture = (mstudiotexture_t *)((byte *)phdr + phdr->textureindex);
 		short *pskinref = (short *)((byte *)phdr + phdr->skinindex);
+		if (skinNumber != 0 && skinNumber < phdr->numskinfamilies)
+			pskinref += (skinNumber * phdr->numskinref);
 
 		for (int j = 0; j < psubmodel->nummesh; j++)
 		{
@@ -896,7 +899,7 @@ PxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int model
 	meshDesc.points.data = verts;
 	meshDesc.points.count = numVerts;
 	meshDesc.points.stride = sizeof(Vector);
-	meshDesc.flags = (PxMeshFlags)0;
+	meshDesc.flags = PxMeshFlag::eFLIPNORMALS;
 
 #ifdef _DEBUG
 	// mesh should be validated before cooked without the mesh cleaning
