@@ -1010,7 +1010,7 @@ CBaseEntity *CPhysicNovodex :: EntityFromActor( PxActor *pObject )
 	return CBaseEntity::Instance( (edict_t *)pObject->userData );
 }
 
-bool CPhysicNovodex::CheckCollision(physx::PxRigidBody *pActor)
+bool CPhysicNovodex::CheckCollision(physx::PxRigidActor *pActor)
 {
 	std::vector<PxShape*> shapes;
 	if (pActor->getNbShapes() > 0)
@@ -1027,7 +1027,7 @@ bool CPhysicNovodex::CheckCollision(physx::PxRigidBody *pActor)
 	return false;
 }
 
-void CPhysicNovodex::ToggleCollision(physx::PxRigidBody *pActor, bool enabled)
+void CPhysicNovodex::ToggleCollision(physx::PxRigidActor *pActor, bool enabled)
 {
 	std::vector<PxShape*> shapes;
 	shapes.resize(pActor->getNbShapes());
@@ -2313,8 +2313,8 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 		return;
 	}
 
-	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
-	if (!pRigidBody || pRigidBody->getNbShapes() <= 0 || !CheckCollision(pRigidBody))
+	PxRigidActor *pRigidActor = pActor->is<PxRigidActor>();
+	if (!pRigidActor || pRigidActor->getNbShapes() <= 0 || !CheckCollision(pRigidActor))
 	{
 		// bad actor?
 		tr->allsolid = false;
@@ -2336,7 +2336,7 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 	model_t *mod = (model_t *)MODEL_HANDLE(pTouch->pev->modelindex);
 
 	auto &meshDescFactory = CMeshDescFactory::Instance();
-	clipfile::GeometryType geomType = ShapeTypeToGeomType(shape.GetGeometryType(pRigidBody));
+	clipfile::GeometryType geomType = ShapeTypeToGeomType(shape.GetGeometryType(pRigidActor));
 	CMeshDesc &cookedMesh = meshDescFactory.CreateObject(pTouch->pev->modelindex, pTouch->pev->body, pTouch->pev->skin, geomType);
 
 	if (!cookedMesh.GetMesh())
@@ -2346,7 +2346,7 @@ void CPhysicNovodex :: SweepTest( CBaseEntity *pTouch, const Vector &start, cons
 		{
 			// update cache or build from scratch
 			Vector triangle[3];
-			if (!shape.Triangulate(pRigidBody))
+			if (!shape.Triangulate(pRigidActor))
 			{
 				// failed to triangulate, unsupported mesh type, so skip them
 				tr->allsolid = false;

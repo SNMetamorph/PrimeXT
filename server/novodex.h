@@ -99,8 +99,8 @@ private:
 	physx::PxTriangleMesh *TriangleMeshFromEntity( CBaseEntity *pObject );
 	physx::PxActor *ActorFromEntity( CBaseEntity *pObject );
 	CBaseEntity	*EntityFromActor( physx::PxActor *pObject );
-	bool CheckCollision(physx::PxRigidBody *pActor);
-	void ToggleCollision(physx::PxRigidBody *pActor, bool enabled);
+	bool CheckCollision(physx::PxRigidActor *pActor);
+	void ToggleCollision(physx::PxRigidActor *pActor, bool enabled);
 	int	CheckFileTimes( const char *szFile1, const char *szFile2 );
 	void StudioCalcBoneQuaterion( mstudiobone_t *pbone, mstudioanim_t *panim, Vector4D &q );
 	void StudioCalcBonePosition( mstudiobone_t *pbone, mstudioanim_t *panim, Vector &pos );
