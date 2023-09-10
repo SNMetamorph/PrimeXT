@@ -1057,7 +1057,7 @@ void *CPhysicNovodex :: CreateBodyFromEntity( CBaseEntity *pObject )
 	}
 
 	float mat[16];
-	float maxSpeed = CVAR_GET_FLOAT("sv_maxspeed");
+	float maxVelocity = CVAR_GET_FLOAT("sv_maxvelocity");
 	matrix4x4(pObject->GetAbsOrigin(), pObject->GetAbsAngles(), 1.0f).CopyToArray(mat);
 	PxTransform pose = PxTransform(PxMat44(mat));
 
@@ -1067,7 +1067,7 @@ void *CPhysicNovodex :: CreateBodyFromEntity( CBaseEntity *pObject )
 	pActor->setRigidBodyFlag(PxRigidBodyFlag::eENABLE_CCD, true);
 	pActor->setLinearVelocity(pObject->GetLocalVelocity());
 	pActor->setAngularVelocity(pObject->GetLocalAvelocity());
-	pActor->setMaxLinearVelocity(maxSpeed);
+	pActor->setMaxLinearVelocity(maxVelocity);
 	pActor->setMaxAngularVelocity(720.0);
 	pActor->userData = pObject->edict();
 	PxRigidBodyExt::updateMassAndInertia(*pActor, k_DensityFactor);
