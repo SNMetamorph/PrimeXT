@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "primext",
+  "version": "0.9",
+  "builtin-baseline": "962e5e39f8a25f42522f51fffc574e05a3efd26b",
+  "dependencies": [],
+  "overrides": [],
+  "features": {
+    "client": {
+      "description": "Build client library",
+      "dependencies": [
+        "imgui"
+      ]
+    },
+    "server": {
+      "description": "Build server library",
+      "dependencies": []
+    },
+    "utils": {
+      "description": "Build utilities",
+      "dependencies": [
+        "miniz",
+        "mimalloc"
+      ]
+    }
+  }
+}

@@ -2,97 +2,90 @@
   "version": 2,
   "configurePresets": [
     {
-      "name": "windows-common-base",
-      "displayName": "Windows Common Base Preset",
-      "description": " ",
-      "hidden": true,
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build",
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
-    },
-    {
-      "name": "windows-x86-base",
-      "displayName": "Windows x86 Base Preset",
-      "description": " ",
-      "inherits": [ "windows-common-base" ],
-      "hidden": true,
-      "architecture": {
-        "value": "x86",
-        "strategy": "external"
-      }
-    },
-    {
       "name": "windows-x86-debug",
       "displayName": "Windows / x86 / Debug",
       "description": " ",
-      "inherits": [ "windows-x86-base" ],
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x86-windows-static",
         "CMAKE_BUILD_TYPE": "Debug"
-      }
+      },
+      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
     },
     {
       "name": "windows-x86-release",
       "displayName": "Windows / x86 / Release",
       "description": " ",
-      "inherits": [ "windows-x86-base" ],
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x86-windows-static",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
-      }
-    },
-    {
-      "name": "windows-x64-base",
-      "displayName": "Windows x64 Base Preset",
-      "description": " ",
-      "inherits": [ "windows-common-base" ],
-      "hidden": true,
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      }
+      },
+      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
     },
     {
       "name": "windows-x64-debug",
       "displayName": "Windows / x64 / Debug",
       "description": " ",
-      "inherits": [ "windows-x64-base" ],
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static",
         "CMAKE_BUILD_TYPE": "Debug"
-      }
+      },
+      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
     },
     {
       "name": "windows-x64-release",
       "displayName": "Windows / x64 / Release",
       "description": " ",
-      "inherits": [ "windows-x64-base" ],
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
-      }
+      },
+      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
     },
     {
-      "name": "linux-debug",
-      "displayName": "Linux / Debug",
+      "name": "linux-x86-debug",
+      "displayName": "Linux / x86 / Debug",
       "description": " ",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "ENABLE_PHYSX": "OFF"
+        "VCPKG_TARGET_TRIPLET": "x86-linux",
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
+    },
+    {
+      "name": "linux-x64-debug",
+      "displayName": "Linux / x64 / Debug",
+      "description": " ",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "CMAKE_BUILD_TYPE": "Debug"
       },
       "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
     },
     {
       "name": "utils-termux-debug",
-      "displayName": "Termux / Debug (Utils Only)",
+      "displayName": "Termux / ARM / Debug [Utils Only]",
       "description": " ",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "arm-linux",
         "ENABLE_PHYSX": "OFF",
         "BUILD_SERVER": "OFF",
         "BUILD_CLIENT": "OFF",
         "BUILD_GAME_LAUNCHER": "OFF",
         "BUILD_PXMV": "OFF",
-        "ENABLE_STATIC_LINKING": "OFF",
         "CMAKE_BUILD_TYPE": "Debug"
       },
       "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
@@ -103,11 +96,10 @@
       "description": " ",
       "generator": "Visual Studio 17 2022",
       "binaryDir": "${sourceDir}/build",
-      "architecture": {
-        "value": "win32",
-        "strategy": "set"
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x86-windows-static",
+        "CMAKE_BUILD_TYPE": "Debug"
       },
-      "cacheVariables": {},
       "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
     },
     {
@@ -116,11 +108,10 @@
       "description": " ",
       "generator": "Visual Studio 17 2022",
       "binaryDir": "${sourceDir}/build",
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static",
+        "CMAKE_BUILD_TYPE": "Debug"
       },
-      "cacheVariables": {},
       "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
     },
     {
@@ -130,8 +121,8 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
-        "CMAKE_C_FLAGS": "-m32",
-        "CMAKE_CXX_FLAGS": "-m32",
+        "VCPKG_TARGET_TRIPLET": "x86-linux",
+        "CMAKE_BUILD_TYPE": "Debug",
         "ENABLE_PHYSX": "OFF"
       },
       "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
@@ -143,6 +134,8 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "CMAKE_BUILD_TYPE": "Debug",
         "ENABLE_PHYSX": "OFF"
       },
       "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
