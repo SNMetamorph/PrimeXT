@@ -16,7 +16,10 @@ if(${CMAKE_VERSION} VERSION_LESS "3.0.2")
 	endmacro()
 endif()
 
-project(PrimeXT)
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake")
+set(VCPKG_OVERLAY_PORTS "${CMAKE_SOURCE_DIR}/vcpkg_ports")
+set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/vcpkg_triplets")
+
 option(BUILD_CLIENT "Build client library" ON)
 option(BUILD_SERVER "Build server library" ON)
 option(BUILD_UTILS "Build developer utilities (map/models compilers, etc.)" ON)
@@ -30,6 +33,20 @@ set(SERVER_INSTALL_DIR "bin" CACHE STRING "Server library path relative to game 
 set(CLIENT_INSTALL_DIR "bin" CACHE STRING "Client library path relative to game directory")
 set(UTILS_INSTALL_DIR "devkit" CACHE STRING "Utilities path relative to game directory")
 set(SERVER_LIBRARY_NAME "server" CACHE STRING "Library name for Linux/MacOS/Windows")
+
+if(BUILD_CLIENT)
+	list(APPEND VCPKG_MANIFEST_FEATURES "client")
+endif()
+
+if(BUILD_SERVER)
+	list(APPEND VCPKG_MANIFEST_FEATURES "server")
+endif()
+
+if(BUILD_UTILS)
+	list(APPEND VCPKG_MANIFEST_FEATURES "utils")
+endif()
+
+project(PrimeXT)
 
 # Xash3D FWGS Library Naming Scheme compliance
 # Documentation: https://github.com/FWGS/xash3d-fwgs/blob/master/Documentation/library-naming.md
