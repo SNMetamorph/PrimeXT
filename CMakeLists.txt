@@ -16,7 +16,15 @@ if(${CMAKE_VERSION} VERSION_LESS "3.0.2")
 	endmacro()
 endif()
 
-set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake")
+if(CMAKE_TOOLCHAIN_FILE) 
+	if (NOT CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg.cmake$")
+		set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "${CMAKE_TOOLCHAIN_FILE}")
+		set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake")
+	endif()
+else()
+	set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake")
+endif()
+
 set(VCPKG_OVERLAY_PORTS "${CMAKE_SOURCE_DIR}/vcpkg_ports")
 set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/vcpkg_triplets")
 
