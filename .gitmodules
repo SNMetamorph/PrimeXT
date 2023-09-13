@@ -4,12 +4,6 @@
 [submodule "external/mxtk"]
 	path = external/mxtk
 	url = https://github.com/SNMetamorph/mxtk.git
-[submodule "external/imgui"]
-	path = external/imgui
-	url = https://github.com/ocornut/imgui.git
-[submodule "external/mimalloc"]
-	path = external/mimalloc
-	url = https://github.com/microsoft/mimalloc.git
 [submodule "external/vcpkg"]
 	path = external/vcpkg
 	url = https://github.com/microsoft/vcpkg.git
