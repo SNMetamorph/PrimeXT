@@ -6,7 +6,9 @@
   "dependencies": [
     "fmt"
   ],
-  "overrides": [],
+  "overrides": [
+    { "name": "physx", "version": "4.1.2#6" }
+  ],
   "features": {
     "client": {
       "description": "Build client library",
@@ -22,6 +24,12 @@
       "description": "Build utilities",
       "dependencies": [
         "miniz"
+      ]
+    },
+    "physx": {
+      "description": "Enable PhysX support",
+      "dependencies": [
+        "physx"
       ]
     }
   }
