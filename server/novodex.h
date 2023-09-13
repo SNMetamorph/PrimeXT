@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "util.h"
 #include "cbase.h"
 
+#include <PxConfig.h>
 #include <PxPhysicsAPI.h>
 #include <PxSimulationEventCallback.h>
 #include <PxScene.h>
