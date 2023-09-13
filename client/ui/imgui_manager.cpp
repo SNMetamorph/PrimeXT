@@ -147,7 +147,7 @@ void CImGuiManager::HandleKeyInput(bool keyDown, int keyNumber)
 {
     ImGuiIO &io = ImGui::GetIO();
     if (!HandleMouseInput(keyDown, keyNumber)) {
-        io.AddKeyEvent(m_KeysMapping[keyNumber], keyDown);
+        io.AddKeyEvent(static_cast<ImGuiKey>(m_KeysMapping[keyNumber]), keyDown);
     }
 }
 
