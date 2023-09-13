@@ -25,9 +25,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"../"
 	"${CMAKE_SOURCE_DIR}/public"
 	"${CMAKE_SOURCE_DIR}/common"
-	"${CMAKE_SOURCE_DIR}/external/miniz"
 	"${CMAKE_SOURCE_DIR}/external/squish"
-	"${CMAKE_SOURCE_DIR}/external/mimalloc/include"
 ) 
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
@@ -67,11 +65,16 @@ if(ENABLE_STATIC_LINKING)
 	set_compiler_runtime(${PROJECT_NAME} STATIC)
 endif()
 
-# add dependecy libraries
+# link dependency libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE
 	squish
-	mimalloc-static
 )
+
+find_package(mimalloc CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc mimalloc-static)
+
+find_package(miniz CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE miniz::miniz)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)

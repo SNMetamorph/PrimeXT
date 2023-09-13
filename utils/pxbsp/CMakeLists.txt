@@ -42,7 +42,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"../common"
 	"../../public"
 	"../../common"
-	"${CMAKE_SOURCE_DIR}/external/mimalloc/include"
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
@@ -94,9 +93,8 @@ if(ENABLE_STATIC_LINKING)
 endif()
 
 # add mimalloc library depedency
-target_link_libraries(${PROJECT_NAME} PRIVATE
-	mimalloc-static
-)
+find_package(mimalloc CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc mimalloc-static)
 
 # link platform-specific depedency libraries
 if(NOT XASH_WIN32)
