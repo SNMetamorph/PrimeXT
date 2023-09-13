@@ -95,8 +95,6 @@ list(APPEND SVDLL_SOURCES
 	"multiplay_gamerules.cpp"
 	"monsters/nihilanth.cpp"
 	"monsters/nodes.cpp"
-	"novodex.cpp"
-	"physics/NxUserStream.cpp"
 	"monsters/osprey.cpp"
 	"pathcorner.cpp"
 	"physents.cpp"
@@ -140,20 +138,31 @@ list(APPEND SVDLL_SOURCES
 	"monsters/zombie.cpp"
 )
 
-# add .def file to sources
-if(MSVC)
-list(APPEND SVDLL_SOURCES
-	"server.def"
-)
+if(ENABLE_PHYSX)
+	include(FindPhysX)
+	list(APPEND SVDLL_SOURCES
+		"novodex.cpp"
+		"physics/contact_report.cpp"
+		"physics/debug_renderer.cpp"
+		"physics/decomposed_shape.cpp"
+		"physics/NxUserStream.cpp"
+		"physics/NxErrorStream.cpp"
+	)
 endif()
 
-add_library (${PROJECT_NAME} SHARED ${SVDLL_SOURCES})
+# add .def file to sources
+if(MSVC)
+	list(APPEND SVDLL_SOURCES
+		"server.def"
+	)
+endif()
+
+add_library(${PROJECT_NAME} SHARED ${SVDLL_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"."
 	"monsters"
 	"physics"
 	"wpn_shared"
-	"${CMAKE_SOURCE_DIR}/external/novodex"
 	"${CMAKE_SOURCE_DIR}/common"
 	"${CMAKE_SOURCE_DIR}/engine"
 	"${CMAKE_SOURCE_DIR}/game_shared"
@@ -204,6 +213,20 @@ endif()
 # link dependency libraries
 find_package(fmt CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
+
+if(ENABLE_PHYSX)
+	find_package(PhysX REQUIRED)
+	target_link_libraries(${PROJECT_NAME} PRIVATE
+		PhysX::PhysX
+	)
+	find_path(PHYSX_HEADERS_DIR "PxPhysicsAPI.h")
+	target_include_directories(${PROJECT_NAME} PRIVATE
+		"${PHYSX_HEADERS_DIR}"
+		"${PHYSX_HEADERS_DIR}/cooking"
+		"${PHYSX_HEADERS_DIR}/geometry"
+		"${PHYSX_HEADERS_DIR}/foundation"
+	)
+endif()
 
 set_target_properties (${PROJECT_NAME} PROPERTIES
 	CXX_STANDARD 17
