@@ -15,8 +15,6 @@ set(DIR_UTILS_OUTPUT
 # add dependency libraries subprojects
 add_subdirectory("common/imagelib" imagelib)
 add_subdirectory("${CMAKE_SOURCE_DIR}/external/squish" squish)
-add_subdirectory("${CMAKE_SOURCE_DIR}/external/mimalloc" mimalloc EXCLUDE_FROM_ALL)
-set_compiler_runtime(mimalloc-static STATIC)
 
 # add mxtk library subproject (used by pxmv and pxsv)
 if(BUILD_PXMV OR BUILD_PXSV)

@@ -78,11 +78,6 @@ if(NOT ENABLE_VGUI_COMPATIBILITY)
 		"ui/ui_demo_window.cpp"
 		"ui/ui_material_editor.cpp"
 		"ui/ui_postfx_menu.cpp"
-		"${CMAKE_SOURCE_DIR}/external/imgui/imgui.cpp"
-		"${CMAKE_SOURCE_DIR}/external/imgui/imgui_demo.cpp"
-		"${CMAKE_SOURCE_DIR}/external/imgui/imgui_draw.cpp"
-		"${CMAKE_SOURCE_DIR}/external/imgui/imgui_tables.cpp"
-		"${CMAKE_SOURCE_DIR}/external/imgui/imgui_widgets.cpp"
 	)
 	list(APPEND CLDLL_SOURCES ${IMGUI_SOURCES})
 endif()
@@ -100,7 +95,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"../engine"
 	"../game_shared"
 	"../public"
-	"${CMAKE_SOURCE_DIR}/external/imgui"
 )
 
 if(ENABLE_VGUI_COMPATIBILITY)
@@ -165,6 +159,10 @@ if(ENABLE_VGUI_COMPATIBILITY)
 		target_link_libraries(${PROJECT_NAME} PRIVATE :vgui.so)
 	endif()
 endif()
+
+# link dependency libraries
+find_package(imgui CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE imgui::imgui)
 
 if(WIN32)
 	target_link_libraries(${PROJECT_NAME} PRIVATE user32.lib)

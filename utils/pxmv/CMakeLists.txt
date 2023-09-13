@@ -40,7 +40,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"."
 	"${CMAKE_SOURCE_DIR}/external/mxtk/include"
 	"${CMAKE_SOURCE_DIR}/external/mxtk/include/mx"
-	"${CMAKE_SOURCE_DIR}/external/mimalloc/include"
 	"../../game_shared" # should be first because mathlib.h also locates in ../common
 	"../../engine"
 	"../../common"
@@ -84,8 +83,10 @@ endif()
 # add depedency libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE
 	mxtk
-	mimalloc-static
 )
+
+find_package(mimalloc CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc mimalloc-static)
 
 if(MSVC)
 	target_link_libraries(${PROJECT_NAME} PRIVATE
