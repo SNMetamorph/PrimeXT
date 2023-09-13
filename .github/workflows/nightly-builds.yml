@@ -129,6 +129,11 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install gcc-multilib g++-multilib cmake ninja-build
+
       - name: Setup Java
         uses: actions/setup-java@v3.6.0
         with:
