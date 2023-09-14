@@ -96,7 +96,7 @@ GNU General Public License for more details.
 	#define open _open
 	#define read _read
 	#define alloca _alloca
-
+	#define lseek _lseek
 	#define WIN32_LEAN_AND_MEAN
 	#define NOWINRES
 	#define NOSERVICE
