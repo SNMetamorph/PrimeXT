@@ -14,6 +14,7 @@ GNU General Public License for more details.
 */
 
 #pragma once
+#include <vector>
 #include <filesystem>
 #include <stdint.h>
 
@@ -42,4 +43,5 @@ namespace fs
 	int32_t Read(void *buffer, int32_t size, FileHandle fileHandle);
 	int32_t Write(void *buffer, int32_t size, FileHandle fileHandle);
 	const char *ReadLine(char *buffer, int32_t size, FileHandle fileHandle);
+	bool LoadFileToBuffer(const Path &filePath, std::vector<uint8_t> &dataBuffer);
 }

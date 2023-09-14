@@ -100,3 +100,21 @@ const char *fs::ReadLine(char *buffer, int32_t size, FileHandle fileHandle)
 {
 	return g_FileSystemManager.GetInterface()->ReadLine(buffer, size, fileHandle);
 }
+
+bool fs::LoadFileToBuffer(const Path &filePath, std::vector<uint8_t> &dataBuffer)
+{
+	const auto fsInterface = g_FileSystemManager.GetInterface();
+	FileHandle_t fileHandle = fsInterface->Open(filePath.string().c_str(), "rb", "GAME");
+	if (fileHandle) 
+	{
+		size_t bufferSize = fsInterface->Size(fileHandle);
+		dataBuffer.clear();
+		dataBuffer.resize(bufferSize);
+		if (fsInterface->Read(dataBuffer.data(), bufferSize, fileHandle) == bufferSize) {
+			fsInterface->Close(fileHandle);
+			return true;
+		}
+		fsInterface->Close(fileHandle);
+	}
+	return false;
+}
