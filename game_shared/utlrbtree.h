@@ -314,7 +314,7 @@ public:
 			return false;
 
 #ifdef _DEBUG // it's safe to skip this here, since the only way to get indices after m_LastAlloc is to use MaxElement()
-		if ( Elements().IsIdxAfter( i, this->m_LastAlloc ) )
+		if ( this->Elements().IsIdxAfter( i, this->m_LastAlloc ) )
 		{
 			assert( 0 );
 			return false; // don't read values that have been allocated, but not constructed
