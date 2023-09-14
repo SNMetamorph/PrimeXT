@@ -64,7 +64,6 @@ GNU General Public License for more details.
 		#define O_BINARY    0
 		#define O_TEXT      0
 		#define _mkdir( x ) mkdir( x, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH )
-		#define tell( a ) lseek(a, 0, SEEK_CUR)
 		#define LoadLibrary( x ) dlopen( x, RTLD_NOW )
 		#define GetProcAddress( x, y ) dlsym( x, y )
 		#define FreeLibrary( x ) dlclose( x )

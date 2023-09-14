@@ -414,7 +414,7 @@ void LoadBSPFile( const char *filename )
 void AddLump( int lumpnum, void *data, int len )
 {
 	dlump_t *lump = &header->lumps[lumpnum];
-	lump->fileofs = tell( wadfile );
+	lump->fileofs = lseek( wadfile, 0, SEEK_CUR );
 	lump->filelen = len;
 	SafeWrite( wadfile, data, (len + 3) & ~3 );
 }
@@ -422,7 +422,7 @@ void AddLump( int lumpnum, void *data, int len )
 static void AddExtraLump( int lumpnum, void *data, int len, dextrahdr_t *header )
 {
 	dlump_t* lump = &header->lumps[lumpnum];
-	lump->fileofs = tell( wadfile );
+	lump->fileofs = lseek( wadfile, 0, SEEK_CUR );
 	lump->filelen = len;
 	SafeWrite( wadfile, data, (len + 3) & ~3 );
 }
@@ -430,7 +430,7 @@ static void AddExtraLump( int lumpnum, void *data, int len, dextrahdr_t *header 
 void AddLumpClipnodes( int lumpnum )
 {
 	dlump_t *lump = &header->lumps[lumpnum];
-	lump->fileofs = tell( wadfile );
+	lump->fileofs = lseek( wadfile, 0, SEEK_CUR );
 
 	if( g_numclipnodes < MAX_MAP_CLIPNODES )
 	{
