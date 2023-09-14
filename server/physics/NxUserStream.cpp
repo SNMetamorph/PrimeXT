@@ -1,6 +1,7 @@
 /*
 NxUserStream.cpp - this file is a part of Novodex physics engine implementation
 Copyright (C) 2012 Uncle Mike
+Copyright (C) 2023 SNMetamorph
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,152 +18,122 @@ GNU General Public License for more details.
 
 #include "extdll.h"
 #include "util.h"
-//#include "Pxf.h"
 #include "NxUserStream.h"
-#include <direct.h>
 
 using namespace physx;
 
-// user stream. constructor
-UserStream :: UserStream( const char* filename, bool load ) : fp(NULL)
+UserStream::UserStream(const char *filePath, bool precacheToMemory)
 {
-	load_file = load;
+	m_offset = 0;
+	m_fileCached = precacheToMemory;
+	m_fileHandle = nullptr;
 
-	if( load_file )
-	{
-		int size;
-
-		// load from pack or disk
-		buffer = LOAD_FILE( filename, &size );
-		m_iLength = size;
-		m_iOffset = 0;
+	if (m_fileCached) {
+		fs::LoadFileToBuffer(filePath, m_dataBuffer);
 	}
 	else
 	{
-		// make sure the directories have been made
-		char	szFilePath[MAX_PATH];
-		char	szFullPath[MAX_PATH];
-
-		// make sure directories have been made
-		GET_GAME_DIR( szFilePath );
-
-		Q_snprintf( szFullPath, sizeof( szFullPath ), "%s/%s", szFilePath, filename );
-		CreatePath( szFullPath ); // make sure what all folders are existing
-
-		// write to disk
-		fp = fopen( szFullPath, "wb" );
-		ASSERT( fp != NULL );
+		m_fileHandle = fs::Open(filePath, "wb");
+		ASSERT(m_fileHandle != nullptr);
 	}
 }
 
-UserStream :: ~UserStream()
+UserStream::~UserStream()
 {
-	if( load_file )
-    {
-		FREE_FILE( buffer );
-		m_iOffset = m_iLength = 0;
-		buffer = NULL;         
+	if (m_fileCached)
+	{
+		m_offset = 0;
+		m_dataBuffer.clear();
 	}
 	else
 	{
-		if( fp ) fclose( fp );
-		fp = NULL;
-	}
-}
-
-void UserStream :: CreatePath( char *path )
-{
-	char *ofs, save;
-
-	for( ofs = path+1; *ofs; ofs++ )
-	{
-		if( *ofs == '/' || *ofs == '\\' )
-		{
-			// create the directory
-			save = *ofs;
-			*ofs = 0;
-			_mkdir( path );
-			*ofs = save;
+		if (m_fileHandle) {
+			fs::Close(m_fileHandle);
 		}
+		m_fileHandle = nullptr;
 	}
 }
 
-// Loading API
-uint32_t UserStream::read( void *outbuf, uint32_t size )
+uint32_t UserStream::read(void *outputBuf, uint32_t size)
 {
-	if( size == 0 ) 
+	if (size == 0) {
 		return 0;
+	}
 
 #ifdef _DEBUG
 	// in case we failed to loading file
-	memset( outbuf, 0x00, size );
+	memset(outputBuf, 0x00, size);
 #endif
-	if( !buffer || !outbuf ) 
+
+	size_t bufferLength = m_dataBuffer.size();
+	if (!bufferLength || !outputBuf)
 		return 0;
 
 	// check for enough room
-	if( m_iOffset >= m_iLength )
+	if (m_offset >= bufferLength) {
+		ALERT(at_warning, "UserStream::read: precached file buffer overrun\n");
 		return 0; // hit EOF
+	}
 
-	size_t read_size = 0;
-
-	if( m_iOffset + size <= m_iLength )
+	if (m_offset + size <= bufferLength)
 	{
-		memcpy( outbuf, buffer + m_iOffset, size );
-		(size_t)m_iOffset += size;
-		read_size = size;
+		memcpy(outputBuf, m_dataBuffer.data() + m_offset, size);
+		m_offset += size;
+		return size;
 	}
 	else
 	{
-		size_t reduced_size = m_iLength - m_iOffset;
-		memcpy( outbuf, buffer + m_iOffset, reduced_size );
-		(size_t)m_iOffset += reduced_size;
-		read_size = reduced_size;
-		ALERT( at_warning, "readBuffer: buffer is overrun\n" );
+		ALERT(at_warning, "UserStream::read: precached file buffer overrun\n");
+		size_t reducedSize = bufferLength - m_offset;
+		memcpy(outputBuf, m_dataBuffer.data() + m_offset, reducedSize);
+		m_offset += reducedSize;
+		return reducedSize;
 	}
-
-	return read_size;
 }
 
-// Saving API
-uint32_t UserStream::write( const void *buffer, uint32_t size )
+uint32_t UserStream::write(const void *inputBuf, uint32_t size)
 {
-	size_t w = fwrite( buffer, size, 1, fp );
-	return w;
+	ASSERT(m_fileHandle != nullptr);
+	return fs::Write(const_cast<void*>(inputBuf), size, m_fileHandle);
 }
 
-MemoryWriteBuffer::MemoryWriteBuffer() : currentSize(0), maxSize(0), data(NULL)
+MemoryWriteBuffer::MemoryWriteBuffer()
 {
+	m_currentSize = 0;
 }
 
 MemoryWriteBuffer::~MemoryWriteBuffer()
 {
-	free( data );
+	m_dataBuffer.clear();
 }
 
-uint32_t MemoryWriteBuffer::write( const void *buffer, uint32_t size )
+uint32_t MemoryWriteBuffer::write(const void *inputBuf, uint32_t size)
 {
-	PxU32 expectedSize = currentSize + size;
-	if( expectedSize > maxSize )
-	{
-		maxSize = expectedSize + 4096;
-
-		PxU8 *newData = (PxU8 *)malloc( maxSize );
-		if( data )
-		{
-			memcpy( newData, data, currentSize );
-			free( data );
-		}
-		data = newData;
+	const size_t growthSize = 4096;
+	size_t expectedSize = m_currentSize + size;
+	if (expectedSize > m_dataBuffer.size()) {
+		m_dataBuffer.resize(expectedSize + growthSize);
 	}
-
-	memcpy( data + currentSize, buffer, size );
-	currentSize += size;
+	memcpy(m_dataBuffer.data() + m_currentSize, inputBuf, size);
+	m_currentSize += size;
 	return size;
 }
 
-MemoryReadBuffer::MemoryReadBuffer(const PxU8* data) : buffer(data)
+size_t MemoryWriteBuffer::getSize() const
 {
+	return m_dataBuffer.size();
+}
+
+const uint8_t *MemoryWriteBuffer::getData() const
+{
+	return m_dataBuffer.data();
+}
+
+MemoryReadBuffer::MemoryReadBuffer(const uint8_t *data, size_t dataSize)
+{
+	m_dataSize = dataSize;
+	m_dataOffset = 0;
+	m_buffer = data;
 }
 
 MemoryReadBuffer::~MemoryReadBuffer()
@@ -170,11 +141,22 @@ MemoryReadBuffer::~MemoryReadBuffer()
 	// We don't own the data => no delete
 }
 
-uint32_t MemoryReadBuffer::read(void *dest, uint32_t count)
+uint32_t MemoryReadBuffer::read(void *outputBuf, uint32_t count)
 {
-	memcpy(dest, buffer, count);
-	buffer += count;
-	return count;
+	if (m_dataOffset >= m_dataSize) {
+		ALERT(at_warning, "MemoryReadBuffer::read: input buffer is overrun\n");
+		return 0;
+	}
+
+	size_t bytesToRead = count;
+	if (m_dataOffset + count > m_dataSize) {
+		ALERT(at_warning, "MemoryReadBuffer::read: input buffer is overrun\n");
+		bytesToRead = m_dataSize - m_dataOffset;
+	}
+
+	memcpy(outputBuf, m_buffer + m_dataOffset, bytesToRead);
+	m_dataOffset += bytesToRead;
+	return bytesToRead;
 }
 
 #endif // USE_PHYSICS_ENGINE
