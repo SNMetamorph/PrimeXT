@@ -343,7 +343,7 @@ bool MIP_CheckForReplace( dlumpinfo_t *find, rgbdata_t *image, int &width, int &
 				size_t oldpos;
 				mip_t test;
 
-				oldpos = tell( W_GetHandle( output_wad ) ); // don't forget restore original position
+				oldpos = lseek( W_GetHandle( output_wad ), 0, SEEK_CUR ); // don't forget restore original position
 
 				if( lseek( W_GetHandle( output_wad ), find->filepos, SEEK_SET ) == -1 )
 				{

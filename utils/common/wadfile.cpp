@@ -22,7 +22,7 @@ GNU General Public License for more details.
 #include "port.h"
 
 #ifndef ALLOW_WADS_IN_PACKS
-#define FS_Tell( x )	tell( x )
+#define FS_Tell( x )	lseek( x, 0, SEEK_CUR )
 #define FS_Seek( x, y, z )	lseek( x, y, z )
 #define FS_Read( x, y, z )	read( x, y, z )
 #define FS_Write( x, y, z )	write( x, y, z )
