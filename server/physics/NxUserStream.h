@@ -1,6 +1,7 @@
 /*
 NxUserStream.h - a Novodex physics engine implementation
 Copyright (C) 2012 Uncle Mike
+Copyright (C) 2023 SNMetamorph
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,25 +19,23 @@ GNU General Public License for more details.
 
 #include "PxIO.h"
 #include "PxSimpleTypes.h"
+#include "filesystem_utils.h"
+#include <vector>
 
 class UserStream : public physx::PxInputStream, public physx::PxOutputStream
 {
 public:
-	UserStream( const char *filename, bool load );
+	UserStream(const char *filename, bool precacheToMemory);
 	virtual ~UserStream();
 
-	virtual uint32_t read( void *outbuf, uint32_t size );
-	virtual uint32_t write( const void *buffer, uint32_t size );
+	virtual uint32_t read(void *outputBuf, uint32_t size);
+	virtual uint32_t write(const void *inputBuf, uint32_t size);
 
 private:
-	bool	load_file; // state
-	FILE	*fp;
-	byte	*buffer;
-	size_t	m_iOffset;
-	size_t	m_iLength;
-
-	// misc routines
-	void	CreatePath( char *path );
+	bool m_fileCached;
+	size_t m_offset;
+	std::vector<uint8_t> m_dataBuffer;
+	fs::FileHandle m_fileHandle;
 };
 
 class MemoryWriteBuffer : public physx::PxOutputStream
@@ -45,23 +44,27 @@ public:
 	MemoryWriteBuffer();
 	virtual ~MemoryWriteBuffer();
 
-	virtual uint32_t write(const void *src, uint32_t count);
+	virtual uint32_t write(const void *inputBuf, uint32_t count);
+	const uint8_t *getData() const;
+	size_t getSize() const;
 
-	physx::PxU32	currentSize;
-	physx::PxU32	maxSize;
-	physx::PxU8		*data;
+private:
+	size_t m_currentSize;
+	std::vector<uint8_t> m_dataBuffer;
 };
 
 class MemoryReadBuffer : public physx::PxInputStream
 {
 public:
-	MemoryReadBuffer(const physx::PxU8 *data);
+	MemoryReadBuffer(const uint8_t *data, size_t dataSize);
 	virtual ~MemoryReadBuffer();
 
 	virtual uint32_t read(void *dest, uint32_t count);
 
 private:
-	mutable const physx::PxU8 *buffer;
+	size_t m_dataSize;
+	size_t m_dataOffset;
+	mutable const uint8_t *m_buffer;
 };
 
 #endif // NX_USER_STREAM

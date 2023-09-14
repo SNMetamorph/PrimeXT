@@ -327,8 +327,8 @@ PxConvexMesh *CPhysicNovodex :: ConvexMeshFromBmodel( entvars_t *pev, int modeli
 	meshDesc.points.count = numVerts;
 	meshDesc.flags = PxConvexFlag::eCOMPUTE_CONVEX;
 
-	MemoryWriteBuffer buf;
-	bool status = m_pCooking->cookConvexMesh( meshDesc, buf );
+	MemoryWriteBuffer outputBuffer;
+	bool status = m_pCooking->cookConvexMesh(meshDesc, outputBuffer);
 	delete [] verts;
 
 	if( !status )
@@ -337,7 +337,8 @@ PxConvexMesh *CPhysicNovodex :: ConvexMeshFromBmodel( entvars_t *pev, int modeli
 		return NULL;
 	}
 
-	pHull = m_pPhysics->createConvexMesh( MemoryReadBuffer( buf.data ));
+	MemoryReadBuffer inputBuffer(outputBuffer.getData(), outputBuffer.getSize());
+	pHull = m_pPhysics->createConvexMesh(inputBuffer);
 	if( !pHull ) ALERT( at_error, "failed to create convex mesh from %s\n", bmodel->name );
 
 	return pHull;
@@ -422,8 +423,8 @@ PxTriangleMesh *CPhysicNovodex :: TriangleMeshFromBmodel( entvars_t *pev, int mo
 	PX_ASSERT(res);
 #endif
 
-	MemoryWriteBuffer buf;
-	bool status = m_pCooking->cookTriangleMesh( meshDesc, buf );
+	MemoryWriteBuffer outputBuffer;
+	bool status = m_pCooking->cookTriangleMesh(meshDesc, outputBuffer);
 	delete [] indices;
 
 	if( !status )
@@ -432,7 +433,8 @@ PxTriangleMesh *CPhysicNovodex :: TriangleMeshFromBmodel( entvars_t *pev, int mo
 		return NULL;
 	}
 
-	pMesh = m_pPhysics->createTriangleMesh( MemoryReadBuffer( buf.data ));
+	MemoryReadBuffer inputBuffer(outputBuffer.getData(), outputBuffer.getSize());
+	pMesh = m_pPhysics->createTriangleMesh(inputBuffer);
 	if( !pMesh ) 
 		ALERT( at_error, "failed to create triangle mesh from %s\n", bmodel->name );
 
@@ -513,7 +515,8 @@ PxConvexMesh *CPhysicNovodex :: ConvexMeshFromStudio( entvars_t *pev, int modeli
 	if (CheckFileTimes(smodel->name, cacheFileName.string().c_str()))
 	{
 		// hull is never than studiomodel. Trying to load it
-		pHull = m_pPhysics->createConvexMesh( UserStream( cacheFileName.string().c_str(), true ));
+		UserStream cacheFileStream(cacheFileName.string().c_str(), true);
+		pHull = m_pPhysics->createConvexMesh(cacheFileStream);
 
 		if( !pHull )
 		{
@@ -659,7 +662,8 @@ PxConvexMesh *CPhysicNovodex :: ConvexMeshFromStudio( entvars_t *pev, int modeli
 	meshDesc.points.stride = sizeof(Vector);
 	meshDesc.flags = PxConvexFlag::eCOMPUTE_CONVEX;
 
-	bool status = m_pCooking->cookConvexMesh( meshDesc, UserStream( cacheFileName.string().c_str(), false ));
+	UserStream outputFileStream(cacheFileName.string().c_str(), false);
+	bool status = m_pCooking->cookConvexMesh(meshDesc, outputFileStream);
 
 	delete [] verts;
 	delete [] m_verts;
@@ -671,7 +675,8 @@ PxConvexMesh *CPhysicNovodex :: ConvexMeshFromStudio( entvars_t *pev, int modeli
 		return NULL;
 	}
 
-	pHull = m_pPhysics->createConvexMesh( UserStream( cacheFileName.string().c_str(), true ));
+	UserStream inputFileStream(cacheFileName.string().c_str(), true);
+	pHull = m_pPhysics->createConvexMesh(inputFileStream);
 	if( !pHull ) ALERT( at_error, "failed to create convex mesh from %s\n", smodel->name );
 
 	return pHull;
@@ -720,7 +725,8 @@ PxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int model
 	if (CheckFileTimes(smodel->name, cacheFilePath.string().c_str()) && !m_fWorldChanged)
 	{
 		// hull is never than studiomodel. Trying to load it
-		pMesh = m_pPhysics->createTriangleMesh(UserStream(cacheFilePath.string().c_str(), true));
+		UserStream cacheFileStream(cacheFilePath.string().c_str(), true);
+		pMesh = m_pPhysics->createTriangleMesh(cacheFileStream);
 
 		if (!pMesh)
 		{
@@ -907,7 +913,8 @@ PxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int model
 	PX_ASSERT(res);
 #endif
 
-	bool status = m_pCooking->cookTriangleMesh(meshDesc, UserStream(cacheFilePath.string().c_str(), false));
+	UserStream outputFileStream(cacheFilePath.string().c_str(), false);
+	bool status = m_pCooking->cookTriangleMesh(meshDesc, outputFileStream);
 	delete[] verts;
 	delete[] indices;
 
@@ -917,7 +924,8 @@ PxTriangleMesh *CPhysicNovodex::TriangleMeshFromStudio(entvars_t *pev, int model
 		return NULL;
 	}
 
-	pMesh = m_pPhysics->createTriangleMesh(UserStream(cacheFilePath.string().c_str(), true));
+	UserStream inputFileStream(cacheFilePath.string().c_str(), true);
+	pMesh = m_pPhysics->createTriangleMesh(inputFileStream);
 	if (!pMesh) ALERT(at_error, "failed to create triangle mesh from %s\n", smodel->name);
 
 	return pMesh;
@@ -1852,12 +1860,13 @@ int CPhysicNovodex :: FLoadTree( char *szMapName )
 	}
 
 	// save off mapname
-	strcpy ( m_szMapName, szMapName );
+	strcpy(m_szMapName, szMapName);
 
 	char szHullFilename[MAX_PATH];
 
 	Q_snprintf( szHullFilename, sizeof( szHullFilename ), "cache/maps/%s.bin", szMapName );
-	m_pSceneMesh = m_pPhysics->createTriangleMesh( UserStream( szHullFilename, true ));
+	UserStream cacheFileStream(szHullFilename, true);
+	m_pSceneMesh = m_pPhysics->createTriangleMesh(cacheFileStream);
 	m_fWorldChanged = FALSE;
 
 	return (m_pSceneMesh != NULL) ? TRUE : FALSE;
@@ -2038,14 +2047,16 @@ int CPhysicNovodex :: BuildCollisionTree( char *szMapName )
 	char szHullFilename[MAX_PATH];
 	Q_snprintf( szHullFilename, sizeof( szHullFilename ), "cache/maps/%s.bin", szMapName );
 
-	if( m_pCooking )
+	if (m_pCooking)
 	{
-		bool status = m_pCooking->cookTriangleMesh( levelDesc, UserStream( szHullFilename, false ));
-    }
+		UserStream outputFileStream(szHullFilename, false);
+		bool status = m_pCooking->cookTriangleMesh(levelDesc, outputFileStream);
+	}
 
 	delete [] indices;
 
-	m_pSceneMesh = m_pPhysics->createTriangleMesh( UserStream( szHullFilename, true ));
+	UserStream inputFileStream(szHullFilename, true);
+	m_pSceneMesh = m_pPhysics->createTriangleMesh(inputFileStream);
 	m_fWorldChanged = TRUE;
 
 	return (m_pSceneMesh != NULL) ? TRUE : FALSE;
