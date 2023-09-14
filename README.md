@@ -36,25 +36,34 @@ git clone --recursive https://github.com/SNMetamorph/PrimeXT.git
 cd PrimeXT
 ```
 Next steps will be vary according to your development environment and tools.
+
 ### Windows (using Visual Studio)
 3) Open cloned repository directory as CMake folder with Visual Studio (project tested with VS2019, but more later version will works also)  
-4) Select desired build configuration, highly recommended to use `x86-Debug`
-5) In `Build` menu select `Build solution`, or you can use `Ctrl+Shift+B` hotkey instead. Wait for completion.
+4) Select desired build preset, for example you can use `Windows / x86 / Debug`
+5) In `Build` menu select `Build solution`, or you can use hotkey `Ctrl+Shift+B` instead. Wait for completion.
 6) Compiled binaries locates in `build\x\bin` and `build\x\devkit`, where `x` is your build configuration name
+
 ### Linux (using CMake)
 Tested on Ubuntu 18.04 and Ubuntu 22.04. Probably it'll work on Debian too.  
+This example shows how to build project for Linux with x86 architecture, of course
+you can set another target platform if you need, see CMakePresets.json file for more information.
+
 3) Install build depedencies
 ```
 sudo dpkg --add-architecture i386
 sudo apt-get update
-sudo apt-get install gcc-multilib g++-multilib cmake
+sudo apt-get install gcc-multilib g++-multilib cmake ninja-build
 sudo apt-get install qtbase5-dev:i386
 ```
 4) Prepare build environment and configure project
 ```
+external/vcpkg/bootstrap-vcpkg.sh
 cmake -E make_directory ./build
 cd build
-cmake .. -DCMAKE_C_FLAGS="-m32" -DCMAKE_CXX_FLAGS="-m32" -DENABLE_PHYSX=OFF
+cmake .. --preset linux-x86-debug
 ```
-5) Build project: `cmake --build . --config Debug`
+5) Build project:
+```
+cmake --build . --config Debug
+```
 6) Compiled binaries will be located in `build` and `build\primext\bin` directories
