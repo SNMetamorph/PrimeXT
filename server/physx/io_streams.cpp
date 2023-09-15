@@ -1,5 +1,5 @@
 /*
-NxUserStream.cpp - this file is a part of Novodex physics engine implementation
+io_streams.cpp - i/o stream classes that used in PhysX for cooking
 Copyright (C) 2012 Uncle Mike
 Copyright (C) 2023 SNMetamorph
 
@@ -18,7 +18,7 @@ GNU General Public License for more details.
 
 #include "extdll.h"
 #include "util.h"
-#include "NxUserStream.h"
+#include "io_streams.h"
 
 using namespace physx;
 

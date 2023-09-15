@@ -1,5 +1,5 @@
 /*
-NxUserStream.h - a Novodex physics engine implementation
+io_streams.h - i/o stream classes that used in PhysX for cooking
 Copyright (C) 2012 Uncle Mike
 Copyright (C) 2023 SNMetamorph
 
@@ -14,9 +14,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#ifndef NX_USER_STREAM
-#define NX_USER_STREAM
-
+#pragma once
 #include "PxIO.h"
 #include "PxSimpleTypes.h"
 #include "filesystem_utils.h"
@@ -66,5 +64,3 @@ private:
 	size_t m_dataOffset;
 	mutable const uint8_t *m_buffer;
 };
-
-#endif // NX_USER_STREAM

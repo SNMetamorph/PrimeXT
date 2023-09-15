@@ -1,6 +1,7 @@
 /*
-novodex.cpp - this file is a part of Novodex physics engine implementation
+physx_impl.cpp - part of PhysX physics engine implementation
 Copyright (C) 2012 Uncle Mike
+Copyright (C) 2022 SNMetamorph
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -14,27 +15,26 @@ GNU General Public License for more details.
 */
 
 #ifdef USE_PHYSICS_ENGINE
-#include "novodex.h"
+#include "physx_impl.h"
 #include "saverestore.h"
 #include "client.h"
 #include "bspfile.h"
 #include "triangleapi.h"
 #include "studio.h"
-#include "novodex.h"
 #include "pm_defs.h"
 #include "pm_movevars.h"
 #include "animation.h"
 #include "trace.h"
 #include "game.h"
 #include "build.h"
-#include "NxErrorStream.h"
-#include "PxMat33.h"
-#include "PxMat44.h"
+#include "error_stream.h"
 #include "contact_report.h"
 #include "debug_renderer.h"
 #include "decomposed_shape.h"
 #include "meshdesc_factory.h"
 #include "crclib.h"
+#include <PxMat33.h>
+#include <PxMat44.h>
 #include <vector>
 #include <thread>
 #include <sstream>

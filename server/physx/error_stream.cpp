@@ -1,6 +1,7 @@
 /*
-NxErrorStream.cpp - a Novodex physics engine implementation
+error_stream.cpp - class for reporting errors from PhysX engine
 Copyright (C) 2012 Uncle Mike
+Copyright (C) 2023 SNMetamorph
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,7 +14,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "NxErrorStream.h"
+#include "error_stream.h"
 #include "alert.h"
 #include "extdll.h"
 #include "util.h"

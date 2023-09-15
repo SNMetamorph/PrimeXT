@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 #pragma once
-#include "novodex.h"
-#include "PxPhysicsAPI.h"
-#include "PxSimulationEventCallback.h"
+#include "physx_impl.h"
+#include <PxPhysicsAPI.h>
+#include <PxSimulationEventCallback.h>
 
 class CPhysicNovodex::ContactReport : public physx::PxSimulationEventCallback
 {
