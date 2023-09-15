@@ -34,10 +34,10 @@ GNU General Public License for more details.
 #include <PxCooking.h>
 #include <PxTriangle.h>
 	
-class CPhysicNovodex : public IPhysicLayer
+class CPhysicPhysX : public IPhysicLayer
 {
 public:
-	CPhysicNovodex();
+	CPhysicPhysX();
 	void	InitPhysic( void );
 	void	FreePhysic( void );
 	void	Update( float flTimeDelta );

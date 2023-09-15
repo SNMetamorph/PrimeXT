@@ -19,13 +19,13 @@ GNU General Public License for more details.
 
 using namespace physx;
 
-CPhysicNovodex::DebugRenderer &CPhysicNovodex::DebugRenderer::GetInstance()
+CPhysicPhysX::DebugRenderer &CPhysicPhysX::DebugRenderer::GetInstance()
 {
 	static DebugRenderer instance;
 	return instance;
 }
 
-void CPhysicNovodex::DebugRenderer::SetupColor(PxU32 color) const
+void CPhysicPhysX::DebugRenderer::SetupColor(PxU32 color) const
 {
 	float blue = PxU32(color & 0xff) / 255.0f;
 	float green = PxU32((color >> 8) & 0xff) / 255.0f;
@@ -34,14 +34,14 @@ void CPhysicNovodex::DebugRenderer::SetupColor(PxU32 color) const
 	Tri->Color4f(red, green, blue, alpha);
 }
 
-void CPhysicNovodex::DebugRenderer::RenderData(const PxRenderBuffer &data) const
+void CPhysicPhysX::DebugRenderer::RenderData(const PxRenderBuffer &data) const
 {
 	RenderPoints(data.getPoints(), data.getNbPoints());
 	RenderLines(data.getLines(), data.getNbLines());
 	RenderTriangles(data.getTriangles(), data.getNbTriangles());
 }
 
-void CPhysicNovodex::DebugRenderer::RenderPoints(const PxDebugPoint *points, PxU32 count) const
+void CPhysicPhysX::DebugRenderer::RenderPoints(const PxDebugPoint *points, PxU32 count) const
 {
 	Tri->Begin(TRI_POINTS);
 	for (PxU32 i = 0; i < count; i++)
@@ -53,7 +53,7 @@ void CPhysicNovodex::DebugRenderer::RenderPoints(const PxDebugPoint *points, PxU
 	Tri->End();
 }
 
-void CPhysicNovodex::DebugRenderer::RenderLines(const PxDebugLine *lines, PxU32 count) const
+void CPhysicPhysX::DebugRenderer::RenderLines(const PxDebugLine *lines, PxU32 count) const
 {
 	Tri->Begin(TRI_LINES);
 	for (PxU32 i = 0; i < count; i++)
@@ -67,7 +67,7 @@ void CPhysicNovodex::DebugRenderer::RenderLines(const PxDebugLine *lines, PxU32 
 	Tri->End();
 }
 
-void CPhysicNovodex::DebugRenderer::RenderTriangles(const PxDebugTriangle *triangles, PxU32 count) const
+void CPhysicPhysX::DebugRenderer::RenderTriangles(const PxDebugTriangle *triangles, PxU32 count) const
 {
 	Tri->Begin(TRI_TRIANGLES);
 	for (PxU32 i = 0; i < count; i++)
