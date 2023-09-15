@@ -21,13 +21,13 @@ GNU General Public License for more details.
 
 using namespace physx;
 
-CPhysicNovodex::ContactReport &CPhysicNovodex::ContactReport::getInstance()
+CPhysicPhysX::ContactReport &CPhysicPhysX::ContactReport::getInstance()
 {
 	static ContactReport instance;
 	return instance;
 }
 
-void CPhysicNovodex::ContactReport::onContact(const PxContactPairHeader &pairHeader, const PxContactPair *pairs, PxU32 nbPairs)
+void CPhysicPhysX::ContactReport::onContact(const PxContactPairHeader &pairHeader, const PxContactPair *pairs, PxU32 nbPairs)
 {
 	for (PxU32 i = 0; i < nbPairs; i++)
 	{

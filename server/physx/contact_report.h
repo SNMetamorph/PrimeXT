@@ -17,10 +17,10 @@ GNU General Public License for more details.
 #include <PxPhysicsAPI.h>
 #include <PxSimulationEventCallback.h>
 
-class CPhysicNovodex::ContactReport : public physx::PxSimulationEventCallback
+class CPhysicPhysX::ContactReport : public physx::PxSimulationEventCallback
 {
 public:
-	static CPhysicNovodex::ContactReport &getInstance();
+	static CPhysicPhysX::ContactReport &getInstance();
 	virtual void onConstraintBreak(physx::PxConstraintInfo* constraints, physx::PxU32 count) {};
 	virtual void onWake(physx::PxActor** actors, physx::PxU32 count) {};
 	virtual void onSleep(physx::PxActor** actors, physx::PxU32 count) {};

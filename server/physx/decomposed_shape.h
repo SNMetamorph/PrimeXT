@@ -18,7 +18,7 @@ GNU General Public License for more details.
 #include <stdint.h>
 #include <vector>
 
-class CPhysicNovodex::DecomposedShape
+class CPhysicPhysX::DecomposedShape
 {
 public:
 	DecomposedShape() = default;

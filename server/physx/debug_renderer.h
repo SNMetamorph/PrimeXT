@@ -16,8 +16,8 @@ GNU General Public License for more details.
 #include "physx_impl.h"
 #include <PxPhysicsAPI.h>
 
-class CPhysicNovodex;
-class CPhysicNovodex::DebugRenderer
+class CPhysicPhysX;
+class CPhysicPhysX::DebugRenderer
 {
 public:
 	static DebugRenderer &GetInstance();
