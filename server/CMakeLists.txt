@@ -141,12 +141,12 @@ list(APPEND SVDLL_SOURCES
 if(ENABLE_PHYSX)
 	include(FindPhysX)
 	list(APPEND SVDLL_SOURCES
-		"novodex.cpp"
-		"physics/contact_report.cpp"
-		"physics/debug_renderer.cpp"
-		"physics/decomposed_shape.cpp"
-		"physics/NxUserStream.cpp"
-		"physics/NxErrorStream.cpp"
+		"physx/physx_impl.cpp"
+		"physx/contact_report.cpp"
+		"physx/debug_renderer.cpp"
+		"physx/decomposed_shape.cpp"
+		"physx/io_streams.cpp"
+		"physx/error_stream.cpp"
 	)
 endif()
 
@@ -161,7 +161,6 @@ add_library(${PROJECT_NAME} SHARED ${SVDLL_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"."
 	"monsters"
-	"physics"
 	"wpn_shared"
 	"${CMAKE_SOURCE_DIR}/common"
 	"${CMAKE_SOURCE_DIR}/engine"
@@ -174,6 +173,7 @@ if(HAVE_TGMATH_H)
 endif()
 
 if(ENABLE_PHYSX)
+	target_include_directories(${PROJECT_NAME} PRIVATE "physx")
 	target_compile_definitions(${PROJECT_NAME} PRIVATE USE_PHYSICS_ENGINE=1)
 endif()
 
