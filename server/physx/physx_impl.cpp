@@ -104,8 +104,9 @@ void CPhysicPhysX :: InitPhysic( void )
 	scale.length = 39.3701;   // typical length of an object
 	scale.speed = 800.0;   // typical speed of an object, gravity*1s is a reasonable choice
 	
-	m_pVisualDebugger = PxCreatePvd(*m_pFoundation);
-	if (DebugEnabled()) {
+	if (DebugEnabled()) 
+	{
+		m_pVisualDebugger = PxCreatePvd(*m_pFoundation);
 		PxPvdTransport *transport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 1000);
 		m_pVisualDebugger->connect(*transport, PxPvdInstrumentationFlag::eALL);
 	}
@@ -1956,11 +1957,7 @@ int CPhysicPhysX :: CheckFileTimes( const char *szFile1, const char *szFile2 )
 
 bool CPhysicPhysX::DebugEnabled() const
 {
-#ifdef _DEBUG
-	return true;
-#else
-	return false;
-#endif
+	return g_engfuncs.CheckParm("-physxdebug", nullptr) != 0;
 }
 
 //-----------------------------------------------------------------------------
