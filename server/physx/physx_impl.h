@@ -1,5 +1,5 @@
 /*
-novodex.h - part of PhysX physics engine implementation
+physx_impl.h - part of PhysX physics engine implementation
 Copyright (C) 2012 Uncle Mike
 Copyright (C) 2022 SNMetamorph
 
@@ -18,21 +18,21 @@ GNU General Public License for more details.
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
+#include "io_streams.h"
+#include "error_stream.h"
+#include "clipfile.h"
+#include "filesystem_utils.h"
 
 #include <PxConfig.h>
 #include <PxPhysicsAPI.h>
 #include <PxSimulationEventCallback.h>
 #include <PxScene.h>
 #include <PxActor.h>
-#include <NxUserStream.h>
-#include <NxErrorStream.h>
 #include <PxTriangleMeshDesc.h>
 #include <PxConvexMeshDesc.h>
 #include <PxMaterial.h>
 #include <PxCooking.h>
 #include <PxTriangle.h>
-#include "clipfile.h"
-#include "filesystem_utils.h"
 	
 class CPhysicNovodex : public IPhysicLayer
 {
