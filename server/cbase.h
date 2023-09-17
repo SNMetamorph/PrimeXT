@@ -246,6 +246,7 @@ public:
 	BOOL		m_fFreezed;	// is body sleeps?
 	bool		m_isChaining;
 	Vector		m_vecOldPosition;	// don't save this
+	Vector		m_vecOldBounds;
 
 	float		m_flShowHostile;	// for sprite monsters wake-up
 

@@ -102,6 +102,7 @@ private:
 	CBaseEntity	*EntityFromActor( physx::PxActor *pObject );
 	bool CheckCollision(physx::PxRigidActor *pActor);
 	void ToggleCollision(physx::PxRigidActor *pActor, bool enabled);
+	void UpdateCharacterBounds( CBaseEntity *pEntity, physx::PxShape *pShape );
 	int	CheckFileTimes( const char *szFile1, const char *szFile2 );
 	void StudioCalcBoneQuaterion( mstudiobone_t *pbone, mstudioanim_t *panim, Vector4D &q );
 	void StudioCalcBonePosition( mstudiobone_t *pbone, mstudioanim_t *panim, Vector &pos );

@@ -1045,8 +1045,13 @@ void CPhysicPhysX::ToggleCollision(physx::PxRigidActor *pActor, bool enabled)
 	shapes.resize(pActor->getNbShapes());
 	pActor->getShapes(&shapes[0], shapes.size());
 
-	for (PxShape *shape : shapes) {
-		shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, enabled);
+	for (PxShape *shape : shapes) 
+	{
+		bool collisionState = shape->getFlags() & PxShapeFlag::eSIMULATION_SHAPE;
+		if (collisionState != enabled) {
+			// change state only if it's different, to avoid useless write access to API
+			shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, enabled);
+		}
 	}
 }
 
@@ -1097,11 +1102,7 @@ used for characters: clients and monsters
 void *CPhysicPhysX :: CreateBoxFromEntity( CBaseEntity *pObject )
 {
 	PxBoxGeometry boxGeometry;
-	boxGeometry.halfExtents = PxVec3(
-		pObject->pev->size.x * k_PaddingFactor / 2.f,
-		pObject->pev->size.y * k_PaddingFactor / 2.f,
-		pObject->pev->size.z * k_PaddingFactor / 2.f
-	);
+	boxGeometry.halfExtents = pObject->pev->size * k_PaddingFactor;
 
 	PxRigidDynamic *pActor = m_pPhysics->createRigidDynamic(PxTransform(PxIdentity));
 	PxShape *pShape = PxRigidActorExt::createExclusiveShape(*pActor, boxGeometry, *m_pDefaultMaterial);
@@ -2194,7 +2195,7 @@ void CPhysicPhysX :: TeleportCharacter( CBaseEntity *pEntity )
 	{
 		PxBoxGeometry &box = pShape->getGeometry().box();
 		PxTransform pose = pRigidBody->getGlobalPose();
-		box.halfExtents = PxVec3(pEntity->pev->size * k_PaddingFactor);
+		box.halfExtents = pEntity->pev->size * k_PaddingFactor;
 		pose.p = (pEntity->GetAbsOrigin() + vecOffset);
 		pRigidBody->setGlobalPose(pose);
 	}
@@ -2217,11 +2218,11 @@ void CPhysicPhysX :: TeleportActor( CBaseEntity *pEntity )
 
 void CPhysicPhysX :: MoveCharacter( CBaseEntity *pEntity )
 {
-	if( !pEntity || pEntity->m_vecOldPosition == pEntity->pev->origin )
+	if (!pEntity || pEntity->m_vecOldPosition == pEntity->pev->origin)
 		return;
 
-	PxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor )
+	PxActor *pActor = ActorFromEntity(pEntity);
+	if (!pActor)
 		return;
 
 	PxRigidDynamic *pRigidBody = pActor->is<PxRigidDynamic>();
@@ -2230,24 +2231,33 @@ void CPhysicPhysX :: MoveCharacter( CBaseEntity *pEntity )
 
 	PxShape *pShape;
 	pRigidBody->getShapes(&pShape, sizeof(pShape)); // get only first shape, but it can be several
-	if (pShape->getGeometryType() == PxGeometryType::eBOX)
-	{
-		PxBoxGeometry &box = pShape->getGeometry().box();
 
-		// if were in NOCLIP or FLY (ladder climbing) mode - disable collisions
+	if (pEntity->IsPlayer())
+	{
+		// if we're in NOCLIP or FLY (ladder climbing) mode - disable collisions
 		if (pEntity->pev->movetype != MOVETYPE_WALK)
 			ToggleCollision(pRigidBody, false);
-		else 
+		else
 			ToggleCollision(pRigidBody, true);
-
-		Vector vecOffset = (pEntity->IsMonster()) ? Vector( 0, 0, pEntity->pev->maxs.z / 2.0f ) : g_vecZero;
-		box.halfExtents = ( pEntity->pev->size * k_PaddingFactor );
-		pShape->setGeometry(box); // should we do this?
-		PxTransform pose = pRigidBody->getGlobalPose();
-		pose.p = (pEntity->GetAbsOrigin() + vecOffset);
-		pRigidBody->setKinematicTarget(pose);
-		pEntity->m_vecOldPosition = pEntity->GetAbsOrigin(); // update old position
 	}
+
+	UpdateCharacterBounds(pEntity, pShape);
+	Vector vecOffset = (pEntity->IsMonster()) ? Vector(0, 0, pEntity->pev->maxs.z / 2.0f) : g_vecZero;
+	PxTransform pose = pRigidBody->getGlobalPose();
+	pose.p = (pEntity->GetAbsOrigin() + vecOffset);
+	pRigidBody->setKinematicTarget(pose);
+	pEntity->m_vecOldPosition = pEntity->GetAbsOrigin(); // update old position
+}
+
+void CPhysicPhysX::UpdateCharacterBounds(CBaseEntity *pEntity, PxShape *pShape)
+{
+	if (pEntity->pev->size == pEntity->m_vecOldBounds)
+		return;
+
+	PxBoxGeometry box;
+	box.halfExtents = pEntity->pev->size * k_PaddingFactor;
+	pShape->setGeometry(box);
+	pEntity->m_vecOldBounds = pEntity->pev->size;
 }
 
 void CPhysicPhysX :: MoveKinematic( CBaseEntity *pEntity )
@@ -2449,17 +2459,17 @@ void CPhysicPhysX :: SweepEntity( CBaseEntity *pEntity, const Vector &start, con
 	if (!pActor)
 		return;
 
-	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
-	if (!pRigidBody || pRigidBody->getNbShapes() <= 0 || pEntity->pev->solid == SOLID_NOT)
+	PxRigidActor *pRigidActor = pActor->is<PxRigidActor>();
+	if (!pRigidActor || pRigidActor->getNbShapes() <= 0 || pEntity->pev->solid == SOLID_NOT)
 		return; // only dynamic solid objects can be traced
 
 	// test for stuck entity into another
 	if (start == end)
 	{
 		Vector triangle[3], dirs[3];
-		PxTransform globalPose = pRigidBody->getGlobalPose();
+		PxTransform globalPose = pRigidActor->getGlobalPose();
 		DecomposedShape shape;
-		if (!shape.Triangulate(pRigidBody)) {
+		if (!shape.Triangulate(pRigidActor)) {
 			return; // failed to triangulate
 		}
 
@@ -2498,15 +2508,15 @@ void CPhysicPhysX :: SweepEntity( CBaseEntity *pEntity, const Vector &start, con
 
 	// setup trace box
 	PxBoxGeometry testBox;
-	PxTransform initialPose = pRigidBody->getGlobalPose();
+	PxTransform initialPose = pRigidActor->getGlobalPose();
 	initialPose.p = pEntity->Center(); // does we really need to do this?
 	testBox.halfExtents = pEntity->pev->size * 0.5f;
 
 	// make a linear sweep through the world
 	PxSweepBuffer sweepResult;
-	ToggleCollision(pRigidBody, false);
+	ToggleCollision(pRigidActor, false);
 	bool hitOccured = m_pScene->sweep(testBox, initialPose, vecDir, flLength, sweepResult, PxHitFlag::eNORMAL);
-	ToggleCollision(pRigidBody, true);
+	ToggleCollision(pRigidActor, true);
 
 	if (!hitOccured || !sweepResult.getNbTouches())
 		return; // no intersection
