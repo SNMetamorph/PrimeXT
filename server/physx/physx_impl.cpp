@@ -107,7 +107,7 @@ void CPhysicPhysX :: InitPhysic( void )
 	if (DebugEnabled()) 
 	{
 		m_pVisualDebugger = PxCreatePvd(*m_pFoundation);
-		PxPvdTransport *transport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 1000);
+		PxPvdTransport *transport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 300);
 		m_pVisualDebugger->connect(*transport, PxPvdInstrumentationFlag::eALL);
 	}
 
