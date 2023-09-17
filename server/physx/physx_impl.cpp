@@ -45,7 +45,7 @@ GNU General Public License for more details.
 #endif
 
 constexpr float k_PaddingFactor = 0.49f;
-constexpr float k_DensityFactor = 2.00f;
+constexpr float k_DensityFactor = 0.05f;
 constexpr uint32_t k_SolverIterationCount = 4;
 constexpr double k_SimulationStepSize = 1.0 / 100.0;
 
