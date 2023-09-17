@@ -1582,17 +1582,20 @@ collect all the info from generic actor
 */
 void CPhysicPhysX :: SaveBody( CBaseEntity *pEntity )
 {
-	PxRigidDynamic *pActor = ActorFromEntity( pEntity )->is<PxRigidDynamic>();
+	PxRigidActor *pActor = ActorFromEntity(pEntity)->is<PxRigidActor>();
+	PxRigidDynamic *pRigidBody = pActor->is<PxRigidDynamic>();
 
-	if( !pActor )
+	if (!pActor)
 	{
-		ALERT( at_warning, "SaveBody: physic entity %i missed actor!\n", pEntity->m_iActorType );
+		ALERT(at_warning, "SaveBody: physic entity %i missed actor!\n", pEntity->m_iActorType);
 		return;
 	}
 
 	PxShape *shape;
-	pActor->getShapes(&shape, 1);
-	PxFilterData filterData = shape->getSimulationFilterData();
+	PxFilterData filterData;
+	if (pActor->getShapes(&shape, 1)) {
+		filterData = shape->getSimulationFilterData();
+	}
 
 	// filter data get and stored only for one shape, but it can be more than one
 	// assumed that all attached shapes have same filter data
@@ -1602,14 +1605,21 @@ void CPhysicPhysX :: SaveBody( CBaseEntity *pEntity )
 	pEntity->m_iFilterData[3] = filterData.word3;
 
 	pEntity->m_iActorFlags = pActor->getActorFlags();
-	pEntity->m_iBodyFlags = pActor->getRigidBodyFlags();
-	pEntity->m_flBodyMass = pActor->getMass();
-	pEntity->m_fFreezed = pActor->isSleeping();
+	if (pRigidBody) {
+		pEntity->m_iBodyFlags = pRigidBody->getRigidBodyFlags();
+		pEntity->m_flBodyMass = pRigidBody->getMass();
+		pEntity->m_fFreezed = pRigidBody->isSleeping();
+	}
+	else {
+		pEntity->m_iBodyFlags = 0;
+		pEntity->m_flBodyMass = 0.0f;
+		pEntity->m_fFreezed = false;
+	}
 
-	if( pEntity->m_iActorType == ACTOR_DYNAMIC )
+	if (pEntity->m_iActorType == ACTOR_DYNAMIC)
 	{
 		// update movement variables
-		UpdateEntityPos( pEntity );
+		UpdateEntityPos(pEntity);
 	}
 }
 
@@ -1623,11 +1633,11 @@ re-create shape, apply physic params
 void *CPhysicPhysX :: RestoreBody( CBaseEntity *pEntity )
 {
 	// physics not initialized?
-	if (!m_pScene) 
+	if (!m_pScene)
 		return NULL;
 
 	PxShape *pShape;
-	PxRigidDynamic *pActor;
+	PxRigidActor *pActor;
 	PxTransform pose;
 	Vector angles = pEntity->GetAbsAngles();
 
@@ -1638,9 +1648,14 @@ void *CPhysicPhysX :: RestoreBody( CBaseEntity *pEntity )
 	float mat[16];
 	matrix4x4 m(pEntity->GetAbsOrigin(), angles, 1.0f);
 	m.CopyToArray(mat);
-
 	pose = PxTransform(PxMat44(mat));
-	pActor = m_pPhysics->createRigidDynamic(pose);
+
+	if (pEntity->m_iActorType == ACTOR_STATIC) {
+		pActor = m_pPhysics->createRigidStatic(pose);
+	}
+	else {
+		pActor = m_pPhysics->createRigidDynamic(pose);
+	}
 
 	if (!pActor)
 	{
@@ -1648,7 +1663,7 @@ void *CPhysicPhysX :: RestoreBody( CBaseEntity *pEntity )
 		return NULL;
 	}
 
-	switch( pEntity->m_iActorType )
+	switch (pEntity->m_iActorType)
 	{
 		case ACTOR_DYNAMIC:
 		{
@@ -1680,7 +1695,7 @@ void *CPhysicPhysX :: RestoreBody( CBaseEntity *pEntity )
 			pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxTriangleMeshGeometry(triangleMesh), *pMaterial);
 			break;
 		}
-		default: 
+		default:
 		{
 			ALERT(at_error, "RestoreBody: invalid actor type %i\n", pEntity->m_iActorType);
 			return NULL;
@@ -1693,35 +1708,27 @@ void *CPhysicPhysX :: RestoreBody( CBaseEntity *pEntity )
 	// fill in actor description
 	if (pEntity->m_iActorType != ACTOR_STATIC)
 	{
-		pActor->setRigidBodyFlags(static_cast<PxRigidBodyFlags>(pEntity->m_iBodyFlags));
-		pActor->setMass(pEntity->m_flBodyMass);
-		pActor->setSolverIterationCounts(k_SolverIterationCount);
+		PxRigidDynamic *pRigidBody = pActor->is<PxRigidDynamic>();
+		pRigidBody->setRigidBodyFlags(static_cast<PxRigidBodyFlags>(pEntity->m_iBodyFlags));
+		pRigidBody->setMass(pEntity->m_flBodyMass);
+		pRigidBody->setSolverIterationCounts(k_SolverIterationCount);
 
 		if (pEntity->m_iActorType != ACTOR_KINEMATIC)
 		{
-			pActor->setLinearVelocity(pEntity->GetAbsVelocity());
-			pActor->setAngularVelocity(pEntity->GetAbsAvelocity());
+			pRigidBody->setLinearVelocity(pEntity->GetAbsVelocity());
+			pRigidBody->setAngularVelocity(pEntity->GetAbsAvelocity());
 		}
-    }
-  
-	//ActorDesc.density = DENSITY_FACTOR;
-	pActor->userData = pEntity->edict();
-	pActor->setActorFlags(static_cast<PxActorFlags>(pEntity->m_iActorFlags));
 
-	//if( pEntity->m_iActorType == ACTOR_KINEMATIC )
-	//	m_ErrorCallback.hideWarning( true );
-
-	//if( pEntity->m_iActorType == ACTOR_KINEMATIC )
-	//	m_ErrorCallback.hideWarning( false );
-
-	// apply specific actor params
-	pActor->setName( pEntity->GetClassname() );
-	pEntity->m_pUserData = pActor;
-
-	if (pEntity->m_fFreezed && pEntity->m_iActorType == ACTOR_DYNAMIC) {
-		pActor->putToSleep();
+		PxRigidBodyExt::updateMassAndInertia(*pRigidBody, k_DensityFactor);
+		if (pEntity->m_fFreezed && pEntity->m_iActorType == ACTOR_DYNAMIC) {
+			pRigidBody->putToSleep();
+		}
 	}
 
+	pActor->userData = pEntity->edict();
+	pActor->setActorFlags(static_cast<PxActorFlags>(pEntity->m_iActorFlags));
+	pActor->setName(pEntity->GetClassname());
+	pEntity->m_pUserData = pActor;
 	m_pScene->addActor(*pActor);
 	return pActor;
 }
