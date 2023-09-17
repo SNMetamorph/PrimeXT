@@ -425,6 +425,17 @@ int LookupControl( const char *string )
 	if( !Q_stricmp( string, "LM" )) return STUDIO_LINEAR;
 	if( !Q_stricmp( string, "LQ" )) return STUDIO_QUADRATIC_MOTION;
 
+	// warn user about deprecated control tokens
+	if (!Q_stricmp(string, "AX") ||
+		!Q_stricmp(string, "AY") ||
+		!Q_stricmp(string, "AZ") ||
+		!Q_stricmp(string, "AXR") ||
+		!Q_stricmp(string, "AYR") ||
+		!Q_stricmp(string, "AZR")) 
+	{
+		TokenError( "token \"%s\" is deprecated, remove it from QC file\n", string );
+	}
+
 	return -1;
 }
 
