@@ -12,6 +12,7 @@
 #endif
 
 #include "utlarray.h"
+#include <stdint.h>
 
 // SINGLE_INHERITANCE restricts the size of CBaseEntity pointers-to-member-functions to 4 bytes
 class __single_inheritance CBaseEntity;
@@ -39,23 +40,23 @@ public:
 #define FIELD_SIZE( _fieldType )		CDatamapFieldSizeDeducer<_fieldType>::SIZE
 
 DECLARE_FIELD_SIZE( FIELD_FLOAT,		sizeof(float))
-DECLARE_FIELD_SIZE( FIELD_STRING,		sizeof(int))
-DECLARE_FIELD_SIZE( FIELD_ENTITY,		sizeof(int))
-DECLARE_FIELD_SIZE( FIELD_CLASSPTR,		sizeof(int*))
-DECLARE_FIELD_SIZE( FIELD_EHANDLE,		sizeof(int))
-DECLARE_FIELD_SIZE( FIELD_EVARS,		sizeof(int))
-DECLARE_FIELD_SIZE( FIELD_EDICT,		sizeof(int))
+DECLARE_FIELD_SIZE( FIELD_STRING,		sizeof(int32_t))
+DECLARE_FIELD_SIZE( FIELD_ENTITY,		sizeof(int32_t))
+DECLARE_FIELD_SIZE( FIELD_CLASSPTR,		sizeof(void*))
+DECLARE_FIELD_SIZE( FIELD_EHANDLE,		sizeof(int32_t))
+DECLARE_FIELD_SIZE( FIELD_EVARS,		sizeof(int32_t))
+DECLARE_FIELD_SIZE( FIELD_EDICT,		sizeof(int32_t))
 DECLARE_FIELD_SIZE( FIELD_VECTOR,		3 * sizeof(float))
 DECLARE_FIELD_SIZE( FIELD_POSITION_VECTOR, 	3 * sizeof(float))
-DECLARE_FIELD_SIZE( FIELD_POINTER,		sizeof(int *))
-DECLARE_FIELD_SIZE( FIELD_INTEGER,		sizeof(int))
-DECLARE_FIELD_SIZE( FIELD_FUNCTION,		sizeof(int *))
-DECLARE_FIELD_SIZE( FIELD_BOOLEAN,		sizeof(char))
-DECLARE_FIELD_SIZE( FIELD_SHORT,		sizeof(short))
-DECLARE_FIELD_SIZE( FIELD_CHARACTER,		sizeof(char))
+DECLARE_FIELD_SIZE( FIELD_POINTER,		sizeof(void *))
+DECLARE_FIELD_SIZE( FIELD_INTEGER,		sizeof(int32_t))
+DECLARE_FIELD_SIZE( FIELD_FUNCTION,		sizeof(void *))
+DECLARE_FIELD_SIZE( FIELD_BOOLEAN,		sizeof(int8_t))
+DECLARE_FIELD_SIZE( FIELD_SHORT,		sizeof(int16_t))
+DECLARE_FIELD_SIZE( FIELD_CHARACTER,		sizeof(int8_t))
 DECLARE_FIELD_SIZE( FIELD_TIME,		sizeof(float))
-DECLARE_FIELD_SIZE( FIELD_MODELNAME,		sizeof(int))
-DECLARE_FIELD_SIZE( FIELD_SOUNDNAME,		sizeof(int))
+DECLARE_FIELD_SIZE( FIELD_MODELNAME,		sizeof(int32_t))
+DECLARE_FIELD_SIZE( FIELD_SOUNDNAME,		sizeof(int32_t))
 
 #define _FIELD(name, fieldtype, count, flags, mapname )		{ fieldtype, #name, offsetof(classNameTypedef, name), count, flags, mapname, NULL }
 #define _EFIELD(name, fieldtype, count, flags, mapname )		{ fieldtype, #name, offsetof(entvars_t, name), count, flags, mapname, NULL }
