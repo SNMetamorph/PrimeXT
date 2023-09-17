@@ -33,7 +33,6 @@ private:
 	void DecomposeBox(physx::PxRigidActor *rigidBody);
 	void DecomposeConvexMesh(physx::PxRigidActor *rigidBody, physx::PxShape *shape);
 	void DecomposeTriangleMesh(physx::PxRigidActor *rigidBody, physx::PxShape *shape);
-	void DebugDummyBox();
 
 	size_t m_trianglesCount = 0;
 	std::vector<uint32_t> m_indexBuffer;
