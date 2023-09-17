@@ -1668,8 +1668,10 @@ void *CPhysicPhysX :: RestoreBody( CBaseEntity *pEntity )
 		case ACTOR_DYNAMIC:
 		{
 			PxConvexMesh *convexMesh = ConvexMeshFromEntity(pEntity);
-			if (!convexMesh)
+			if (!convexMesh) {
+				ALERT(at_error, "RestoreBody: failed to create convex mesh\n");
 				return NULL;
+			}
 
 			pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxConvexMeshGeometry(convexMesh), *m_pDefaultMaterial);
 			break;
@@ -1685,8 +1687,10 @@ void *CPhysicPhysX :: RestoreBody( CBaseEntity *pEntity )
 		case ACTOR_STATIC:
 		{
 			PxTriangleMesh *triangleMesh = TriangleMeshFromEntity(pEntity);
-			if (!triangleMesh)
+			if (!triangleMesh) {
+				ALERT(at_error, "RestoreBody: failed to create triangle mesh\n");
 				return NULL;
+			}
 
 			PxMaterial *pMaterial = m_pDefaultMaterial;
 			if (pEntity->pev->flags & FL_CONVEYOR) {
@@ -1702,8 +1706,17 @@ void *CPhysicPhysX :: RestoreBody( CBaseEntity *pEntity )
 		}
 	}
 
-	if (!pShape)
-		return NULL; // failed to create shape
+	if (!pShape) {
+		ALERT(at_error, "RestoreBody: failed to create shape\n");
+		return NULL;
+	}
+
+	PxFilterData filterData;
+	filterData.word0 = pEntity->m_iFilterData[0];
+	filterData.word1 = pEntity->m_iFilterData[1];
+	filterData.word2 = pEntity->m_iFilterData[2];
+	filterData.word3 = pEntity->m_iFilterData[3];
+	pShape->setSimulationFilterData(filterData);
 
 	// fill in actor description
 	if (pEntity->m_iActorType != ACTOR_STATIC)
