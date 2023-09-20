@@ -1430,7 +1430,7 @@ void CPhysicPhysX :: UpdateVehicle( CBaseEntity *pObject )
 #endif
 }
 
-bool CPhysicPhysX::UpdateEntityPos( CBaseEntity *pEntity )
+bool CPhysicPhysX::UpdateEntityTransform( CBaseEntity *pEntity )
 {
 	PxActor *pActor = ActorFromEntity(pEntity);
 	if (!pActor)
@@ -1619,7 +1619,7 @@ void CPhysicPhysX :: SaveBody( CBaseEntity *pEntity )
 	if (pEntity->m_iActorType == ACTOR_DYNAMIC)
 	{
 		// update movement variables
-		UpdateEntityPos(pEntity);
+		UpdateEntityTransform(pEntity);
 	}
 }
 

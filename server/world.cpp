@@ -81,7 +81,7 @@ public:
 	virtual int	FLoadTree( char *szMapName ) { return 0; }
 	virtual int	CheckBINFile( char *szMapName ) { return 0; }
 	virtual int	BuildCollisionTree( char *szMapName ) { return 0; }
-	virtual bool	UpdateEntityPos( CBaseEntity *pEntity ) { return false; }
+	virtual bool	UpdateEntityTransform( CBaseEntity *pEntity ) { return false; }
 	virtual void	UpdateEntityAABB( CBaseEntity *pEntity ) {}
 	virtual bool	UpdateActorPos( CBaseEntity *pEntity ) { return false; };
 	virtual void	SetupWorld( void ) {}	
