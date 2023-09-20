@@ -2524,18 +2524,19 @@ void CPhysicPhysX :: SweepEntity( CBaseEntity *pEntity, const Vector &start, con
 	PxBoxGeometry testBox;
 	PxTransform initialPose = pRigidActor->getGlobalPose();
 	initialPose.p = pEntity->Center(); // does we really need to do this?
-	testBox.halfExtents = pEntity->pev->size * 0.5f;
+	testBox.halfExtents = pEntity->pev->size * k_PaddingFactor;
 
 	// make a linear sweep through the world
+	// we need to disable collision here to avoid touching same actor as we trying to sweep
 	PxSweepBuffer sweepResult;
-	ToggleCollision(pRigidActor, false);
+	ToggleCollision(pRigidActor, false); 
 	bool hitOccured = m_pScene->sweep(testBox, initialPose, vecDir, flLength, sweepResult, PxHitFlag::eNORMAL);
 	ToggleCollision(pRigidActor, true);
 
-	if (!hitOccured || !sweepResult.getNbTouches())
+	if (!hitOccured || sweepResult.getNbAnyHits() < 1)
 		return; // no intersection
 
-	const PxSweepHit &hit = sweepResult.getTouch(0);
+	const PxSweepHit &hit = sweepResult.getAnyHit(0);
 	if (hit.distance > flLength || !hit.actor)
 		return; // hit missed
 
