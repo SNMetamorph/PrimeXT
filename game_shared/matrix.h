@@ -221,7 +221,7 @@ public:
 	Vector VectorIRotate( const Vector &v ) const;
 
 	// copy as OpenGl matrix
-	inline void CopyToArray( float *rgfl ) const
+	inline void CopyToArray( float (&rgfl)[16] ) const
 	{
 		rgfl[ 0] = mat[0][0];
 		rgfl[ 1] = mat[0][1];
@@ -604,7 +604,7 @@ public:
 	Vector	VectorIRotate( const Vector &v ) const;
 
 	// copy as OpenGl matrix
-	inline void CopyToArray( float *rgfl ) const
+	inline void CopyToArray( float (&rgfl)[16] ) const
 	{
 		rgfl[ 0] = mat[0][0];
 		rgfl[ 1] = mat[0][1];
@@ -1054,7 +1054,7 @@ public:
 	void	TransformStandardPlane( const struct plane_s &in, struct plane_s &out );
 
 	// copy as OpenGl matrix
-	inline void CopyToArray( float *rgfl ) const
+	inline void CopyToArray( float (&rgfl)[16] ) const
 	{
 		rgfl[ 0] = mat[0][0];
 		rgfl[ 1] = mat[0][1];
