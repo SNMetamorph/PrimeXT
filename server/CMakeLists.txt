@@ -142,7 +142,7 @@ if(ENABLE_PHYSX)
 	include(FindPhysX)
 	list(APPEND SVDLL_SOURCES
 		"physx/physx_impl.cpp"
-		"physx/contact_report.cpp"
+		"physx/event_handler.cpp"
 		"physx/debug_renderer.cpp"
 		"physx/decomposed_shape.cpp"
 		"physx/io_streams.cpp"
