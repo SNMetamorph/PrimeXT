@@ -1752,13 +1752,10 @@ void CPhysicPhysX :: SetAngles( CBaseEntity *pEntity, const Vector &angles )
 	if( !pActor ) 
 		return;
 
-	float mat[9];
 	matrix3x3 m(angles);
-	m.CopyToArray(mat);
-
 	PxRigidDynamic *pRigidDynamic = pActor->is<PxRigidDynamic>();
 	PxTransform transform = pRigidDynamic->getGlobalPose();
-	transform.q = PxQuat(PxMat33( mat ));
+	transform.q = PxQuat(PxMat33( m ));
 	pRigidDynamic->setGlobalPose(transform);
 }
 
