@@ -1,5 +1,5 @@
 /*
-contact_report.h - part of PhysX physics engine implementation
+event_handler.h - class for handling PhysX simulation events
 Copyright (C) 2023 SNMetamorph
 
 This program is free software: you can redistribute it and/or modify
@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-#include "contact_report.h"
+#include "event_handler.h"
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -21,13 +21,13 @@ GNU General Public License for more details.
 
 using namespace physx;
 
-CPhysicPhysX::ContactReport &CPhysicPhysX::ContactReport::getInstance()
+CPhysicPhysX::EventHandler &CPhysicPhysX::EventHandler::getInstance()
 {
-	static ContactReport instance;
+	static EventHandler instance;
 	return instance;
 }
 
-void CPhysicPhysX::ContactReport::onContact(const PxContactPairHeader &pairHeader, const PxContactPair *pairs, PxU32 nbPairs)
+void CPhysicPhysX::EventHandler::onContact(const PxContactPairHeader &pairHeader, const PxContactPair *pairs, PxU32 nbPairs)
 {
 	for (PxU32 i = 0; i < nbPairs; i++)
 	{

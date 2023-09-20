@@ -85,7 +85,7 @@ public:
 	void	*GetPhysicInterface( void ) { return m_pPhysics; }
 
 private:
-	class ContactReport;
+	class EventHandler;
 	class DebugRenderer;
 	class DecomposedShape;
 
