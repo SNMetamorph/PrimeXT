@@ -1129,45 +1129,42 @@ void *CPhysicPhysX :: CreateBoxFromEntity( CBaseEntity *pObject )
 	return pActor;
 }
 
-void *CPhysicPhysX :: CreateKinematicBodyFromEntity( CBaseEntity *pObject )
+void *CPhysicPhysX::CreateKinematicBodyFromEntity(CBaseEntity *pObject)
 {
-	PxTriangleMesh *pCollision = TriangleMeshFromEntity( pObject );
-	if (!pCollision) 
+	PxTriangleMesh *pCollision = TriangleMeshFromEntity(pObject);
+	if (!pCollision)
 		return NULL;
 
 	PxRigidDynamic *pActor = m_pPhysics->createRigidDynamic(PxTransform(PxIdentity));
-	PxShape *pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxTriangleMeshGeometry(pCollision), *m_pDefaultMaterial);
-
-	if( !pActor )
+	if (!pActor)
 	{
-		ALERT( at_error, "failed to create kinematic from entity %s\n", pObject->GetClassname( ));
+		ALERT(at_error, "failed to create kinematic from entity %s\n", pObject->GetClassname());
 		return NULL;
 	}
 
-	if (!UTIL_CanRotate(pObject)) 
-	{ 
+	if (!UTIL_CanRotate(pObject))
+	{
 		// entity missed origin-brush
 		pActor->setRigidDynamicLockFlags(
-			PxRigidDynamicLockFlag::eLOCK_ANGULAR_X | 
-			PxRigidDynamicLockFlag::eLOCK_ANGULAR_Y | 
+			PxRigidDynamicLockFlag::eLOCK_ANGULAR_X |
+			PxRigidDynamicLockFlag::eLOCK_ANGULAR_Y |
 			PxRigidDynamicLockFlag::eLOCK_ANGULAR_Z);
 	}
 
 	float mat[16];
-	matrix4x4( pObject->GetAbsOrigin(), pObject->GetAbsAngles(), 1.0f ).CopyToArray( mat );
+	matrix4x4(pObject->GetAbsOrigin(), pObject->GetAbsAngles(), 1.0f).CopyToArray(mat);
 
 	PxTransform pose = PxTransform(PxMat44(mat));
 	pActor->setName(pObject->GetClassname());
-	pActor->setGlobalPose( pose );
+	pActor->setGlobalPose(pose);
 	pActor->setSolverIterationCounts(k_SolverIterationCount);
 	pActor->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 	pActor->userData = pObject->edict();
-	//m_ErrorCallback.hideWarning(true);
+
+	PxShape *pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxTriangleMeshGeometry(pCollision), *m_pDefaultMaterial);
 	m_pScene->addActor(*pActor);
-	//m_ErrorCallback.hideWarning(false);
 	pObject->m_iActorType = ACTOR_KINEMATIC;
 	pObject->m_pUserData = pActor;
-	
 	return pActor;
 }
 
