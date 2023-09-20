@@ -1836,7 +1836,7 @@ void SV_Physics_Rigid( CBaseEntity *pEntity )
 
 	UTIL_WaterMove( pEntity );
 	SV_CheckWater( pEntity );
-	WorldPhysic->UpdateEntityPos( pEntity );
+	WorldPhysic->UpdateEntityTransform( pEntity );
 
 	// detect the ground
 	CBaseEntity *pGround = pEntity->GetGroundEntity();
@@ -2545,7 +2545,7 @@ void SV_Physics_Vehicle( CBaseEntity *pEntity )
 	SV_CheckWater( pEntity );
 
 	// sync physic states
-	WorldPhysic->UpdateEntityPos( pEntity );
+	WorldPhysic->UpdateEntityTransform( pEntity );
 
 	float movetime = gpGlobals->frametime;
 

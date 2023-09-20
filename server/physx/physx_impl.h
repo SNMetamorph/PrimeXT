@@ -66,7 +66,7 @@ public:
 	int		FLoadTree( char *szMapName );
 	int		CheckBINFile( char *szMapName );
 	int		BuildCollisionTree( char *szMapName );
-	bool	UpdateEntityPos( CBaseEntity *pEntity );
+	bool	UpdateEntityTransform( CBaseEntity *pEntity );
 	void	UpdateEntityAABB( CBaseEntity *pEntity );
 	bool	UpdateActorPos( CBaseEntity *pEntity );
 	void	SetupWorld( void );	

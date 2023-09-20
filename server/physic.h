@@ -49,7 +49,7 @@ public:
 	virtual int		FLoadTree( char *szMapName ) = 0;
 	virtual int		CheckBINFile( char *szMapName ) = 0;
 	virtual int		BuildCollisionTree( char *szMapName ) = 0;
-	virtual bool	UpdateEntityPos( CBaseEntity *pEntity ) = 0;
+	virtual bool	UpdateEntityTransform( CBaseEntity *pEntity ) = 0;
 	virtual void	UpdateEntityAABB( CBaseEntity *pEntity ) = 0;
 	virtual bool	UpdateActorPos( CBaseEntity *pEntity ) = 0;
 	virtual void	SetupWorld( void ) = 0;	
