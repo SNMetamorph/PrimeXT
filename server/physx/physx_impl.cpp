@@ -28,7 +28,7 @@ GNU General Public License for more details.
 #include "game.h"
 #include "build.h"
 #include "error_stream.h"
-#include "contact_report.h"
+#include "event_handler.h"
 #include "debug_renderer.h"
 #include "decomposed_shape.h"
 #include "meshdesc_factory.h"
@@ -132,7 +132,7 @@ void CPhysicPhysX :: InitPhysic( void )
 
 	// create a scene
 	PxSceneDesc sceneDesc(scale);
-	sceneDesc.simulationEventCallback = &ContactReport::getInstance();
+	sceneDesc.simulationEventCallback = &EventHandler::getInstance();
 	sceneDesc.gravity = PxVec3(0.0f, 0.0f, -800.0f);
 	sceneDesc.flags = PxSceneFlag::eENABLE_CCD;
 	sceneDesc.cpuDispatcher = m_pDispatcher;

@@ -1,5 +1,5 @@
 /*
-contact_report.h - part of PhysX physics engine implementation
+event_handler.h - class for handling PhysX simulation events
 Copyright (C) 2023 SNMetamorph
 
 This program is free software: you can redistribute it and/or modify
@@ -17,10 +17,10 @@ GNU General Public License for more details.
 #include <PxPhysicsAPI.h>
 #include <PxSimulationEventCallback.h>
 
-class CPhysicPhysX::ContactReport : public physx::PxSimulationEventCallback
+class CPhysicPhysX::EventHandler : public physx::PxSimulationEventCallback
 {
 public:
-	static CPhysicPhysX::ContactReport &getInstance();
+	static CPhysicPhysX::EventHandler &getInstance();
 	virtual void onConstraintBreak(physx::PxConstraintInfo* constraints, physx::PxU32 count) {};
 	virtual void onWake(physx::PxActor** actors, physx::PxU32 count) {};
 	virtual void onSleep(physx::PxActor** actors, physx::PxU32 count) {};
@@ -29,7 +29,7 @@ public:
 	virtual void onContact(const physx::PxContactPairHeader& pairHeader, const physx::PxContactPair* pairs, physx::PxU32 nbPairs);
 
 private:
-	ContactReport() = default;
-	ContactReport(const ContactReport&) = delete;
-	ContactReport& operator=(const ContactReport&) = delete;
+	EventHandler() = default;
+	EventHandler(const EventHandler&) = delete;
+	EventHandler& operator=(const EventHandler&) = delete;
 };
