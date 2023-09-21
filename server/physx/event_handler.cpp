@@ -27,6 +27,12 @@ CPhysicPhysX::EventHandler &CPhysicPhysX::EventHandler::getInstance()
 	return instance;
 }
 
+/*
+* Documentation:
+* SDK state should not be modified from within the callbacks. In particular objects should not
+* be created or destroyed. If state modification is needed then the changes should be stored to a buffer
+* and performed after the simulation step.
+*/
 void CPhysicPhysX::EventHandler::onContact(const PxContactPairHeader &pairHeader, const PxContactPair *pairs, PxU32 nbPairs)
 {
 	for (PxU32 i = 0; i < nbPairs; i++)
@@ -36,36 +42,43 @@ void CPhysicPhysX::EventHandler::onContact(const PxContactPairHeader &pairHeader
 			return;
 		}
 
-		edict_t* e1 = (edict_t*)pairHeader.actors[0]->userData;
-		edict_t* e2 = (edict_t*)pairHeader.actors[1]->userData;
+		PxActor *a1 = pairHeader.actors[0];
+		PxActor *a2 = pairHeader.actors[1];
+		edict_t *e1 = (edict_t*)a1->userData;
+		edict_t *e2 = (edict_t*)a2->userData;
 
 		if (!e1 || !e2)
 			return;
 
-		if (e1->v.flags & FL_CONVEYOR)
-		{
-			PxRigidBody *actor = pairHeader.actors[1]->is<PxRigidBody>();
-			Vector basevelocity = e1->v.movedir * e1->v.speed * CONVEYOR_SCALE_FACTOR;
-			actor->setForceAndTorque(basevelocity, PxVec3(0.f), PxForceMode::eIMPULSE);
-		}
+		//if (e1->v.flags & FL_CONVEYOR)
+		//{
+		//	PxRigidBody *actor = pairHeader.actors[1]->is<PxRigidBody>();
+		//	Vector basevelocity = e1->v.movedir * e1->v.speed * CONVEYOR_SCALE_FACTOR;
+		//	actor->setForceAndTorque(basevelocity, PxVec3(0.f), PxForceMode::eIMPULSE);
+		//}
 
-		if (e2->v.flags & FL_CONVEYOR)
-		{
-			PxRigidBody* actor = pairHeader.actors[0]->is<PxRigidBody>();
-			Vector basevelocity = e2->v.movedir * e2->v.speed * CONVEYOR_SCALE_FACTOR;
-			actor->setForceAndTorque(basevelocity, PxVec3(0.f), PxForceMode::eIMPULSE);
-		}
+		//if (e2->v.flags & FL_CONVEYOR)
+		//{
+		//	PxRigidBody* actor = pairHeader.actors[0]->is<PxRigidBody>();
+		//	Vector basevelocity = e2->v.movedir * e2->v.speed * CONVEYOR_SCALE_FACTOR;
+		//	actor->setForceAndTorque(basevelocity, PxVec3(0.f), PxForceMode::eIMPULSE);
+		//}
 
 		if (e1 && e1->v.solid != SOLID_NOT)
 		{
 			// FIXME: build trace info
-			DispatchTouch(e1, e2);
+			m_touchEventsQueue.push({ a1, a2 });
 		}
 
 		if (e2 && e2->v.solid != SOLID_NOT)
 		{
 			// FIXME: build trace info
-			DispatchTouch(e1, e2);
+			m_touchEventsQueue.push({ a2, a1 });
 		}
 	}
+}
+
+CPhysicPhysX::EventHandler::TouchEventsQueue& CPhysicPhysX::EventHandler::getTouchEventsQueue()
+{
+	return m_touchEventsQueue;
 }
