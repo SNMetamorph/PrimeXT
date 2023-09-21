@@ -223,6 +223,8 @@ void CPhysicPhysX :: Update( float flTimeDelta )
 		}
 	}
 
+	HandleEvents();
+
 	m_flAccumulator += flTimeDelta;
 	while (m_flAccumulator > k_SimulationStepSize)
 	{
@@ -1973,6 +1975,19 @@ int CPhysicPhysX :: CheckFileTimes( const char *szFile1, const char *szFile2 )
 bool CPhysicPhysX::DebugEnabled() const
 {
 	return g_engfuncs.CheckParm("-physxdebug", nullptr) != 0;
+}
+
+void CPhysicPhysX::HandleEvents()
+{
+	auto &touchEventsQueue = EventHandler::getInstance().getTouchEventsQueue();
+	while (!touchEventsQueue.empty())
+	{
+		auto &touchEvent = touchEventsQueue.front();
+		edict_t *e1 = reinterpret_cast<edict_t*>(touchEvent.first->userData);
+		edict_t *e2 = reinterpret_cast<edict_t*>(touchEvent.second->userData);
+		DispatchTouch(e1, e2);
+		touchEventsQueue.pop();
+	}
 }
 
 //-----------------------------------------------------------------------------

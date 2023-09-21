@@ -91,6 +91,7 @@ private:
 
 	// misc routines
 	bool DebugEnabled() const;
+	void HandleEvents();
 	int	ConvertEdgeToIndex( model_t *model, int edge );
 	physx::PxConvexMesh	*ConvexMeshFromBmodel( entvars_t *pev, int modelindex );
 	physx::PxConvexMesh	*ConvexMeshFromStudio( entvars_t *pev, int modelindex, int32_t body, int32_t skin );
