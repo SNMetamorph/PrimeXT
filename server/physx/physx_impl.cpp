@@ -2317,22 +2317,22 @@ void CPhysicPhysX :: MoveKinematic( CBaseEntity *pEntity )
 
 void CPhysicPhysX :: EnableCollision( CBaseEntity *pEntity, int fEnable )
 {
-	PxActor *pActor = ActorFromEntity( pEntity );
-	if( !pActor )
+	PxActor *pActor = ActorFromEntity(pEntity);
+	if (!pActor)
 		return;
 
 	PxRigidDynamic *pRigidBody = pActor->is<PxRigidDynamic>();
 	if (pRigidBody->getNbShapes() <= 0)
 		return;
 
-	if( fEnable )
+	if (fEnable)
 	{
-		ToggleCollision(pRigidBody, false);
+		ToggleCollision(pRigidBody, true);
 		pActor->setActorFlag(PxActorFlag::eVISUALIZATION, true);
 	}
 	else
 	{
-		ToggleCollision(pRigidBody, true);
+		ToggleCollision(pRigidBody, false);
 		pActor->setActorFlag(PxActorFlag::eVISUALIZATION, false);
 	}
 }
