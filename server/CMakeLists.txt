@@ -143,6 +143,7 @@ if(ENABLE_PHYSX)
 	list(APPEND SVDLL_SOURCES
 		"physx/physx_impl.cpp"
 		"physx/event_handler.cpp"
+		"physx/assert_handler.cpp"
 		"physx/debug_renderer.cpp"
 		"physx/decomposed_shape.cpp"
 		"physx/io_streams.cpp"
@@ -227,6 +228,9 @@ if(ENABLE_PHYSX)
 		"${PHYSX_HEADERS_DIR}/foundation"
 	)
 endif()
+
+find_package(fmt CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
 
 set_target_properties (${PROJECT_NAME} PROPERTIES
 	CXX_STANDARD 17

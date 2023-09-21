@@ -86,6 +86,7 @@ public:
 
 private:
 	class EventHandler;
+	class AssertHandler;
 	class DebugRenderer;
 	class DecomposedShape;
 
