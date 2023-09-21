@@ -29,6 +29,7 @@ GNU General Public License for more details.
 #include "build.h"
 #include "error_stream.h"
 #include "event_handler.h"
+#include "assert_handler.h"
 #include "debug_renderer.h"
 #include "decomposed_shape.h"
 #include "meshdesc_factory.h"
@@ -126,6 +127,7 @@ void CPhysicPhysX :: InitPhysic( void )
 		ALERT( at_warning, "InitPhysic: failed to initalize cooking library\n" );
 	}
 
+	PxSetAssertHandler(AssertHandler::getInstance());
 	if (!PxInitExtensions(*m_pPhysics, m_pVisualDebugger)) {
 		ALERT( at_warning, "InitPhysic: failed to initalize extensions\n" );
 	}
