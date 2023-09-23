@@ -89,10 +89,12 @@ typedef struct
 
 typedef struct
 {
-	float		frame;
+	float	frame;
 	int		sequence;
-	float		gaitframe;
+	float	gaitframe;
 	int		gaitsequence;
+	float	lastgaitframe;
+	float	prevgaitframe;
 
 	// for smooth stair climbing
 	float		stairtime;

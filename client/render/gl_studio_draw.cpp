@@ -488,8 +488,8 @@ float CStudioModelRenderer :: StudioEstimateGaitFrame( mstudioseqdesc_t *pseqdes
 	int numframes = m_boneSetup.LocalMaxFrame( e->curstate.gaitsequence );
 	float t = StudioEstimateInterpolant();
 	float currGaitFrame = e->curstate.fuser1;
-	static float lastGaitFrame = 0.0f;
-	static float prevGaitFrame = 0.0f;
+	float &lastGaitFrame = m_pModelInstance->lerp.lastgaitframe;
+	float &prevGaitFrame = m_pModelInstance->lerp.prevgaitframe;
 
 	if (numframes > 1)
 	{
