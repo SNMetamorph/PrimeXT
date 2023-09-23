@@ -1052,9 +1052,11 @@ void CPhysicPhysX::ToggleCollision(physx::PxRigidActor *pActor, bool enabled)
 	for (PxShape *shape : shapes) 
 	{
 		bool collisionState = shape->getFlags() & PxShapeFlag::eSIMULATION_SHAPE;
-		if (collisionState != enabled) {
+		if (collisionState != enabled) 
+		{
 			// change state only if it's different, to avoid useless write access to API
 			shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, enabled);
+			shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, enabled);
 		}
 	}
 }
