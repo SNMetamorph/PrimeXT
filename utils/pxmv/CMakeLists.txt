@@ -88,7 +88,6 @@ if(MSVC)
 	target_link_libraries(${PROJECT_NAME} PRIVATE
 		"comctl32"
 		"opengl32"
-		"glu32"
 		"winmm"
 	)
 else()

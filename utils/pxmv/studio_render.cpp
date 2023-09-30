@@ -12,7 +12,6 @@
 // 1-4-99	fixed AdvanceFrame wraping bug
 
 #include <gl.h>
-#include <GL/glu.h>
 #include <mxMessageBox.h>
 #include "StudioModel.h"
 #include "ViewerSettings.h"
