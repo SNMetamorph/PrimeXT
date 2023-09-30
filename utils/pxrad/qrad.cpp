@@ -14,7 +14,6 @@
 #include "app_info.h"
 #include "crashhandler.h"
 #include "build_info.h"
-#include <mimalloc-override.h>
 
 /*
 NOTES

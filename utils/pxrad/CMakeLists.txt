@@ -57,7 +57,6 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 	IGNORE_SEARCH_IN_WADS=1
 	ALLOW_WADS_IN_PACKS=1
 	PXBSP_COMPILING=1 # to avoid header hell because of another mathlib implementation
-	MIMALLOC_ALLOCATOR=1
 )
 
 # pxrad compile-time settings
@@ -142,9 +141,6 @@ endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE
 	imagelib
 )
-
-find_package(mimalloc CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc mimalloc-static)
 
 # link platform-specific depedency libraries
 if(NOT XASH_WIN32)

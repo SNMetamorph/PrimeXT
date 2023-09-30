@@ -48,7 +48,6 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 	DOUBLEVEC_T=1
 	IGNORE_SEARCH_IN_WADS=1
 	PXBSP_COMPILING=1 # to avoid header hell because pxbsp uses another mathlib implementation
-	MIMALLOC_ALLOCATOR=1
 )
 
 if(NOT MSVC)
@@ -91,10 +90,6 @@ endif()
 if(ENABLE_STATIC_LINKING)
 	set_compiler_runtime(${PROJECT_NAME} STATIC)
 endif()
-
-# add mimalloc library depedency
-find_package(mimalloc CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc mimalloc-static)
 
 # link platform-specific depedency libraries
 if(NOT XASH_WIN32)

@@ -45,7 +45,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
 	IGNORE_SEARCH_IN_WADS=1
-	MIMALLOC_ALLOCATOR=1
 )
 
 if(NOT MSVC)
@@ -89,9 +88,6 @@ endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE
 	imagelib
 )
-
-find_package(mimalloc CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc mimalloc-static)
 
 # link platform-specific depedency libraries
 if(NOT XASH_WIN32)

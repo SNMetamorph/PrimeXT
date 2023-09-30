@@ -11,7 +11,6 @@
 #include "qrad.h"
 #include "model_trace.h"
 #include "../../engine/studio.h"
-#include <mimalloc-override.h>
 
 #ifdef HLRAD_VERTEXLIGHTING
 

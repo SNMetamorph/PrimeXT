@@ -13,7 +13,6 @@
 #include "qrad.h"
 #include "alias.h"
 #include "model_trace.h"
-#include <mimalloc-override.h>
 
 static trivertex_t	*g_poseverts[MAXALIASFRAMES];
 static stvert_t	g_stverts[MAXALIASVERTS];
