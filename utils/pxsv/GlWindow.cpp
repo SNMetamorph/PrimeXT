@@ -22,7 +22,6 @@
 #include <mxBmp.h>
 
 #include <gl.h>
-#include <GL/glu.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>

@@ -15,7 +15,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gl.h>
-#include <GL/glu.h>
 #include "SpriteModel.h"
 #include "GlWindow.h"
 #include "ViewerSettings.h"
