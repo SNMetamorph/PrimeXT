@@ -30,7 +30,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
 	PXBSP_COMPILING=1 # to avoid header hell because of another mathlib implementation
-	MIMALLOC_ALLOCATOR=1
 )
 
 if(NOT MSVC)
@@ -69,9 +68,6 @@ endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE
 	squish
 )
-
-find_package(mimalloc CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc mimalloc-static)
 
 find_package(miniz CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE miniz::miniz)

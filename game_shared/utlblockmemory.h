@@ -14,10 +14,6 @@
 #pragma once
 #endif
 
-#if MIMALLOC_ALLOCATOR
-#include <mimalloc-override.h>
-#endif
-
 #pragma warning (disable:4100)
 #pragma warning (disable:4514)
 

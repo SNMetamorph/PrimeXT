@@ -51,7 +51,6 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 	IGNORE_SEARCH_IN_WADS=1
 	ALLOW_WADS_IN_PACKS=1
 	PXBSP_COMPILING=1 # hack to avoid header hell
-	MIMALLOC_ALLOCATOR=1
 )
 
 # pxcsg compile-time settings
@@ -99,10 +98,6 @@ endif()
 if(ENABLE_STATIC_LINKING)
 	set_compiler_runtime(${PROJECT_NAME} STATIC)
 endif()
-
-# add mimalloc library depedency
-find_package(mimalloc CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc mimalloc-static)
 
 # link platform-specific depedency libraries
 if(NOT XASH_WIN32)

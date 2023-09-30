@@ -9,7 +9,6 @@
 ****/
 
 #include "qrad.h"
-#include <mimalloc-override.h>
 
 typedef struct facelist_s
 {

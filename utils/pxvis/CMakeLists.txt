@@ -39,7 +39,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
 	IGNORE_SEARCH_IN_WADS=1
 	PXBSP_COMPILING=1 # to avoid header hell because of another mathlib implementation
-	MIMALLOC_ALLOCATOR=1
 )
 
 # pxvis compile-time settings
@@ -88,10 +87,6 @@ endif()
 if(ENABLE_STATIC_LINKING)
 	set_compiler_runtime(${PROJECT_NAME} STATIC)
 endif()
-
-# add mimalloc library depedency
-find_package(mimalloc CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc mimalloc-static)
 
 # link platform-specific depedency libraries
 if(NOT XASH_WIN32)

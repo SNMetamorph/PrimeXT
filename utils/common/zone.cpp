@@ -18,7 +18,6 @@ GNU General Public License for more details.
 #include "stringlib.h"
 #include "mathlib.h"
 #include "conprint.h"
-#include <mimalloc.h>
 
 #define ZONE_ATTEMPT_CALLOC
 //#define ZONE_DEBUG
@@ -60,7 +59,7 @@ static void *attempt_calloc( size_t size )
 	{
 		void	*base;
 		
-		if(( base = (void *)mi_calloc( size, 1 )) != NULL )
+		if(( base = (void *)calloc( size, 1 )) != NULL )
 			return base;
 		// try for half a second or so
 		Sys_Sleep( 100 );
@@ -86,7 +85,7 @@ void *Mem_Alloc( size_t size, unsigned int target )
 #ifdef ZONE_ATTEMPT_CALLOC
 	void *mem = attempt_calloc(sizeof(memhdr_t) + size);
 #else
-	void *mem = mi_calloc(sizeof(memhdr_t) + size, 1);
+	void *mem = calloc(sizeof(memhdr_t) + size, 1);
 #endif
 	if (!mem)
 	{
@@ -149,7 +148,7 @@ void Mem_Free( void *ptr, unsigned int target )
 	c_alloc[target]--;
 	ThreadUnlock();
 #endif
-	mi_free( chunk );
+	free( chunk );
 }
 
 void Mem_Check( void )

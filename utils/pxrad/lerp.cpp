@@ -12,7 +12,6 @@
 
 #include "qrad.h"
 #include "utlarray.h"
-#include <mimalloc-override.h>
 
 #define TRIANGLE_SHAPE_THRESHOLD	DEG2RAD( 115.0 )
 

@@ -9,7 +9,6 @@
 ****/
 
 #include "qrad.h"
-#include <mimalloc-override.h>
 
 #define MAX_NUDGES	12
 

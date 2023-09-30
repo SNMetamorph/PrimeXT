@@ -18,9 +18,6 @@
 #include <string.h>
 #include <malloc.h>
 #include <new>
-#if MIMALLOC_ALLOCATOR
-#include <mimalloc-override.h>
-#endif
 
 #define ALIGN_VALUE( val, alignment )	(( val + alignment - 1 ) & ~( alignment - 1 ))
 #define stackalloc( _size )		_alloca( ALIGN_VALUE( _size, 16 ) )

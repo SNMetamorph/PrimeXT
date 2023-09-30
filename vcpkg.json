@@ -21,8 +21,7 @@
     "utils": {
       "description": "Build utilities",
       "dependencies": [
-        "miniz",
-        "mimalloc"
+        "miniz"
       ]
     }
   }

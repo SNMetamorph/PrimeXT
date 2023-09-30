@@ -38,7 +38,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
 	PXBSP_COMPILING=1 # to avoid header hell because pxmakewad uses another mathlib implementation
-	MIMALLOC_ALLOCATOR=1
 )
 
 if(NOT MSVC)
@@ -74,13 +73,9 @@ if(ENABLE_STATIC_LINKING)
 	set_compiler_runtime(${PROJECT_NAME} STATIC)
 endif()
 
-# add mimalloc library depedency
 target_link_libraries(${PROJECT_NAME} PRIVATE
 	imagelib
 )
-
-find_package(mimalloc CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc mimalloc-static)
 
 # link platform-specific depedency libraries
 if(NOT XASH_WIN32)
