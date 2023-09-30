@@ -6,15 +6,12 @@ include(CompilerRuntime)
 option(ENABLE_MAP_COMPILERS_AVX2 "Enable building map compilers with AVX2 support" OFF)
 option(BUILD_PXMV "Build PrimeXT Model Viewer" ON)
 option(BUILD_PXSV "Build PrimeXT Sprite Viewer" ON)
+option(BUILD_COMPILERS "Build PrimeXT asset compilers (studiomdl, makewad, bsp)" ON)
 
 # set build output directory
 set(DIR_UTILS_OUTPUT 
 	${CMAKE_BINARY_DIR}/$<CONFIG>/${GAMEDIR}/devkit/
 )
-
-# add dependency libraries subprojects
-add_subdirectory("common/imagelib" imagelib)
-add_subdirectory("${CMAKE_SOURCE_DIR}/external/squish" squish)
 
 # add mxtk library subproject (used by pxmv and pxsv)
 if(BUILD_PXMV OR BUILD_PXSV)
@@ -22,22 +19,28 @@ if(BUILD_PXMV OR BUILD_PXSV)
 	set_compiler_runtime(mxtk STATIC)
 endif()
 
-add_subdirectory(pxstudiomdl)
-add_subdirectory(pxmakewad)
-add_subdirectory(pxbsp)
-add_subdirectory(pxcsg)
-add_subdirectory(pxrad)
-add_subdirectory(pxvis)
+if(BUILD_COMPILERS)
+	# add compilers dependency libraries subprojects
+	add_subdirectory("common/imagelib" imagelib)
+	add_subdirectory("${CMAKE_SOURCE_DIR}/external/squish" squish)
 
-# append all targets to list
-list(APPEND UTILS_TARGETS
-	pxstudiomdl
-	pxmakewad
-	pxbsp
-	pxcsg
-	pxrad
-	pxvis
-)
+	add_subdirectory(pxstudiomdl)
+	add_subdirectory(pxmakewad)
+	add_subdirectory(pxbsp)
+	add_subdirectory(pxcsg)
+	add_subdirectory(pxrad)
+	add_subdirectory(pxvis)
+
+	# append all targets to list
+	list(APPEND UTILS_TARGETS
+		pxstudiomdl
+		pxmakewad
+		pxbsp
+		pxcsg
+		pxrad
+		pxvis
+	)
+endif()
 
 if(BUILD_PXMV)
 	add_subdirectory(pxmv)
