@@ -35,6 +35,7 @@
 #include "teamplay_gamerules.h"
 #include "physcallback.h"
 #include "meshdesc_factory.h"
+#include "sv_materials.h"
 
 extern CGraph WorldGraph;
 extern CSoundEnt *pSoundEnt;
@@ -695,6 +696,10 @@ void CWorld :: Precache( void )
 	W_Precache ();									// get weapon precaches
 
 	ClientPrecache();
+
+// initialize material system
+	COM_InitMatdef();
+	SV_InitMaterials();
 
 // sounds used from C physics code
 	PRECACHE_SOUND("common/null.wav");				// clears sound channels

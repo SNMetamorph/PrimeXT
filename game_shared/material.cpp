@@ -146,6 +146,18 @@ matdef_t *COM_DefaultMatdef()
 	return com_defaultmat;
 }
 
+static void COM_PrecacheMatdefSounds(matdef_t *mat)
+{
+#ifndef CLIENT_DLL
+	for (size_t i = 0; mat->step_sounds[i] && i < MAX_MAT_SOUNDS; i++) {
+		PRECACHE_SOUND(mat->step_sounds[i]);
+	}
+	for (size_t i = 0; mat->impact_sounds[i] && i < MAX_MAT_SOUNDS; i++) {
+		PRECACHE_SOUND(mat->impact_sounds[i]);
+	}
+#endif
+}
+
 void COM_InitMatdef()
 {
 	ALERT( at_aiconsole, "loading materials.def\n" );
@@ -293,6 +305,8 @@ void COM_InitMatdef()
 			}
 			else ALERT( at_warning, "Unknown material token %s\n", token );
 		}
+
+		COM_PrecacheMatdefSounds(mat);
 	}
 getout:
 	FREE_FILE( afile );
