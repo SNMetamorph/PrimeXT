@@ -1,6 +1,6 @@
 ﻿---
 sidebar_position: 1
-description: Modern SDK for the Xash3D FWGS engine, with cross-platform support and improved graphics/physics, while retaining all the features and approaches to work inherent in GoldSrc and Xash3D. Based on XashXT, and therefore has all the functionality inherent in XashXT and Spirit Of Half-Life.
+description: Modern Half-Life 1 SDK for the Xash3D FWGS engine, supports cross-platform and have improved graphics & physics, and a lot of new features, while retaining all the features and approaches to work inherent in GoldSrc and Xash3D.
 ---
 
 # Introduction
@@ -8,8 +8,8 @@ description: Modern SDK for the Xash3D FWGS engine, with cross-platform support 
 ![Header](/img/intro/header.png)
 
 ### About project
-A modern SDK for the Xash3D FWGS engine, to work on modern platforms with cross-platform support and improved graphics/physics, while retaining all the features and approaches to work inherent in GoldSrc and Xash3D.
-Based on XashXT, and therefore has all the functionality inherent in XashXT and Spirit Of Half-Life. Suitable for creating both singleplayer and multiplayer mods. 
+Modern Half-Life 1 SDK for the Xash3D FWGS engine, supports cross-platform and have improved graphics & physics, and a lot of new features, while retaining all the features and approaches to work inherent in GoldSrc and Xash3D.
+Based on XashXT, and therefore inherits all the functionality from XashXT and Spirit Of Half-Life. Suitable for creating both singleplayer and multiplayer mods. 
 
 ### Current functionality
 - Compatibility with most of GoldSrc mods
@@ -20,7 +20,7 @@ Based on XashXT, and therefore has all the functionality inherent in XashXT and 
 - Extended maximum map size limit (65535x65535x65535 units)
 - Automatic exposure correction (eye adaptation effect)
 - Support for decals on studiomodels
-- Extended model limits (no more need to split into a bunch of `.smd` files)
+- Extended model limits (no more need to split into a bunch of smd-files)
 - Dynamic lighting with shadows
 - Rigid body physics (using PhysX engine)
 - Normal mapping support
@@ -34,19 +34,21 @@ Based on XashXT, and therefore has all the functionality inherent in XashXT and 
 - Mirrors
 - Monitors
 - Portals, with the ability to move entities through them
-- Own set of utilities for development (compilers of maps, models, model viewer) 
+- Bunch of utilities for mod development (asset compilers, model/sprite viewers) 
 
 ### Future plans
-- Support for physically based rendering (PBR)
+- Support for physically based rendering (PBR), but preserving possibility to switch back to classic lighting model
+- Implement GPU-based light baking utility
 - Real-time screen space reflections
-- Major rendering optimizations
-- Updating PhysX SDK to modern version
+- Forward+ rendering implementation
+- Major rendering optimizations (depth pre-pass, flexible culling system, etc.)
+- Total rework of material system
+- Implement in-game material editor
 - Implement particle engine
 - Implement ragdoll physics
 - Implement vehicles
-- Improvement of NPC's AI
 - Adding support for OpenAL Soft / Steam Audio
-- Porting to Android
+- Bringing the Android port to a working state
 
 ### Developers and contributors
 - **SNMetamorph** - Lead developer
@@ -60,6 +62,7 @@ Based on XashXT, and therefore has all the functionality inherent in XashXT and 
 - **ThomasvonWinkler** - Testing
 - **KorteZZ** - Testing
 
-If you wish, you can also take part in the development of PrimeXT: we need testers and programmers with knowledge of C++. 
+If you wish, you can also take part in the development of PrimeXT - any contribution will be important for us. More details
+you can find out about contributing in development on the project [Discord server](https://discord.gg/BxQUMUescJ).
 
 ![Footer](/img/intro/footer.png)
