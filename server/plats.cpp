@@ -982,6 +982,13 @@ void CFuncTrain :: Next( void )
 	// Save last target in case we need to find it again
 	pev->message = pev->target;
 
+	if (pev->target == pTarg->pev->target)
+	{
+		ALERT(at_error, "Path entity \"%s\" have the target set as itself! Train stopped.\n", pTarg->GetTargetname());
+		Stop();
+		return;
+	}
+
 	if( FBitSet( pev->spawnflags, SF_TRAIN_REVERSE ) && m_pSequence != NULL )
 	{
 		CBaseEntity *pSearch = m_pSequence->m_pDestination;
