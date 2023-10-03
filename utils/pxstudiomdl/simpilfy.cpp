@@ -21,7 +21,6 @@ GNU General Public License for more details.
 #include "iksolver.h"
 
 #define ANIM_COMPRESS_THRESHOLD	0	// more values compress animation but can skip frames (optimal range between 0-100)
-#define cmp_animvalue( x, y )		( abs( value[x] - value[y] ) <= ANIM_COMPRESS_THRESHOLD )
 
 void AccumulateSeqLayers( Vector pos[], Vector4D q[], int sequence, float frame, float flWeight );
 int g_rootIndex = 0;
@@ -3962,6 +3961,9 @@ static void CompressAnimations( void )
 				mstudioanimvalue_t data[MAXSTUDIOANIMATIONS];
 				mstudioanimvalue_t *pcount, *pvalue;
 				short value[MAXSTUDIOANIMATIONS] = {0};
+				auto checkAnimEpsilon = [&value](int32_t x, int32_t y) {
+					return abs(value[x] - value[y]) <= ANIM_COMPRESS_THRESHOLD;
+				};
 
 				if( panim->numframes <= 0 )
 					COM_FatalError( "no animation frames: \"%s\"\n", panim->name );
@@ -4031,8 +4033,8 @@ static void CompressAnimations( void )
 
 					// insert value if they're not equal, 
 					// or if we're not on a run and the run is less than 3 units
-					else if( !cmp_animvalue( m, m - 1 ) || (( pcount->num.total == pcount->num.valid )
-					&& (( m < n - 1 ) && !cmp_animvalue( m, m + 1 ))))
+					else if( !checkAnimEpsilon( m, m - 1 ) || (( pcount->num.total == pcount->num.valid )
+					&& (( m < n - 1 ) && !checkAnimEpsilon( m, m + 1 ))))
 					{
 						if( pcount->num.total != pcount->num.valid )
 						{
@@ -4063,8 +4065,12 @@ static void CompressAnimations( void )
 		}
 	}
 
-	if( total != 0 )
-		MsgDev( D_INFO, "animation compressed of %.1f%c at original size\n", ((float)changes / (float)total ) * 100.0f, '%' );
+	if (total != 0) 
+	{
+		float sizeRatio = changes / static_cast<float>(total);
+		float compressionPercent = (1.0f - sizeRatio) * 100.0f;
+		MsgDev(D_INFO, "animation compressed of %.1f%% at original size\n", compressionPercent);
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -4129,10 +4135,14 @@ static void CompressSingle( s_animationstream_t *pStream )
 
 		pStream->scale[k] = scale;
 		
+		float v;
 		mstudioanimvalue_t *pcount, *pvalue;
 		short value[MAXSTUDIOANIMATIONS] = {0};
 		mstudioanimvalue_t data[MAXSTUDIOANIMATIONS];
-		float v;
+
+		auto checkAnimEpsilon = [&value](int32_t x, int32_t y) {
+			return abs(value[x] - value[y]) <= ANIM_COMPRESS_THRESHOLD;
+		};
 
 		// find deltas from default pose
 		for( n = 0; n < pStream->numerror; n++ )
@@ -4182,8 +4192,8 @@ static void CompressSingle( s_animationstream_t *pStream )
 
 			// insert value if they're not equal, 
 			// or if we're not on a run and the run is less than 3 units
-			else if( !cmp_animvalue( m, m - 1 ) || (( pcount->num.total == pcount->num.valid )
-			&& (( m < n - 1 ) && !cmp_animvalue( m, m + 1 ))))
+			else if( !checkAnimEpsilon( m, m - 1 ) || (( pcount->num.total == pcount->num.valid )
+			&& (( m < n - 1 ) && !checkAnimEpsilon( m, m + 1 ))))
 			{
 				if( pcount->num.total != pcount->num.valid )
 				{
