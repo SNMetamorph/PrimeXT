@@ -153,9 +153,21 @@ static void Mod_LoadWorldMaterials( void )
 		Mod_CopyMaterialDesc(mat, desc);
 
 		// build material names
-		Q_snprintf( diffuse, sizeof( diffuse ), "textures/%s", tx->name );
-		Q_snprintf( bumpmap, sizeof( bumpmap ), "textures/%s_norm", tx->name );
-		Q_snprintf( glossmap, sizeof( glossmap ), "textures/%s_gloss", tx->name );
+		if (Q_strlen(desc->diffusemap) && IMAGE_EXISTS(desc->diffusemap))
+			Q_strncpy(diffuse, desc->diffusemap, sizeof(diffuse));
+		else
+			Q_snprintf(diffuse, sizeof(diffuse), "textures/%s", tx->name);
+
+		if (Q_strlen(desc->normalmap) && IMAGE_EXISTS(desc->normalmap))
+			Q_strncpy(bumpmap, desc->normalmap, sizeof(bumpmap));
+		else
+			Q_snprintf(bumpmap, sizeof(bumpmap), "textures/%s_norm", tx->name);
+
+		if (Q_strlen(desc->glossmap) && IMAGE_EXISTS(desc->glossmap))
+			Q_strncpy(glossmap, desc->glossmap, sizeof(glossmap));
+		else
+			Q_snprintf(glossmap, sizeof(glossmap), "textures/%s_gloss", tx->name);
+
 		Q_snprintf( glowmap, sizeof( glowmap ), "textures/%s_luma", tx->name );
 		Q_snprintf( heightmap, sizeof( heightmap ), "textures/%s_hmap", tx->name );
 
