@@ -45,22 +45,21 @@ Next steps will be vary according to your development environment and tools.
 
 ### Linux (using CMake)
 Tested on Ubuntu 18.04 and Ubuntu 22.04. Probably it'll work on Debian too.  
-This example shows how to build project for Linux with x86 architecture, of course
+This example shows how to build project for Linux with x64 architecture, of course
 you can set another target platform if you need, see CMakePresets.json file for more information.
 
 3) Install build depedencies
 ```
-sudo dpkg --add-architecture i386
 sudo apt-get update
-sudo apt-get install gcc-multilib g++-multilib cmake ninja-build
-sudo apt-get install qtbase5-dev:i386
+sudo apt-get install gcc-multilib g++-multilib cmake ninja-build pkg-config
+sudo apt-get install qtbase5-dev
 ```
 4) Prepare build environment and configure project
 ```
 external/vcpkg/bootstrap-vcpkg.sh
 cmake -E make_directory ./build
 cd build
-cmake .. --preset linux-x86-debug
+cmake .. --preset linux-x64-debug
 ```
 5) Build project:
 ```
