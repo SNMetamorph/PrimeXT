@@ -90,7 +90,7 @@ endif()
 
 if(WIN32)
 	# so, we can't use static linking on Linux because of Qt
-	if(ENABLE_STATIC_LINKING)
+	if(ENABLE_STATIC_CRT_LINKING)
 		set_compiler_runtime(${PROJECT_NAME} STATIC)
 	endif()
 endif()

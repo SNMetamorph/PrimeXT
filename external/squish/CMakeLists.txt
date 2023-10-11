@@ -63,7 +63,7 @@ if(MSVC)
 endif()
 
 # set static compiler runtime
-if(ENABLE_STATIC_LINKING)
+if(ENABLE_STATIC_CRT_LINKING)
 	set_compiler_runtime(${PROJECT_NAME} STATIC)
 endif()
 
