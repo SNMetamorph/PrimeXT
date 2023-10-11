@@ -88,13 +88,6 @@ else()
 	)
 endif()
 
-# link log library for Android platform
-if(XASH_ANDROID)
-	target_link_libraries(${PROJECT_NAME} PRIVATE
-		log
-	)
-endif()
-
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)
 

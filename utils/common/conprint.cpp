@@ -28,10 +28,6 @@ GNU General Public License for more details.
 #include <unistd.h>
 #endif
 
-#if XASH_ANDROID
-#include <android/log.h>
-#endif
-
 #define IsColorString( p )		( p && *( p ) == '^' && *(( p ) + 1) && *(( p ) + 1) >= '0' && *(( p ) + 1 ) <= '9' )
 #define ColorIndex( c )		((( c ) - '0' ) & 7 )
 
@@ -109,10 +105,6 @@ void Sys_PrintLog(const char *pMsg)
 
 	time(&crt_time);
 	crt_tm = localtime(&crt_time);
-
-#if XASH_ANDROID
-	__android_log_print(ANDROID_LOG_DEBUG, "PrimeXT", "%s", pMsg);
-#endif
 
 	if (!logfile)
 		return;
@@ -229,7 +221,7 @@ static void Sys_PrintPosix(const char *pMsg)
 	colored[len] = 0;
 	printf("%s\033[0m", colored);
 
-#elif !XASH_ANDROID
+#else
 	printf("%s", pMsg);
 	fflush(stdout);
 #endif
