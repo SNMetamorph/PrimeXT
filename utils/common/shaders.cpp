@@ -17,7 +17,7 @@ GNU General Public License for more details.
 #include "stringlib.h"
 #include "cmdlib.h"
 #include "mathlib.h"
-#include "filesystem.h"
+#include "file_system.h"
 #include "shaders.h"
 #include "scriplib.h"
 #include "bspfile.h"

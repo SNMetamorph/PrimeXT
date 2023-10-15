@@ -1,5 +1,5 @@
 /*
-filesystem.h - simple version of game engine filesystem for tools
+file_system.h - simple version of game engine filesystem for tools
 Copyright (C) 2015 Uncle Mike
 
 This program is free software: you can redistribute it and/or modify

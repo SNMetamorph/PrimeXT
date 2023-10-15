@@ -8,7 +8,7 @@ list(APPEND DIR_SOURCES
 	"../common/bspfile.cpp"
 	"../common/cmdlib.cpp"
 	"../common/conprint.cpp"
-	"../common/filesystem.cpp"
+	"../common/file_system.cpp"
 	"../common/mathlib.cpp"
 	"../common/polylib.cpp"
 	"../common/scriplib.cpp"

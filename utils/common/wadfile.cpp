@@ -18,7 +18,7 @@ GNU General Public License for more details.
 #include <stdio.h>
 #include "cmdlib.h"
 #include "stringlib.h"
-#include "filesystem.h"
+#include "file_system.h"
 #include "port.h"
 
 #ifndef ALLOW_WADS_IN_PACKS

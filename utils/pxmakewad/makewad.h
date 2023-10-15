@@ -17,7 +17,7 @@ GNU General Public License for more details.
 #define MAKEWAD_H
 
 #include "cmdlib.h"
-#include "filesystem.h"
+#include "file_system.h"
 #include "miptex.h"
 
 #define S_ERROR "^1error:^7 "

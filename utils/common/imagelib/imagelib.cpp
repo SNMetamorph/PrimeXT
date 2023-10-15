@@ -19,7 +19,7 @@ GNU General Public License for more details.
 #include "cmdlib.h"
 #include "stringlib.h"
 #include "imagelib.h"
-#include "filesystem.h"
+#include "file_system.h"
 #include "ddstex.h"
 #include "mathlib.h"
 #include "crclib.h"

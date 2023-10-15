@@ -16,7 +16,7 @@
 #include "mathlib.h"
 #include "bspfile.h"
 #include "scriplib.h"
-#include "filesystem.h"
+#include "file_system.h"
 #include "stringlib.h"
 
 #if XASH_WIN32

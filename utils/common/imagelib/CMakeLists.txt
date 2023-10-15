@@ -7,7 +7,7 @@ include(CompilerRuntime)
 list(APPEND DIR_SOURCES
 	"../cmdlib.cpp"
 	"../conprint.cpp"
-	"../filesystem.cpp"
+	"../file_system.cpp"
 	#"../mathlib.cpp"
 	#"../scriplib.cpp"
 	"../stringlib.cpp"

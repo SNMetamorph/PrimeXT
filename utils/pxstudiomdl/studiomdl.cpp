@@ -18,7 +18,7 @@ GNU General Public License for more details.
 #include "mathlib.h"
 #include "stringlib.h"
 #include "scriplib.h"
-#include "filesystem.h"
+#include "file_system.h"
 #define EXTERN
 #include "studio.h"
 #include "studiomdl.h"

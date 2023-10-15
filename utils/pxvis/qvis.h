@@ -15,7 +15,7 @@
 #include "mathlib.h"
 #include "bspfile.h"
 #include "stringlib.h"
-#include "filesystem.h"
+#include "file_system.h"
 #include "compatibility_mode.h"
 
 #define DEFAULT_FASTVIS	false

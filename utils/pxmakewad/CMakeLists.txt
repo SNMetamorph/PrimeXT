@@ -8,7 +8,7 @@ list(APPEND DIR_SOURCES
 	"../common/cmdlib.cpp"
 	"../common/conprint.cpp"
 	"../common/crashhandler.cpp"
-	"../common/filesystem.cpp"
+	"../common/file_system.cpp"
 	"../common/wadfile.cpp"
 	"../common/mathlib.cpp"
 	"../common/stringlib.cpp"

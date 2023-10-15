@@ -10,7 +10,7 @@ list(APPEND DIR_SOURCES
 	"../common/cmdlib.cpp"
 	"../common/conprint.cpp"
 	"../common/crashhandler.cpp"
-	"../common/filesystem.cpp"
+	"../common/file_system.cpp"
 	"../common/scriplib.cpp"
 	"../common/stringlib.cpp"
 	"../common/virtualfs.cpp"

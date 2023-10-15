@@ -16,7 +16,7 @@ GNU General Public License for more details.
 #include "conprint.h"
 #include "cmdlib.h"
 #include "stringlib.h"
-#include "filesystem.h"
+#include "file_system.h"
 #include "imagelib.h"
 #include "makewad.h"
 #include "status_code.h"

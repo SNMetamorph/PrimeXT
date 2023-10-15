@@ -12,7 +12,7 @@
 #include "stringlib.h"
 #include "studio.h"
 #include "studiomdl.h"
-#include "filesystem.h"
+#include "file_system.h"
 #include "app_info.h"
 #include "build_info.h"
 

@@ -23,7 +23,7 @@ GNU General Public License for more details.
 #include "stringlib.h"
 #include "imagelib.h"
 #include "stringlib.h"
-#include "filesystem.h"
+#include "file_system.h"
 #include "ddstex.h"
 #include "squish.h"
 #include "mathlib.h"

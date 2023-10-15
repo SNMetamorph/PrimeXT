@@ -26,7 +26,7 @@ GNU General Public License for more details.
 #include <stdio.h>
 #include "cmdlib.h"
 #include "stringlib.h"
-#include "filesystem.h"
+#include "file_system.h"
 
 #define MAX_TOKEN		2048	// parse token length
 

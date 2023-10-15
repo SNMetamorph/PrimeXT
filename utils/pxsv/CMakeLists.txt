@@ -11,7 +11,7 @@ list(APPEND DIR_SOURCES
 	"../../game_shared/stringlib.cpp"
 	"../common/conprint.cpp"
 	"../common/cmdlib.cpp"
-	"../common/filesystem.cpp"
+	"../common/file_system.cpp"
 	"../common/zone.cpp"
 	"FileAssociation.cpp"
     "GlWindow.cpp"

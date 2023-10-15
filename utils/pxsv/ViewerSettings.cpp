@@ -18,7 +18,7 @@
 #include "ViewerSettings.h"
 #include "SpriteModel.h"
 #include "stringlib.h"
-#include "filesystem.h"
+#include "file_system.h"
 #include "build.h"
 #include <stdio.h>
 #include <stdlib.h>

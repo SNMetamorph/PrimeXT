@@ -1,5 +1,5 @@
 /*
-filesystem.cpp - simple version of game engine filesystem for tools
+file_system.cpp - simple version of game engine filesystem for tools
 Copyright (C) 2015 Uncle Mike
 
 This program is free software: you can redistribute it and/or modify
@@ -30,7 +30,7 @@ GNU General Public License for more details.
 #include "conprint.h"
 #include "cmdlib.h"
 #include "stringlib.h"
-#include "filesystem.h"
+#include "file_system.h"
 #include "mathlib.h"
 #include <sys/stat.h>
 

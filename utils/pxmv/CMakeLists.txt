@@ -14,7 +14,7 @@ list(APPEND DIR_SOURCES
 	"../../game_shared/procbones.cpp"
 	"../../game_shared/stringlib.cpp"
 	"../common/conprint.cpp"
-	"../common/filesystem.cpp"
+	"../common/file_system.cpp"
 	"../common/cmdlib.cpp"
 	"../common/zone.cpp"
 	"ControlPanel.cpp"

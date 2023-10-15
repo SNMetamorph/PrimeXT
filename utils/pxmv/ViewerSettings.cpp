@@ -24,7 +24,7 @@
 #include "StudioModel.h"
 #include "stringlib.h"
 #include "conprint.h"
-#include "filesystem.h"
+#include "file_system.h"
 
 #if XASH_WIN32
 #include <io.h>

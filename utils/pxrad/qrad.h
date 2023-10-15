@@ -16,7 +16,7 @@
 #include "polylib.h"
 #include "threads.h"
 #include "stringlib.h"
-#include "filesystem.h"
+#include "file_system.h"
 #include "utlarray.h"
 #include "compatibility_mode.h"
 

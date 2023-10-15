@@ -16,7 +16,7 @@
 #include "threads.h"
 #include "polylib.h"
 #include "stringlib.h"
-#include "filesystem.h"
+#include "file_system.h"
 #include "port.h"
 #include "compatibility_mode.h"
 
