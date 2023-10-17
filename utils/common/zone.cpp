@@ -18,8 +18,10 @@ GNU General Public License for more details.
 #include "stringlib.h"
 #include "mathlib.h"
 #include "conprint.h"
+#include <new>
 
 #define ZONE_ATTEMPT_CALLOC
+#define ZONE_OVERRIDE_ALLOC_OPS
 //#define ZONE_DEBUG
 
 static int	c_alloc[C_MAXSTAT] = { 0 };
@@ -179,3 +181,23 @@ size_t Mem_Size( void *ptr )
 
 	return chunk->size;
 }
+
+#ifdef ZONE_OVERRIDE_ALLOC_OPS
+void* operator new(std::size_t n)
+{
+	return Mem_Alloc(n);
+}
+void operator delete(void *p)
+{
+	Mem_Free(p);
+}
+
+void* operator new[](std::size_t s)
+{
+	return Mem_Alloc(s);
+}
+void operator delete[](void *p)
+{
+	Mem_Free(p);
+}
+#endif
