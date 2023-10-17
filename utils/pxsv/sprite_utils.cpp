@@ -265,54 +265,54 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 		return 0;
 
 	// load the model
-	if( (fp = fopen( spritename, "rb" )) == NULL)
+	if ((fp = fopen(spritename, "rb")) == NULL)
 		return 0;
 
-	fseek( fp, 0, SEEK_END );
-	m_iFileSize = ftell( fp );
-	fseek( fp, 0, SEEK_SET );
+	fseek(fp, 0, SEEK_END);
+	m_iFileSize = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
 
 	buffer = Mem_Alloc(m_iFileSize);
 	if (!buffer)
 	{
 		m_iFileSize = 0;
-		fclose (fp);
+		fclose(fp);
 		return 0;
 	}
 
-	fread( buffer, m_iFileSize, 1, fp );
-	fclose( fp );
+	fread(buffer, m_iFileSize, 1, fp);
+	fclose(fp);
 
 	dsprite_q1_t	*pinq1;
 	dsprite_hl_t	*pinhl;
 	dsprite_t		*pin;
-	short		*numi = NULL;
+	const int16_t	*numPaletteColors = nullptr;
 	dframetype_t	*pframetype;
 	msprite_t		*psprite;
 	int		i, size;
 
 	pin = (dsprite_t *)buffer;
 
-	if (strncmp ((const char *) buffer, "IDSP", 4 ))
+	if (strncmp((const char *)buffer, "IDSP", 4))
 	{
-		mxMessageBox( g_GlWindow, "Unknown file format.", g_appTitle, MX_MB_OK | MX_MB_ERROR );
+		mxMessageBox(g_GlWindow, "Unknown file format.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
 		m_iFileSize = 0;
 		Mem_Free(buffer);
 		return 0;
 	}
 
-	if( pin->version != SPRITE_VERSION_Q1 && pin->version != SPRITE_VERSION_HL )
+	if (pin->version != SPRITE_VERSION_Q1 && pin->version != SPRITE_VERSION_HL)
 	{
-		mxMessageBox( g_GlWindow, "Unsupported sprite version.", g_appTitle, MX_MB_OK | MX_MB_ERROR );
+		mxMessageBox(g_GlWindow, "Unsupported sprite version.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
 		m_iFileSize = 0;
 		Mem_Free(buffer);
 		return 0;
 	}
 
-	if( pin->version == SPRITE_VERSION_Q1 )
+	if (pin->version == SPRITE_VERSION_Q1)
 	{
 		pinq1 = (dsprite_q1_t *)buffer;
-		size = sizeof( msprite_t ) + ( pinq1->numframes - 1 ) * sizeof( psprite->frames );
+		size = sizeof(msprite_t) + (pinq1->numframes - 1) * sizeof(psprite->frames);
 		psprite = (msprite_t *)Mem_Alloc(size);
 		m_pspritehdr = psprite;	// make link to extradata
 
@@ -327,12 +327,12 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 		m_spritemaxs[0] = m_spritemaxs[1] = pinq1->bounds[0] * 0.5f;
 		m_spritemins[2] = -pinq1->bounds[1] * 0.5f;
 		m_spritemaxs[2] = pinq1->bounds[1] * 0.5f;
-		numi = NULL;
+		numPaletteColors = NULL;
 	}
-	else if( pin->version == SPRITE_VERSION_HL )
+	else if (pin->version == SPRITE_VERSION_HL)
 	{
 		pinhl = (dsprite_hl_t *)buffer;
-		size = sizeof( msprite_t ) + ( pinhl->numframes - 1 ) * sizeof( psprite->frames );
+		size = sizeof(msprite_t) + (pinhl->numframes - 1) * sizeof(psprite->frames);
 		psprite = (msprite_t *)Mem_Alloc(size);
 		m_pspritehdr = psprite;	// make link to extradata
 
@@ -347,58 +347,60 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 		m_spritemaxs[0] = m_spritemaxs[1] = pinhl->bounds[0] * 0.5f;
 		m_spritemins[2] = -pinhl->bounds[1] * 0.5f;
 		m_spritemaxs[2] = pinhl->bounds[1] * 0.5f;
-		numi = (short *)(pinhl + 1);
+		numPaletteColors = (short *)(pinhl + 1);
 	}
 
 	// last color are transparent
-	m_palette[255*4+0] = m_palette[255*4+1] = m_palette[255*4+2] = m_palette[255*4+3] = 0;
+	m_palette[255 * 4 + 0] = m_palette[255 * 4 + 1] = m_palette[255 * 4 + 2] = m_palette[255 * 4 + 3] = 0;
 	m_loadframe = 0;
 
-	if( numi == NULL )
+	if (!numPaletteColors)
 	{
-		for( i = 0; i < 255; i++ )
+		// for quake 1 sprites we don't have embedded palette 
+		// and should use default one
+		for (i = 0; i < 255; i++)
 		{
-			m_palette[i*4+0] = palette_q1[i*3+0];
-			m_palette[i*4+1] = palette_q1[i*3+1];
-			m_palette[i*4+2] = palette_q1[i*3+2];
-			m_palette[i*4+3] = 0xFF;
+			m_palette[i * 4 + 0] = palette_q1[i * 3 + 0];
+			m_palette[i * 4 + 1] = palette_q1[i * 3 + 1];
+			m_palette[i * 4 + 2] = palette_q1[i * 3 + 2];
+			m_palette[i * 4 + 3] = 0xFF;
 		}
 		pframetype = (dframetype_t *)(pinq1 + 1);
 	}
-	else if( *numi == 256 )
-	{	
-		byte	*pal = (byte *)(numi+1);
+	else if (*numPaletteColors == 256)
+	{
+		const uint8_t *pal = reinterpret_cast<const uint8_t*>(numPaletteColors + 1);
 
 		// install palette
-		switch( psprite->texFormat )
+		switch (psprite->texFormat)
 		{
-                    case SPR_INDEXALPHA:
-			for( i = 0; i < 256; i++ )
-			{
-				m_palette[i*4+0] = pal[765];
-				m_palette[i*4+1] = pal[766];
-				m_palette[i*4+2] = pal[767];
-				m_palette[i*4+3] = i;
-			}
-			break;
-		case SPR_ALPHTEST:		
-			for( i = 0; i < 255; i++ )
-			{
-				m_palette[i*4+0] = pal[i*3+0];
-				m_palette[i*4+1] = pal[i*3+1];
-				m_palette[i*4+2] = pal[i*3+2];
-				m_palette[i*4+3] = 0xFF;
-			}
-                              break;
-		default:
-			for( i = 0; i < 256; i++ )
-			{
-				m_palette[i*4+0] = pal[i*3+0];
-				m_palette[i*4+1] = pal[i*3+1];
-				m_palette[i*4+2] = pal[i*3+2];
-				m_palette[i*4+3] = 0xFF;
-			}
-			break;
+			case SPR_INDEXALPHA:
+				for (i = 0; i < 256; i++)
+				{
+					m_palette[i * 4 + 0] = pal[765];
+					m_palette[i * 4 + 1] = pal[766];
+					m_palette[i * 4 + 2] = pal[767];
+					m_palette[i * 4 + 3] = i;
+				}
+				break;
+			case SPR_ALPHTEST:
+				for (i = 0; i < 255; i++)
+				{
+					m_palette[i * 4 + 0] = pal[i * 3 + 0];
+					m_palette[i * 4 + 1] = pal[i * 3 + 1];
+					m_palette[i * 4 + 2] = pal[i * 3 + 2];
+					m_palette[i * 4 + 3] = 0xFF;
+				}
+				break;
+			default:
+				for (i = 0; i < 256; i++)
+				{
+					m_palette[i * 4 + 0] = pal[i * 3 + 0];
+					m_palette[i * 4 + 1] = pal[i * 3 + 1];
+					m_palette[i * 4 + 2] = pal[i * 3 + 2];
+					m_palette[i * 4 + 3] = 0xFF;
+				}
+				break;
 		}
 
 		pframetype = (dframetype_t *)(pal + 768);
