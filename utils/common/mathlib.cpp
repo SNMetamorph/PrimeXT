@@ -193,7 +193,7 @@ SinCos
 */
 void SinCos( float radians, float *sine, float *cosine )
 {
-#if XASH_LINUX && !XASH_ANDROID
+#if _GNU_SOURCE && !XASH_ANDROID
 	sincosf(radians, sine, cosine);
 #else
 	*sine = sinf(radians);

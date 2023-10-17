@@ -55,7 +55,7 @@ GNU General Public License for more details.
 	#if XASH_POSIX
 		#include <unistd.h>
 		#include <dlfcn.h>
-		#include <linux/limits.h>
+		#include <limits.h>
 
 		#define PATH_SPLITTER "/"
 		#define HAVE_DUP

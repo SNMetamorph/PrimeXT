@@ -210,7 +210,7 @@ inline vec_t VectorNormalize( vec3_t v )
 	return length;
 }
 
-#if !XASH_LINUX
+#if XASH_WIN32
 // disabled declaration for linux to avoid conflict
 _forceinline int ffsl( uint32_t mask )
 {
