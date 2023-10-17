@@ -262,7 +262,7 @@ double GAME_EXPORT I_FloatTime( void )
 
 	QueryPerformanceCounter( &CurrentTime );
 	return (double)( CurrentTime.QuadPart - g_ClockStart.QuadPart ) / (double)( g_PerformanceFrequency.QuadPart );
-#elif XASH_LINUX
+#elif XASH_POSIX
 	static int64 g_PerformanceFrequency;
 	static int64 g_ClockStart;
 	int64 CurrentTime;

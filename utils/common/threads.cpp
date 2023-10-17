@@ -257,7 +257,7 @@ void RunThreadsOnIncremental( int workcnt, bool showpacifier, pfnRunThreads func
 	RunThreadsOn( workcnt, showpacifier, func );
 }
 
-#elif XASH_LINUX
+#elif XASH_POSIX
 #define Error COM_FatalError
 
 static pfnThreadWork	g_workfunction;
