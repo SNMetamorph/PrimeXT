@@ -11,10 +11,6 @@
 // 1-4-99	fixed file texture load and file read bug
 
 ////////////////////////////////////////////////////////////////////////
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <gl.h>
 #include "SpriteModel.h"
 #include "GlWindow.h"
 #include "ViewerSettings.h"
@@ -23,6 +19,12 @@
 
 #include <mx.h>
 #include "sprviewer.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <gl.h>
+#include <vector>
 
 SpriteModel g_spriteModel;
 extern bool bUseWeaponOrigin;
@@ -259,7 +261,6 @@ dframetype_t* SpriteModel :: LoadSpriteGroup( void *pin, mspriteframe_t **ppfram
 msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 {
 	FILE *fp;
-	void *buffer;
 
 	if (!spritename)
 		return 0;
@@ -272,15 +273,16 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 	m_iFileSize = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
 
-	buffer = Mem_Alloc(m_iFileSize);
-	if (!buffer)
+	std::vector<uint8_t> buffer;
+	buffer.resize(m_iFileSize);
+	if (buffer.size() != m_iFileSize)
 	{
 		m_iFileSize = 0;
 		fclose(fp);
 		return 0;
 	}
 
-	fread(buffer, m_iFileSize, 1, fp);
+	fread(buffer.data(), m_iFileSize, 1, fp);
 	fclose(fp);
 
 	dsprite_q1_t	*pinq1;
@@ -291,13 +293,12 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 	msprite_t		*psprite;
 	int		i, size;
 
-	pin = (dsprite_t *)buffer;
+	pin = (dsprite_t *)buffer.data();
 
-	if (strncmp((const char *)buffer, "IDSP", 4))
+	if (strncmp((const char *)buffer.data(), "IDSP", 4))
 	{
 		mxMessageBox(g_GlWindow, "Unknown file format.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
 		m_iFileSize = 0;
-		Mem_Free(buffer);
 		return 0;
 	}
 
@@ -305,13 +306,12 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 	{
 		mxMessageBox(g_GlWindow, "Unsupported sprite version.", g_appTitle, MX_MB_OK | MX_MB_ERROR);
 		m_iFileSize = 0;
-		Mem_Free(buffer);
 		return 0;
 	}
 
 	if (pin->version == SPRITE_VERSION_Q1)
 	{
-		pinq1 = (dsprite_q1_t *)buffer;
+		pinq1 = (dsprite_q1_t *)buffer.data();
 		size = sizeof(msprite_t) + (pinq1->numframes - 1) * sizeof(psprite->frames);
 		psprite = (msprite_t *)Mem_Alloc(size);
 		m_pspritehdr = psprite;	// make link to extradata
@@ -331,7 +331,7 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 	}
 	else if (pin->version == SPRITE_VERSION_HL)
 	{
-		pinhl = (dsprite_hl_t *)buffer;
+		pinhl = (dsprite_hl_t *)buffer.data();
 		size = sizeof(msprite_t) + (pinhl->numframes - 1) * sizeof(psprite->frames);
 		psprite = (msprite_t *)Mem_Alloc(size);
 		m_pspritehdr = psprite;	// make link to extradata
@@ -407,19 +407,19 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 	}
 	else 
 	{
-		mxMessageBox( g_GlWindow, "sprite has wrong number of palette colors.\n", g_appTitle, MX_MB_OK | MX_MB_ERROR );
+		mxMessageBox( g_GlWindow, "Sprite has wrong number of palette colors (only 256 supported)\n", g_appTitle, MX_MB_OK | MX_MB_ERROR );
 		Mem_Free(m_pspritehdr);
+		m_pspritehdr = nullptr;
 		m_iFileSize = 0;
-		Mem_Free(buffer);
 		return 0;
 	}
 
 	if( m_pspritehdr->numframes > MAX_SPRITE_FRAMES )
 	{
-		mxMessageBox( g_GlWindow, "sprite has too many frames.", g_appTitle, MX_MB_OK | MX_MB_ERROR );
+		mxMessageBox( g_GlWindow, "Sprite has too many frames", g_appTitle, MX_MB_OK | MX_MB_ERROR );
 		Mem_Free(m_pspritehdr);
+		m_pspritehdr = nullptr;
 		m_iFileSize = 0;
-		Mem_Free(buffer);
 		return 0;
 	}
 
@@ -466,7 +466,6 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 
 	// free buffer
 	m_iFileSize = 0;
-	Mem_Free(buffer);
 
 	return m_pspritehdr;
 }
