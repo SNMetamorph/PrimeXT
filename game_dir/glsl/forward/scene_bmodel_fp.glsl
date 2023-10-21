@@ -162,6 +162,9 @@ void main( void )
 	albedo = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, u_RefractScale );
 #elif defined( APPLY_TERRAIN )
 	albedo = TerrainMixDiffuse( u_ColorMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
+#elif defined( MONITOR_BRUSH )
+	// in case of rendering monitor we don't need SRGB->linear conversion
+	albedo = texture2D( u_ColorMap, vec_TexDiffuse );
 #else
 	albedo = colormap2D( u_ColorMap, vec_TexDiffuse );
 #endif
