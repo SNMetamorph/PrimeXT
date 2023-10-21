@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 06 September 2023)
+// PrimeXT FGD (last updated 21 October 2023)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -1549,7 +1549,7 @@
 	]
 ]
 
-@PointClass base(Targetname) size (-4 -4 -4, 4 4 4) iconsprite("sprites/fgd/env_particle.spr") = env_particle : "Particle Effect"
+@PointClass base(Targetname, Parent) size (-4 -4 -4, 4 4 4) iconsprite("sprites/fgd/env_particle.spr") = env_particle : "Particle Effect"
 [
 	message(string) : "Particle File" : "aurora/smoke.aur"
 	attachment(string) : "Attachment Point"
