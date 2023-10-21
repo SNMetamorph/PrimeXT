@@ -403,6 +403,12 @@ int R_AllocateSubviewTexture(const CViewport &viewport, texFlags_t texFlags)
 			return 0;	// disable
 		}
 
+		// use HDR textures for subviews too
+		bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
+		if (hdr_rendering) {
+			texFlags = static_cast<texFlags_t>(texFlags | TF_ARB_FLOAT | TF_ARB_16BIT);
+		}
+
 		// create new mirror texture
 		tr.subviewTextures[i].texturenum = CREATE_TEXTURE( va( "*subview%i", i ), viewport.GetWidth(), viewport.GetHeight(), NULL, texFlags ); 
 		tr.subviewTextures[i].texframe = tr.realframecount; // now used
