@@ -3,6 +3,9 @@ on:
   push:
     paths-ignore:
       - 'documentation/**'
+  pull_request:
+    paths-ignore:
+      - 'documentation/**'
 
 jobs:
   build-windows:
@@ -170,12 +173,20 @@ jobs:
     name: release-builds
     runs-on: ubuntu-latest
     needs: [build-windows, build-linux]
-    if: ${{ always() && github.ref == 'refs/heads/master' }}
     steps:
+      - name: Check for pull request
+        uses: 8BitJonny/gh-get-current-pr@2.2.0
+        id: pr-check
+        with:
+          # Verbose setting SHA when using Pull_Request event trigger to fix #16. (For push even trigger this is not necessary.)
+          sha: ${{ github.event.pull_request.head.sha }} 
+
       - name: Fetch artifacts
+        if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
         uses: actions/download-artifact@v3.0.1
 
       - name: Remove old release
+        if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
         uses: dev-drprasad/delete-tag-and-release@v0.2.1
         with:
           delete_release: true
@@ -184,6 +195,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Repackage binaries and allow GitHub to process removed release for few seconds
+        if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
         continue-on-error: true
         run: |
           cd Windows
@@ -195,6 +207,7 @@ jobs:
           sleep 20s
 
       - name: Upload new release
+        if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
         uses: softprops/action-gh-release@v0.1.15
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

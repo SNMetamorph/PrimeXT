@@ -2,8 +2,11 @@ name: documentation-deploy
 
 on:
   push:
-    branches: [master]
-    paths: [documentation/**]
+    paths: 
+      - 'documentation/**'
+  pull_request:
+    paths: 
+      - 'documentation/**'
 
 jobs:
   deploy:
@@ -20,9 +23,17 @@ jobs:
           npm ci
           npm run build
 
+      - name: Check for pull request
+        uses: 8BitJonny/gh-get-current-pr@2.2.0
+        id: pr-check
+        with:
+          # Verbose setting SHA when using Pull_Request event trigger to fix #16. (For push even trigger this is not necessary.)
+          sha: ${{ github.event.pull_request.head.sha }} 
+
       # Popular action to deploy to GitHub Pages:
       # Docs: https://github.com/peaceiris/actions-gh-pages#%EF%B8%8F-docusaurus
       - name: Deploy to GitHub Pages
+        if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
