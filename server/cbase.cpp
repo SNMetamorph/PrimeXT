@@ -24,13 +24,12 @@
 #include	"gamerules.h"
 #include	"weapons.h"
 #include	"game.h"
+#include "UserMessages.h"
 
 //#define USE_ENGINE_TOUCH_TRIGGERS
 
 extern DLL_GLOBAL Vector		g_vecAttackDir;
 extern CGraph			WorldGraph;
-extern int			gmsgKillPart;
-extern int			gmsgKillDecals;
 static CUtlArray<CBaseEntity *>	g_TeleportStack;
 
 void CBaseEntity :: DontThink( void )

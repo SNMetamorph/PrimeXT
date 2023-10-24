@@ -28,6 +28,7 @@
 #include "trains.h"
 #include "monsterevent.h"
 #include "scriptevent.h"
+#include "UserMessages.h"
 
 #define SF_GIBSHOOTER_REPEATABLE	1 // allows a gibshooter to be refired
 #define SF_FUNNEL_REVERSE		1 // funnel effect repels particles instead of attracting them.

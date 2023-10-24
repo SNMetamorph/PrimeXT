@@ -38,6 +38,7 @@
 #include "weaponinfo.h"
 #include "usercmd.h"
 #include "netadr.h"
+#include "UserMessages.h"
 #include <locale>
 
 extern DLL_GLOBAL ULONG		g_ulModelIndexPlayer;
@@ -46,10 +47,9 @@ extern DLL_GLOBAL int		g_iSkillLevel;
 extern DLL_GLOBAL ULONG		g_ulFrameCount;
 
 extern void CopyToBodyQue( CBaseEntity *pCorpse );
-extern int giPrecacheGrunt;
-extern int gmsgSayText;
-
 extern int g_teamplay;
+
+void LinkUserMessages();
 
 /*
  * used by kill command and disconnect command
@@ -588,7 +588,7 @@ void ServerActivate( edict_t *pEdictList, int edictCount, int clientMax )
 	// Every call to ServerActivate should be matched by a call to ServerDeactivate
 	g_serveractive = 1;
 
-	LinkUserMessages ();
+	LinkUserMessages();
 
 	// Clients have not been initialized yet
 	for ( i = 0; i < edictCount; i++ )

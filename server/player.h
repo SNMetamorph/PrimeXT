@@ -415,13 +415,6 @@ public:
 #define AUTOAIM_10DEGREES 0.1736481776669
 
 
-extern int gmsgHudText;
-extern int gmsgParticle;
-extern int gmsgStudioDecal;
-extern int gmsgCustomDecal;
-extern int gmsgMusicFade;
-extern int gmsgSetupBones;
-extern int gmsgPostFxSettings;
 extern BOOL gInitHUD;
 
 #endif // PLAYER_H
