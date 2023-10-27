@@ -73,7 +73,8 @@
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x86-linux",
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_PHYSX": "OFF"
       },
       "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
     },
@@ -85,7 +86,8 @@
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-linux",
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_PHYSX": "OFF"
       },
       "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
     },
