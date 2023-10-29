@@ -184,12 +184,12 @@ void main()
 #endif // HAS_GLOSSMAP
 
 // compute the diffuse term
-#if defined( PLANAR_REFLECTION ) && !defined( LIQUID_UNDERWATER ) // HACKHACK
+#if defined( LIGHTMAP_DEBUG ) || defined( LIQUID_SURFACE )
+	vec4 albedo = vec4(1.0);
+#elif defined( PLANAR_REFLECTION ) && !defined( LIQUID_UNDERWATER ) // HACKHACK
 	vec4 albedo = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, u_RefractScale );
 #elif defined( APPLY_TERRAIN )
 	vec4 albedo = TerrainMixDiffuse( u_ColorMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
-#elif defined( LIQUID_SURFACE )
-	vec4 albedo = vec4(1.0);
 #else
 	vec4 albedo = colormap2D( u_ColorMap, vec_TexDiffuse );
 #endif

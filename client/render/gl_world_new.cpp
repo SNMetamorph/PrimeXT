@@ -1108,6 +1108,15 @@ static word Mod_ShaderLightForward( CDynLight *dl, msurface_t *s )
 	if( mirror && glConfig.max_varying_floats > 48 )
 		GL_AddShaderDirective( options, "PLANAR_REFLECTION" );
 
+	// debug visualization
+	if( r_lightmap->value > 0.0f && r_lightmap->value <= 2.0f )
+	{
+		if( r_lightmap->value == 1.0f && worldmodel->lightdata )
+			GL_AddShaderDirective( options, "LIGHTMAP_DEBUG" );
+		else if( r_lightmap->value == 2.0f && FBitSet( world->features, WORLD_HAS_DELUXEMAP ))
+			GL_AddShaderDirective( options, "LIGHTVEC_DEBUG" );
+	}
+
 	// and finally select the render-mode
 	if( FBitSet( mat->flags, BRUSH_LIQUID ))
 	{

@@ -166,10 +166,13 @@ void main( void )
 	if (shadow <= 0.0) 
 		discard; // fast reject
  
+#if defined( LIGHTMAP_DEBUG )
+	vec3 albedo = vec3(1.0);
+#else 
 	vec3 albedo = diffuse.rgb;
+#endif
 	light *= atten * shadow; // apply attenuation and shadowing
 	LightingData lighting = ComputeLighting(N, V, L, albedo, light, mat);
-	
 #if defined( APPLY_PBS )
 	diffuse.rgb = (lighting.kD * albedo / M_PI) * lighting.diffuse;
 #else

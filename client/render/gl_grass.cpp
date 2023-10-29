@@ -1325,6 +1325,15 @@ static word R_GrassShaderLightForward( CDynLight *dl, grass_t *g )
 			GL_AddShaderDirective( options, "APPLY_SHADOW" );
 	}
 
+	// debug visualization
+	if( r_lightmap->value > 0.0f && r_lightmap->value <= 2.0f )
+	{
+		if( r_lightmap->value == 1.0f && worldmodel->lightdata )
+			GL_AddShaderDirective( options, "LIGHTMAP_DEBUG" );
+		else if( r_lightmap->value == 2.0f && FBitSet( world->features, WORLD_HAS_DELUXEMAP ))
+			GL_AddShaderDirective( options, "LIGHTVEC_DEBUG" );
+	}
+
 	word shaderNum = GL_FindUberShader( glname, options );
 
 	if( !shaderNum )

@@ -78,9 +78,12 @@ void main( void )
 #endif
 	vec3 N = normalize( var_Normal );
 
-	// compute the diffuse term
+// compute the diffuse term
+#if defined( LIGHTMAP_DEBUG )
+	vec4 diffuse = vec4(1.0);
+#else
 	vec4 diffuse = colormap2D( u_ColorMap, var_TexDiffuse );
-
+#endif
 	vec3 light = vec3( 1.0 );
 	float shadow = 1.0;
 
