@@ -47,19 +47,20 @@ jobs:
 
       - name: Prepare artifacts
         run: |
+          mkdir artifacts\
           mkdir publish\
           mkdir publish\primext
           mkdir publish\primext\bin
           mkdir publish\primext\devkit
           move build\${{ matrix.build_conf }}\* publish\
           move game_dir\* publish\primext
+          Compress-Archive -Path publish\* -Destination artifacts\primext-${{ matrix.cmake_preset }}.zip
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: Windows
-          path: |
-            publish/*
+          name: artifact-${{ matrix.cmake_preset }}
+          path: artifacts/*
 
   build-linux:
     runs-on: ${{ matrix.os }}
@@ -106,6 +107,7 @@ jobs:
  
       - name: Prepare artifacts
         run: |
+          mkdir artifacts/
           mkdir publish/
           mkdir publish/primext
           mkdir publish/primext/bin
@@ -113,13 +115,13 @@ jobs:
           cp -r build/${{ matrix.build_conf }}/primext/* publish/primext/
           cp build/${{ matrix.build_conf }}/primext_run publish/
           cp -r game_dir/* publish/primext
+          zip -r artifacts/primext-${{ matrix.cmake_preset }}.zip publish
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: Linux
-          path: |
-            publish/*
+          name: artifact-${{ matrix.cmake_preset }}
+          path: artifacts/*
 
   build-android:
     runs-on: ubuntu-latest
@@ -153,21 +155,22 @@ jobs:
         run: chmod +x ./gradlew && ./gradlew assembleDebug
         working-directory: android
 
-      - name: Prepare artifacts
-        run: |
-          mkdir publish/
-          mkdir publish/primext
-          mkdir publish/primext/bin
-          mkdir publish/primext/devkit
-          cp android/app/build/outputs/apk/debug/app-debug.apk publish/primext-debug.apk
-          cp -r game_dir/* publish/primext
+      #- name: Prepare artifacts
+      #  run: |
+      #    mkdir artifacts/
+      #    mkdir publish/
+      #    mkdir publish/primext
+      #    mkdir publish/primext/bin
+      #    mkdir publish/primext/devkit
+      #    cp android/app/build/outputs/apk/debug/app-debug.apk publish/primext-debug.apk
+      #    cp -r game_dir/* publish/primext
+      #    zip -r artifacts/primext-${{ matrix.cmake_preset }}.zip publish
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: Android
-          path: |
-            publish/*
+      #- name: Upload artifacts
+      #  uses: actions/upload-artifact@v3
+      #  with:
+      #    name: artifact-${{ matrix.cmake_preset }}
+      #    path: artifacts/*
 
   release:
     name: release-builds
@@ -184,6 +187,8 @@ jobs:
       - name: Fetch artifacts
         if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
         uses: actions/download-artifact@v3.0.1
+        with:
+          path: artifacts/
 
       - name: Remove old release
         if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
@@ -198,12 +203,13 @@ jobs:
         if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
         continue-on-error: true
         run: |
-          cd Windows
-          zip -r ../PrimeXT-Windows-x86.zip *
-          cd ../Linux
-          tar -czvf ../PrimeXT-Linux-i386.tar.gz *
-          #cd ../Android
-          #zip -r ../PrimeXT-Android.zip *
+          cd artifacts/
+          for i in artifact-*; do
+            mv "$i"/* .
+            rm -rf "$i"
+          done
+          ls -R .
+          cd ../
           sleep 20s
 
       - name: Upload new release
@@ -211,7 +217,7 @@ jobs:
         uses: softprops/action-gh-release@v0.1.15
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: PrimeXT-*
+          files: artifacts/*
           tag_name: continious
           draft: false
           prerelease: true
