@@ -16,6 +16,10 @@ if(${CMAKE_VERSION} VERSION_LESS "3.0.2")
 	endmacro()
 endif()
 
+if(VCPKG_TARGET_ANDROID)
+	include(VcpkgAndroid)
+endif()
+
 include(VcpkgIntegration)
 option(BUILD_CLIENT "Build client library" ON)
 option(BUILD_SERVER "Build server library" ON)
