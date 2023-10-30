@@ -115,7 +115,9 @@ jobs:
           cp -r build/${{ matrix.build_conf }}/primext/* publish/primext/
           cp build/${{ matrix.build_conf }}/primext_run publish/
           cp -r game_dir/* publish/primext
-          zip -r artifacts/primext-${{ matrix.cmake_preset }}.zip publish
+          pushd publish
+          zip -r ../artifacts/primext-${{ matrix.cmake_preset }}.zip ./*
+          popd
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
