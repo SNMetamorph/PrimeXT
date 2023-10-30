@@ -1109,13 +1109,20 @@ R_GrassTextureForName
 find or add unique texture for grass
 ================
 */
-byte R_GrassTextureForName( const char *name )
+int R_GrassTextureForName( const char *name, byte *tex )
 {
-	byte i;
+	size_t i;
+
 	for( i = 0; i < GRASS_TEXTURES && grasstexs[i].name[0]; i++ )
 	{
 		if( !Q_stricmp( grasstexs[i].name, name ))
-			return i;	// found
+			goto end;	// found
+	}
+
+	if( i == GRASS_TEXTURES )
+	{
+		ALERT( at_warning, "limit of grass textures was exceeded %d\n", GRASS_TEXTURES );
+		return 1;
 	}
 
 	// allocate a new one
@@ -1128,7 +1135,9 @@ byte R_GrassTextureForName( const char *name )
 		grasstexs[i].gl_texturenum = tr.defaultTexture;
 	}
 
-	return i;
+end:
+	*tex = (byte)i;
+	return 0;
 }
 
 /*
@@ -1692,7 +1701,8 @@ void R_GrassInit( void )
 				continue;
 			}
 
-			entry.texture = R_GrassTextureForName( token );
+			if( R_GrassTextureForName( token, &entry.texture ))
+				break;
 
 			pfile = COM_ParseLine( pfile, token );
 			if( !pfile )
