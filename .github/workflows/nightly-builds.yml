@@ -32,6 +32,9 @@ jobs:
         # We'll use this as our working directory for all subsequent commands
         run: cmake -E make_directory ${{github.workspace}}/build
 
+      - name: Install ninja-build tool
+        uses: seanmiddleditch/gha-setup-ninja@v4
+
       - name: Configure CMake
         # Use a bash shell so we can use the same syntax for environment variable
         # access regardless of the host operating system
@@ -40,7 +43,7 @@ jobs:
         # Note the current convention is to use the -S and -B options here to specify source
         # and build directories, but this is only available with CMake 3.13 and higher.
         # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-        run: cmake $GITHUB_WORKSPACE --preset ${{ matrix.cmake_preset }} -G "Visual Studio 17 2022"
+        run: cmake $GITHUB_WORKSPACE --preset ${{ matrix.cmake_preset }}
 
       - name: Build
         working-directory: ${{github.workspace}}/build
