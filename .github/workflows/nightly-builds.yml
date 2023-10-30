@@ -16,9 +16,11 @@ jobs:
           - os: windows-latest
             cmake_preset: windows-x86-debug
             build_conf: Debug
+            devenv_arch: amd64_x86
           - os: windows-latest
             cmake_preset: windows-x64-debug
             build_conf: Debug
+            devenv_arch: amd64
 
     steps:
       - name: Checkout repository
@@ -31,6 +33,10 @@ jobs:
         # Some projects don't allow in-source building, so create a separate build directory
         # We'll use this as our working directory for all subsequent commands
         run: cmake -E make_directory ${{github.workspace}}/build
+
+      - uses: ilammy/msvc-dev-cmd@v1.12.1
+        with:
+          arch: ${{ matrix.devenv_arch }}
 
       - name: Install ninja-build tool
         uses: seanmiddleditch/gha-setup-ninja@v4
