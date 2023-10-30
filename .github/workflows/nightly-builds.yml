@@ -14,7 +14,10 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            cmake_preset: ci-windows-x86
+            cmake_preset: windows-x86-debug
+            build_conf: Debug
+          - os: windows-latest
+            cmake_preset: windows-x64-debug
             build_conf: Debug
 
     steps:
@@ -37,7 +40,7 @@ jobs:
         # Note the current convention is to use the -S and -B options here to specify source
         # and build directories, but this is only available with CMake 3.13 and higher.
         # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-        run: cmake $GITHUB_WORKSPACE --preset ${{ matrix.cmake_preset }} -DCMAKE_BUILD_TYPE=${{ matrix.build_conf }}
+        run: cmake $GITHUB_WORKSPACE --preset ${{ matrix.cmake_preset }} -G "Visual Studio 17 2022"
 
       - name: Build
         working-directory: ${{github.workspace}}/build
@@ -68,7 +71,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-22.04
-            cmake_preset: ci-linux-x64
+            cmake_preset: linux-x64-debug
             build_conf: Debug
 
     steps:
@@ -97,7 +100,7 @@ jobs:
         # Note the current convention is to use the -S and -B options here to specify source
         # and build directories, but this is only available with CMake 3.13 and higher.
         # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-        run: cmake $GITHUB_WORKSPACE --preset ${{ matrix.cmake_preset }} -DCMAKE_BUILD_TYPE=${{ matrix.build_conf }}
+        run: cmake $GITHUB_WORKSPACE --preset ${{ matrix.cmake_preset }}
 
       - name: Build
         working-directory: ${{github.workspace}}/build
