@@ -17,6 +17,8 @@ GNU General Public License for more details.
 #include "port.h"
 #include "assert.h"
 #include "stringlib.h"
+#include <fmt/format.h>
+#include <string>
 
 #ifdef _WIN32
 using dllhandle_t = HMODULE;
@@ -30,15 +32,14 @@ bool fs::CFilesystemManager::Initialize()
 {
 	assert(m_pFileSystem == nullptr);
 
-	char path[MAX_PATH];
-
+	std::string path;
 #if XASH_ANDROID
-	Q_snprintf(path, sizeof(path), "%s/lib%s", getenv( "XASH3D_ENGLIBDIR" ), "filesystem_stdio." OS_LIB_EXT);
+	path = fmt::format("{}/lib{}", getenv("XASH3D_ENGLIBDIR"), "filesystem_stdio." OS_LIB_EXT);
 #else
-	Q_snprintf(path, sizeof(path), "%s", "filesystem_stdio." OS_LIB_EXT);
+	path = ("filesystem_stdio." OS_LIB_EXT);
 #endif
 
-	dllhandle_t filesystemModule = LoadLibrary(path);
+	dllhandle_t filesystemModule = LoadLibrary(path.c_str());
 	if (!filesystemModule) {
 		return false;
 	}
