@@ -16,6 +16,7 @@ GNU General Public License for more details.
 #include "filesystem_manager.h"
 #include "port.h"
 #include "assert.h"
+#include "stringlib.h"
 
 #ifdef _WIN32
 using dllhandle_t = HMODULE;
@@ -28,7 +29,16 @@ using pfnCreateInterface_t = void *(*)(const char *interfaceName, int *retval);
 bool fs::CFilesystemManager::Initialize()
 {
 	assert(m_pFileSystem == nullptr);
-	dllhandle_t filesystemModule = LoadLibrary("filesystem_stdio." OS_LIB_EXT);
+
+	char path[MAX_PATH];
+
+#if XASH_ANDROID
+	Q_snprintf(path, sizeof(path), "%s/lib%s", getenv( "XASH3D_ENGLIBDIR" ), "filesystem_stdio." OS_LIB_EXT);
+#else
+	Q_snprintf(path, sizeof(path), "%s", "filesystem_stdio." OS_LIB_EXT);
+#endif
+
+	dllhandle_t filesystemModule = LoadLibrary(path);
 	if (!filesystemModule) {
 		return false;
 	}
