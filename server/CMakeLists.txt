@@ -200,6 +200,10 @@ if(ENABLE_STATIC_CRT_LINKING)
 	set_compiler_runtime(${PROJECT_NAME} STATIC)
 endif()
 
+# link dependency libraries
+find_package(fmt CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
+
 set_target_properties (${PROJECT_NAME} PROPERTIES
 	CXX_STANDARD 17
 	CXX_STANDARD_REQUIRED YES
