@@ -32,7 +32,7 @@ jobs:
       - name: Create build environment
         # Some projects don't allow in-source building, so create a separate build directory
         # We'll use this as our working directory for all subsequent commands
-        run: cmake -E make_directory ${{github.workspace}}/build
+        run: cmake -E make_directory ${{ github.workspace }}/build
 
       - uses: ilammy/msvc-dev-cmd@v1.12.1
         with:
@@ -42,24 +42,22 @@ jobs:
         uses: seanmiddleditch/gha-setup-ninja@v4
 
       - name: Configure CMake
-        working-directory: ${{github.workspace}}/build
+        working-directory: ${{ github.workspace }}/build
         # Note the current convention is to use the -S and -B options here to specify source
         # and build directories, but this is only available with CMake 3.13 and higher.
         # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-        run: cmake "${{github.workspace}}" --preset ${{ matrix.cmake_preset }}
+        run: cmake "${{ github.workspace }}" --preset ${{ matrix.cmake_preset }}
 
       - name: Build
-        working-directory: ${{github.workspace}}/build
+        working-directory: ${{ github.workspace }}/build
         # Execute the build. You can specify a specific target with "--target <NAME>"
         run: cmake --build . --config ${{ matrix.build_conf }} --parallel 8
 
       - name: Prepare artifacts
         run: |
           mkdir artifacts\
-          mkdir publish\
-          mkdir publish\primext
-          mkdir publish\primext\bin
-          mkdir publish\primext\devkit
+          mkdir -p publish\primext\bin
+          mkdir -p publish\primext\devkit
           move build\${{ matrix.build_conf }}\* publish\
           move game_dir\* publish\primext
           Compress-Archive -Path publish\* -Destination artifacts\primext-${{ matrix.cmake_preset }}.zip
@@ -89,7 +87,7 @@ jobs:
       - name: Create build environment
         # Some projects don't allow in-source building, so create a separate build directory
         # We'll use this as our working directory for all subsequent commands
-        run: cmake -E make_directory ${{github.workspace}}/build
+        run: cmake -E make_directory ${{ github.workspace }}/build
       
       - name: Install dependencies
         run: |
@@ -101,14 +99,14 @@ jobs:
         # Use a bash shell so we can use the same syntax for environment variable
         # access regardless of the host operating system
         shell: bash
-        working-directory: ${{github.workspace}}/build
+        working-directory: ${{ github.workspace }}/build
         # Note the current convention is to use the -S and -B options here to specify source
         # and build directories, but this is only available with CMake 3.13 and higher.
         # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
         run: cmake $GITHUB_WORKSPACE --preset ${{ matrix.cmake_preset }}
 
       - name: Build
-        working-directory: ${{github.workspace}}/build
+        working-directory: ${{ github.workspace }}/build
         shell: bash
         # Execute the build.  You can specify a specific target with "--target <NAME>"
         run: cmake --build . --config ${{ matrix.build_conf }} --parallel 8
@@ -116,10 +114,8 @@ jobs:
       - name: Prepare artifacts
         run: |
           mkdir artifacts/
-          mkdir publish/
-          mkdir publish/primext
-          mkdir publish/primext/bin
-          mkdir publish/primext/devkit
+          mkdir -p publish/primext/bin
+          mkdir -p publish/primext/devkit
           cp -r build/${{ matrix.build_conf }}/primext/* publish/primext/
           cp build/${{ matrix.build_conf }}/primext_run publish/
           cp -r game_dir/* publish/primext
@@ -156,7 +152,7 @@ jobs:
         uses: actions/setup-java@v3.6.0
         with:
           distribution: 'microsoft'
-          java-version: '11'
+          java-version: '17'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
@@ -164,23 +160,19 @@ jobs:
       - name: Build
         run: chmod +x ./gradlew && ./gradlew assembleDebug
         working-directory: android
+        env:
+          ANDROID_NDK_ROOT: /usr/local/lib/android/sdk/ndk/26.1.10909125
 
-      #- name: Prepare artifacts
-      #  run: |
-      #    mkdir artifacts/
-      #    mkdir publish/
-      #    mkdir publish/primext
-      #    mkdir publish/primext/bin
-      #    mkdir publish/primext/devkit
-      #    cp android/app/build/outputs/apk/debug/app-debug.apk publish/primext-debug.apk
-      #    cp -r game_dir/* publish/primext
-      #    zip -r artifacts/primext-${{ matrix.cmake_preset }}.zip publish
+      - name: Prepare artifacts
+        run: |
+          mkdir artifacts/
+          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/primext-debug.apk
 
-      #- name: Upload artifacts
-      #  uses: actions/upload-artifact@v3
-      #  with:
-      #    name: artifact-${{ matrix.cmake_preset }}
-      #    path: artifacts/*
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifact-android-debug
+          path: artifacts/*
 
   release:
     name: release-builds
