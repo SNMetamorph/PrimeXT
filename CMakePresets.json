@@ -110,64 +110,6 @@
         "CMAKE_BUILD_TYPE": "Debug"
       },
       "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
-    },
-    {
-      "name": "ci-windows-x86",
-      "displayName": "CI / Windows / x86",
-      "description": " ",
-      "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/build",
-      "architecture": {
-        "value": "win32",
-        "strategy": "set"
-      },
-      "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": "x86-windows-static",
-        "CMAKE_BUILD_TYPE": "Debug"
-      },
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
-    },
-    {
-      "name": "ci-windows-x64",
-      "displayName": "CI / Windows / x64",
-      "description": " ",
-      "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/build",
-      "architecture": {
-        "value": "x64",
-        "strategy": "set"
-      },
-      "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": "x64-windows-static",
-        "CMAKE_BUILD_TYPE": "Debug"
-      },
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
-    },
-    {
-      "name": "ci-linux-x86",
-      "displayName": "CI / Linux / x86",
-      "description": " ",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build",
-      "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": "x86-linux",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "ENABLE_PHYSX": "OFF"
-      },
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
-    },
-    {
-      "name": "ci-linux-x64",
-      "displayName": "CI / Linux / x64",
-      "description": " ",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build",
-      "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": "x64-linux",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "ENABLE_PHYSX": "OFF"
-      },
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
     }
   ]
 }
