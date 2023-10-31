@@ -164,6 +164,9 @@ endif()
 find_package(imgui CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE imgui::imgui)
 
+find_package(fmt CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
+
 if(WIN32)
 	target_link_libraries(${PROJECT_NAME} PRIVATE user32.lib)
 endif()
