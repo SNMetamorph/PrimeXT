@@ -229,8 +229,9 @@ if(ENABLE_PHYSX)
 	)
 endif()
 
-find_package(fmt CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
+if(XASH_ANDROID)
+	target_link_libraries(${PROJECT_NAME} PRIVATE log)
+endif()
 
 set_target_properties (${PROJECT_NAME} PROPERTIES
 	CXX_STANDARD 17

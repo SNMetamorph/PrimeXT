@@ -29,7 +29,7 @@ android {
 
         externalNativeBuild {
             cmake {
-                arguments '-DVCPKG_TARGET_ANDROID=ON', '-DBUILD_UTILS=OFF', '-DENABLE_PHYSX=OFF', '-DBUILD_GAME_LAUNCHER=OFF'
+                arguments '-DVCPKG_TARGET_ANDROID=ON', '-DBUILD_UTILS=OFF', '-DBUILD_GAME_LAUNCHER=OFF'
             }
         }
     }
