@@ -13,11 +13,13 @@ sidebar_position: 3
 
 ## 1. Установка движка 
 - Выберите и скачайте [билд движка Xash3D FWGS](https://github.com/FWGS/xash3d-fwgs/releases/tag/continuous)
-для вашей платформы (в случае Windows это файл `xash3d-fwgs-win32-i386.7z`), все файлы из архива распакуйте в папку.
-- Скопируйте файл `vgui.dll` и папку `valve` из вашей установленной [Half-Life 1](https://store.steampowered.com/app/70/HalfLife/) в папку с файлами из предыдущего шага.
+для вашей платформы. В случае Windows, это файл `xash3d-fwgs-win32-i386.7z` для 32-бит, или файл `xash3d-fwgs-win32-amd64.7z` для 64-бит. Все файлы из архива распакуйте в папку.
+В дальнейшем под директорией движка будет подразумеваться именно эта папка.
+- Скопируйте папку `valve` из вашей установленной копии [Half-Life 1](https://store.steampowered.com/app/70/HalfLife/) в папку с файлами из предыдущего шага.
 - Для проверки запустите `xash3d.exe`/`xash3d.sh`/`xash3d` в зависимости от вашей платформы.
 
 ## 2. Установка PrimeXT
-- Скачайте [билд PrimeXT](https://github.com/SNMetamorph/PrimeXT/releases/tag/continious) для вашей платформы и скопируйте все файлы из архива в директорию движка.
+- Скачайте [билд PrimeXT](https://github.com/SNMetamorph/PrimeXT/releases/tag/continious) для вашей платформы и скопируйте все файлы из архива в директорию движка. Обратите внимание, что билд движка и PrimeXT
+должны быть для одной и той же платформы и архитектуры.
 - Скачайте [контент PrimeXT](https://drive.google.com/file/d/1l3voCVdNi_SlFrOI31ZwABWLQXXUW-Zc/view?usp=sharing) и скопируйте папку `primext` из архива в директорию движка.
-- Установка завершена! Запустить игру можно с помощью файла `primext.exe`
+- Установка завершена! Запустить игру можно с помощью файла `primext.exe`/`primext_run`
