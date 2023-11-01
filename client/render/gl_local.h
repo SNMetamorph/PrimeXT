@@ -519,7 +519,7 @@ typedef struct
 	CUtlArray<gl_state_t>	cached_state;
 
 	gl_lightmap_t	lightmaps[MAX_LIGHTMAPS];
-	byte		current_lightmap_texture;
+	uint32_t	current_lightmap_texture;
 	TextureHandle	packed_lights_texture;
 	TextureHandle	packed_planes_texture;
 	TextureHandle	packed_nodes_texture;

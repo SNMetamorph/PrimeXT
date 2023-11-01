@@ -554,7 +554,7 @@ void GL_SetupWorldScenePass( void )
 
 void GL_DrawDeferredPass( void )
 {
-	if( !tr.defSceneShader || !tr.defLightShader )
+	if( !tr.defSceneShader[0] || !tr.defSceneShader[1] || !tr.defLightShader )
 		return; // oops!
 
 	GL_DEBUG_SCOPE();
