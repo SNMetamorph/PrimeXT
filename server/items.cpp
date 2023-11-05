@@ -28,7 +28,7 @@
 #include "skill.h"
 #include "items.h"
 #include "gamerules.h"
-#include "UserMessages.h"
+#include "user_messages.h"
 
 class CWorldItem : public CBaseEntity
 {

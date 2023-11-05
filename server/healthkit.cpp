@@ -21,7 +21,7 @@
 #include "player.h"
 #include "items.h"
 #include "gamerules.h"
-#include "UserMessages.h"
+#include "user_messages.h"
 
 class CHealthKit : public CItem
 {

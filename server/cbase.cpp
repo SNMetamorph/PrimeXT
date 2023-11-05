@@ -24,7 +24,7 @@
 #include	"gamerules.h"
 #include	"weapons.h"
 #include	"game.h"
-#include "UserMessages.h"
+#include "user_messages.h"
 
 //#define USE_ENGINE_TOUCH_TRIGGERS
 

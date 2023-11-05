@@ -34,7 +34,7 @@
 #include "trace.h"
 #include "utldict.h"
 #include "render_api.h"
-#include "UserMessages.h"
+#include "user_messages.h"
 
 //-----------------------------------------------------------------------------
 // Entity creation factory

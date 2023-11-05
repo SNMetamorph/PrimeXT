@@ -38,7 +38,7 @@
 #include "weaponinfo.h"
 #include "usercmd.h"
 #include "netadr.h"
-#include "UserMessages.h"
+#include "user_messages.h"
 #include <locale>
 
 extern DLL_GLOBAL ULONG		g_ulModelIndexPlayer;

@@ -22,7 +22,7 @@
 #include "player.h"
 #include "soundent.h"
 #include "gamerules.h"
-#include "UserMessages.h"
+#include "user_messages.h"
 
 enum mp5_e
 {

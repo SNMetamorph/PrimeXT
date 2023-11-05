@@ -31,7 +31,7 @@
 #include "decals.h"
 #include "gamerules.h"
 #include "sv_materials.h"
-#include "UserMessages.h"
+#include "user_messages.h"
 
 extern int gEvilImpulse101;
 

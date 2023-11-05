@@ -35,7 +35,7 @@
 #include "gamerules.h"
 #include "game.h"
 #include "hltv.h"
-#include "UserMessages.h"
+#include "user_messages.h"
 #include "ropes/CRope.h"
 
 // #define DUCKFIX

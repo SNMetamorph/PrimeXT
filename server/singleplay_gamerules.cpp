@@ -23,7 +23,7 @@
 #include	"gamerules.h"
 #include	"skill.h"
 #include	"items.h"
-#include "UserMessages.h"
+#include "user_messages.h"
 
 extern DLL_GLOBAL CGameRules	*g_pGameRules;
 extern DLL_GLOBAL BOOL	g_fGameOver;

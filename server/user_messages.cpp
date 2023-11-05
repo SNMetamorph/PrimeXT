@@ -2,7 +2,7 @@
 #include "util.h"
 #include "cbase.h"
 #include "shake.h"
-#include "UserMessages.h"
+#include "user_messages.h"
 
 void LinkUserMessages()
 {
