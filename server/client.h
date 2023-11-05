@@ -31,7 +31,6 @@ extern void PlayerPostThink( edict_t *pEntity );
 extern void PlayerPreThink( edict_t *pEntity );
 extern void ParmsNewLevel( void );
 extern void ParmsChangeLevel( void );
-extern void LinkUserMessages( void );
 
 extern void ClientPrecache( void );
 

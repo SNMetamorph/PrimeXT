@@ -24,6 +24,7 @@
 #include "talkmonster.h"
 #include "gamerules.h"
 #include "material.h"
+#include "user_messages.h"
 
 
 // ==================== GENERIC AMBIENT SOUND ======================================

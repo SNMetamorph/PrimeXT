@@ -21,8 +21,7 @@
 #include "player.h"
 #include "items.h"
 #include "gamerules.h"
-
-extern int gmsgItemPickup;
+#include "user_messages.h"
 
 class CHealthKit : public CItem
 {

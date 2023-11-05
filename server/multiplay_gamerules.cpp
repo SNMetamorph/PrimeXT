@@ -26,13 +26,10 @@
 #include	"game.h"
 #include	"items.h"
 #include	"hltv.h"
+#include "user_messages.h"
 
 extern DLL_GLOBAL CGameRules	*g_pGameRules;
 extern DLL_GLOBAL BOOL	g_fGameOver;
-extern int gmsgDeathMsg;	// client dll messages
-extern int gmsgScoreInfo;
-extern int gmsgMOTD;
-extern int gmsgServerName;
 
 extern int g_teamplay;
 
@@ -370,9 +367,6 @@ BOOL CHalfLifeMultiplay :: ClientConnected( edict_t *pEntity, const char *pszNam
 {
 	return TRUE;
 }
-
-extern int gmsgSayText;
-extern int gmsgGameMode;
 
 void CHalfLifeMultiplay :: UpdateGameMode( CBasePlayer *pPlayer )
 {

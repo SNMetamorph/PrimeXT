@@ -21,6 +21,7 @@
 #include "CRopeSegment.h"
 #include "studio.h"
 #include "player.h"
+#include "user_messages.h"
 
 #define HOOK_CONSTANT	2500.0f
 #define SPRING_DAMPING	0.1f	

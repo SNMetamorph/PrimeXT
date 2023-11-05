@@ -22,6 +22,7 @@
 #include "player.h"
 #include "hornet.h"
 #include "gamerules.h"
+#include "user_messages.h"
 
 enum hgun_e
 {

@@ -40,6 +40,7 @@ list(APPEND SVDLL_SOURCES
 	"bmodels.cpp"
 	"monsters/bullsquid.cpp"
 	"buttons.cpp"
+	"user_messages.cpp"
 	"cbase.cpp"
 	"ropes/CElectrifiedWire.cpp"
 	"client.cpp"

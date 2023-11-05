@@ -18,6 +18,7 @@
 #include "game.h"
 #include "cbase.h"
 #include "client.h"
+#include "user_messages.h"
 
 cvar_t	displaysoundlist = {"displaysoundlist","0"};
 

@@ -21,6 +21,7 @@
 #include "nodes.h"
 #include "player.h"
 #include "gamerules.h"
+#include "user_messages.h"
 
 #define BOLT_AIR_VELOCITY	2000
 #define BOLT_WATER_VELOCITY	1000

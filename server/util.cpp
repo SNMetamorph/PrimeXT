@@ -34,6 +34,7 @@
 #include "trace.h"
 #include "utldict.h"
 #include "render_api.h"
+#include "user_messages.h"
 
 //-----------------------------------------------------------------------------
 // Entity creation factory
@@ -1147,7 +1148,6 @@ void UTIL_HudMessageAll( const hudtextparms_t &textparms, const char *pMessage )
 }
 
 					 
-extern int gmsgTextMsg, gmsgSayText;
 void UTIL_ClientPrintAll( int msg_dest, const char *msg_name, const char *param1, const char *param2, const char *param3, const char *param4 )
 {
 	MESSAGE_BEGIN( MSG_ALL, gmsgTextMsg );
