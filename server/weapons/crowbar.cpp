@@ -13,14 +13,7 @@
 *
 ****/
 
-#include "extdll.h"
-#include "util.h"
-#include "cbase.h"
-#include "monsters.h"
-#include "weapons.h"
-#include "nodes.h"
-#include "player.h"
-#include "gamerules.h"
+#include "crowbar.h"
 
 #define CROWBAR_BODYHIT_VOLUME	128
 #define CROWBAR_WALLHIT_VOLUME	512
@@ -36,27 +29,6 @@ enum crowbar_e
 	CROWBAR_ATTACK2HIT,
 	CROWBAR_ATTACK3MISS,
 	CROWBAR_ATTACK3HIT
-};
-
-class CCrowbar : public CBasePlayerWeapon
-{
-	DECLARE_CLASS( CCrowbar, CBasePlayerWeapon );
-public:
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 1; }
-	void SwingAgain( void );
-	void Smack( void );
-	int GetItemInfo(ItemInfo *p);
-
-	DECLARE_DATADESC();
-
-	void PrimaryAttack( void );
-	int Swing( int fFirst );
-	BOOL Deploy( void );
-	void Holster( void );
-	int m_iSwing;
-	TraceResult m_trHit;
 };
 
 LINK_ENTITY_TO_CLASS( weapon_crowbar, CCrowbar );
