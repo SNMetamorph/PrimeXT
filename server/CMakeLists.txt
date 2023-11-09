@@ -12,33 +12,25 @@ list(APPEND SVDLL_SOURCES
 	"cbase.cpp"
 	"client.cpp"
 	"combat.cpp"
-	"crossbow.cpp"
-	"crowbar.cpp"
 	"dll_int.cpp"
 	"doors.cpp"
 	"effects.cpp"
-	"egon.cpp"
 	"explode.cpp"
 	"func_break.cpp"
 	"func_monitor.cpp"
 	"func_tank.cpp"
 	"game.cpp"
 	"gamerules.cpp"
-	"gauss.cpp"
 	"ggrenade.cpp"
 	"globals.cpp"
-	"glock.cpp"
 	"h_battery.cpp"
 	"h_cycler.cpp"
-	"handgrenade.cpp"
 	"healthkit.cpp"
-	"hornetgun.cpp"
 	"items.cpp"
 	"lights.cpp"
 	"mapents.cpp"
 	"maprules.cpp"
 	"mortar.cpp"
-	"mp5.cpp"
 	"multiplay_gamerules.cpp"
 	"novodex.cpp"
 	"pathcorner.cpp"
@@ -47,26 +39,20 @@ list(APPEND SVDLL_SOURCES
 	"physics/NxUserStream.cpp"
 	"plats.cpp"
 	"player.cpp"
-	"python.cpp"
 	"ropes/CElectrifiedWire.cpp"
 	"ropes/CRope.cpp"
 	"ropes/CRopeSegment.cpp"
-	"rpg.cpp"
-	"satchel.cpp"
 	"saverestore.cpp"
-	"shotgun.cpp"
 	"singleplay_gamerules.cpp"
 	"skill.cpp"
 	"sound.cpp"
 	"spectator.cpp"
-	"squeakgrenade.cpp"
 	"stats.cpp"
 	"strings.cpp"
 	"subs.cpp"
 	"sv_materials.cpp"
 	"teamplay_gamerules.cpp"
 	"triggers.cpp"
-	"tripmine.cpp"
 	"user_messages.cpp"
 	"util.cpp"
 	"weapons.cpp"
@@ -95,6 +81,7 @@ list(APPEND SVDLL_SOURCES
 )
 
 file(GLOB MONSTERS_SOURCES "monsters/*.cpp")
+file(GLOB WEAPONS_SOURCES "weapons/*.cpp")
 
 # add .def file to sources
 if(MSVC)
@@ -102,6 +89,7 @@ if(MSVC)
 endif()
 
 list(APPEND SVDLL_SOURCES ${MONSTERS_SOURCES})
+list(APPEND SVDLL_SOURCES ${WEAPONS_SOURCES})
 add_library(${PROJECT_NAME} SHARED ${SVDLL_SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
