@@ -15,6 +15,7 @@
 //
 // Misc utility code
 //
+#pragma once
 #include "stringlib.h"
 
 #ifndef ACTIVITY_H
