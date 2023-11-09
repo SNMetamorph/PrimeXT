@@ -54,6 +54,7 @@ CBaseEntity
 #define MF_LADDER			BIT( 3 )		// ladders is sended to client for predict reasons
 #define MF_TEMP_PARENT		BIT( 4 )		// temporare parent on teleport
 
+#pragma once
 #include "saverestore.h"
 #include "schedule.h"
 
