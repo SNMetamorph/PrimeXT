@@ -33,7 +33,6 @@ list(APPEND SVDLL_SOURCES
 	"maprules.cpp"
 	"mortar.cpp"
 	"multiplay_gamerules.cpp"
-	"monsters/osprey.cpp"
 	"pathcorner.cpp"
 	"physic.cpp"
 	"plats.cpp"
@@ -94,6 +93,7 @@ if(ENABLE_PHYSX)
 	)
 endif()
 
+file(GLOB ENTITIES_SOURCES "entities/*.cpp")
 file(GLOB MONSTERS_SOURCES "monsters/*.cpp")
 file(GLOB WEAPONS_SOURCES "weapons/*.cpp")
 
@@ -102,6 +102,7 @@ if(MSVC)
 	list(APPEND SVDLL_SOURCES "server.def")
 endif()
 
+list(APPEND SVDLL_SOURCES ${ENTITIES_SOURCES})
 list(APPEND SVDLL_SOURCES ${MONSTERS_SOURCES})
 list(APPEND SVDLL_SOURCES ${WEAPONS_SOURCES})
 add_library(${PROJECT_NAME} SHARED ${SVDLL_SOURCES})
@@ -109,6 +110,9 @@ add_library(${PROJECT_NAME} SHARED ${SVDLL_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
 	"."
 	"monsters"
+	"physics"
+	"weapons"
+	"entities"
 	"wpn_shared"
 	"${CMAKE_SOURCE_DIR}/common"
 	"${CMAKE_SOURCE_DIR}/engine"
