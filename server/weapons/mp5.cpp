@@ -13,15 +13,7 @@
 *
 ****/
 
-#include "extdll.h"
-#include "util.h"
-#include "cbase.h"
-#include "monsters.h"
-#include "weapons.h"
-#include "nodes.h"
-#include "player.h"
-#include "soundent.h"
-#include "gamerules.h"
+#include "mp5.h"
 #include "user_messages.h"
 
 enum mp5_e
@@ -36,32 +28,9 @@ enum mp5_e
 	MP5_FIRE3,
 };
 
-class CMP5 : public CBasePlayerWeapon
-{
-	DECLARE_CLASS( CMP5, CBasePlayerWeapon );
-public:
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 3; }
-	int GetItemInfo(ItemInfo *p);
-	int AddToPlayer( CBasePlayer *pPlayer );
-
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
-	int SecondaryAmmoIndex( void );
-	BOOL Deploy( void );
-	void Reload( void );
-	void WeaponIdle( void );
-	float m_flNextAnimTime;
-	int m_iShell;
-};
-
 LINK_ENTITY_TO_CLASS( weapon_mp5, CMP5 );
 LINK_ENTITY_TO_CLASS( weapon_9mmAR, CMP5 );
 
-
-//=========================================================
-//=========================================================
 int CMP5::SecondaryAmmoIndex( void )
 {
 	return m_iSecondaryAmmoType;
@@ -307,91 +276,3 @@ void CMP5::WeaponIdle( void )
 
 	m_flTimeWeaponIdle = gpGlobals->time + RANDOM_FLOAT ( 10, 15 );// how long till we do this again.
 }
-
-class CMP5AmmoClip : public CBasePlayerAmmo
-{
-	DECLARE_CLASS( CMP5AmmoClip, CBasePlayerAmmo );
-
-	void Spawn( void )
-	{ 
-		Precache( );
-		SET_MODEL(ENT(pev), "models/w_9mmARclip.mdl");
-		CBasePlayerAmmo::Spawn( );
-	}
-	void Precache( void )
-	{
-		PRECACHE_MODEL ("models/w_9mmARclip.mdl");
-		PRECACHE_SOUND("items/9mmclip1.wav");
-	}
-	BOOL AddAmmo( CBaseEntity *pOther ) 
-	{ 
-		int bResult = (pOther->GiveAmmo( AMMO_MP5CLIP_GIVE, "9mm", _9MM_MAX_CARRY) != -1);
-		if (bResult)
-		{
-			EMIT_SOUND(ENT(pev), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM);
-		}
-		return bResult;
-	}
-};
-
-LINK_ENTITY_TO_CLASS( ammo_mp5clip, CMP5AmmoClip );
-LINK_ENTITY_TO_CLASS( ammo_9mmAR, CMP5AmmoClip );
-
-
-class CMP5Chainammo : public CBasePlayerAmmo
-{
-	DECLARE_CLASS( CMP5Chainammo, CBasePlayerAmmo );
-
-	void Spawn( void )
-	{ 
-		Precache( );
-		SET_MODEL(ENT(pev), "models/w_chainammo.mdl");
-		CBasePlayerAmmo::Spawn( );
-	}
-	void Precache( void )
-	{
-		PRECACHE_MODEL ("models/w_chainammo.mdl");
-		PRECACHE_SOUND("items/9mmclip1.wav");
-	}
-	BOOL AddAmmo( CBaseEntity *pOther ) 
-	{ 
-		int bResult = (pOther->GiveAmmo( AMMO_CHAINBOX_GIVE, "9mm", _9MM_MAX_CARRY) != -1);
-		if (bResult)
-		{
-			EMIT_SOUND(ENT(pev), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM);
-		}
-		return bResult;
-	}
-};
-
-LINK_ENTITY_TO_CLASS( ammo_9mmbox, CMP5Chainammo );
-
-class CMP5AmmoGrenade : public CBasePlayerAmmo
-{
-	DECLARE_CLASS( CMP5AmmoGrenade, CBasePlayerAmmo );
-
-	void Spawn( void )
-	{ 
-		Precache( );
-		SET_MODEL(ENT(pev), "models/w_ARgrenade.mdl");
-		CBasePlayerAmmo::Spawn( );
-	}
-	void Precache( void )
-	{
-		PRECACHE_MODEL ("models/w_ARgrenade.mdl");
-		PRECACHE_SOUND("items/9mmclip1.wav");
-	}
-	BOOL AddAmmo( CBaseEntity *pOther ) 
-	{ 
-		int bResult = (pOther->GiveAmmo( AMMO_M203BOX_GIVE, "ARgrenades", M203_GRENADE_MAX_CARRY ) != -1);
-
-		if (bResult)
-		{
-			EMIT_SOUND(ENT(pev), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM);
-		}
-		return bResult;
-	}
-};
-
-LINK_ENTITY_TO_CLASS( ammo_mp5grenades, CMP5AmmoGrenade );
-LINK_ENTITY_TO_CLASS( ammo_ARgrenades, CMP5AmmoGrenade );
