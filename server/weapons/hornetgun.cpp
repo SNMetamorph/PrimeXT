@@ -13,16 +13,7 @@
 *
 ****/
 
-#include "extdll.h"
-#include "util.h"
-#include "cbase.h"
-#include "monsters.h"
-#include "weapons.h"
-#include "nodes.h"
-#include "player.h"
-#include "hornet.h"
-#include "gamerules.h"
-#include "user_messages.h"
+#include "hornetgun.h"
 
 enum hgun_e
 {
@@ -38,29 +29,6 @@ enum firemode_e
 {
 	FIREMODE_TRACK = 0,
 	FIREMODE_FAST
-};
-
-class CHgun : public CBasePlayerWeapon
-{
-	DECLARE_CLASS( CHgun, CBasePlayerWeapon );
-public:
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 4; }
-	int GetItemInfo(ItemInfo *p);
-	int AddToPlayer( CBasePlayer *pPlayer );
-
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
-	BOOL Deploy( void );
-	BOOL IsUseable( void ){ return TRUE; };
-	void Holster( void );
-	void Reload( void );
-	void WeaponIdle( void );
-
-	float m_flNextAnimTime;
-	float m_flRechargeTime;
-	int m_iFirePhase;// don't save me.
 };
 
 LINK_ENTITY_TO_CLASS( weapon_hornetgun, CHgun );
