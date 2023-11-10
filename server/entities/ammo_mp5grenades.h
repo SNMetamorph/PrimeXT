@@ -21,10 +21,12 @@
 #include "weapons.h"
 #include "nodes.h"
 #include "player.h"
+#include "soundent.h"
+#include "gamerules.h"
 
-class CGlockAmmo : public CBasePlayerAmmo
+class CMP5AmmoGrenade : public CBasePlayerAmmo
 {
-	DECLARE_CLASS( CGlockAmmo, CBasePlayerAmmo );
+	DECLARE_CLASS( CMP5AmmoGrenade, CBasePlayerAmmo );
 
 	void Spawn();
 	void Precache();
