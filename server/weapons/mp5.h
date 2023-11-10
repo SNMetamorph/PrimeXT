@@ -21,12 +21,25 @@
 #include "weapons.h"
 #include "nodes.h"
 #include "player.h"
+#include "soundent.h"
+#include "gamerules.h"
 
-class CGlockAmmo : public CBasePlayerAmmo
+class CMP5 : public CBasePlayerWeapon
 {
-	DECLARE_CLASS( CGlockAmmo, CBasePlayerAmmo );
+	DECLARE_CLASS( CMP5, CBasePlayerWeapon );
+public:
+	void Spawn( void );
+	void Precache( void );
+	int iItemSlot( void ) { return 3; }
+	int GetItemInfo(ItemInfo *p);
+	int AddToPlayer( CBasePlayer *pPlayer );
 
-	void Spawn();
-	void Precache();
-	BOOL AddAmmo(CBaseEntity *pOther);
+	void PrimaryAttack( void );
+	void SecondaryAttack( void );
+	int SecondaryAmmoIndex( void );
+	BOOL Deploy( void );
+	void Reload( void );
+	void WeaponIdle( void );
+	float m_flNextAnimTime;
+	int m_iShell;
 };
