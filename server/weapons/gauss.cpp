@@ -13,17 +13,7 @@
 *
 ****/
 
-#include "extdll.h"
-#include "util.h"
-#include "cbase.h"
-#include "monsters.h"
-#include "weapons.h"
-#include "nodes.h"
-#include "player.h"
-#include "soundent.h"
-#include "shake.h"
-#include "gamerules.h"
-#include "user_messages.h"
+#include "gauss.h"
 
 #define GAUSS_PRIMARY_CHARGE_VOLUME	256 // how loud gauss is while charging
 #define GAUSS_PRIMARY_FIRE_VOLUME	450 // how loud gauss is when discharged
@@ -39,43 +29,6 @@ enum gauss_e
 	GAUSS_FIRE2,
 	GAUSS_HOLSTER,
 	GAUSS_DRAW
-};
-
-class CGauss : public CBasePlayerWeapon
-{
-	DECLARE_CLASS( CGauss, CBasePlayerWeapon );
-public:
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 4; }
-	int GetItemInfo(ItemInfo *p);
-	int AddToPlayer( CBasePlayer *pPlayer );
-
-	DECLARE_DATADESC();
-
-	BOOL Deploy( void );
-	void Holster( void );
-
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
-	void WeaponIdle( void );
-
-	int m_fInAttack;	
-	float m_flStartCharge;
-	float m_flPlayAftershock;
-	void StartFire( void );
-	void Fire( Vector vecOrigSrc, Vector vecDirShooting, float flDamage );
-	float GetFullChargeTime( void );
-	int m_iBalls;
-	int m_iGlow;
-	int m_iBeam;
-	int m_iSoundState; // don't save this
-
-	float m_flNextAmmoBurn;// while charging, when to absorb another unit of player's ammo?
-
-	// was this weapon just fired primary or secondary?
-	// we need to know so we can pick the right set of effects. 
-	BOOL m_fPrimaryFire;
 };
 
 BEGIN_DATADESC( CGauss )
@@ -797,31 +750,3 @@ void CGauss::WeaponIdle( void )
 		SendWeaponAnim( iAnim );
 	}
 }
-
-class CGaussAmmo : public CBasePlayerAmmo
-{
-	DECLARE_CLASS( CGaussAmmo, CBasePlayerAmmo );
-
-	void Spawn( void )
-	{ 
-		Precache( );
-		SET_MODEL(ENT(pev), "models/w_gaussammo.mdl");
-		CBasePlayerAmmo::Spawn( );
-	}
-	void Precache( void )
-	{
-		PRECACHE_MODEL ("models/w_gaussammo.mdl");
-		PRECACHE_SOUND("items/9mmclip1.wav");
-	}
-	BOOL AddAmmo( CBaseEntity *pOther ) 
-	{ 
-		if (pOther->GiveAmmo( AMMO_URANIUMBOX_GIVE, "uranium", URANIUM_MAX_CARRY ) != -1)
-		{
-			EMIT_SOUND(ENT(pev), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM);
-			return TRUE;
-		}
-		return FALSE;
-	}
-};
-
-LINK_ENTITY_TO_CLASS( ammo_gaussclip, CGaussAmmo );
