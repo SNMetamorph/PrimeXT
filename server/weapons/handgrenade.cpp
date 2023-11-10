@@ -12,13 +12,8 @@
 *   without written permission from Valve LLC.
 *
 ****/
-#include "extdll.h"
-#include "util.h"
-#include "cbase.h"
-#include "monsters.h"
-#include "weapons.h"
-#include "nodes.h"
-#include "player.h"
+
+#include "handgrenade.h"
 
 #define HANDGRENADE_PRIMARY_VOLUME	450
 
@@ -32,25 +27,6 @@ enum handgrenade_e
 	HANDGRENADE_THROW3,	// hard
 	HANDGRENADE_HOLSTER,
 	HANDGRENADE_DRAW
-};
-
-class CHandGrenade : public CBasePlayerWeapon
-{
-	DECLARE_CLASS( CHandGrenade, CBasePlayerWeapon );
-public:
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 5; }
-	int GetItemInfo(ItemInfo *p);
-
-	void PrimaryAttack( void );
-	BOOL Deploy( void );
-	BOOL CanHolster( void );
-	void Holster( void );
-	void WeaponIdle( void );
-
-	float m_flStartThrow;
-	float m_flReleaseThrow;
 };
 
 LINK_ENTITY_TO_CLASS( weapon_handgrenade, CHandGrenade );
