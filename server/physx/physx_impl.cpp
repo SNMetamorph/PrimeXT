@@ -2623,9 +2623,7 @@ void CPhysicPhysX :: SweepEntity( CBaseEntity *pEntity, const Vector &start, con
 	// make a linear sweep through the world
 	// we need to disable collision here to avoid touching same actor as we trying to sweep
 	PxSweepBuffer sweepResult;
-	ToggleCollision(pRigidActor, false); 
 	bool hitOccured = m_pScene->sweep(testBox, initialPose, vecDir, flLength, sweepResult, PxHitFlag::eNORMAL);
-	ToggleCollision(pRigidActor, true);
 
 	if (!hitOccured || sweepResult.getNbAnyHits() < 1)
 		return; // no intersection
