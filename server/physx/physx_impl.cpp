@@ -72,6 +72,7 @@ CPhysicPhysX::CPhysicPhysX()
 	m_fLoaded = false;
 	m_fDisableWarning = false;
 	m_fWorldChanged = false;
+	m_traceStateChanges = false;
 	m_flAccumulator = 0.0;
 
 	m_szMapName[0] = '\0';
@@ -1049,6 +1050,10 @@ void CPhysicPhysX::ToggleCollision(physx::PxRigidActor *pActor, bool enabled)
 	shapes.resize(pActor->getNbShapes());
 	pActor->getShapes(&shapes[0], shapes.size());
 
+	if (TracingStateChanges(pActor)) {
+		ALERT(at_console, "PhysX: ToggleCollision( actor = %x, state = %s )\n", pActor, enabled ? "true" : "false");
+	}
+
 	for (PxShape *shape : shapes) 
 	{
 		bool collisionState = shape->getFlags() & PxShapeFlag::eSIMULATION_SHAPE;
@@ -1755,6 +1760,12 @@ void CPhysicPhysX :: SetAngles( CBaseEntity *pEntity, const Vector &angles )
 	if( !pActor ) 
 		return;
 
+	if (TracingStateChanges(pActor)) 
+	{
+		ALERT(at_console, "PhysX: SetAngles( entity = %x, angles = (%.2f, %.2f, %.2f) )\n", 
+			pEntity, angles.x, angles.y, angles.z);
+	}
+
 	matrix3x3 m(angles);
 	PxRigidDynamic *pRigidDynamic = pActor->is<PxRigidDynamic>();
 	PxTransform transform = pRigidDynamic->getGlobalPose();
@@ -1768,6 +1779,12 @@ void CPhysicPhysX :: SetOrigin( CBaseEntity *pEntity, const Vector &origin )
 	if( !pActor ) 
 		return;
 
+	if (TracingStateChanges(pActor)) 
+	{
+		ALERT(at_console, "PhysX: SetOrigin( entity = %x, origin = (%.2f, %.2f, %.2f) )\n", 
+			pEntity, origin.x, origin.y, origin.z);
+	}
+
 	PxRigidDynamic *pRigidDynamic = pActor->is<PxRigidDynamic>();
 	PxTransform transform = pRigidDynamic->getGlobalPose();
 	transform.p = origin;
@@ -1780,6 +1797,12 @@ void CPhysicPhysX :: SetVelocity( CBaseEntity *pEntity, const Vector &velocity )
 	if( !pActor ) 
 		return;
 
+	if (TracingStateChanges(pActor)) 
+	{
+		ALERT(at_console, "PhysX: SetVelocity( entity = %x, velocity = (%.2f, %.2f, %.2f) )\n", 
+			pEntity, velocity.x, velocity.y, velocity.z);
+	}
+
 	PxRigidDynamic *pRigidDynamic = pActor->is<PxRigidDynamic>();
 	pRigidDynamic->setLinearVelocity( velocity );
 }
@@ -1790,6 +1813,12 @@ void CPhysicPhysX :: SetAvelocity( CBaseEntity *pEntity, const Vector &velocity 
 	if( !pActor ) 
 		return;
 
+	if (TracingStateChanges(pActor)) 
+	{
+		ALERT(at_console, "PhysX: SetAvelocity( entity = %x, velocity = (%.2f, %.2f, %.2f) )\n", 
+			pEntity, velocity.x, velocity.y, velocity.z);
+	}
+
 	PxRigidDynamic *pRigidDynamic = pActor->is<PxRigidDynamic>();
 	pRigidDynamic->setAngularVelocity( velocity );
 }
@@ -1799,6 +1828,12 @@ void CPhysicPhysX :: MoveObject( CBaseEntity *pEntity, const Vector &finalPos )
 	PxActor *pActor = ActorFromEntity( pEntity );
 	if( !pActor ) 
 		return;
+
+	if (TracingStateChanges(pActor)) 
+	{
+		ALERT(at_console, "PhysX: MoveObject( entity = %x, finalPos = (%.2f, %.2f, %.2f) )\n", 
+			pEntity, finalPos.x, finalPos.y, finalPos.z);
+	}
 
 	PxRigidDynamic *pRigidDynamic = pActor->is<PxRigidDynamic>();
 	PxTransform pose = pRigidDynamic->getGlobalPose();
@@ -1811,6 +1846,12 @@ void CPhysicPhysX :: RotateObject( CBaseEntity *pEntity, const Vector &finalAngl
 	PxActor *pActor = ActorFromEntity( pEntity );
 	if( !pActor ) 
 		return;
+
+	if (TracingStateChanges(pActor)) 
+	{
+		ALERT(at_console, "PhysX: RotateObject( entity = %x, finalAngle = (%.2f, %.2f, %.2f) )\n", 
+			pEntity, finalAngle.x, finalAngle.y, finalAngle.z);
+	}
 
 	PxRigidDynamic *pRigidDynamic = pActor->is<PxRigidDynamic>();
 	PxTransform pose = pRigidDynamic->getGlobalPose();
@@ -1979,6 +2020,14 @@ int CPhysicPhysX :: CheckFileTimes( const char *szFile1, const char *szFile2 )
 bool CPhysicPhysX::DebugEnabled() const
 {
 	return g_engfuncs.CheckParm("-physxdebug", nullptr) != 0;
+}
+
+bool CPhysicPhysX::TracingStateChanges(PxActor *actor) const
+{
+	if (DebugEnabled() && m_traceStateChanges) {
+		return strcmp(actor->getName(), "func_physbox") == 0 || strcmp(actor->getName(), "env_physbox") == 0;
+	}
+	return false;
 }
 
 void CPhysicPhysX::HandleEvents()
@@ -2243,6 +2292,10 @@ void CPhysicPhysX :: TeleportActor( CBaseEntity *pEntity )
 	if (!pActor)
 		return;
 
+	if (TracingStateChanges(pActor)) {
+		ALERT(at_console, "PhysX: TeleportActor( entity = %x )\n", pEntity);
+	}
+
 	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
 	matrix4x4 m(pEntity->GetAbsOrigin(), pEntity->GetAbsAngles(), 1.0f);
 	PxTransform pose = PxTransform(PxMat44(m));
@@ -2261,6 +2314,20 @@ void CPhysicPhysX :: MoveCharacter( CBaseEntity *pEntity )
 	PxRigidDynamic *pRigidBody = pActor->is<PxRigidDynamic>();
 	if (pRigidBody->getNbShapes() <= 0)
 		return;
+
+	if (TracingStateChanges(pActor)) 
+	{
+		ALERT(at_console, 
+			"PhysX: MoveCharacter( entity = %x, from = (%.2f, %.2f, %.2f), to = (%.2f, %.2f, %.2f) )\n", 
+			pEntity, 
+			pEntity->m_vecOldPosition.x,
+			pEntity->m_vecOldPosition.y,
+			pEntity->m_vecOldPosition.z,
+			pEntity->pev->origin.x,
+			pEntity->pev->origin.y,
+			pEntity->pev->origin.z
+		);
+	}
 
 	PxShape *pShape;
 	pRigidBody->getShapes(&pShape, sizeof(pShape)); // get only first shape, but it can be several
@@ -2329,6 +2396,10 @@ void CPhysicPhysX :: EnableCollision( CBaseEntity *pEntity, int fEnable )
 	if (pRigidBody->getNbShapes() <= 0)
 		return;
 
+	if (TracingStateChanges(pActor)) {
+		ALERT(at_console, "PhysX: EnableCollision( entity = %x, state = %s )\n", pEntity, fEnable ? "true" : "false");
+	}
+
 	if (fEnable)
 	{
 		ToggleCollision(pRigidBody, true);
@@ -2350,6 +2421,10 @@ void CPhysicPhysX :: MakeKinematic( CBaseEntity *pEntity, int fEnable )
 	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
 	if (!pRigidBody || pRigidBody->getNbShapes() <= 0)
 		return;
+
+	if (TracingStateChanges(pActor)) {
+		ALERT(at_console, "PhysX: MakeKinematic( entity = %x, state = %s )\n", pEntity, fEnable ? "true" : "false");
+	}
 
 	if (fEnable)
 		pRigidBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);

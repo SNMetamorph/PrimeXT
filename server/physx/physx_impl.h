@@ -92,6 +92,7 @@ private:
 
 	// misc routines
 	bool DebugEnabled() const;
+	bool TracingStateChanges(physx::PxActor *actor) const;
 	void HandleEvents();
 	int	ConvertEdgeToIndex( model_t *model, int edge );
 	physx::PxConvexMesh	*ConvexMeshFromBmodel( entvars_t *pev, int modelindex );
@@ -124,6 +125,7 @@ private:
 	bool m_fLoaded;	// collision tree is loaded and actual
 	bool m_fDisableWarning;	// some warnings will be swallowed
 	bool m_fWorldChanged;	// world is changed refresh the statics in case their scale was changed too
+	bool m_traceStateChanges;
 	double m_flAccumulator;
 
 	physx::PxTriangleMesh *m_pSceneMesh;
