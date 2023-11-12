@@ -14,6 +14,8 @@
 ****/
 #include "item_antidote.h"
 
+LINK_ENTITY_TO_CLASS(item_antidote, CItemAntidote);
+
 void CItemAntidote::Spawn( void )
 { 
 	Precache( );

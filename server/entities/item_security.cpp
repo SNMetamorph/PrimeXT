@@ -14,6 +14,8 @@
 ****/
 #include "item_security.h"
 
+LINK_ENTITY_TO_CLASS(item_security, CItemSecurity);
+
 void CItemSecurity::Spawn( void )
 { 
 	Precache( );

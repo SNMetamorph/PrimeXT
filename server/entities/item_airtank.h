@@ -32,5 +32,3 @@ class CAirtank : public CGrenade
 
 	int	 m_state;
 };
-
-LINK_ENTITY_TO_CLASS( item_airtank, CAirtank );

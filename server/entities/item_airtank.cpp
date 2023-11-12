@@ -14,6 +14,8 @@
 ****/
 #include "item_airtank.h"
 
+LINK_ENTITY_TO_CLASS(item_airtank, CAirtank);
+
 BEGIN_DATADESC( CAirtank )
 	DEFINE_FIELD( m_state, FIELD_INTEGER ),
 	DEFINE_FUNCTION( TankThink ),

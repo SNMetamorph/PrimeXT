@@ -14,6 +14,8 @@
 ****/
 #include "item_suit.h"
 
+LINK_ENTITY_TO_CLASS(item_suit, CItemSuit);
+
 void CItemSuit::Spawn( void )
 { 
 	Precache( );

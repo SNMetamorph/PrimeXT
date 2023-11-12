@@ -14,6 +14,8 @@
 ****/
 #include "item_longjump.h"
 
+LINK_ENTITY_TO_CLASS(item_longjump, CItemLongJump);
+
 void CItemLongJump::Spawn( void )
 { 
 	Precache( );

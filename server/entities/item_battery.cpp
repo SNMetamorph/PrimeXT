@@ -14,6 +14,8 @@
 ****/
 #include "item_battery.h"
 
+LINK_ENTITY_TO_CLASS(item_battery, CItemBattery);
+
 void CItemBattery::Spawn( void )
 { 
 	Precache( );

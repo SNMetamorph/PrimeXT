@@ -14,6 +14,8 @@
 ****/
 #include "item_generic.h"
 
+LINK_ENTITY_TO_CLASS(item_generic, CItemGeneric);
+
 void CItemGeneric::Spawn( void )
 { 
 	Precache( );

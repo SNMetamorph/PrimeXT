@@ -25,5 +25,3 @@ class CItemLongJump : public CItem
 	void Precache( void );
 	BOOL MyTouch( CBasePlayer *pPlayer );
 };
-
-LINK_ENTITY_TO_CLASS( item_longjump, CItemLongJump );
