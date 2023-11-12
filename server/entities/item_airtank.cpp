@@ -12,7 +12,7 @@
 *   without written permission from Valve LLC.
 *
 ****/
-#include "airtank.h"
+#include "item_airtank.h"
 
 BEGIN_DATADESC( CAirtank )
 	DEFINE_FIELD( m_state, FIELD_INTEGER ),

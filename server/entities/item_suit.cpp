@@ -12,7 +12,7 @@
 *   without written permission from Valve LLC.
 *
 ****/
-#include "suit.h"
+#include "item_suit.h"
 
 void CItemSuit::Spawn( void )
 { 

@@ -12,22 +12,24 @@
 *   without written permission from Valve LLC.
 *
 ****/
-#include "securitycard.h"
+#include "item_antidote.h"
 
-void CItemSecurity::Spawn( void )
+void CItemAntidote::Spawn( void )
 { 
 	Precache( );
-	SET_MODEL(ENT(pev), "models/w_security.mdl");
+	SET_MODEL(ENT(pev), "models/w_antidote.mdl");
 	CItem::Spawn( );
 }
 
-void CItemSecurity::Precache( void )
+void CItemAntidote::Precache( void )
 {
-	PRECACHE_MODEL ("models/w_security.mdl");
+	PRECACHE_MODEL ("models/w_antidote.mdl");
 }
-	
-BOOL CItemSecurity::MyTouch( CBasePlayer *pPlayer )
+
+BOOL CItemAntidote::MyTouch( CBasePlayer *pPlayer )
 {
-	pPlayer->m_rgItems[ITEM_SECURITY] += 1;
+	pPlayer->SetSuitUpdate("!HEV_DET4", FALSE, SUIT_NEXT_IN_1MIN);
+		
+	pPlayer->m_rgItems[ITEM_ANTIDOTE] += 1;
 	return TRUE;
 }

@@ -12,7 +12,7 @@
 *   without written permission from Valve LLC.
 *
 ****/
-#include "battery.h"
+#include "item_battery.h"
 
 void CItemBattery::Spawn( void )
 { 

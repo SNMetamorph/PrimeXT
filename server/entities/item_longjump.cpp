@@ -12,48 +12,39 @@
 *   without written permission from Valve LLC.
 *
 ****/
-#include "healthkit.h"
+#include "item_longjump.h"
 
-void CHealthKit :: Spawn( void )
-{
+void CItemLongJump::Spawn( void )
+{ 
 	Precache( );
-	SET_MODEL(ENT(pev), "models/w_medkit.mdl");
-
-	CItem::Spawn();
+	SET_MODEL(ENT(pev), "models/w_longjump.mdl");
+	CItem::Spawn( );
 }
 
-void CHealthKit::Precache( void )
+void CItemLongJump::Precache( void )
 {
-	PRECACHE_MODEL("models/w_medkit.mdl");
-	PRECACHE_SOUND("items/smallmedkit1.wav");
+	PRECACHE_MODEL ("models/w_longjump.mdl");
 }
 
-BOOL CHealthKit::MyTouch( CBasePlayer *pPlayer )
+BOOL CItemLongJump::MyTouch( CBasePlayer *pPlayer )
 {
-	if ( pPlayer->pev->deadflag != DEAD_NO )
+	if ( pPlayer->m_fLongJump )
 	{
 		return FALSE;
 	}
 
-	if ( pPlayer->TakeHealth( gSkillData.healthkitCapacity, DMG_GENERIC ) )
+	if ( pPlayer->HasWeapon( WEAPON_SUIT ))
 	{
+		pPlayer->m_fLongJump = TRUE;// player now has longjump module
+
+		g_engfuncs.pfnSetPhysicsKeyValue( pPlayer->edict(), "slj", "1" );
+
 		MESSAGE_BEGIN( MSG_ONE, gmsgItemPickup, NULL, pPlayer->pev );
 			WRITE_STRING( STRING(pev->classname) );
 		MESSAGE_END();
 
-		EMIT_SOUND(ENT(pPlayer->pev), CHAN_ITEM, "items/smallmedkit1.wav", 1, ATTN_NORM);
-
-		if ( g_pGameRules->ItemShouldRespawn( this ) )
-		{
-			Respawn();
-		}
-		else
-		{
-			UTIL_Remove(this);	
-		}
-
-		return TRUE;
+		EMIT_SOUND_SUIT( pPlayer->edict(), "!HEV_A1" );	// Play the longjump sound UNDONE: Kelly? correct sound?
+		return TRUE;		
 	}
-
 	return FALSE;
 }

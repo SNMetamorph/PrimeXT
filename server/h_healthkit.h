@@ -17,7 +17,7 @@
 #include "cbase.h"
 #include "monsters.h"
 #include "player.h"
-#include "items\items.h"
+#include "items.h"
 #include "gamerules.h"
 
 //-------------------------------------------------------------

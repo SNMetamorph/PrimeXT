@@ -12,7 +12,7 @@
 *   without written permission from Valve LLC.
 *
 ****/
-#include "generic.h"
+#include "item_generic.h"
 
 void CItemGeneric::Spawn( void )
 { 
