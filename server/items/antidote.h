@@ -17,10 +17,7 @@
 #include "cbase.h"
 #include "weapons.h"
 #include "player.h"
-#include "skill.h"
 #include "items.h"
-#include "gamerules.h"
-#include "user_messages.h"
 
 class CItemAntidote : public CItem
 {

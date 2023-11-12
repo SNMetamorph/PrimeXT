@@ -16,12 +16,9 @@
 #include "util.h"
 #include "cbase.h"
 #include "monsters.h"
-#include "weapons.h"
-#include "nodes.h"
 #include "player.h"
 #include "items\items.h"
 #include "gamerules.h"
-#include "user_messages.h"
 
 //-------------------------------------------------------------
 // Wall mounted health kit

@@ -23,12 +23,8 @@
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
-#include "weapons.h"
-#include "player.h"
-#include "skill.h"
 #include "items.h"
 #include "gamerules.h"
-#include "user_messages.h"
 
 class CWorldItem : public CBaseEntity
 {

@@ -16,8 +16,6 @@
 #include "util.h"
 #include "cbase.h"
 #include "monsters.h"
-#include "weapons.h"
-#include "nodes.h"
 #include "player.h"
 #include "items.h"
 #include "gamerules.h"

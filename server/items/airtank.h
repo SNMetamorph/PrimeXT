@@ -15,10 +15,7 @@
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
-#include "monsters.h"
 #include "weapons.h"
-#include "nodes.h"
-#include "player.h"
 
 class CAirtank : public CGrenade
 {

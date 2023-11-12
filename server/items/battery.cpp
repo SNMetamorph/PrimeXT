@@ -14,7 +14,7 @@
 ****/
 #include "battery.h"
 
-CItemBattery::Spawn( void )
+void CItemBattery::Spawn( void )
 { 
 	Precache( );
 	if (pev->model)
@@ -24,7 +24,7 @@ CItemBattery::Spawn( void )
 	CItem::Spawn( );
 }
 
-CItemBattery::Precache( void )
+void CItemBattery::Precache( void )
 {
 	if (pev->model)
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
@@ -37,7 +37,7 @@ CItemBattery::Precache( void )
 		PRECACHE_SOUND( "items/gunpickup2.wav" );
 }
 
-CItemBattery::MyTouch( CBasePlayer *pPlayer )
+BOOL CItemBattery::MyTouch( CBasePlayer *pPlayer )
 {
 	if ( pPlayer->pev->deadflag != DEAD_NO )
 	{

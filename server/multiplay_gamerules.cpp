@@ -24,7 +24,7 @@
  
 #include	"skill.h"
 #include	"game.h"
-#include	"items.h"
+#include	"items\items.h"
 #include	"hltv.h"
 #include "user_messages.h"
 

@@ -14,19 +14,19 @@
 ****/
 #include "longjump.h"
 
-CItemLongJump::Spawn( void )
+void CItemLongJump::Spawn( void )
 { 
 	Precache( );
 	SET_MODEL(ENT(pev), "models/w_longjump.mdl");
 	CItem::Spawn( );
 }
 
-CItemLongJump::Precache( void )
+void CItemLongJump::Precache( void )
 {
 	PRECACHE_MODEL ("models/w_longjump.mdl");
 }
 
-CItemLongJump::MyTouch( CBasePlayer *pPlayer )
+BOOL CItemLongJump::MyTouch( CBasePlayer *pPlayer )
 {
 	if ( pPlayer->m_fLongJump )
 	{

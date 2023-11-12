@@ -14,19 +14,19 @@
 ****/
 #include "antidote.h"
 
-CItemAntidote::Spawn( void )
+void CItemAntidote::Spawn( void )
 { 
 	Precache( );
 	SET_MODEL(ENT(pev), "models/w_antidote.mdl");
 	CItem::Spawn( );
 }
 
-CItemAntidote::Precache( void )
+void CItemAntidote::Precache( void )
 {
 	PRECACHE_MODEL ("models/w_antidote.mdl");
 }
 
-CItemAntidote::MyTouch( CBasePlayer *pPlayer )
+BOOL CItemAntidote::MyTouch( CBasePlayer *pPlayer )
 {
 	pPlayer->SetSuitUpdate("!HEV_DET4", FALSE, SUIT_NEXT_IN_1MIN);
 		

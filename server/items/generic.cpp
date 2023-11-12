@@ -14,21 +14,21 @@
 ****/
 #include "generic.h"
 
-CItemGeneric::Spawn( void )
+void CItemGeneric::Spawn( void )
 { 
 	Precache( );
 	SET_MODEL( edict(), GetModel( ));
 	CItem::Spawn( );
 }
 
-CItemGeneric::Precache( void )
+void CItemGeneric::Precache( void )
 {
 	PRECACHE_MODEL( GetModel( ));
 	if( pev->noise )
 		PRECACHE_SOUND( (char*)STRING(pev->noise) );
 }
 
-CItemGeneric::MyTouch( CBasePlayer *pPlayer )
+BOOL CItemGeneric::MyTouch( CBasePlayer *pPlayer )
 {
 	if ( pPlayer->HasWeapon( WEAPON_SUIT ))
 	{

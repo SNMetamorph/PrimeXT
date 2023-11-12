@@ -14,19 +14,19 @@
 ****/
 #include "suit.h"
 
-CItemSuit::Spawn( void )
+void CItemSuit::Spawn( void )
 { 
 	Precache( );
 	SET_MODEL(ENT(pev), "models/w_suit.mdl");
 	CItem::Spawn( );
 }
 
-CItemSuit::Precache( void )
+void CItemSuit::Precache( void )
 {
 	PRECACHE_MODEL ("models/w_suit.mdl");
 }
 
-CItemSuit::MyTouch( CBasePlayer *pPlayer )
+BOOL CItemSuit::MyTouch( CBasePlayer *pPlayer )
 {
 	if ( pPlayer->HasWeapon( WEAPON_SUIT ))
 		return FALSE;

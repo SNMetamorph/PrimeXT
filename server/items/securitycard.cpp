@@ -14,19 +14,19 @@
 ****/
 #include "securitycard.h"
 
-CItemSecurity::Spawn( void )
+void CItemSecurity::Spawn( void )
 { 
 	Precache( );
 	SET_MODEL(ENT(pev), "models/w_security.mdl");
 	CItem::Spawn( );
 }
 
-CItemSecurity::Precache( void )
+void CItemSecurity::Precache( void )
 {
 	PRECACHE_MODEL ("models/w_security.mdl");
 }
 	
-CItemSecurity::MyTouch( CBasePlayer *pPlayer )
+BOOL CItemSecurity::MyTouch( CBasePlayer *pPlayer )
 {
 	pPlayer->m_rgItems[ITEM_SECURITY] += 1;
 	return TRUE;
