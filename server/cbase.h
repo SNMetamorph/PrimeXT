@@ -632,7 +632,6 @@ public:
 	{
 		if( m_iOldSolid == SOLID_NOT && pev->solid != SOLID_NOT )
 		{
-			WorldPhysic->EnableCollision( this, FALSE );
 			m_iOldSolid = pev->solid;
 			pev->solid = SOLID_NOT;
 		}
@@ -642,7 +641,6 @@ public:
 	{
 		if( m_iOldSolid != SOLID_NOT && pev->solid == SOLID_NOT )
 		{
-			WorldPhysic->EnableCollision( this, TRUE );
 			pev->solid = m_iOldSolid;
 			m_iOldSolid = SOLID_NOT;
 		}
