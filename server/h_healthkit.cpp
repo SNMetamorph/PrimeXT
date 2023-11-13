@@ -16,6 +16,8 @@
 //-------------------------------------------------------------
 #include "h_healthkit.h"
 
+LINK_ENTITY_TO_CLASS(func_healthcharger, CWallHealth);
+
 BEGIN_DATADESC( CWallHealth )
 	DEFINE_FIELD( m_flNextCharge, FIELD_TIME ),
 	DEFINE_KEYFIELD( m_iReactivate, FIELD_INTEGER, "dmdelay" ),

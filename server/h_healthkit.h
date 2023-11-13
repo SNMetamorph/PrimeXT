@@ -12,6 +12,8 @@
 *   without written permission from Valve LLC.
 *
 ****/
+#pragma once
+
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -44,5 +46,3 @@ public:
 	int m_iOn;	// 0 = off, 1 = startup, 2 = going
 	float m_flSoundTime;
 };
-
-LINK_ENTITY_TO_CLASS(func_healthcharger, CWallHealth);

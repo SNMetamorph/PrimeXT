@@ -12,6 +12,8 @@
 *   without written permission from Valve LLC.
 *
 ****/
+#pragma once
+
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
