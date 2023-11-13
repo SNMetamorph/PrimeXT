@@ -622,7 +622,9 @@ bool CPhysicsPushedEntities::SpeculativelyCheckPush( PhysicsPushedInfo_t &info, 
 		}
 
 		// we're not blocked if the blocker is point-sized or non-solid
-		if( pBlocker->IsPointSized() || pBlocker->pev->solid == SOLID_NOT )
+		// dynamic actors also doesn't block way since all pushables are kinematic actors
+		// and they just can push away other dynamic actors despite of obstacles
+		if( pBlocker->IsPointSized() || pBlocker->pev->solid == SOLID_NOT || bIsDynamic )
 		{
 			return true;
 		}
