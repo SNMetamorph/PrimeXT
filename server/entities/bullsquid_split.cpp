@@ -18,6 +18,8 @@
 
 #include	"bullsquid_split.h"
 
+extern int			   iSquidSpitSprite;
+
 LINK_ENTITY_TO_CLASS( squidspit, CSquidSpit );
 
 BEGIN_DATADESC( CSquidSpit )
