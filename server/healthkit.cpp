@@ -14,7 +14,7 @@
 //-------------------------------------------------------------
 // Wall mounted health kit
 //-------------------------------------------------------------
-#include "h_healthkit.h"
+#include "healthkit.h"
 
 LINK_ENTITY_TO_CLASS(func_healthcharger, CWallHealth);
 

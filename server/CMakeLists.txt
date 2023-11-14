@@ -71,7 +71,7 @@ list(APPEND SVDLL_SOURCES
 	"monsters/gman.cpp"
 	"monsters/h_ai.cpp"
 	"h_battery.cpp"
-	"h_healthkit.cpp"
+	"healthkit.cpp"
 	"h_cycler.cpp"
 	"handgrenade.cpp"
 	"monsters/hassassin.cpp"
