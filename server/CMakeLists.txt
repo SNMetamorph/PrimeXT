@@ -6,7 +6,6 @@ include(CompilerRuntime)
 check_include_file("tgmath.h" HAVE_TGMATH_H)
 
 list(APPEND SVDLL_SOURCES
-	"airtank.cpp"
 	"bmodels.cpp"
 	"buttons.cpp"
 	"cbase.cpp"
@@ -25,8 +24,8 @@ list(APPEND SVDLL_SOURCES
 	"ggrenade.cpp"
 	"globals.cpp"
 	"h_battery.cpp"
-	"h_cycler.cpp"
 	"healthkit.cpp"
+	"h_cycler.cpp"
 	"items.cpp"
 	"lights.cpp"
 	"mapents.cpp"
