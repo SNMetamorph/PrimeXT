@@ -17,6 +17,7 @@
 //=========================================================
 
 #include	"bullsquid.h"
+#include	"bullsquid_split.h"
 
 LINK_ENTITY_TO_CLASS( monster_bullchicken, CBullsquid );
 LINK_ENTITY_TO_CLASS( monster_bullsquid, CBullsquid ); //LRC - let's get the right name...
