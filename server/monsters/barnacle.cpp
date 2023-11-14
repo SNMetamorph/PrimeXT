@@ -16,44 +16,8 @@
 // barnacle - stationary ceiling mounted 'fishing' monster
 //=========================================================
 
-#include	"extdll.h"
-#include	"util.h"
-#include	"cbase.h"
-#include	"monsters.h"
-#include	"schedule.h"
+#include	"barnacle.h"
 
-#define	BARNACLE_BODY_HEIGHT	44 // how 'tall' the barnacle's model is.
-#define BARNACLE_PULL_SPEED		8
-#define BARNACLE_KILL_VICTIM_DELAY	5 // how many seconds after pulling prey in to gib them. 
-
-//=========================================================
-// Monster's Anim Events Go Here
-//=========================================================
-#define	BARNACLE_AE_PUKEGIB	2
-
-class CBarnacle : public CBaseMonster
-{
-	DECLARE_CLASS( CBarnacle, CBaseMonster );
-public:
-	void Spawn( void );
-	void Precache( void );
-	CBaseEntity *TongueTouchEnt ( float *pflLength );
-	int Classify ( void );
-	void HandleAnimEvent( MonsterEvent_t *pEvent );
-	void BarnacleThink ( void );
-	void WaitTillDead ( void );
-	void Killed( entvars_t *pevAttacker, int iGib );
-	int TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType );
-
-	float m_flAltitude;
-	float m_flKillVictimTime;
-	int m_cGibs;		// barnacle loads up on gibs each time it kills something.
-	BOOL m_fTongueExtended;
-	BOOL m_fLiftingPrey;
-	float m_flTongueAdj;
-
-	DECLARE_DATADESC();
-};
 LINK_ENTITY_TO_CLASS( monster_barnacle, CBarnacle );
 
 BEGIN_DATADESC( CBarnacle )
@@ -400,7 +364,7 @@ void CBarnacle :: Precache()
 // to see if any entity is touching it. Also stores the length
 // of the trace in the int pointer provided.
 //=========================================================
-#define BARNACLE_CHECK_SPACING	8
+
 CBaseEntity *CBarnacle :: TongueTouchEnt ( float *pflLength )
 {
 	TraceResult	tr;
