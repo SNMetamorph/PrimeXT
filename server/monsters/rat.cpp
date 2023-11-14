@@ -16,25 +16,8 @@
 // rat - environmental monster
 //=========================================================
 
-#include	"extdll.h"
-#include	"util.h"
-#include	"cbase.h"
-#include	"monsters.h"
-#include	"schedule.h"
+#include	"rat.h"
 
-//=========================================================
-// Monster's Anim Events Go Here
-//=========================================================
-
-class CRat : public CBaseMonster
-{
-	DECLARE_CLASS( CRat, CBaseMonster );
-public:
-	void Spawn( void );
-	void Precache( void );
-	void SetYawSpeed( void );
-	int  Classify ( void );
-};
 LINK_ENTITY_TO_CLASS( monster_rat, CRat );
 
 //=========================================================
