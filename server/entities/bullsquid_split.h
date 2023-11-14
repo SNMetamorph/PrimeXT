@@ -26,7 +26,6 @@
 #include	"nodes.h"
 #include	"effects.h"
 #include	"decals.h"
-#include	"soundent.h"
 #include	"game.h"
 
 //=========================================================
