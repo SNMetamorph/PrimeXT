@@ -13,22 +13,24 @@
 *
 ****/
 //=========================================================
-// babyheadcrab.h - more tiny, jumpy alien parasite
+// monster template
 //=========================================================
 
 #pragma once
 
-#include	"headcrab.h"
+#include	"extdll.h"
+#include	"util.h"
+#include	"cbase.h"
+#include	"monsters.h"
+#include	"schedule.h"
 
-class CBabyCrab : public CHeadCrab
+class CMyMonster : public CBaseMonster
 {
+	DECLARE_CLASS( CMyMonster, CBaseMonster );
 public:
 	void Spawn( void );
 	void Precache( void );
-	void SetYawSpeed ( void );
-	float GetDamageAmount( void ) { return gSkillData.headcrabDmgBite * 0.3; }
-	BOOL CheckRangeAttack1 ( float flDot, float flDist );
-	Schedule_t* GetScheduleOfType ( int Type );
-	virtual int GetVoicePitch( void ) { return PITCH_NORM + RANDOM_LONG(40,50); }
-	virtual float GetSoundVolue( void ) { return 0.8; }
+	void SetYawSpeed( void );
+	int  Classify ( void );
+	void HandleAnimEvent( MonsterEvent_t *pEvent );
 };
