@@ -16,6 +16,8 @@
 // headcrab.h - tiny, jumpy alien parasite
 //=========================================================
 
+#pragma once
+
 #include	"extdll.h"
 #include	"util.h"
 #include	"cbase.h"
