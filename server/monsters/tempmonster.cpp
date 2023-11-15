@@ -17,26 +17,8 @@
 //=========================================================
 #if 0
 
-#include	"extdll.h"
-#include	"util.h"
-#include	"cbase.h"
-#include	"monsters.h"
-#include	"schedule.h"
+#include	"tempmonster.h"
 
-//=========================================================
-// Monster's Anim Events Go Here
-//=========================================================
-
-class CMyMonster : public CBaseMonster
-{
-	DECLARE_CLASS( CMyMonster, CBaseMonster );
-public:
-	void Spawn( void );
-	void Precache( void );
-	void SetYawSpeed( void );
-	int  Classify ( void );
-	void HandleAnimEvent( MonsterEvent_t *pEvent );
-};
 LINK_ENTITY_TO_CLASS( my_monster, CMyMonster );
 
 //=========================================================
