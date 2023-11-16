@@ -15,33 +15,8 @@
 //=========================================================
 // Generic Monster - purely for scripted sequence work.
 //=========================================================
-#include	"extdll.h"
-#include	"util.h"
-#include	"cbase.h"
-#include	"monsters.h"
-#include	"schedule.h"
-#include	"talkmonster.h"
+#include	"genericmonster.h"
 
-// For holograms, make them not solid so the player can walk through them
-#define	SF_GENERICMONSTER_NOTSOLID	4 
-#define	SF_HEAD_CONTROLLER		8
-
-//=========================================================
-// Monster's Anim Events Go Here
-//=========================================================
-
-class CGenericMonster : public CTalkMonster
-{
-	DECLARE_CLASS( CGenericMonster, CTalkMonster );
-public:
-	void Spawn( void );
-	void Precache( void );
-	void SetYawSpeed( void );
-	int  Classify ( void );
-	void HandleAnimEvent( MonsterEvent_t *pEvent );
-	void KeyValue( KeyValueData *pkvd );
-	int ISoundMask ( void );
-};
 LINK_ENTITY_TO_CLASS( monster_generic, CGenericMonster );
 
 void CGenericMonster::KeyValue( KeyValueData *pkvd )
