@@ -14,6 +14,7 @@
 ****/
 
 #include "nihilanth.h"
+#include "nihilanth_hvr.h"
 
 LINK_ENTITY_TO_CLASS( monster_nihilanth, CNihilanth );
 
@@ -56,6 +57,47 @@ BEGIN_DATADESC( CNihilanth )
 	DEFINE_FUNCTION( NullThink ),
 	DEFINE_FUNCTION( CommandUse ),
 END_DATADESC()
+
+const char *CNihilanth::pAttackSounds[] =
+{
+	"X/x_attack1.wav",
+	"X/x_attack2.wav",
+	"X/x_attack3.wav",
+};
+
+const char *CNihilanth::pBallSounds[] =
+{
+	"X/x_ballattack1.wav",
+};
+
+const char *CNihilanth::pShootSounds[] =
+{
+	"X/x_shoot1.wav",
+};
+
+const char *CNihilanth::pRechargeSounds[] =
+{
+	"X/x_recharge1.wav",
+	"X/x_recharge2.wav",
+	"X/x_recharge3.wav",
+};
+
+const char *CNihilanth::pLaughSounds[] =
+{
+	"X/x_laugh1.wav",
+	"X/x_laugh2.wav",
+};
+
+const char *CNihilanth::pPainSounds[] =
+{
+	"X/x_pain1.wav",
+	"X/x_pain2.wav",
+};
+
+const char *CNihilanth::pDeathSounds[] =
+{
+	"X/x_die1.wav",
+};
 
 //=========================================================
 // Nihilanth, final Boss monster
