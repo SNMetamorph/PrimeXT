@@ -72,6 +72,40 @@ DEFINE_CUSTOM_SCHEDULES( CHeadCrab )
 	slHCRangeAttack1Fast,
 };
 
+const char *CHeadCrab::pIdleSounds[] =
+{
+	"headcrab/hc_idle1.wav",
+	"headcrab/hc_idle2.wav",
+	"headcrab/hc_idle3.wav",
+};
+const char *CHeadCrab::pAlertSounds[] =
+{
+	"headcrab/hc_alert1.wav",
+};
+const char *CHeadCrab::pPainSounds[] =
+{
+	"headcrab/hc_pain1.wav",
+	"headcrab/hc_pain2.wav",
+	"headcrab/hc_pain3.wav",
+};
+const char *CHeadCrab::pAttackSounds[] =
+{
+	"headcrab/hc_attack1.wav",
+	"headcrab/hc_attack2.wav",
+	"headcrab/hc_attack3.wav",
+};
+
+const char *CHeadCrab::pDeathSounds[] =
+{
+	"headcrab/hc_die1.wav",
+	"headcrab/hc_die2.wav",
+};
+
+const char *CHeadCrab::pBiteSounds[] =
+{
+	"headcrab/hc_headbite.wav",
+};
+
 IMPLEMENT_CUSTOM_SCHEDULES( CHeadCrab, CBaseMonster );
 
 //=========================================================
