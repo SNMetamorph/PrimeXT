@@ -18,7 +18,43 @@
 
 #include "babyheadcrab.h"
 
+extern Schedule_t	slHCRangeAttack1Fast[];
+
 LINK_ENTITY_TO_CLASS( monster_babycrab, CBabyCrab );
+
+const char *CBabyCrab::pIdleSounds[] =
+{
+	"headcrab/hc_idle1.wav",
+	"headcrab/hc_idle2.wav",
+	"headcrab/hc_idle3.wav",
+};
+const char *CBabyCrab::pAlertSounds[] =
+{
+	"headcrab/hc_alert1.wav",
+};
+const char *CBabyCrab::pPainSounds[] =
+{
+	"headcrab/hc_pain1.wav",
+	"headcrab/hc_pain2.wav",
+	"headcrab/hc_pain3.wav",
+};
+const char *CBabyCrab::pAttackSounds[] =
+{
+	"headcrab/hc_attack1.wav",
+	"headcrab/hc_attack2.wav",
+	"headcrab/hc_attack3.wav",
+};
+
+const char *CBabyCrab::pDeathSounds[] =
+{
+	"headcrab/hc_die1.wav",
+	"headcrab/hc_die2.wav",
+};
+
+const char *CBabyCrab::pBiteSounds[] =
+{
+	"headcrab/hc_headbite.wav",
+};
 
 void CBabyCrab :: Spawn( void )
 {
