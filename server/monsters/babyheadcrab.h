@@ -31,4 +31,11 @@ public:
 	Schedule_t* GetScheduleOfType ( int Type );
 	virtual int GetVoicePitch( void ) { return PITCH_NORM + RANDOM_LONG(40,50); }
 	virtual float GetSoundVolue( void ) { return 0.8; }
+
+	static const char *pIdleSounds[];
+	static const char *pAlertSounds[];
+	static const char *pPainSounds[];
+	static const char *pAttackSounds[];
+	static const char *pDeathSounds[];
+	static const char *pBiteSounds[];
 };
