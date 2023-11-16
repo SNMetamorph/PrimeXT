@@ -288,7 +288,7 @@ void CNihilanthHVR::ZapTouch( CBaseEntity *pOther )
 	SetNextThink( 0.2 );
 }
 
-void CNihilanthHVR :: TeleportInit( CNihilanth *pOwner, CBaseEntity *pEnemy, CBaseEntity *pTarget, CBaseEntity *pTouch )
+void CNihilanthHVR::TeleportInit( CNihilanth *pOwner, CBaseEntity *pEnemy, CBaseEntity *pTarget, CBaseEntity *pTouch )
 {
 	pev->movetype = MOVETYPE_FLY;
 	pev->solid = SOLID_BBOX;

@@ -22,6 +22,7 @@
 #include "weapons.h"
 #include "nodes.h"
 #include "effects.h"
+#include "nihilanth.h"
 
 class CNihilanthHVR : public CBaseMonster
 {
