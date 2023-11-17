@@ -29,6 +29,58 @@ BEGIN_DATADESC( CAGrunt )
 	DEFINE_FIELD( m_iLastWord, FIELD_INTEGER ),
 END_DATADESC()
 
+const char *CAGrunt::pAttackHitSounds[] = 
+{
+	"zombie/claw_strike1.wav",
+	"zombie/claw_strike2.wav",
+	"zombie/claw_strike3.wav",
+};
+
+const char *CAGrunt::pAttackMissSounds[] = 
+{
+	"zombie/claw_miss1.wav",
+	"zombie/claw_miss2.wav",
+};
+
+const char *CAGrunt::pAttackSounds[] =
+{
+	"agrunt/ag_attack1.wav",
+	"agrunt/ag_attack2.wav",
+	"agrunt/ag_attack3.wav",
+};
+
+const char *CAGrunt::pDieSounds[] =
+{
+	"agrunt/ag_die1.wav",
+	"agrunt/ag_die4.wav",
+	"agrunt/ag_die5.wav",
+};
+
+const char *CAGrunt::pPainSounds[] =
+{
+	"agrunt/ag_pain1.wav",
+	"agrunt/ag_pain2.wav",
+	"agrunt/ag_pain3.wav",
+	"agrunt/ag_pain4.wav",
+	"agrunt/ag_pain5.wav",
+};
+
+const char *CAGrunt::pIdleSounds[] =
+{
+	"agrunt/ag_idle1.wav",
+	"agrunt/ag_idle2.wav",
+	"agrunt/ag_idle3.wav",
+	"agrunt/ag_idle4.wav",
+};
+
+const char *CAGrunt::pAlertSounds[] =
+{
+	"agrunt/ag_alert1.wav",
+	"agrunt/ag_alert3.wav",
+	"agrunt/ag_alert4.wav",
+	"agrunt/ag_alert5.wav",
+};
+
 //=========================================================
 // IRelationship - overridden because Human Grunts are 
 // Alien Grunt's nemesis.

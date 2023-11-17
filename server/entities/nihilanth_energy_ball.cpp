@@ -13,7 +13,7 @@
 *
 ****/
 
-#include "nihilanth_hvr.h"
+#include "nihilanth_energy_ball.h"
 
 LINK_ENTITY_TO_CLASS( nihilanth_energy_ball, CNihilanthHVR );
 

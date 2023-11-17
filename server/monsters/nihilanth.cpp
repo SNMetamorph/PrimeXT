@@ -14,7 +14,7 @@
 ****/
 
 #include "nihilanth.h"
-#include "nihilanth_hvr.h"
+#include "nihilanth_energy_ball.h"
 
 LINK_ENTITY_TO_CLASS( monster_nihilanth, CNihilanth );
 
@@ -388,7 +388,11 @@ void CNihilanth :: GibMonster( void )
 	// EMIT_SOUND_DYN(edict(), CHAN_VOICE, "common/bodysplat.wav", 0.75, ATTN_NORM, 0, 200);		
 }
 
-
+void CNihilanth::SetObjectCollisionBox( void )
+{
+	pev->absmin = GetAbsOrigin() + Vector( -16 * N_SCALE, -16 * N_SCALE, -48 * N_SCALE );
+	pev->absmax = GetAbsOrigin() + Vector( 16 * N_SCALE, 16 * N_SCALE, 28 * N_SCALE );
+}
 
 void CNihilanth :: FloatSequence( void )
 {

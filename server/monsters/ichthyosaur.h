@@ -35,8 +35,6 @@
 
 #define ICHTHYOSAUR_SPEED 150
 
-extern CGraph WorldGraph;
-
 #define EYE_MAD	0
 #define EYE_BASE	1
 #define EYE_CLOSED	2
@@ -129,45 +127,6 @@ public:
 	void BiteSound( void );
 	void DeathSound( void );
 	void PainSound( void );
-};
-
-const char *CIchthyosaur::pIdleSounds[] = 
-{
-	"ichy/ichy_idle1.wav",
-	"ichy/ichy_idle2.wav",
-	"ichy/ichy_idle3.wav",
-	"ichy/ichy_idle4.wav",
-};
-
-const char *CIchthyosaur::pAlertSounds[] = 
-{
-	"ichy/ichy_alert2.wav",
-	"ichy/ichy_alert3.wav",
-};
-
-const char *CIchthyosaur::pAttackSounds[] = 
-{
-	"ichy/ichy_attack1.wav",
-	"ichy/ichy_attack2.wav",
-};
-
-const char *CIchthyosaur::pBiteSounds[] = 
-{
-	"ichy/ichy_bite1.wav",
-	"ichy/ichy_bite2.wav",
-};
-
-const char *CIchthyosaur::pPainSounds[] = 
-{
-	"ichy/ichy_pain2.wav",
-	"ichy/ichy_pain3.wav",
-	"ichy/ichy_pain5.wav",
-};
-
-const char *CIchthyosaur::pDieSounds[] = 
-{
-	"ichy/ichy_die2.wav",
-	"ichy/ichy_die4.wav",
 };
 
 #define EMIT_ICKY_SOUND( chan, array ) \
