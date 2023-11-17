@@ -17,7 +17,7 @@
 // CONTROLLER HEADBALL
 //=========================================================
 
-#include	"controller_headball.h"
+#include	"controller_head_ball.h"
 
 LINK_ENTITY_TO_CLASS( controller_head_ball, CControllerHeadBall );
 

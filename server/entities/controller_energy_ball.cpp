@@ -17,7 +17,7 @@
 // CONTROLLER ZAPBALL
 //=========================================================
 
-#include	"controller_zapball.h"
+#include	"controller_energy_ball.h"
 
 LINK_ENTITY_TO_CLASS( controller_energy_ball, CControllerZapBall );
 

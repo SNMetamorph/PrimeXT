@@ -29,6 +29,42 @@ BEGIN_DATADESC( CController )
 	DEFINE_FIELD( m_vecEstVelocity, FIELD_VECTOR ),
 END_DATADESC()
 
+const char *CController::pAttackSounds[] = 
+{
+	"controller/con_attack1.wav",
+	"controller/con_attack2.wav",
+	"controller/con_attack3.wav",
+};
+
+const char *CController::pIdleSounds[] = 
+{
+	"controller/con_idle1.wav",
+	"controller/con_idle2.wav",
+	"controller/con_idle3.wav",
+	"controller/con_idle4.wav",
+	"controller/con_idle5.wav",
+};
+
+const char *CController::pAlertSounds[] = 
+{
+	"controller/con_alert1.wav",
+	"controller/con_alert2.wav",
+	"controller/con_alert3.wav",
+};
+
+const char *CController::pPainSounds[] = 
+{
+	"controller/con_pain1.wav",
+	"controller/con_pain2.wav",
+	"controller/con_pain3.wav",
+};
+
+const char *CController::pDeathSounds[] = 
+{
+	"controller/con_die1.wav",
+	"controller/con_die2.wav",
+};
+
 //=========================================================
 // Classify - indicates this monster's place in the 
 // relationship table.

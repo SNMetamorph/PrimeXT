@@ -16,7 +16,7 @@
 //=========================================================
 // Gargantua
 //=========================================================
-#include	"gargantua_smoker.h"
+#include	"env_smoker.h"
 
 LINK_ENTITY_TO_CLASS( env_smoker, CSmoker );
 

@@ -18,7 +18,7 @@
 //=========================================================
 #include	"bigmomma.h"
 #include	"bigmomma_mortar.h"
-#include	"info_BM.h"
+#include	"info_bigmomma.h"
 
 extern void MortarSpray(const Vector &position, const Vector &direction, int spriteModel, int count);
 
@@ -31,6 +31,66 @@ BEGIN_DATADESC( CBigMomma )
 	DEFINE_FIELD( m_painSoundTime, FIELD_TIME ),
 	DEFINE_FIELD( m_crabCount, FIELD_INTEGER ),
 END_DATADESC()
+
+const char *CBigMomma::pChildDieSounds[] = 
+{
+	"gonarch/gon_childdie1.wav",
+	"gonarch/gon_childdie2.wav",
+	"gonarch/gon_childdie3.wav",
+};
+
+const char *CBigMomma::pSackSounds[] = 
+{
+	"gonarch/gon_sack1.wav",
+	"gonarch/gon_sack2.wav",
+	"gonarch/gon_sack3.wav",
+};
+
+const char *CBigMomma::pDeathSounds[] = 
+{
+	"gonarch/gon_die1.wav",
+};
+
+const char *CBigMomma::pAttackSounds[] = 
+{
+	"gonarch/gon_attack1.wav",
+	"gonarch/gon_attack2.wav",
+	"gonarch/gon_attack3.wav",
+};
+const char *CBigMomma::pAttackHitSounds[] = 
+{
+	"zombie/claw_strike1.wav",
+	"zombie/claw_strike2.wav",
+	"zombie/claw_strike3.wav",
+};
+
+const char *CBigMomma::pBirthSounds[] = 
+{
+	"gonarch/gon_birth1.wav",
+	"gonarch/gon_birth2.wav",
+	"gonarch/gon_birth3.wav",
+};
+
+const char *CBigMomma::pAlertSounds[] = 
+{
+	"gonarch/gon_alert1.wav",
+	"gonarch/gon_alert2.wav",
+	"gonarch/gon_alert3.wav",
+};
+
+const char *CBigMomma::pPainSounds[] = 
+{
+	"gonarch/gon_pain2.wav",
+	"gonarch/gon_pain4.wav",
+	"gonarch/gon_pain5.wav",
+};
+
+const char *CBigMomma::pFootSounds[] = 
+{
+	"gonarch/gon_step1.wav",
+	"gonarch/gon_step2.wav",
+	"gonarch/gon_step3.wav",
+};
 
 //=========================================================
 // Classify - indicates this monster's place in the 

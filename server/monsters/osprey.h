@@ -13,7 +13,7 @@
 *
 ****/
 
-#pragma onces
+#pragma once
 
 #include "extdll.h"
 #include "util.h"
