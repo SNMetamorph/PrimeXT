@@ -790,6 +790,9 @@ LINK_ENTITY_TO_CLASS( monster_barney_dead, CDeadBarney );
 //=========================================================
 // ********** DeadBarney SPAWN **********
 //=========================================================
+
+char *CDeadBarney::m_szPoses[] = { "lying_on_back", "lying_on_side", "lying_on_stomach" };
+
 void CDeadBarney :: Spawn( )
 {
 	PRECACHE_MODEL("models/barney.mdl");

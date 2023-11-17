@@ -16,7 +16,7 @@
 //=========================================================
 // Gargantua
 //=========================================================
-#include	"gargantua_spiral.h"
+#include	"streak_spiral.h"
 
 extern void StreakSplash(const Vector &origin, const Vector &direction, int color, int count, int speed, int velocityRange);
 

@@ -25,6 +25,7 @@
 
 class CApacheHVR : public CGrenade
 {
+public:
 	DECLARE_CLASS( CApacheHVR, CGrenade );
 	void Spawn( void );
 	void Precache( void );

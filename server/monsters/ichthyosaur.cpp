@@ -35,6 +35,47 @@ BEGIN_DATADESC( CIchthyosaur )
 	DEFINE_FUNCTION( BiteTouch ),
 END_DATADESC()
 
+const char *CIchthyosaur::pIdleSounds[] = 
+{
+	"ichy/ichy_idle1.wav",
+	"ichy/ichy_idle2.wav",
+	"ichy/ichy_idle3.wav",
+	"ichy/ichy_idle4.wav",
+};
+
+const char *CIchthyosaur::pAlertSounds[] = 
+{
+	"ichy/ichy_alert2.wav",
+	"ichy/ichy_alert3.wav",
+};
+
+const char *CIchthyosaur::pAttackSounds[] = 
+{
+	"ichy/ichy_attack1.wav",
+	"ichy/ichy_attack2.wav",
+};
+
+const char *CIchthyosaur::pBiteSounds[] = 
+{
+	"ichy/ichy_bite1.wav",
+	"ichy/ichy_bite2.wav",
+};
+
+const char *CIchthyosaur::pPainSounds[] = 
+{
+	"ichy/ichy_pain2.wav",
+	"ichy/ichy_pain3.wav",
+	"ichy/ichy_pain5.wav",
+};
+
+const char *CIchthyosaur::pDieSounds[] = 
+{
+	"ichy/ichy_die2.wav",
+	"ichy/ichy_die4.wav",
+};
+
+extern CGraph WorldGraph;
+
 void CIchthyosaur :: IdleSound( void )	
 { 
 	EMIT_ICKY_SOUND( CHAN_VOICE, pIdleSounds ); 

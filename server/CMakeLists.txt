@@ -24,7 +24,6 @@ list(APPEND SVDLL_SOURCES
 	"ggrenade.cpp"
 	"globals.cpp"
 	"h_battery.cpp"
-	"healthkit.cpp"
 	"h_cycler.cpp"
 	"items.cpp"
 	"lights.cpp"

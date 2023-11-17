@@ -44,6 +44,8 @@ BEGIN_DATADESC( CHGrunt )
 	DEFINE_FIELD( m_iSentence, FIELD_INTEGER ),
 END_DATADESC()
 
+extern DLL_GLOBAL int		g_iSkillLevel;
+
 //=========================================================
 // Speak Sentence - say your cued up sentence.
 //
@@ -2274,6 +2276,9 @@ LINK_ENTITY_TO_CLASS( monster_hgrunt_dead, CDeadHGrunt );
 //=========================================================
 // ********** DeadHGrunt SPAWN **********
 //=========================================================
+
+char *CDeadHGrunt::m_szPoses[] = { "deadstomach", "deadside", "deadsitting" };
+
 void CDeadHGrunt :: Spawn( void )
 {
 	PRECACHE_MODEL("models/hgrunt.mdl");

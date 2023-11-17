@@ -28,8 +28,6 @@
 #include	"weapons.h"
 #include	"soundent.h"
 
-extern DLL_GLOBAL int		g_iSkillLevel;
-
 //=========================================================
 // Monster's Anim Events Go Here
 //=========================================================
@@ -90,29 +88,4 @@ public:
 	static const char *pAttackMissSounds[];
 	static const char *pPainSounds[];
 	static const char *pDeathSounds[];
-};
-
-const char *CISlave::pAttackHitSounds[] = 
-{
-	"zombie/claw_strike1.wav",
-	"zombie/claw_strike2.wav",
-	"zombie/claw_strike3.wav",
-};
-
-const char *CISlave::pAttackMissSounds[] = 
-{
-	"zombie/claw_miss1.wav",
-	"zombie/claw_miss2.wav",
-};
-
-const char *CISlave::pPainSounds[] = 
-{
-	"aslave/slv_pain1.wav",
-	"aslave/slv_pain2.wav",
-};
-
-const char *CISlave::pDeathSounds[] = 
-{
-	"aslave/slv_die1.wav",
-	"aslave/slv_die2.wav",
 };
