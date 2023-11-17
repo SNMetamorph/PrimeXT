@@ -31,7 +31,7 @@
 
 #define		SQUID_SPRINT_DIST	256 // how close the squid has to get before starting to sprint and refusing to swerve
 
-int			   iSquidSpitSprite;
+extern int			   iSquidSpitSprite;
 	
 //=========================================================
 // monster-specific schedule types

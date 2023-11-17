@@ -72,24 +72,8 @@ public:
 	void SwimThink( void );
 	void DeadThink( void );
 
-	void Touch( CBaseEntity *pOther )
-	{
-		if ( pOther->IsPlayer() )
-		{
-			// If the client is pushing me, give me some base velocity
-			if ( gpGlobals->trace_ent && gpGlobals->trace_ent == edict() )
-			{
-				SetBaseVelocity( pOther->GetAbsVelocity( ));
-				pev->flags |= FL_BASEVELOCITY;
-			}
-		}
-	}
-
-	void SetObjectCollisionBox( void )
-	{
-		pev->absmin = GetAbsOrigin() + Vector(-8, -8, 0 );
-		pev->absmax = GetAbsOrigin() + Vector( 8,  8, 2 );
-	}
+	void Touch( CBaseEntity *pOther );
+	void SetObjectCollisionBox( void );
 
 	void AttackSound( void );
 	void AlertSound( void );
@@ -132,17 +116,4 @@ private:
 	CBeam	*m_pb;
 	CBeam	*m_pt;
 #endif
-};
-
-const char *CLeech::pAttackSounds[] =
-{
-	"leech/leech_bite1.wav",
-	"leech/leech_bite2.wav",
-	"leech/leech_bite3.wav",
-};
-
-const char *CLeech::pAlertSounds[] =
-{
-	"leech/leech_alert1.wav",
-	"leech/leech_alert2.wav",
 };

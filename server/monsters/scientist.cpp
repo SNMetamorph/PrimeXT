@@ -1036,6 +1036,9 @@ LINK_ENTITY_TO_CLASS( monster_scientist_dead, CDeadScientist );
 //
 // ********** DeadScientist SPAWN **********
 //
+
+char *CDeadScientist::m_szPoses[] = { "lying_on_back", "lying_on_stomach", "dead_sitting", "dead_hang", "dead_table1", "dead_table2", "dead_table3" };
+
 void CDeadScientist :: Spawn( )
 {
 	PRECACHE_MODEL("models/scientist.mdl");

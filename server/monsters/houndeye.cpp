@@ -27,6 +27,8 @@ BEGIN_DATADESC( CHoundeye )
 	DEFINE_FIELD( m_vecPackCenter, FIELD_POSITION_VECTOR ),
 END_DATADESC()
 
+extern CGraph WorldGraph;
+
 //=========================================================
 // Classify - indicates this monster's place in the 
 // relationship table.

@@ -53,11 +53,7 @@ public:
 	// Don't allow the tentacle to go across transitions!!!
 	virtual int ObjectCaps( void ) { return BaseClass :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 
-	void SetObjectCollisionBox( void )
-	{
-		pev->absmin = GetAbsOrigin() + Vector( -400, -400, 0 );
-		pev->absmax = GetAbsOrigin() + Vector( 400, 400, 850 );
-	}
+	void SetObjectCollisionBox( void );
 
 	void Cycle( void );
 	void CommandUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
@@ -114,28 +110,6 @@ public:
 
 int CTentacle :: g_fFlySound;
 int CTentacle :: g_fSquirmSound;
-
-const char *CTentacle::pHitSilo[] = 
-{
-	"tentacle/te_strike1.wav",
-	"tentacle/te_strike2.wav",
-};
-
-const char *CTentacle::pHitDirt[] = 
-{
-	"player/pl_dirt1.wav",
-	"player/pl_dirt2.wav",
-	"player/pl_dirt3.wav",
-	"player/pl_dirt4.wav",
-};
-
-const char *CTentacle::pHitWater[] = 
-{
-	"player/pl_slosh1.wav",
-	"player/pl_slosh2.wav",
-	"player/pl_slosh3.wav",
-	"player/pl_slosh4.wav",
-};
 
 // animation sequence aliases 
 typedef enum

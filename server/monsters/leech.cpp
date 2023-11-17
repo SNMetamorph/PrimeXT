@@ -55,6 +55,19 @@ BEGIN_DATADESC( CLeech )
 	DEFINE_FUNCTION( DeadThink ),
 END_DATADESC()
 
+const char *CLeech::pAttackSounds[] =
+{
+	"leech/leech_bite1.wav",
+	"leech/leech_bite2.wav",
+	"leech/leech_bite3.wav",
+};
+
+const char *CLeech::pAlertSounds[] =
+{
+	"leech/leech_alert1.wav",
+	"leech/leech_alert2.wav",
+};
+
 void CLeech::Spawn( void )
 {
 	Precache();
@@ -335,6 +348,24 @@ void CLeech::DeadThink( void )
 	}
 }
 
+void CLeech::Touch( CBaseEntity *pOther )
+{
+	if ( pOther->IsPlayer() )
+	{
+		// If the client is pushing me, give me some base velocity
+		if ( gpGlobals->trace_ent && gpGlobals->trace_ent == edict() )
+		{
+			SetBaseVelocity( pOther->GetAbsVelocity( ));
+			pev->flags |= FL_BASEVELOCITY;
+		}
+	}
+}
+
+void CLeech::SetObjectCollisionBox( void )
+{
+	pev->absmin = GetAbsOrigin() + Vector(-8, -8, 0 );
+	pev->absmax = GetAbsOrigin() + Vector( 8,  8, 2 );
+}
 
 
 void CLeech::UpdateMotion( void )

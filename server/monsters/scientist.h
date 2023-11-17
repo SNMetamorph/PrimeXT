@@ -126,7 +126,6 @@ public:
 	int	m_iPose;// which sequence to display
 	static char *m_szPoses[7];
 };
-char *CDeadScientist::m_szPoses[] = { "lying_on_back", "lying_on_stomach", "dead_sitting", "dead_hang", "dead_table1", "dead_table2", "dead_table3" };
 
 //=========================================================
 // Sitting Scientist PROP

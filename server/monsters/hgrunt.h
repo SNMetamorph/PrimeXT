@@ -45,8 +45,6 @@
 
 int g_fGruntQuestion;				// true if an idle grunt asked a question. Cleared when someone answers.
 
-extern DLL_GLOBAL int		g_iSkillLevel;
-
 //=========================================================
 // monster-specific DEFINE's
 //=========================================================
@@ -223,8 +221,6 @@ public:
 	int m_iPose;// which sequence to display	-- temporary, don't need to save
 	static char *m_szPoses[3];
 };
-
-char *CDeadHGrunt::m_szPoses[] = { "deadstomach", "deadside", "deadsitting" };
 
 //=========================================================
 // CHGruntRepel - when triggered, spawns a monster_human_grunt

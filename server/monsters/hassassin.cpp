@@ -33,6 +33,7 @@ BEGIN_DATADESC( CHAssassin )
 	DEFINE_FIELD( m_iFrustration, FIELD_INTEGER ),
 END_DATADESC()
 
+extern DLL_GLOBAL int  g_iSkillLevel;
 
 //=========================================================
 // DieSound

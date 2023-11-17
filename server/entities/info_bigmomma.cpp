@@ -16,7 +16,7 @@
 //=========================================================
 // monster template
 //=========================================================
-#include	"info_BM.h"
+#include	"info_bigmomma.h"
 
 LINK_ENTITY_TO_CLASS( info_bigmomma, CInfoBM );
 

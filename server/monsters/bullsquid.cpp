@@ -28,6 +28,8 @@ BEGIN_DATADESC( CBullsquid )
 	DEFINE_FIELD( m_flNextSpitTime, FIELD_TIME ),
 END_DATADESC()
 
+int			   iSquidSpitSprite;
+
 //=========================================================
 // IgnoreConditions 
 //=========================================================
