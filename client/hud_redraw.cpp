@@ -36,11 +36,10 @@ void CHud::Think( void )
 		pList = pList->pNext;
 	}
 
-	// think about default fov
-	if( m_iFOV == 0 )
+	if (m_iFOV == 0 || !m_zoomMode)
 	{
-		// only let players adjust up in fov,  and only if they are not overriden by something else
-		m_iFOV = Q_max( default_fov->value, 90 );  
+		// let players only adjust up in fov, and only if they are not overriden by zoom
+		m_iFOV = Q_max(default_fov->value, 90);
 	}
 }
 
