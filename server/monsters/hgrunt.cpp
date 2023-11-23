@@ -46,6 +46,17 @@ END_DATADESC()
 
 extern DLL_GLOBAL int		g_iSkillLevel;
 
+const char *CHGrunt::pGruntSentences[] = 
+{
+	"HG_GREN", // grenade scared grunt
+	"HG_ALERT", // sees player
+	"HG_MONSTER", // sees monster
+	"HG_COVER", // running to cover
+	"HG_THROW", // about to throw grenade
+	"HG_CHARGE",  // running out to get the enemy
+	"HG_TAUNT", // say rude things
+};
+
 //=========================================================
 // Speak Sentence - say your cued up sentence.
 //
