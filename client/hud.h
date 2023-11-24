@@ -533,6 +533,7 @@ public:
 	Vector m_vecAngles;
 	int m_iKeyBits;
 	int m_iHideHUDDisplay;
+	bool m_zoomMode;
 	int m_iFOV;
 	int m_Teamplay;
 	int m_iRes;

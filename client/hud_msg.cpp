@@ -179,9 +179,14 @@ int CHud::MsgFunc_SetFOV( const char *pszName,  int iSize, void *pbuf )
 	int newfov = READ_BYTE();
 	float def_fov = CVAR_GET_FLOAT( "default_fov" );
 
-	if( newfov == 0 )
+	if (newfov == 0) {
 		m_iFOV = def_fov;
-	else m_iFOV = newfov;
+		m_zoomMode = false;
+	}
+	else {
+		m_iFOV = newfov;
+		m_zoomMode = true;
+	}
 
 	if( m_iFOV == def_fov )
 	{

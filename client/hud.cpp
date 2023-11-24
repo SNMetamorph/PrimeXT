@@ -150,7 +150,8 @@ void CHud :: VidInit( void )
 	// assumption: number_1, number_2, etc, are all listed and loaded sequentially
 	m_HUD_number_0 = GetSpriteIndex( "number_0" );
 	m_iFontHeight = m_rgrcRects[m_HUD_number_0].bottom - m_rgrcRects[m_HUD_number_0].top;
-	
+	m_zoomMode = false;
+
 	// loading error sprite
 	m_HUD_error = GetSpriteIndex( "error" );
 	m_hHudError = GetSprite( m_HUD_error );

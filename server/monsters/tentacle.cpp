@@ -19,127 +19,9 @@
 
 */
 
-#include	"extdll.h"
-#include	"util.h"
-#include	"cbase.h"
-#include	"monsters.h"
-#include	"weapons.h"
-#include	"soundent.h"
-
-
-#define ACT_T_IDLE		1010
-#define ACT_T_TAP			1020
-#define ACT_T_STRIKE		1030
-#define ACT_T_REARIDLE	1040
-
-class CTentacle : public CBaseMonster
-{
-	DECLARE_CLASS( CTentacle, CBaseMonster );
-public:
-	void Spawn( );
-	void Precache( );
-	void KeyValue( KeyValueData *pkvd );
-	CTentacle( );
-
-	DECLARE_DATADESC();
-
-	// Don't allow the tentacle to go across transitions!!!
-	virtual int ObjectCaps( void ) { return BaseClass :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
-
-	void SetObjectCollisionBox( void )
-	{
-		pev->absmin = GetAbsOrigin() + Vector( -400, -400, 0 );
-		pev->absmax = GetAbsOrigin() + Vector( 400, 400, 850 );
-	}
-
-	void Cycle( void );
-	void CommandUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	void Start( void );
-	void DieThink( void );
-
-	void Test( void );
-
-	void HitTouch( CBaseEntity *pOther );
-
-	float HearingSensitivity( void ) { return 2.0; };
-
-	int TakeDamage( entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType );
-	void HandleAnimEvent( MonsterEvent_t *pEvent );
-	void Killed( entvars_t *pevAttacker, int iGib );
-
-	MONSTERSTATE GetIdealState ( void ) { return MONSTERSTATE_IDLE; };
-	int CanPlaySequence( BOOL fDisregardState ) { return TRUE; };
-
-	int Classify( void );
-
-	int Level( float dz );
-	int MyLevel( void );
-	float MyHeight( void );
-
-	float m_flInitialYaw;
-	int m_iGoalAnim;
-	int m_iLevel;
-	int m_iDir;
-	float m_flFramerateAdj;
-	float m_flSoundYaw;
-	int m_iSoundLevel;
-	float m_flSoundTime;
-	float m_flSoundRadius;
-	int m_iHitDmg;
-	float m_flHitTime;
-
-	float m_flTapRadius;
-
-	float m_flNextSong;
-	static int g_fFlySound;
-	static int g_fSquirmSound;
-
-	float m_flMaxYaw;
-	int m_iTapSound;
-
-	Vector m_vecPrevSound;
-	float m_flPrevSoundTime;
-
-	static const char *pHitSilo[];
-	static const char *pHitDirt[];
-	static const char *pHitWater[];
-};
-
-
-
-int CTentacle :: g_fFlySound;
-int CTentacle :: g_fSquirmSound;
+#include	"tentacle.h"
 
 LINK_ENTITY_TO_CLASS( monster_tentacle, CTentacle );
-
-// stike sounds
-#define TE_NONE -1
-#define TE_SILO 0
-#define TE_DIRT 1
-#define TE_WATER 2
-
-const char *CTentacle::pHitSilo[] = 
-{
-	"tentacle/te_strike1.wav",
-	"tentacle/te_strike2.wav",
-};
-
-const char *CTentacle::pHitDirt[] = 
-{
-	"player/pl_dirt1.wav",
-	"player/pl_dirt2.wav",
-	"player/pl_dirt3.wav",
-	"player/pl_dirt4.wav",
-};
-
-const char *CTentacle::pHitWater[] = 
-{
-	"player/pl_slosh1.wav",
-	"player/pl_slosh2.wav",
-	"player/pl_slosh3.wav",
-	"player/pl_slosh4.wav",
-};
-
 
 BEGIN_DATADESC( CTentacle )
 	DEFINE_FIELD( m_flInitialYaw, FIELD_FLOAT ),
@@ -167,74 +49,27 @@ BEGIN_DATADESC( CTentacle )
 	DEFINE_FUNCTION( HitTouch ),
 END_DATADESC()
 
-
-// animation sequence aliases 
-typedef enum
+const char *CTentacle::pHitSilo[] = 
 {
-	TENTACLE_ANIM_Pit_Idle,
+	"tentacle/te_strike1.wav",
+	"tentacle/te_strike2.wav",
+};
 
-	TENTACLE_ANIM_rise_to_Temp1,
-	TENTACLE_ANIM_Temp1_to_Floor,
-	TENTACLE_ANIM_Floor_Idle,
-	TENTACLE_ANIM_Floor_Fidget_Pissed,
-	TENTACLE_ANIM_Floor_Fidget_SmallRise,
-	TENTACLE_ANIM_Floor_Fidget_Wave,
-	TENTACLE_ANIM_Floor_Strike,
-	TENTACLE_ANIM_Floor_Tap,
-	TENTACLE_ANIM_Floor_Rotate,
-	TENTACLE_ANIM_Floor_Rear,
-	TENTACLE_ANIM_Floor_Rear_Idle,
-	TENTACLE_ANIM_Floor_to_Lev1,
+const char *CTentacle::pHitDirt[] = 
+{
+	"player/pl_dirt1.wav",
+	"player/pl_dirt2.wav",
+	"player/pl_dirt3.wav",
+	"player/pl_dirt4.wav",
+};
 
-	TENTACLE_ANIM_Lev1_Idle,
-	TENTACLE_ANIM_Lev1_Fidget_Claw,
-	TENTACLE_ANIM_Lev1_Fidget_Shake,
-	TENTACLE_ANIM_Lev1_Fidget_Snap,
-	TENTACLE_ANIM_Lev1_Strike,
-	TENTACLE_ANIM_Lev1_Tap,
-	TENTACLE_ANIM_Lev1_Rotate,
-	TENTACLE_ANIM_Lev1_Rear,
-	TENTACLE_ANIM_Lev1_Rear_Idle,
-	TENTACLE_ANIM_Lev1_to_Lev2,
-
-	TENTACLE_ANIM_Lev2_Idle,
-	TENTACLE_ANIM_Lev2_Fidget_Shake,
-	TENTACLE_ANIM_Lev2_Fidget_Swing,
-	TENTACLE_ANIM_Lev2_Fidget_Tut,
-	TENTACLE_ANIM_Lev2_Strike,
-	TENTACLE_ANIM_Lev2_Tap,
-	TENTACLE_ANIM_Lev2_Rotate,
-	TENTACLE_ANIM_Lev2_Rear,
-	TENTACLE_ANIM_Lev2_Rear_Idle,
-	TENTACLE_ANIM_Lev2_to_Lev3,
-
-	TENTACLE_ANIM_Lev3_Idle,
-	TENTACLE_ANIM_Lev3_Fidget_Shake,
-	TENTACLE_ANIM_Lev3_Fidget_Side,
-	TENTACLE_ANIM_Lev3_Fidget_Swipe,
-	TENTACLE_ANIM_Lev3_Strike,
-	TENTACLE_ANIM_Lev3_Tap,
-	TENTACLE_ANIM_Lev3_Rotate,
-	TENTACLE_ANIM_Lev3_Rear,
-	TENTACLE_ANIM_Lev3_Rear_Idle,
-
-	TENTACLE_ANIM_Lev1_Door_reach,
-
-	TENTACLE_ANIM_Lev3_to_Engine,
-	TENTACLE_ANIM_Engine_Idle,
-	TENTACLE_ANIM_Engine_Sway,
-	TENTACLE_ANIM_Engine_Swat,
-	TENTACLE_ANIM_Engine_Bob,
-	TENTACLE_ANIM_Engine_Death1,
-	TENTACLE_ANIM_Engine_Death2,
-	TENTACLE_ANIM_Engine_Death3,
-
-	TENTACLE_ANIM_none
-} TENTACLE_ANIM;
-
-
-
-
+const char *CTentacle::pHitWater[] = 
+{
+	"player/pl_slosh1.wav",
+	"player/pl_slosh2.wav",
+	"player/pl_slosh3.wav",
+	"player/pl_slosh4.wav",
+};
 
 //=========================================================
 // Classify - indicates this monster's place in the 
@@ -451,7 +286,11 @@ void CTentacle :: Test( void )
 	pev->nextthink = gpGlobals->time + 0.1;
 }
 
-
+void CTentacle::SetObjectCollisionBox( void )
+{
+	pev->absmin = GetAbsOrigin() + Vector( -400, -400, 0 );
+	pev->absmax = GetAbsOrigin() + Vector( 400, 400, 850 );
+}
 
 //
 // TentacleThink
