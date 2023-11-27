@@ -19,17 +19,11 @@ list(APPEND SVDLL_SOURCES
 	"func_monitor.cpp"
 	"func_tank.cpp"
 	"game.cpp"
-	"gamerules.cpp"
-	"ggrenade.cpp"
 	"globals.cpp"
-	"h_battery.cpp"
-	"h_cycler.cpp"
 	"items.cpp"
 	"lights.cpp"
 	"mapents.cpp"
 	"maprules.cpp"
-	"mortar.cpp"
-	"multiplay_gamerules.cpp"
 	"novodex.cpp"
 	"pathcorner.cpp"
 	"physents.cpp"
@@ -41,7 +35,6 @@ list(APPEND SVDLL_SOURCES
 	"ropes/CRope.cpp"
 	"ropes/CRopeSegment.cpp"
 	"saverestore.cpp"
-	"singleplay_gamerules.cpp"
 	"skill.cpp"
 	"sound.cpp"
 	"spectator.cpp"
@@ -49,7 +42,6 @@ list(APPEND SVDLL_SOURCES
 	"strings.cpp"
 	"subs.cpp"
 	"sv_materials.cpp"
-	"teamplay_gamerules.cpp"
 	"triggers.cpp"
 	"user_messages.cpp"
 	"util.cpp"
@@ -81,6 +73,7 @@ list(APPEND SVDLL_SOURCES
 file(GLOB ENTITIES_SOURCES "entities/*.cpp")
 file(GLOB MONSTERS_SOURCES "monsters/*.cpp")
 file(GLOB WEAPONS_SOURCES "weapons/*.cpp")
+file(GLOB GAMERULES_SOURCES "gamerules/*.cpp")
 
 # add .def file to sources
 if(MSVC)
@@ -90,6 +83,7 @@ endif()
 list(APPEND SVDLL_SOURCES ${ENTITIES_SOURCES})
 list(APPEND SVDLL_SOURCES ${MONSTERS_SOURCES})
 list(APPEND SVDLL_SOURCES ${WEAPONS_SOURCES})
+list(APPEND SVDLL_SOURCES ${GAMERULES_SOURCES})
 add_library(${PROJECT_NAME} SHARED ${SVDLL_SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -98,6 +92,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"physics"
 	"weapons"
 	"entities"
+	"gamerules"
 	"wpn_shared"
 	"${CMAKE_SOURCE_DIR}/external/novodex"
 	"${CMAKE_SOURCE_DIR}/common"
