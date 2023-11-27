@@ -12,32 +12,43 @@
 *   without written permission from Valve LLC.
 *
 ****/
+/*
+
+===== mortar.cpp ========================================================
+
+  the "LaBuznik" mortar device              
+
+*/
 
 #pragma once
+
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
-#include "monsters.h"
+#include "saverestore.h"
 #include "weapons.h"
-#include "nodes.h"
-#include "player.h"
+#include "decals.h"
+#include "soundent.h"
 #include "ggrenade.h"
 
-class CHandGrenade : public CBasePlayerWeapon
+class CFuncMortarField : public CBaseToggle
 {
-	DECLARE_CLASS( CHandGrenade, CBasePlayerWeapon );
+	DECLARE_CLASS( CFuncMortarField, CBaseToggle );
 public:
 	void Spawn( void );
 	void Precache( void );
-	int iItemSlot( void ) { return 5; }
-	int GetItemInfo(ItemInfo *p);
+	void KeyValue( KeyValueData *pkvd );
 
-	void PrimaryAttack( void );
-	BOOL Deploy( void );
-	BOOL CanHolster( void );
-	void Holster( void );
-	void WeaponIdle( void );
+	// Bmodels don't go across transitions
+	virtual int	ObjectCaps( void ) { return BaseClass :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 
-	float m_flStartThrow;
-	float m_flReleaseThrow;
+	DECLARE_DATADESC();
+
+	void FieldUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+
+	int m_iszXController;
+	int m_iszYController;
+	float m_flSpread;
+	int m_iCount;
+	int m_fControl;
 };

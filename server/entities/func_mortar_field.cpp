@@ -20,35 +20,7 @@
 
 */
 
-#include "extdll.h"
-#include "util.h"
-#include "cbase.h"
-#include "saverestore.h"
-#include "weapons.h"
-#include "decals.h"
-#include "soundent.h"
-
-class CFuncMortarField : public CBaseToggle
-{
-	DECLARE_CLASS( CFuncMortarField, CBaseToggle );
-public:
-	void Spawn( void );
-	void Precache( void );
-	void KeyValue( KeyValueData *pkvd );
-
-	// Bmodels don't go across transitions
-	virtual int	ObjectCaps( void ) { return BaseClass :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
-
-	DECLARE_DATADESC();
-
-	void FieldUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-
-	int m_iszXController;
-	int m_iszYController;
-	float m_flSpread;
-	int m_iCount;
-	int m_fControl;
-};
+#include "func_mortar_field.h"
 
 LINK_ENTITY_TO_CLASS( func_mortar_field, CFuncMortarField );
 
@@ -184,75 +156,3 @@ void CFuncMortarField :: FieldUse( CBaseEntity *pActivator, CBaseEntity *pCaller
 	}
 }
 
-
-class CMortar : public CGrenade
-{
-	DECLARE_CLASS( CMortar, CGrenade );
-public:
-	void Spawn( void );
-	void Precache( void );
-	void MortarExplode( void );
-
-	DECLARE_DATADESC();
-
-	int m_spriteTexture;
-};
-
-LINK_ENTITY_TO_CLASS( monster_mortar, CMortar );
-
-BEGIN_DATADESC( CMortar )
-	DEFINE_FUNCTION( MortarExplode ),
-END_DATADESC()
-
-void CMortar::Spawn( )
-{
-	pev->movetype	= MOVETYPE_NONE;
-	pev->solid		= SOLID_NOT;
-
-	pev->dmg		= 200;
-
-	SetThink( &CMortar::MortarExplode );
-	pev->nextthink = 0;
-
-	Precache( );
-
-
-}
-
-void CMortar::Precache( )
-{
-	m_spriteTexture = PRECACHE_MODEL( "sprites/lgtning.spr" );
-}
-
-void CMortar::MortarExplode( void )
-{
-	Vector absOrigin = GetAbsOrigin();
-
-	// mortar beam
-	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-		WRITE_BYTE( TE_BEAMPOINTS );
-		WRITE_COORD( absOrigin.x );
-		WRITE_COORD( absOrigin.y );
-		WRITE_COORD( absOrigin.z );
-		WRITE_COORD( absOrigin.x );
-		WRITE_COORD( absOrigin.y );
-		WRITE_COORD( absOrigin.z + 1024 );
-		WRITE_SHORT(m_spriteTexture );
-		WRITE_BYTE( 0 ); // framerate
-		WRITE_BYTE( 0 ); // framerate
-		WRITE_BYTE( 1 ); // life
-		WRITE_BYTE( 40 );  // width
-		WRITE_BYTE( 0 );   // noise
-		WRITE_BYTE( 255 );   // r, g, b
-		WRITE_BYTE( 160 );   // r, g, b
-		WRITE_BYTE( 100 );   // r, g, b
-		WRITE_BYTE( 128 );	// brightness
-		WRITE_BYTE( 0 );		// speed
-	MESSAGE_END();
-
-	TraceResult tr;
-	UTIL_TraceLine( absOrigin + Vector( 0, 0, 1024 ), absOrigin - Vector( 0, 0, 1024 ), dont_ignore_monsters, edict(), &tr );
-
-	Explode( &tr, DMG_BLAST | DMG_MORTAR );
-	UTIL_ScreenShake( tr.vecEndPos, 25.0, 150.0, 1.0, 750 );
-}

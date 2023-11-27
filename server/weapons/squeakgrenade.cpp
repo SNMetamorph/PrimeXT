@@ -22,6 +22,7 @@
 #include "player.h"
 #include "soundent.h"
 #include "gamerules.h"
+#include "ggrenade.h"
 
 #define SQUEEK_DETONATE_DELAY		15.0
 
