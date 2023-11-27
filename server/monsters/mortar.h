@@ -12,32 +12,34 @@
 *   without written permission from Valve LLC.
 *
 ****/
+/*
+
+===== mortar.cpp ========================================================
+
+  the "LaBuznik" mortar device              
+
+*/
 
 #pragma once
+
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
-#include "monsters.h"
+#include "saverestore.h"
 #include "weapons.h"
-#include "nodes.h"
-#include "player.h"
+#include "decals.h"
+#include "soundent.h"
 #include "ggrenade.h"
 
-class CHandGrenade : public CBasePlayerWeapon
+class CMortar : public CGrenade
 {
-	DECLARE_CLASS( CHandGrenade, CBasePlayerWeapon );
+	DECLARE_CLASS( CMortar, CGrenade );
 public:
 	void Spawn( void );
 	void Precache( void );
-	int iItemSlot( void ) { return 5; }
-	int GetItemInfo(ItemInfo *p);
+	void MortarExplode( void );
 
-	void PrimaryAttack( void );
-	BOOL Deploy( void );
-	BOOL CanHolster( void );
-	void Holster( void );
-	void WeaponIdle( void );
+	DECLARE_DATADESC();
 
-	float m_flStartThrow;
-	float m_flReleaseThrow;
+	int m_spriteTexture;
 };

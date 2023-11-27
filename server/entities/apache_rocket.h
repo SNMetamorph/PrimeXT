@@ -22,6 +22,7 @@
 #include "weapons.h"
 #include "nodes.h"
 #include "effects.h"
+#include "ggrenade.h"
 
 class CApacheHVR : public CGrenade
 {
