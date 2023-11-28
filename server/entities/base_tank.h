@@ -19,10 +19,8 @@
 #include "util.h"
 #include "cbase.h"
 #include "effects.h"
-#include "weapons.h"
 #include "explode.h"
 #include "monsters.h"
-#include "player.h"
 #include "func_tankcontrols.h"
 
 #define SF_TANK_ACTIVE		0x0001

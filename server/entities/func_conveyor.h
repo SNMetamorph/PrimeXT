@@ -18,9 +18,6 @@
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
-#include "client.h"
-#include "player.h"
-#include "func_break.h"
 
 #define SF_CONVEYOR_VISUAL		BIT( 0 )
 #define SF_CONVEYOR_NOTSOLID		BIT( 1 )

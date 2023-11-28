@@ -18,10 +18,10 @@
 LINK_ENTITY_TO_CLASS(func_light, CFuncLight);
 
 BEGIN_DATADESC(CFuncLight)
-DEFINE_FIELD(m_iFlickerMode, FIELD_INTEGER),
-DEFINE_FIELD(m_flNextFlickerTime, FIELD_FLOAT),
-DEFINE_FIELD(m_vecLastDmgPoint, FIELD_POSITION_VECTOR),
-DEFINE_FUNCTION(Flicker),
+	DEFINE_FIELD(m_iFlickerMode, FIELD_INTEGER),
+	DEFINE_FIELD(m_flNextFlickerTime, FIELD_FLOAT),
+	DEFINE_FIELD(m_vecLastDmgPoint, FIELD_POSITION_VECTOR),
+	DEFINE_FUNCTION(Flicker),
 END_DATADESC()
 
 void CFuncLight::Spawn(void)

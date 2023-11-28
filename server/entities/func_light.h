@@ -18,8 +18,6 @@
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
-#include "client.h"
-#include "player.h"
 #include "func_break.h"
 
 #define SF_LIGHT_START_ON		BIT( 0 )
