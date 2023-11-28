@@ -19,22 +19,7 @@
   Explosion-related code
 
 */
-#include "extdll.h"
-#include "util.h"
-#include "cbase.h"
-#include "decals.h"
 #include "explode.h"
-
-// Spark Shower
-class CShower : public CBaseEntity
-{
-	DECLARE_CLASS( CShower, CBaseEntity );
-
-	void Spawn( void );
-	void Think( void );
-	void Touch( CBaseEntity *pOther );
-	int ObjectCaps( void ) { return FCAP_DONT_SAVE; }
-};
 
 LINK_ENTITY_TO_CLASS( spark_shower, CShower );
 
@@ -85,21 +70,6 @@ void CShower::Touch( CBaseEntity *pOther )
 	if ( (GetAbsVelocity().x * GetAbsVelocity().x + GetAbsVelocity().y * GetAbsVelocity().y ) < 10.0 )
 		pev->speed = 0;
 }
-
-class CEnvExplosion : public CBaseMonster
-{
-	DECLARE_CLASS( CEnvExplosion, CBaseMonster );
-public:
-	void Spawn( );
-	void Smoke ( void );
-	void KeyValue( KeyValueData *pkvd );
-	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-
-	DECLARE_DATADESC();
-
-	int m_iMagnitude;// how large is the fireball? how much damage?
-	int m_spriteScale; // what's the exact fireball sprite scale? 
-};
 
 BEGIN_DATADESC( CEnvExplosion )
 	DEFINE_FIELD( m_iMagnitude, FIELD_INTEGER ),

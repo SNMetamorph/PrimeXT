@@ -12,9 +12,13 @@
 *   without written permission from Valve LLC.
 *
 ****/
-#ifndef EXPLODE_H
-#define EXPLODE_H
 
+#pragma once
+
+#include "extdll.h"
+#include "util.h"
+#include "cbase.h"
+#include "decals.h"
 
 #define	SF_ENVEXPLOSION_NODAMAGE	( 1 << 0 ) // when set, ENV_EXPLOSION will not actually inflict damage
 #define	SF_ENVEXPLOSION_REPEATABLE	( 1 << 1 ) // can this entity be refired?
@@ -29,5 +33,27 @@ extern DLL_GLOBAL	short	g_sModelIndexSmoke;
 
 extern void ExplosionCreate( const Vector &center, const Vector &angles, edict_t *pOwner, int magnitude, BOOL doDamage );
 
-#endif			//EXPLODE_H
+class CShower : public CBaseEntity
+{
+	DECLARE_CLASS( CShower, CBaseEntity );
 
+	void Spawn( void );
+	void Think( void );
+	void Touch( CBaseEntity *pOther );
+	int ObjectCaps( void ) { return FCAP_DONT_SAVE; }
+};
+
+class CEnvExplosion : public CBaseMonster
+{
+	DECLARE_CLASS( CEnvExplosion, CBaseMonster );
+public:
+	void Spawn( );
+	void Smoke ( void );
+	void KeyValue( KeyValueData *pkvd );
+	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+
+	DECLARE_DATADESC();
+
+	int m_iMagnitude;// how large is the fireball? how much damage?
+	int m_spriteScale; // what's the exact fireball sprite scale? 
+};
