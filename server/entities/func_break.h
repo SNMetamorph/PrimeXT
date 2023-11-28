@@ -12,19 +12,22 @@
 *   without written permission from Valve LLC.
 *
 ****/
-#ifndef FUNC_BREAK_H
-#define FUNC_BREAK_H
+
+#pragma once
+
+#include "extdll.h"
+#include "util.h"
+#include "cbase.h"
+#include "saverestore.h"
+#include "func_break.h"
+#include "decals.h"
+#include "explode.h"
 
 // func breakable
 #define SF_BREAK_TRIGGER_ONLY		1	// may only be broken by trigger
 #define SF_BREAK_TOUCH		2	// can be 'crashed through' by running player (plate glass)
 #define SF_BREAK_PRESSURE		4	// can be broken by a player standing on it
 #define SF_BREAK_CROWBAR		256	// instant break if hit with crowbar
-
-// func_pushable (it's also func_breakable, so don't collide with those flags)
-#define SF_PUSH_BREAKABLE		128
-#define SF_PUSH_HOLDABLE		512	// item can be picked up by player
-#define SF_PUSH_BSPCOLLISION		1024	// use BSP tree instead of bbox
 
 typedef enum { expRandom, expDirected } ExplType;
 typedef enum { matGlass = 0, matWood, matMetal, matFlesh, matCinderBlock, matCeilingTile, matComputer, matUnbreakableGlass, matRocks, matNone, matLastMaterial } Materials;
@@ -80,6 +83,3 @@ public:
 	int	m_iszGibModel;
 	int	m_iszSpawnObject;
 };
-
-#endif	// FUNC_BREAK_H
-
