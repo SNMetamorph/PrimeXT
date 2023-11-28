@@ -18,7 +18,6 @@ list(APPEND SVDLL_SOURCES
 	"mapents.cpp"
 	"maprules.cpp"
 	"novodex.cpp"
-	"pathcorner.cpp"
 	"physents.cpp"
 	"physic.cpp"
 	"physics/NxUserStream.cpp"

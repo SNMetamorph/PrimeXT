@@ -15,6 +15,8 @@
 #ifndef TRAINS_H
 #define TRAINS_H
 
+#include "path_track.h"
+
 // Tracktrain spawn flags
 #define SF_TRACKTRAIN_NOPITCH		0x0001
 #define SF_TRACKTRAIN_NOCONTROL	0x0002
@@ -57,53 +59,6 @@ enum TrackOrientationType_t
 	TrackOrientation_Fixed = 0,
 	TrackOrientation_FacePath,
 	TrackOrientation_FacePathAngles,
-};
-
-//#define PATH_SPARKLE_DEBUG		// This makes a particle effect around path_track entities for debugging
-class CPathTrack : public CPointEntity
-{
-	DECLARE_CLASS( CPathTrack, CPointEntity );
-public:
-	CPathTrack();
-
-	void		Spawn( void );
-	void		Activate( void );
-	void		KeyValue( KeyValueData* pkvd);
-	STATE		GetState ( void );
-	
-	void		SetPrevious( CPathTrack *pprevious );
-	void		Link( void );
-	void		Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-
-	CPathTrack	*ValidPath( CPathTrack *ppath, int testFlag = true ); // Returns ppath if enabled, NULL otherwise
-	void		Project( CPathTrack *pstart, CPathTrack *pend, Vector &origin, float dist );
-	int		GetOrientationType( void ) { return m_eOrientationType; }
-
-	Vector		GetOrientation( bool bForwardDir );
-	CPathTrack	*GetNextInDir( bool bForward );
-
-	static CPathTrack *Instance( edict_t *pent );
-
-	CPathTrack	*LookAhead( Vector &origin, float dist, int move, CPathTrack **pNextNext = NULL );
-	CPathTrack	*Nearest( const Vector &origin );
-
-	CPathTrack	*GetNext( void );
-	CPathTrack	*GetPrevious( void );
-
-	DECLARE_DATADESC();
-
-#ifdef PATH_SPARKLE_DEBUG
-	void 		Sparkle(void);
-#endif
-	float		m_length;
-	string_t		m_altName;
-	CPathTrack	*m_pnext;
-	CPathTrack	*m_pprevious;
-	CPathTrack	*m_paltpath;
-	int		m_eOrientationType;
-
-	string_t		m_iszFireFow;
-	string_t		m_iszFireRev;
 };
 
 class CFuncTrain;
