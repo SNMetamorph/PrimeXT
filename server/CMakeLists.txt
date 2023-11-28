@@ -7,13 +7,11 @@ check_include_file("tgmath.h" HAVE_TGMATH_H)
 
 list(APPEND SVDLL_SOURCES
 	"bmodels.cpp"
-	"buttons.cpp"
 	"cbase.cpp"
 	"client.cpp"
 	"combat.cpp"
 	"dll_int.cpp"
 	"effects.cpp"
-	"func_tank.cpp"
 	"game.cpp"
 	"globals.cpp"
 	"items.cpp"
