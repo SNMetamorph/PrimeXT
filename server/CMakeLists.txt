@@ -6,7 +6,6 @@ include(CompilerRuntime)
 check_include_file("tgmath.h" HAVE_TGMATH_H)
 
 list(APPEND SVDLL_SOURCES
-	"bmodels.cpp"
 	"cbase.cpp"
 	"client.cpp"
 	"combat.cpp"
