@@ -1734,8 +1734,9 @@ get_next_light:
 
 	if( ignored == -1 )
 	{
-		if( count > (int)cv_deferred_maxlights->value )
-			ALERT( at_aiconsole, "total %i lights affected to face\n", count );
+		if (CVAR_TO_BOOL(cv_deferred) && count > (int)cv_deferred_maxlights->value) {
+			ALERT(at_aiconsole, "total %i lights affected to face\n", count);
+		}
 		return;
 	}
 	for( i = 0; i < (int)cv_deferred_maxlights->value && lights[i] != 255; i++ );
