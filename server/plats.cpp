@@ -25,6 +25,7 @@
 #include "cbase.h"
 #include "trains.h"
 #include "saverestore.h"
+#include "func_traindoor.h"
 
 #define SF_PLAT_TOGGLE		BIT( 0 )
 

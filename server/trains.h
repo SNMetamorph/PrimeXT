@@ -15,6 +15,8 @@
 #ifndef TRAINS_H
 #define TRAINS_H
 
+#include "path_track.h"
+
 // Tracktrain spawn flags
 #define SF_TRACKTRAIN_NOPITCH		0x0001
 #define SF_TRACKTRAIN_NOCONTROL	0x0002
@@ -57,53 +59,6 @@ enum TrackOrientationType_t
 	TrackOrientation_Fixed = 0,
 	TrackOrientation_FacePath,
 	TrackOrientation_FacePathAngles,
-};
-
-//#define PATH_SPARKLE_DEBUG		// This makes a particle effect around path_track entities for debugging
-class CPathTrack : public CPointEntity
-{
-	DECLARE_CLASS( CPathTrack, CPointEntity );
-public:
-	CPathTrack();
-
-	void		Spawn( void );
-	void		Activate( void );
-	void		KeyValue( KeyValueData* pkvd);
-	STATE		GetState ( void );
-	
-	void		SetPrevious( CPathTrack *pprevious );
-	void		Link( void );
-	void		Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-
-	CPathTrack	*ValidPath( CPathTrack *ppath, int testFlag = true ); // Returns ppath if enabled, NULL otherwise
-	void		Project( CPathTrack *pstart, CPathTrack *pend, Vector &origin, float dist );
-	int		GetOrientationType( void ) { return m_eOrientationType; }
-
-	Vector		GetOrientation( bool bForwardDir );
-	CPathTrack	*GetNextInDir( bool bForward );
-
-	static CPathTrack *Instance( edict_t *pent );
-
-	CPathTrack	*LookAhead( Vector &origin, float dist, int move, CPathTrack **pNextNext = NULL );
-	CPathTrack	*Nearest( const Vector &origin );
-
-	CPathTrack	*GetNext( void );
-	CPathTrack	*GetPrevious( void );
-
-	DECLARE_DATADESC();
-
-#ifdef PATH_SPARKLE_DEBUG
-	void 		Sparkle(void);
-#endif
-	float		m_length;
-	string_t		m_altName;
-	CPathTrack	*m_pnext;
-	CPathTrack	*m_pprevious;
-	CPathTrack	*m_paltpath;
-	int		m_eOrientationType;
-
-	string_t		m_iszFireFow;
-	string_t		m_iszFireRev;
 };
 
 class CFuncTrain;
@@ -189,56 +144,6 @@ public:
 	float		m_flDesiredSpeed;
 	float		m_flAccelSpeed;
 	float		m_flReachedDist;
-};
-
-typedef enum
-{
-	TD_CLOSED,
-	TD_SHIFT_UP,
-	TD_SLIDING_UP,
-	TD_OPENED,
-	TD_SLIDING_DOWN,
-	TD_SHIFT_DOWN
-} TRAINDOOR_STATE;
-
-#define SF_TRAINDOOR_INVERSE			BIT( 0 )
-#define SF_TRAINDOOR_OPEN_IN_MOVING		BIT( 1 )
-#define SF_TRAINDOOR_ONOFF_MODE		BIT( 2 )
-
-class CBaseTrainDoor : public CBaseToggle
-{
-	DECLARE_CLASS( CBaseTrainDoor, CBaseToggle );
-public:
-	void Spawn( void );
-	void Precache( void );
-	virtual void KeyValue( KeyValueData *pkvd );
-	virtual void Blocked( CBaseEntity *pOther );
-	virtual int ObjectCaps( void ) { return ((CBaseToggle::ObjectCaps() & ~FCAP_ACROSS_TRANSITION)) | FCAP_SET_MOVEDIR; }
-	virtual bool IsDoorControl( void ) { return !FBitSet( pev->spawnflags, SF_TRAINDOOR_OPEN_IN_MOVING ) && GetState() != STATE_OFF; }
-
-	DECLARE_DATADESC();
-
-	// local functions
-	void FindTrain( void );
-	void DoorGoUp( void );
-	void DoorGoDown( void );
-	void DoorHitTop( void );
-	void DoorSlideUp( void );
-	void DoorSlideDown( void );
-	void DoorSlideWait( void );		// wait before sliding
-	void DoorHitBottom( void );
-	void ActivateTrain( void );
-	
-	int		m_iMoveSnd;	// sound a door makes while moving
-	int		m_iStopSnd;	// sound a door makes when it stops
-
-	CFuncTrackTrain	*m_pTrain;	// my train pointer
-	Vector		m_vecOldAngles;
-
-	TRAINDOOR_STATE	door_state;
-	virtual void	OverrideReset( void );
-	virtual void	Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	virtual STATE	GetState ( void );
 };
 
 #endif//TRAINS_H

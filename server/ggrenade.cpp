@@ -18,23 +18,10 @@
 
 */
 
-#include "extdll.h"
-#include "util.h"
-#include "cbase.h"
-#include "monsters.h"
-#include "weapons.h"
-#include "nodes.h"
+#include "ggrenade.h"
 #include "soundent.h"
-#include "decals.h"
-
-
-//===================grenade
-
 
 LINK_ENTITY_TO_CLASS( grenade, CGrenade );
-
-// Grenades flagged with this will be triggered when the owner calls detonateSatchelCharges
-#define SF_DETONATE		0x0001
 
 BEGIN_DATADESC( CGrenade )
 	DEFINE_FUNCTION( Smoke ),
@@ -508,7 +495,3 @@ void CGrenade :: UseSatchelCharges( entvars_t *pevOwner, SATCHELCODE code )
 		pentFind = FIND_ENTITY_BY_CLASSNAME( pentFind, "grenade" );
 	}
 }
-
-//======================end grenade
-
-

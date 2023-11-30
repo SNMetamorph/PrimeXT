@@ -25,7 +25,7 @@
 #include "cbase.h"
 #include "saverestore.h"
 #include "nodes.h"
-#include "doors.h"
+#include "func_door.h"
 
 #define MOVE_TOGGLE_NONE		0
 #define MOVE_TOGGLE_LINEAR		1
