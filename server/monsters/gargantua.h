@@ -30,7 +30,7 @@
 #include	"effects.h"
 #include	"soundent.h"
 #include	"decals.h"
-#include	"explode.h"
+#include	"env_explosion.h"
 #include	"func_break.h"
 
 //=========================================================

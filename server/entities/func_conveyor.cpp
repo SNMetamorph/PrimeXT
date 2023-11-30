@@ -18,7 +18,7 @@
 LINK_ENTITY_TO_CLASS(func_conveyor, CFuncConveyor);
 
 BEGIN_DATADESC(CFuncConveyor)
-DEFINE_FIELD(m_flMaxSpeed, FIELD_FLOAT),
+	DEFINE_FIELD(m_flMaxSpeed, FIELD_FLOAT),
 END_DATADESC()
 
 void CFuncConveyor::Spawn(void)

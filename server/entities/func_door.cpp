@@ -13,7 +13,7 @@
 *
 ****/
 
-#include "doors.h"	// for func_traindoor
+#include "func_door.h"	// for func_traindoor
 
 BEGIN_DATADESC( CBaseDoor )
 	DEFINE_KEYFIELD( m_bHealthValue, FIELD_CHARACTER, "healthvalue" ),

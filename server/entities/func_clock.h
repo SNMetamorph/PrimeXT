@@ -19,10 +19,6 @@
 #include "util.h"
 #include "cbase.h"
 
-#define SECONDS_PER_MINUTE	60
-#define SECONDS_PER_HOUR	3600
-#define SECODNS_PER_DAY	43200
-
 class CFuncClock : public CBaseDelay
 {
 	DECLARE_CLASS(CFuncClock, CBaseDelay);

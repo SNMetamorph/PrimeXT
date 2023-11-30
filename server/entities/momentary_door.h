@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include "doors.h"
+#include "func_door.h"
 
 #define SF_DOOR_CONSTANT_SPEED		BIT( 1 )
 

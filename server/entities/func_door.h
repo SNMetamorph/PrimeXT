@@ -20,7 +20,7 @@
 #include "cbase.h"
 #include "client.h"
 #include "player.h"
-#include "doors.h"
+#include "func_door.h"
 #include "trains.h"
 
 // doors

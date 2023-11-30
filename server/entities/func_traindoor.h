@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include "doors.h"
+#include "func_door.h"
 
 typedef enum
 {

@@ -19,7 +19,7 @@
 #include "util.h"
 #include "cbase.h"
 #include "effects.h"
-#include "explode.h"
+#include "env_explosion.h"
 #include "monsters.h"
 #include "func_tankcontrols.h"
 

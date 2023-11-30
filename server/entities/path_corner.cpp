@@ -16,7 +16,7 @@
 // ========================== PATH_CORNER ===========================
 //
 
-#include "pathcorner.h"
+#include "path_corner.h"
 
 LINK_ENTITY_TO_CLASS( path_corner, CPathCorner );
 

@@ -20,7 +20,7 @@
 #include "cbase.h"
 #include "client.h"
 #include "player.h"
-#include "doors.h"
+#include "func_door.h"
 
 #define SF_BUTTON_DONTMOVE		BIT( 0 )
 
@@ -56,15 +56,7 @@ public:
 	STATE GetState( void ) { return m_iState; }
 
 	// Buttons that don't take damage can be IMPULSE used
-	virtual int ObjectCaps( void )
-	{
-		int flags = FCAP_SET_MOVEDIR;
-		if( pev->takedamage == DAMAGE_NO )
-			flags |= FCAP_IMPULSE_USE;
-		if( FBitSet( pev->spawnflags, SF_BUTTON_ONLYDIRECT ))
-			flags |= FCAP_ONLYDIRECT_USE;
-		return ((BaseClass :: ObjectCaps() & (~FCAP_ACROSS_TRANSITION)) | flags);
-	}
+	virtual int ObjectCaps(void);
 
 	BOOL	m_fStayPushed;	// button stays pushed in until touched again?
 	BOOL	m_fRotating;	// a rotating button?  default is a sliding button.

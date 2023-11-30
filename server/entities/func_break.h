@@ -21,7 +21,7 @@
 #include "saverestore.h"
 #include "func_break.h"
 #include "decals.h"
-#include "explode.h"
+#include "env_explosion.h"
 
 // func breakable
 #define SF_BREAK_TRIGGER_ONLY		1	// may only be broken by trigger

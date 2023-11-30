@@ -18,19 +18,14 @@
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
-#include "client.h"
-#include "player.h"
-#include "func_door.h"
+#include "decals.h"
 
-#define SF_BUTTON_TARGET_USE		BIT( 0 )
-#define SF_BUTTON_TARGET_ON		BIT( 1 )
-
-class CButtonTarget : public CBaseDelay
+class CShower : public CBaseEntity
 {
-	DECLARE_CLASS( CButtonTarget, CBaseDelay );
-public:
+	DECLARE_CLASS( CShower, CBaseEntity );
+
 	void Spawn( void );
-	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	int TakeDamage( entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType );
-	virtual int ObjectCaps( void );
+	void Think( void );
+	void Touch( CBaseEntity *pOther );
+	int ObjectCaps( void ) { return FCAP_DONT_SAVE; }
 };

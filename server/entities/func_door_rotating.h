@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include "doors.h"
+#include "func_door.h"
 
 class CRotDoor : public CBaseDoor
 {

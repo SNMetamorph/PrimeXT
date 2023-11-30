@@ -449,3 +449,21 @@ void CMomentaryRotButton :: SetPositionMoveDone( void )
 
 	SetMoveDoneTime( dt );
 }
+
+CMomentaryRotButton *CMomentaryRotButton::Instance(edict_t *pent)
+{
+	return (CMomentaryRotButton *)GET_PRIVATE(pent);
+}
+
+float CMomentaryRotButton::GetPosition(void)
+{
+	return GetPos(GetLocalAngles());
+}
+
+int CMomentaryRotButton::ObjectCaps(void)
+{
+	int flags = (CBaseToggle::ObjectCaps() & (~FCAP_ACROSS_TRANSITION));
+	if (FBitSet(pev->spawnflags, SF_MOMENTARY_ROT_DOOR))
+		return flags;
+	return flags | FCAP_CONTINUOUS_USE;
+}

@@ -20,7 +20,7 @@
 #include "cbase.h"
 #include "client.h"
 #include "player.h"
-#include "doors.h"
+#include "func_door.h"
 
 #define SF_GLOBAL_SET		BIT( 0 )	// set global state to initial state on spawn
 

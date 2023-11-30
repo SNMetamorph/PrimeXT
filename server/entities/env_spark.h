@@ -20,7 +20,7 @@
 #include "cbase.h"
 #include "client.h"
 #include "player.h"
-#include "doors.h"
+#include "func_door.h"
 
 #define SF_SPARK_TOGGLE		BIT( 5 )
 #define SF_SPARK_START_ON		BIT( 6 )

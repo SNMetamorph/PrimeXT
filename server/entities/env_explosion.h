@@ -33,16 +33,6 @@ extern DLL_GLOBAL	short	g_sModelIndexSmoke;
 
 extern void ExplosionCreate( const Vector &center, const Vector &angles, edict_t *pOwner, int magnitude, BOOL doDamage );
 
-class CShower : public CBaseEntity
-{
-	DECLARE_CLASS( CShower, CBaseEntity );
-
-	void Spawn( void );
-	void Think( void );
-	void Touch( CBaseEntity *pOther );
-	int ObjectCaps( void ) { return FCAP_DONT_SAVE; }
-};
-
 class CEnvExplosion : public CBaseMonster
 {
 	DECLARE_CLASS( CEnvExplosion, CBaseMonster );

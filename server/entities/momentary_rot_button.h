@@ -20,7 +20,7 @@
 #include "cbase.h"
 #include "client.h"
 #include "player.h"
-#include "doors.h"
+#include "func_door.h"
 
 #define SF_MOMENTARY_ROT_DOOR			BIT( 0 )
 #define SF_MOMENTARY_ROT_BUTTON_AUTO_RETURN	BIT( 4 )
@@ -48,23 +48,11 @@ public:
 
 	DECLARE_DATADESC();
 
-	static CMomentaryRotButton *Instance( edict_t *pent )
-	{
-		return (CMomentaryRotButton *)GET_PRIVATE( pent );
-	}
+	static CMomentaryRotButton *Instance(edict_t *pent);
 
-	virtual float GetPosition( void )
-	{
-		return GetPos( GetLocalAngles( ));
-	}
+	virtual float GetPosition(void);
 
-	virtual int ObjectCaps( void ) 
-	{ 
-		int flags = (CBaseToggle::ObjectCaps() & (~FCAP_ACROSS_TRANSITION)); 
-		if( FBitSet( pev->spawnflags, SF_MOMENTARY_ROT_DOOR ))
-			return flags;
-		return flags | FCAP_CONTINUOUS_USE;
-	}
+	virtual int ObjectCaps(void);
 
 	int	m_sounds;
 	int	m_lastUsed;

@@ -446,3 +446,13 @@ void CBaseButton::ButtonBackHome( void )
 		DontThink();
 	}
 }
+
+int CBaseButton::ObjectCaps(void)
+{
+	int flags = FCAP_SET_MOVEDIR;
+	if (pev->takedamage == DAMAGE_NO)
+		flags |= FCAP_IMPULSE_USE;
+	if (FBitSet(pev->spawnflags, SF_BUTTON_ONLYDIRECT))
+		flags |= FCAP_ONLYDIRECT_USE;
+	return ((BaseClass::ObjectCaps() & (~FCAP_ACROSS_TRANSITION)) | flags);
+}

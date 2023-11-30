@@ -15,6 +15,10 @@
 
 #include "func_clock.h"
 
+#define SECONDS_PER_MINUTE	60
+#define SECONDS_PER_HOUR	3600
+#define SECODNS_PER_DAY	43200
+
 LINK_ENTITY_TO_CLASS(func_clock, CFuncClock);
 
 BEGIN_DATADESC(CFuncClock)

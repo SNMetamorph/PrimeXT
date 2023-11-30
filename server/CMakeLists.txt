@@ -9,6 +9,8 @@ list(APPEND SVDLL_SOURCES
 	"cbase.cpp"
 	"client.cpp"
 	"combat.cpp"
+	"ggrenade.cpp"
+	"base_tank.cpp"
 	"dll_int.cpp"
 	"effects.cpp"
 	"game.cpp"

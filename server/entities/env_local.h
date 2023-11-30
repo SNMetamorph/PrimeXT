@@ -20,7 +20,7 @@
 #include "cbase.h"
 #include "client.h"
 #include "player.h"
-#include "doors.h"
+#include "func_door.h"
 
 #define SF_LOCAL_START_ON		BIT( 0 )
 #define SF_LOCAL_REMOVE_ON_FIRE	BIT( 1 )
