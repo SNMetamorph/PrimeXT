@@ -13,15 +13,7 @@
 *
 ****/
 
-#include "extdll.h"
-#include "util.h"
-#include "cbase.h"
-#include "monsters.h"
-#include "weapons.h"
-#include "nodes.h"
-#include "player.h"
-#include "gamerules.h"
-#include "user_messages.h"
+#include "shotgun.h"
 
 // special deathmatch shotgun spreads
 #define VECTOR_CONE_DM_SHOTGUN	Vector( 0.08716f, 0.04362f, 0.00f ) // 10 degrees by 5 degrees
@@ -39,28 +31,6 @@ enum shotgun_e
 	SHOTGUN_HOLSTER,
 	SHOTGUN_IDLE4,
 	SHOTGUN_IDLE_DEEP
-};
-
-class CShotgun : public CBasePlayerWeapon
-{
-	DECLARE_CLASS( CShotgun, CBasePlayerWeapon );
-public:
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( ) { return 3; }
-	int GetItemInfo(ItemInfo *p);
-	int AddToPlayer( CBasePlayer *pPlayer );
-
-	DECLARE_DATADESC();
-
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
-	BOOL Deploy( );
-	void Reload( void );
-	void WeaponIdle( void );
-	int m_fInReload;
-	float m_flNextReload;
-	int m_iShell;
 };
 
 LINK_ENTITY_TO_CLASS( weapon_shotgun, CShotgun );
@@ -403,31 +373,3 @@ void CShotgun::WeaponIdle( void )
 		}
 	}
 }
-
-class CShotgunAmmo : public CBasePlayerAmmo
-{
-	DECLARE_CLASS( CShotgunAmmo, CBasePlayerAmmo );
-
-	void Spawn( void )
-	{ 
-		Precache( );
-		SET_MODEL(ENT(pev), "models/w_shotbox.mdl");
-		BaseClass :: Spawn( );
-	}
-	void Precache( void )
-	{
-		PRECACHE_MODEL ("models/w_shotbox.mdl");
-		PRECACHE_SOUND("items/9mmclip1.wav");
-	}
-	BOOL AddAmmo( CBaseEntity *pOther ) 
-	{ 
-		if (pOther->GiveAmmo( AMMO_BUCKSHOTBOX_GIVE, "buckshot", BUCKSHOT_MAX_CARRY ) != -1)
-		{
-			EMIT_SOUND(ENT(pev), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM);
-			return TRUE;
-		}
-		return FALSE;
-	}
-};
-
-LINK_ENTITY_TO_CLASS( ammo_buckshot, CShotgunAmmo );
