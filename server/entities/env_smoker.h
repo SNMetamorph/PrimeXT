@@ -29,7 +29,7 @@
 #include	"weapons.h"
 #include	"effects.h"
 #include	"decals.h"
-#include	"explode.h"
+#include	"env_explosion.h"
 #include	"func_break.h"
 
 class CSmoker : public CBaseEntity

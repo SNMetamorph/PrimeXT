@@ -23,6 +23,7 @@
 #include "player.h"
 #include "soundent.h"
 #include "gamerules.h"
+#include "ggrenade.h"
 
 class CMP5 : public CBasePlayerWeapon
 {

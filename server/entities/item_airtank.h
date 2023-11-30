@@ -18,6 +18,7 @@
 #include "util.h"
 #include "cbase.h"
 #include "weapons.h"
+#include "ggrenade.h"
 
 class CAirtank : public CGrenade
 {

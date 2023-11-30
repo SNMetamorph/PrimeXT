@@ -21,6 +21,7 @@
 #include "player.h"
 #include "effects.h"
 #include "gamerules.h"
+#include "ggrenade.h"
 
 #define TRIPMINE_PRIMARY_VOLUME	450
 

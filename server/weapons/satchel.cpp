@@ -21,6 +21,7 @@
 #include "nodes.h"
 #include "player.h"
 #include "gamerules.h"
+#include "ggrenade.h"
 
 class CSatchelCharge : public CGrenade
 {

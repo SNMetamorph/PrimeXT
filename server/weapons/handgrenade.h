@@ -21,6 +21,7 @@
 #include "weapons.h"
 #include "nodes.h"
 #include "player.h"
+#include "ggrenade.h"
 
 class CHandGrenade : public CBasePlayerWeapon
 {
