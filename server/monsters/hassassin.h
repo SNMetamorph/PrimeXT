@@ -28,6 +28,7 @@
 #include	"weapons.h"
 #include	"soundent.h"
 #include	"game.h"
+#include	"ggrenade.h"
 
 //=========================================================
 // monster-specific schedule types
