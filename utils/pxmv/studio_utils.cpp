@@ -1444,7 +1444,7 @@ const char *StudioModel::getQCcode( void )
 	{
 	case TYPE_ORIGIN:
 		if( g_viewerSettings.editMode == EDIT_SOURCE )
-			Q_snprintf( str, sizeof( str ), "$origin %g %g %g", ed->origin.y, ed->origin.x, ed->origin.z );
+			Q_snprintf( str, sizeof( str ), "$origin %g %g %g", -ed->origin.y, ed->origin.x, -ed->origin.z );
 		break;
 	case TYPE_BBOX:
 		Q_snprintf( str, sizeof( str ), "$bbox %g %g %g %g %g %g", ed->mins.x, ed->mins.y, ed->mins.z, ed->maxs.x, ed->maxs.y, ed->maxs.z );
