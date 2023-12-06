@@ -930,17 +930,13 @@ void R_InitDynLightShader( int type )
 	if (CVAR_TO_BOOL(r_shadows))
 	{
 		int shadow_smooth_type = static_cast<int>(r_shadows->value);
-		// shadow cubemaps only support if GL_EXT_gpu_shader4 is support
-		if (type == LIGHT_SPOT || GL_Support(R_EXT_GPU_SHADER4))
-		{
-			GL_AddShaderDirective(options, "APPLY_SHADOW");
-			if (shadow_smooth_type == 2)
-				GL_AddShaderDirective(options, "SHADOW_PCF2X2");
-			else if (shadow_smooth_type == 3)
-				GL_AddShaderDirective(options, "SHADOW_PCF3X3");
-			else if (shadow_smooth_type == 4)
-				GL_AddShaderDirective(options, "SHADOW_VOGEL_DISK");
-		}
+		GL_AddShaderDirective(options, "APPLY_SHADOW");
+		if (shadow_smooth_type == 2)
+			GL_AddShaderDirective(options, "SHADOW_PCF2X2");
+		else if (shadow_smooth_type == 3)
+			GL_AddShaderDirective(options, "SHADOW_PCF3X3");
+		else if (shadow_smooth_type == 4)
+			GL_AddShaderDirective(options, "SHADOW_VOGEL_DISK");
 	}
 
 	tr.defDynLightShader[type] = GL_FindShader( "deferred/dynlight", "deferred/generic", "deferred/dynlight", options );

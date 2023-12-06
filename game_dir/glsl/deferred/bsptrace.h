@@ -49,7 +49,6 @@ vec4 fetchNode( float number )
 
 float traceRay( const in vec3 p0, const in vec3 p1, float nodenum )
 {
-#if defined( GLSL_gpu_shader4 )
 	vec3	stack_p1[MAX_STACK_DEPTH];
 	vec2	stack_node[MAX_STACK_DEPTH];
 	vec3	other_p0, other_p1;
@@ -124,7 +123,6 @@ float traceRay( const in vec3 p0, const in vec3 p1, float nodenum )
 		if( stack_pos >= MAX_STACK_DEPTH )
 			break; // stack overflow
 	}
-#endif//GLSL_gpu_shader4
 	return 1.0;
 }
 

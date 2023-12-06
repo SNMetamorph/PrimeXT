@@ -641,11 +641,6 @@ static void GL_InitExtensions( void )
 		return;
 	}
 
-	GL_CheckExtension( "GL_EXT_gpu_shader4", NULL, "gl_ext_gpu_shader4", R_EXT_GPU_SHADER4 );
-
-	if( !GL_Support( R_EXT_GPU_SHADER4 ))
-		ALERT( at_warning, "GL_EXT_gpu_shader4 not support. Shadows from omni lights will be disabled\n" );
-
 	GL_CheckExtension("GL_ARB_debug_output", debugoutputfuncs, "gl_debug_output", R_DEBUG_OUTPUT);
 	GL_CheckExtension("GL_KHR_debug", khr_debug_funcs, "gl_khr_debug", R_KHR_DEBUG);
 	GL_CheckExtension("GL_NV_alpha_to_coverage_dither_control", nv_dither_control_func, "gl_a2c_dither_control", R_A2C_DITHER_CONTROL);
@@ -958,8 +953,7 @@ static void GL_InitTextures( void )
 	R_InitBlankBumpTexture();
 	R_InitVSDCTCubemap();
 
-	if( GL_Support( R_EXT_GPU_SHADER4 ))
-		tr.depthCubemap = CREATE_TEXTURE( "depthCube", 8, 8, NULL, TF_SHADOW_CUBEMAP ); 
+	tr.depthCubemap = CREATE_TEXTURE( "depthCube", 8, 8, NULL, TF_SHADOW_CUBEMAP ); 
 
 	// BRDF look-up table
 	tr.brdfApproxTexture = LOAD_TEXTURE("gfx/brdf_approx.dds", NULL, 0, TF_KEEP_SOURCE | TF_CLAMP);

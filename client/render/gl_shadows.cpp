@@ -617,8 +617,7 @@ void R_RenderShadowmaps( void )
 
 		if( pl->type == LIGHT_OMNI )
 		{
-			// need GL_EXT_gpu_shader4 for cubemap shadows
-			if( !GL_Support( R_TEXTURECUBEMAP_EXT ) || !GL_Support( R_EXT_GPU_SHADER4 ))
+			if( !GL_Support( R_TEXTURECUBEMAP_EXT ))
 				continue;
 
 			if( !Mod_CheckBoxVisible( pl->absmin, pl->absmax ))

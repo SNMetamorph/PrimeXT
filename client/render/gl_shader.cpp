@@ -733,12 +733,6 @@ static bool GL_ProcessShader( glsl_program_t *program, const char *filename, GLe
 		outputFile->Printf("#define GLSL_SHADER_VERTEX\n");
 	}
 
-	if( GL_Support( R_EXT_GPU_SHADER4 ))
-	{
-		outputFile->Printf("#extension GL_EXT_gpu_shader4 : require\n"); // support bitwise ops
-		outputFile->Printf("#define GLSL_gpu_shader4\n");
-	}
-
 	if( GL_Support( R_TEXTURE_2D_RECT_EXT ))
 	{
 		outputFile->Printf("#extension GL_ARB_texture_rectangle : enable\n"); // support texture rectangle

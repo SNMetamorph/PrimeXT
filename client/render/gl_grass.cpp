@@ -1327,11 +1327,7 @@ static word R_GrassShaderLightForward( CDynLight *dl, grass_t *g )
 
 	if( CVAR_TO_BOOL( r_shadows ) && !FBitSet( dl->flags, DLF_NOSHADOWS ))
 	{
-		// shadow cubemaps only support if GL_EXT_gpu_shader4 is support
-		if( dl->type == LIGHT_DIRECTIONAL && CVAR_TO_BOOL( r_sunshadows ))
-			GL_AddShaderDirective( options, "APPLY_SHADOW" );
-		else if( dl->type == LIGHT_SPOT || GL_Support( R_EXT_GPU_SHADER4 ))
-			GL_AddShaderDirective( options, "APPLY_SHADOW" );
+		GL_AddShaderDirective( options, "APPLY_SHADOW" );
 	}
 
 	// debug visualization

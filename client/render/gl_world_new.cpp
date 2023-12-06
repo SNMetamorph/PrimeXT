@@ -1135,7 +1135,7 @@ static word Mod_ShaderLightForward( CDynLight *dl, msurface_t *s )
 			if (shadow_smooth_type == 4)
 				GL_AddShaderDirective(options, "SHADOW_VOGEL_DISK");
 		}
-		else if( dl->type == LIGHT_SPOT || GL_Support( R_EXT_GPU_SHADER4 ))
+		else
 		{
 			GL_AddShaderDirective( options, "APPLY_SHADOW" );
 			if (shadow_smooth_type == 2)

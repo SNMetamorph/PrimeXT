@@ -42,7 +42,6 @@ float ShadowProj( const in vec3 world )
 {
 	float shadow = 0.0;
 
-#if defined( GLSL_gpu_shader4 )
 	// transform to camera space
 	vec4 cam = gl_ModelViewMatrix * vec4( world.xyz, 1.0 );
 	float vertexDistanceToCamera = -cam.z;
@@ -220,7 +219,6 @@ float ShadowProj( const in vec3 world )
 	}
 #endif // NUM_SHADOW_SPLITS
 #endif // SHADOW_VOGEL_DISK
-#endif // GL_EXT_gpu_shader4
 	return shadow;
 }
 
