@@ -606,12 +606,6 @@ static void GL_InitExtensions( void )
 		}
 	}
 
-	// 2d texture array support
-	GL_CheckExtension( "GL_EXT_texture_array", NULL, "gl_texture_2d_array", R_TEXTURE_ARRAY_EXT, true );
-
-	if( !GL_Support( R_TEXTURE_ARRAY_EXT ))
-		ALERT( at_warning, "GL_EXT_texture_array not support. Landscapes will be unavailable\n" );
-
 	// occlusion queries
 	GL_CheckExtension( "GL_ARB_occlusion_query", occlusionfunc, "gl_occlusion_queries", R_OCCLUSION_QUERIES_EXT );
 
@@ -713,10 +707,10 @@ static void GL_InitExtensions( void )
 
 	glConfig.max_2d_texture_size = 0;
 	pglGetIntegerv( GL_MAX_TEXTURE_SIZE, &glConfig.max_2d_texture_size );
-	if( glConfig.max_2d_texture_size <= 0 ) glConfig.max_2d_texture_size = 256;
+	if( glConfig.max_2d_texture_size <= 0 ) 
+		glConfig.max_2d_texture_size = 256;
 
-	if( GL_Support( R_TEXTURE_ARRAY_EXT ))
-		pglGetIntegerv( GL_MAX_ARRAY_TEXTURE_LAYERS_EXT, &glConfig.max_2d_texture_layers );
+	pglGetIntegerv( GL_MAX_ARRAY_TEXTURE_LAYERS_EXT, &glConfig.max_2d_texture_layers );
 
 	// FBO support
 	GL_CheckExtension( "GL_ARB_framebuffer_object", fbofuncs, "gl_framebuffers", R_FRAMEBUFFER_OBJECT );

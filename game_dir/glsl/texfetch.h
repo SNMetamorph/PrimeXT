@@ -22,13 +22,11 @@ GNU General Public License for more details.
 #define detailmap2D		texture2D
 #define decalmap2D		texture2D
 
-#if defined( GLSL_ALLOW_TEXTURE_ARRAY )
 vec4 colormap2DArray(sampler2DArray tex, vec2 uv, float layer)
 {
 	vec4 sample = texture2DArray(tex, vec3(uv, layer));
 	return vec4(ConvertSRGBToLinear(sample.rgb), sample.a);
 }
-#endif
 
 vec4 colormap2D(sampler2D tex, vec2 uv)
 {
@@ -147,7 +145,6 @@ vec3 normalmap2DLod( sampler2D tex, const vec2 uv, float lod )
 	return N;
 }
 
-#if defined( GLSL_ALLOW_TEXTURE_ARRAY )
 vec3 normalmap2DArray( sampler2DArray tex, const vec2 uv, const float layer )
 {
 	vec4 normalmap = texture2DArray( tex, vec3( uv, layer ));
@@ -174,7 +171,6 @@ vec3 normalmap2DArray( sampler2DArray tex, const vec2 uv, const float layer )
 
 	return N;
 }
-#endif
 
 vec4 cubic(float x)
 {

@@ -737,13 +737,6 @@ static bool GL_ProcessShader( glsl_program_t *program, const char *filename, GLe
 	{
 		outputFile->Printf("#extension GL_EXT_gpu_shader4 : require\n"); // support bitwise ops
 		outputFile->Printf("#define GLSL_gpu_shader4\n");
-		if( GL_Support( R_TEXTURE_ARRAY_EXT ))
-			outputFile->Printf("#define GLSL_ALLOW_TEXTURE_ARRAY\n");
-	}
-	else if( GL_Support( R_TEXTURE_ARRAY_EXT ))
-	{
-		outputFile->Printf("#extension GL_EXT_texture_array : require\n"); // support texture arrays
-		outputFile->Printf("#define GLSL_ALLOW_TEXTURE_ARRAY\n");
 	}
 
 	if( GL_Support( R_TEXTURE_2D_RECT_EXT ))

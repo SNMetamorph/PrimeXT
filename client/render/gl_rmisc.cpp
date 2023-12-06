@@ -83,7 +83,7 @@ bool LoadHeightMap( indexMap_t *im, int numLayers )
 	TextureHandle tex;
 	int	i, depth = 1;
 
-	if( !GL_Support( R_TEXTURE_ARRAY_EXT ) || numLayers <= 0 )
+	if( numLayers <= 0 )
 		return false;
 
 	// loading heightmap and keep the source pixels
