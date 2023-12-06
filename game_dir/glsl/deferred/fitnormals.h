@@ -43,7 +43,7 @@ void CompressUnsignedNormalToNormalsBuffer( inout vec3 vNormal )
 	vNormal.rgb /= maxNAbs;
 
 	// look-up fitting length and scale the normal to get the best fit
-	float fFittingScale = texture2D( u_FitNormalMap, vTexCoord ).r;
+	float fFittingScale = texture( u_FitNormalMap, vTexCoord ).r;
 
 	// scale the normal to get the best fit
 	vNormal.rgb *= fFittingScale;

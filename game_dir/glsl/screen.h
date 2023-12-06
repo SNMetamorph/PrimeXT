@@ -43,7 +43,7 @@ vec3 GetScreenColor(in vec3 N, float fade)
 #if defined( APPLY_ABERRATION )
 	return chromemap2D(u_ScreenMap, screenCoord, N, u_AberrationScale * fade);
 #else
-	return texture2D(u_ScreenMap, screenCoord).rgb;
+	return texture(u_ScreenMap, screenCoord).rgb;
 #endif
 }
 

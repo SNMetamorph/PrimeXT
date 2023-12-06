@@ -80,7 +80,7 @@ vec3 ApplyColorAccent(vec3 color)
 
 void main()
 {
-	vec3 color = texture2D(u_ScreenMap, var_TexCoord).rgb;
+	vec3 color = texture(u_ScreenMap, var_TexCoord).rgb;
 	color = AdjustColorLevels(color);
 	color = ApplyColorAccent(color);
 	color = AdjustBrightness(color);

@@ -44,7 +44,7 @@ float ShadowSpot( const in vec4 projection, const in vec2 texel )
 	{
 		for( float j = -filterWidth; j < filterWidth; j += stepSize )
 		{
-			shadow += shadow2D( u_ShadowMap, coord + vec3( i, j, -0.000005 )).r;
+			shadow += texture( u_ShadowMap, coord + vec3( i, j, -0.000005 ));
 		}
 	}
 
@@ -58,13 +58,13 @@ float ShadowSpot( const in vec4 projection, const in vec2 texel )
 	
 	for( int i = 0; i < 16; ++i )
 	{
-		shadow += shadow2D(u_ShadowMap, coord + vec3(stepSize * VogelDiskSample(i, 16, rotation), 0.0)).r;
+		shadow += texture(u_ShadowMap, coord + vec3(stepSize * VogelDiskSample(i, 16, rotation), 0.0));
 	}
 	
     shadow *= 0.0625;	
 	return shadow;
 #else
-	return shadow2D( u_ShadowMap, coord ).r; // no PCF
+	return texture( u_ShadowMap, coord ); // no PCF
 #endif
 }
 

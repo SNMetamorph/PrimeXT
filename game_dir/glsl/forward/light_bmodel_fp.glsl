@@ -210,7 +210,7 @@ void main()
 
 #if defined( LIGHT_SPOT )
 	// texture or procedural spotlight
-	light *= texture2DProj( u_ProjectMap, var_ProjCoord ).rgb;
+	light *= textureProj( u_ProjectMap, var_ProjCoord ).rgb;
 #if defined( APPLY_SHADOW )
 	if( NdotL > 0.0 ) 
 		shadow = ShadowSpot( var_ShadowCoord, u_ShadowParams.xy );

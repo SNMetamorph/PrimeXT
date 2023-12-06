@@ -68,7 +68,7 @@ void main( void )
 	vec3 vecTexCoord = vec3( var_TexDiffuse.xy, 1.0 );
 
 #if defined( PARALLAX_SIMPLE )
-	float offset = texture2D( u_HeightMap, vecTexCoord.xy ).r * 0.04 - 0.02;
+	float offset = texture( u_HeightMap, vecTexCoord.xy ).r * 0.04 - 0.02;
 	vecTexCoord.xy = ( offset * -V.xy + vecTexCoord.xy );
 #elif defined( PARALLAX_OCCLUSION )
 	vecTexCoord = ParallaxOcclusionMap( var_TexDiffuse.xy, V );

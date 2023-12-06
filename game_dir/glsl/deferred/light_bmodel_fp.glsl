@@ -25,7 +25,7 @@ flat varying vec4		var_LightNums1;
 
 void main( void )
 {
-	if( texture2D( u_ColorMap, var_TexDiffuse ).a < BMODEL_ALPHA_THRESHOLD )
+	if( texture( u_ColorMap, var_TexDiffuse ).a < BMODEL_ALPHA_THRESHOLD )
 		discard;
 
 	vec4 normal = vec4( 0.0 );

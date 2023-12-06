@@ -29,7 +29,7 @@ vec4 SampleScreenTexture(float offsetX, float offsetY)
 	vec2 texelSize = u_ScreenSizeInv;
 	vec2 coordOffset = vec2(offsetX, offsetY) * texelSize;
 	vec2 texCoords = clamp(var_TexCoord + coordOffset, u_TexCoordClamp.xy, u_TexCoordClamp.zw);
-	return texture2DLod(u_ScreenMap, texCoords, u_MipLod);
+	return textureLod(u_ScreenMap, texCoords, u_MipLod);
 }
 
 void main()

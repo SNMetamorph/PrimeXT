@@ -54,7 +54,7 @@ void main( void )
 #endif
 	// apply fullbright pixels
 #if defined( HAS_LUMA )
-	vec3 luma = texture2D( u_GlowMap, var_TexDiffuse ).rgb;
+	vec3 luma = texture( u_GlowMap, var_TexDiffuse ).rgb;
 	if( VectorMax( luma ) > EQUAL_EPSILON )
 		normal.w = 1.0;	// this pixel is fullbright
 	albedo.rgb += luma;		// add luma color

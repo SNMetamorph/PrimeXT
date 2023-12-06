@@ -53,8 +53,8 @@ void main()
 	const float adaptRateToBright = 1.6;
 
 	float currentAdaptRate;
-	float avgLuminanceLog = texture2DLod(u_ScreenMap, vec2(0.5), u_MipLod).r;
-	float prevExposure = texture2D(u_NormalMap, vec2(0.5)).r;
+	float avgLuminanceLog = textureLod(u_ScreenMap, vec2(0.5), u_MipLod).r;
+	float prevExposure = texture(u_NormalMap, vec2(0.5)).r;
 	float avgLuminance = avgLuminanceLog / (1.0 - avgLuminanceLog);
 	float ev100 = ComputeEV100FromAvgLuminance(avgLuminance);
 	float currentExposure = clamp(ConvertEV100ToExposure(ev100) * exposureScale, exposureMin, exposureMax);

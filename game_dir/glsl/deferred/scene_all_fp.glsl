@@ -42,8 +42,8 @@ varying vec3 	var_RayVec;
 
 void main( void )
 {
-	vec3 diffuse = texture2D( u_ColorMap, var_TexCoord ).rgb;
-	vec4 normal = texture2D( u_NormalMap, var_TexCoord );
+	vec3 diffuse = texture( u_ColorMap, var_TexCoord ).rgb;
+	vec4 normal = texture( u_NormalMap, var_TexCoord );
 	float gammaIndex;
 
 	if( normal.w == 1.0 )
@@ -54,7 +54,7 @@ void main( void )
 	}
 
 	vec4 glossmap = colormap2D( u_GlossMap, var_TexCoord );
-	float w = texture2D( u_DepthMap, var_TexCoord ).r;
+	float w = texture( u_DepthMap, var_TexCoord ).r;
 	normal.xyz = normalize( normal.xyz * 2.0 - 1.0 );
 	w = linearizeDepth( u_zFar, w );
 	vec3 pos = u_ViewOrigin + var_RayVec * (w - 1.0); // nudge point to avoid z-fighting
@@ -71,7 +71,7 @@ void main( void )
 	s_light[3] = vec3( 0.0 );
 	styles = vec4( 255.0 );
 
-	vec4 lights = texture2D( u_VisLightMap0, var_TexCoord ) * 255.0;
+	vec4 lights = texture( u_VisLightMap0, var_TexCoord ) * 255.0;
 
 	// do lighting for current pixel
 	for( int i = 0; lights[i] != 255.0; i++ )
@@ -80,7 +80,7 @@ void main( void )
 		{
 			if( first )
 			{
-				lights = texture2D( u_VisLightMap1, var_TexCoord ) * 255.0;
+				lights = texture( u_VisLightMap1, var_TexCoord ) * 255.0;
 				first = false;
 				i = 0;
 			}

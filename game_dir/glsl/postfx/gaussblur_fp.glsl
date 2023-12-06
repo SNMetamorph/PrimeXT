@@ -21,7 +21,7 @@ varying vec2	var_TexCoord;
 void main( void )
 {
 	vec2 tx = var_TexCoord;
-	vec4 sum = texture2D( u_ScreenMap, tx ) * 0.134598;
+	vec4 sum = texture( u_ScreenMap, tx ) * 0.134598;
 	vec2 dx = vec2( 0.0 ); // assume no blur
 
 #if defined( BLUR_X )
@@ -30,19 +30,19 @@ void main( void )
 	dx = vec2( 0.0, 0.01953 ) * u_BlurFactor.y;
 #endif
 	vec2 sdx = dx;
-	sum += (texture2D( u_ScreenMap, tx + sdx ) + texture2D( u_ScreenMap, tx - sdx )) * 0.127325;
+	sum += (texture( u_ScreenMap, tx + sdx ) + texture( u_ScreenMap, tx - sdx )) * 0.127325;
 	sdx += dx;
-	sum += (texture2D( u_ScreenMap, tx + sdx ) + texture2D( u_ScreenMap, tx - sdx )) * 0.107778;
+	sum += (texture( u_ScreenMap, tx + sdx ) + texture( u_ScreenMap, tx - sdx )) * 0.107778;
 	sdx += dx;
-	sum += (texture2D( u_ScreenMap, tx + sdx ) + texture2D( u_ScreenMap, tx - sdx )) * 0.081638;
+	sum += (texture( u_ScreenMap, tx + sdx ) + texture( u_ScreenMap, tx - sdx )) * 0.081638;
 	sdx += dx;
-	sum += (texture2D( u_ScreenMap, tx + sdx ) + texture2D( u_ScreenMap, tx - sdx )) * 0.055335;
+	sum += (texture( u_ScreenMap, tx + sdx ) + texture( u_ScreenMap, tx - sdx )) * 0.055335;
 	sdx += dx;
-	sum += (texture2D( u_ScreenMap, tx + sdx ) + texture2D( u_ScreenMap, tx - sdx )) * 0.033562;
+	sum += (texture( u_ScreenMap, tx + sdx ) + texture( u_ScreenMap, tx - sdx )) * 0.033562;
 	sdx += dx;
-	sum += (texture2D( u_ScreenMap, tx + sdx ) + texture2D( u_ScreenMap, tx - sdx )) * 0.018216;
+	sum += (texture( u_ScreenMap, tx + sdx ) + texture( u_ScreenMap, tx - sdx )) * 0.018216;
 	sdx += dx;
-	sum += (texture2D( u_ScreenMap, tx + sdx ) + texture2D( u_ScreenMap, tx - sdx )) * 0.008847;
+	sum += (texture( u_ScreenMap, tx + sdx ) + texture( u_ScreenMap, tx - sdx )) * 0.008847;
 	sdx += dx;
 
 	gl_FragColor = sum;

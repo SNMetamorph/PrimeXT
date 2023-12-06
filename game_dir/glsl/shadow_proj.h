@@ -58,7 +58,7 @@ float ShadowProj( const in vec3 world )
 		shadowVert = WorldToTexel( world, 0 );
         for( int i = 0; i < SAMPLE_COUNT; i += 1 )
 	    {
-	 	    shadow += shadow2D( u_ShadowMap0, shadowVert + vec3(stepSize * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+	 	    shadow += texture( u_ShadowMap0, shadowVert + vec3(stepSize * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0));
 	    }
 	}
 	else
@@ -66,7 +66,7 @@ float ShadowProj( const in vec3 world )
 		shadowVert = WorldToTexel( world, 1 );
         for( int i = 0; i < SAMPLE_COUNT; i += 1 )
 		{
-			shadow += shadow2D( u_ShadowMap1, shadowVert + vec3(stepSize * 0.5 * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+			shadow += texture( u_ShadowMap1, shadowVert + vec3(stepSize * 0.5 * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0));
 		}         
 	}
 #elif (NUM_SHADOW_SPLITS == 2)
@@ -75,7 +75,7 @@ float ShadowProj( const in vec3 world )
 		shadowVert = WorldToTexel( world, 0 );
 		for( int i = 0; i < SAMPLE_COUNT; i += 1 )
 		{
-			shadow += shadow2D( u_ShadowMap0, shadowVert + vec3(stepSize * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+			shadow += texture( u_ShadowMap0, shadowVert + vec3(stepSize * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0));
 		}
 	}
 	else if( vertexDistanceToCamera < u_ShadowSplitDist.y )
@@ -83,7 +83,7 @@ float ShadowProj( const in vec3 world )
 		shadowVert = WorldToTexel( world, 1 );
 		for( int i = 0; i < SAMPLE_COUNT; i += 1 )
 		{
-			shadow += shadow2D( u_ShadowMap1, shadowVert + vec3(stepSize * 0.5 * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+			shadow += texture( u_ShadowMap1, shadowVert + vec3(stepSize * 0.5 * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0));
 		}
 		
 	}
@@ -92,7 +92,7 @@ float ShadowProj( const in vec3 world )
 		shadowVert = WorldToTexel( world, 2 );
 		for( int i = 0; i < SAMPLE_COUNT; i += 1 )
 		{
-			shadow += shadow2D( u_ShadowMap2, shadowVert + vec3(stepSize * 0.25 * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+			shadow += texture( u_ShadowMap2, shadowVert + vec3(stepSize * 0.25 * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0));
 		}
 	}
 #elif (NUM_SHADOW_SPLITS == 3)
@@ -101,7 +101,7 @@ float ShadowProj( const in vec3 world )
 		shadowVert = WorldToTexel( world, 0 );
 		for( int i = 0; i < SAMPLE_COUNT; i += 1 )
 		{
-			shadow += shadow2D( u_ShadowMap0, shadowVert + vec3(stepSize * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+			shadow += texture( u_ShadowMap0, shadowVert + vec3(stepSize * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0));
 		}
 	}
 	else if( vertexDistanceToCamera < u_ShadowSplitDist.y )
@@ -109,7 +109,7 @@ float ShadowProj( const in vec3 world )
 		shadowVert = WorldToTexel( world, 1 );
 		for( int i = 0; i < SAMPLE_COUNT; i += 1 )
 		{
-			shadow += shadow2D( u_ShadowMap1, shadowVert + vec3(stepSize * 0.5 * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+			shadow += texture( u_ShadowMap1, shadowVert + vec3(stepSize * 0.5 * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0));
 		}
 	}
 	else if( vertexDistanceToCamera < u_ShadowSplitDist.z )
@@ -117,7 +117,7 @@ float ShadowProj( const in vec3 world )
 		shadowVert = WorldToTexel( world, 2 );
 		for( int i = 0; i < SAMPLE_COUNT; i += 1 )
 		{
-			shadow += shadow2D( u_ShadowMap2, shadowVert + vec3(stepSize * 0.25 *  VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+			shadow += texture( u_ShadowMap2, shadowVert + vec3(stepSize * 0.25 *  VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0));
 		}
 	}
 	else
@@ -125,7 +125,7 @@ float ShadowProj( const in vec3 world )
 		shadowVert = WorldToTexel( world, 3 );
 		for( int i = 0; i < SAMPLE_COUNT; i += 1 )
 		{
-			shadow += shadow2D( u_ShadowMap3, shadowVert + vec3(stepSize * 0.125 * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+			shadow += texture( u_ShadowMap3, shadowVert + vec3(stepSize * 0.125 * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0));
 		}
 	}
 #else // no shadow splits at all
@@ -133,7 +133,7 @@ float ShadowProj( const in vec3 world )
 		shadowVert = WorldToTexel( world, 0 );
 		for( int i = 0; i < SAMPLE_COUNT; i += 1 )
 		{
-			shadow += shadow2D( u_ShadowMap0, shadowVert + vec3(stepSize * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0)).r;
+			shadow += texture( u_ShadowMap0, shadowVert + vec3(stepSize * VogelDiskSample( i, SAMPLE_COUNT, rotation ), 0.0));
 		}
 	}
 #endif			
@@ -143,79 +143,79 @@ float ShadowProj( const in vec3 world )
 	if( vertexDistanceToCamera < u_ShadowSplitDist.x )
 	{
 		shadowVert = WorldToTexel( world, 0 );
-		shadow = shadow2D( u_ShadowMap0, shadowVert.xyz ).r * 0.25;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( -1, -1)).r * 0.0625;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( -1, 0 )).r * 0.125;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( -1, 1 )).r * 0.0625;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 0, -1 )).r * 0.125;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 0, 1 )).r * 0.125;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 1, -1 )).r * 0.0625;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 1, 0 )).r * 0.125;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 1, 1 )).r * 0.0625;
+		shadow = texture( u_ShadowMap0, shadowVert.xyz ) * 0.25;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(-1.0, -1.0, 0.0) * u_TexelSize[0]) * 0.0625;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(-1.0, 0.0, 0.0) * u_TexelSize[0]) * 0.125;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec2(-1.0, 1.0, 0.0) * u_TexelSize[0]) * 0.0625;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(0.0, -1.0, 0.0) * u_TexelSize[0]) * 0.125;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(0.0, 1.0, 0.0) * u_TexelSize[0]) * 0.125;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(1.0, -1.0, 0.0) * u_TexelSize[0]) * 0.0625;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(1.0, 0.0, 0.0) * u_TexelSize[0]) * 0.125;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(1.0, 1.0, 0.0) * u_TexelSize[0]) * 0.0625;
 	}
 	else
 	{
 		shadowVert = WorldToTexel( world, 1 );
-		shadow = shadow2D( u_ShadowMap1, shadowVert.xyz ).r;
+		shadow = texture( u_ShadowMap1, shadowVert.xyz );
 	}
 #elif (NUM_SHADOW_SPLITS == 2)
 	if( vertexDistanceToCamera < u_ShadowSplitDist.x )
 	{
 		shadowVert = WorldToTexel( world, 0 );
-		shadow = shadow2D( u_ShadowMap0, shadowVert.xyz ).r * 0.25;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( -1, -1)).r * 0.0625;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( -1, 0 )).r * 0.125;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( -1, 1 )).r * 0.0625;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 0, -1 )).r * 0.125;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 0, 1 )).r * 0.125;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 1, -1 )).r * 0.0625;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 1, 0 )).r * 0.125;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 1, 1 )).r * 0.0625;
+		shadow = texture( u_ShadowMap0, shadowVert.xyz ) * 0.25;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(-1.0, -1.0, 0.0) * u_TexelSize[0]) * 0.0625;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(-1.0, 0.0, 0.0) * u_TexelSize[0]) * 0.125;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec2(-1.0, 1.0, 0.0) * u_TexelSize[0]) * 0.0625;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(0.0, -1.0, 0.0) * u_TexelSize[0]) * 0.125;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(0.0, 1.0, 0.0) * u_TexelSize[0]) * 0.125;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(1.0, -1.0, 0.0) * u_TexelSize[0]) * 0.0625;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(1.0, 0.0, 0.0) * u_TexelSize[0]) * 0.125;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(1.0, 1.0, 0.0) * u_TexelSize[0]) * 0.0625;
 	}
 	else if( vertexDistanceToCamera < u_ShadowSplitDist.y )
 	{
 		shadowVert = WorldToTexel( world, 1 );
-		shadow = shadow2D( u_ShadowMap1, shadowVert.xyz ).r;
+		shadow = texture( u_ShadowMap1, shadowVert.xyz ).;
 		
 	}
 	else
 	{
 		shadowVert = WorldToTexel( world, 2 );
-		shadow = shadow2D( u_ShadowMap2, shadowVert.xyz ).r;
+		shadow = texture( u_ShadowMap2, shadowVert.xyz );
 	}
 #elif (NUM_SHADOW_SPLITS == 3)
 	if( vertexDistanceToCamera < u_ShadowSplitDist.x )
 	{
 		shadowVert = WorldToTexel( world, 0 );
-		shadow = shadow2D( u_ShadowMap0, shadowVert.xyz ).r * 0.25;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( -1, -1)).r * 0.0625;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( -1, 0 )).r * 0.125;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( -1, 1 )).r * 0.0625;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 0, -1 )).r * 0.125;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 0, 1 )).r * 0.125;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 1, -1 )).r * 0.0625;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 1, 0 )).r * 0.125;
-		shadow += shadow2DOffset( u_ShadowMap0, shadowVert.xyz, ivec2( 1, 1 )).r * 0.0625;
+		shadow = texture( u_ShadowMap0, shadowVert.xyz ) * 0.25;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(-1.0, -1.0, 0.0) * u_TexelSize[0]) * 0.0625;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(-1.0, 0.0, 0.0) * u_TexelSize[0]) * 0.125;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec2(-1.0, 1.0, 0.0) * u_TexelSize[0]) * 0.0625;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(0.0, -1.0, 0.0) * u_TexelSize[0]) * 0.125;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(0.0, 1.0, 0.0) * u_TexelSize[0]) * 0.125;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(1.0, -1.0, 0.0) * u_TexelSize[0]) * 0.0625;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(1.0, 0.0, 0.0) * u_TexelSize[0]) * 0.125;
+		shadow += texture( u_ShadowMap0, shadowVert.xyz + vec3(1.0, 1.0, 0.0) * u_TexelSize[0]) * 0.0625;
 	}
 	else if( vertexDistanceToCamera < u_ShadowSplitDist.y )
 	{
 		shadowVert = WorldToTexel( world, 1 );
-		shadow = shadow2D( u_ShadowMap1, shadowVert.xyz ).r;
+		shadow = texture( u_ShadowMap1, shadowVert.xyz );
 	}
 	else if( vertexDistanceToCamera < u_ShadowSplitDist.z )
 	{
 		shadowVert = WorldToTexel( world, 2 );
-		shadow = shadow2D( u_ShadowMap2, shadowVert.xyz ).r;
+		shadow = texture( u_ShadowMap2, shadowVert.xyz );
 	}
 	else
 	{
 		shadowVert = WorldToTexel( world, 3 );
-		shadow = shadow2D( u_ShadowMap3, shadowVert.xyz ).r;
+		shadow = texture( u_ShadowMap3, shadowVert.xyz );
 	}
 #else // no shadow splits at all
 	{
 		shadowVert = WorldToTexel( world, 0 );
-		shadow = shadow2D( u_ShadowMap0, shadowVert.xyz ).r;
+		shadow = texture( u_ShadowMap0, shadowVert.xyz );
 	}
 #endif // NUM_SHADOW_SPLITS
 #endif // SHADOW_VOGEL_DISK

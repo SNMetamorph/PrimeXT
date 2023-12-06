@@ -34,7 +34,7 @@ varying vec3 		var_RayVec;
 
 void main( void )
 {
-	vec4 normal = texture2D( u_NormalMap, var_TexCoord );
+	vec4 normal = texture( u_NormalMap, var_TexCoord );
 
 	if( normal.w == 1.0 )
 	{
@@ -43,14 +43,14 @@ void main( void )
 		return;
 	}
 
-	float w = texture2D( u_DepthMap, var_TexCoord ).r;
+	float w = texture( u_DepthMap, var_TexCoord ).r;
 	w = linearizeDepth( u_zFar, w );
 	vec3 pos = u_ViewOrigin + var_RayVec * (w - 1.0); // nudge point to avoid z-fighting
 	normal.xyz = normalize( normal.xyz * 2.0 - 1.0 );
 	vec4 shadowmap = vec4( 0.0 );
 	bool first = true;
 
-	vec4 lights = texture2D( u_VisLightMap0, var_TexCoord ) * 255.0;
+	vec4 lights = texture( u_VisLightMap0, var_TexCoord ) * 255.0;
 
 	// do lighting for current pixel
 	for( int i = 0; i < MAXDYNLIGHTS; i++ )
@@ -59,7 +59,7 @@ void main( void )
 		{
 			if( first )
 			{
-				lights = texture2D( u_VisLightMap1, var_TexCoord ) * 255.0;
+				lights = texture( u_VisLightMap1, var_TexCoord ) * 255.0;
 				first = false;
 				i = 0;
 			}

@@ -103,7 +103,7 @@ void main( void )
 #endif
 	// apply fullbright pixels
 #if defined( HAS_LUMA )
-	albedo.rgb += texture2D( u_GlowMap, vec_TexDiffuse ).rgb;
+	albedo.rgb += texture( u_GlowMap, vec_TexDiffuse ).rgb;
 #endif
 
 #if defined( HAS_LUMA ) || defined( LIGHTING_FULLBRIGHT )

@@ -203,12 +203,12 @@ lighting.diffuse += var_AmbientLight;
 #endif // LIGHTING_FULLBRIGHT
 
 #if defined( HAS_LUMA )
-	result.rgb += texture2D( u_GlowMap, vec_TexDiffuse ).rgb;
+	result.rgb += texture( u_GlowMap, vec_TexDiffuse ).rgb;
 #endif
 
 #if defined( USING_SCREENCOPY )
 	// prohibits displaying in refractions objects, that are closer to camera than this studiomodel
-	float distortedDepth = texture2D(u_DepthMap, GetDistortedTexCoords(N, 1.0)).r;
+	float distortedDepth = texture(u_DepthMap, GetDistortedTexCoords(N, 1.0)).r;
 	float distortScale = step(gl_FragCoord.z, distortedDepth);
 	result.rgb = mix(GetScreenColor(N, distortScale), result.rgb, result.a);
 #endif

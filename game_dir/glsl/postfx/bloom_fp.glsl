@@ -36,7 +36,7 @@ void main()
 	tex += textureBicubic(u_ScreenMap, var_TexCoord, 6.0, texSize);
 	tex *= 0.2;		
 		
-	tex += texture2DLod(u_ScreenMap, var_TexCoord, 1.0);	
+	tex += textureLod(u_ScreenMap, var_TexCoord, 1.0);	
 	tex *= 0.25;
 	
 	gl_FragColor = tex;

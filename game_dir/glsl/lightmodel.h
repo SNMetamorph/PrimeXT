@@ -114,7 +114,7 @@ float SpecularAntialiasing(vec3 n, float roughness)
 vec3 ComputeSpecularIBL(vec3 N, vec3 V, vec3 albedo, vec3 prefilteredSample, MaterialData mat)
 {
 	vec3 F0 = mix(vec3(0.02), albedo, mat.metalness);
-	vec2 brdf = texture2D(u_BRDFApproxMap, vec2(max(dot(N, V), 0.0), SmoothnessToRoughness(mat.smoothness))).rg;
+	vec2 brdf = texture(u_BRDFApproxMap, vec2(max(dot(N, V), 0.0), SmoothnessToRoughness(mat.smoothness))).rg;
 	return prefilteredSample * (F0 * brdf.x + brdf.y) * mat.specularIntensity;
 }
 

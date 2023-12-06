@@ -28,11 +28,11 @@ void main()
 	vec4 texSample[5];
 	vec2 pixelOffset = u_ScreenSizeInv;
 
-	texSample[0] = texture2DLod(u_ScreenMap, clamp(var_TexCoord, u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
-	texSample[1] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(pixelOffset.x, pixelOffset.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
-	texSample[2] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(-pixelOffset.x, -pixelOffset.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
-	texSample[3] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(pixelOffset.x, -pixelOffset.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
-	texSample[4] = texture2DLod(u_ScreenMap, clamp(var_TexCoord + vec2(-pixelOffset.x, pixelOffset.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);		
+	texSample[0] = textureLod(u_ScreenMap, clamp(var_TexCoord, u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
+	texSample[1] = textureLod(u_ScreenMap, clamp(var_TexCoord + vec2(pixelOffset.x, pixelOffset.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
+	texSample[2] = textureLod(u_ScreenMap, clamp(var_TexCoord + vec2(-pixelOffset.x, -pixelOffset.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
+	texSample[3] = textureLod(u_ScreenMap, clamp(var_TexCoord + vec2(pixelOffset.x, -pixelOffset.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);
+	texSample[4] = textureLod(u_ScreenMap, clamp(var_TexCoord + vec2(-pixelOffset.x, pixelOffset.y), u_TexCoordClamp.xy, u_TexCoordClamp.zw), u_MipLod);		
 
 	averaged = texSample[0] + texSample[1] + texSample[2] + texSample[3] + texSample[4];
 	averaged /= 5.0;

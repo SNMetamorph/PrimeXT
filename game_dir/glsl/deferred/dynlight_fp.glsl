@@ -47,15 +47,15 @@ varying vec3 	var_RayVec;
 
 void main( void )
 {
-	vec4 normal = texture2D( u_NormalMap, var_TexCoord );
+	vec4 normal = texture( u_NormalMap, var_TexCoord );
 
 	// ignore fullbright pixels
 	if( normal.w == 1.0 )
 		discard;
 
-	vec3 diffuse = texture2D( u_ColorMap, var_TexCoord ).rgb;
+	vec3 diffuse = texture( u_ColorMap, var_TexCoord ).rgb;
 	vec4 glossmap = colormap2D( u_GlossMap, var_TexCoord );
-	float srcW = texture2D( u_DepthMap, var_TexCoord ).r;
+	float srcW = texture( u_DepthMap, var_TexCoord ).r;
 	float w = linearizeDepth( u_zFar, srcW );
 	vec4 worldpos = vec4( u_ViewOrigin + var_RayVec * w, 1.0 ); // nudge point to avoid z-fighting
 	vec3 lvec = u_LightOrigin.xyz - worldpos.xyz;
@@ -84,7 +84,7 @@ void main( void )
 
 #if defined( LIGHT_SPOT )
 	vec4 tproj = ( Mat4Texture( -0.5 ) * u_LightViewProjMatrix ) * worldpos;
-	light *= texture2DProj( u_ProjectMap, tproj ).rgb;
+	light *= textureProj( u_ProjectMap, tproj ).rgb;
 #if defined( APPLY_SHADOW )
 	vec4 sproj = ( Mat4Texture( 0.5 ) * u_LightViewProjMatrix ) * worldpos;
 	if( NdotL > 0.0 ) shadow = ShadowSpot( sproj, u_ShadowParams.xy );

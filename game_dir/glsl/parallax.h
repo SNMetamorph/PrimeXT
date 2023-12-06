@@ -33,12 +33,12 @@ float ComputeLOD( const vec2 tc )
 
 float GetHeightMapSample(sampler2D heightMap, const in vec2 texCoord)
 {
-	return texture2D(heightMap, texCoord).r;
+	return texture(heightMap, texCoord).r;
 }
 
 float GetHeightMapSampleLOD(sampler2D heightMap, const in vec2 texCoord, float lod)
 {
-	return texture2DLod(heightMap, texCoord, lod).r;
+	return textureLod(heightMap, texCoord, lod).r;
 }
 
 float GetDepthMapSample(sampler2D heightMap, const in vec2 texCoord)
@@ -189,7 +189,7 @@ float ParallaxSelfShadow( in vec3 N, in vec3 L, in vec2 texCoord )
 vec2 ParallaxMapSimple(const in vec2 texCoords, const in vec3 viewDir)
 { 
 	float heightScale = u_ReliefParams.z * 0.25;
-	float offset = texture2D(u_HeightMap, texCoords).r * heightScale - 0.0075;
+	float offset = texture(u_HeightMap, texCoords).r * heightScale - 0.0075;
 	return (offset * vec2(viewDir.x, -viewDir.y) + texCoords);
 } 
 

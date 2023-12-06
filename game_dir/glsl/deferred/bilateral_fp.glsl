@@ -29,7 +29,7 @@ float AddSampleContribution( in vec2 texCoord, in float depth, in float weight, 
 	float	sampleDepth;
 
 	// Load the depth from the depth map
-	sampleDepth = texture2D( u_DepthMap, texCoord ).r;
+	sampleDepth = texture( u_DepthMap, texCoord ).r;
 
 	// Transform the depth into eye space
 	sampleDepth = linearizeDepth( u_zFar, sampleDepth );
@@ -39,7 +39,7 @@ float AddSampleContribution( in vec2 texCoord, in float depth, in float weight, 
 		return 0.0;
 
 	// Sample the color map and add its contribution
-	color += texture2D( u_ColorMap, texCoord ) * weight;
+	color += texture( u_ColorMap, texCoord ) * weight;
 
 	return weight;
 }
@@ -51,13 +51,13 @@ void main( void )
 	float	weightSum = 0.153170;
 
 	// Load the depth from the depth map
-	depth = texture2D( u_DepthMap, v_TexCoord ).r;
+	depth = texture( u_DepthMap, v_TexCoord ).r;
 
 	// Transform the depth into eye space
 	depth = linearizeDepth( u_zFar, depth );
 
 	// Blur using a 9x9 bilateral Gaussian filter
-	color = texture2D( u_ColorMap, v_TexCoord ) * weightSum;
+	color = texture( u_ColorMap, v_TexCoord ) * weightSum;
 
 	weightSum += AddSampleContribution( v_TexCoords[0].st, depth, 0.144893, color );
 	weightSum += AddSampleContribution( v_TexCoords[0].pq, depth, 0.144893, color );

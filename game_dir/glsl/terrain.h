@@ -44,6 +44,7 @@ void TerrainReadMask( const vec2 tc, inout vec4 mask0, inout vec4 mask1, inout v
 #endif
 }
 
+#if defined( APPLY_TERRAIN )
 vec4 TerrainMixDiffuse( sampler2DArray tex, vec2 tc, vec4 mask0, vec4 mask1, vec4 mask2, vec4 mask3 )
 {
 	vec4 diffuse = vec4( 0.0 );
@@ -332,3 +333,4 @@ vec4 TerrainColorDebug( vec4 mask0, vec4 mask1, vec4 mask2, vec4 mask3 )
 	return diffuse;
 }
 #endif
+#endif // APPLY_TERRAIN

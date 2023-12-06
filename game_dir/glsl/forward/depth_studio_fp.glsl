@@ -19,5 +19,5 @@ varying vec2		var_TexDiffuse;
 
 void main( void )
 {
-	gl_FragColor = texture2D( u_ColorMap, var_TexDiffuse );
+	gl_FragColor = texture( u_ColorMap, var_TexDiffuse );
 }

@@ -19,18 +19,25 @@ GNU General Public License for more details.
 #include "const.h"
 #include "mathlib.h"
 
-#define detailmap2D		texture2D
-#define decalmap2D		texture2D
+vec4 detailmap2D(sampler2D tex, vec2 uv)
+{
+	return texture(tex, uv);
+}
+
+vec4 decalmap2D(sampler2D tex, vec2 uv)
+{
+	return texture(tex, uv);
+}
 
 vec4 colormap2DArray(sampler2DArray tex, vec2 uv, float layer)
 {
-	vec4 sample = texture2DArray(tex, vec3(uv, layer));
+	vec4 sample = texture(tex, vec3(uv, layer));
 	return vec4(ConvertSRGBToLinear(sample.rgb), sample.a);
 }
 
 vec4 colormap2D(sampler2D tex, vec2 uv)
 {
-	vec4 sample = texture2D(tex, uv);
+	vec4 sample = texture(tex, uv);
 	return vec4(ConvertSRGBToLinear(sample.rgb), sample.a);
 }
 
@@ -47,7 +54,7 @@ vec4 reflectmap2D( sampler2D tex, vec4 projTC, vec3 N, vec3 fragCoord, float ref
 	projTC.z += N.z * refraction * 2.0;
 #endif
 #endif
-	return texture2DProj( tex, projTC );
+	return textureProj( tex, projTC );
 }
 
 vec3 chromemap2D( sampler2D tex, vec2 screenCoord, vec3 N, float aberration )
@@ -59,41 +66,41 @@ vec3 chromemap2D( sampler2D tex, vec2 screenCoord, vec3 N, float aberration )
 	screenCoord2.y -= N.x * aberration * screenCoord.y;
 	screenCoord2.x = clamp( screenCoord2.x, 0.01, 0.99 );
 	screenCoord2.y = clamp( screenCoord2.y, 0.01, 0.99 );
-	screenmap.r = texture2D( tex, screenCoord2 ).r;
+	screenmap.r = texture( tex, screenCoord2 ).r;
 
 	screenCoord2 = screenCoord;
 	screenCoord2.x += N.y * aberration * screenCoord.x;
 	screenCoord2.y -= N.z * aberration * screenCoord.y;
 	screenCoord2.x = clamp( screenCoord2.x, 0.01, 0.99 );
 	screenCoord2.y = clamp( screenCoord2.y, 0.01, 0.99 );
-	screenmap.g = texture2D( tex, screenCoord2 ).g;
+	screenmap.g = texture( tex, screenCoord2 ).g;
 
 	screenCoord2 = screenCoord;
 	screenCoord2.x -= N.z * aberration * screenCoord.x;
 	screenCoord2.y += N.x * aberration * screenCoord.y;
 	screenCoord2.x = clamp( screenCoord2.x, 0.01, 0.99 );
 	screenCoord2.y = clamp( screenCoord2.y, 0.01, 0.99 );
-	screenmap.b = texture2D( tex, screenCoord2 ).b;
+	screenmap.b = texture( tex, screenCoord2 ).b;
 
 	return screenmap;
 }
 
 vec4 lightmap2D(sampler2D tex, const vec2 uv, float lightmapGamma)
 {
-	vec4 sample = texture2D(tex, uv);
+	vec4 sample = texture(tex, uv);
 	return vec4(pow(sample.rgb, vec3(1.0 / lightmapGamma)), sample.a);
 }
 
 vec3 deluxemap2D( sampler2D tex, const vec2 uv )
 {
-	vec3 deluxmap = texture2D( tex, uv ).xyz;
+	vec3 deluxmap = texture( tex, uv ).xyz;
 	return (( deluxmap - 0.5 ) * 2.0 );
 }
 
 // get support for various normalmap encode
 vec3 normalmap2D( sampler2D tex, const vec2 uv )
 {
-	vec4 normalmap = texture2D( tex, uv );
+	vec4 normalmap = texture( tex, uv );
 	vec3 N;
 
 #if defined( NORMAL_AG_PARABOLOID )
@@ -147,7 +154,7 @@ vec3 normalmap2DLod( sampler2D tex, const vec2 uv, float lod )
 
 vec3 normalmap2DArray( sampler2DArray tex, const vec2 uv, const float layer )
 {
-	vec4 normalmap = texture2DArray( tex, vec3( uv, layer ));
+	vec4 normalmap = texture( tex, vec3( uv, layer ));
 	vec3 N;
 
 #if defined( NORMAL_AG_PARABOLOID )

@@ -23,7 +23,7 @@ float depthCube( const in vec3 coord, const float scale, const float bias )
 	const float acneRemoveFactor = 1.0;
 	float fs_z = max(abs(coord.x), max(abs(coord.y), abs(coord.z))) - acneRemoveFactor;
 	float depth = ((fs_z * scale + bias) / fs_z) * 0.5 + 0.5;
-	return shadowCube(u_ShadowMap, vec4(coord, depth)).r;
+	return texture(u_ShadowMap, vec4(coord, depth));
 }
 
 float ShadowOmni( const in vec3 I, const in vec4 params )

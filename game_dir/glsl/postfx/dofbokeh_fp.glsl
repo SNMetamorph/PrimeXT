@@ -146,7 +146,7 @@ float bdepth( vec2 coords )
 
 	for( int i = 0; i < 9; i++ )
 	{
-		float tmp = texture2D( u_DepthMap, coords + offset[i] ).r;
+		float tmp = texture( u_DepthMap, coords + offset[i] ).r;
 		d += tmp * kernel[i];
 	}
 	
@@ -158,9 +158,9 @@ vec3 color( vec2 coords, float blur )
 {
 	vec3 col = vec3( 0.0 );
 	
-	col.r = texture2D( u_ScreenMap, coords + vec2(   0.0,  1.0 ) * texel * fringe * blur ).r;
-	col.g = texture2D( u_ScreenMap, coords + vec2(-0.866, -0.5 ) * texel * fringe * blur ).g;
-	col.b = texture2D( u_ScreenMap, coords + vec2( 0.866, -0.5 ) * texel * fringe * blur ).b;
+	col.r = texture( u_ScreenMap, coords + vec2(   0.0,  1.0 ) * texel * fringe * blur ).r;
+	col.g = texture( u_ScreenMap, coords + vec2(-0.866, -0.5 ) * texel * fringe * blur ).g;
+	col.b = texture( u_ScreenMap, coords + vec2( 0.866, -0.5 ) * texel * fringe * blur ).b;
 	
 	vec3 lumcoeff = vec3( 0.299, 0.587, 0.114 );
 	float lum = dot( col.rgb, lumcoeff );
@@ -211,11 +211,11 @@ void main( void )
 #ifdef DEPTH_BLUR
 	float depth = linearize( bdepth( var_TexCoord ));
 #else
-	float depth = linearize( texture2D( u_DepthMap, var_TexCoord ).x );
+	float depth = linearize( texture( u_DepthMap, var_TexCoord ).x );
 #endif
 	// focal plane calculation
 #ifdef AUTOFOCUS
-	float fDepth = linearize( texture2D( u_DepthMap, focus ).x );
+	float fDepth = linearize( texture( u_DepthMap, focus ).x );
 #else
 	float fDepth = u_FocalDepth;
 #endif
@@ -248,7 +248,7 @@ void main( void )
 	float h = texel.y * blur * maxblur + noise.y;
 	
 	// calculation of final color
-	vec3 col = texture2D( u_ScreenMap, var_TexCoord ).rgb;
+	vec3 col = texture( u_ScreenMap, var_TexCoord ).rgb;
 	
 	if( blur > 0.05 )
 	{

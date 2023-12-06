@@ -39,7 +39,7 @@ void main( void )
 	float sunDist = saturate( u_LightOrigin.z ) * saturate( 1.0 - saturate( length( sunVec ) * 0.2 ));
 	sunVec *= 0.1 * u_LightOrigin.z;
 
-	vec4 colorMapSample = texture2D( u_ColorMap, tc );
+	vec4 colorMapSample = texture( u_ColorMap, tc );
 	float fShaftsMask = saturate( 1.0001 - colorMapSample.w );
 	float fBlend = colorMapSample.w * 0.85;	// shaft brightness
 	float weight_sum = 1.0;
@@ -49,14 +49,14 @@ void main( void )
 	{
 		vec2 offset = sunVec.xy * 0.25 * i;
 		float weight = 1.0 / max(length(offset), 0.0001);
-		accum += texture2D( u_ColorMap, tc + offset ).rgb * weight;
+		accum += texture( u_ColorMap, tc + offset ).rgb * weight;
 		weight_sum += weight;	
 	}
 
 	accum /= weight_sum;
  	accum *= 2.0 * sunDist;
 	
- 	vec3 cScreen = texture2D( u_ScreenMap, tc ).rgb;
+ 	vec3 cScreen = texture( u_ScreenMap, tc ).rgb;
 	vec3 outColor = cScreen + accum.rgb * fBlend * sunColor * (1.0 - cScreen);
 	outColor = BlendSoftLight( outColor, sunColor * fShaftsMask * 0.5 + 0.5 );
 	gl_FragColor = vec4( outColor, 1.0 );

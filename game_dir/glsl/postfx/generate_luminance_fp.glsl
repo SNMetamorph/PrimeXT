@@ -30,13 +30,13 @@ void main()
 {
 	float samples[4];
 	vec2 pixelOffset = u_ScreenSizeInv;
-	vec3 sourceColor = texture2D(u_ScreenMap, var_TexCoord).xyz;
+	vec3 sourceColor = texture(u_ScreenMap, var_TexCoord).xyz;
 	float weight = 1.05 - 0.2 * length(var_TexCoord - vec2(0.5, 0.5));
 
 	samples[0] = GetLogLuminance(weight * sourceColor);
-	samples[1] = GetLogLuminance(weight * texture2D(u_ScreenMap, var_TexCoord + vec2(pixelOffset.x, 0)).xyz);
-	samples[2] = GetLogLuminance(weight * texture2D(u_ScreenMap, var_TexCoord + vec2(0, pixelOffset.y)).xyz);
-	samples[3] = GetLogLuminance(weight * texture2D(u_ScreenMap, var_TexCoord + pixelOffset).xyz);
+	samples[1] = GetLogLuminance(weight * texture(u_ScreenMap, var_TexCoord + vec2(pixelOffset.x, 0)).xyz);
+	samples[2] = GetLogLuminance(weight * texture(u_ScreenMap, var_TexCoord + vec2(0, pixelOffset.y)).xyz);
+	samples[3] = GetLogLuminance(weight * texture(u_ScreenMap, var_TexCoord + pixelOffset).xyz);
 
 	float luminance = (samples[0] + samples[1] + samples[2] + samples[3]) / 4.0;
 	gl_FragColor = vec4(luminance, GetLuminance(sourceColor), 0.0, 0.0);
