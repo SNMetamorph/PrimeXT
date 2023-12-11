@@ -1524,15 +1524,6 @@ void CPhysicPhysX :: UpdateEntityAABB( CBaseEntity *pEntity )
 		AddPointToBounds( globalPose.transform(bbox.maximum), pEntity->pev->absmin, pEntity->pev->absmax );
 	}
 
-	// shrink AABB by 1 units in each axis
-	// or pushers can't be moving them
-	pEntity->pev->absmin.x += 1;
-	pEntity->pev->absmin.y += 1;
-	pEntity->pev->absmin.z += 1;
-	pEntity->pev->absmax.x -= 1;
-	pEntity->pev->absmax.y -= 1;
-	pEntity->pev->absmax.z -= 1;
-
 	pEntity->pev->mins = pEntity->pev->absmin - pEntity->pev->origin;
 	pEntity->pev->maxs = pEntity->pev->absmax - pEntity->pev->origin;
 	pEntity->pev->size = pEntity->pev->maxs - pEntity->pev->mins;
