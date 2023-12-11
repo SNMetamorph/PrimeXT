@@ -54,6 +54,7 @@ varying vec2		var_TexDiffuse;
 varying vec2		var_TexDetail;
 varying vec2		var_TexGlobal;
 varying vec3		var_Position;
+varying vec3		var_ViewDir;
 varying vec4		var_LightNums0;
 varying vec4		var_LightNums1;
 

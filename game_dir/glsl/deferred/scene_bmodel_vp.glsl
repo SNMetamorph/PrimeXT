@@ -36,6 +36,7 @@ varying vec2		var_TexDiffuse;
 varying vec2		var_TexDetail;
 varying vec2		var_TexGlobal;
 varying vec3		var_Position;
+varying vec3		var_ViewDir;
 varying vec4		var_LightNums0;
 varying vec4		var_LightNums1;
 
@@ -56,6 +57,7 @@ void main( void )
 	var_TexDetail = ( attr_TexCoord0.xy + u_TexOffset ) * u_DetailScale;
 	var_TexGlobal = attr_TexCoord0.zw;
 	var_Position = worldpos.xyz;
+	var_ViewDir = (u_ViewOrigin.xyz - worldpos.xyz) * var_WorldMat;
 
 	if( u_ViewOrigin.w != 0.0 )
 	{
