@@ -36,8 +36,8 @@ varying vec2		var_TexDiffuse;
 varying vec2		var_TexDetail;
 varying vec2		var_TexGlobal;
 varying vec3		var_Position;
-flat varying vec4		var_LightNums0;
-flat varying vec4		var_LightNums1;
+varying vec4		var_LightNums0;
+varying vec4		var_LightNums1;
 
 void main( void )
 {

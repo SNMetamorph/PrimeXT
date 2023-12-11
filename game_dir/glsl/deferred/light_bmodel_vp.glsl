@@ -28,8 +28,8 @@ uniform vec2		u_TexOffset;	// conveyor stuff
 
 varying mat3		var_WorldMat;
 varying vec2		var_TexDiffuse;
-flat varying vec4		var_LightNums0;
-flat varying vec4		var_LightNums1;
+varying vec4		var_LightNums0;
+varying vec4		var_LightNums1;
 
 void main( void )
 {
