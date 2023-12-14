@@ -19,12 +19,11 @@ GNU General Public License for more details.
 #include <queue>
 #include <utility>
 
-class CPhysicPhysX::EventHandler : public physx::PxSimulationEventCallback
+class EventHandler : public physx::PxSimulationEventCallback
 {
 public:
 	using TouchEventsQueue = std::queue<std::pair<physx::PxActor*, physx::PxActor*>>;
 
-	static CPhysicPhysX::EventHandler &getInstance();
 	virtual void onConstraintBreak(physx::PxConstraintInfo* constraints, physx::PxU32 count) {};
 	virtual void onWake(physx::PxActor** actors, physx::PxU32 count) {};
 	virtual void onSleep(physx::PxActor** actors, physx::PxU32 count) {};
@@ -34,9 +33,5 @@ public:
 	TouchEventsQueue &getTouchEventsQueue();
 
 private:
-	EventHandler() = default;
-	EventHandler(const EventHandler&) = delete;
-	EventHandler& operator=(const EventHandler&) = delete;
-
 	TouchEventsQueue m_touchEventsQueue;
 };

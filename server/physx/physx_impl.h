@@ -20,6 +20,7 @@ GNU General Public License for more details.
 #include "cbase.h"
 #include "io_streams.h"
 #include "error_stream.h"
+#include "assert_handler.h"
 #include "clipfile.h"
 #include "filesystem_utils.h"
 
@@ -34,6 +35,9 @@ GNU General Public License for more details.
 #include <PxCooking.h>
 #include <PxTriangle.h>
 	
+class DebugRenderer;
+class EventHandler;
+
 class CPhysicPhysX : public IPhysicLayer
 {
 public:
@@ -85,11 +89,6 @@ public:
 	void	*GetPhysicInterface( void ) { return m_pPhysics; }
 
 private:
-	class EventHandler;
-	class AssertHandler;
-	class DebugRenderer;
-	class DecomposedShape;
-
 	// misc routines
 	bool DebugEnabled() const;
 	bool TracingStateChanges(physx::PxActor *actor) const;
@@ -136,7 +135,10 @@ private:
 
 	char p_speeds_msg[1024];	// debug message
 
-	ErrorCallback m_ErrorCallback;
+	AssertHandler m_assertHandler;
+	ErrorCallback m_errorCallback;
+	std::unique_ptr<DebugRenderer> m_debugRenderer;
+	std::unique_ptr<EventHandler> m_eventHandler;
 	physx::PxCooking *m_pCooking;
 	physx::PxDefaultAllocator m_Allocator;
 	physx::PxPvd *m_pVisualDebugger;
