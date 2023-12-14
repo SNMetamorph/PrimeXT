@@ -21,19 +21,13 @@ GNU General Public License for more details.
 
 using namespace physx;
 
-CPhysicPhysX::EventHandler &CPhysicPhysX::EventHandler::getInstance()
-{
-	static EventHandler instance;
-	return instance;
-}
-
 /*
 * Documentation:
 * SDK state should not be modified from within the callbacks. In particular objects should not
 * be created or destroyed. If state modification is needed then the changes should be stored to a buffer
 * and performed after the simulation step.
 */
-void CPhysicPhysX::EventHandler::onContact(const PxContactPairHeader &pairHeader, const PxContactPair *pairs, PxU32 nbPairs)
+void EventHandler::onContact(const PxContactPairHeader &pairHeader, const PxContactPair *pairs, PxU32 nbPairs)
 {
 	for (PxU32 i = 0; i < nbPairs; i++)
 	{
@@ -78,7 +72,7 @@ void CPhysicPhysX::EventHandler::onContact(const PxContactPairHeader &pairHeader
 	}
 }
 
-CPhysicPhysX::EventHandler::TouchEventsQueue& CPhysicPhysX::EventHandler::getTouchEventsQueue()
+EventHandler::TouchEventsQueue& EventHandler::getTouchEventsQueue()
 {
 	return m_touchEventsQueue;
 }

@@ -19,13 +19,7 @@ GNU General Public License for more details.
 
 using namespace physx;
 
-CPhysicPhysX::DebugRenderer &CPhysicPhysX::DebugRenderer::GetInstance()
-{
-	static DebugRenderer instance;
-	return instance;
-}
-
-void CPhysicPhysX::DebugRenderer::SetupColor(PxU32 color) const
+void DebugRenderer::SetupColor(PxU32 color) const
 {
 	float blue = PxU32(color & 0xff) / 255.0f;
 	float green = PxU32((color >> 8) & 0xff) / 255.0f;
@@ -34,14 +28,14 @@ void CPhysicPhysX::DebugRenderer::SetupColor(PxU32 color) const
 	Tri->Color4f(red, green, blue, alpha);
 }
 
-void CPhysicPhysX::DebugRenderer::RenderData(const PxRenderBuffer &data) const
+void DebugRenderer::RenderData(const PxRenderBuffer &data) const
 {
 	RenderPoints(data.getPoints(), data.getNbPoints());
 	RenderLines(data.getLines(), data.getNbLines());
 	RenderTriangles(data.getTriangles(), data.getNbTriangles());
 }
 
-void CPhysicPhysX::DebugRenderer::RenderPoints(const PxDebugPoint *points, PxU32 count) const
+void DebugRenderer::RenderPoints(const PxDebugPoint *points, PxU32 count) const
 {
 	Tri->Begin(TRI_POINTS);
 	for (PxU32 i = 0; i < count; i++)
@@ -53,7 +47,7 @@ void CPhysicPhysX::DebugRenderer::RenderPoints(const PxDebugPoint *points, PxU32
 	Tri->End();
 }
 
-void CPhysicPhysX::DebugRenderer::RenderLines(const PxDebugLine *lines, PxU32 count) const
+void DebugRenderer::RenderLines(const PxDebugLine *lines, PxU32 count) const
 {
 	Tri->Begin(TRI_LINES);
 	for (PxU32 i = 0; i < count; i++)
@@ -67,7 +61,7 @@ void CPhysicPhysX::DebugRenderer::RenderLines(const PxDebugLine *lines, PxU32 co
 	Tri->End();
 }
 
-void CPhysicPhysX::DebugRenderer::RenderTriangles(const PxDebugTriangle *triangles, PxU32 count) const
+void DebugRenderer::RenderTriangles(const PxDebugTriangle *triangles, PxU32 count) const
 {
 	Tri->Begin(TRI_TRIANGLES);
 	for (PxU32 i = 0; i < count; i++)

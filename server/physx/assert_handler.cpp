@@ -19,13 +19,7 @@ GNU General Public License for more details.
 #include <fmt/format.h>
 #include <string>
 
-CPhysicPhysX::AssertHandler &CPhysicPhysX::AssertHandler::getInstance()
-{
-	static AssertHandler instance;
-	return instance;
-}
-
-void CPhysicPhysX::AssertHandler::operator()(const char *expr, const char *file, int line, bool &ignore)
+void AssertHandler::operator()(const char *expr, const char *file, int line, bool &ignore)
 {
 	std::string fileName = file;
 	fileName.erase(0, fileName.find_last_of("/\\") + 1);

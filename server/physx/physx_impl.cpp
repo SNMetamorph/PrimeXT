@@ -77,6 +77,9 @@ CPhysicPhysX::CPhysicPhysX()
 
 	m_szMapName[0] = '\0';
 	p_speeds_msg[0] = '\0';
+
+	m_debugRenderer = std::make_unique<DebugRenderer>();
+	m_eventHandler = std::make_unique<EventHandler>();
 }
 
 void CPhysicPhysX :: InitPhysic( void )
@@ -94,7 +97,7 @@ void CPhysicPhysX :: InitPhysic( void )
 		return;
 	}
 
-	m_pFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, m_Allocator, m_ErrorCallback);
+	m_pFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, m_Allocator, m_errorCallback);
 	if (!m_pFoundation)
 	{
 		ALERT(at_error, "InitPhysic: failed to create foundation\n");
@@ -128,14 +131,14 @@ void CPhysicPhysX :: InitPhysic( void )
 		ALERT( at_warning, "InitPhysic: failed to initalize cooking library\n" );
 	}
 
-	PxSetAssertHandler(AssertHandler::getInstance());
+	PxSetAssertHandler(m_assertHandler);
 	if (!PxInitExtensions(*m_pPhysics, m_pVisualDebugger)) {
 		ALERT( at_warning, "InitPhysic: failed to initalize extensions\n" );
 	}
 
 	// create a scene
 	PxSceneDesc sceneDesc(scale);
-	sceneDesc.simulationEventCallback = &EventHandler::getInstance();
+	sceneDesc.simulationEventCallback = m_eventHandler.get();
 	sceneDesc.gravity = PxVec3(0.0f, 0.0f, -800.0f);
 	sceneDesc.flags = PxSceneFlag::eENABLE_CCD;
 	sceneDesc.cpuDispatcher = m_pDispatcher;
@@ -2023,7 +2026,7 @@ bool CPhysicPhysX::TracingStateChanges(PxActor *actor) const
 
 void CPhysicPhysX::HandleEvents()
 {
-	auto &touchEventsQueue = EventHandler::getInstance().getTouchEventsQueue();
+	auto &touchEventsQueue = m_eventHandler->getTouchEventsQueue();
 	while (!touchEventsQueue.empty())
 	{
 		auto &touchEvent = touchEventsQueue.front();
@@ -2170,7 +2173,7 @@ void CPhysicPhysX :: DebugDraw( void )
 	if( !m_pPhysics || !m_pScene )
 		return;
 
-	DebugRenderer::GetInstance().RenderData(m_pScene->getRenderBuffer());
+	m_debugRenderer->RenderData(m_pScene->getRenderBuffer());
 }
 
 /*

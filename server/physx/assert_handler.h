@@ -13,18 +13,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 #pragma once
-#include "physx_impl.h"
 #include <PxAssert.h>
 
-class CPhysicPhysX::AssertHandler : public physx::PxAssertHandler
+class AssertHandler : public physx::PxAssertHandler
 {
 public:
-	static CPhysicPhysX::AssertHandler &getInstance();
-
-private:
-	AssertHandler() = default;
-	AssertHandler(const AssertHandler&) = delete;
-	AssertHandler& operator=(const AssertHandler&) = delete;
-
 	void operator()(const char *expr, const char *file, int line, bool &ignore) override;
 };

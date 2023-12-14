@@ -16,18 +16,12 @@ GNU General Public License for more details.
 #include "physx_impl.h"
 #include <PxPhysicsAPI.h>
 
-class CPhysicPhysX;
-class CPhysicPhysX::DebugRenderer
+class DebugRenderer
 {
 public:
-	static DebugRenderer &GetInstance();
 	void RenderData(const physx::PxRenderBuffer& data) const;
 
 private:
-	DebugRenderer() = default;
-	DebugRenderer(const DebugRenderer&) = delete;
-	DebugRenderer& operator=(const DebugRenderer&) = delete;
-
 	void SetupColor(physx::PxU32 color) const;
 	void RenderPoints(const physx::PxDebugPoint *points, physx::PxU32 count) const;
 	void RenderLines(const physx::PxDebugLine *lines, physx::PxU32 count) const;
