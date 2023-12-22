@@ -31,6 +31,7 @@ GNU General Public License for more details.
 #include "event_handler.h"
 #include "assert_handler.h"
 #include "debug_renderer.h"
+#include "contact_modify_callback.h"
 #include "decomposed_shape.h"
 #include "meshdesc_factory.h"
 #include "crclib.h"
@@ -80,6 +81,7 @@ CPhysicPhysX::CPhysicPhysX()
 
 	m_debugRenderer = std::make_unique<DebugRenderer>();
 	m_eventHandler = std::make_unique<EventHandler>();
+	m_contactModifyCallback = std::make_unique<ContactModifyCallback>();
 }
 
 void CPhysicPhysX :: InitPhysic( void )
@@ -139,6 +141,7 @@ void CPhysicPhysX :: InitPhysic( void )
 	// create a scene
 	PxSceneDesc sceneDesc(scale);
 	sceneDesc.simulationEventCallback = m_eventHandler.get();
+	sceneDesc.contactModifyCallback = m_contactModifyCallback.get();
 	sceneDesc.gravity = PxVec3(0.0f, 0.0f, -800.0f);
 	sceneDesc.flags = PxSceneFlag::eENABLE_CCD;
 	sceneDesc.cpuDispatcher = m_pDispatcher;
@@ -152,6 +155,7 @@ void CPhysicPhysX :: InitPhysic( void )
 					  |	PxPairFlag::eNOTIFY_TOUCH_FOUND
 					  |	PxPairFlag::eNOTIFY_TOUCH_PERSISTS
 					  | PxPairFlag::eNOTIFY_CONTACT_POINTS
+					  | PxPairFlag::eMODIFY_CONTACTS
 					  | PxPairFlag::eCONTACT_EVENT_POSE;
 			return PxFilterFlag::eDEFAULT;
 	};

@@ -37,6 +37,7 @@ GNU General Public License for more details.
 	
 class DebugRenderer;
 class EventHandler;
+class ContactModifyCallback;
 
 class CPhysicPhysX : public IPhysicLayer
 {
@@ -139,6 +140,7 @@ private:
 	ErrorCallback m_errorCallback;
 	std::unique_ptr<DebugRenderer> m_debugRenderer;
 	std::unique_ptr<EventHandler> m_eventHandler;
+	std::unique_ptr<ContactModifyCallback> m_contactModifyCallback;
 	physx::PxCooking *m_pCooking;
 	physx::PxDefaultAllocator m_Allocator;
 	physx::PxPvd *m_pVisualDebugger;

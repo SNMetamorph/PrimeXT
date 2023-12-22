@@ -17,8 +17,6 @@ GNU General Public License for more details.
 #include "util.h"
 #include "cbase.h"
 
-#define CONVEYOR_SCALE_FACTOR	((1.0f / gpGlobals->frametime) * 0.5f)
-
 using namespace physx;
 
 /*
@@ -43,20 +41,6 @@ void EventHandler::onContact(const PxContactPairHeader &pairHeader, const PxCont
 
 		if (!e1 || !e2)
 			return;
-
-		//if (e1->v.flags & FL_CONVEYOR)
-		//{
-		//	PxRigidBody *actor = pairHeader.actors[1]->is<PxRigidBody>();
-		//	Vector basevelocity = e1->v.movedir * e1->v.speed * CONVEYOR_SCALE_FACTOR;
-		//	actor->setForceAndTorque(basevelocity, PxVec3(0.f), PxForceMode::eIMPULSE);
-		//}
-
-		//if (e2->v.flags & FL_CONVEYOR)
-		//{
-		//	PxRigidBody* actor = pairHeader.actors[0]->is<PxRigidBody>();
-		//	Vector basevelocity = e2->v.movedir * e2->v.speed * CONVEYOR_SCALE_FACTOR;
-		//	actor->setForceAndTorque(basevelocity, PxVec3(0.f), PxForceMode::eIMPULSE);
-		//}
 
 		if (e1 && e1->v.solid != SOLID_NOT)
 		{
