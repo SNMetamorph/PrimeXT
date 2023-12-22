@@ -32,6 +32,7 @@ GNU General Public License for more details.
 #include "assert_handler.h"
 #include "debug_renderer.h"
 #include "contact_modify_callback.h"
+#include "collision_filter_data.h"
 #include "decomposed_shape.h"
 #include "meshdesc_factory.h"
 #include "crclib.h"
@@ -155,8 +156,14 @@ void CPhysicPhysX :: InitPhysic( void )
 					  |	PxPairFlag::eNOTIFY_TOUCH_FOUND
 					  |	PxPairFlag::eNOTIFY_TOUCH_PERSISTS
 					  | PxPairFlag::eNOTIFY_CONTACT_POINTS
-					  | PxPairFlag::eMODIFY_CONTACTS
 					  | PxPairFlag::eCONTACT_EVENT_POSE;
+
+			CollisionFilterData fd1(filterData0);
+			CollisionFilterData fd2(filterData1);
+			if (fd1.HasConveyorFlag() || fd2.HasConveyorFlag()) {
+				pairFlags |= PxPairFlag::eMODIFY_CONTACTS;
+			}
+
 			return PxFilterFlag::eDEFAULT;
 	};
 
@@ -1195,8 +1202,9 @@ void *CPhysicPhysX :: CreateStaticBodyFromEntity( CBaseEntity *pObject )
 	float mat[16];
 	matrix4x4(pObject->GetAbsOrigin(), pObject->GetAbsAngles(), 1.0f).CopyToArray(mat);
 
+	bool conveyorEntity = FBitSet(pObject->pev->flags, FL_CONVEYOR);
 	PxTransform pose = PxTransform(PxMat44(mat));
-	PxMaterial *material = (pObject->pev->flags & FL_CONVEYOR) ? m_pConveyorMaterial : m_pDefaultMaterial;
+	PxMaterial *material = conveyorEntity ? m_pConveyorMaterial : m_pDefaultMaterial;
 	PxRigidStatic *pActor = m_pPhysics->createRigidStatic(pose);
 	PxShape *pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxTriangleMeshGeometry(pCollision), *material);
 
@@ -1204,6 +1212,13 @@ void *CPhysicPhysX :: CreateStaticBodyFromEntity( CBaseEntity *pObject )
 	{
 		ALERT( at_error, "failed to create static from entity %s\n", pObject->GetClassname( ));
 		return NULL;
+	}
+
+	if (conveyorEntity) 
+	{
+		CollisionFilterData filterData;
+		filterData.SetConveyorFlag(true);
+		pShape->setSimulationFilterData(filterData.ToNativeType());
 	}
 
 	pActor->setName( pObject->GetClassname( ));
