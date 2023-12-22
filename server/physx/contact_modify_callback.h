@@ -1,5 +1,5 @@
 /*
-debug_renderer.h - part of PhysX physics engine implementation
+contact_modify_callback.h - part of PhysX physics engine implementation
 Copyright (C) 2023 SNMetamorph
 
 This program is free software: you can redistribute it and/or modify
@@ -12,17 +12,12 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
+
 #pragma once
 #include <PxPhysicsAPI.h>
 
-class DebugRenderer
+class ContactModifyCallback : public physx::PxContactModifyCallback
 {
 public:
-	void RenderData(const physx::PxRenderBuffer& data) const;
-
-private:
-	void SetupColor(physx::PxU32 color) const;
-	void RenderPoints(const physx::PxDebugPoint *points, physx::PxU32 count) const;
-	void RenderLines(const physx::PxDebugLine *lines, physx::PxU32 count) const;
-	void RenderTriangles(const physx::PxDebugTriangle *triangles, physx::PxU32 count) const;
+	void onContactModify(physx::PxContactModifyPair* const pairs, physx::PxU32 count);
 };

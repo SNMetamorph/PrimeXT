@@ -144,6 +144,7 @@ if(ENABLE_PHYSX)
 		"physx/physx_impl.cpp"
 		"physx/event_handler.cpp"
 		"physx/assert_handler.cpp"
+		"physx/contact_modify_callback.cpp"
 		"physx/debug_renderer.cpp"
 		"physx/decomposed_shape.cpp"
 		"physx/io_streams.cpp"
