@@ -1526,7 +1526,6 @@ bool CPhysicPhysX :: IsBodySleeping( CBaseEntity *pEntity )
 
 void CPhysicPhysX :: UpdateEntityAABB( CBaseEntity *pEntity )
 {
-	PxU32 boundsCount;
 	PxActor *pActor = ActorFromEntity( pEntity );
 	if (!pActor)
 		return;
@@ -1535,17 +1534,11 @@ void CPhysicPhysX :: UpdateEntityAABB( CBaseEntity *pEntity )
 	if (!pRigidActor || pRigidActor->getNbShapes() <= 0)
 		return;
 
+	PxBounds3 actorBounds = pRigidActor->getWorldBounds();
 	ClearBounds( pEntity->pev->absmin, pEntity->pev->absmax );
-	PxTransform globalPose = pRigidActor->getGlobalPose();
-	PxBounds3 *boundsList = PxRigidActorExt::getRigidActorShapeLocalBoundsList(*pRigidActor, boundsCount);
+	AddPointToBounds( actorBounds.minimum, pEntity->pev->absmin, pEntity->pev->absmax );
+	AddPointToBounds( actorBounds.maximum, pEntity->pev->absmin, pEntity->pev->absmax );
 	
-	for (PxU32 i = 0; i < boundsCount; i++)
-	{
-		const PxBounds3 &bbox = boundsList[i];
-		AddPointToBounds( globalPose.transform(bbox.minimum), pEntity->pev->absmin, pEntity->pev->absmax );
-		AddPointToBounds( globalPose.transform(bbox.maximum), pEntity->pev->absmin, pEntity->pev->absmax );
-	}
-
 	pEntity->pev->mins = pEntity->pev->absmin - pEntity->pev->origin;
 	pEntity->pev->maxs = pEntity->pev->absmax - pEntity->pev->origin;
 	pEntity->pev->size = pEntity->pev->maxs - pEntity->pev->mins;
@@ -2178,13 +2171,11 @@ void CPhysicPhysX::SetupWorld(void)
 
 	pActor->setName(g_pWorld->GetClassname());
 	pActor->userData = g_pWorld->edict();
+
 	m_pScene->addActor(*pActor);
 	m_pSceneActor = pActor;
 	m_fLoaded = true;
-
-	PxU32 boundsCount;
-	PxBounds3 *boundsList = PxRigidActorExt::getRigidActorShapeLocalBoundsList(*pActor, boundsCount);
-	m_worldBounds = boundsList[0];
+	m_worldBounds = pActor->getWorldBounds();
 }
 	
 void CPhysicPhysX :: DebugDraw( void )
