@@ -53,6 +53,7 @@ public:
 	void	*CreateKinematicBodyFromEntity( CBaseEntity *pEntity );
 	void	*CreateStaticBodyFromEntity( CBaseEntity *pObject );
 	void	*CreateVehicle( CBaseEntity *pObject, string_t scriptName = 0 );
+	void	*CreateTriggerFromEntity( CBaseEntity *pEntity );
 	void	*RestoreBody( CBaseEntity *pEntity );
 	void	SaveBody( CBaseEntity *pObject );
 	bool	Initialized( void ) { return (m_pPhysics != NULL); }

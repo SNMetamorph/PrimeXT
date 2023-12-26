@@ -25,6 +25,17 @@ using namespace physx;
 * be created or destroyed. If state modification is needed then the changes should be stored to a buffer
 * and performed after the simulation step.
 */
+
+void EventHandler::onTrigger(PxTriggerPair* pairs, PxU32 count)
+{
+	for (PxU32 i = 0; i < count; i++)
+	{
+		if (pairs[i].flags & (PxTriggerPairFlag::eREMOVED_SHAPE_TRIGGER | PxTriggerPairFlag::eREMOVED_SHAPE_OTHER)) {
+			continue; // ignore pairs when shapes have been deleted
+		}
+	}
+}
+
 void EventHandler::onContact(const PxContactPairHeader &pairHeader, const PxContactPair *pairs, PxU32 nbPairs)
 {
 	for (PxU32 i = 0; i < nbPairs; i++)

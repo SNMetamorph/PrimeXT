@@ -341,7 +341,12 @@ void CBaseDoor::Spawn( void )
 		UTIL_SetOrigin( this, m_vecPosition1 );
 	}
 
-	m_pUserData = WorldPhysic->CreateKinematicBodyFromEntity(this);
+	if (FStrEq(STRING(pev->classname), "func_water")) {
+		m_pUserData = WorldPhysic->CreateTriggerFromEntity(this);
+	}
+	else {
+		m_pUserData = WorldPhysic->CreateKinematicBodyFromEntity(this);
+	}
 
 	m_iState = STATE_OFF;
 

@@ -150,6 +150,12 @@ void CPhysicPhysX :: InitPhysic( void )
 		PxFilterObjectAttributes attributes0, PxFilterData filterData0,
 		PxFilterObjectAttributes attributes1, PxFilterData filterData1,
 		PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize) -> PxFilterFlags {
+		    if (PxFilterObjectIsTrigger(attributes0) || PxFilterObjectIsTrigger(attributes1))
+			{
+				pairFlags = PxPairFlag::eTRIGGER_DEFAULT;
+				return PxFilterFlag::eDEFAULT;
+			}
+
 			pairFlags = PxPairFlag::eCONTACT_DEFAULT
 					  | PxPairFlag::eDETECT_CCD_CONTACT
 					  | PxPairFlag::eNOTIFY_TOUCH_CCD
@@ -165,7 +171,7 @@ void CPhysicPhysX :: InitPhysic( void )
 			}
 
 			return PxFilterFlag::eDEFAULT;
-	};
+		};
 
 	m_worldBounds.minimum = PxVec3(-32768, -32768, -32768);
 	m_worldBounds.maximum = PxVec3(32768, 32768, 32768);
@@ -1231,6 +1237,32 @@ void *CPhysicPhysX :: CreateStaticBodyFromEntity( CBaseEntity *pObject )
 	return pActor;
 }
 
+void *CPhysicPhysX::CreateTriggerFromEntity(CBaseEntity *pEntity)
+{
+	PxBoxGeometry boxGeometry;
+	boxGeometry.halfExtents = pEntity->pev->size / 2.0f;
+	Vector centerOrigin = pEntity->pev->mins + pEntity->pev->size / 2.0f;
+	PxRigidStatic *pActor = m_pPhysics->createRigidStatic(PxTransform(centerOrigin));
+	PxShape *pShape = PxRigidActorExt::createExclusiveShape(*pActor, boxGeometry, *m_pDefaultMaterial);
+
+	if (!pActor)
+	{
+		ALERT( at_error, "failed to create trigger actor from entity %s\n", pEntity->GetClassname());
+		return NULL;
+	}
+
+	pShape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
+	pShape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
+	pActor->setName(pEntity->GetClassname());
+	pActor->userData = pEntity->edict();
+	m_pScene->addActor(*pActor);
+
+	pEntity->m_iActorType = ACTOR_TRIGGER;
+	pEntity->m_pUserData = pActor;
+
+	return pActor;
+}
+
 void *CPhysicPhysX :: CreateVehicle( CBaseEntity *pObject, string_t scriptName )
 {
 #if defined (HAS_PHYSIC_VEHICLE)
@@ -1538,7 +1570,7 @@ void CPhysicPhysX :: UpdateEntityAABB( CBaseEntity *pEntity )
 	ClearBounds( pEntity->pev->absmin, pEntity->pev->absmax );
 	AddPointToBounds( actorBounds.minimum, pEntity->pev->absmin, pEntity->pev->absmax );
 	AddPointToBounds( actorBounds.maximum, pEntity->pev->absmin, pEntity->pev->absmax );
-	
+
 	pEntity->pev->mins = pEntity->pev->absmin - pEntity->pev->origin;
 	pEntity->pev->maxs = pEntity->pev->absmax - pEntity->pev->origin;
 	pEntity->pev->size = pEntity->pev->maxs - pEntity->pev->mins;
