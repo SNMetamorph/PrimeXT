@@ -32,6 +32,7 @@ public:
 	virtual void	*CreateKinematicBodyFromEntity( CBaseEntity *pEntity ) = 0;
 	virtual void	*CreateStaticBodyFromEntity( CBaseEntity *pObject ) = 0;
 	virtual void	*CreateVehicle( CBaseEntity *pObject, int scriptName = 0 ) = 0;
+	virtual void	*CreateTriggerFromEntity( CBaseEntity *pEntity ) = 0;
 	virtual void	*RestoreBody( CBaseEntity *pEntity ) = 0;
 	virtual void	SaveBody( CBaseEntity *pObject ) = 0;
 	virtual void	SetOrigin( CBaseEntity *pEntity, const Vector &origin ) = 0;

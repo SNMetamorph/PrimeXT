@@ -63,6 +63,7 @@ public:
 	virtual void	*CreateBoxFromEntity( CBaseEntity *pObject ) { return NULL; }
 	virtual void	*CreateKinematicBodyFromEntity( CBaseEntity *pEntity ) { return NULL; }
 	virtual void	*CreateStaticBodyFromEntity( CBaseEntity *pObject ) { return NULL; }
+	virtual void	*CreateTriggerFromEntity( CBaseEntity *pEntity ) { return NULL; }
 	virtual void	*CreateVehicle( CBaseEntity *pObject, string_t scriptName = 0 ) { return NULL; }
 	virtual void	*RestoreBody( CBaseEntity *pEntity ) { return NULL; }
 	virtual void	SaveBody( CBaseEntity *pObject ) {}
