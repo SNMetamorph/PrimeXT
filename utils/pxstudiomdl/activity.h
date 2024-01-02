@@ -94,71 +94,7 @@ typedef enum
 	ACT_FLINCH_LEFTARM,
 	ACT_FLINCH_RIGHTARM,
 	ACT_FLINCH_LEFTLEG,
-	ACT_FLINCH_RIGHTLEG,
-
-	// acts for viewmodel
-	ACT_VM_NONE,		// weapon viewmodel animations
-	ACT_VM_DEPLOY,                // deploy
-	ACT_VM_DEPLOY_EMPTY,          // deploy empty weapon
-	ACT_VM_HOLSTER,               // holster empty weapon
-	ACT_VM_HOLSTER_EMPTY,
-	ACT_VM_IDLE,
-	ACT_VM_IDLE_IS,		// IronSight animations
-	ACT_VM_RANGE_ATTACK,
-	ACT_VM_RANGE_ATTACK_IS,	// IronSight animations
-	ACT_VM_MELEE_ATTACK,
-	ACT_VM_MELEE_ATTACK_IS,	// IronSight animations
-	ACT_VM_SHOOT_LAST,
-	ACT_VM_SHOOT_LAST_IS,	// IronSight animations
-	ACT_VM_LAST_MELEE_ATTACK,
-	ACT_VM_LAST_MELEE_ATTACK_IS,	// IronSight animations
-	ACT_VM_START_RELOAD,
-	ACT_VM_START_RELOAD_IS,
-	ACT_VM_RELOAD,
-	ACT_VM_RELOAD_IS,
-	ACT_VM_RELOAD_EMPTY,
-	ACT_VM_RELOAD_EMPTY_IS,
-	ACT_VM_TURNON,		// switch firemode on
-	ACT_VM_TURNOFF,		// switch firemode off
-	ACT_VM_PUMP,		// user animations
-	ACT_VM_PUMP_IS,
-	ACT_VM_PUMP_EMPTY,
-	ACT_VM_PUMP_EMPTY_IS,
-	ACT_VM_START_CHARGE,
-	ACT_VM_CHARGE,
-	ACT_VM_OVERLOAD,
-	ACT_VM_IDLE_EMPTY,
-	ACT_VM_IDLE_EMPTY_IS,
-	ACT_VM_IRONSIGHT_ON,
-	ACT_VM_IRONSIGHT_OFF,
-	ACT_VM_SHOOT_EMPTY,
-	ACT_VM_SHOOT_EMPTY_IS,
-	ACT_VM_IRONSIGHT_ON_EMPTY,
-	ACT_VM_IRONSIGHT_OFF_EMPTY,
-	ACT_VM_RESERVED0,		// reserved acts for future expansions
-	ACT_VM_RESERVED1,
-	ACT_VM_RESERVED2,
-	ACT_VM_RESERVED3,
-	ACT_VM_RESERVED4,
-
-	// continue enumerate acts for monsters
-	ACT_FLASHLIGHT,
-	ACT_WALKBACK_FIRE,
-
-	ACT_FIRINGWALK,
-	ACT_FIRINGRUN,
-	ACT_DIERAGDOLL,
-	ACT_180_LEFT,		// 180 degree left turn
-	ACT_180_RIGHT,
-	ACT_90_LEFT,		// 90 degree turns
-	ACT_90_RIGHT,
-
-	// Sometimes, you just want to set an NPC's sequence to a sequence that doesn't actually
-	// have an activity. The AI will reset the NPC's sequence to whatever its IDEAL activity
-	// is, though. So if you set ideal activity to DO_NOT_DISTURB, the AI will not interfere
-	// with the NPC's current sequence. (SJB)
-	ACT_DO_NOT_DISTURB,
-	ACT_TRANSITION,
+	ACT_FLINCH_RIGHTLEG
 } Activity;
 
 typedef struct
