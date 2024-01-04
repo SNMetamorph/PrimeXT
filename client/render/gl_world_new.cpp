@@ -1017,18 +1017,18 @@ static word Mod_ShaderLightForward( CDynLight *dl, msurface_t *s )
 	char options[MAX_OPTIONS_LENGTH];
 	mfaceinfo_t *landscape = NULL;
 	mextrasurf_t *es = s->info;
-	int lightOmniType = !FBitSet(dl->flags, DLF_NOSHADOWS) ? 0 : 1;
+	int32_t lightShadowType = !FBitSet(dl->flags, DLF_NOSHADOWS) ? 0 : 1;
 
 	switch( dl->type )
 	{
 		case LIGHT_SPOT:
-			if (es->forwardLightSpot.IsValid()) {
-				return es->forwardLightSpot.GetHandle(); // valid
+			if (es->forwardLightSpot[lightShadowType].IsValid()) {
+				return es->forwardLightSpot[lightShadowType].GetHandle(); // valid
 			}
 			break;
 		case LIGHT_OMNI:
-			if (es->forwardLightOmni[lightOmniType].IsValid()) {
-				return es->forwardLightOmni[lightOmniType].GetHandle(); // valid
+			if (es->forwardLightOmni[lightShadowType].IsValid()) {
+				return es->forwardLightOmni[lightShadowType].GetHandle(); // valid
 			}
 			break;
 		case LIGHT_DIRECTIONAL:
@@ -1162,11 +1162,11 @@ static word Mod_ShaderLightForward( CDynLight *dl, msurface_t *s )
 	switch( dl->type )
 	{
 	case LIGHT_SPOT:
-		es->forwardLightSpot.SetShader( shaderNum );
+		es->forwardLightSpot[lightShadowType].SetShader( shaderNum );
 		ClearBits( s->flags, SURF_NODLIGHT );
 		break;
 	case LIGHT_OMNI:
-		es->forwardLightOmni[lightOmniType].SetShader( shaderNum );
+		es->forwardLightOmni[lightShadowType].SetShader( shaderNum );
 		ClearBits( s->flags, SURF_NODLIGHT );
 		break;
 	case LIGHT_DIRECTIONAL:

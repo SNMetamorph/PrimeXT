@@ -313,15 +313,15 @@ typedef struct mextrasurf_s
 	unsigned int	query;		// test surface for occluding (active if query != 0)
 // shader cache
 	shader_t		forwardScene[2];	// two for mirrors
-	shader_t		forwardLightSpot;
-	shader_t		forwardLightOmni[2]; // first for w/ shadows, second for w/o shadows
+	shader_t		forwardLightSpot[2]; // first for w/ shadows, second for w/o shadows
+	shader_t		forwardLightOmni[2]; 
 	shader_t		forwardLightProj;
 	shader_t		deferredScene;
 	shader_t		deferredLight;
 	shader_t		forwardDepth;
 
 	struct brushdecal_s	*pdecals;		// linked decals
-	intptr_t		reserved[21];	// just for future expansions or mod-makers
+	intptr_t		reserved[20];	// just for future expansions or mod-makers
 } mextrasurf_t;
 
 typedef struct msurface_s

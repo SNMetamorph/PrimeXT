@@ -406,7 +406,8 @@ void CStudioModelRenderer :: UpdateInstanceMaterials( void )
 	for( int i = 0; i < m_pStudioHeader->numtextures; i++ )
 	{
 		m_pModelInstance->materials[i].forwardScene.Invalidate();
-		m_pModelInstance->materials[i].forwardLightSpot.Invalidate();
+		m_pModelInstance->materials[i].forwardLightSpot[0].Invalidate();
+		m_pModelInstance->materials[i].forwardLightSpot[1].Invalidate();
 		m_pModelInstance->materials[i].forwardLightOmni[0].Invalidate();
 		m_pModelInstance->materials[i].forwardLightOmni[1].Invalidate();
 		m_pModelInstance->materials[i].forwardLightProj.Invalidate();
