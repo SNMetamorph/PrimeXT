@@ -568,8 +568,6 @@ public:
 	void SetStyle(string_t iszPattern);
 	void UpdatePVSPoint(void);
 	void UpdateState();
-	void Activate();
-	void Deactivate();
 	void EXPORT CineThink(void);
 	void EXPORT PVSThink(void);
 
@@ -634,6 +632,7 @@ void CDynamicLight::Spawn()
 	if (pev->spawnflags & SF_DYNLIGHT_STARTOFF)
 	{
 		pev->effects |= EF_NODRAW;
+		DontThink();
 	}
 	else if (pev->sequence)
 	{
@@ -771,16 +770,6 @@ void CDynamicLight::UpdateState()
 	UpdateStyle();
 	pev->framerate = m_flBrightness;
 	pev->skin = m_iStyle & 0x3F; // store lightstyle index in first 6 bits
-}
-
-void CDynamicLight::Activate()
-{
-	pev->effects &= ~EF_NODRAW;
-}
-
-void CDynamicLight::Deactivate()
-{
-	pev->effects |= EF_NODRAW;
 }
 
 void EXPORT CDynamicLight::CineThink(void)
