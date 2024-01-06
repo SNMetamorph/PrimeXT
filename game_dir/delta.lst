@@ -117,7 +117,7 @@ entity_state_t gamedll Entity_Encode
 	DEFINE_DELTA( rendermode, DT_INTEGER, 8, 1.0 ),
 	DEFINE_DELTA( renderamt, DT_INTEGER, 8, 1.0 ),
 	DEFINE_DELTA( renderfx, DT_INTEGER, 8, 1.0 ),
-	DEFINE_DELTA( scale, DT_FLOAT, 16, 1024.0 ),
+	DEFINE_DELTA( scale, DT_FLOAT, 19, 1024.0 ),
 	DEFINE_DELTA( rendercolor.r, DT_BYTE, 8, 1.0 ),
 	DEFINE_DELTA( rendercolor.g, DT_BYTE, 8, 1.0 ),
 	DEFINE_DELTA( rendercolor.b, DT_BYTE, 8, 1.0 ),
