@@ -568,9 +568,10 @@ public:
 	void SetStyle(string_t iszPattern);
 	void UpdatePVSPoint(void);
 	void UpdateState();
-	void EXPORT CineThink(void);
-	void EXPORT PVSThink(void);
+	void CineThink(void);
+	void PVSThink(void);
 
+	DECLARE_DATADESC();
 private:
 	bool CustomStyleUsed();
 	void UpdateStyle();
@@ -587,6 +588,10 @@ private:
 
 LINK_ENTITY_TO_CLASS(env_dynlight, CDynamicLight);
 
+BEGIN_DATADESC( CDynamicLight )
+	DEFINE_FUNCTION( CineThink ),
+	DEFINE_FUNCTION( PVSThink ),
+END_DATADESC()
 
 void CDynamicLight::Spawn()
 {
@@ -772,7 +777,7 @@ void CDynamicLight::UpdateState()
 	pev->skin = m_iStyle & 0x3F; // store lightstyle index in first 6 bits
 }
 
-void EXPORT CDynamicLight::CineThink(void)
+void CDynamicLight::CineThink(void)
 {
 	UpdatePVSPoint();
 	UpdateState();
@@ -782,7 +787,7 @@ void EXPORT CDynamicLight::CineThink(void)
 	SetNextThink(CIN_FRAMETIME);
 }
 
-void EXPORT CDynamicLight::PVSThink(void)
+void CDynamicLight::PVSThink(void)
 {
 	UpdatePVSPoint();
 	UpdateState();
