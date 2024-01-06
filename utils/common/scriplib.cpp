@@ -73,7 +73,7 @@ void AddScriptToStack( const char *filename )
 
 	script++;
 	if( script == &scriptstack[MAX_INCLUDES] )
-		COM_FatalError( "script file exceeded MAX_INCLUDES\n" );
+		COM_FatalError( "file \"%s\": script file exceeded MAX_INCLUDES\n", filename );
 	Q_strcpy( script->filename, filename );
 
 	script->buffer = (char *)COM_LoadFile( script->filename, &size, true );
@@ -96,7 +96,7 @@ void IncludeScriptFile( const char *filename )
 
 	script++;
 	if( script == &scriptstack[MAX_INCLUDES] )
-		COM_FatalError( "script file exceeded MAX_INCLUDES\n" );
+		COM_FatalError( "file \"%s\": script file exceeded MAX_INCLUDES\n", filename );
 	Q_strcpy( script->filename, filename );
 	MsgDev( D_REPORT, "entering the script %s\n", script->filename );
 	script->buffer = (char *)FS_LoadFile( script->filename, &size, false );
@@ -172,7 +172,7 @@ bool EndOfScript( bool crossline )
 	bool	finished = script->separate_stack;
 
 	if( !crossline )
-		COM_FatalError( "line %i is incomplete\n", scriptline );
+		COM_FatalError( "file %s(%i): line is incomplete\n", script->filename, scriptline );
 
 	if( !Q_strcmp( script->filename, "memory buffer" ))
 	{
@@ -230,7 +230,7 @@ skipspace:
 		if( *script->script_p++ == '\n' )
 		{
 			if( !crossline )
-				COM_FatalError( "line %i is incomplete\n", scriptline );
+				COM_FatalError( "file %s(%i): line is incomplete\n", script->filename, scriptline );
 			scriptline = script->line++;
 		}
 	}
@@ -242,7 +242,7 @@ skipspace:
 	if( *script->script_p == ';' || *script->script_p == '#' || ( *script->script_p == '/' && *((script->script_p) + 1) == '/' ))
 	{
 		if( !crossline )
-			COM_FatalError( "line %i is incomplete\n", scriptline );
+			COM_FatalError( "file %s(%i): line is incomplete\n", script->filename, scriptline );
 
 		if( *script->script_p == '/' )
 			script->script_p++;
@@ -267,7 +267,7 @@ skipspace:
 	if( script->script_p[0] == '/' && script->script_p[1] == '*' )
 	{
 		if( !crossline )
-			COM_FatalError( "line %i is incomplete\n", scriptline );
+			COM_FatalError( "file %s(%i): line is incomplete\n", script->filename, scriptline );
 
 		script->script_p += 2;
 
@@ -296,7 +296,7 @@ skipspace:
 				break;
 
 			if( token_p == &token[MAXTOKEN] )
-				COM_FatalError( "token too large on line %i\n", scriptline );
+				COM_FatalError( "file %s(%i): token too large\n", script->filename, scriptline );
 		}
 		script->script_p++;
 	}
@@ -309,7 +309,7 @@ skipspace:
 			if( script->script_p == script->end_p )
 				break;
 			if( token_p == &token[MAXTOKEN] )
-				COM_FatalError( "token too large on line %i\n", scriptline );
+				COM_FatalError( "file %s(%i): token too large\n", script->filename, scriptline );
 		}
 	}
 
@@ -425,7 +425,7 @@ void CheckToken( const char *match )
 	GetToken( true );
 
 	if( Q_strcmp( token, match ))
-		COM_FatalError( "missing '%s' at line %d\n", match, scriptline );
+		COM_FatalError( "file %s(%i): missing '%s'\n", script->filename, scriptline, match );
 }
 
 void Parse1DMatrix( int x, vec_t *m )
@@ -446,17 +446,17 @@ void Parse1DMatrix( int x, vec_t *m )
 void Parse1DMatrixAppend( char *buffer, int x, vec_t *m )
 {
 	if( !GetTokenAppend( buffer, true ) || Q_strcmp( token, "(" ))
-		COM_FatalError( "missing '(' at line %d\n", scriptline );
+		COM_FatalError( "file %s(%i): missing '('\n", script->filename, scriptline );
 
 	for( int i = 0; i < x; i++ )
 	{
 		if( !GetTokenAppend( buffer, false ))
-			COM_FatalError( "line %d is incomplete\n", scriptline );
+			COM_FatalError( "file %s(%i): line is incomplete\n", script->filename, scriptline );
 		m[i] = atof( token );
 	}
 
 	if( !GetTokenAppend( buffer, true ) || Q_strcmp( token, ")" ))
-		COM_FatalError( "missing ')' at line %d\n", scriptline );
+		COM_FatalError( "file %s(%i): missing ')' at line\n", script->filename, scriptline );
 }
 
 void Parse2DMatrix( int y, int x, vec_t *m )
