@@ -176,7 +176,7 @@ void GL_ComputeSunParams( const Vector &skyVector )
 	float	ambientIntensity = 0.0025f + sunBrightness * Q_min(1.0f, Q_max(0.0f, (0.375f + sunPos) / 0.25f));
 	float	diffuseIntensity = sunBrightness * Q_min(1.0f, Q_max(0.0f, (0.03125f + sunPos) / 0.0625f));
 
-	float ambientFactor = RemapVal(tr.ambientFactor, AMBIENT_EPSILON, r_lighting_modulate->value, 0.0f, 1.0f);
+	float ambientFactor = RemapVal(tr.ambientFactor, AMBIENT_EPSILON, 1.0f, 0.0f, 1.0f);
 	tr.sun_ambient = Q_max(ambientIntensity * ambientFactor, 0.0f);
 	tr.sun_ambient = bound(0.0f, tr.sun_ambient, tr.ambientFactor);
 	tr.sun_diffuse = sunColor * diffuseIntensity;
@@ -248,8 +248,8 @@ bool GL_BackendStartFrame( ref_viewpass_t *rvp, RefParams params )
 		pglFinish();
 
 	// setup light factors
-	tr.ambientFactor = bound( AMBIENT_EPSILON, r_lighting_ambient->value, r_lighting_modulate->value );
-	float cachedFactor = bound( tr.ambientFactor, r_lighting_modulate->value, 1.0f );
+	tr.ambientFactor = bound( AMBIENT_EPSILON, r_lighting_ambient->value, 1.0f );
+	float cachedFactor = bound( tr.ambientFactor, 1.0f, 1.0f );
 
 	if( cachedFactor != tr.diffuseFactor )
 	{

@@ -28,7 +28,6 @@ extern cvar_t *gl_debug_verbose;
 extern cvar_t *cv_dynamiclight;
 extern cvar_t *r_detailtextures;
 extern cvar_t *r_lighting_ambient;
-extern cvar_t *r_lighting_modulate;
 extern cvar_t *r_lightstyle_lerping;
 extern cvar_t *r_lighting_extended;
 extern cvar_t *r_occlusion_culling;

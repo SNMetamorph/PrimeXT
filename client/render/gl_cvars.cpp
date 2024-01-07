@@ -24,7 +24,6 @@ cvar_t *gl_debug_verbose;
 cvar_t *cv_dynamiclight;
 cvar_t *r_detailtextures;
 cvar_t *r_lighting_ambient;
-cvar_t *r_lighting_modulate;
 cvar_t *r_lightstyle_lerping;
 cvar_t *r_lighting_extended;
 cvar_t *r_occlusion_culling;
@@ -131,7 +130,6 @@ void R_InitializeConVars()
 	r_finish = CVAR_GET_POINTER("gl_finish");
 	cv_crosshair = CVAR_GET_POINTER("crosshair");
 	r_lighting_ambient = CVAR_GET_POINTER("r_lighting_ambient");
-	r_lighting_modulate = CVAR_GET_POINTER("r_lighting_modulate");
 	r_lightstyle_lerping = CVAR_GET_POINTER("cl_lightstyle_lerping");
 	r_lighting_extended = CVAR_GET_POINTER("r_lighting_extended");
 	r_draw_beams = CVAR_GET_POINTER("cl_draw_beams");
