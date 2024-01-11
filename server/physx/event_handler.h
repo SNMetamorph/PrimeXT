@@ -17,13 +17,23 @@ GNU General Public License for more details.
 #include <PxPhysicsAPI.h>
 #include <PxSimulationEventCallback.h>
 #include <queue>
+#include <vector>
 #include <utility>
 
 class EventHandler : public physx::PxSimulationEventCallback
 {
 public:
 	using TouchEventsQueue = std::queue<std::pair<physx::PxActor*, physx::PxActor*>>;
+	struct WaterContactPair
+	{
+		physx::PxActor *waterTriggerActor;
+		physx::PxActor *objectActor;
 
+		bool operator==(const WaterContactPair &operand) const {
+			return waterTriggerActor == operand.waterTriggerActor && objectActor == operand.objectActor;
+		}
+	};
+	
 	virtual void onConstraintBreak(physx::PxConstraintInfo* constraints, physx::PxU32 count) {};
 	virtual void onWake(physx::PxActor** actors, physx::PxU32 count) {};
 	virtual void onSleep(physx::PxActor** actors, physx::PxU32 count) {};
@@ -31,7 +41,9 @@ public:
 	virtual void onAdvance(const physx::PxRigidBody* const* bodyBuffer, const physx::PxTransform* poseBuffer, const physx::PxU32 count) {};
 	virtual void onContact(const physx::PxContactPairHeader& pairHeader, const physx::PxContactPair* pairs, physx::PxU32 nbPairs);
 	TouchEventsQueue &getTouchEventsQueue();
+	std::vector<WaterContactPair> &getWaterContactPairs();
 
 private:
 	TouchEventsQueue m_touchEventsQueue;
+	std::vector<WaterContactPair> m_waterContactPairs;
 };

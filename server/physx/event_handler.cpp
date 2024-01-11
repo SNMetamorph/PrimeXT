@@ -16,6 +16,7 @@ GNU General Public License for more details.
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
+#include <algorithm>
 
 using namespace physx;
 
@@ -30,8 +31,29 @@ void EventHandler::onTrigger(PxTriggerPair* pairs, PxU32 count)
 {
 	for (PxU32 i = 0; i < count; i++)
 	{
-		if (pairs[i].flags & (PxTriggerPairFlag::eREMOVED_SHAPE_TRIGGER | PxTriggerPairFlag::eREMOVED_SHAPE_OTHER)) {
+		const PxTriggerPair &pair = pairs[i];
+		if (pair.flags & (PxTriggerPairFlag::eREMOVED_SHAPE_TRIGGER | PxTriggerPairFlag::eREMOVED_SHAPE_OTHER)) {
 			continue; // ignore pairs when shapes have been deleted
+		}
+
+		edict_t *triggerEntity = reinterpret_cast<edict_t*>(pair.triggerActor->userData);
+		if (triggerEntity && FStrEq(STRING(triggerEntity->v.classname), "func_water")) 
+		{
+			WaterContactPair contactPair = { pair.triggerActor, pair.otherActor };
+			if (pair.status == PxPairFlag::eNOTIFY_TOUCH_FOUND) 
+			{
+				auto searchIter = std::find(m_waterContactPairs.begin(), m_waterContactPairs.end(), contactPair);
+				if (searchIter == std::end(m_waterContactPairs)) {
+					m_waterContactPairs.push_back(contactPair);
+				}
+			}
+			else if (pair.status == PxPairFlag::eNOTIFY_TOUCH_LOST) 
+			{
+ 				auto it = std::remove_if(m_waterContactPairs.begin(), m_waterContactPairs.end(), [&contactPair](const auto &p) {
+					return p == contactPair;
+				});
+				m_waterContactPairs.erase(it, m_waterContactPairs.end());
+			}
 		}
 	}
 }
@@ -70,4 +92,9 @@ void EventHandler::onContact(const PxContactPairHeader &pairHeader, const PxCont
 EventHandler::TouchEventsQueue& EventHandler::getTouchEventsQueue()
 {
 	return m_touchEventsQueue;
+}
+
+std::vector<EventHandler::WaterContactPair>& EventHandler::getWaterContactPairs()
+{
+	return m_waterContactPairs;
 }

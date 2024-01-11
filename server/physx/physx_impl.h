@@ -103,6 +103,7 @@ private:
 	physx::PxTriangleMesh *TriangleMeshFromStudio( entvars_t *pev, int modelindex, int32_t body, int32_t skin );
 	physx::PxTriangleMesh *TriangleMeshFromEntity( CBaseEntity *pObject );
 	physx::PxActor *ActorFromEntity( CBaseEntity *pObject );
+	physx::PxBounds3 GetIntersectionBounds( const physx::PxBounds3 &a, const physx::PxBounds3 &b );
 	CBaseEntity	*EntityFromActor( physx::PxActor *pObject );
 	bool CheckCollision(physx::PxRigidActor *pActor);
 	void ToggleCollision(physx::PxRigidActor *pActor, bool enabled);
