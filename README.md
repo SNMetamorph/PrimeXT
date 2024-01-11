@@ -4,7 +4,6 @@
 ![GitHub release (by tag)](https://img.shields.io/github/downloads/SNMetamorph/PrimeXT/total)
 ![GitHub repo size](https://img.shields.io/github/repo-size/SNMetamorph/PrimeXT)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/SNMetamorph/PrimeXT)
-![Lines of code](https://img.shields.io/tokei/lines/github/SNMetamorph/PrimeXT)
 
 [![ModDB Rating](https://button.moddb.com/popularity/medium/mods/56077.png)](https://www.moddb.com/mods/primext)
 
@@ -14,11 +13,12 @@ At this time, project in primal state: it somehow works, but there is a lot of t
 We need interested people to work on this SDK with us! Main goals of this project is:
 - Optimizing world rendering as much as possible
 - Implementing HDR rendering pipeline
-- Updating PhysX headers to modern SDK version
+- Total rework of material system
+- Improving physics futher: ragdolls, vehicles, fine-tuning, etc. 
 - Implementing particle engine, something like in Source Engine
-- Cross-platform (now Windows and Linux supported, Android in plans)
-- Writing actual documentation, translating it to English (in process)
-- Code refactoring
+- Cross-platform (Windows and Linux supported, Android port in plans)
+- Writing actual documentation, translating existing pages to English
+- Code refactoring (where it really needed)
 
 Full list of project goals you can see on documetation site, it's available [here](https://snmetamorph.github.io/PrimeXT/), but now it's still in progress. 
 Therefore, you can tell suggestion about what should be documented at first.  
