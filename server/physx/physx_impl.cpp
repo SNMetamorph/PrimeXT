@@ -49,6 +49,9 @@ GNU General Public License for more details.
 
 constexpr float k_PaddingFactor = 0.49f;
 constexpr float k_DensityFactor = 0.05f;
+constexpr float k_WaterDensity = 0.030f;
+constexpr float k_WaterLinearDragFactor = 500.f;
+constexpr float k_WaterAngularDragFactor = 1.0f;
 constexpr uint32_t k_SolverIterationCount = 4;
 constexpr double k_SimulationStepSize = 1.0 / 100.0;
 
@@ -1037,6 +1040,22 @@ PxActor *CPhysicPhysX :: ActorFromEntity( CBaseEntity *pObject )
 	}
 #endif
 	return (PxActor *)pObject->m_pUserData;
+}
+
+physx::PxBounds3 CPhysicPhysX::GetIntersectionBounds(const physx::PxBounds3 &a, const physx::PxBounds3 &b)
+{
+	if (!a.intersects(b)) {
+		return PxBounds3::empty();
+	}
+
+	PxBounds3 result;
+	result.minimum.x = std::max(a.minimum.x, b.minimum.x);
+	result.minimum.y = std::max(a.minimum.y, b.minimum.y);
+	result.minimum.z = std::max(a.minimum.z, b.minimum.z);
+	result.maximum.x = std::min(a.maximum.x, b.maximum.x);
+	result.maximum.y = std::min(a.maximum.y, b.maximum.y);
+	result.maximum.z = std::min(a.maximum.z, b.maximum.z);
+	return result;
 }
 
 CBaseEntity *CPhysicPhysX :: EntityFromActor( PxActor *pObject )
@@ -2078,6 +2097,37 @@ void CPhysicPhysX::HandleEvents()
 		edict_t *e2 = reinterpret_cast<edict_t*>(touchEvent.second->userData);
 		DispatchTouch(e1, e2);
 		touchEventsQueue.pop();
+	}
+	 
+	auto &waterContactPairs = m_eventHandler->getWaterContactPairs();
+	for (const auto &pair : waterContactPairs)
+	{
+		edict_t *entity = reinterpret_cast<edict_t*>(pair.objectActor->userData);
+		physx::PxRigidDynamic *dynamicActor = pair.objectActor->is<PxRigidDynamic>();
+		physx::PxRigidStatic *triggerActor = pair.waterTriggerActor->is<PxRigidStatic>();
+
+		if (!FBitSet(dynamicActor->getRigidBodyFlags(), PxRigidBodyFlag::eKINEMATIC))
+		{
+			PxBounds3 objectBounds = dynamicActor->getWorldBounds();
+			PxBounds3 waterBounds = triggerActor->getWorldBounds();
+			PxBounds3 intersectionBounds = GetIntersectionBounds(objectBounds, waterBounds);
+			if (!intersectionBounds.isEmpty())
+			{
+				PxVec3 intersectionSizes = intersectionBounds.getDimensions();
+				float displacedVolume = intersectionSizes.x * intersectionSizes.y * intersectionSizes.z;
+				PxVec3 byoyancyForce = displacedVolume * k_WaterDensity * -PxVec3(0.f, 0.f, -g_psv_gravity->value);
+				dynamicActor->addForce(byoyancyForce);
+
+				// in practice this velocity should be relative to water shape, since water can be moved
+				PxVec3 velocityDir = dynamicActor->getLinearVelocity();// -triggerActor->getLinearVelocity();
+				float velocityMag = velocityDir.normalizeSafe();
+				PxVec3 linearDragForce = k_WaterLinearDragFactor * k_WaterDensity * velocityMag * velocityMag * -velocityDir;
+				dynamicActor->addForce(linearDragForce);
+
+				PxVec3 angularDragForce = k_WaterAngularDragFactor * displacedVolume * -dynamicActor->getAngularVelocity();
+				dynamicActor->addTorque(angularDragForce);
+			}
+		}
 	}
 }
 
