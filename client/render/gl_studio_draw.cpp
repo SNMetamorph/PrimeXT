@@ -2718,7 +2718,7 @@ void CStudioModelRenderer :: DrawMeshFromBuffer( const vbomesh_t *mesh )
 	else pglDrawElements( GL_TRIANGLES, mesh->numElems, GL_UNSIGNED_INT, 0 );
 
 	r_stats.c_total_tris += (mesh->numElems / 3);
-	r_stats.num_flushes++;
+	r_stats.num_flushes_total++;
 }
 
 void CStudioModelRenderer :: BuildMeshListForLight( CDynLight *pl, bool solid )

@@ -252,6 +252,16 @@ public:
 	const Vector GetModelOrigin( void );
 };
 
+struct gl_buffer_flush_stats_t
+{
+	uint32_t num_flushes_shader;
+	uint32_t num_flushes_entity;
+	uint32_t num_flushes_material;
+	uint32_t num_flushes_lightmap;
+	uint32_t num_flushes_mirrortex;
+	uint32_t num_flushes_cubemap;
+};
+
 typedef enum
 {
 	LM_FREE = 0,	// lightmap is clear
@@ -637,25 +647,27 @@ typedef struct
 
 typedef struct
 {
-	unsigned int	c_world_leafs;
-	unsigned int	c_world_nodes;	// walking by BSP tree
+	uint32_t	c_world_leafs;
+	uint32_t	c_world_nodes;	// walking by BSP tree
 
-	unsigned int	c_culled_entities;
-	unsigned int	c_total_tris;	// triangle count
+	uint32_t	c_culled_entities;
+	uint32_t	c_total_tris;	// triangle count
 
-	unsigned int	c_mirror_passes;
-	unsigned int	c_portal_passes;
-	unsigned int	c_screen_passes;
-	unsigned int	c_shadow_passes;
-	unsigned int	c_sky_passes;
+	uint32_t	c_mirror_passes;
+	uint32_t	c_portal_passes;
+	uint32_t	c_screen_passes;
+	uint32_t	c_shadow_passes;
+	uint32_t	c_sky_passes;
 
-	unsigned int	c_worldlights;
-	unsigned int	c_occlusion_culled;	// culled by occlusion query
+	uint32_t	c_worldlights;
+	uint32_t	c_occlusion_culled;	// culled by occlusion query
 
-	unsigned int	c_screen_copy;	// how many times screen was copied
+	uint32_t	c_screen_copy;	// how many times screen was copied
 
-	unsigned int	num_shader_binds;
-	unsigned int	num_flushes;
+	uint32_t	num_shader_binds;
+	uint32_t	num_flushes_total;
+
+	gl_buffer_flush_stats_t solid_brush_list_flushes;
 
 	msurface_t	*debug_surface;
 } ref_stats_t;

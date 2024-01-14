@@ -693,7 +693,7 @@ void R_DrawGrassMeshFromBuffer( const grass_t *mesh )
 	else pglDrawElements( GL_TRIANGLES, mesh->numElems, GL_UNSIGNED_SHORT, 0 );
 
 	r_stats.c_total_tris += (mesh->numVerts / 2);
-	r_stats.num_flushes++;
+	r_stats.num_flushes_total++;
 }
 
 /*

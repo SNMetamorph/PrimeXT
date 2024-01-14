@@ -580,7 +580,7 @@ void DrawRain( void )
 				else pglDrawElements( GL_TRIANGLES, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 				r_stats.c_total_tris += (m_iNumVerts - 2);
 				m_iNumVerts = m_iNumIndex = 0;
-				r_stats.num_flushes++;
+				r_stats.num_flushes_total++;
 			}
 
 			Vector2D toPlayer; 
@@ -634,7 +634,7 @@ void DrawRain( void )
 				pglDrawRangeElements( GL_TRIANGLES, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 			else pglDrawElements( GL_TRIANGLES, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 			r_stats.c_total_tris += (m_iNumVerts - 2);
-			r_stats.num_flushes++;
+			r_stats.num_flushes_total++;
 		}
 	}
 	else if( Rain.weatherMode == MODE_SNOW )
@@ -657,7 +657,7 @@ void DrawRain( void )
 				else pglDrawElements( GL_QUADS, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 				r_stats.c_total_tris += (m_iNumVerts / 2);
 				m_iNumVerts = m_iNumIndex = 0;
-				r_stats.num_flushes++;
+				r_stats.num_flushes_total++;
 			}
 
 			// apply start fading effect
@@ -718,7 +718,7 @@ void DrawRain( void )
 				pglDrawRangeElements( GL_QUADS, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 			else pglDrawElements( GL_QUADS, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 			r_stats.c_total_tris += (m_iNumVerts / 2);
-			r_stats.num_flushes++;
+			r_stats.num_flushes_total++;
 		}
 	}
 
@@ -774,7 +774,7 @@ void DrawFXObjects( void )
 			else pglDrawElements( GL_QUADS, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 			r_stats.c_total_tris += (m_iNumVerts / 2);
 			m_iNumVerts = m_iNumIndex = 0;
-			r_stats.num_flushes++;
+			r_stats.num_flushes_total++;
 		}
 
 		// cull invisible rings
@@ -836,7 +836,7 @@ void DrawFXObjects( void )
 			pglDrawRangeElements( GL_QUADS, 0, m_iNumVerts, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 		else pglDrawElements( GL_QUADS, m_iNumIndex, GL_UNSIGNED_SHORT, m_indexarray );
 		r_stats.c_total_tris += (m_iNumVerts / 2);
-		r_stats.num_flushes++;
+		r_stats.num_flushes_total++;
 	}
 
 	pglDisableClientState( GL_TEXTURE_COORD_ARRAY );
