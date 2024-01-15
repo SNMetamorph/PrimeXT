@@ -3223,6 +3223,61 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 }
 
 /*
+=================
+R_SortSolidBrushFaces
+
+=================
+*/
+static int R_SortSolidBrushFaces( const CSolidEntry *a, const CSolidEntry *b )
+{
+	msurface_t	*surf1, *surf2;
+	mextrasurf_t	*esrf1, *esrf2;
+
+	surf1 = a->m_pSurf;
+	surf2 = b->m_pSurf;
+	esrf1 = surf1->info;
+	esrf2 = surf2->info;
+
+	if( esrf1->forwardScene[0].GetHandle() > esrf2->forwardScene[0].GetHandle() )
+		return 1;
+
+	if( esrf1->forwardScene[0].GetHandle() < esrf2->forwardScene[0].GetHandle() )
+		return -1;
+
+	if( esrf1->forwardScene[1].GetHandle() > esrf2->forwardScene[1].GetHandle() )
+		return 1;
+
+	if( esrf1->forwardScene[1].GetHandle() < esrf2->forwardScene[1].GetHandle() )
+		return -1;
+
+	if( surf1->texinfo->texture->gl_texturenum > surf2->texinfo->texture->gl_texturenum )
+		return 1;
+
+	if( surf1->texinfo->texture->gl_texturenum < surf2->texinfo->texture->gl_texturenum )
+		return -1;
+
+	if( esrf1->lightmaptexturenum > esrf2->lightmaptexturenum )
+		return 1;
+
+	if( esrf1->lightmaptexturenum < esrf2->lightmaptexturenum )
+		return -1;
+
+	if( esrf1->parent > esrf2->parent )
+		return 1;
+
+	if( esrf1->parent < esrf2->parent )
+		return -1;
+
+	//if( esrf1->parent->hCachedMatrix > esrf2->parent->hCachedMatrix )
+	//	return 1;
+
+	//if( esrf1->parent->hCachedMatrix < esrf2->parent->hCachedMatrix )
+	//	return -1;
+
+	return 0;
+}
+
+/*
 ================
 R_RenderDynLightList
 
@@ -3592,6 +3647,7 @@ void R_RenderSolidBrushList( void )
 	if( !RI->frame.solid_faces.Count() )
 		return;
 
+	RI->frame.solid_faces.Sort( R_SortSolidBrushFaces );
 	GL_DEBUG_SCOPE();
 	GL_Blend( GL_FALSE );
 	GL_AlphaTest( GL_FALSE );
