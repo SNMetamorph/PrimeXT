@@ -281,9 +281,13 @@ void CBaseDoor::Spawn( void )
 		UTIL_SetOrigin( this, m_vecPosition1 );
 	}
 
-	// another hack: PhysX 2.8.4.0 crashed while trying to created kinematic body from this brush-model
-	if ( FStrEq( STRING( gpGlobals->mapname ), "c2a5e" ) && FStrEq( STRING( pev->model ), "*103" ));
-	else m_pUserData = WorldPhysic->CreateKinematicBodyFromEntity( this );
+	if (FStrEq(STRING(pev->classname), "func_water")) {
+		m_pUserData = WorldPhysic->CreateTriggerFromEntity(this);
+	}
+	else {
+		m_pUserData = WorldPhysic->CreateKinematicBodyFromEntity(this);
+	}
+
 	m_iState = STATE_OFF;
 
 	// if the door is flagged for USE button activation only, use NULL touch function
