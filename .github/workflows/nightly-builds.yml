@@ -54,13 +54,17 @@ jobs:
         run: cmake --build . --config ${{ matrix.build_conf }} --parallel 8
 
       - name: Prepare artifacts
+        shell: bash
         run: |
-          mkdir artifacts\
-          mkdir -p publish\primext\bin
-          mkdir -p publish\primext\devkit
-          move build\${{ matrix.build_conf }}\* publish\
-          move game_dir\* publish\primext
-          Compress-Archive -Path publish\* -Destination artifacts\primext-${{ matrix.cmake_preset }}.zip
+          mkdir artifacts/
+          mkdir -p publish/primext/bin
+          mkdir -p publish/primext/devkit
+          cp -r build/${{ matrix.build_conf }}/primext/* publish/primext/
+          cp build/${{ matrix.build_conf }}/primext_run publish/
+          cp -r game_dir/* publish/primext
+          pushd publish
+          zip -r ../artifacts/primext-${{ matrix.cmake_preset }}.zip ./*
+          popd
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
