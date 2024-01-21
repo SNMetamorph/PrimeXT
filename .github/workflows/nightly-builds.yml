@@ -74,9 +74,19 @@ jobs:
           cp build/${{ matrix.build_conf }}/primext_run publish/ || true
           cp build/${{ matrix.build_conf }}/primext.exe publish/ || true
           cp -r game_dir/* publish/primext
+
+      - name: Pack artifact files to archive (Linux)
+        if: runner.os == 'Linux'
+        run: |
           pushd publish
           zip -r ../artifacts/primext-${{ matrix.cmake_preset }}.zip ./*
           popd
+
+      # we forced to do this split because Git on Windows can't use zip, bruh
+      - name: Pack artifact files to archive (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          Compress-Archive -Path publish\* -Destination artifacts\primext-${{ matrix.cmake_preset }}.zip
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
