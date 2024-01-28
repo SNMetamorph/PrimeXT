@@ -7,6 +7,9 @@ on:
     paths-ignore:
       - 'documentation/**'
 
+permissions:
+  contents: write
+
 jobs:
   build-generic:
     runs-on: ${{ matrix.os }}
@@ -26,6 +29,9 @@ jobs:
             build_conf: Debug
             devenv_arch: none
     env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Enables the vcpkg dependency graph integration.
+      VCPKG_FEATURE_FLAGS: dependencygraph
       # Indicates the location of the vcpkg as a Git submodule of the project repository.
       VCPKG_ROOT: ${{ github.workspace }}/external/vcpkg
       # Tells vcpkg where binary packages are stored.
