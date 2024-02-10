@@ -24,7 +24,6 @@ GNU General Public License for more details.
 #include "clipfile.h"
 #include "filesystem_utils.h"
 
-#include <PxConfig.h>
 #include <PxPhysicsAPI.h>
 #include <PxSimulationEventCallback.h>
 #include <PxScene.h>

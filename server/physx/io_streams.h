@@ -15,9 +15,10 @@ GNU General Public License for more details.
 */
 
 #pragma once
-#include "PxIO.h"
-#include "PxSimpleTypes.h"
 #include "filesystem_utils.h"
+#include <PxConfig.h>
+#include <PxIO.h>
+#include <PxSimpleTypes.h>
 #include <vector>
 
 class UserStream : public physx::PxInputStream, public physx::PxOutputStream

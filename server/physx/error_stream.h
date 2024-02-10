@@ -15,6 +15,7 @@ GNU General Public License for more details.
 */
 
 #pragma once
+#include <PxConfig.h>
 #include <PxErrorCallback.h>
 
 class ErrorCallback : public physx::PxErrorCallback

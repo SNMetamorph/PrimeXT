@@ -14,6 +14,7 @@ GNU General Public License for more details.
 */
 
 #pragma once
+#include <PxConfig.h>
 #include <PxPhysicsAPI.h>
 
 class ContactModifyCallback : public physx::PxContactModifyCallback

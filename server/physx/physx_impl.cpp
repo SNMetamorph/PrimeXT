@@ -15,6 +15,7 @@ GNU General Public License for more details.
 */
 
 #ifdef USE_PHYSICS_ENGINE
+#include <PxConfig.h>
 #include "physx_impl.h"
 #include "saverestore.h"
 #include "client.h"
