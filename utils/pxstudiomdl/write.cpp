@@ -550,42 +550,48 @@ void WriteSequenceInfo( void )
 
 
 		// save boneweights
-		int oldweightlistindex = 0;
-		j = 0;
-
-		// look up previous sequence weights and try to find a match
-		for( k = 0; k < i; k++ )
+		if (g_numweightlist > 0) 
 		{
+			int oldweightlistindex = 0;
 			j = 0;
-			// only check newer boneweights than the last one
-			if( pseqdesc[k-i].weightlistindex > oldweightlistindex )
+
+			// look up previous sequence weights and try to find a match
+			for (k = 0; k < i; k++)
 			{
-				oldweightlistindex = pseqdesc[k-i].weightlistindex;
-				for( j = 0; j < g_numbones; j++ )
+				j = 0;
+				// only check newer boneweights than the last one
+				if (pseqdesc[k - i].weightlistindex > oldweightlistindex)
 				{
-					if( g_sequence[i].weight[j] != g_sequence[k].weight[j] )
+					oldweightlistindex = pseqdesc[k - i].weightlistindex;
+					for (j = 0; j < g_numbones; j++)
+					{
+						if (g_sequence[i].weight[j] != g_sequence[k].weight[j])
+							break;
+					}
+					if (j == g_numbones)
 						break;
 				}
-				if( j == g_numbones )
-					break;
+			}
+
+			// check to see if all the bones matched
+			if (j < g_numbones)
+			{
+				// allocate new block
+				float *pweight = (float *)pData;
+				pseqdesc->weightlistindex = (pData - pStart);
+				pData += g_numbones * sizeof(float);
+
+				for (j = 0; j < g_numbones; j++)
+					pweight[j] = g_sequence[i].weight[j];
+			}
+			else
+			{
+				// use previous boneweight
+				pseqdesc->weightlistindex = oldweightlistindex;
 			}
 		}
-
-		// check to see if all the bones matched
-		if( j < g_numbones )
-		{
-			// allocate new block
-			float *pweight = (float *)pData;
-			pseqdesc->weightlistindex = (pData - pStart);
-			pData += g_numbones * sizeof( float );
-
-			for( j = 0; j < g_numbones; j++ )
-				pweight[j] = g_sequence[i].weight[j];
-		}
-		else
-		{
-			// use previous boneweight
-			pseqdesc->weightlistindex = oldweightlistindex;
+		else {
+			pseqdesc->weightlistindex = 0; // or may be we should use -1?
 		}
 
 		// save iklocks
