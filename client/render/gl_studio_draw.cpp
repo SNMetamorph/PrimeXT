@@ -2056,19 +2056,16 @@ void CStudioModelRenderer::StudioDrawBodyPartsBBox()
 
 		for (int j = 0; j < pSubModel->nummesh; j++)
 		{
-			Vector mins, maxs;
-			Vector p[8], tmp;
+			Vector p[8];
 			vbomesh_t *mesh = &pSubModel->meshes[j];
 			
-			TransformAABB(m_pModelInstance->m_pbones[mesh->parentbone], mesh->mins, mesh->maxs, mins, maxs);
-			ExpandBounds(mins, maxs, 0.5f);
-
 			// compute a full bounding box
 			for (int k = 0; k < 8; k++)
 			{
-				p[k][0] = (k & 1) ? mins[0] : maxs[0];
-				p[k][1] = (k & 2) ? mins[1] : maxs[1];
-				p[k][2] = (k & 4) ? mins[2] : maxs[2];
+				p[k].x = (k & 1) ? mesh->mins.x : mesh->maxs.x;
+				p[k].y = (k & 2) ? mesh->mins.y : mesh->maxs.y;
+				p[k].z = (k & 4) ? mesh->mins.z : mesh->maxs.z;
+				p[k] = m_pModelInstance->m_pbones[mesh->parentbone].VectorTransform(p[k]);
 			}
 
 			GL_Bind(GL_TEXTURE0, tr.whiteTexture);
@@ -2077,10 +2074,7 @@ void CStudioModelRenderer::StudioDrawBodyPartsBBox()
 			gEngfuncs.pTriAPI->Begin(TRI_LINES);
 
 			for (int k = 0; k < 6; k++)
-			{
-				tmp = g_vecZero;
-				tmp[k % 3] = (k < 3) ? 1.0f : -1.0f;
-				
+			{				
 				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][0]]);
 				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][1]]);
 				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][1]]);
