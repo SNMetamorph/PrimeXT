@@ -13,10 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#ifdef _WIN32
-#define NOMINMAX
-#include <windows.h>
-#endif
+#include "port.h"
 typedef unsigned char byte;
 #include <ctype.h>
 #include <stdio.h>

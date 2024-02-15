@@ -2,10 +2,7 @@
 //			Copyright (C) XashXT Group 2011
 //		         stringlib.cpp - safety string routines 
 //=======================================================================
-#ifdef _WIN32
-#define NOMINMAX
-#include <windows.h>
-#endif
+#include "port.h"
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
