@@ -2,11 +2,6 @@
 #ifndef INPUT_MOUSE_H
 #define INPUT_MOUSE_H
 #include "wrect.h"
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <stdarg.h>
-#endif
 #include "port.h"
 #include "mathlib.h"
 #include "cdll_int.h"

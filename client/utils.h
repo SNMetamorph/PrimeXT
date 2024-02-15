@@ -44,7 +44,6 @@ enum
 };
 
 #ifdef _WIN32
-//#include <Windows.h>
 typedef HMODULE dllhandle_t;
 #else
 typedef void* dllhandle_t;
