@@ -219,7 +219,7 @@ public:
 	const Vector&	GetAbsAvelocity( void ) const;
 
 	const Vector&	GetBaseVelocity( void ) const { return pev->basevelocity; }
-
+	Vector		GetScale() const;
 	void		ApplyLocalVelocityImpulse( const Vector &vecImpulse );
 	void		ApplyAbsVelocityImpulse( const Vector &vecImpulse );
 

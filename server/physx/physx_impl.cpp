@@ -1113,7 +1113,8 @@ void *CPhysicPhysX :: CreateBodyFromEntity( CBaseEntity *pObject )
 		return NULL;
 
 	PxRigidDynamic *pActor = m_pPhysics->createRigidDynamic(PxTransform(PxIdentity));
-	PxShape *pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxConvexMeshGeometry(pCollision), *m_pDefaultMaterial);
+	PxMeshScale scale(pObject->GetScale());
+	PxShape *pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxConvexMeshGeometry(pCollision, scale), *m_pDefaultMaterial);
 
 	if (!pActor)
 	{
@@ -1212,7 +1213,8 @@ void *CPhysicPhysX::CreateKinematicBodyFromEntity(CBaseEntity *pObject)
 	pActor->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 	pActor->userData = pObject->edict();
 
-	PxShape *pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxTriangleMeshGeometry(pCollision), *m_pDefaultMaterial);
+	PxMeshScale scale(pObject->GetScale());
+	PxShape *pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxTriangleMeshGeometry(pCollision, scale), *m_pDefaultMaterial);
 	m_pScene->addActor(*pActor);
 	pObject->m_iActorType = ACTOR_KINEMATIC;
 	pObject->m_pUserData = pActor;
@@ -1230,9 +1232,10 @@ void *CPhysicPhysX :: CreateStaticBodyFromEntity( CBaseEntity *pObject )
 
 	bool conveyorEntity = FBitSet(pObject->pev->flags, FL_CONVEYOR);
 	PxTransform pose = PxTransform(PxMat44(mat));
+	PxMeshScale scale(pObject->GetScale());
 	PxMaterial *material = conveyorEntity ? m_pConveyorMaterial : m_pDefaultMaterial;
 	PxRigidStatic *pActor = m_pPhysics->createRigidStatic(pose);
-	PxShape *pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxTriangleMeshGeometry(pCollision), *material);
+	PxShape *pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxTriangleMeshGeometry(pCollision, scale), *material);
 
 	if( !pActor )
 	{
@@ -2548,7 +2551,6 @@ void CPhysicPhysX :: SweepTest( CBaseEntity *pTouch, const Vector &start, const 
 	}
 
 	DecomposedShape shape;
-	vec3_t scale = pTouch->pev->startpos.Length() < 0.001f ? vec3_t(1.0f) : pTouch->pev->startpos;
 	model_t *mod = (model_t *)MODEL_HANDLE(pTouch->pev->modelindex);
 
 	auto &meshDescFactory = CMeshDescFactory::Instance();
@@ -2632,7 +2634,7 @@ void CPhysicPhysX :: SweepTest( CBaseEntity *pTouch, const Vector &start, const 
 
 	TraceMesh trm;
 	trm.SetTraceMesh(pMesh, pHeadNode, pTouch->pev->modelindex);
-	trm.SetMeshOrientation(pTouch->pev->origin, pTouch->pev->angles, scale); 
+	trm.SetMeshOrientation(pTouch->pev->origin, pTouch->pev->angles, pTouch->GetScale()); 
 	trm.SetupTrace(start, mins, maxs, end, tr);
 
 	if (trm.DoTrace())

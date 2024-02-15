@@ -428,6 +428,11 @@ void CBaseEntity :: CalcAbsoluteAvelocity( void )
 #endif
 }
 
+Vector CBaseEntity::GetScale() const
+{
+	return pev->startpos.Length() < 0.001f ? vec3_t(1.0f) : pev->startpos;
+}
+
 void CBaseEntity::ApplyLocalVelocityImpulse( const Vector &vecImpulse )
 {
 	// NOTE: Don't have to use GetVelocity here because local values
