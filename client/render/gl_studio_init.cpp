@@ -338,6 +338,10 @@ void CStudioModelRenderer :: DeleteStudioCache( mstudiocache_t **ppstudiocache )
 				vbomesh_t *pMesh = &pSubModel->meshes[k];
 
 				DeleteVBOMesh( pMesh );
+
+				// we need to call destructor explicitly here, because vbomesh_t[] located
+				// inside pre-allocated memory chunk and therefore RAII doesn't works
+				pMesh->~vbomesh_t(); 
 			}
 		}
 	}

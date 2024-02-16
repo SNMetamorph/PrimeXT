@@ -15,6 +15,18 @@ USER-DEFINED DATA
 // this struct may be expaned by user request
 typedef struct vbomesh_s
 {
+	vbomesh_s() :
+		skinref(0), 
+		numVerts(0), 
+		numElems(0),
+		lightmapnum(0),
+		vbo(0), 
+		vao(0), 
+		ibo(0),
+		parentbone(0),
+		uniqueID(0),
+		cacheSize(0) {};
+
 	unsigned int	skinref;			// skin reference
 	unsigned int	numVerts;			// trifan vertices count
 	unsigned int	numElems;			// trifan elements count
