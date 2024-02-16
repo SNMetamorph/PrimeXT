@@ -50,6 +50,7 @@ list(APPEND CLDLL_SOURCES
 	"${CMAKE_SOURCE_DIR}/game_shared/material.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/mathlib.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/matrix.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/bounding_box.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/meshdesc.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/meshdesc_factory.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/playermove.cpp"

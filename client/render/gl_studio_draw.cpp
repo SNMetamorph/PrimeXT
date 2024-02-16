@@ -109,10 +109,39 @@ int CStudioModelRenderer :: StudioGetBounds( CSolidEntry *entry, Vector bounds[2
 	if( !vbo || vbo->parentbone == 0xFF )
 		return 0;
 
-	ModelInstance_t *inst = &m_ModelInstances[entry->m_pParentEntity->modelhandle];
-	TransformAABB( inst->m_pbones[vbo->parentbone], vbo->mins, vbo->maxs, bounds[0], bounds[1] );
-
+	CBoundingBox meshBounds = StudioGetMeshBounds(vbo);
+	bounds[0] = meshBounds.GetMins();
+	bounds[1] = meshBounds.GetMaxs();
 	return 1;
+}
+
+/*
+================
+StudioGetBounds
+
+Get world-space bounds for a given mesh, accounting all contained bones
+================
+*/
+CBoundingBox CStudioModelRenderer::StudioGetMeshBounds(const vbomesh_t *mesh)
+{
+	Vector mins, maxs;
+	bool boneWeighting = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
+	const mposetobone_t	*m = m_pModelInstance->m_pModel->poseToBone;
+
+	ClearBounds(mins, maxs);
+	for (const auto &[boneIndex, bound] : mesh->boneBounds) 
+	{
+		vec3_t worldSpaceMins, worldSpaceMaxs;
+		matrix3x4 out = m_pModelInstance->m_pbones[boneIndex];
+		if (boneWeighting) {
+			out.ConcatTransforms(m->posetobone[boneIndex]);
+		}
+		TransformAABB(out, bound.GetMins(), bound.GetMaxs(), worldSpaceMins, worldSpaceMaxs);
+		AddPointToBounds(worldSpaceMins, mins, maxs);
+		AddPointToBounds(worldSpaceMaxs, mins, maxs);
+	}
+	ExpandBounds(mins, maxs, 0.5f); // create sentinel border for refractions
+	return CBoundingBox(mins, maxs);
 }
 
 /*
@@ -2058,14 +2087,14 @@ void CStudioModelRenderer::StudioDrawBodyPartsBBox()
 		{
 			Vector p[8];
 			vbomesh_t *mesh = &pSubModel->meshes[j];
-			
+
 			// compute a full bounding box
+			CBoundingBox meshBounds = StudioGetMeshBounds(mesh);
 			for (int k = 0; k < 8; k++)
 			{
-				p[k].x = (k & 1) ? mesh->mins.x : mesh->maxs.x;
-				p[k].y = (k & 2) ? mesh->mins.y : mesh->maxs.y;
-				p[k].z = (k & 4) ? mesh->mins.z : mesh->maxs.z;
-				p[k] = m_pModelInstance->m_pbones[mesh->parentbone].VectorTransform(p[k]);
+				p[k].x = (k & 1) ? meshBounds.GetMins().x : meshBounds.GetMaxs().x;
+				p[k].y = (k & 2) ? meshBounds.GetMins().y : meshBounds.GetMaxs().y;
+				p[k].z = (k & 4) ? meshBounds.GetMins().z : meshBounds.GetMaxs().z;
 			}
 
 			GL_Bind(GL_TEXTURE0, tr.whiteTexture);
@@ -2230,14 +2259,12 @@ void CStudioModelRenderer :: AddMeshToDrawList( studiohdr_t *phdr, vbomesh_t *me
 	// static entities allows to cull each part individually
 	if( FBitSet( RI->currententity->curstate.iuser1, CF_STATIC_ENTITY ) )
 	{
-		Vector	absmin, absmax;
+		CBoundingBox meshBounds = StudioGetMeshBounds(mesh);
 
-		TransformAABB( m_pModelInstance->m_pbones[mesh->parentbone], mesh->mins, mesh->maxs, absmin, absmax );
-
-		if( !Mod_CheckBoxVisible( absmin, absmax ))
+		if( !Mod_CheckBoxVisible( meshBounds.GetMins(), meshBounds.GetMaxs() ))
 			return; // occulded
 
-		if( R_CullBox( absmin, absmax ))
+		if( R_CullBox( meshBounds.GetMins(), meshBounds.GetMaxs() ))
 			return; // culled
 	}
 
@@ -2317,14 +2344,12 @@ void CStudioModelRenderer :: AddMeshToDrawList( studiohdr_t *phdr, vbomesh_t *me
 		entry.SetRenderMesh(mesh, hProgram);
 		if (mesh->parentbone != 0xFF)
 		{
-			Vector mins, maxs;
-			TransformAABB(m_pModelInstance->m_pbones[mesh->parentbone], mesh->mins, mesh->maxs, mins, maxs);
-			ExpandBounds(mins, maxs, 0.5f); // create sentinel border for refractions
+			CBoundingBox meshBounds = StudioGetMeshBounds(mesh);
 			if (ScreenCopyRequired(shader)) {
-				entry.ComputeScissor(mins, maxs);
+				entry.ComputeScissor(meshBounds.GetMins(), meshBounds.GetMaxs());
 			}
 			else {
-				entry.ComputeViewDistance(mins, maxs);
+				entry.ComputeViewDistance(meshBounds.GetMins(), meshBounds.GetMaxs());
 			}
 		}
 		RI->frame.trans_list.AddToTail(entry);

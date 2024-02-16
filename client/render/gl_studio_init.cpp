@@ -1592,37 +1592,47 @@ void CStudioModelRenderer :: MeshCreateBuffer( vbomesh_t *pOut, const mstudiomes
 	bool 		has_boneweights = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
 	bool		has_vertexlight = ( lightmode == LIGHTSTATIC_VERTEX ) ? true : false;
 	bool		has_lightmap = ( lightmode == LIGHTSTATIC_SURFACE ) ? true : false;
+	const mposetobone_t	*m = RI->currentmodel->poseToBone;
 	static uint	arrayelems[MAXARRAYVERTS*3];
-	Vector		mins, maxs;
 
+	new (pOut) vbomesh_t();
 	pOut->skinref = pMesh->skinref;
 	pOut->parentbone = 0xFF;
-
-	ClearBounds( mins, maxs );
 
 	// we need to compute some things individually per mesh
 	for (int i = 0; i < pMeshInfo->numvertices; i++)
 	{
 		svert_t	*vert = &m_arrayxvert[pMeshInfo->firstvertex + i];
-
-		AddPointToBounds( vert->vertex, mins, maxs );
-
 		int boneid = vert->boneid[0];
 
-		if( pOut->parentbone == 0xFF )
+		if (pOut->parentbone == 0xFF)
 			pOut->parentbone = boneid;
 
 		// update bone if it was parent of current bone
-		if( pOut->parentbone != boneid )
+		if (pOut->parentbone != boneid)
 		{
-			for( int k = pOut->parentbone; k != -1; k = pbones[k].parent )
+			for (int j = pOut->parentbone; j != -1; j = pbones[j].parent)
 			{
-				if( k == boneid )
+				if (j == boneid)
 				{
 					pOut->parentbone = boneid;
 					break;
 				}
 			}
+		}
+
+		for (int j = 0; j < 4; j++) 
+		{
+			int32_t boneIndex = vert->boneid[j];
+			if (boneIndex < 0) {
+				continue;
+			}
+
+			vec3_t tempVert = vert->vertex;
+			if (has_boneweights) {
+				tempVert = m->posetobone[boneIndex].VectorTransform(tempVert);
+			}
+			pOut->boneBounds[boneIndex].ExpandToPoint(tempVert);
 		}
 	}
 
@@ -1630,8 +1640,6 @@ void CStudioModelRenderer :: MeshCreateBuffer( vbomesh_t *pOut, const mstudiomes
 	for (int i = 0; i < pMeshInfo->numindices; i++)
 		arrayelems[i] = m_arrayelems[pMeshInfo->firstindex + i] - pMeshInfo->firstvertex;
 
-	pOut->mins = mins;
-	pOut->maxs = maxs;
 	pOut->lightmapnum = pMeshInfo->lightmapnum;
 	pOut->numVerts = pMeshInfo->numvertices;
 	pOut->numElems = pMeshInfo->numindices;

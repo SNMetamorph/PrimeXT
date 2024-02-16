@@ -2,6 +2,8 @@
 #include "color24.h"
 #include "lightlimits.h"
 #include "mathlib.h"
+#include "bounding_box.h"
+#include <unordered_map>
 
 /*
 ===========================
@@ -16,13 +18,13 @@ typedef struct vbomesh_s
 	unsigned int	skinref;			// skin reference
 	unsigned int	numVerts;			// trifan vertices count
 	unsigned int	numElems;			// trifan elements count
-	int		lightmapnum;		// each mesh should use only once atlas page!
+	int		lightmapnum;				// each mesh should use only once atlas page!
 
 	unsigned int	vbo, vao, ibo;		// buffer objects
-	vec3_t		mins, maxs;		// right transform to get screencopy
-	int		parentbone;		// parent bone to transform AABB
+	std::unordered_map<int32_t, CBoundingBox> boneBounds; // right transform to get screencopy
+	int		parentbone;					// parent bone to transform AABB
 	unsigned short	uniqueID;			// to reject decal drawing
-	unsigned int	cacheSize;		// debug info: uploaded cache size for this buffer
+	unsigned int	cacheSize;			// debug info: uploaded cache size for this buffer
 } vbomesh_t;
 
 typedef struct mstudiosurface_s
