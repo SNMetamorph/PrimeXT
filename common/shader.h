@@ -22,6 +22,8 @@ class shader_t
 	unsigned short	shadernum;
 	unsigned short	sequence;
 public:
+	shader_t() : shadernum(0), sequence(0) {};
+
 	struct glsl_prog_s *GetShader( void );
 	void SetShader( unsigned short hand );
 	unsigned short GetHandle( void ) { return shadernum; }
