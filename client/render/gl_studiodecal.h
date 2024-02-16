@@ -36,6 +36,15 @@ typedef struct
 // decal entry
 typedef struct studiodecal_s
 {
+	studiodecal_s() :
+		flags(0), 
+		normal(0.0f), 
+		position(0.0f),
+		modelpose(0), 
+		texinfo(nullptr),
+		depth(0), 
+		modelmesh(nullptr) {};
+
 	// this part is goes to savelist
 	byte			flags;
 	Vector			normal;

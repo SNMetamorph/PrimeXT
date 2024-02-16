@@ -1032,8 +1032,6 @@ void CStudioModelRenderer :: AllocDecalForMesh( DecalBuildInfo_t& build )
 	int index = m_pModelInstance->m_DecalList.AddToTail();
 	studiodecal_t *pDecal = &m_pModelInstance->m_DecalList[index];
 
-	memset( pDecal, 0, sizeof( studiodecal_t ));
-
 	// copy settings
 	pDecal->normal = build.vecLocalNormal;
 	pDecal->position = build.vecLocalEnd;
@@ -1454,7 +1452,6 @@ check_decals:
 			if( pDecal->depth == depth )
 			{
 				DeleteVBOMesh( &pDecal->mesh );
-				memset( pDecal, 0 , sizeof( *pDecal ));
 				m_pModelInstance->m_DecalList.Remove( i );
 				goto check_decals;
 			}
