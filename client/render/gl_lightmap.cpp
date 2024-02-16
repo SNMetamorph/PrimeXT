@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "studio.h"
 #include "com_model.h"
 #include "ref_params.h"
+#include "gl_studio_userdata.h"
 #include "gl_local.h"
 #include <stringlib.h>
 #include "gl_shader.h"

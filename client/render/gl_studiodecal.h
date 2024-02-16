@@ -15,6 +15,7 @@ GNU General Public License for more details.
 
 #ifndef GL_STUDIODECAL_H
 #define GL_STUDIODECAL_H
+#include "gl_studio_userdata.h"
 
 enum
 {
