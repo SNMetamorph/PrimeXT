@@ -814,7 +814,7 @@ int R_CullSurface( msurface_t *surf, const Vector &vieworg, CFrustum *frustum, i
 bool R_CullBrushModel( cl_entity_t *e );
 bool R_CullNodeTopView( mnode_t *node );
 
-#define R_CullBox( mins, maxs )		( RI->view.frustum.CullBox( mins, maxs ))
+#define R_CullBox( mins, maxs )		( RI->view.frustum.CullBoxFast( mins, maxs ))
 #define R_CullSphere( centre, radius )		( RI->view.frustum.CullSphere( centre, radius ))
 #define R_CullFrustum( otherFrustum )		( RI->view.frustum.CullFrustum( otherFrustum ))
 

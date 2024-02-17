@@ -1583,7 +1583,7 @@ void R_AddGrassToDrawList( msurface_t *s, drawlist_t drawlist_type )
 		frustum = &RI->currentlight->frustum;
 	else frustum = &RI->view.frustum;
 
-	if( frustum && frustum->CullBox( absmin, absmax ))
+	if( frustum && frustum->CullBoxFast( absmin, absmax ))
 		return;
 
 	// NOTE: at this point we have surface that passed visibility and frustum tests

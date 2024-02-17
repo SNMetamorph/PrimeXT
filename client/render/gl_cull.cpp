@@ -205,7 +205,7 @@ int R_CullSurface( msurface_t *surf, const Vector &vieworg, CFrustum *frustum, i
 		}
 	}
 
-	if( frustum && frustum->CullBox( surf->info->mins, surf->info->maxs, clipFlags ))
+	if( frustum && frustum->CullBoxFast( surf->info->mins, surf->info->maxs, clipFlags ))
 		return CULL_FRUSTUM;
 	return CULL_VISIBLE;
 }

@@ -2771,7 +2771,7 @@ void CStudioModelRenderer :: BuildMeshListForLight( CDynLight *pl, bool solid )
 			CSolidEntry *entry = &RI->frame.solid_meshes[i];
 			StudioGetBounds( entry, bounds );
 
-			if( pl->frustum.CullBox( bounds[0], bounds[1] ))
+			if( pl->frustum.CullBoxFast( bounds[0], bounds[1] ))
 				continue;	// no interaction
 
 			// setup the global pointers
@@ -2795,7 +2795,7 @@ void CStudioModelRenderer :: BuildMeshListForLight( CDynLight *pl, bool solid )
 				continue;
 
 			StudioGetBounds( entry, bounds );
-			if( pl->frustum.CullBox( bounds[0], bounds[1] ))
+			if( pl->frustum.CullBoxFast( bounds[0], bounds[1] ))
 				continue;	// no interaction
 
 			// setup the global pointers

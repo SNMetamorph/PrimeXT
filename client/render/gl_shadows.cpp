@@ -164,7 +164,7 @@ static int R_ComputeCropBounds( const matrix4x4 &lightViewProjection, Vector bou
 			worldBounds[1] = es->maxs;
 		}
 
-		if( frustum.CullBox( worldBounds[0], worldBounds[1] ))
+		if( frustum.CullBoxFast( worldBounds[0], worldBounds[1] ))
 			continue;
 
 		for( int j = 0; j < 8; j++ )
@@ -192,7 +192,7 @@ static int R_ComputeCropBounds( const matrix4x4 &lightViewProjection, Vector bou
 		if( !R_StudioGetBounds( &prevRI->frame.solid_meshes[i], worldBounds ))
 			continue;
 
-		if( frustum.CullBox( worldBounds[0], worldBounds[1] ))
+		if( frustum.CullBoxFast( worldBounds[0], worldBounds[1] ))
 			continue;
 
 		for( int j = 0; j < 8; j++ )

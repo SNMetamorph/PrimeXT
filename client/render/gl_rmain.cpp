@@ -259,7 +259,7 @@ void R_MarkWorldVisibleFaces( model_t *model )
 
 		if( CHECKVISBIT( RI->view.pvsarray, leaf->cluster ) && ( leaf->efrags || leaf->nummarksurfaces ))
 		{
-			if( RI->view.frustum.CullBox( eleaf->mins, eleaf->maxs ))
+			if( RI->view.frustum.CullBoxFast( eleaf->mins, eleaf->maxs ))
 				continue;
 
 			// do additional culling in dev_overview mode

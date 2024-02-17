@@ -256,7 +256,8 @@ void CFrustum :: DrawFrustumDebug( void )
 	pglEnd();
 }
 
-bool CFrustum :: CullBox( const Vector &mins, const Vector &maxs, int userClipFlags )
+// faster implementation, but may fail in case when frustum smaller than bounds
+bool CFrustum :: CullBoxFast( const Vector &mins, const Vector &maxs, int userClipFlags )
 {
 	int iClipFlags;
 
