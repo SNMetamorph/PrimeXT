@@ -1060,7 +1060,7 @@ void CStudioModelRenderer :: AllocDecalForMesh( DecalBuildInfo_t& build )
 void CStudioModelRenderer :: AddDecalToMesh( DecalBuildInfo_t& build )
 {
 	const vbomesh_t *mesh = build.m_pModelMesh;
-	CBoundingBox meshBounds = StudioGetMeshBounds(mesh);
+	CBoundingBox meshBounds = StudioGetMeshBounds(m_pModelInstance, mesh);
 	
 	if( !BoundsAndSphereIntersect( meshBounds.GetMins(), meshBounds.GetMaxs(), build.vecLocalEnd, build.m_Radius))
 		return; // no intersection

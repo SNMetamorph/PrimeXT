@@ -595,7 +595,7 @@ public:
 	int	StudioGetBounds( cl_entity_t *e, Vector bounds[2] );
 	int	StudioGetBounds( CSolidEntry *entry, Vector bounds[2] );
 	int	StudioGetBounds( CSolidEntry *entry, CBoundingBox &bounds );
-	CBoundingBox StudioGetMeshBounds( const vbomesh_t *mesh );
+	CBoundingBox StudioGetMeshBounds( ModelInstance_t *inst, const vbomesh_t *mesh );
 	bool	StudioLoadTBN( void );
 	bool	StudioSaveTBN( void );
 

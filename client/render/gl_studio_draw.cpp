@@ -109,7 +109,8 @@ int CStudioModelRenderer :: StudioGetBounds( CSolidEntry *entry, Vector bounds[2
 	if( !vbo || vbo->parentbone == 0xFF )
 		return 0;
 
-	CBoundingBox meshBounds = StudioGetMeshBounds(vbo);
+	ModelInstance_t *inst = &m_ModelInstances[entry->m_pParentEntity->modelhandle];
+	CBoundingBox meshBounds = StudioGetMeshBounds(inst, vbo);
 	bounds[0] = meshBounds.GetMins();
 	bounds[1] = meshBounds.GetMaxs();
 	return 1;
@@ -128,7 +129,8 @@ int CStudioModelRenderer::StudioGetBounds( CSolidEntry *entry, CBoundingBox &bou
 	if( !vbo || vbo->parentbone == 0xFF )
 		return 0;
 
-	CBoundingBox meshBounds = StudioGetMeshBounds(vbo);
+	ModelInstance_t *inst = &m_ModelInstances[entry->m_pParentEntity->modelhandle];
+	CBoundingBox meshBounds = StudioGetMeshBounds(inst, vbo);
 	bounds = meshBounds;
 	return 1;
 }
@@ -140,17 +142,17 @@ StudioGetBounds
 Get world-space bounds for a given mesh, accounting all contained bones
 ================
 */
-CBoundingBox CStudioModelRenderer::StudioGetMeshBounds(const vbomesh_t *mesh)
+CBoundingBox CStudioModelRenderer::StudioGetMeshBounds(ModelInstance_t *inst, const vbomesh_t *mesh)
 {
 	Vector mins, maxs;
 	bool boneWeighting = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
-	const mposetobone_t	*m = m_pModelInstance->m_pModel->poseToBone;
+	const mposetobone_t	*m = inst->m_pModel->poseToBone;
 
 	ClearBounds(mins, maxs);
 	for (const auto &[boneIndex, bound] : mesh->boneBounds) 
 	{
 		vec3_t worldSpaceMins, worldSpaceMaxs;
-		matrix3x4 out = m_pModelInstance->m_pbones[boneIndex];
+		matrix3x4 out = inst->m_pbones[boneIndex];
 		if (boneWeighting) {
 			out.ConcatTransforms(m->posetobone[boneIndex]);
 		}
@@ -2111,7 +2113,7 @@ void CStudioModelRenderer::StudioDrawBodyPartsBBox()
 			vbomesh_t *mesh = &pSubModel->meshes[j];
 
 			// compute a full bounding box
-			CBoundingBox meshBounds = StudioGetMeshBounds(mesh);
+			CBoundingBox meshBounds = StudioGetMeshBounds(m_pModelInstance, mesh);
 			for (int k = 0; k < 8; k++)
 			{
 				p[k].x = (k & 1) ? meshBounds.GetMins().x : meshBounds.GetMaxs().x;
@@ -2281,7 +2283,7 @@ void CStudioModelRenderer :: AddMeshToDrawList( studiohdr_t *phdr, vbomesh_t *me
 	// static entities allows to cull each part individually
 	if( FBitSet( RI->currententity->curstate.iuser1, CF_STATIC_ENTITY ) )
 	{
-		CBoundingBox meshBounds = StudioGetMeshBounds(mesh);
+		CBoundingBox meshBounds = StudioGetMeshBounds(m_pModelInstance, mesh);
 
 		if( !Mod_CheckBoxVisible( meshBounds.GetMins(), meshBounds.GetMaxs() ))
 			return; // occulded
@@ -2366,7 +2368,7 @@ void CStudioModelRenderer :: AddMeshToDrawList( studiohdr_t *phdr, vbomesh_t *me
 		entry.SetRenderMesh(mesh, hProgram);
 		if (mesh->parentbone != 0xFF)
 		{
-			CBoundingBox meshBounds = StudioGetMeshBounds(mesh);
+			CBoundingBox meshBounds = StudioGetMeshBounds(m_pModelInstance, mesh);
 			if (ScreenCopyRequired(shader)) {
 				entry.ComputeScissor(meshBounds.GetMins(), meshBounds.GetMaxs());
 			}
