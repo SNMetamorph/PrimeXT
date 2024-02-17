@@ -350,6 +350,40 @@ bool CFrustum :: CullBoxFast( const Vector &mins, const Vector &maxs, int userCl
 	return false;
 }
 
+bool CFrustum::CullBoxSafe( const CBoundingBox &bounds )
+{
+	// https://iquilezles.org/articles/frustumcorrect/
+	if (CVAR_TO_BOOL(r_nocull))
+		return false;
+
+	const vec3_t &mins = bounds.GetMins();
+	const vec3_t &maxs = bounds.GetMaxs();
+
+	for (int32_t i = 0; i < FRUSTUM_PLANES; i++)
+	{
+		if (!FBitSet(clipFlags, BIT(i))) {
+			continue;
+		}
+
+		// assumed that plane normal vectors directed inside frustum
+		int32_t out = 0;
+		const mplane_t *plane = &planes[i];
+        out += (DotProduct(plane->normal, Vector(mins.x, mins.y, mins.z) - plane->dist) < 0.0) ? 1 : 0;
+		out += (DotProduct(plane->normal, Vector(maxs.x, mins.y, mins.z) - plane->dist) < 0.0) ? 1 : 0;
+		out += (DotProduct(plane->normal, Vector(mins.x, maxs.y, mins.z) - plane->dist) < 0.0) ? 1 : 0;
+		out += (DotProduct(plane->normal, Vector(maxs.x, maxs.y, mins.z) - plane->dist) < 0.0) ? 1 : 0;
+		out += (DotProduct(plane->normal, Vector(mins.x, mins.y, maxs.z) - plane->dist) < 0.0) ? 1 : 0;
+		out += (DotProduct(plane->normal, Vector(maxs.x, mins.y, maxs.z) - plane->dist) < 0.0) ? 1 : 0;
+		out += (DotProduct(plane->normal, Vector(mins.x, maxs.y, maxs.z) - plane->dist) < 0.0) ? 1 : 0;
+		out += (DotProduct(plane->normal, Vector(maxs.x, maxs.y, maxs.z) - plane->dist) < 0.0) ? 1 : 0;
+
+		if (out == 8) {
+			return true;
+		}
+	}
+	return false;
+}
+
 bool CFrustum :: CullSphere( const Vector &centre, float radius, int userClipFlags )
 {
 	int iClipFlags;

@@ -17,6 +17,7 @@ GNU General Public License for more details.
 #ifndef GL_FRUSTUM_H
 #define GL_FRUSTUM_H
 #include "matrix.h"
+#include "bounding_box.h"
 
 // don't change this order
 #define FRUSTUM_LEFT	0
@@ -47,6 +48,7 @@ public:
 
 	// cull methods
 	bool CullBoxFast( const Vector &mins, const Vector &maxs, int userClipFlags = 0 );
+	bool CullBoxSafe( const CBoundingBox &bounds );
 	bool CullSphere( const Vector &centre, float radius, int userClipFlags = 0 );
 	bool CullFrustum( CFrustum *frustum, int userClipFlags = 0 );
 
