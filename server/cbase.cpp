@@ -430,7 +430,14 @@ void CBaseEntity :: CalcAbsoluteAvelocity( void )
 
 Vector CBaseEntity::GetScale() const
 {
-	return pev->startpos.Length() < 0.001f ? vec3_t(1.0f) : pev->startpos;
+	// storing scale in pev->startpos hack is specific for env_static
+	if (Q_strcmp(GetClassname(), "env_static") == 0)
+	{
+		if (pev->startpos.Length() > 0.001f) {
+			return pev->startpos;
+		}
+	}
+	return vec3_t(pev->scale);
 }
 
 void CBaseEntity::ApplyLocalVelocityImpulse( const Vector &vecImpulse )

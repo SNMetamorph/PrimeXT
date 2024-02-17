@@ -275,13 +275,13 @@ public:
 	void		SetChaining( bool chaining ) { m_isChaining = chaining; }
 	BOOL		ShouldToggle( USE_TYPE useType );
 
-	const char*	GetClassname() { return STRING( pev->classname ); }
-	const char*	GetGlobalname() { return STRING( pev->globalname ); }
-	const char*	GetTargetname() { return STRING( pev->targetname ); }
-	const char*	GetTarget() { return STRING( pev->target ); }
-	const char*	GetMessage() { return STRING( pev->message ); }
-	const char*	GetNetname() { return STRING( pev->netname ); }
-	const char*	GetModel() { return STRING( pev->model ); }
+	const char*	GetClassname() const { return STRING( pev->classname ); } 
+	const char*	GetGlobalname() const { return STRING( pev->globalname ); }
+	const char*	GetTargetname() const { return STRING( pev->targetname ); }
+	const char*	GetTarget() const { return STRING( pev->target ); }
+	const char*	GetMessage() const { return STRING( pev->message ); }
+	const char*	GetNetname() const { return STRING( pev->netname ); }
+	const char*	GetModel() const { return STRING( pev->model ); }
 	void		SetModel( const char *model );
 	void		ReportInfo( void );
 
