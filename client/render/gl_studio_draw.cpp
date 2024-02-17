@@ -2079,6 +2079,10 @@ void CStudioModelRenderer::StudioDrawBodyPartsBBox()
 {
 	mbodypart_s* bodyparts;
 
+	// looks ugly, skip
+	if( RI->currententity == GET_VIEWMODEL( ))
+		return;
+
 	if (m_pModelInstance->m_FlCache != NULL)
 		bodyparts = m_pModelInstance->m_FlCache->bodyparts;
 	else if (m_pModelInstance->m_VlCache != NULL)
