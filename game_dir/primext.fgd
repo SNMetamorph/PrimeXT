@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 21 October 2023)
+// PrimeXT FGD (last updated 18 February 2024)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -1564,6 +1564,7 @@
 [
 	target(target_destination) : "Target on Break"
 	model(studio) : "Model" : "models/box.mdl"
+	scale(string) : "Scale (1.0 = normal size)" : "1.0"
 	health(integer) : "Strength" : 25
 	material(choices) :"Material type" : 0 =
 	[
