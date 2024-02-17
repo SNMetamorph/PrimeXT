@@ -808,10 +808,7 @@ PxTriangleMesh *CPhysicPhysX::TriangleMeshFromStudio(entvars_t *pev, int modelin
 
 	pbone = (mstudiobone_t *)((byte *)phdr + phdr->boneindex);
 	matrix4x4 transform, bonematrix, bonetransform[MAXSTUDIOBONES];
-
-	if (pev->startpos != g_vecZero)
-		transform = matrix3x4(g_vecZero, g_vecZero, pev->startpos);
-	else transform.Identity();
+	transform.Identity();
 
 	// compute bones for default anim
 	for (int i = 0; i < phdr->numbones; i++)
