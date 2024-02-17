@@ -209,6 +209,7 @@ void Physic_SweepTest(cl_entity_t *pTouch, const Vector &start, const Vector &mi
 		return;
 	}
 
+	Vector scale = Vector(1.f, 1.f, 1.f);
 	Vector trace_mins, trace_maxs, bounds[2];
 	UTIL_MoveBounds(start, mins, maxs, end, trace_mins, trace_maxs);
 
@@ -244,10 +245,19 @@ void Physic_SweepTest(cl_entity_t *pTouch, const Vector &start, const Vector &mi
 		return;
 	}
 
-	TraceMesh	trm;	// a name like Doom3 :-)
+	TraceMesh trm;	// a name like Doom3 :-)
+	if (FBitSet(RI->currententity->curstate.iuser1, CF_STATIC_ENTITY)) 
+	{
+		if (RI->currententity->curstate.startpos != g_vecZero) {
+			scale = pev->startpos;
+		}
+	}
+	else {
+		scale = Vector(pev->scale);
+	}
 
 	trm.SetTraceMesh(pMesh, pHeadNode, pTouch->curstate.modelindex);
-	trm.SetMeshOrientation(pev->origin, pev->angles, pev->startpos);
+	trm.SetMeshOrientation(pev->origin, pev->angles, scale);
 	trm.SetupTrace(start, mins, maxs, end, tr);
 
 	if (trm.DoTrace())
