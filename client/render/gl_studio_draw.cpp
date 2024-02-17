@@ -115,6 +115,24 @@ int CStudioModelRenderer :: StudioGetBounds( CSolidEntry *entry, Vector bounds[2
 	return 1;
 }
 
+int CStudioModelRenderer::StudioGetBounds( CSolidEntry *entry, CBoundingBox &bounds )
+{
+	if( !entry || entry->m_bDrawType != DRAWTYPE_MESH )
+		return 0;
+
+	if( !entry->m_pParentEntity || entry->m_pParentEntity->modelhandle == INVALID_HANDLE )
+		return 0;
+
+	vbomesh_t *vbo = entry->m_pMesh;
+
+	if( !vbo || vbo->parentbone == 0xFF )
+		return 0;
+
+	CBoundingBox meshBounds = StudioGetMeshBounds(vbo);
+	bounds = meshBounds;
+	return 1;
+}
+
 /*
 ================
 StudioGetBounds
