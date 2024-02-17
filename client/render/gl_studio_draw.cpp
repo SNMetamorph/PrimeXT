@@ -145,7 +145,7 @@ Get world-space bounds for a given mesh, accounting all contained bones
 CBoundingBox CStudioModelRenderer::StudioGetMeshBounds(ModelInstance_t *inst, const vbomesh_t *mesh)
 {
 	Vector mins, maxs;
-	bool boneWeighting = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
+	bool boneWeighting = inst->m_pModel->poseToBone != nullptr;
 	const mposetobone_t	*m = inst->m_pModel->poseToBone;
 
 	ClearBounds(mins, maxs);
