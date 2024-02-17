@@ -39,6 +39,7 @@ cvar_t *r_overview;
 cvar_t *r_novis;
 cvar_t *r_nocull;
 cvar_t *r_lockpvs;
+cvar_t *r_lockfrustum;
 cvar_t *gl_hdr;
 cvar_t *r_tonemap;
 cvar_t *r_bloom;
@@ -138,6 +139,7 @@ void R_InitializeConVars()
 	r_novis = CVAR_GET_POINTER("r_novis");
 	r_nocull = CVAR_GET_POINTER("r_nocull");
 	r_lockpvs = CVAR_GET_POINTER("r_lockpvs");
+	r_lockfrustum = CVAR_GET_POINTER("r_lockfrustum");
 	r_wireframe = CVAR_GET_POINTER("gl_wireframe");
 	r_lightmap = CVAR_GET_POINTER("r_lightmap");
 	r_decals = CVAR_GET_POINTER("r_decals");

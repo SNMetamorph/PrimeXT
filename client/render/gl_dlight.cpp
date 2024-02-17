@@ -375,7 +375,8 @@ Calling only once per frame
 */
 void R_SetupLightProjection( CDynLight *pl )
 {
-	if( !pl->update )
+	const bool frustumLocked = CVAR_TO_BOOL(r_lockfrustum);
+	if (!pl->update || frustumLocked)
 	{
 		if( pl->type != LIGHT_DIRECTIONAL )
 		{
