@@ -12,6 +12,7 @@
 #endif
 
 #include "utlarray.h"
+#include "ehandle.h"
 #include <stdint.h>
 
 // SINGLE_INHERITANCE restricts the size of CBaseEntity pointers-to-member-functions to 4 bytes
@@ -43,7 +44,7 @@ DECLARE_FIELD_SIZE( FIELD_FLOAT,		sizeof(float))
 DECLARE_FIELD_SIZE( FIELD_STRING,		sizeof(int32_t))
 DECLARE_FIELD_SIZE( FIELD_ENTITY,		sizeof(int32_t))
 DECLARE_FIELD_SIZE( FIELD_CLASSPTR,		sizeof(void*))
-DECLARE_FIELD_SIZE( FIELD_EHANDLE,		sizeof(int32_t))
+DECLARE_FIELD_SIZE( FIELD_EHANDLE,		sizeof(EHANDLE))
 DECLARE_FIELD_SIZE( FIELD_EVARS,		sizeof(int32_t))
 DECLARE_FIELD_SIZE( FIELD_EDICT,		sizeof(int32_t))
 DECLARE_FIELD_SIZE( FIELD_VECTOR,		3 * sizeof(float))
