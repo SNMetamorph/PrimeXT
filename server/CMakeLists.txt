@@ -55,6 +55,7 @@ list(APPEND SVDLL_SOURCES
 	"doors.cpp"
 	"effects.cpp"
 	"egon.cpp"
+	"ehandle.cpp"
 	"explode.cpp"
 	"monsters/flyingmonster.cpp"
 	"func_break.cpp"
