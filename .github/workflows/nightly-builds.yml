@@ -115,6 +115,7 @@ jobs:
       - name: Prepare artifacts
         shell: bash
         run: |
+          ls -l build/
           mkdir artifacts/
           mkdir -p publish/primext/bin
           mkdir -p publish/primext/devkit
