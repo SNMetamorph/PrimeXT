@@ -979,23 +979,23 @@ bool CMeshDesc::StudioSaveCache()
 	std::vector<clipfile::CacheEntry> cacheEntries;
 
 	GetCacheFilePath(filePath);
-	fs::FileHandle cacheFile = fs::Open(filePath, "a+b");
-	if (!cacheFile) {
+	fs::File cacheFile(filePath, "a+b");
+	if (!cacheFile.IsOpen()) {
 		// msg
 		return false;
 	}
 
-	fs::Seek(cacheFile, 0, fs::SeekType::Set);
-	fs::Read(&fileHeader, sizeof(fileHeader), cacheFile);
-	fs::Seek(cacheFile, fileHeader.tableOffset, fs::SeekType::Set);
-	fs::Read(&entriesCount, sizeof(entriesCount), cacheFile);
+	cacheFile.Seek(0, fs::SeekType::Set);
+	cacheFile.Read(&fileHeader, sizeof(fileHeader));
+	cacheFile.Seek(fileHeader.tableOffset, fs::SeekType::Set);
+	cacheFile.Read(&entriesCount, sizeof(entriesCount));
 
 	// store all entries in local buffer
 	cacheEntries.reserve(entriesCount);
 	for (size_t i = 0; i < entriesCount; i++)
 	{
 		clipfile::CacheEntry &entry = cacheEntries.emplace_back();
-		fs::Read(&entry, sizeof(entry), cacheFile);
+		cacheFile.Read(&entry, sizeof(entry));
 	}
 
 	std::vector<clipfile::Facet> facets;
@@ -1035,55 +1035,55 @@ bool CMeshDesc::StudioSaveCache()
 	}
 
 	// goto end of file
-	fs::Seek(cacheFile, 0, fs::SeekType::End);
+	cacheFile.Seek(0, fs::SeekType::End);
 
 	// add new data entry to list
 	auto &currentEntry = cacheEntries.emplace_back();
 	currentEntry.body = m_iBodyNumber;
 	currentEntry.skin = m_iSkinNumber;
 	currentEntry.geometryType = m_iGeometryType;
-	currentEntry.dataOffset = fs::Tell(cacheFile);
+	currentEntry.dataOffset = cacheFile.Tell();
 	
 	// write lumps 
-	fs::Write(&data, sizeof(data), cacheFile);
+	cacheFile.Write(&data, sizeof(data));
 
 	lump = &data.lumps[clipfile::kDataLumpFacets];
-	lump->fileofs = fs::Tell(cacheFile);
+	lump->fileofs = cacheFile.Tell();
 	lump->filelen = sizeof(clipfile::Facet) * m_mesh.numfacets;
-	fs::Write(out_facets, AlignTo<size_t, 4>(lump->filelen), cacheFile);
+	cacheFile.Write(out_facets, AlignTo<size_t, 4>(lump->filelen));
 
 	lump = &data.lumps[clipfile::kDataLumpPlanes];
-	lump->fileofs = fs::Tell(cacheFile);
+	lump->fileofs = cacheFile.Tell();
 	lump->filelen = sizeof(clipfile::Plane) * m_mesh.numplanes;
-	fs::Write(out_planes, AlignTo<size_t, 4>(lump->filelen), cacheFile);
+	cacheFile.Write(out_planes, AlignTo<size_t, 4>(lump->filelen));
 
 	lump = &data.lumps[clipfile::kDataLumpPlaneIndexes];
-	lump->fileofs = fs::Tell(cacheFile);
+	lump->fileofs = cacheFile.Tell();
 	lump->filelen = sizeof(uint32_t) * m_iTotalPlanes;
-	fs::Write(m_srcPlaneElems, AlignTo<size_t, 4>(lump->filelen), cacheFile);
+	cacheFile.Write(m_srcPlaneElems, AlignTo<size_t, 4>(lump->filelen));
 
-	currentEntry.dataLength = fs::Tell(cacheFile) - currentEntry.dataOffset;
+	currentEntry.dataLength = cacheFile.Tell() - currentEntry.dataOffset;
 
 	// write cache table back to file
-	fileHeader.tableOffset = fs::Tell(cacheFile);
+	fileHeader.tableOffset = cacheFile.Tell();
 	entriesCount += 1;
-	fs::Write(&entriesCount, sizeof(entriesCount), cacheFile);
+	cacheFile.Write(&entriesCount, sizeof(entriesCount));
 
 	for (size_t i = 0; i < cacheEntries.size(); i++) {
 		clipfile::CacheEntry &entry = cacheEntries[i];
-		fs::Write(&entry, sizeof(entry), cacheFile);
+		cacheFile.Write(&entry, sizeof(entry));
 	}
-	fs::Close(cacheFile);
+	cacheFile.Close();
 
 	// update file header
-	cacheFile = fs::Open(filePath, "r+b");
-	fs::Seek(cacheFile, 0, fs::SeekType::Set);
-	fs::Write(&fileHeader, sizeof(fileHeader), cacheFile);
+	cacheFile.Open(filePath, "r+b");
+	cacheFile.Seek(0, fs::SeekType::Set);
+	cacheFile.Write(&fileHeader, sizeof(fileHeader));
 
 	// update lumps
-	fs::Seek(cacheFile, currentEntry.dataOffset, fs::SeekType::Set);
-	fs::Write(&data, sizeof(data), cacheFile);
-	fs::Close(cacheFile);
+	cacheFile.Seek(currentEntry.dataOffset, fs::SeekType::Set);
+	cacheFile.Write(&data, sizeof(data));
+	cacheFile.Close();
 
 	return true;
 }
@@ -1640,27 +1640,27 @@ bool CMeshDesc::PresentInCache() const
 	fileName.erase(fileName.find_last_of("."));
 
 	fs::Path filePath = "cache/" + fileName + ".clip";
-	fs::FileHandle cacheFile = fs::Open(filePath, "rb");
-	if (!fs::FileExists(filePath) || !cacheFile) {
+	fs::File cacheFile(filePath, "rb");
+	if (!fs::FileExists(filePath) || !cacheFile.IsOpen()) {
 		return false;
 	}
 
 	// read header
-	fs::Read(&hdr, sizeof(hdr), cacheFile);
+	cacheFile.Read(&hdr, sizeof(hdr));
 
 	// read cache entries table
 	uint32_t entriesCount;
-	fs::Seek(cacheFile, hdr.tableOffset, fs::SeekType::Set);
-	fs::Read(&entriesCount, sizeof(entriesCount), cacheFile);
+	cacheFile.Seek(hdr.tableOffset, fs::SeekType::Set);
+	cacheFile.Read(&entriesCount, sizeof(entriesCount));
 
 	// read cache entries list
 	entriesList.reserve(entriesCount);
 	for (size_t i = 0; i < entriesCount; i++)
 	{
 		auto &entry = entriesList.emplace_back();
-		fs::Read(&entry, sizeof(table.entries), cacheFile);
+		cacheFile.Read(&entry, sizeof(table.entries));
 	}
-	fs::Close(cacheFile);
+	cacheFile.Close();
 
 	for (size_t i = 0; i < entriesCount; i++)
 	{

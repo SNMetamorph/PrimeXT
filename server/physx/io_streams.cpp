@@ -26,15 +26,15 @@ UserStream::UserStream(const char *filePath, bool precacheToMemory)
 {
 	m_offset = 0;
 	m_fileCached = precacheToMemory;
-	m_fileHandle = nullptr;
+	m_outputFile = {};
 
 	if (m_fileCached) {
 		fs::LoadFileToBuffer(filePath, m_dataBuffer);
 	}
 	else
 	{
-		m_fileHandle = fs::Open(filePath, "wb");
-		ASSERT(m_fileHandle != nullptr);
+		m_outputFile.Open(filePath, "wb");
+		ASSERT(m_outputFile.IsOpen());
 	}
 }
 
@@ -47,10 +47,9 @@ UserStream::~UserStream()
 	}
 	else
 	{
-		if (m_fileHandle) {
-			fs::Close(m_fileHandle);
+		if (m_outputFile.IsOpen()) {
+			m_outputFile.Close();
 		}
-		m_fileHandle = nullptr;
 	}
 }
 
@@ -93,8 +92,8 @@ uint32_t UserStream::read(void *outputBuf, uint32_t size)
 
 uint32_t UserStream::write(const void *inputBuf, uint32_t size)
 {
-	ASSERT(m_fileHandle != nullptr);
-	return fs::Write(const_cast<void*>(inputBuf), size, m_fileHandle);
+	ASSERT(m_outputFile.IsOpen());
+	return m_outputFile.Write(const_cast<void*>(inputBuf), size);
 }
 
 MemoryWriteBuffer::MemoryWriteBuffer()

@@ -29,19 +29,40 @@ namespace fs
 		End
 	};
 
+	class File
+	{
+	public:
+		File();
+		~File();
+		File(const Path &filePath, const char *mode);
+
+		// move semantics
+		File(File&& other);
+		File& operator=(File&& other);
+
+		// restrict copying, because class holds resource
+		File(const File&) = delete;
+		File& operator=(const File&) = delete;
+
+		bool Open(const Path &filePath, const char *mode);
+		void Close();
+		void Seek(int32_t offset, SeekType type);
+		void Flush();
+		int32_t Tell();
+		int32_t Size();
+		bool EndOfFile();
+		bool IsOpen();
+		int32_t Read(void *buffer, int32_t size);
+		int32_t Write(void *buffer, int32_t size);
+		const char *ReadLine(char *buffer, int32_t size);
+
+	private:
+		FileHandle m_handle;
+	};
+
 	bool Initialize();
 	bool FileExists(const Path &filePath);
 	void RemoveFile(const Path &filePath);
 	bool IsDirectory(const Path &filePath);
-	FileHandle Open(const Path &filePath, const char *mode);
-	void Close(FileHandle fileHandle);
-	void Seek(FileHandle fileHandle, int32_t offset, SeekType type);
-	void Flush(FileHandle fileHandle);
-	int32_t Tell(FileHandle fileHandle);
-	int32_t Size(FileHandle fileHandle);
-	bool EndOfFile(FileHandle fileHandle);
-	int32_t Read(void *buffer, int32_t size, FileHandle fileHandle);
-	int32_t Write(void *buffer, int32_t size, FileHandle fileHandle);
-	const char *ReadLine(char *buffer, int32_t size, FileHandle fileHandle);
 	bool LoadFileToBuffer(const Path &filePath, std::vector<uint8_t> &dataBuffer);
 }

@@ -18,6 +18,133 @@ GNU General Public License for more details.
 
 static fs::CFilesystemManager g_FileSystemManager;
 
+fs::File::File() :
+	m_handle(nullptr)
+{
+}
+
+fs::File::~File()
+{
+	if (m_handle) {
+		g_FileSystemManager.GetInterface()->Close(m_handle);
+	}
+}
+
+fs::File::File(const Path &filePath, const char *mode)
+{
+	m_handle = g_FileSystemManager.GetInterface()->Open(filePath.string().c_str(), mode, "GAME");
+}
+
+fs::File::File(File &&other)
+{
+	m_handle = other.m_handle;
+	other.m_handle = nullptr;
+}
+
+fs::File& fs::File::operator=(File &&other)
+{
+	m_handle = other.m_handle;
+	other.m_handle = nullptr;
+	return *this;
+}
+
+bool fs::File::Open(const Path &filePath, const char *mode)
+{
+	m_handle = g_FileSystemManager.GetInterface()->Open(filePath.string().c_str(), mode, "GAME");
+	return (m_handle != nullptr) ? true : false;
+}
+
+void fs::File::Close()
+{
+	if (m_handle) 
+	{
+		g_FileSystemManager.GetInterface()->Close(m_handle);
+		m_handle = nullptr;
+	}
+}
+
+void fs::File::Seek(int32_t offset, SeekType type)
+{
+	if (!m_handle)
+		return;
+
+	FileSystemSeek_t seekType;
+	switch (type)
+	{
+		case fs::SeekType::Set:
+			seekType = FILESYSTEM_SEEK_HEAD;
+			break;
+		case fs::SeekType::Current:
+			seekType = FILESYSTEM_SEEK_CURRENT;
+			break;
+		default:
+			seekType = FILESYSTEM_SEEK_TAIL;
+			break;
+	}
+	g_FileSystemManager.GetInterface()->Seek(m_handle, offset, seekType);
+}
+
+void fs::File::Flush()
+{
+	if (!m_handle)
+		return;
+
+	g_FileSystemManager.GetInterface()->Flush(m_handle);
+}
+
+int32_t fs::File::Tell()
+{
+	if (!m_handle)
+		return 0;
+
+	return g_FileSystemManager.GetInterface()->Tell(m_handle);
+}
+
+int32_t fs::File::Size()
+{
+	if (!m_handle)
+		return 0;
+
+	return g_FileSystemManager.GetInterface()->Size(m_handle);
+}
+
+bool fs::File::EndOfFile()
+{
+	if (!m_handle)
+		return true;
+
+	return g_FileSystemManager.GetInterface()->EndOfFile(m_handle);
+}
+
+bool fs::File::IsOpen()
+{
+	return (m_handle != nullptr) ? true : false;
+}
+
+int32_t fs::File::Read(void *buffer, int32_t size)
+{
+	if (!m_handle)
+		return 0;
+
+	return g_FileSystemManager.GetInterface()->Read(buffer, size, m_handle);
+}
+
+int32_t fs::File::Write(void *buffer, int32_t size)
+{
+	if (!m_handle)
+		return 0;
+
+	return g_FileSystemManager.GetInterface()->Write(buffer, size, m_handle);
+}
+
+const char *fs::File::ReadLine(char *buffer, int32_t size)
+{
+	if (!m_handle)
+		return nullptr;
+
+	return g_FileSystemManager.GetInterface()->ReadLine(buffer, size, m_handle);
+}
+
 bool fs::Initialize()
 {
 	return g_FileSystemManager.Initialize();
@@ -36,69 +163,6 @@ void fs::RemoveFile(const Path &filePath)
 bool fs::IsDirectory(const Path &filePath)
 {
 	return g_FileSystemManager.GetInterface()->IsDirectory(filePath.string().c_str());
-}
-
-fs::FileHandle fs::Open(const Path &filePath, const char *mode)
-{
-	return g_FileSystemManager.GetInterface()->Open(filePath.string().c_str(), mode, "GAME");
-}
-
-void fs::Close(FileHandle fileHandle)
-{
-	g_FileSystemManager.GetInterface()->Close(fileHandle);
-}
-
-void fs::Seek(FileHandle fileHandle, int32_t offset, SeekType type)
-{
-	FileSystemSeek_t seekType;
-	switch (type)
-	{
-		case fs::SeekType::Set:
-			seekType = FILESYSTEM_SEEK_HEAD;
-			break;
-		case fs::SeekType::Current:
-			seekType = FILESYSTEM_SEEK_CURRENT;
-			break;
-		case fs::SeekType::End:
-			seekType = FILESYSTEM_SEEK_TAIL;
-			break;
-	}
-	g_FileSystemManager.GetInterface()->Seek(fileHandle, offset, seekType);
-}
-
-void fs::Flush(FileHandle fileHandle)
-{
-	g_FileSystemManager.GetInterface()->Flush(fileHandle);
-}
-
-int32_t fs::Tell(FileHandle fileHandle)
-{
-	return g_FileSystemManager.GetInterface()->Tell(fileHandle);
-}
-
-int32_t fs::Size(FileHandle fileHandle)
-{
-	return g_FileSystemManager.GetInterface()->Size(fileHandle);
-}
-
-bool fs::EndOfFile(FileHandle fileHandle)
-{
-	return g_FileSystemManager.GetInterface()->EndOfFile(fileHandle);
-}
-
-int32_t fs::Read(void *buffer, int32_t size, FileHandle fileHandle)
-{
-	return g_FileSystemManager.GetInterface()->Read(buffer, size, fileHandle);
-}
-
-int32_t fs::Write(void *buffer, int32_t size, FileHandle fileHandle)
-{
-	return g_FileSystemManager.GetInterface()->Write(buffer, size, fileHandle);
-}
-
-const char *fs::ReadLine(char *buffer, int32_t size, FileHandle fileHandle)
-{
-	return g_FileSystemManager.GetInterface()->ReadLine(buffer, size, fileHandle);
 }
 
 bool fs::LoadFileToBuffer(const Path &filePath, std::vector<uint8_t> &dataBuffer)

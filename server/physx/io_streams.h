@@ -34,7 +34,7 @@ private:
 	bool m_fileCached;
 	size_t m_offset;
 	std::vector<uint8_t> m_dataBuffer;
-	fs::FileHandle m_fileHandle;
+	fs::File m_outputFile;
 };
 
 class MemoryWriteBuffer : public physx::PxOutputStream
