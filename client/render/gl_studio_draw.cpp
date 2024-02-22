@@ -2079,7 +2079,7 @@ void CStudioModelRenderer :: StudioDrawAttachments( bool bCustomFov )
 
 void CStudioModelRenderer::StudioDrawBodyPartsBBox()
 {
-	mbodypart_s* bodyparts;
+	mbodypart_t *bodyparts;
 
 	// looks ugly, skip
 	if( RI->currententity == GET_VIEWMODEL( ))
@@ -2386,7 +2386,7 @@ AddBodyPartToDrawList
 
 ====================
 */
-void CStudioModelRenderer :: AddBodyPartToDrawList( studiohdr_t *phdr, mbodypart_s *bodyparts, int bodypart, bool lightpass )
+void CStudioModelRenderer :: AddBodyPartToDrawList( studiohdr_t *phdr, mbodypart_t *bodyparts, int bodypart, bool lightpass )
 {
 	if( !bodyparts ) bodyparts = RI->currentmodel->studiocache->bodyparts;
 	if( !bodyparts ) HOST_ERROR( "%s missed cache\n", RI->currententity->model->name );

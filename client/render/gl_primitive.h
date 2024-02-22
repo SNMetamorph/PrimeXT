@@ -31,7 +31,7 @@ class CSolidEntry
 public:
 	void SetRenderPrimitive( const Vector verts[4], const Vector4D &color, TextureHandle texture, int rendermode );
 	void SetRenderSurface( msurface_t *surface, word hProgram );
-	void SetRenderMesh( struct vbomesh_s *mesh, word hProgram );
+	void SetRenderMesh( struct vbomesh_t *mesh, word hProgram );
 	virtual bool IsTranslucent( void ) { return false; }
 	int GetType( void ) { return m_bDrawType; }
 
@@ -54,7 +54,7 @@ public:
 
 	union
 	{
-		struct vbomesh_s	*m_pMesh;		// NULL or mesh
+		struct vbomesh_t	*m_pMesh;		// NULL or mesh
 		msurface_t	*m_pSurf;		// NULL or surface
 		int		m_iColor;		// primitive color
 	};

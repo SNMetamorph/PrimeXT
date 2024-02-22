@@ -13,9 +13,9 @@ USER-DEFINED DATA
 ===========================
 */
 // this struct may be expaned by user request
-typedef struct vbomesh_s
+struct vbomesh_t
 {
-	vbomesh_s() :
+	vbomesh_t() :
 		skinref(0), 
 		numVerts(0), 
 		numElems(0),
@@ -37,9 +37,9 @@ typedef struct vbomesh_s
 	int		parentbone;					// parent bone to transform AABB
 	unsigned short	uniqueID;			// to reject decal drawing
 	unsigned int	cacheSize;			// debug info: uploaded cache size for this buffer
-} vbomesh_t;
+};
 
-typedef struct mstudiosurface_s
+struct mstudiosurface_t
 {
 	int		flags;			// match with msurface_t->flags
 	int		texture_step;
@@ -55,23 +55,23 @@ typedef struct mstudiosurface_s
 	color24		*samples;		// note: this is the actual lightmap data for this surface
 	color24		*normals;		// note: this is the actual deluxemap data for this surface
 	byte		*shadows;		// note: occlusion map for this surface
-} mstudiosurface_t;
+};
 	
-typedef struct
+struct msubmodel_t
 {
 	vbomesh_t		*meshes;			// meshes per submodel
 	int		nummesh;			// mstudiomodel_t->nummesh
-} msubmodel_t;
+};
 
 // triangles
-typedef struct mbodypart_s
+struct mbodypart_t
 {
 	int		base;			// mstudiobodyparts_t->base
 	msubmodel_t	*models[MAXSTUDIOBODYPARTS];	// submodels per body part
 	int		nummodels;		// mstudiobodyparts_t->nummodels
-} mbodypart_t;
+};
 
-typedef struct mvbocache_s
+struct mstudiocache_t
 {
 	mstudiosurface_t	*surfaces;
 	int		numsurfaces;
@@ -80,9 +80,9 @@ typedef struct mvbocache_s
 	int		numbodyparts;
 
 	bool		update_light;		// gamma or brightness was changed so we need to reload lightmaps
-} mstudiocache_t;
+};
 
-typedef struct mposebone_s
+struct mposetobone_t
 {
 	matrix3x4		posetobone[MAXSTUDIOBONES];
-} mposetobone_t;
+};

@@ -447,13 +447,13 @@ typedef struct model_s
 	union
 	{
 	byte		*visdata;
-	struct mposebone_s	*poseToBone;
+	struct mposetobone_t *poseToBone;
 	};
 
 	union
 	{
 	color24		*lightdata;
-	struct mvbocache_s	*studiocache;	// pointer to VBO-prepared model (only for mod_studio)
+	struct mstudiocache_t *studiocache;	// pointer to VBO-prepared model (only for mod_studio)
 	};
 
 	union
