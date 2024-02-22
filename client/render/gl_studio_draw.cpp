@@ -1710,7 +1710,7 @@ void CStudioModelRenderer :: CacheSurfaceLight( cl_entity_t *ent )
 		{
 			if( m_pModelInstance->m_FlCache && m_pModelInstance->m_FlCache->update_light )
 			{
-				for( int j = 0; j < m_pModelInstance->m_FlCache->numsurfaces; j++ )
+				for( int j = 0; j < m_pModelInstance->m_FlCache->surfaces.size(); j++ )
 				{
 					mstudiosurface_t *surf = &m_pModelInstance->m_FlCache->surfaces[j];
 					R_UpdateSurfaceParams( surf );
@@ -2086,11 +2086,11 @@ void CStudioModelRenderer::StudioDrawBodyPartsBBox()
 		return;
 
 	if (m_pModelInstance->m_FlCache != NULL)
-		bodyparts = m_pModelInstance->m_FlCache->bodyparts;
+		bodyparts = &m_pModelInstance->m_FlCache->bodyparts.front();
 	else if (m_pModelInstance->m_VlCache != NULL)
-		bodyparts = m_pModelInstance->m_VlCache->bodyparts;
+		bodyparts = &m_pModelInstance->m_VlCache->bodyparts.front();
 	else
-		bodyparts = RI->currentmodel->studiocache->bodyparts;
+		bodyparts = &RI->currentmodel->studiocache->bodyparts.front();
 
 	if (!bodyparts) {
 		HOST_ERROR("%s missed cache\n", RI->currententity->model->name);
@@ -2101,13 +2101,13 @@ void CStudioModelRenderer::StudioDrawBodyPartsBBox()
 	{
 		mbodypart_t* pBodyPart = &bodyparts[i];
 		int index = RI->currententity->curstate.body / pBodyPart->base;
-		index = index % pBodyPart->nummodels;
+		index = index % pBodyPart->models.size();
 
 		msubmodel_t* pSubModel = pBodyPart->models[index];
 		if (!pSubModel) 
 			continue; // blank submodel, just ignore
 
-		for (int j = 0; j < pSubModel->nummesh; j++)
+		for (int j = 0; j < pSubModel->meshes.size(); j++)
 		{
 			Vector p[8];
 			vbomesh_t *mesh = &pSubModel->meshes[j];
@@ -2388,18 +2388,18 @@ AddBodyPartToDrawList
 */
 void CStudioModelRenderer :: AddBodyPartToDrawList( studiohdr_t *phdr, mbodypart_t *bodyparts, int bodypart, bool lightpass )
 {
-	if( !bodyparts ) bodyparts = RI->currentmodel->studiocache->bodyparts;
+	if( !bodyparts ) bodyparts = &RI->currentmodel->studiocache->bodyparts.front();
 	if( !bodyparts ) HOST_ERROR( "%s missed cache\n", RI->currententity->model->name );
 
 	bodypart = bound( 0, bodypart, phdr->numbodyparts );
 	mbodypart_t *pBodyPart = &bodyparts[bodypart];
 	int index = RI->currententity->curstate.body / pBodyPart->base;
-	index = index % pBodyPart->nummodels;
+	index = index % pBodyPart->models.size();
 
 	msubmodel_t *pSubModel = pBodyPart->models[index];
 	if( !pSubModel ) return; // blank submodel, just ignore
 
-	for( int i = 0; i < pSubModel->nummesh; i++ )
+	for( int i = 0; i < pSubModel->meshes.size(); i++ )
 		AddMeshToDrawList( phdr, &pSubModel->meshes[i], lightpass );
 }
 
@@ -2555,9 +2555,9 @@ void CStudioModelRenderer :: AddStudioModelToDrawList( cl_entity_t *e, bool upda
 
 	// change shared model with instanced model for this entity (it has personal vertex light cache)
 	if( m_pModelInstance->m_FlCache != NULL )
-		pbodyparts = m_pModelInstance->m_FlCache->bodyparts;
+		pbodyparts = &m_pModelInstance->m_FlCache->bodyparts.front();
 	else if( m_pModelInstance->m_VlCache != NULL )
-		pbodyparts = m_pModelInstance->m_VlCache->bodyparts;
+		pbodyparts = &m_pModelInstance->m_VlCache->bodyparts.front();
 
 	for( int i = 0 ; i < m_pStudioHeader->numbodyparts; i++ )
 		AddBodyPartToDrawList( m_pStudioHeader, pbodyparts, i, ( RI->currentlight != NULL ));
@@ -4087,10 +4087,10 @@ void CStudioModelRenderer :: ClearLightCache( void )
 	{
 		mstudiocache_t *cache = tr.surface_light_cache[i];
 
-		if (!cache || cache->numsurfaces <= 0)
+		if (!cache || cache->surfaces.empty())
 			continue;
 
-		for (int j = 0; j < cache->numsurfaces; j++)
+		for (int j = 0; j < cache->surfaces.size(); j++)
 		{
 			mstudiosurface_t *surf = &cache->surfaces[j];
 			SetBits(surf->flags, SURF_LM_UPDATE | SURF_GRASS_UPDATE);

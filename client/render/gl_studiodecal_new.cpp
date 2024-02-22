@@ -120,7 +120,6 @@ void CStudioModelRenderer :: PurgeDecals( ModelInstance_t *inst )
 	for( int i = 0; i < inst->m_DecalList.Count(); i++ )
 	{
 		studiodecal_t *pDecal = &inst->m_DecalList[i];
-		DeleteVBOMesh( &pDecal->mesh );
 	}
 
 	// release himself
@@ -1451,7 +1450,6 @@ check_decals:
 
 			if( pDecal->depth == depth )
 			{
-				DeleteVBOMesh( &pDecal->mesh );
 				m_pModelInstance->m_DecalList.Remove( i );
 				goto check_decals;
 			}

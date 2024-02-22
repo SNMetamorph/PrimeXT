@@ -3,6 +3,7 @@
 #include "lightlimits.h"
 #include "mathlib.h"
 #include "bounding_box.h"
+#include <vector>
 #include <unordered_map>
 
 /*
@@ -26,6 +27,7 @@ struct vbomesh_t
 		parentbone(0),
 		uniqueID(0),
 		cacheSize(0) {};
+	~vbomesh_t();
 
 	unsigned int	skinref;			// skin reference
 	unsigned int	numVerts;			// trifan vertices count
@@ -41,6 +43,12 @@ struct vbomesh_t
 
 struct mstudiosurface_t
 {
+	mstudiosurface_t() 
+	{
+		// remove this in case some non-PoD members added to this struct
+		memset(this, 0, sizeof(mstudiosurface_t)); 
+	};
+
 	int		flags;			// match with msurface_t->flags
 	int		texture_step;
 
@@ -59,27 +67,26 @@ struct mstudiosurface_t
 	
 struct msubmodel_t
 {
-	vbomesh_t		*meshes;			// meshes per submodel
-	int		nummesh;			// mstudiomodel_t->nummesh
+	std::vector<vbomesh_t> meshes;		// meshes per submodel
 };
 
 // triangles
 struct mbodypart_t
 {
-	int		base;			// mstudiobodyparts_t->base
-	msubmodel_t	*models[MAXSTUDIOBODYPARTS];	// submodels per body part
-	int		nummodels;		// mstudiobodyparts_t->nummodels
+	mbodypart_t() : base(0) {};
+
+	int	base;							// mstudiobodyparts_t->base
+	std::vector<msubmodel_t*> models;	// submodels per body part 
 };
 
 struct mstudiocache_t
 {
-	mstudiosurface_t	*surfaces;
-	int		numsurfaces;
+	mstudiocache_t() : update_light(false) {};
 
-	mbodypart_t	*bodyparts;
-	int		numbodyparts;
-
-	bool		update_light;		// gamma or brightness was changed so we need to reload lightmaps
+	std::vector<mstudiosurface_t> surfaces;
+	std::vector<mbodypart_t> bodyparts;
+	std::vector<msubmodel_t> submodels;
+	bool update_light;		// gamma or brightness was changed so we need to reload lightmaps
 };
 
 struct mposetobone_t

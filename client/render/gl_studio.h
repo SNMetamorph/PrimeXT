@@ -232,8 +232,6 @@ private:
 
 	void DrawMeshFromBuffer( const vbomesh_t *mesh );
 
-	void DeleteVBOMesh( vbomesh_t *mesh );
-
 	// Process studio client events
 	void StudioClientEvents( void );
 
