@@ -158,6 +158,13 @@ static void COM_PrecacheMatdefSounds(matdef_t *mat)
 #endif
 }
 
+void COM_PrecacheMaterialsSounds()
+{
+	for (int i = 0; i < com_matcount; i++) {
+		COM_PrecacheMatdefSounds(com_matdef + i);
+	}
+}
+
 void COM_InitMatdef()
 {
 	ALERT( at_aiconsole, "loading materials.def\n" );
@@ -305,8 +312,6 @@ void COM_InitMatdef()
 			}
 			else ALERT( at_warning, "Unknown material token %s\n", token );
 		}
-
-		COM_PrecacheMatdefSounds(mat);
 	}
 getout:
 	FREE_FILE( afile );

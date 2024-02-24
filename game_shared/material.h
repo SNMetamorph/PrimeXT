@@ -60,6 +60,7 @@ struct matdesc_t
 matdef_t *COM_MatDefFromSurface(msurface_t *surf, const Vector &pointOnSurf);
 matdef_t *COM_FindMatdef(const char *name);
 matdef_t *COM_DefaultMatdef();
+void COM_PrecacheMaterialsSounds();
 void COM_InitMatdef();
 
 // matdesc is visual properties description
