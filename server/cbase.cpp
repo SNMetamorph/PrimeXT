@@ -437,7 +437,7 @@ Vector CBaseEntity::GetScale() const
 			return pev->startpos;
 		}
 	}
-	return vec3_t(pev->scale);
+	return pev->scale > 0.001f ? vec3_t(pev->scale) : vec3_t(1.0f);
 }
 
 void CBaseEntity::ApplyLocalVelocityImpulse( const Vector &vecImpulse )
