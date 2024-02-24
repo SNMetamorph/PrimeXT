@@ -19,6 +19,7 @@
 #include "cbase.h"
 #include "client.h"
 #include "user_messages.h"
+#include "sv_materials.h"
 
 cvar_t	displaysoundlist = {"displaysoundlist","0"};
 
@@ -946,6 +947,10 @@ void GameDLLInit( void )
 
 	WorldPhysic->InitPhysic();	// initialize physic world
 	LinkUserMessages();			// yes in the Xash3D we can register messages here
+
+	// initialize material system
+	COM_InitMatdef();
+	SV_InitMaterials();
 }
 
 void GameDLLShutdown( void )
