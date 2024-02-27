@@ -27,37 +27,50 @@ class CDatamapFieldSizeDeducer
 public:
 	enum
 	{
-		SIZE = 0
+		SIZE = 0,
+		INPUT_SIZE = 1
 	};
 
-	static int FieldSize( )
+	static int FieldSize()
+	{
+		return 0;
+	}
+
+	static int FieldInputSize()
 	{
 		return 0;
 	}
 };
 
-#define DECLARE_FIELD_SIZE( _fieldType, _fieldSize )	\
-	template< > class CDatamapFieldSizeDeducer<_fieldType> { public: enum { SIZE = _fieldSize }; static int FieldSize() { return _fieldSize; }};
-#define FIELD_SIZE( _fieldType )		CDatamapFieldSizeDeducer<_fieldType>::SIZE
+#define DECLARE_FIELD_SIZE( _fieldType, _fieldSize, _fieldInputSize ) \
+	template< > class CDatamapFieldSizeDeducer<_fieldType> { \
+		public: \
+		enum { SIZE = _fieldSize, INPUT_SIZE = _fieldInputSize }; \
+		static int FieldSize() { return _fieldSize; } \
+		static int FieldInputSize() { return _fieldInputSize; } \
+	};
 
-DECLARE_FIELD_SIZE( FIELD_FLOAT,		sizeof(float))
-DECLARE_FIELD_SIZE( FIELD_STRING,		sizeof(int32_t))
-DECLARE_FIELD_SIZE( FIELD_ENTITY,		sizeof(int32_t))
-DECLARE_FIELD_SIZE( FIELD_CLASSPTR,		sizeof(void*))
-DECLARE_FIELD_SIZE( FIELD_EHANDLE,		sizeof(EHANDLE))
-DECLARE_FIELD_SIZE( FIELD_EVARS,		sizeof(int32_t))
-DECLARE_FIELD_SIZE( FIELD_EDICT,		sizeof(int32_t))
-DECLARE_FIELD_SIZE( FIELD_VECTOR,		3 * sizeof(float))
-DECLARE_FIELD_SIZE( FIELD_POSITION_VECTOR, 	3 * sizeof(float))
-DECLARE_FIELD_SIZE( FIELD_POINTER,		sizeof(void *))
-DECLARE_FIELD_SIZE( FIELD_INTEGER,		sizeof(int32_t))
-DECLARE_FIELD_SIZE( FIELD_FUNCTION,		sizeof(void *))
-DECLARE_FIELD_SIZE( FIELD_BOOLEAN,		sizeof(int8_t))
-DECLARE_FIELD_SIZE( FIELD_SHORT,		sizeof(int16_t))
-DECLARE_FIELD_SIZE( FIELD_CHARACTER,		sizeof(int8_t))
-DECLARE_FIELD_SIZE( FIELD_TIME,		sizeof(float))
-DECLARE_FIELD_SIZE( FIELD_MODELNAME,		sizeof(int32_t))
-DECLARE_FIELD_SIZE( FIELD_SOUNDNAME,		sizeof(int32_t))
+#define FIELD_SIZE( _fieldType )		CDatamapFieldSizeDeducer<_fieldType>::SIZE
+#define FIELD_INPUT_SIZE( _fieldType )	CDatamapFieldSizeDeducer<_fieldType>::INPUT_SIZE
+
+DECLARE_FIELD_SIZE( FIELD_FLOAT,		sizeof(float),			sizeof(float) )
+DECLARE_FIELD_SIZE( FIELD_STRING,		sizeof(int),			sizeof(int) )
+DECLARE_FIELD_SIZE( FIELD_ENTITY,		sizeof(void *),			sizeof(int) )
+DECLARE_FIELD_SIZE( FIELD_CLASSPTR,		sizeof(void *),			sizeof(int) )
+DECLARE_FIELD_SIZE( FIELD_EHANDLE,		sizeof(EHANDLE),		sizeof(int) )
+DECLARE_FIELD_SIZE( FIELD_EVARS,		sizeof(void *),			sizeof(int) )
+DECLARE_FIELD_SIZE( FIELD_EDICT,		sizeof(void *),			sizeof(int) )
+DECLARE_FIELD_SIZE( FIELD_VECTOR,		3 * sizeof(float),		3 * sizeof(float) )
+DECLARE_FIELD_SIZE( FIELD_POSITION_VECTOR, 3 * sizeof(float),	3 * sizeof(float) )
+DECLARE_FIELD_SIZE( FIELD_POINTER,		sizeof(void *),			sizeof(void *) )
+DECLARE_FIELD_SIZE( FIELD_INTEGER,		sizeof(int),			sizeof(int) )
+DECLARE_FIELD_SIZE( FIELD_FUNCTION,		sizeof(void *),			sizeof(void *) )
+DECLARE_FIELD_SIZE( FIELD_BOOLEAN,		sizeof(int),			sizeof(int) )
+DECLARE_FIELD_SIZE( FIELD_SHORT,		sizeof(short),			sizeof(short) )
+DECLARE_FIELD_SIZE( FIELD_CHARACTER,	sizeof(char),			sizeof(char) )
+DECLARE_FIELD_SIZE( FIELD_TIME,			sizeof(float),			sizeof(float) )
+DECLARE_FIELD_SIZE( FIELD_MODELNAME,	sizeof(int),			sizeof(int) )
+DECLARE_FIELD_SIZE( FIELD_SOUNDNAME,	sizeof(int),			sizeof(int) )
 
 #define _FIELD(name, fieldtype, count, flags, mapname )		{ fieldtype, #name, offsetof(classNameTypedef, name), count, flags, mapname, NULL }
 #define _EFIELD(name, fieldtype, count, flags, mapname )		{ fieldtype, #name, offsetof(entvars_t, name), count, flags, mapname, NULL }

@@ -181,6 +181,29 @@ static int gSizes[FIELD_TYPECOUNT] =
 	FIELD_SIZE( FIELD_VOID ),
 };
 
+static int gInputSizes[FIELD_TYPECOUNT] = 
+{
+	FIELD_INPUT_SIZE( FIELD_FLOAT ),
+	FIELD_INPUT_SIZE( FIELD_STRING ),
+	FIELD_INPUT_SIZE( FIELD_ENTITY ),
+	FIELD_INPUT_SIZE( FIELD_CLASSPTR ),
+	FIELD_INPUT_SIZE( FIELD_EHANDLE ),
+	FIELD_INPUT_SIZE( FIELD_EVARS ),
+	FIELD_INPUT_SIZE( FIELD_EDICT ),
+	FIELD_INPUT_SIZE( FIELD_VECTOR ),
+	FIELD_INPUT_SIZE( FIELD_POSITION_VECTOR ),
+	FIELD_INPUT_SIZE( FIELD_POINTER ),
+	FIELD_INPUT_SIZE( FIELD_INTEGER ),
+	FIELD_INPUT_SIZE( FIELD_FUNCTION ),
+	FIELD_INPUT_SIZE( FIELD_BOOLEAN ),
+	FIELD_INPUT_SIZE( FIELD_SHORT ),
+	FIELD_INPUT_SIZE( FIELD_CHARACTER ),
+	FIELD_INPUT_SIZE( FIELD_TIME ),
+	FIELD_INPUT_SIZE( FIELD_MODELNAME ),
+	FIELD_INPUT_SIZE( FIELD_SOUNDNAME ),
+	FIELD_INPUT_SIZE( FIELD_VOID ),
+};
+
 // Base class includes common SAVERESTOREDATA pointer, and manages the entity table
 CSaveRestoreBuffer :: CSaveRestoreBuffer( void )
 {
@@ -855,7 +878,7 @@ int CRestore::ReadField( const void *pBaseData, DATAMAP *pMap, TYPEDESCRIPTION *
 				for ( j = 0; j < pTest->fieldSize; j++ )
 				{
 					void *pOutputData = ((char *)pBaseData + pTest->fieldOffset + (j*gSizes[pTest->fieldType]) );
-					void *pInputData = (char *)pData + j * gSizes[pTest->fieldType];
+					void *pInputData = (char *)pData + j * gInputSizes[pTest->fieldType];
 
 					switch( pTest->fieldType )
 					{
@@ -921,9 +944,6 @@ int CRestore::ReadField( const void *pBaseData, DATAMAP *pMap, TYPEDESCRIPTION *
 						*((edict_t **)pOutputData) = pent;
 						break;
 					case FIELD_EHANDLE:
-						// Input and Output sizes are different!
-						// EHANDLEs, as well as some other field types are stored as 32-bit integer entity index
-						pInputData = (char*)pData + j * sizeof(int32_t);
 						entityIndex = *( int *)pInputData;
 						pent = EntityFromIndex( entityIndex );
 						if ( pent )
