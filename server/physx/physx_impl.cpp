@@ -1706,6 +1706,7 @@ void *CPhysicPhysX :: RestoreBody( CBaseEntity *pEntity )
 	PxRigidActor *pActor;
 	PxTransform pose;
 	Vector angles = pEntity->GetAbsAngles();
+	PxMeshScale scale(pEntity->GetScale());
 
 	if (pEntity->m_iActorType == ACTOR_CHARACTER) {
 		angles = g_vecZero;	// no angles for NPC and client
@@ -1739,7 +1740,7 @@ void *CPhysicPhysX :: RestoreBody( CBaseEntity *pEntity )
 				return NULL;
 			}
 
-			pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxConvexMeshGeometry(convexMesh), *m_pDefaultMaterial);
+			pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxConvexMeshGeometry(convexMesh, scale), *m_pDefaultMaterial);
 			break;
 		}
 		case ACTOR_CHARACTER:
@@ -1762,7 +1763,7 @@ void *CPhysicPhysX :: RestoreBody( CBaseEntity *pEntity )
 			if (pEntity->pev->flags & FL_CONVEYOR) {
 				pMaterial = m_pConveyorMaterial;
 			}
-			pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxTriangleMeshGeometry(triangleMesh), *pMaterial);
+			pShape = PxRigidActorExt::createExclusiveShape(*pActor, PxTriangleMeshGeometry(triangleMesh, scale), *pMaterial);
 			break;
 		}
 		default:
