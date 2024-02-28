@@ -1730,6 +1730,13 @@ void *CPhysicPhysX :: RestoreBody( CBaseEntity *pEntity )
 		return NULL;
 	}
 
+	PxRigidDynamic *pRigidBody = pActor->is<PxRigidDynamic>();
+	if (pEntity->m_iActorType == ACTOR_KINEMATIC) 
+	{
+		// set kinematic flag before shape creating, this is required by design
+		pRigidBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+	}
+
 	switch (pEntity->m_iActorType)
 	{
 		case ACTOR_DYNAMIC:
@@ -1788,7 +1795,6 @@ void *CPhysicPhysX :: RestoreBody( CBaseEntity *pEntity )
 	// fill in actor description
 	if (pEntity->m_iActorType != ACTOR_STATIC)
 	{
-		PxRigidDynamic *pRigidBody = pActor->is<PxRigidDynamic>();
 		pRigidBody->setRigidBodyFlags(static_cast<PxRigidBodyFlags>(pEntity->m_iBodyFlags));
 		pRigidBody->setMass(pEntity->m_flBodyMass);
 		pRigidBody->setSolverIterationCounts(k_SolverIterationCount);
