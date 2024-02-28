@@ -49,8 +49,8 @@ private:
 	Vector		m_vecOrigin;
 	Vector		m_vecAngles;
 	Vector		m_vecScale;
-	int			m_iSkin;
-	int			m_iBody;
+	int32_t		m_bodyNumber;
+	int32_t		m_skinNumber;
 	matrix4x4	m_transform;
 	model_t		*m_pModel;
 
@@ -59,17 +59,10 @@ public:
 	~TraceMesh() {}
 
 	// trace stuff
-	void SetTraceMesh( mmesh_t *cached_mesh, areanode_t *tree, int modelindex );
+	void SetTraceMesh( mmesh_t *cached_mesh, areanode_t *tree, int modelindex, int32_t body, int32_t skin );
 	void SetMeshOrientation( const Vector &pos, const Vector &ang, const Vector &xform )
 	{
 		m_vecOrigin = pos, m_vecAngles = ang, m_vecScale = xform;
-		m_iBody = m_iSkin = 0; // reset it
-	}
-
-	void SetMeshParams( int body, int skin )
-	{
-		m_iBody = body;
-		m_iSkin = skin;
 	}
 
 	void SetupTrace( const Vector &start, const Vector &mins, const Vector &maxs, const Vector &end, trace_t *trace ); 

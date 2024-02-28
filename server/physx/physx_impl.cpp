@@ -2616,6 +2616,8 @@ void CPhysicPhysX :: SweepTest( CBaseEntity *pTouch, const Vector &start, const 
 
 	mmesh_t *pMesh;
 	areanode_t *pHeadNode;
+	int32_t meshBody, meshSkin;
+
 	if (mod->type == mod_studio && FBitSet(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE))
 	{
 		CMeshDesc &originalMesh = meshDescFactory.CreateObject(pTouch->pev->modelindex, pTouch->pev->body, pTouch->pev->skin, clipfile::GeometryType::Original);
@@ -2627,17 +2629,21 @@ void CPhysicPhysX :: SweepTest( CBaseEntity *pTouch, const Vector &start, const 
 			}
 		}
 
+		meshBody = originalMesh.GetBody();
+		meshSkin = originalMesh.GetSkin();
 		pMesh = originalMesh.GetMesh();
 		pHeadNode = originalMesh.GetHeadNode();
 	} 
 	else
 	{
+		meshBody = cookedMesh.GetBody();
+		meshSkin = cookedMesh.GetSkin();
 		pMesh = cookedMesh.GetMesh();
 		pHeadNode = cookedMesh.GetHeadNode();
 	}
 
 	TraceMesh trm;
-	trm.SetTraceMesh(pMesh, pHeadNode, pTouch->pev->modelindex);
+	trm.SetTraceMesh(pMesh, pHeadNode, pTouch->pev->modelindex, meshBody, meshSkin);
 	trm.SetMeshOrientation(pTouch->pev->origin, pTouch->pev->angles, pTouch->GetScale()); 
 	trm.SetupTrace(start, mins, maxs, end, tr);
 

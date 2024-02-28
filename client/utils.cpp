@@ -256,7 +256,7 @@ void Physic_SweepTest(cl_entity_t *pTouch, const Vector &start, const Vector &mi
 		scale = Vector(pev->scale);
 	}
 
-	trm.SetTraceMesh(pMesh, pHeadNode, pTouch->curstate.modelindex);
+	trm.SetTraceMesh(pMesh, pHeadNode, pTouch->curstate.modelindex, bodyMesh.GetBody(), bodyMesh.GetSkin());
 	trm.SetMeshOrientation(pev->origin, pev->angles, scale);
 	trm.SetupTrace(start, mins, maxs, end, tr);
 

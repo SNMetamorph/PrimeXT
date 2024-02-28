@@ -40,11 +40,13 @@ extern globalvars_t *gpGlobals;
 // and to avoid various numeric issues
 #define	SURFACE_CLIP_EPSILON	(0.125)
 
-void TraceMesh :: SetTraceMesh( mmesh_t *cached_mesh, areanode_t *tree, int modelindex )
+void TraceMesh :: SetTraceMesh( mmesh_t *cached_mesh, areanode_t *tree, int modelindex, int32_t body, int32_t skin )
 {
 	m_pModel = (model_t *)MODEL_HANDLE( modelindex );
 	mesh = cached_mesh;
 	areanodes = tree;
+	m_bodyNumber = body;
+	m_skinNumber = skin;
 }
 
 matdesc_t *TraceMesh :: GetMaterialForFacet( const mfacet_t *facet )
@@ -75,8 +77,8 @@ mstudiotexture_t *TraceMesh :: GetTextureForFacet( const mfacet_t *facet )
 		if (phdr->numtextures != 0 && phdr->textureindex != 0)
 		{
 			short *pskinref = (short *)((byte *)phdr + phdr->skinindex);
-			if (m_iSkin > 0 && m_iSkin < phdr->numskinfamilies)
-				pskinref += (m_iSkin * phdr->numskinref);
+			if (m_skinNumber > 0 && m_skinNumber < phdr->numskinfamilies)
+				pskinref += (m_skinNumber * phdr->numskinref);
 
 			return &textures[pskinref[facet->skinref]];
 		}

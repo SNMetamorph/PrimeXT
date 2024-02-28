@@ -66,6 +66,8 @@ public:
 	// get cached collision
 	mmesh_t *GetMesh() { return (m_bMeshBuilt) ? &m_mesh : NULL; }
 	areanode_t *GetHeadNode() { return (has_tree) ? areanodes : NULL; }
+	int32_t GetBody() const { return m_iBodyNumber; }
+	int32_t GetSkin() const { return m_iSkinNumber; }
 
 	void SetDebugName(const char *name) { m_debugName = name; }
 	void SetModel(const model_t *mod, int32_t body, int32_t skin);
