@@ -1384,7 +1384,7 @@ BEGIN_DATADESC_NO_BASE( CBaseEntity )
 	DEFINE_FIELD( m_vecAngles, FIELD_VECTOR ),
 	DEFINE_FIELD( m_vecVelocity, FIELD_VECTOR ), 
 	DEFINE_FIELD( m_vecAvelocity, FIELD_VECTOR ),
-	DEFINE_AUTO_ARRAY( m_local, FIELD_FLOAT ),		// matrix4x4
+	DEFINE_ARRAY( m_local, FIELD_FLOAT, 16 ),		// matrix4x4
 
 	DEFINE_FIELD( m_iFlags, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iOldSolid, FIELD_INTEGER ),
