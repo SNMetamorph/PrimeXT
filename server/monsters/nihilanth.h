@@ -21,7 +21,7 @@
 #include "monsters.h"
 #include "weapons.h"
 #include "nodes.h"
-#include "effects.h"
+#include "env_sprite.h"
 
 #define N_SCALE		15
 #define N_SPHERES	20

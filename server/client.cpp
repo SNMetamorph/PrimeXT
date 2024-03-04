@@ -39,6 +39,7 @@
 #include "usercmd.h"
 #include "netadr.h"
 #include "user_messages.h"
+#include "beam.h"
 #include <locale>
 
 extern DLL_GLOBAL ULONG		g_ulModelIndexPlayer;

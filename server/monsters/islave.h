@@ -24,7 +24,7 @@
 #include	"monsters.h"
 #include	"squadmonster.h"
 #include	"schedule.h"
-#include	"effects.h"
+#include	"env_beam.h"
 #include	"weapons.h"
 #include	"soundent.h"
 

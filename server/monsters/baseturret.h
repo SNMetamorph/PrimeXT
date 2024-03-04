@@ -31,7 +31,7 @@
 #include "cbase.h"
 #include "monsters.h"
 #include "weapons.h"
-#include "effects.h"
+#include "env_sprite.h"
 
 extern Vector VecBModelOrigin( entvars_t* pevBModel );
 

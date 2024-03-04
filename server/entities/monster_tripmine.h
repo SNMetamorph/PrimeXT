@@ -22,7 +22,7 @@
 #include "weapons.h"
 #include "nodes.h"
 #include "player.h"
-#include "effects.h"
+#include "env_beam.h"
 #include "gamerules.h"
 #include "ggrenade.h"
 

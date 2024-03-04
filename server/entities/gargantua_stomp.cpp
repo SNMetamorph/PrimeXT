@@ -16,7 +16,8 @@
 //=========================================================
 // Gargantua
 //=========================================================
-#include	"gargantua_stomp.h"
+#include "gargantua_stomp.h"
+#include "env_sprite.h"
 
 LINK_ENTITY_TO_CLASS( garg_stomp, CStomp );
 CStomp *CStomp::StompCreate( const Vector &origin, const Vector &end, float speed )

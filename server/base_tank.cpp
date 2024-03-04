@@ -13,6 +13,7 @@
 *
 ****/
 #include "base_tank.h"
+#include "env_sprite.h"
 
 class CFuncTankControls;
 
