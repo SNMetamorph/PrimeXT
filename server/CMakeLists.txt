@@ -27,7 +27,6 @@ list(APPEND SVDLL_SOURCES
 	"monsters.cpp"
 	"monsterstate.cpp"
 	"nodes.cpp"
-	"physents.cpp"
 	"physic.cpp"
 	"plats.cpp"
 	"player.cpp"
