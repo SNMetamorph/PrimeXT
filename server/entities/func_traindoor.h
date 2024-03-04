@@ -31,6 +31,8 @@ typedef enum
 #define SF_TRAINDOOR_OPEN_IN_MOVING		BIT( 1 )
 #define SF_TRAINDOOR_ONOFF_MODE		BIT( 2 )
 
+class CFuncTrackTrain;
+
 class CBaseTrainDoor : public CBaseToggle
 {
 	DECLARE_CLASS( CBaseTrainDoor, CBaseToggle );
