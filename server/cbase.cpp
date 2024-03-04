@@ -25,6 +25,7 @@
 #include	"weapons.h"
 #include	"game.h"
 #include "user_messages.h"
+#include "beam.h"
 
 //#define USE_ENGINE_TOUCH_TRIGGERS
 

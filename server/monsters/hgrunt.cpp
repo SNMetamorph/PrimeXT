@@ -27,7 +27,8 @@
 
 */
 
-#include	"hgrunt.h"
+#include "hgrunt.h"
+#include "env_beam.h"
 
 LINK_ENTITY_TO_CLASS( monster_human_grunt, CHGrunt );
 

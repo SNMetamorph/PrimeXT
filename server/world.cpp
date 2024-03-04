@@ -36,6 +36,7 @@
 #include "physcallback.h"
 #include "meshdesc_factory.h"
 #include "sv_materials.h"
+#include "env_message.h"
 
 extern CGraph WorldGraph;
 extern CSoundEnt *pSoundEnt;

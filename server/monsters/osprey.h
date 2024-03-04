@@ -22,7 +22,6 @@
 #include "weapons.h"
 #include "nodes.h"
 #include "soundent.h"
-#include "effects.h"
 #include "customentity.h"
 
 typedef struct 

@@ -28,7 +28,7 @@
 #include	"nodes.h"
 #include	"soundent.h"
 #include	"animation.h"
-#include	"effects.h"
+#include	"env_beam.h"
 #include	"weapons.h"
 
 #define SEARCH_RETRY	16

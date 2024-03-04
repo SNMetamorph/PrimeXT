@@ -23,7 +23,7 @@
 #include	"util.h"
 #include	"cbase.h"
 #include	"monsters.h"
-#include	"effects.h"
+#include	"env_sprite.h"
 #include	"schedule.h"
 #include	"weapons.h"
 #include	"squadmonster.h"

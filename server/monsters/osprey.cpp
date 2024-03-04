@@ -13,6 +13,7 @@
 *
 ****/
 #include "osprey.h"
+#include "env_beam.h"
 
 LINK_ENTITY_TO_CLASS( monster_osprey, COsprey );
 

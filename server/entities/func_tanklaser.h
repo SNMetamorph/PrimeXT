@@ -16,6 +16,7 @@
 #pragma once
 
 #include "base_tank.h"
+#include "env_laser.h"
 
 class CFuncTankLaser : public CBaseTank
 {
