@@ -42,7 +42,25 @@ jobs:
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]
         # Learn more about CodeQL language support at https://git.io/codeql-language-support
 
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Indicates the location of the vcpkg as a Git submodule of the project repository.
+      VCPKG_ROOT: ${{ github.workspace }}/external/vcpkg
+      # Tells vcpkg where binary packages are stored.
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/external/vcpkg/bincache
+      # Let's use GitHub Action cache as storage for the vcpkg Binary Caching feature.
+      VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'
+
     steps:
+    # Set env vars needed for vcpkg to leverage the GitHub Action cache as a storage
+    # for Binary Caching.
+    - name: Set env vars needed for vcpkg to leverage the GitHub Action cache
+      uses: actions/github-script@v6
+      with:
+        script: |
+          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
     - name: Checkout repository
       uses: actions/checkout@v3
       with:
@@ -69,6 +87,28 @@ jobs:
       # Some projects don't allow in-source building, so create a separate build directory
       # We'll use this as our working directory for all subsequent commands
       run: cmake -E make_directory ${{ github.workspace }}/build
+
+    - name: "Create directory '${{ env.VCPKG_DEFAULT_BINARY_CACHE }}'"
+      shell: bash
+      run: mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
+
+    # Restore vcpkg from the GitHub Action cache service. Note that packages are restored by vcpkg's binary caching
+    # when it is being run afterwards by CMake.
+    - name: Restore vcpkg
+      uses: actions/cache@v3
+      with:
+        # The first path is the location of vcpkg: it contains the vcpkg executable and data files, as long as the
+        # built package archives (aka binary cache) which are located by VCPKG_DEFAULT_BINARY_CACHE env var.
+        # The other paths starting with '!' are exclusions: they contain termporary files generated during the build of the installed packages.
+        path: |
+          ${{ env.VCPKG_ROOT }}
+          !${{ env.VCPKG_ROOT }}/buildtrees
+          !${{ env.VCPKG_ROOT }}/packages
+          !${{ env.VCPKG_ROOT }}/downloads
+          !${{ env.VCPKG_ROOT }}/installed
+        # The key is composed in a way that it gets properly invalidated whenever a different version of vcpkg is being used.
+        key: |
+          ${{ hashFiles( '.git/modules/external/vcpkg/HEAD' )}}
 
     - name: Configure CMake
       working-directory: ${{ github.workspace }}/build
