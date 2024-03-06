@@ -409,35 +409,61 @@ bool CFrustum :: CullSphere( const Vector &centre, float radius, int userClipFla
 	return false;
 }
 
-// FIXME: could be optimize?
-bool CFrustum :: CullFrustum( CFrustum *frustum, int userClipFlags )
+// FIXME: could be optimized?
+bool CFrustum :: CullFrustum( CFrustum *frustum )
 {
-	int iClipFlags;
 	Vector bbox[8];
 
 	if( CVAR_TO_BOOL( r_nocull ))
 		return false;
 
-	if( userClipFlags != 0 )
-		iClipFlags = userClipFlags;
-	else iClipFlags = clipFlags;
-
+	// check for self intersects other
 	frustum->ComputeFrustumCorners( bbox );
 
-	for( int i = 0; i < FRUSTUM_PLANES; i++ )
+	for (int i = 0; i < FRUSTUM_PLANES; i++)
 	{
-		if( !FBitSet( iClipFlags, BIT( i )))
+		if (!FBitSet(clipFlags, BIT(i)))
 			continue;
 
 		const mplane_t *p = &planes[i];
+		bool pointsOutside = true;
 
-		for( int j = 0; j < 8; j++ )
+		for (int j = 0; j < 8; j++)
 		{
-			// at least one point of other frustum intersect with our frustum
-			if( DotProduct( bbox[j], p->normal ) - p->dist >= ON_EPSILON )
-				return false;
+			// at least one corner point of other frustum lies in front of other frustum plane
+			if (DotProduct(bbox[j], p->normal) - p->dist >= DIST_EPSILON) {
+				pointsOutside = false;
+				break;
+			}
 		}
+
+		if (pointsOutside)
+			return true; // found separating plane, there is no intersection
 	}
 
-	return true;
+	// check for other intersects self
+	ComputeFrustumCorners( bbox );
+
+	for (int i = 0; i < FRUSTUM_PLANES; i++)
+	{
+		if (!FBitSet(frustum->clipFlags, BIT(i)))
+			continue;
+
+		const mplane_t *p = &frustum->planes[i];
+		bool pointsOutside = true;
+
+		for (int j = 0; j < 8; j++)
+		{
+			// at least one corner point of other frustum lies in front of other frustum plane
+			if (DotProduct(bbox[j], p->normal) - p->dist >= DIST_EPSILON) {
+				pointsOutside = false;
+				break;
+			}
+		}
+
+		if (pointsOutside)
+			return true; // found separating plane, there is no intersection
+	}
+
+	return false;
 }
