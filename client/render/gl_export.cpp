@@ -564,6 +564,7 @@ static void GL_InitExtensions( void )
 	else glConfig.hardware_type = GLHW_GENERIC;
 
 	glConfig.version = Q_atof( glConfig.version_string );
+	glConfig.debug_context = gEngfuncs.CheckParm("-gldebug", NULL) != 0;
 
 	Msg( "GL_VERSION: %g\n", glConfig.version );
 
@@ -742,16 +743,21 @@ static void GL_InitExtensions( void )
 
 	glConfig.max_texture_units = RENDER_GET_PARM( PARM_MAX_IMAGE_UNITS, 0 );
 
-	if (GL_Support(R_KHR_DEBUG)) {
-		pglEnable(GL_DEBUG_OUTPUT);
-	}
-
-	if (GL_Support(R_DEBUG_OUTPUT) || GL_Support(R_KHR_DEBUG))
+	if (glConfig.debug_context)
 	{
-		// force everything to happen in the main thread instead of in a separate driver thread
-		pglEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
-		pglDebugMessageCallbackARB(GL_DebugOutput, NULL);
-		pglDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW_ARB, 0, NULL, true); // enable all the low priority messages
+		ALERT( at_aiconsole, "GL_InitExtensions: renderer initialized with debug context\n" );
+
+		if (GL_Support(R_KHR_DEBUG)) {
+			pglEnable(GL_DEBUG_OUTPUT);
+		}
+
+		if (GL_Support(R_DEBUG_OUTPUT) || GL_Support(R_KHR_DEBUG))
+		{
+			// force everything to happen in the main thread instead of in a separate driver thread
+			pglEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
+			pglDebugMessageCallbackARB(GL_DebugOutput, NULL);
+			pglDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW_ARB, 0, NULL, true); // enable all the low priority messages
+		}
 	}
 
 	if (GL_Support(R_A2C_DITHER_CONTROL))

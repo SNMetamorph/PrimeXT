@@ -719,6 +719,7 @@ typedef struct
 	// list of supported extensions
 	const char	*extensions_string;
 	bool		extension[R_EXTCOUNT];
+	bool		debug_context;
 
 	int		block_size;		// lightmap blocksize
 	
