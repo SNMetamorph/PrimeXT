@@ -1,0 +1,27 @@
+/***
+*
+*	Copyright (c) 1996-2002, Valve LLC. All rights reserved.
+*	
+*	This product contains software technology licensed from Id 
+*	Software, Inc. ("Id Technology").  Id Technology (c) 1996 Id Software, Inc. 
+*	All Rights Reserved.
+*
+*   Use, distribution, and modification of this source code and/or resulting
+*   object code is restricted to non-commercial enhancements to products from
+*   Valve LLC.  All other use, distribution, or modification is prohibited
+*   without written permission from Valve LLC.
+*
+****/
+
+#include "trigger_multiple.h"
+
+LINK_ENTITY_TO_CLASS( trigger_multiple, CTriggerMultiple );
+
+void CTriggerMultiple :: Spawn( void )
+{
+	if (m_flWait == 0)
+		m_flWait = 0.2;
+
+	InitTrigger();
+	SetTouch( &CBaseTrigger::MultiTouch );
+}
