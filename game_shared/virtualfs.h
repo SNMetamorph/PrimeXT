@@ -17,6 +17,18 @@ public:
 	CVirtualFS( const byte *file, size_t size );
 	~CVirtualFS();
 
+	template<class T> T Read() 
+	{
+		T temp;
+		this->Read(reinterpret_cast<void*>(&temp), sizeof(T));
+		return temp;
+	}
+
+	template<class T> size_t Write(const T &data)
+	{
+		return this->Write(reinterpret_cast<const void*>(&data), sizeof(T));
+	}
+
 	size_t Read( void *out, size_t size );
 	size_t Write( const void *in, size_t size );
 	size_t Insert( const void *in, size_t size );
