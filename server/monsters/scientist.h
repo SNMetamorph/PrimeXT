@@ -25,7 +25,7 @@
 #include	"talkmonster.h"
 #include	"schedule.h"
 #include	"defaultai.h"
-#include	"scripted.h"
+#include	"scriptevent.h"
 #include	"animation.h"
 #include	"soundent.h"
 
