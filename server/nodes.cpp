@@ -2295,23 +2295,12 @@ int CGraph :: FLoadGraph ( char *szMapName )
 {
 	char	szFilename[MAX_PATH];
 	int	iVersion;
-	int	iResult;
 	int	length;
 	byte	*aMemFile;
 	byte	*pMemFile;
 
-	Q_snprintf( szFilename, sizeof( szFilename ), "maps/%s.bsp", szMapName );
-
-	iResult = MAP_READ_LUMP( szFilename, LUMP_AINODEGRAPH, (void **)&aMemFile, &length );
-
-	if( iResult != LUMP_LOAD_OK )
-	{
-		// this map doesn't support including new lumps. fallback to old method
-		Q_snprintf( szFilename, sizeof( szFilename ), "maps/graphs/%s.nod", szMapName );
-
-		aMemFile = LOAD_FILE( szFilename, &length );
-	}
-
+	Q_snprintf( szFilename, sizeof( szFilename ), "maps/graphs/%s.nod", szMapName );
+	aMemFile = LOAD_FILE( szFilename, &length );
 	pMemFile = aMemFile;
 
 	if( !aMemFile )
@@ -2486,9 +2475,6 @@ int CGraph :: FSaveGraph ( char *szMapName )
 		return FALSE;
 	}
 
-	Q_snprintf( szFilename, sizeof( szFilename ), "maps/%s.bsp", szMapName );
-	ALERT ( at_aiconsole, "Write LUMP_AINODEGRAPH to %s\n", szFilename );
-
 	// write the version
 	file.Write( &iVersion, sizeof( int ));
 
@@ -2514,20 +2500,15 @@ int CGraph :: FSaveGraph ( char *szMapName )
 		file.Write( m_pHashLinks, sizeof( int16_t ) * m_nHashLinks );
 	}
 
-	// dump into real file
-	int iResult = MAP_SAVE_LUMP( szFilename, LUMP_AINODEGRAPH, file.GetBuffer(), file.GetSize( ));
+	// dump into real file	
+	Q_snprintf( szFilename, sizeof( szFilename ), "maps/graphs/%s.nod", szMapName ); 
 
-	if( iResult != LUMP_SAVE_OK )
-	{
-		// this map doesn't support including new lumps. fallback to old method
-		Q_snprintf( szFilename, sizeof( szFilename ), "maps/graphs/%s.nod", szMapName ); 
-
-		if( SAVE_FILE( szFilename, file.GetBuffer(), file.GetSize( )))
-			return true;
+	if (SAVE_FILE(szFilename, file.GetBuffer(), file.GetSize())) {
+		return true;
+	}
+	else {
 		return false;
 	}
-
-	return (iResult == LUMP_SAVE_OK) ? true : false;
 }
 
 //=========================================================
@@ -2598,25 +2579,13 @@ int CGraph :: FSetGraphPointers ( void )
 //=========================================================
 int CGraph :: CheckNODFile ( char *szMapName )
 {
-	int	retValue;
-
+	int		iCompare;
+	int		retValue = TRUE;
 	char	szBspFilename[MAX_PATH];
 	char	szGraphFilename[MAX_PATH];
 
 	Q_snprintf( szBspFilename, sizeof( szBspFilename ), "maps/%s.bsp", szMapName );
-	retValue = MAP_CHECK_LUMP( szBspFilename, LUMP_AINODEGRAPH, NULL );
-
-	if( retValue == LUMP_LOAD_OK )
-		return true;
-	else if( retValue == LUMP_LOAD_NOT_EXIST )
-		return false;
-
-	Q_snprintf( szBspFilename, sizeof( szBspFilename ), "maps/%s.bsp", szMapName );
 	Q_snprintf( szGraphFilename, sizeof( szBspFilename ), "maps/graphs/%s.nod", szMapName );
-
-	retValue = TRUE;
-
-	int iCompare;
 
 	if (COMPARE_FILE_TIME(szBspFilename, szGraphFilename, &iCompare))
 	{
