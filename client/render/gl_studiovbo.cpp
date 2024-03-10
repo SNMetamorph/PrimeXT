@@ -59,10 +59,11 @@ mesh_loader_t CStudioModelRenderer :: m_pfnMeshLoaderGL30[MESHLOADER_COUNT] =
 
 void CStudioModelRenderer :: CreateBufferBaseGL21( vbomesh_t *pOut, svert_t *arrayxvert )
 {
-	static svert_v0_gl21_t	arraysvert[MAXARRAYVERTS];
+	std::vector<svert_v0_gl21_t> arraysvert;
+	arraysvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
-	for( int i = 0; i < pOut->numVerts; i++ )
+	for (uint32_t i = 0; i < pOut->numVerts; i++)
 	{
 		arraysvert[i].vertex[0] = arrayxvert[i].vertex[0];
 		arraysvert[i].vertex[1] = arrayxvert[i].vertex[1];
@@ -104,7 +105,8 @@ void CStudioModelRenderer :: BindBufferBaseGL21( vbomesh_t *pOut, int attrFlags 
 
 void CStudioModelRenderer :: CreateBufferBaseGL30( vbomesh_t *pOut, svert_t *arrayxvert )
 {
-	static svert_v0_gl30_t	arraysvert[MAXARRAYVERTS];
+	std::vector<svert_v0_gl30_t> arraysvert;
+	arraysvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -147,7 +149,8 @@ void CStudioModelRenderer :: BindBufferBaseGL30( vbomesh_t *pOut, int attrFlags 
 
 void CStudioModelRenderer :: CreateBufferBaseBumpGL21( vbomesh_t *pOut, svert_t *arrayxvert )
 {
-	static svert_v1_gl21_t	arraysvert[MAXARRAYVERTS];
+	std::vector<svert_v1_gl21_t> arraysvert;
+	arraysvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -204,7 +207,8 @@ void CStudioModelRenderer :: BindBufferBaseBumpGL21( vbomesh_t *pOut, int attrFl
 
 void CStudioModelRenderer :: CreateBufferBaseBumpGL30( vbomesh_t *pOut, svert_t *arrayxvert )
 {
-	static svert_v1_gl30_t	arraysvert[MAXARRAYVERTS];
+	std::vector<svert_v1_gl30_t> arraysvert;
+	arraysvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -255,7 +259,8 @@ void CStudioModelRenderer :: BindBufferBaseBumpGL30( vbomesh_t *pOut, int attrFl
 
 void CStudioModelRenderer :: CreateBufferVLightGL21( vbomesh_t *pOut, svert_t *arrayxvert )
 {
-	static svert_v2_gl21_t	arraysvert[MAXARRAYVERTS];
+	std::vector<svert_v2_gl21_t> arraysvert;
+	arraysvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -303,7 +308,8 @@ void CStudioModelRenderer :: BindBufferVLightGL21( vbomesh_t *pOut, int attrFlag
 
 void CStudioModelRenderer :: CreateBufferVLightGL30( vbomesh_t *pOut, svert_t *arrayxvert )
 {
-	static svert_v2_gl30_t	arraysvert[MAXARRAYVERTS];
+	std::vector<svert_v2_gl30_t> arraysvert;
+	arraysvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -349,7 +355,8 @@ void CStudioModelRenderer :: BindBufferVLightGL30( vbomesh_t *pOut, int attrFlag
 
 void CStudioModelRenderer :: CreateBufferVLightBumpGL21( vbomesh_t *pOut, svert_t *arrayxvert )
 {
-	static svert_v3_gl21_t	arraysvert[MAXARRAYVERTS];
+	std::vector<svert_v3_gl21_t> arraysvert;
+	arraysvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -416,7 +423,8 @@ void CStudioModelRenderer :: BindBufferVLightBumpGL21( vbomesh_t *pOut, int attr
 
 void CStudioModelRenderer :: CreateBufferVLightBumpGL30( vbomesh_t *pOut, svert_t *arrayxvert )
 {
-	static svert_v3_gl30_t	arraysvert[MAXARRAYVERTS];
+	std::vector<svert_v3_gl30_t> arraysvert;
+	arraysvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -477,7 +485,8 @@ void CStudioModelRenderer :: BindBufferVLightBumpGL30( vbomesh_t *pOut, int attr
 
 void CStudioModelRenderer :: CreateBufferWeightGL21( vbomesh_t *pOut, svert_t *arrayxvert )
 {
-	static svert_v4_gl21_t	arraysvert[MAXARRAYVERTS];
+	std::vector<svert_v4_gl21_t> arraysvert;
+	arraysvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -532,7 +541,8 @@ void CStudioModelRenderer :: BindBufferWeightGL21( vbomesh_t *pOut, int attrFlag
 
 void CStudioModelRenderer :: CreateBufferWeightGL30( vbomesh_t *pOut, svert_t *arrayxvert )
 {
-	static svert_v4_gl30_t	arraysvert[MAXARRAYVERTS];
+	std::vector<svert_v4_gl30_t> arraysvert;
+	arraysvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -585,7 +595,8 @@ void CStudioModelRenderer :: BindBufferWeightGL30( vbomesh_t *pOut, int attrFlag
 
 void CStudioModelRenderer :: CreateBufferWeightBumpGL21( vbomesh_t *pOut, svert_t *arrayxvert )
 {
-	static svert_v5_gl21_t	arraysvert[MAXARRAYVERTS];
+	std::vector<svert_v5_gl21_t> arraysvert;
+	arraysvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -652,7 +663,8 @@ void CStudioModelRenderer :: BindBufferWeightBumpGL21( vbomesh_t *pOut, int attr
 
 void CStudioModelRenderer :: CreateBufferWeightBumpGL30( vbomesh_t *pOut, svert_t *arrayxvert )
 {
-	static svert_v5_gl30_t	arraysvert[MAXARRAYVERTS];
+	std::vector<svert_v5_gl30_t> arraysvert;
+	arraysvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -713,7 +725,8 @@ void CStudioModelRenderer :: BindBufferWeightBumpGL30( vbomesh_t *pOut, int attr
 
 void CStudioModelRenderer :: CreateBufferLightMapGL21( vbomesh_t *pOut, svert_t *arrayxvert )
 {
-	static svert_v6_gl21_t	arraysvert[MAXARRAYVERTS];
+	std::vector<svert_v6_gl21_t> arraysvert;
+	arraysvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -775,7 +788,8 @@ void CStudioModelRenderer :: BindBufferLightMapGL21( vbomesh_t *pOut, int attrFl
 
 void CStudioModelRenderer :: CreateBufferLightMapGL30( vbomesh_t *pOut, svert_t *arrayxvert )
 {
-	static svert_v6_gl30_t	arraysvert[MAXARRAYVERTS];
+	std::vector<svert_v6_gl30_t> arraysvert;
+	arraysvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -835,7 +849,8 @@ void CStudioModelRenderer :: BindBufferLightMapGL30( vbomesh_t *pOut, int attrFl
 
 void CStudioModelRenderer :: CreateBufferLightMapBumpGL21( vbomesh_t *pOut, svert_t *arrayxvert )
 {
-	static svert_v7_gl21_t	arraysvert[MAXARRAYVERTS];
+	std::vector<svert_v7_gl21_t> arraysvert;
+	arraysvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -909,7 +924,8 @@ void CStudioModelRenderer :: BindBufferLightMapBumpGL21( vbomesh_t *pOut, int at
 
 void CStudioModelRenderer :: CreateBufferLightMapBumpGL30( vbomesh_t *pOut, svert_t *arrayxvert )
 {
-	static svert_v7_gl30_t	arraysvert[MAXARRAYVERTS];
+	std::vector<svert_v7_gl30_t> arraysvert;
+	arraysvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -977,7 +993,8 @@ void CStudioModelRenderer :: BindBufferLightMapBumpGL30( vbomesh_t *pOut, int at
 
 void CStudioModelRenderer :: CreateBufferGenericGL21( vbomesh_t *pOut, svert_t *arrayxvert )
 {
-	static svert_v8_gl21_t	arraysvert[MAXARRAYVERTS];
+	std::vector<svert_v8_gl21_t> arraysvert;
+	arraysvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -1115,7 +1132,8 @@ void CStudioModelRenderer :: BindBufferGenericGL21( vbomesh_t *pOut, int attrFla
 
 void CStudioModelRenderer :: CreateBufferGenericGL30( vbomesh_t *pOut, svert_t *arrayxvert )
 {
-	static svert_v8_gl30_t	arraysvert[MAXARRAYVERTS];
+	std::vector<svert_v8_gl30_t> arraysvert;
+	arraysvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
