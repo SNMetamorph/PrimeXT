@@ -26,7 +26,7 @@
 #include	"talkmonster.h"
 #include	"schedule.h"
 #include	"defaultai.h"
-#include	"scripted.h"
+#include	"scriptevent.h"
 #include	"weapons.h"
 #include	"soundent.h"
 

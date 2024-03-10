@@ -21,7 +21,7 @@
 #include "cbase.h"
 #include "monsters.h"
 #include "animation.h"
-#include "scripted.h"
+#include "scripted_sequence.h"
 #include "nodes.h"
 #include "defaultai.h"
 #include "soundent.h"

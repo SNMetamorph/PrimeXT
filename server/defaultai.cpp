@@ -23,7 +23,7 @@
 #include	"defaultai.h"
 #include	"soundent.h"
 #include	"nodes.h"
-#include	"scripted.h"
+#include	"scripted_sequence.h"
 
 //=========================================================
 // Fail
