@@ -108,7 +108,7 @@ typedef struct
 //=========================================================
 // CGraph 
 //=========================================================
-#define	GRAPH_VERSION	(int)16// !!!increment this whever graph/node/link classes change, to obsolesce older disk files.
+#define	GRAPH_VERSION	(int)17// !!!increment this whever graph/node/link classes change, to obsolesce older disk files.
 class CGraph
 {
 public:
@@ -207,6 +207,7 @@ public:
 		return 0; 
 	}
 
+	static uint32_t GetPlatformHash();
 
 	inline	CNode &Node( int i )
 	{

@@ -19,11 +19,13 @@
 #include	"extdll.h"
 #include	"util.h"
 #include	"cbase.h"
-#include  "virtualfs.h"
+#include	"virtualfs.h"
 #include	"monsters.h"
 #include	"nodes.h"
 #include	"animation.h"
 #include	"func_door.h"
+#include	"crclib.h"
+#include	"build_info.h"
 
 #define	HULL_STEP_SIZE 16// how far the test hull moves on each step
 #define	NODE_HEIGHT	8	// how high to lift nodes off the ground after we drop them all (make stair/ramp mapping easier)
@@ -463,6 +465,15 @@ int	CGraph::NodeType( const CBaseEntity *pEntity )
 	return bits_NODE_LAND;
 }
 
+uint32_t CGraph::GetPlatformHash()
+{
+	uint32_t hash;
+	CRC32_Init(&hash);
+	CRC32_ProcessBuffer(&hash, BuildInfo::GetArchitecture(), strlen(BuildInfo::GetArchitecture()));
+	CRC32_ProcessBuffer(&hash, BuildInfo::GetPlatform(), strlen(BuildInfo::GetPlatform()));
+	hash = CRC32_Final(hash);
+	return hash;
+}
 
 // Sum up graph weights on the path from iStart to iDest to determine path length
 float CGraph::PathLength( int iStart, int iDest, int iHull, int afCapMask )
@@ -2317,11 +2328,26 @@ int CGraph :: FLoadGraph ( char *szMapName )
 		memcpy(&iVersion, pMemFile, sizeof(int));
 		pMemFile += sizeof(int);
 
-		if ( iVersion != GRAPH_VERSION )
+		// Read the platform hash
+		//
+		length -= sizeof(uint32_t);
+		if (length < 0) goto ShortFile;
+		uint32_t platformHash = *(reinterpret_cast<uint32_t*>(pMemFile));
+		pMemFile += sizeof(uint32_t);
+		
+		if (iVersion != GRAPH_VERSION)
 		{
 			// This file was written by a different build of the dll!
 			//
-			ALERT ( at_aiconsole, "**ERROR** Graph version is %d, expected %d\n",iVersion, GRAPH_VERSION );
+			ALERT(at_aiconsole, "**ERROR** Graph version is %d, expected %d\n", iVersion, GRAPH_VERSION);
+			goto ShortFile;
+		}
+
+		if (platformHash != GetPlatformHash())
+		{
+			// This file was written by a different build of the dll!
+			//
+			ALERT(at_aiconsole, "**ERROR** Graph platform hash mismatch\n");
 			goto ShortFile;
 		}
 
@@ -2477,6 +2503,9 @@ int CGraph :: FSaveGraph ( char *szMapName )
 
 	// write the version
 	file.Write( &iVersion, sizeof( int ));
+
+	// write platform hash
+	file.Write( GetPlatformHash() );
 
 	// write the CGraph class
 	file.Write( this, sizeof( CGraph ));
