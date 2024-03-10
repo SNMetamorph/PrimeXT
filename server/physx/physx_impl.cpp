@@ -2347,6 +2347,10 @@ void CPhysicPhysX :: FreeAllBodies()
 	// throw all bodies
 	for (PxActor *actor : actors)
 	{
+		CBaseEntity *entity = EntityFromActor( actor );
+		if (entity) {
+			entity->m_pUserData = nullptr;
+		}
 		m_pScene->removeActor(*actor);
 		actor->release();
 	}
