@@ -1133,12 +1133,12 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 	byte		*pvertbone = ((byte *)m_pStudioHeader + pSubModel->vertinfoindex);
 	byte		*pnormbone = ((byte *)m_pStudioHeader + pSubModel->norminfoindex);
 	mstudiomaterial_t	*pmaterial = (mstudiomaterial_t *)RI->currentmodel->materials;
-	static Vector	localverts[MAXARRAYVERTS];
+	std::vector<Vector> localverts;
 	bool		use_fan_sequence = false;
 	dmodelvertlight_t	*dvl = NULL;
 	dmodelfacelight_t	*dfl = NULL;
 	int		i, count;
-	matrix3x4		skinMat;
+	matrix3x4 skinMat;
 
 	switch( lightmode )
 	{
@@ -1150,6 +1150,8 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 		use_fan_sequence = true;
 		break;
 	}
+
+	localverts.resize(pSubModel->numverts);
 
 	if( m_iTBNState == TBNSTATE_GENERATE || use_fan_sequence )
 	{
@@ -1575,7 +1577,7 @@ void CStudioModelRenderer :: MeshCreateBuffer( vbomesh_t *pOut, const mstudiomes
 	bool		has_vertexlight = ( lightmode == LIGHTSTATIC_VERTEX ) ? true : false;
 	bool		has_lightmap = ( lightmode == LIGHTSTATIC_SURFACE ) ? true : false;
 	const mposetobone_t	*m = RI->currentmodel->poseToBone;
-	static uint	arrayelems[MAXARRAYVERTS*3];
+	std::vector<uint32_t> arrayelems;
 
 	pOut->skinref = pMesh->skinref;
 	pOut->parentbone = 0xFF;
@@ -1618,6 +1620,7 @@ void CStudioModelRenderer :: MeshCreateBuffer( vbomesh_t *pOut, const mstudiomes
 	}
 
 	// remap indices to local range
+	arrayelems.resize(pMeshInfo->numindices);
 	for (int i = 0; i < pMeshInfo->numindices; i++)
 		arrayelems[i] = m_arrayelems[pMeshInfo->firstindex + i] - pMeshInfo->firstvertex;
 
@@ -1635,7 +1638,7 @@ void CStudioModelRenderer :: MeshCreateBuffer( vbomesh_t *pOut, const mstudiomes
 	if( glConfig.version < ACTUAL_GL_VERSION )
 		m_pfnMeshLoaderGL21[type].CreateBuffer( pOut, &m_arrayxvert[pMeshInfo->firstvertex] );
 	else m_pfnMeshLoaderGL30[type].CreateBuffer( pOut, &m_arrayxvert[pMeshInfo->firstvertex] );
-	CreateIndexBuffer( pOut, arrayelems );
+	CreateIndexBuffer( pOut, arrayelems.data() );
 
 //	Msg( "%s -> %s\n", m_pfnMeshLoaderGL21[type].BufferName, RI->currentmodel->name );
 
