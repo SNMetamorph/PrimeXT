@@ -544,22 +544,11 @@ void DispatchObjectCollsionBox( edict_t *pent )
 
 void OnFreeEntPrivateData( edict_s *pEdict )
 {
-	if( g_fPhysicInitialized )
+	if (pEdict && pEdict->pvPrivateData)
 	{
-		if( pEdict && pEdict->pvPrivateData )
-		{
-			// here you can deallocate stuff which contained in CBaseEntity
-			//CBaseEntity *pEntity = CBaseEntity::Instance( pEdict );
-		}
-
-		if( GET_SERVER_STATE() == SERVER_DEAD )
-			return;
-	}
-
-	if( pEdict && pEdict->pvPrivateData )
-	{
-		CBaseEntity *pEntity = CBaseEntity::Instance( pEdict );
+		CBaseEntity *pEntity = CBaseEntity::Instance(pEdict);
 		pEntity->UpdateOnRemove();
+		pEntity->~CBaseEntity();
 	}
 }
 

@@ -155,6 +155,9 @@ public:
 
 	DECLARE_DATADESC();
 
+	// Always keep this virtual destructor, so derived classes can be properly destructed
+	virtual ~CBaseEntity() {}
+
 	// path corners
 	CBaseEntity	*m_pGoalEnt;	// path corner we are heading towards
 	CBaseEntity	*m_pLink;		// used for temporary link-list operations. 
