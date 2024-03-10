@@ -1943,7 +1943,8 @@ void Mod_InitBSPModelsTexture( void )
 
 static void CreateBufferBaseGL21( bvert_t *arrayxvert )
 {
-	static bvert_v0_gl21_t	arraybvert[MAX_MAP_VERTS*4];
+	std::vector<bvert_v0_gl21_t> arraybvert;
+	arraybvert.resize(world->numvertexes);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < world->numvertexes; i++ )
@@ -2015,7 +2016,8 @@ static void BindBufferBaseGL21( void )
 
 static void CreateBufferBaseGL30( bvert_t *arrayxvert )
 {
-	static bvert_v0_gl30_t	arraybvert[MAX_MAP_VERTS*4];
+	std::vector<bvert_v0_gl30_t> arraybvert;
+	arraybvert.resize(world->numvertexes);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < world->numvertexes; i++ )
