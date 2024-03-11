@@ -3,11 +3,6 @@
 #
 # Helper script when using vcpkg with cmake. It should be triggered via the variable VCPKG_TARGET_ANDROID
 #
-# For example:
-# if (VCPKG_TARGET_ANDROID)
-#     include("cmake/vcpkg_android.cmake")
-# endif()
-# 
 # This script will:
 # 1. check the presence of needed env variables: ANDROID_NDK_HOME
 # 2. set VCPKG_TARGET_TRIPLET according to ANDROID_ABI
