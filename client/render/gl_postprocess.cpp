@@ -757,7 +757,7 @@ void RenderSunShafts( void )
 
 void RenderBloom()
 {
-	if (!CVAR_TO_BOOL(r_bloom))
+	if (!CVAR_TO_BOOL(r_bloom) || CVAR_TO_BOOL(r_show_luminance)) 
 		return;
 
 	if (FBitSet(RI->params, RP_ENVVIEW)) // no bloom in cubemaps
