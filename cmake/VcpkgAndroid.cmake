@@ -81,7 +81,11 @@ if (VCPKG_TARGET_ANDROID)
     # However, vcpkg provides a way to preload and additional toolchain, 
     # with the VCPKG_CHAINLOAD_TOOLCHAIN_FILE option.
     set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE $ENV{ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake)
-    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake)
+
+    set(VCPKG_INSTANCE_PATH "")
+	get_vcpkg_instance_path(VCPKG_INSTANCE_PATH)
+    set(CMAKE_TOOLCHAIN_FILE ${VCPKG_INSTANCE_PATH})
+
     message("VcpkgAndroid.cmake: CMAKE_TOOLCHAIN_FILE was set to ${CMAKE_TOOLCHAIN_FILE}")
     message("VcpkgAndroid.cmake: VCPKG_CHAINLOAD_TOOLCHAIN_FILE was set to ${VCPKG_CHAINLOAD_TOOLCHAIN_FILE}")
 
