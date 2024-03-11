@@ -1,20 +1,8 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.19)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
-if(NOT ${CMAKE_VERSION} VERSION_LESS "3.15.0")
-	cmake_policy(SET CMP0091 NEW)
-endif()
-
-# add_compile_options for older cmake versions
-if(${CMAKE_VERSION} VERSION_LESS "3.0.2")
-	macro(add_compile_options)
-		set(list_var "${ARGV}")
-		foreach(arg IN LISTS list_var)
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${arg}")
-		endforeach()
-	endmacro()
-endif()
+cmake_policy(SET CMP0091 NEW)
 
 include(VcpkgIntegration)
 include(VcpkgAndroid)
