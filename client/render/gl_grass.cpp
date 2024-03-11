@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #include "gl_cvars.h"
 #include "gl_debug.h"
 #include <utlarray.h>
+#include <vector>
 #include <stringlib.h>
 #include "vertex_fmt.h"
 
@@ -44,7 +45,8 @@ static float		m_flGrassFadeEnd;
 
 static void CreateBufferBaseGL21( grass_t *pOut, gvert_t *arrayxvert )
 {
-	static gvert_v0_gl21_t	arraygvert[MAX_GRASS_VERTS];
+	std::vector<gvert_v0_gl21_t> arraygvert;
+	arraygvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -91,7 +93,8 @@ static void BindBufferBaseGL21( grass_t *pOut, int attrFlags )
 
 static void CreateBufferBaseGL30( grass_t *pOut, gvert_t *arrayxvert )
 {
-	static gvert_v0_gl30_t	arraygvert[MAX_GRASS_VERTS];
+	std::vector<gvert_v0_gl30_t> arraygvert;
+	arraygvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -136,7 +139,8 @@ static void BindBufferBaseGL30( grass_t *pOut, int attrFlags )
 
 static void CreateBufferBaseBumpGL21( grass_t *pOut, gvert_t *arrayxvert )
 {
-	static gvert_v1_gl21_t	arraygvert[MAX_GRASS_VERTS];
+	std::vector<gvert_v1_gl21_t> arraygvert;
+	arraygvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
@@ -190,7 +194,8 @@ static void BindBufferBaseBumpGL21( grass_t *pOut, int attrFlags )
 
 static void CreateBufferBaseBumpGL30( grass_t *pOut, gvert_t *arrayxvert )
 {
-	static gvert_v1_gl30_t	arraygvert[MAX_GRASS_VERTS];
+	std::vector<gvert_v1_gl30_t> arraygvert;
+	arraygvert.resize(pOut->numVerts);
 
 	// convert to GLSL-compacted array
 	for( int i = 0; i < pOut->numVerts; i++ )
