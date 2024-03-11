@@ -36,10 +36,6 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # Enables the vcpkg dependency graph integration.
       VCPKG_FEATURE_FLAGS: dependencygraph
-      # Indicates the location of the vcpkg as a Git submodule of the project repository.
-      VCPKG_ROOT: ${{ github.workspace }}/external/vcpkg
-      # Tells vcpkg where binary packages are stored.
-      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/external/vcpkg/bincache
       # Let's use GitHub Action cache as storage for the vcpkg Binary Caching feature.
       VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'
     steps:
@@ -68,6 +64,14 @@ jobs:
         with:
           arch: ${{ matrix.devenv_arch }}
 
+      - name: Dynamically set vcpkg-related environment variables
+        # We need this because previous step overwrites VCPKG_ROOT envvar on Windows runners 
+        uses: actions/github-script@v6
+        with:
+          script: |
+            core.exportVariable('VCPKG_ROOT', `${process.env.GITHUB_WORKSPACE}/external/vcpkg`.replaceAll('\\', '/'));
+            core.exportVariable('VCPKG_DEFAULT_BINARY_CACHE', `${process.env.GITHUB_WORKSPACE}/external/vcpkg/bincache`.replaceAll('\\', '/'));
+
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
@@ -80,7 +84,7 @@ jobs:
 
       - name: "Create directory '${{ env.VCPKG_DEFAULT_BINARY_CACHE }}'"
         shell: bash
-        run: mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
+        run: mkdir -p ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
 
       # Restore vcpkg from the GitHub Action cache service. Note that packages are restored by vcpkg's binary caching
       # when it is being run afterwards by CMake.
