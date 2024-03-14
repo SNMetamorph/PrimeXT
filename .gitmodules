@@ -1,9 +1,6 @@
 [submodule "external/vgui"]
 	path = external/vgui
 	url = https://github.com/FWGS/vgui-dev.git
-[submodule "external/mxtk"]
-	path = external/mxtk
-	url = https://github.com/SNMetamorph/mxtk.git
 [submodule "external/vcpkg"]
 	path = external/vcpkg
 	url = https://github.com/microsoft/vcpkg.git
