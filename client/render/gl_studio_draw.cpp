@@ -592,28 +592,15 @@ StudioEstimateInterpolant
 float CStudioModelRenderer :: StudioEstimateInterpolant()
 {
 	cl_entity_t *e = RI->currententity;
-	double interval = 0.1;	// monster think interval
-	float dadt = 1.0f;
-
-	if (e->player)
-	{
-		float updateRate = atof(gEngfuncs.PlayerInfo_ValueForKey(e->index, "cl_updaterate"));
-		if (updateRate > 0.0f)
-			interval = 1.0f / updateRate;
-
-		if (gEngfuncs.GetMaxClients() == 1 || updateRate < 1.0f) {
-			interval = 1.0f; // in listen server entity state update happens every frame
-		}
-	}
-
+	double dadt = 1.0;
+	const double interval = 0.1; // animtime update interval is always fixed and equals 0.1 sec
 
 	if (!m_fShootDecal && (e->curstate.animtime >= e->latched.prevanimtime + 0.01f))
 	{
 		dadt = (tr.time - e->curstate.animtime) / interval;
-		dadt = bound(0.0f, dadt, 1.0f);
+		dadt = bound(0.0, dadt, 2.0); // allow value to be above 1.0 for extrapolation in case of update didn't came in time
 	}
-
-	return dadt;
+	return static_cast<float>(dadt);
 }
 
 /*
