@@ -64,7 +64,7 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'PrimeXT Docs',
+        title: 'PrimeXT',
         logo: {
           alt: 'PrimeXT Logo',
           src: 'img/logo_256.png',
@@ -74,9 +74,8 @@ const config = {
             type: 'doc',
             docId: 'eng/intro',
             position: 'left',
-            label: 'Tutorial',
+            label: 'Documentation',
           },
-          {to: '/blog', label: 'Blog', position: 'left'},
           {
             href: 'https://github.com/SNMetamorph/PrimeXT',
             label: 'GitHub',
