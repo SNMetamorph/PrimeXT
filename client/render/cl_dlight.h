@@ -25,13 +25,14 @@ GNU General Public License for more details.
 #define MAX_SHADOWMAPS	(NUM_SHADOW_SPLITS + 1)
 
 // dlight flags
-#define DLF_NOSHADOWS	BIT( 0 )
-#define DLF_NOBUMP		BIT( 1 )
-#define DLF_LENSFLARE	BIT( 2 )
-#define DLF_CULLED		BIT( 3 )		// light culled by scissor
-#define DLF_ASPECT3X4	BIT( 4 )
-#define DLF_ASPECT4X3	BIT( 5 )
-#define DLF_FLIPTEXTURE	BIT( 6 )
+#define DLF_NOSHADOWS				BIT( 0 )
+#define DLF_NOBUMP					BIT( 1 )
+#define DLF_LENSFLARE				BIT( 2 )
+#define DLF_CULLED					BIT( 3 )		// light culled by scissor
+#define DLF_ASPECT3X4				BIT( 4 )
+#define DLF_ASPECT4X3				BIT( 5 )
+#define DLF_FLIPTEXTURE				BIT( 6 )
+#define DLF_PARENTENTITY_NOSHADOW	BIT( 7 )
 
 class CDynLight
 {
@@ -46,6 +47,7 @@ public:
 	int			type;				// light type
 	int			lightstyleIndex;
 	bool		update;				// light needs update
+	cl_entity_t *parentEntity;
 
 	matrix4x4		viewMatrix;
 	matrix4x4		projectionMatrix;			// light projection matrix

@@ -376,13 +376,20 @@ static void R_ShadowPassSetupViewCache( CDynLight *pl, int split = 0 )
 		RI->currentmodel = RI->currententity->model;
 
 		// skip entities with disabled shadow casting
-		if (RI->currententity->curstate.effects & EF_NOSHADOW)
+		if (FBitSet(RI->currententity->curstate.effects, EF_NOSHADOW))
 			continue;
 
 		// disable rendering shadows for local player
 		if (!CVAR_TO_BOOL(r_renderplayershadow)) 
 		{
 			if (RI->currententity->index == localPlayerIndex)
+				continue;
+		}
+
+		// skip entities that marked as parent for dynlight and according flag set
+		if (FBitSet(pl->flags, DLF_PARENTENTITY_NOSHADOW) && pl->parentEntity)
+		{
+			if (RI->currententity->index == pl->parentEntity->index)
 				continue;
 		}
 
