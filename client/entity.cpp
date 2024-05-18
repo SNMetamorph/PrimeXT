@@ -21,7 +21,6 @@
 #include "gl_studio.h"
 #include "gl_cvars.h"
 #include "gl_rpart.h"
-#include "flashlight.h"
 #include "exportdef.h"
 
 void Game_AddObjects( void );
@@ -186,12 +185,6 @@ void DLLEXPORT HUD_ProcessPlayerState( struct entity_state_s *dst, const struct 
 	//	g_iPlayerClass = dst->playerclass;
 	//	g_iTeamNumber = dst->team;
 	//}
-
-	// buz: get flashlight status
-	if (dst->effects & EF_DIMLIGHT)
-		g_PlayerFlashlight.TurnOn();
-	else 
-		g_PlayerFlashlight.TurnOff();
 }
 
 /*

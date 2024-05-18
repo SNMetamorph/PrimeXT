@@ -13,7 +13,6 @@
 #include "r_studioint.h"
 #include "gl_studio.h"
 #include "gl_cvars.h"
-#include "flashlight.h"
 #include <mathlib.h>
 
 // thirdperson camera
@@ -986,9 +985,6 @@ void V_CalcFirstPersonRefdef( struct ref_params_s *pparams )
 
 	// smooth player view in multiplayer
 	V_InterpolatePos( pparams );
-
-	// update flashlight state
-	g_PlayerFlashlight.Update(pparams);
 }
 
 //==========================

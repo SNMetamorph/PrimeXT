@@ -30,6 +30,7 @@ GNU General Public License for more details.
 #include "screenfade.h"
 #include "shake.h"
 #include "cl_env_dynlight.h"
+#include <unordered_map>
 
 /*
 ===============
@@ -397,6 +398,67 @@ int R_ComputeFxBlend( cl_entity_t *e )
 	return blend;
 }
 
+static void R_SetupPlayerFlashlight(cl_entity_t *ent)
+{
+	pmtrace_t ptr;
+	Vector origin, vecEnd, angles;
+	Vector forward, right, up;
+	static std::unordered_map<int, float> cached_smooth_values;
+
+	if (UTIL_IsLocal(ent->index))
+	{
+		vec3_t viewOffset;
+		cl_entity_t *localPlayer = gEngfuncs.GetLocalPlayer();
+        gEngfuncs.pEventAPI->EV_LocalPlayerViewheight(viewOffset);
+		origin = localPlayer->origin + viewOffset;
+
+		gEngfuncs.GetViewAngles(angles);
+		gEngfuncs.pfnAngleVectors(angles, forward, right, up);
+		origin += (up * 6.0f) + (right * 5.0f) + (forward * 2.0f);
+		vecEnd = origin + forward * 700.0f;
+	}
+	else
+	{
+		angles = ent->angles;
+		angles.x = -angles.x * 3;
+		gEngfuncs.pfnAngleVectors(angles, forward, right, up);
+		origin = ent->curstate.origin;
+		vecEnd = origin + forward * 700.0f;
+	}
+
+	gEngfuncs.pEventAPI->EV_SetTraceHull(2);
+	gEngfuncs.pEventAPI->EV_PlayerTrace(origin, vecEnd, 0, -1, &ptr);
+
+	float addideal = 0.0f;
+	if (ptr.fraction < 1.0f) {
+		addideal = (1.0f - ptr.fraction) * 30.0f;
+	}
+
+	float &add = cached_smooth_values[ent->index];
+	float speed = (add - addideal) * 10.0f;
+	if (speed < 0) speed *= -1.0f;
+
+	if (add < addideal)
+	{
+		add += GET_FRAMETIME() * speed;
+		if (add > addideal) add = addideal;
+	}
+	else if (add > addideal)
+	{
+		add -= GET_FRAMETIME() * speed;
+		if (add < addideal) add = addideal;
+	}
+
+	CDynLight *flashlight = CL_AllocDlight(FLASHLIGHT_KEY - ent->index);
+	R_SetupLightParams(flashlight, origin, angles, 700.0f, 35.0f + add, LIGHT_SPOT);
+	R_SetupLightTexture(flashlight, tr.flashlightTexture);
+
+	flashlight->flags = DLF_PARENTENTITY_NOSHADOW;
+	flashlight->parentEntity = ent;
+	flashlight->color = Vector(1.4f, 1.4f, 1.4f); // make model dymanic lighting happy
+	flashlight->die = tr.time + 0.05f;
+}
+
 static bool R_HandleLightEntity(cl_entity_t *ent)
 {
 	// not light entity
@@ -522,6 +584,10 @@ qboolean R_AddEntity( struct cl_entity_s *clent, int entityType )
 
 	if (R_HandleLightEntity(clent))
 		return true;
+
+	if (clent->curstate.effects & EF_DIMLIGHT) {
+		R_SetupPlayerFlashlight(clent);
+	}
 
 	if (clent->curstate.effects & EF_SCREENMOVIE)
 	{

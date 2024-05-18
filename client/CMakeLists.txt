@@ -13,7 +13,6 @@ list(APPEND CLDLL_SOURCES
 	"battery.cpp"
 	"cdll_int.cpp"
 	"death.cpp"
-	"flashlight.cpp"
 	"geiger.cpp"
 	"health.cpp"
 	"entity.cpp"
