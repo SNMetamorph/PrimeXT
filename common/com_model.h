@@ -317,15 +317,13 @@ typedef struct mextrasurf_s
 	shader_t		forwardLightSpot[2]; // first for w/ shadows, second for w/o shadows
 	shader_t		forwardLightOmni[2]; 
 	shader_t		forwardLightProj;
-	shader_t		deferredScene;
-	shader_t		deferredLight;
 	shader_t		forwardDepth;
 
 	struct brushdecal_s	*pdecals;		// linked decals
 #if XASH_64BIT == 1
-	intptr_t		reserved[24];	// just for future expansions or mod-makers
+	intptr_t		reserved[25];	// just for future expansions or mod-makers
 #else
-	intptr_t		reserved[20];	// just for future expansions or mod-makers
+	intptr_t		reserved[22];	// just for future expansions or mod-makers
 #endif
 } mextrasurf_t;
 
