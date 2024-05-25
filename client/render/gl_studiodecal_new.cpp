@@ -1616,15 +1616,6 @@ void CStudioModelRenderer :: SetDecalUniforms( studiodecal_t *pDecal )
 		case UT_BRDFAPPROXMAP:
 			u->SetValue(tr.brdfApproxTexture.ToInt());
 			break;
-		case UT_BSPPLANESMAP:
-			u->SetValue(tr.packed_planes_texture.ToInt());
-			break;
-		case UT_BSPNODESMAP:
-			u->SetValue(tr.packed_nodes_texture.ToInt());
-			break;
-		case UT_BSPLIGHTSMAP:
-			u->SetValue(tr.packed_lights_texture.ToInt());
-			break;
 		case UT_RENDERALPHA:
 			if( e->curstate.rendermode == kRenderTransTexture || e->curstate.rendermode == kRenderTransAdd )
 				u->SetValue( e->curstate.renderamt / 255.0f );

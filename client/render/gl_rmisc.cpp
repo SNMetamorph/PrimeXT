@@ -609,10 +609,6 @@ void R_InitCommonTextures( void )
 		tr.sunShadowFBO[i].Init( FBO_DEPTH, sunSize[i], sunSize[i] );
 	}
 
-	tr.fbo_light.Init( FBO_COLOR, glState.width, glState.height, FBO_LINEAR );
-	tr.fbo_filter.Init( FBO_COLOR, glState.width, glState.height, FBO_LINEAR );
-	tr.fbo_shadow.Init( FBO_COLOR, glState.defWidth, glState.defHeight, FBO_LINEAR );
-
 	// setup the skybox sides
 	for( i = 0; i < 6; i++ )
 		tr.skyboxTextures[i] = TextureHandle::GetSkyboxTextures(i);
@@ -900,78 +896,6 @@ void R_NewMap( void )
 
 /*
 ==================
-R_InitDynLightShader
-
-changed dynamic lighting shaders
-==================
-*/
-void R_InitDynLightShader( int type )
-{
-	char options[MAX_OPTIONS_LENGTH];
-
-	switch( type )
-	{
-	case LIGHT_SPOT:
-		GL_SetShaderDirective( options, "LIGHT_SPOT" );
-		break;
-	case LIGHT_OMNI:
-		GL_SetShaderDirective( options, "LIGHT_OMNI" );
-		break;
-	default:	return;
-		break;
-	}
-
-	if (CVAR_TO_BOOL(cv_brdf))
-		GL_AddShaderDirective( options, "APPLY_PBS" );
-
-	if (CVAR_TO_BOOL(cv_specular))
-		GL_AddShaderDirective( options, "HAS_GLOSSMAP" );
-
-	if (CVAR_TO_BOOL(r_shadows))
-	{
-		int shadow_smooth_type = static_cast<int>(r_shadows->value);
-		GL_AddShaderDirective(options, "APPLY_SHADOW");
-		if (shadow_smooth_type == 2)
-			GL_AddShaderDirective(options, "SHADOW_PCF2X2");
-		else if (shadow_smooth_type == 3)
-			GL_AddShaderDirective(options, "SHADOW_PCF3X3");
-		else if (shadow_smooth_type == 4)
-			GL_AddShaderDirective(options, "SHADOW_VOGEL_DISK");
-	}
-
-	tr.defDynLightShader[type] = GL_FindShader( "deferred/dynlight", "deferred/generic", "deferred/dynlight", options );
-}
-
-/*
-==================
-R_InitDynLightShaders
-
-changed dynamic lighting shaders
-==================
-*/
-void R_InitDynLightShaders( void )
-{
-	char options[MAX_OPTIONS_LENGTH];
-
-	GL_CleanupDrawState();
-
-	R_InitDynLightShader( LIGHT_SPOT );
-	R_InitDynLightShader( LIGHT_OMNI );
-
-	options[0] = '\0';
-
-	if( CVAR_TO_BOOL( cv_deferred_tracebmodels ))
-		GL_AddShaderDirective( options, "BSPTRACE_BMODELS" );
-
-	// init deferred shaders
-	tr.defSceneShader[0] = GL_FindShader( "deferred/scene_sep", "deferred/generic", "deferred/scene_sep", options );
-	tr.defSceneShader[1] = GL_FindShader( "deferred/scene_all", "deferred/generic", "deferred/scene_all", options );
-	tr.defLightShader = GL_FindShader( "deferred/light", "deferred/generic", "deferred/light", options );
-	tr.bilateralShader = GL_FindUberShader( "deferred/bilateral" );
-}
-
-/*
-==================
 R_VidInit
 
 Called always when "vid_mode" or "fullscreen" cvars is changed
@@ -983,14 +907,10 @@ void R_VidInit( void )
 	glState.width = RENDER_GET_PARM( PARM_SCREEN_WIDTH, 0 );
 	glState.height = RENDER_GET_PARM( PARM_SCREEN_HEIGHT, 0 );
 
-	// TESTTEST
-	glState.defWidth = 256;
-	glState.defHeight = 192;
-
 	COpenGLUnitCube::GetInstance().Initialize();
 	R_InitCommonTextures();
 	R_InitCubemapShaders();
-	GL_VidInitDrawBuffers();
+
 	if (CVAR_TO_BOOL(gl_hdr)) {
 		GL_VidInitTempScreenFBO();
 	}

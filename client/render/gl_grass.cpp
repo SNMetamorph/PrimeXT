@@ -900,9 +900,7 @@ void R_RenderGrassOnList( void )
 	if( !RI->frame.grass_list.Count())
 		return; // don't waste time
 
-	if( !FBitSet( RI->params, RP_DEFERREDLIGHT ))
-		GL_AlphaTest( GL_TRUE );
-	else GL_AlphaTest( GL_FALSE );
+	GL_AlphaTest( GL_TRUE );
 
 	GL_DEBUG_SCOPE();
 	pglAlphaFunc( GL_GREATER, r_grass_alpha->value );
@@ -918,19 +916,8 @@ void R_RenderGrassOnList( void )
 	{
 		grass_t *g = RI->frame.grass_list[i];
 
-		if( FBitSet( RI->params, RP_DEFERREDSCENE ))
-			hCurrentShader = g->deferredScene.GetHandle();
-		else if( FBitSet( RI->params, RP_DEFERREDLIGHT ))
-			hCurrentShader = g->deferredLight.GetHandle();
-		else hCurrentShader = g->forwardScene.GetHandle();
-
+		hCurrentShader = g->forwardScene.GetHandle();
 		if( !hCurrentShader ) continue;
-
-		if( FBitSet( RI->params, RP_DEFERREDSCENE|RP_DEFERREDLIGHT ) && memcmp( g->lights, cached_lights, MAXDYNLIGHTS ))
-		{
-			memcpy( cached_lights, g->lights, MAXDYNLIGHTS );
-			update_params = true;
-		}
 
 		if( hCachedMatrix != g->hCachedMatrix )
 		{
@@ -1376,78 +1363,6 @@ static word R_GrassShaderLightForward( CDynLight *dl, grass_t *g )
 
 /*
 ================
-R_GrassShaderSceneDeferred
-
-grass scene deferred
-================
-*/
-word R_GrassShaderSceneDeferred( msurface_t *s, grass_t *g )
-{
-	char glname[64];
-	char options[MAX_OPTIONS_LENGTH];
-	mextrasurf_t *es = s->info;
-
-	if( g->deferredScene.IsValid( ))
-		return g->deferredScene.GetHandle(); // valid
-
-	Q_strncpy( glname, "deferred/scene_grass", sizeof( glname ));
-	memset( options, 0, sizeof( options ));
-
-	material_t *mat = s->texinfo->texture->material;
-
-	GL_AddShaderDirective( options, "APPLY_FADE_DIST" );
-
-	word shaderNum = GL_FindUberShader( glname, options );
-	if( !shaderNum )
-	{
-		SetBits( g->flags, FGRASS_NODRAW );
-		return 0; // something bad happens
-	}
-
-	ClearBits( g->flags, FGRASS_NODRAW );
-	g->deferredScene.SetShader( shaderNum );
-
-	return shaderNum;
-}
-
-/*
-================
-R_GrassShaderLightDeferred
-
-grass light deferred
-================
-*/
-word R_GrassShaderLightDeferred( msurface_t *s, grass_t *g )
-{
-	char glname[64];
-	char options[MAX_OPTIONS_LENGTH];
-	mextrasurf_t *es = s->info;
-
-	if( g->deferredLight.IsValid( ))
-		return g->deferredLight.GetHandle(); // valid
-
-	Q_strncpy( glname, "deferred/light_grass", sizeof( glname ));
-	memset( options, 0, sizeof( options ));
-
-	material_t *mat = s->texinfo->texture->material;
-
-	GL_AddShaderDirective( options, "APPLY_FADE_DIST" );
-
-	word shaderNum = GL_FindUberShader( glname, options );
-	if( !shaderNum )
-	{
-		SetBits( g->flags, FGRASS_NODRAW );
-		return 0; // something bad happens
-	}
-
-	g->deferredLight.SetShader( shaderNum );
-	ClearBits( g->flags, FGRASS_NODRAW );
-
-	return shaderNum;
-}
-
-/*
-================
 R_GrassShaderSceneDepth
 
 return grass depth-shader
@@ -1604,18 +1519,14 @@ void R_AddGrassToDrawList( msurface_t *s, drawlist_t drawlist_type )
 		case DRAWLIST_SOLID:
 			if( FBitSet( grass->flags, FGRASS_NODRAW ))
 				continue;
-			if( FBitSet( RI->params, RP_DEFERREDSCENE|RP_DEFERREDLIGHT ))
-			{
-				// precache shaders
-				R_GrassShaderSceneDeferred( s, grass );
-				R_GrassShaderLightDeferred( s, grass );
-			}
-			else R_GrassShaderSceneForward( s, grass );
+
+			R_GrassShaderSceneForward( s, grass );
 			RI->frame.grass_list.AddToTail( grass );
 			break;
 		case DRAWLIST_SHADOW:
 			if( FBitSet( grass->flags, FGRASS_NODRAW ))
 				continue;
+
 			R_GrassShaderSceneDepth( s, grass );
 			RI->frame.grass_list.AddToTail( grass );
 			break;

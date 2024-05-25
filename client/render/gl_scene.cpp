@@ -56,20 +56,6 @@ void R_CheckChanges(void)
 		ClearBits(r_studio_decals->flags, FCVAR_CHANGED);
 	}
 
-	if (FBitSet(cv_deferred_maxlights->flags, FCVAR_CHANGED))
-	{
-		float maxDeferredLights = bound(1, cv_deferred_maxlights->value, MAXDYNLIGHTS);
-		if (maxDeferredLights != cv_deferred_maxlights->value)
-			CVAR_SET_FLOAT("gl_deferred_maxlights", maxDeferredLights);
-		ClearBits(cv_deferred_maxlights->flags, FCVAR_CHANGED);
-	}
-
-	if (FBitSet(cv_deferred_tracebmodels->flags, FCVAR_CHANGED))
-	{
-		ClearBits(cv_deferred_tracebmodels->flags, FCVAR_CHANGED);
-		tr.params_changed = true;
-	}
-
 	if (FBitSet(r_recursion_depth->flags, FCVAR_CHANGED))
 	{
 		float depth = bound(0.0f, r_recursion_depth->value, MAX_REF_STACK - 2);
@@ -92,12 +78,6 @@ void R_CheckChanges(void)
 	if (FBitSet(r_cubemap->flags, FCVAR_CHANGED))
 	{
 		ClearBits(r_cubemap->flags, FCVAR_CHANGED);
-		settings_changed = true;
-	}
-
-	if (FBitSet(cv_deferred->flags, FCVAR_CHANGED))
-	{
-		ClearBits(cv_deferred->flags, FCVAR_CHANGED);
 		settings_changed = true;
 	}
 
@@ -265,7 +245,6 @@ void R_ClearScene( void )
 
 	if (tr.params_changed)
 	{
-		R_InitDynLightShaders();
 		InitPostprocessShaders();
 	}
 }

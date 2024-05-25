@@ -351,17 +351,8 @@ void R_DrawSkyBox()
 
 	if (drawSun)
 	{
-		if (FBitSet(RI->params, RP_DEFERREDSCENE)) {
-			hSkyShader = tr.defSceneSky;
-		}
-		else if (FBitSet(RI->params, RP_DEFERREDLIGHT)) {
-			hSkyShader = tr.defLightSky;
-		}
-		else 
-		{
-			int type = tr.sun_light_enabled ? 1 : 0;
-			hSkyShader = tr.skyboxEnv[type];
-		}
+		int type = tr.sun_light_enabled ? 1 : 0;
+		hSkyShader = tr.skyboxEnv[type];
 	}
 
 	for (int i = 0; i < 6; i++)

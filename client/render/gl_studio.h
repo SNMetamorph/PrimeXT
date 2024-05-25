@@ -252,8 +252,6 @@ private:
 
 	word ShaderSceneForward( mstudiomaterial_t *mat, int lightmode, bool bone_weighting, int numbones );
 	word ShaderLightForward( CDynLight *dl, mstudiomaterial_t *mat, bool bone_weighting, int numbones );
-	word ShaderSceneDeferred( mstudiomaterial_t *mat, bool bone_weighting, int numbones );
-	word ShaderLightDeferred( mstudiomaterial_t *mat, bool bone_weighting, int numbones );
 	word ShaderSceneDepth( mstudiomaterial_t *mat, bool bone_weighting, int numbones );
 	word ShaderDecalForward( studiodecal_t *pDecal, bool has_vertexlight );
 
@@ -633,8 +631,6 @@ public:
 	// Draw view model (at end the frame)
 	void	DrawViewModel( void );
 
-	void	RenderDeferredStudioList( void );
-
 	void	RenderSolidStudioList( void );
 
 	void	RenderShadowStudioList( void );
@@ -687,12 +683,6 @@ inline int R_StudioGetBounds( cl_entity_t *e, Vector bounds[2] )
 inline int R_StudioGetBounds( CSolidEntry *entry, Vector bounds[2] )
 {
 	return g_StudioRenderer.StudioGetBounds( entry, bounds );
-}
-
-inline void R_RenderDeferredStudioList( void )
-{
-	GL_DEBUG_SCOPE();
-	g_StudioRenderer.RenderDeferredStudioList();
 }
 
 inline void R_RenderSolidStudioList( void )

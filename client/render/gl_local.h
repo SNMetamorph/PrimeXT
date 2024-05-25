@@ -117,10 +117,8 @@ enum RefParams
 	RP_NOSHADOWS		= BIT(11),	// disable shadows for this pass
 	RP_WATERPASS		= BIT(12),	// it's mirorring plane for water surface
 	RP_NOGRASS			= BIT(13),	// don't draw grass
-	RP_DEFERREDSCENE	= BIT(14),	// render scene into geometry buffer
-	RP_DEFERREDLIGHT	= BIT(15),	// render scene into low-res lightmap
-	RP_THIRDPERSON		= BIT(16),	// camera is thirdperson
-	RP_FORCE_NOPLAYER	= BIT(17)	// ignore player drawing in some special cases
+	RP_THIRDPERSON		= BIT(14),	// camera is thirdperson
+	RP_FORCE_NOPLAYER	= BIT(15)	// ignore player drawing in some special cases
 };
 
 inline RefParams operator|(RefParams a, RefParams b)
@@ -528,28 +526,12 @@ typedef struct
 
 	gl_lightmap_t	lightmaps[MAX_LIGHTMAPS];
 	uint32_t	current_lightmap_texture;
-	TextureHandle	packed_lights_texture;
-	TextureHandle	packed_planes_texture;
-	TextureHandle	packed_nodes_texture;
-	TextureHandle	packed_models_texture;
-
 	gl_shadowmap_t	shadowmap;	// single atlas
 
 	// framebuffers
 	CFrameBuffer	fbo_shadow2D;	// used for projection shadowmapping
 	CFrameBuffer	fbo_shadowCM;	// used for omnidirectional shadowmapping
 	CFrameBuffer	sunShadowFBO[MAX_SHADOWMAPS];	// extra-large shadowmap for sun rendering
-	CFrameBuffer	fbo_light;	// store lightmap
-	CFrameBuffer	fbo_filter;	// store filtered lightmap
-	CFrameBuffer	fbo_shadow;	// store shadowflags
-
-	// deffered rendering framebuffers
-	gl_drawbuffer_t	*defscene_fbo;
-	gl_drawbuffer_t	*deflight_fbo;
-	word		defSceneShader[2];	// geometry pass
-	word		defLightShader;	// light pass
-	word		defDynLightShader[2];// dynamic light pass
-	word		bilateralShader;	// upscale filter
 
 	// HDR rendering stuff
 	gl_drawbuffer_t *screen_hdr_fbo;
@@ -562,8 +544,6 @@ typedef struct
 
 	// skybox shaders
 	word		skyboxEnv[2];	// skybox & sun
-	word		defSceneSky;	// skybox & sun
-	word		defLightSky;	// skybox & sun
 
 	// framebuffers
 	gl_fbo_t		frame_buffers[MAX_FRAMEBUFFERS];
@@ -690,7 +670,6 @@ typedef enum
 typedef struct
 {
 	int		width, height;
-	int		defWidth, defHeight;
 	qboolean		fullScreen;
 	qboolean		wideScreen;
 
@@ -820,13 +799,6 @@ bool R_CullNodeTopView( mnode_t *node );
 #define R_CullFrustum( otherFrustum )		( RI->view.frustum.CullFrustum( otherFrustum ))
 
 //
-// gl_deferred.cpp
-//
-void GL_SetupGBuffer( void );
-void GL_ResetGBuffer( void );
-void GL_DrawDeferredPass( void );
-
-//
 // gl_framebuffer.c
 //
 gl_drawbuffer_t *GL_AllocDrawbuffer(const char *name, int width, int height, int depth = 1);
@@ -834,7 +806,6 @@ void GL_ResizeDrawbuffer(gl_drawbuffer_t *fbo, int width, int height, int depth 
 void GL_AttachColorTextureToFBO(gl_drawbuffer_t *fbo, TextureHandle texture, int colorIndex, int cubemapSide = 0, int mipLevel = 0);
 void GL_AttachDepthTextureToFBO(gl_drawbuffer_t *fbo, TextureHandle texture, int side = 0);
 void GL_CheckFBOStatus(gl_drawbuffer_t *fbo);
-void GL_VidInitDrawBuffers();
 void GL_FreeDrawbuffers();
 void GL_FreeDrawbuffer(gl_drawbuffer_t *fbo);
 
@@ -901,7 +872,6 @@ void CL_InitMaterials( void );
 matdesc_t *CL_FindMaterial( const char *name );
 void R_LoadLandscapes( const char *filename );
 terrain_t *R_FindTerrain( const char *texname );
-void R_InitDynLightShaders( void );
 void R_InitShadowTextures( void );
 void R_FreeLandscapes( void );
 byte R_LightToTexGamma( byte input );
@@ -931,7 +901,6 @@ void GL_FreeGPUShaders( void );
 // gl_shadows.cpp
 //
 void R_RenderShadowmaps( void );
-void R_RenderDeferredShadows( void );
 
 //
 // gl_movie.cpp

@@ -63,8 +63,6 @@ typedef struct grass_s
 	shader_t		forwardLightSpot;
 	shader_t		forwardLightOmni;
 	shader_t		forwardLightProj;
-	shader_t		deferredScene;
-	shader_t		deferredLight;
 	shader_t		forwardDepth;
 
 	byte		texture;		// not a real texture just index into array

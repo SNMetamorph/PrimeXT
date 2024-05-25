@@ -46,8 +46,6 @@ typedef struct mstudiomat_s
 	shader_t		forwardLightSpot[2];
 	shader_t		forwardLightOmni[2];
 	shader_t		forwardLightProj;
-	shader_t		deferredScene;
-	shader_t		deferredLight;
 	shader_t		forwardDepth;
 
 	unsigned short	lastRenderMode;		// for catch change render modes

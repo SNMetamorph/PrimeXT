@@ -352,7 +352,7 @@ static void R_SetupViewCache( const ref_viewpass_t *rvp )
 	if (RI->view.port.CompareWith(rvp->viewport))
 	{
 		RI->view.port = CViewport(rvp->viewport);
-		if (RP_NORMALPASS( ) && !FBitSet( RI->params, RP_DEFERREDLIGHT ))
+		if (RP_NORMALPASS( ))
 		{
 			// set up viewport (main, playersetup)
 			int x = floor(RI->view.port.GetX() * glState.width / glState.width);
@@ -697,11 +697,7 @@ static void R_SetupViewCache( const ref_viewpass_t *rvp )
 	}
 
 	// setup dynamic lights
-	if( !FBitSet( RI->params, RP_DEFERREDLIGHT ))
-	{
-		Mod_InitBSPModelsTexture();
-		R_SetupDynamicLights();
-	}
+	R_SetupDynamicLights();
 
 	// cache client frame
 	RI->view.client_frame = tr.realframecount;		
@@ -980,42 +976,6 @@ void R_RenderScene( const ref_viewpass_t *rvp, RefParams params )
 
 /*
 ===============
-R_RenderDeferredScene
-===============
-*/
-void R_RenderDeferredScene( const ref_viewpass_t *rvp, RefParams params )
-{
-	// now we know about pass specific
-	RI->params = params;
-	GL_DEBUG_SCOPE();
-	R_SetupViewCache( rvp );
-
-	// draw all the shadowmaps
-	if( FBitSet( RI->params, RP_DEFERREDSCENE ))
-		R_RenderShadowmaps();
-
-	GL_SetupGBuffer();
-	R_SetupGLstate();
-	R_Clear( ~0 );
-
-	R_DrawSkyBox();
-	R_RenderDeferredBrushList();
-	R_RenderDeferredStudioList();
-	R_PushRefState();
-	RI->params = params;
-	R_DrawViewModel();
-	R_PopRefState();
-	GL_CleanupDrawState();
-	GL_ResetGBuffer();
-
-	GL_CheckForErrors();
-
-	GL_DrawDeferredPass();
-	R_ResetGLstate();
-}
-
-/*
-===============
 HUD_RenderFrame
 
 A callback that replaces RenderFrame
@@ -1064,30 +1024,17 @@ int HUD_RenderFrame( const struct ref_viewpass_s *rvp )
 		return 0;
 	}
 
-	if( CVAR_TO_BOOL( cv_deferred ))
+
+	if (hdr_rendering) 
 	{
-		if( !CVAR_TO_BOOL( cv_deferred_full ))
-		{
-			defVP.viewport[2] = glState.defWidth;
-			defVP.viewport[3] = glState.defHeight;
-			R_RenderDeferredScene( &defVP, RP_DEFERREDLIGHT );
-			defVP = *rvp;
+		if (multisampling) {
+			GL_BindDrawbuffer(tr.screen_multisample_fbo);
 		}
-		R_RenderDeferredScene( &defVP, RP_DEFERREDSCENE );
-	}
-	else
-	{
-		if (hdr_rendering) 
-		{
-			if (multisampling) {
-				GL_BindDrawbuffer(tr.screen_multisample_fbo);
-			}
-			else {
-				GL_BindDrawbuffer(tr.screen_hdr_fbo);
-			}
+		else {
+			GL_BindDrawbuffer(tr.screen_hdr_fbo);
 		}
-		R_RenderScene( &defVP, refParams );
 	}
+	R_RenderScene( &defVP, refParams );
 
 	defVP = *rvp;
 

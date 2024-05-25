@@ -424,82 +424,6 @@ static word R_ShaderDecalForward( brushdecal_t *decal )
 }
 
 /*
-===============
-R_ShaderDecalDeferred
-
-Select the program for surface (diffuse\puddle)
-===============
-*/
-static word R_ShaderDecalDeferred( brushdecal_t *decal )
-{
-	char glname[64];
-	char options[MAX_OPTIONS_LENGTH];
-	const DecalGroupEntry *texinfo = decal->texinfo;
-	mextrasurf_t *es= decal->surface;
-	bool mirrorSurface = false;
-	bool have_parallax = false;
-	bool have_bumpmap = false;
-	msurface_t *s = es->surf;
-
-	ASSERT( worldmodel != NULL );
-
-	if( decal->deferredScene.IsValid( ))
-		return decal->deferredScene.GetHandle(); // valid
-
-	Q_strncpy( glname, "deferred/scene_decal_bmodel", sizeof( glname ));
-	memset( options, 0, sizeof( options ));
-
-	if( FBitSet( decal->flags, FDECAL_PUDDLE ))
-		GL_AddShaderDirective( options, "DECAL_PUDDLE" );
-
-	if( texinfo->gl_heightmap_id != tr.whiteTexture && texinfo->matdesc->reliefScale > 0.0f )
-	{
-		if( cv_parallax->value == 1.0f )
-			GL_AddShaderDirective( options, "PARALLAX_SIMPLE" );
-		else if( cv_parallax->value >= 2.0f )
-			GL_AddShaderDirective( options, "PARALLAX_OCCLUSION" );
-		have_parallax = true;
-	}
-
-	material_t *mat = R_TextureAnimation( s )->material;
-
-	if( CVAR_TO_BOOL( cv_specular ) && ( texinfo->gl_specular_id != tr.blackTexture ))
-		GL_AddShaderDirective( options, "HAS_GLOSSMAP" );
-
-	if( !texinfo->opaque )
-	{
-		// GL_DST_COLOR, GL_SRC_COLOR
-		GL_AddShaderDirective( options, "APPLY_COLORBLEND" );
-	}
-
-	if(( texinfo->gl_normalmap_id != tr.normalmapTexture ) && CVAR_TO_BOOL( cv_bump ))
-	{
-		GL_AddShaderDirective( options, "HAS_NORMALMAP" );
-		GL_EncodeNormal( options, texinfo->gl_normalmap_id );
-
-		if( FBitSet( decal->flags, FDECAL_PUDDLE ))
-			GL_AddShaderDirective( options, "APPLY_REFRACTION" );
-		have_bumpmap = true;
-	}
-
-	if( have_parallax || have_bumpmap )
-		GL_AddShaderDirective( options, "COMPUTE_TBN" );
-
-	if( FBitSet( mat->flags, BRUSH_TRANSPARENT ))
-		GL_AddShaderDirective( options, "ALPHA_TEST" );
-
-	if( FBitSet( decal->flags, FDECAL_PUDDLE ) && !RP_CUBEPASS( ))
-		GL_AddShaderDirective( options, "REFLECTION_CUBEMAP" );		 
-
-	word shaderNum = GL_FindUberShader( glname, options );
-	if( !shaderNum ) return 0; // something bad happens
-
-	decal->deferredScene.SetShader( shaderNum );
-
-	return shaderNum;
-}
-
-/*
 ==============================================================================
 
  DECAL CLIPPING
@@ -1315,21 +1239,10 @@ void R_SetDecalUniforms( brushdecal_t *decal )
 	Vector4D lightstyles;
 
 	// begin draw the sorted list
-	if( FBitSet( RI->params, RP_DEFERREDSCENE ))
+	if( RI->currentshader != decal->forwardScene.GetShader() )
 	{
-		if( RI->currentshader != decal->deferredScene.GetShader() )
-		{
-			// force to bind new shader
-			GL_BindShader( decal->deferredScene.GetShader() );
-		}
-	}
-	else
-	{
-		if( RI->currentshader != decal->forwardScene.GetShader() )
-		{
-			// force to bind new shader
-			GL_BindShader( decal->forwardScene.GetShader() );
-		}
+		// force to bind new shader
+		GL_BindShader( decal->forwardScene.GetShader() );
 	}
 
 	material_t *mat = R_TextureAnimation( es->surf )->material;
@@ -1421,15 +1334,6 @@ void R_SetDecalUniforms( brushdecal_t *decal )
 			break;
 		case UT_FITNORMALMAP:
 			u->SetValue( tr.normalsFitting.ToInt() );
-			break;
-		case UT_FRAGDATA0:
-			u->SetValue( tr.defscene_fbo->colortarget[0].ToInt() );
-			break;
-		case UT_FRAGDATA1:
-			u->SetValue( tr.defscene_fbo->colortarget[1].ToInt() );
-			break;
-		case UT_FRAGDATA2:
-			u->SetValue( tr.defscene_fbo->colortarget[2].ToInt() );
 			break;
 		case UT_MODELMATRIX:
 			u->SetValue( &glm->modelMatrix[0] );
@@ -1620,24 +1524,15 @@ static void R_RenderSurfaceDecals( msurface_t *surf, drawlist_t drawlist_type )
 			continue;
 
 		// initialize decal shader
-		if( FBitSet( RI->params, RP_DEFERREDSCENE ))
-		{
-			if( !R_ShaderDecalDeferred( p ))
-				continue;
-		}
-		else
-		{
-			if( !R_ShaderDecalForward( p ))
-				continue;
-		}
+		if( !R_ShaderDecalForward( p ))
+			continue;
+
 		R_SetDecalUniforms( p );
 
-		if( !FBitSet( RI->params, RP_DEFERREDSCENE ))
-		{
-			if( p->texinfo->opaque )
-				pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-			else pglBlendFunc( GL_DST_COLOR, GL_SRC_COLOR );
-		}
+		if( p->texinfo->opaque )
+			pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+		else pglBlendFunc( GL_DST_COLOR, GL_SRC_COLOR );
+
 		r_stats.c_total_tris += (p->numElems / 3);
 
 		// draw decal from cache
@@ -1718,16 +1613,7 @@ void R_RenderDecalsSolidList( drawlist_t drawlist_type )
 	if( GL_Support( R_SEAMLESS_CUBEMAP ))
 		pglEnable( GL_TEXTURE_CUBE_MAP_SEAMLESS );
 
-	if( FBitSet( RI->params, RP_DEFERREDSCENE ))
-	{
-		pglColorMaski( 3, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE );
-		pglColorMaski( 4, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE );
-	}
-
-	if( FBitSet( RI->params, RP_DEFERREDSCENE ))
-		GL_Blend( GL_FALSE );
-	else 
-		GL_Blend( GL_TRUE );
+	GL_Blend( GL_TRUE );
 
 	GL_DEBUG_SCOPE();
 	GL_AlphaTest( GL_FALSE );
@@ -1752,12 +1638,6 @@ void R_RenderDecalsSolidList( drawlist_t drawlist_type )
 			continue;
 
 		R_RenderSurfaceDecals( s, drawlist_type );
-	}
-
-	if( FBitSet( RI->params, RP_DEFERREDSCENE ))
-	{
-		pglColorMaski( 3, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE );
-		pglColorMaski( 4, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE );
 	}
 
 	if( GL_Support( R_SEAMLESS_CUBEMAP ))

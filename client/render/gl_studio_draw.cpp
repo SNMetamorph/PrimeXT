@@ -2249,12 +2249,6 @@ word CStudioModelRenderer :: ChooseStudioProgram( studiohdr_t *phdr, mstudiomate
 	}
 	else
 	{
-		if( FBitSet( RI->params, RP_DEFERREDSCENE|RP_DEFERREDLIGHT ))
-		{
-			ShaderSceneDeferred( mat, bone_weights, phdr->numbones );
-			return ShaderLightDeferred( mat, bone_weights, phdr->numbones );
-		}
-
 		return ShaderSceneForward( mat, lightmode, bone_weights, phdr->numbones );
 	}
 }
@@ -2716,15 +2710,8 @@ void CStudioModelRenderer :: DrawViewModel( void )
 	// because water blur separates them
 	AddStudioModelToDrawList( view );
 
-	if( FBitSet( RI->params, RP_DEFERREDSCENE|RP_DEFERREDLIGHT ))
-	{
-		RenderDeferredStudioList();
-	}
-	else
-	{
-		RenderSolidStudioList();
-		R_RenderTransList();
-	}
+	RenderSolidStudioList();
+	R_RenderTransList();
 
 	if( bCustom ) RestoreNormalFov( projMatrix, worldViewProjMatrix );
 
@@ -2881,64 +2868,6 @@ void CStudioModelRenderer :: RenderDynLightList( bool solid )
 	pglDisable( GL_SCISSOR_TEST );
 	GL_CleanUpTextureUnits( 0 );
 	RI->currentlight = NULL;
-}
-
-void CStudioModelRenderer :: RenderDeferredStudioList( void )
-{
-	if( !RI->frame.solid_meshes.Count() )
-		return;
-
-	pglAlphaFunc( GL_GEQUAL, 0.5f );
-	GL_Blend( GL_FALSE );
-	GL_AlphaTest( GL_FALSE );
-	GL_DepthMask( GL_TRUE );
-
-	if( GL_Support( R_SEAMLESS_CUBEMAP ))
-		pglEnable( GL_TEXTURE_CUBE_MAP_SEAMLESS );
-
-	// sorting list to reduce shader switches
-	if( !CVAR_TO_BOOL( cv_nosort ))
-		RI->frame.solid_meshes.Sort( SortSolidMeshes );
-
-	RI->currententity = NULL;
-	RI->currentmodel = NULL;
-	m_pCurrentMaterial = NULL;
-
-	int i;
-
-	for( i = 0; i < RI->frame.solid_meshes.Count(); i++ )
-	{
-		CSolidEntry *entry = &RI->frame.solid_meshes[i];
-
-		if( entry->m_bDrawType != DRAWTYPE_MESH )
-			continue;
-
-		if( m_iDrawModelType == DRAWSTUDIO_NORMAL )
-		{
-			GL_DepthRange( gldepthmin, gldepthmax );
-			GL_ClipPlane( true );
-		}
-
-		DrawSingleMesh(entry, (i == 0), false);
-	}
-
-	if( GL_Support( R_SEAMLESS_CUBEMAP ))
-		pglDisable( GL_TEXTURE_CUBE_MAP_SEAMLESS );
-
-	if( m_iDrawModelType == DRAWSTUDIO_NORMAL )
-		GL_DepthRange( gldepthmin, gldepthmax );
-
-	GL_CleanupDrawState();
-	GL_AlphaToCoverage( false );
-	GL_AlphaTest( GL_FALSE );
-	GL_ClipPlane( true );
-	GL_Cull( GL_FRONT );
-
-	// now draw studio decals
-	for( i = 0; i < RI->frame.solid_meshes.Count(); i++ )
-	{
-//		DrawDecal( &RI->frame.solid_meshes[i] );
-	}
 }
 
 word CStudioModelRenderer :: ShaderSceneForward( mstudiomaterial_t *mat, int lightmode, bool bone_weighting, int numbones )
@@ -3261,124 +3190,6 @@ word CStudioModelRenderer :: ShaderLightForward( CDynLight *dl, mstudiomaterial_
 	return shaderNum;
 }
 
-word CStudioModelRenderer :: ShaderSceneDeferred( mstudiomaterial_t *mat, bool bone_weighting, int numbones )
-{
-	char glname[64];
-	char options[MAX_OPTIONS_LENGTH];
-	bool using_cubemaps = false;
-
-	if( mat->deferredScene.IsValid( ))
-		return mat->deferredScene.GetHandle(); // valid
-
-	Q_strncpy( glname, "deferred/scene_studio", sizeof( glname ));
-	memset( options, 0, sizeof( options ));
-
-	if( numbones == 1 )
-		GL_AddShaderDirective( options, "MAXSTUDIOBONES 1" );
-
-	if( bone_weighting )
-		GL_AddShaderDirective( options, "APPLY_BONE_WEIGHTING" );
-
-	if( FBitSet( mat->flags, STUDIO_NF_CHROME ))
-		GL_AddShaderDirective( options, "HAS_CHROME" );
-
-	if( FBitSet( mat->flags, STUDIO_NF_FULLBRIGHT ) || R_FullBright( ))
-		GL_AddShaderDirective( options, "LIGHTING_FULLBRIGHT" );
-
-	if( FBitSet( mat->flags, STUDIO_NF_FLATSHADE ))
-		GL_AddShaderDirective( options, "LIGHTING_FLATSHADE" );
-
-	if( FBitSet( mat->flags, STUDIO_NF_LUMA ))
-		GL_AddShaderDirective( options, "HAS_LUMA" );
-
-	if( FBitSet( mat->flags, STUDIO_NF_HAS_DETAIL ) && CVAR_TO_BOOL( r_detailtextures ) && glConfig.max_varying_floats > 48 )
-		GL_AddShaderDirective( options, "HAS_DETAIL" );
-
-	if( !RP_CUBEPASS() && ( FBitSet( mat->flags, STUDIO_NF_NORMALMAP ) && CVAR_TO_BOOL( cv_bump )))
-	{
-		GL_AddShaderDirective( options, "HAS_NORMALMAP" );
-		GL_EncodeNormal( options, mat->gl_normalmap_id );
-		GL_AddShaderDirective( options, "COMPUTE_TBN" );
-	}
-
-	// parallax mapping
-	if (FBitSet(mat->flags, STUDIO_NF_HEIGHTMAP) && mat->reliefScale > 0.0f)
-	{
-		if (cv_parallax->value > 0.0f)
-		{
-			if (cv_parallax->value == 1.0f)
-				GL_AddShaderDirective(options, "PARALLAX_SIMPLE");
-			else if (cv_parallax->value >= 2.0f)
-				GL_AddShaderDirective(options, "PARALLAX_OCCLUSION");
-		}
-	}
-
-	if( !RP_CUBEPASS() && ( CVAR_TO_BOOL( cv_specular ) && FBitSet( mat->flags, STUDIO_NF_GLOSSMAP )))
-		GL_AddShaderDirective( options, "HAS_GLOSSMAP" );
-
-	if(( world->num_cubemaps > 0 ) && CVAR_TO_BOOL( r_cubemap ) && (mat->reflectScale > 0.0f) && !RP_CUBEPASS( ))
-	{
-		GL_AddShaderDirective( options, "REFLECTION_CUBEMAP" );
-		using_cubemaps = true;
-	}
-
-	word shaderNum = GL_FindUberShader( glname, options );
-	if( !shaderNum )
-	{
-		SetBits( mat->flags, STUDIO_NF_NODRAW );
-		return 0; // something bad happens
-	}
-
-	if( using_cubemaps )
-		GL_AddShaderFeature( shaderNum, SHADER_USE_CUBEMAPS );
-
-	// done
-	ClearBits( mat->flags, STUDIO_NF_NODRAW );
-	mat->deferredScene.SetShader( shaderNum );
-
-	return shaderNum;
-}
-
-word CStudioModelRenderer :: ShaderLightDeferred( mstudiomaterial_t *mat, bool bone_weighting, int numbones )
-{
-	char glname[64];
-	char options[MAX_OPTIONS_LENGTH];
-
-	if( mat->deferredLight.IsValid( ))
-		return mat->deferredLight.GetHandle(); // valid
-
-	Q_strncpy( glname, "deferred/light_studio", sizeof( glname ));
-	memset( options, 0, sizeof( options ));
-
-	if( numbones == 1 )
-		GL_AddShaderDirective( options, "MAXSTUDIOBONES 1" );
-
-	if( bone_weighting )
-		GL_AddShaderDirective( options, "APPLY_BONE_WEIGHTING" );
-
-	if( FBitSet( mat->flags, STUDIO_NF_FULLBRIGHT ) || R_FullBright( ))
-		GL_AddShaderDirective( options, "LIGHTING_FULLBRIGHT" );
-
-	if( FBitSet( mat->flags, STUDIO_NF_FLATSHADE ))
-		GL_AddShaderDirective( options, "LIGHTING_FLATSHADE" );
-
-	if( FBitSet( mat->flags, STUDIO_NF_LUMA ))
-		GL_AddShaderDirective( options, "HAS_LUMA" );
-
-	word shaderNum = GL_FindUberShader( glname, options );
-	if( !shaderNum )
-	{
-		SetBits( mat->flags, STUDIO_NF_NODRAW );
-		return 0; // something bad happens
-	}
-
-	// done
-	ClearBits( mat->flags, STUDIO_NF_NODRAW );
-	mat->deferredLight.SetShader( shaderNum );
-
-	return shaderNum;
-}
-
 word CStudioModelRenderer :: ShaderSceneDepth( mstudiomaterial_t *mat, bool bone_weighting, int numbones )
 {
 	char glname[64];
@@ -3462,17 +3273,6 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force, boo
 	bool texFlagMasked = FBitSet(mat->flags, STUDIO_NF_MASKED);
 	bool texAlphaToCoverage = FBitSet(mat->flags, STUDIO_NF_ALPHATOCOVERAGE);
 
-	if( FBitSet( RI->params, RP_DEFERREDLIGHT|RP_DEFERREDSCENE ))
-	{
-		if( FBitSet( RI->params, RP_DEFERREDSCENE ))
-			entry->m_hProgram = mat->deferredScene.GetHandle();
-		else if( FBitSet( RI->params, RP_DEFERREDLIGHT ))
-			entry->m_hProgram = mat->deferredLight.GetHandle();
-		else entry->m_hProgram = 0;
-
-		if( !entry->m_hProgram ) return;
-	}
-
 	if( force || ( RI->currentshader != &glsl_programs[entry->m_hProgram] ))
 	{
 		// force to bind new shader
@@ -3481,7 +3281,7 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force, boo
 	}
 
 	bool screenCopyRequired = ScreenCopyRequired(RI->currentshader);
-	if( FBitSet( RI->params, RP_SHADOWVIEW|RP_DEFERREDSCENE ))
+	if( FBitSet( RI->params, RP_SHADOWVIEW ))
 	{
 		if (texFlagMasked)
 		{
@@ -3684,15 +3484,6 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force, boo
 			u->SetValue(width, height, mat->reliefScale, cv_shadow_offset->value);
 			break;
 		}
-		case UT_BSPPLANESMAP:
-			u->SetValue( tr.packed_planes_texture.ToInt() );
-			break;
-		case UT_BSPNODESMAP:
-			u->SetValue( tr.packed_nodes_texture.ToInt() );
-			break;
-		case UT_BSPLIGHTSMAP:
-			u->SetValue( tr.packed_lights_texture.ToInt() );
-			break;
 		case UT_FITNORMALMAP:
 			u->SetValue( tr.normalsFitting.ToInt() );
 			break;

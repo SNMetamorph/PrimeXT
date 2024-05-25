@@ -244,13 +244,6 @@ static uniformTable_t glsl_uniformTable[] =
 { "u_GlowMap",		UT_GLOWMAP,		UFL_TEXTURE_UNIT },
 { "u_HeightMap",		UT_HEIGHTMAP,		UFL_TEXTURE_UNIT },
 { "u_LayerMap",		UT_LAYERMAP,		UFL_TEXTURE_UNIT },
-{ "u_FragData0",		UT_FRAGDATA0,		UFL_TEXTURE_UNIT },
-{ "u_FragData1",		UT_FRAGDATA1,		UFL_TEXTURE_UNIT },
-{ "u_FragData2",		UT_FRAGDATA2,		UFL_TEXTURE_UNIT },
-{ "u_BspPlanesMap",		UT_BSPPLANESMAP,		UFL_TEXTURE_UNIT },
-{ "u_BspModelsMap",		UT_BSPMODELSMAP,		UFL_TEXTURE_UNIT },
-{ "u_BspNodesMap",		UT_BSPNODESMAP,		UFL_TEXTURE_UNIT },
-{ "u_BspLightsMap",		UT_BSPLIGHTSMAP,		UFL_TEXTURE_UNIT },
 { "u_FitNormalMap",		UT_FITNORMALMAP,		UFL_TEXTURE_UNIT },
 { "u_ModelMatrix",		UT_MODELMATRIX,		0 },
 { "u_ReflectMatrix",	UT_REFLECTMATRIX,		0 },
@@ -747,7 +740,7 @@ static bool GL_ProcessShader( glsl_program_t *program, const char *filename, GLe
 	outputFile->Printf("#ifndef LIGHT_SAMPLES\n#define LIGHT_SAMPLES %i\n#endif\n", LIGHT_SAMPLES);
 	outputFile->Printf("#ifndef MAX_LIGHTSTYLES\n#define MAX_LIGHTSTYLES %i\n#endif\n", MAX_LIGHTSTYLES);
 	outputFile->Printf("#ifndef MAXLIGHTMAPS\n#define MAXLIGHTMAPS %i\n#endif\n", MAXLIGHTMAPS);
-	outputFile->Printf("#ifndef MAXDYNLIGHTS\n#define MAXDYNLIGHTS %i\n#endif\n", (int)cv_deferred_maxlights->value);
+	outputFile->Printf("#ifndef MAXDYNLIGHTS\n#define MAXDYNLIGHTS %i\n#endif\n", MAXDYNLIGHTS);
 	outputFile->Printf("#ifndef GRASS_ANIM_DIST\n#define GRASS_ANIM_DIST %f\n#endif\n", GRASS_ANIM_DIST);
 
 	int headerLines = GL_GetFileLineCount(outputFile) - 1;
@@ -1612,8 +1605,6 @@ void GL_InitGPUShaders()
 	GL_SetShaderDirective( options, "SKYBOX_DAYTIME" );
 	tr.skyboxEnv[0] = GL_FindShader( "forward/skybox", "forward/generic", "forward/skybox" );
 	tr.skyboxEnv[1] = GL_FindShader( "forward/skybox", "forward/generic", "forward/skybox", options );
-	tr.defSceneSky = GL_FindShader( "deferred/skybox", "deferred/generic", "deferred/sky_scene" );
-	tr.defLightSky = GL_FindShader( "deferred/skybox", "deferred/generic", "deferred/sky_light" );
 }
 
 void GL_FreeUberShaders( void )

@@ -470,7 +470,6 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 
 	mstudiolight_t	light;
 	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);
-	bool deferred = CVAR_TO_BOOL(cv_deferred);
 	bool multisampling = CVAR_GET_FLOAT("gl_msaa") > 0.0f;
 
 	tr.frametime = tr.saved_frametime;
@@ -504,10 +503,9 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	RI->view.fov_x = rvp->fov_x;
 	RI->view.fov_y = rvp->fov_y; 
 
-	if (!deferred)
-		R_DrawViewModel();		// 3D
+	R_DrawViewModel();		// 3D
 
-	if (!deferred && hdr_rendering)
+	if (hdr_rendering)
 	{
 		if (multisampling)
 		{
@@ -523,7 +521,7 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	RenderDOF();				// 2D
 	RenderNerveGasBlur();		// 2D
 	RenderUnderwaterBlur();		// 2D
-	if (!deferred && hdr_rendering)
+	if (hdr_rendering)
 	{
 		RenderBloom();
 		RenderTonemap();		// should be last step in HDR pipeline!!!
@@ -534,7 +532,7 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	RenderPostprocessing();		// 2D
 	R_ShowLightMaps();			// 2D
 	
-	if (!deferred && hdr_rendering) {
+	if (hdr_rendering) {
 		R_RenderScreenQuad();
 	}
 

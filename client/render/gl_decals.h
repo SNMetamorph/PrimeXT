@@ -89,7 +89,6 @@ typedef struct brushdecal_s
 
 	// shader cache
 	shader_t			forwardScene;
-	shader_t			deferredScene;
 	mextrasurf_t		*surface;
 	struct brushdecal_s		*pnext;	// linked list for each surface
 	model_t			*model;

@@ -738,9 +738,11 @@ get_next_light:
 		return;
 
 	int i;
-	for( i = 0; i < (int)cv_deferred_maxlights->value && lights[i] != 255; i++ );
-	if( i < (int)cv_deferred_maxlights->value )
+	for( i = 0; i < MAXDYNLIGHTS && lights[i] != 255; i++ );
+
+	if( i < MAXDYNLIGHTS )
 		lights[i] = light;	// nearest light for surf
+
 	indexes[ignored][0] = -1;	// this light is handled
 
 //	if( count > (int)cv_deferred_maxlights->value && i == (int)cv_deferred_maxlights->value )
