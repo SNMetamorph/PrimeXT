@@ -31,7 +31,7 @@ GNU General Public License for more details.
 #include "cl_dlight.h"
 #include "cl_entity.h"
 #include "texture_handle.h"
-#include "xash3d_features.h"
+#include "enginefeatures.h"
 #include <utlarray.h>
 #include "vector.h"
 #include <matrix.h>

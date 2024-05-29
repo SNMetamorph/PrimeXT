@@ -25,7 +25,7 @@ GNU General Public License for more details.
 #include "com_model.h"
 #include "studio.h"
 #include "movelist.h"
-#include "xash3d_features.h"
+#include "enginefeatures.h"
 #include "render_api.h"
 #include "physic.h"
 #include "triangleapi.h"
