@@ -20,7 +20,7 @@ GNU General Public License for more details.
 #include "triangleapi.h"
 #include "custom_alloc.h"
 #include "parsemsg.h"
-#include "xash3d_features.h"
+#include "enginefeatures.h"
 #include "r_weather.h"
 #include "gl_local.h"
 #include "gl_debug.h"
