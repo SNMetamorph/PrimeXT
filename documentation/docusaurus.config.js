@@ -128,6 +128,9 @@ const config = {
         ],
         copyright: `Copyright © ${new Date().getFullYear()} PrimeXT, Inc. Built with Docusaurus.`,
       },
+      colorMode: {
+        respectPrefersColorScheme: true,
+      },
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
