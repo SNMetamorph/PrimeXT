@@ -807,11 +807,6 @@ int main( int argc, char *argv[] )
 	//
 	mx_setcwd (mx::getApplicationPath ());
 
-#if XASH_WIN32 == 1
-	// HOTFIX hide console window
-	ShowWindow(GetConsoleWindow(), SW_HIDE);
-#endif
-
 	char cmdline[1024] = "";
 	if (argc > 1)
 	{
@@ -849,3 +844,10 @@ int main( int argc, char *argv[] )
 
 	return ret;
 }
+
+#if XASH_WIN32 == 1
+int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPreInst, LPSTR lpCmdLine, int nCmdShow)
+{
+	return main(__argc, __argv);
+}
+#endif

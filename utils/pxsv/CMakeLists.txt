@@ -72,6 +72,9 @@ if(MSVC)
 	# release mode compiler flags
 	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release,RelWithDebInfo>:/O2>) # enable optimizing to maximize speed
 	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release,RelWithDebInfo>:/GL>) # enable whole program optimization
+
+	# set proper subsystem to avoid unwanted console window appearing
+	target_link_options(${PROJECT_NAME} PRIVATE /SUBSYSTEM:WINDOWS)
 endif()
 
 # add depedency libraries
