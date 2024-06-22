@@ -48,6 +48,7 @@ list(APPEND SVDLL_SOURCES
 	"user_messages.cpp"
 	"util.cpp"
 	"weapons.cpp"
+	"weapon_logic.cpp"
 	"world.cpp"
 )
 
