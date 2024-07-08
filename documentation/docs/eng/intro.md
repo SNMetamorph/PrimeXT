@@ -4,11 +4,7 @@ description: Modern Half-Life 1 SDK for the Xash3D FWGS engine, supports cross-p
 ---
 
 # Introduction
-
-![Header](/img/intro/header.png)
-
-### About project
-Modern Half-Life 1 SDK for the Xash3D FWGS engine, supports cross-platform and have improved graphics & physics, and a lot of new features, while retaining all the features and approaches to work inherent in GoldSrc and Xash3D.
+PrimeXT - modern Half-Life 1 SDK for the Xash3D FWGS engine, supports cross-platform and have improved graphics & physics, and a lot of new features, while retaining all the features and approaches to work inherent in GoldSrc and Xash3D.
 Based on XashXT, and therefore inherits all the functionality from XashXT and Spirit Of Half-Life. Suitable for creating both singleplayer and multiplayer mods. 
 
 ### Current functionality
@@ -64,5 +60,3 @@ Based on XashXT, and therefore inherits all the functionality from XashXT and Sp
 
 If you wish, you can also take part in the development of PrimeXT - any contribution will be important for us. More details
 you can find out about contributing in development on the project [Discord server](https://discord.gg/BxQUMUescJ).
-
-![Footer](/img/intro/footer.png)
