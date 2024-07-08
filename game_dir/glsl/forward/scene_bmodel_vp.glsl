@@ -106,7 +106,7 @@ void main( void )
 #endif
 
 #if defined( PLANAR_REFLECTION )
-	var_TexMirror = ( Mat4Texture( 0.5 ) * u_ReflectMatrix ) * worldpos;
+	var_TexMirror = ( Mat4Texture( 0.5 ) * u_ReflectMatrix ) * position;
 #endif
 
 #if defined( REFLECTION_CUBEMAP )
