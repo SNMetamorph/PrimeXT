@@ -53,11 +53,10 @@ varying vec3	var_TexLight3;
 
 #if defined( REFLECTION_CUBEMAP ) || defined( APPLY_PBS )
 varying vec3	var_WorldNormal;
-varying mat3	var_MatrixTBN;
 #endif
 
-#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
-varying vec3	var_TangentViewDir;
+#if defined( REFLECTION_CUBEMAP ) || defined( APPLY_PBS ) || defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
+varying mat3	var_MatrixTBN;
 #endif
 
 varying vec3	var_LightDir;
@@ -73,12 +72,20 @@ void main( void )
 	MaterialData mat;
 	LightingData lighting;
 
+#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION ) ||defined( REFLECTION_CUBEMAP ) || defined( APPLY_PBS )
+	mat3 tbnBasis = mat3(normalize(var_MatrixTBN[0]), normalize(var_MatrixTBN[1]), normalize(var_MatrixTBN[2]));
+#endif
+
+#if defined( PARALLAX_SIMPLE ) || defined( PARALLAX_OCCLUSION )
+	vec3 tangentViewDir = normalize(u_ViewOrigin - var_Position) * tbnBasis;
+#endif
+
 #if defined( PARALLAX_SIMPLE )
-	//vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse, normalize(var_TangentViewDir));
-	vec_TexDiffuse = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse, normalize(var_TangentViewDir));
-	//vec_TexDiffuse = ParallaxReliefMap(var_TexDiffuse, normalize(var_TangentViewDir));
+	//vec_TexDiffuse = ParallaxMapSimple(var_TexDiffuse, tangentViewDir);
+	vec_TexDiffuse = ParallaxOffsetMap(u_NormalMap, var_TexDiffuse, tangentViewDir);
+	//vec_TexDiffuse = ParallaxReliefMap(var_TexDiffuse, tangentViewDir);
 #elif defined( PARALLAX_OCCLUSION )
-	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse, normalize(var_TangentViewDir)).xy; 
+	vec_TexDiffuse = ParallaxOcclusionMap(var_TexDiffuse, tangentViewDir).xy; 
 #else
 	vec_TexDiffuse = var_TexDiffuse;
 #endif
@@ -127,7 +134,6 @@ void main( void )
 #endif // HAS_GLOSSMAP
 
 #if defined( REFLECTION_CUBEMAP ) || defined( APPLY_PBS )
-	mat3 tbnBasis = mat3(normalize(var_MatrixTBN[0]), normalize(var_MatrixTBN[1]), normalize(var_MatrixTBN[2]));
 #if defined( HAS_NORMALMAP )
 	// TBN generates only for models with normal maps (just optimization)
 	// because of that we can use TBN matrix only for this case
