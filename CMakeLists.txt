@@ -20,6 +20,7 @@ set(SERVER_INSTALL_DIR "bin" CACHE STRING "Server library path relative to game 
 set(CLIENT_INSTALL_DIR "bin" CACHE STRING "Client library path relative to game directory")
 set(UTILS_INSTALL_DIR "devkit" CACHE STRING "Utilities path relative to game directory")
 set(SERVER_LIBRARY_NAME "server" CACHE STRING "Library name for Linux/MacOS/Windows")
+set(CMAKE_CXX_STANDARD 14)
 
 if(BUILD_CLIENT)
 	list(APPEND VCPKG_MANIFEST_FEATURES "client")
