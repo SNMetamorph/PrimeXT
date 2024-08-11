@@ -467,9 +467,23 @@ void CStudioModelRenderer :: ClearInstanceData( bool create )
 	for( int i = 0; i < Q_min( MAXSTUDIOATTACHMENTS, m_pStudioHeader->numattachments ); i++ )
 	{
 		Q_strncpy( att[i].name, pattachment[i].name, sizeof( att[0].name ));
-
-		att[i].local.Identity();
 		att[i].local.SetOrigin( pattachment[i].org );
+
+		if( FBitSet( pattachment[i].flags, STUDIO_ATTACHMENT_LOCAL ))
+		{
+		  att[i].local[0][0] = pattachment->vectors[0][0];
+		  att[i].local[0][1] = pattachment->vectors[0][1];
+		  att[i].local[0][2] = pattachment->vectors[0][2];
+		  att[i].local[1][0] = pattachment->vectors[1][0];
+		  att[i].local[1][1] = pattachment->vectors[1][1];
+		  att[i].local[1][2] = pattachment->vectors[1][2];
+		  att[i].local[2][0] = pattachment->vectors[2][0];
+		  att[i].local[2][1] = pattachment->vectors[2][1];
+		  att[i].local[2][2] = pattachment->vectors[2][2];
+		}
+		else {
+			att[i].local.Identity();
+		}
 
 		if( !Q_strnicmp( att[i].name, "LightProbe.", 11 ))
 			SetBits( m_pModelInstance->info_flags, MF_CUSTOM_LIGHTGRID );
