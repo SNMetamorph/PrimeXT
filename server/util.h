@@ -29,7 +29,7 @@
 
 #include "datamap.h"
 #include "xashxt_strings.h"
-
+#include "extdll.h"
 #include "com_model.h"
 #include "sprite.h"
 
