@@ -536,7 +536,7 @@ typedef struct
 	// HDR rendering stuff
 	gl_drawbuffer_t *screen_hdr_fbo;
 	gl_drawbuffer_t *screen_multisample_fbo;
-	uint32_t screen_hdr_fbo_mip[6];
+	uint32_t		*screen_hdr_fbo_mip;
 	TextureHandle	screen_hdr_fbo_texture_color;
 	TextureHandle	screen_hdr_fbo_texture_depth;
 	TextureHandle	screen_multisample_fbo_texture_color;

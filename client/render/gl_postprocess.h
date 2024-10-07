@@ -41,7 +41,7 @@ public:
 	float	m_flDOFStartTime;
 
 	// automatic exposure 
-	gl_drawbuffer_t	*avg_luminance_fbo[11];
+	gl_drawbuffer_t	**avg_luminance_fbo;
 	gl_drawbuffer_t *exposure_storage_fbo[2];
 	TextureHandle	avg_luminance_texture = TextureHandle::Null();
 	TextureHandle exposure_storage_texture[2] = { TextureHandle::Null() };

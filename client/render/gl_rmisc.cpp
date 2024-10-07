@@ -810,11 +810,19 @@ void GL_InitTempScreenFBO()
 	GL_CheckFBOStatus(tr.screen_hdr_fbo);
 
 	// generate screen fbo texture mips
-	for (int i = 0; i < 6; i++)
+	const int mipCount = 1 + floor(log2(Q_max(glState.width, glState.height)));
+
+	if (tr.screen_hdr_fbo_mip)
 	{
-		if (tr.screen_hdr_fbo_mip[i] <= 0) {
-			pglGenFramebuffers(1, &tr.screen_hdr_fbo_mip[i]);
-		}
+		pglDeleteFramebuffers(mipCount, tr.screen_hdr_fbo_mip);
+		delete[] tr.screen_hdr_fbo_mip;
+		tr.screen_hdr_fbo_mip = nullptr;
+	}
+
+	tr.screen_hdr_fbo_mip = new uint32_t[mipCount];
+	for (int i = 0; i < mipCount; i++)
+	{
+		pglGenFramebuffers(1, &tr.screen_hdr_fbo_mip[i]);
 		pglBindFramebuffer(GL_FRAMEBUFFER_EXT, tr.screen_hdr_fbo_mip[i]);
 		pglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, tr.screen_hdr_fbo_texture_color.GetGlHandle(), i + 1);
 	}
