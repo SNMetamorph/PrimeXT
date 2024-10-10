@@ -810,17 +810,18 @@ void GL_InitTempScreenFBO()
 	GL_CheckFBOStatus(tr.screen_hdr_fbo);
 
 	// generate screen fbo texture mips
-	const int mipCount = 1 + floor(log2(Q_max(glState.width, glState.height)));
+	const int mipCount = GL_TextureMipCount(glState.width, glState.height);
+	const int fboCount = mipCount - 1; // don't take mip 0 into account
 
 	if (tr.screen_hdr_fbo_mip)
 	{
-		pglDeleteFramebuffers(mipCount, tr.screen_hdr_fbo_mip);
+		pglDeleteFramebuffers(fboCount, tr.screen_hdr_fbo_mip);
 		delete[] tr.screen_hdr_fbo_mip;
 		tr.screen_hdr_fbo_mip = nullptr;
 	}
 
-	tr.screen_hdr_fbo_mip = new uint32_t[mipCount];
-	for (int i = 0; i < mipCount; i++)
+	tr.screen_hdr_fbo_mip = new uint32_t[fboCount];
+	for (int i = 0; i < fboCount; i++)
 	{
 		pglGenFramebuffers(1, &tr.screen_hdr_fbo_mip[i]);
 		pglBindFramebuffer(GL_FRAMEBUFFER_EXT, tr.screen_hdr_fbo_mip[i]);

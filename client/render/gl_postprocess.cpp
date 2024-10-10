@@ -794,13 +794,13 @@ void RenderBloom()
 	int w = glState.width;
 	int h = glState.height;
 	glsl_program_t *shader = RI->currentshader;
-	const int mipCount = 1 + floor(log2(Q_max(glState.width, glState.height)));
+	const int mipCount = GL_TextureMipCount(w, h);
 
 	// render and blur mips
-	for (int i = 0; i < mipCount; i++)
+	for (int i = 0; i < (mipCount - 1); i++)
 	{
-		w /= 2;
-		h /= 2;
+		w = Q_max(1, w / 2);
+		h = Q_max(1, h / 2);
 
 		pglViewport(0, 0, w, h);
 		for (int j = 0; j < shader->numUniforms; j++)
