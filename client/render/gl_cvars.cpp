@@ -155,7 +155,7 @@ void R_InitializeConVars()
 	r_dof_debug = CVAR_REGISTER("r_dof_debug", "0", FCVAR_ARCHIVE);
 
 	cv_renderer = CVAR_REGISTER("gl_renderer", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
-	gl_debug_verbose = CVAR_REGISTER("gl_debug_verbose", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+	gl_debug_verbose = CVAR_REGISTER("gl_debug_verbose", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 	cv_bump = CVAR_REGISTER("gl_bump", "1", FCVAR_ARCHIVE);
 	cv_bumpvecs = CVAR_REGISTER("bump_vecs", "0", 0);
 	cv_specular = CVAR_REGISTER("gl_specular", "1", FCVAR_ARCHIVE);
