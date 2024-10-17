@@ -794,7 +794,8 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 
 	// mirror is actual only if we has actual screen texture!
 	bool surf_monitor = FBitSet(s->flags, SURF_SCREEN);
-	bool mirror = Surf_CheckSubview( s->info ) && !surf_monitor;
+	bool surf_portal = FBitSet(s->flags, SURF_PORTAL);
+	bool mirror = Surf_CheckSubview( s->info ) && !surf_monitor && !surf_portal;
 
 	if( es->forwardScene[mirror].IsValid() && es->lastRenderMode == e->curstate.rendermode )
 		return es->forwardScene[mirror].GetHandle(); // valid
@@ -964,6 +965,9 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 
 	if (mirror) {
 		GL_AddShaderDirective(options, "PLANAR_REFLECTION");
+	}
+	else if (surf_portal) {
+		GL_AddShaderDirective(options, "PORTAL_SURFACE");
 	}
 
 	if (using_normalmap && surf_transparent)
