@@ -67,7 +67,7 @@ centroid varying vec2		var_TexGlobal;
 centroid varying vec3		var_ViewDir;
 centroid varying vec3		var_Position;
 
-#if defined( PLANAR_REFLECTION )
+#if defined( PLANAR_REFLECTION ) || defined( PORTAL_SURFACE )
 varying vec4		var_TexMirror;	// mirror coords
 #endif
 
@@ -156,7 +156,7 @@ void main( void )
 #endif // LIQUID_SURFACE
 
 // compute the result term
-#if defined( PLANAR_REFLECTION )
+#if defined( PLANAR_REFLECTION ) || defined( PORTAL_SURFACE )
 	albedo = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, u_RefractScale );
 #elif defined( APPLY_TERRAIN )
 	albedo = TerrainMixDiffuse( u_ColorMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
@@ -252,7 +252,7 @@ void main( void )
 
 	// fetch color for saved screencopy
 	vec3 screenmap = GetScreenColor( N, distortScale );
-#if defined( PLANAR_REFLECTION )
+#if defined( PLANAR_REFLECTION ) || defined( PORTAL_SURFACE )
 	result.a = GetFresnel( saturate(dot(V, N)), WATER_F0_VALUE, FRESNEL_FACTOR );
 #endif // PLANAR_REFLECTION
 
