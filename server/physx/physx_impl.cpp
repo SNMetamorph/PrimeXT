@@ -1542,8 +1542,12 @@ bool CPhysicPhysX::UpdateEntityTransform( CBaseEntity *pEntity )
 
 bool CPhysicPhysX :: UpdateActorPos( CBaseEntity *pEntity )
 {
-	PxRigidActor *pActor = ActorFromEntity( pEntity )->is<PxRigidActor>();
-	if( !pActor ) 
+	PxActor *pActor = ActorFromEntity(pEntity);
+	if (!pActor)
+		return false;
+
+	PxRigidActor *pRigidActor = pActor->is<PxRigidActor>();
+	if (!pRigidActor)
 		return false;
 
 	float mat[16];
@@ -1551,9 +1555,9 @@ bool CPhysicPhysX :: UpdateActorPos( CBaseEntity *pEntity )
 	m.CopyToArray( mat );
 
 	PxTransform pose = PxTransform(PxMat44(mat));
-	pActor->setGlobalPose( pose );
+	pRigidActor->setGlobalPose( pose );
 
-	PxRigidDynamic *pRigidDynamic = ActorFromEntity(pEntity)->is<PxRigidDynamic>();
+	PxRigidDynamic *pRigidDynamic = pActor->is<PxRigidDynamic>();
 	if (!(pRigidDynamic->getRigidBodyFlags() & PxRigidBodyFlag::eKINEMATIC))
 	{
 		pRigidDynamic->setLinearVelocity( pEntity->GetLocalVelocity() );
@@ -1569,7 +1573,7 @@ bool CPhysicPhysX :: IsBodySleeping( CBaseEntity *pEntity )
 	if (!pActor)
 		return false;
 
-	PxRigidDynamic *pDynamicActor = ActorFromEntity(pEntity)->is<PxRigidDynamic>();
+	PxRigidDynamic *pDynamicActor = pActor->is<PxRigidDynamic>();
 	if (!pDynamicActor)
 		return false;
 
@@ -1648,18 +1652,25 @@ collect all the info from generic actor
 */
 void CPhysicPhysX :: SaveBody( CBaseEntity *pEntity )
 {
-	PxRigidActor *pActor = ActorFromEntity(pEntity)->is<PxRigidActor>();
-	PxRigidDynamic *pRigidBody = pActor->is<PxRigidDynamic>();
-
+	PxActor *pActor = ActorFromEntity(pEntity);
 	if (!pActor)
 	{
 		ALERT(at_warning, "SaveBody: physic entity %i missed actor!\n", pEntity->m_iActorType);
 		return;
 	}
 
+	PxRigidActor *pRigidActor = pActor->is<PxRigidActor>();
+	if (!pRigidActor)
+	{
+		ALERT(at_warning, "SaveBody: physic entity %i missed rigid actor!\n", pEntity->m_iActorType);
+		return;
+	}
+
 	PxShape *shape;
 	PxFilterData filterData;
-	if (pActor->getShapes(&shape, 1)) {
+	PxRigidDynamic *pRigidBody = pRigidActor->is<PxRigidDynamic>();
+
+	if (pRigidActor->getShapes(&shape, 1)) {
 		filterData = shape->getSimulationFilterData();
 	}
 
@@ -1670,7 +1681,7 @@ void CPhysicPhysX :: SaveBody( CBaseEntity *pEntity )
 	pEntity->m_iFilterData[2] = filterData.word2;
 	pEntity->m_iFilterData[3] = filterData.word3;
 
-	pEntity->m_iActorFlags = pActor->getActorFlags();
+	pEntity->m_iActorFlags = pRigidActor->getActorFlags();
 	if (pRigidBody) {
 		pEntity->m_iBodyFlags = pRigidBody->getRigidBodyFlags();
 		pEntity->m_flBodyMass = pRigidBody->getMass();
