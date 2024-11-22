@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 18 February 2024)
+// PrimeXT FGD (last updated 23 November 2024)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -4473,6 +4473,19 @@
 [
 	target(target_destination) : "Target Monster"
 	m_iszPath(target_destination) : "Patrol Path Start"
+]
+
+@PointClass base(Targetname) color(180 255 10) = trigger_teleport_point : "Teleport any entity regardless of its current location. This entity acts as a target. To teleport the player, leave Entity field empty or write: player."
+[
+	target(target_destination) : "Activate after tele"
+	master(target_destination) : "Master"
+	entityname(target_destination) : "Entity name"
+	spawnflags(flags) =
+	[
+		1: "Keep entity's velocity" : 0
+		2: "Keep entity's angles" : 0
+		4: "Remove after teleport" : 0
+	]
 ]
 
 @SolidClass base(Trigger) = trigger_teleport : "Trigger Teleport" []

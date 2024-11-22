@@ -50,9 +50,9 @@ void CTriggerTeleportPoint::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, U
 		entityVelocity = pEntity->GetAbsVelocity();
 	}
 
-	Vector EntityAngles = targetAng;
+	Vector entityAngles = targetAng;
 	if (FBitSet(pev->spawnflags, PT_KEEP_ANGLES)) {
-		EntityAngles = pEntity->GetAbsAngles();
+		entityAngles = pEntity->GetAbsAngles();
 	}
 
 	// offset to correctly teleport the player...
@@ -60,7 +60,7 @@ void CTriggerTeleportPoint::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, U
 		targetOrg.z += 36;
 	}
 
-	pEntity->Teleport(&targetOrg, &EntityAngles, &entityVelocity);
+	pEntity->Teleport(&targetOrg, &entityAngles, &entityVelocity);
 
 	UTIL_FireTargets(pev->target, pActivator, pCaller, USE_TOGGLE, 0);
 
