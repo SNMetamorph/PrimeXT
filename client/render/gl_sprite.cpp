@@ -194,12 +194,15 @@ Cull sprite model by bbox
 */
 bool CSpriteModelRenderer :: CullSpriteModel( void )
 {
-	if( !m_pSpriteHeader )
+	if (!m_pSpriteHeader)
 		return true;
 
-	SpriteComputeBBox( m_pCurrentEntity, NULL );
+	SpriteComputeBBox(m_pCurrentEntity, NULL);
 
-	return R_CullModel( m_pCurrentEntity, sprite_absmin, sprite_absmax );
+	if (R_CullModel(m_pCurrentEntity, sprite_absmin, sprite_absmax))
+		return true;
+
+	return !Mod_CheckBoxVisible(sprite_absmin, sprite_absmax);
 }
 
 /*
