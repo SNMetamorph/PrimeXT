@@ -149,7 +149,7 @@
 }
 {
 "classname" "env_sky"
-"scale" "64"
+"scale" "128"
 "angles" "0 0 0"
 "frequency" "2.5"
 "duration" "1.0"
