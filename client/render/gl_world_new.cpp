@@ -2923,8 +2923,8 @@ void R_BuildFaceListForLight( CDynLight *pl, bool solid )
 {
 	RI->currententity = GET_ENTITY( 0 );
 	RI->currentmodel = RI->currententity->model;
-	RI->frame.light_faces.Purge();
-	RI->frame.light_grass.Purge();
+	RI->frame.light_faces.RemoveAll();
+	RI->frame.light_grass.RemoveAll();
 	tr.modelorg = pl->origin;
 
 	if( solid )

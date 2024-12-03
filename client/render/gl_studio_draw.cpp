@@ -2688,8 +2688,8 @@ void CStudioModelRenderer :: DrawViewModel( void )
 		GL_FrontFace( !glState.frontFace );
 
 	m_iDrawModelType = DRAWSTUDIO_VIEWMODEL;
-	RI->frame.solid_meshes.Purge();
-	RI->frame.trans_list.Purge();
+	RI->frame.solid_meshes.RemoveAll();
+	RI->frame.trans_list.RemoveAll();
 	view->curstate.weaponmodel = 0;
 
 	matrix4x4 projMatrix, worldViewProjMatrix;
@@ -2740,7 +2740,7 @@ void CStudioModelRenderer :: DrawMeshFromBuffer( const vbomesh_t *mesh )
 
 void CStudioModelRenderer :: BuildMeshListForLight( CDynLight *pl, bool solid )
 {
-	RI->frame.light_meshes.Purge();
+	RI->frame.light_meshes.RemoveAll();
 	Vector bounds[2];
 
 	if( solid )

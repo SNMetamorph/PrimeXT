@@ -227,7 +227,7 @@ void R_ClearScene( void )
 	tr.sky_camera = nullptr;
 	tr.local_client_added = false;
 	tr.num_draw_entities = 0;
-	tr.cached_state.Purge(); // invalidate cache
+	tr.cached_state.RemoveAll(); // invalidate cache
 	GET_ENTITY( 0 )->hCachedMatrix = GL_CacheState( g_vecZero, g_vecZero );
 
 	tr.num_2D_shadows_used = tr.num_CM_shadows_used = 0;

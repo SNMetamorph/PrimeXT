@@ -108,14 +108,14 @@ void R_BuildViewPassHierarchy( void )
 
 void R_ClearFrameLists( void )
 {
-	RI->frame.solid_faces.Purge();
-	RI->frame.solid_meshes.Purge();
-	RI->frame.grass_list.Purge();
-	RI->frame.trans_list.Purge();
-	RI->frame.light_meshes.Purge();
-	RI->frame.light_faces.Purge();
-	RI->frame.light_grass.Purge();
-	RI->frame.primverts.Purge();
+	RI->frame.solid_faces.RemoveAll();
+	RI->frame.solid_meshes.RemoveAll();
+	RI->frame.grass_list.RemoveAll();
+	RI->frame.trans_list.RemoveAll();
+	RI->frame.light_meshes.RemoveAll();
+	RI->frame.light_faces.RemoveAll();
+	RI->frame.light_grass.RemoveAll();
+	RI->frame.primverts.RemoveAll();
 	RI->frame.num_subview_faces = 0;
 }
 
