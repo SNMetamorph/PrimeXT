@@ -23,13 +23,14 @@
 #include "player.h"
 #include "gamerules.h"
 #include "user_messages.h"
+#include "weapon_logic_funcs.h"
 
-class CCrossbow : public CBasePlayerWeapon
+class CCrossbowWeaponLogic : public CBaseWeaponLogic
 {
-	DECLARE_CLASS( CCrossbow, CBasePlayerWeapon );
 public:
-	void Spawn( void );
-	void Precache( void );
+	CCrossbowWeaponLogic() = delete;
+	CCrossbowWeaponLogic(IWeaponLogicFuncs *funcs);
+
 	int iItemSlot( ) { return 3; }
 	int GetItemInfo(ItemInfo *p);
 
@@ -37,10 +38,6 @@ public:
 	void FireSniperBolt( void );
 	void PrimaryAttack( void );
 	void SecondaryAttack( void );
-	int AddToPlayer( CBasePlayer *pPlayer );
-
-	DECLARE_DATADESC();
-
 	BOOL Deploy( void );
 	void Holster( void );
 	void Reload( void );
@@ -48,4 +45,15 @@ public:
 
 	int m_fInZoom; // don't save this
 	int m_fZoomInUse;
+};
+
+class CCrossbow : public CBasePlayerWeapon
+{
+	DECLARE_CLASS( CCrossbow, CBasePlayerWeapon );
+public:
+	void Spawn( void );
+	void Precache( void );
+	int AddToPlayer( CBasePlayer *pPlayer );
+
+	DECLARE_DATADESC();
 };
