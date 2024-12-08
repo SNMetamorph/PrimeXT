@@ -1,6 +1,6 @@
 {
   "name": "primext-documentation",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
@@ -14,14 +14,14 @@
     "write-heading-ids": "docusaurus write-heading-ids"
   },
   "dependencies": {
-    "@docusaurus/core": "^2.4.3",
-    "@docusaurus/preset-classic": "^2.4.3",
-    "@easyops-cn/docusaurus-search-local": "^0.33.4",
-    "@mdx-js/react": "^1.6.21",
-    "clsx": "^1.1.1",
-    "prism-react-renderer": "^1.2.1",
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1"
+    "@docusaurus/core": "3.6.3",
+    "@docusaurus/preset-classic": "3.6.3",
+    "@easyops-cn/docusaurus-search-local": "^0.46.1",
+    "@mdx-js/react": "^3.0.0",
+    "clsx": "^2.1.1",
+    "prism-react-renderer": "^2.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "browserslist": {
     "production": [
