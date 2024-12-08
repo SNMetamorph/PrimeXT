@@ -15,6 +15,7 @@
 
 #include "crossbow.h"
 #include "crossbow_bolt.h"
+#include "weapon_logic_funcs_impl.h"
 
 #define BOLT_AIR_VELOCITY	2000
 #define BOLT_WATER_VELOCITY	1000
@@ -38,19 +39,17 @@ enum crossbow_e
 LINK_ENTITY_TO_CLASS( weapon_crossbow, CCrossbow );
 
 BEGIN_DATADESC( CCrossbow )
-	DEFINE_FIELD( m_fInZoom, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_fZoomInUse, FIELD_BOOLEAN ),
+	//DEFINE_FIELD( m_fInZoom, FIELD_BOOLEAN ),
+	//DEFINE_FIELD( m_fZoomInUse, FIELD_BOOLEAN ),
 END_DATADESC()
 
 void CCrossbow::Spawn( void )
 {
+	pev->classname = MAKE_STRING( "weapon_crossbow" );
 	Precache( );
-	m_iId = WEAPON_CROSSBOW;
 	SET_MODEL(ENT(pev), "models/w_crossbow.mdl");
-
-	m_iDefaultAmmo = CROSSBOW_DEFAULT_GIVE;
-
 	FallInit();// get ready to fall down.
+	m_pWeaponLogic = new CCrossbowWeaponLogic(new CWeaponLogicFuncsImpl(this));
 }
 
 int CCrossbow::AddToPlayer( CBasePlayer *pPlayer )
@@ -58,7 +57,7 @@ int CCrossbow::AddToPlayer( CBasePlayer *pPlayer )
 	if ( CBasePlayerWeapon::AddToPlayer( pPlayer ) )
 	{
 		MESSAGE_BEGIN( MSG_ONE, gmsgWeapPickup, NULL, pPlayer->pev );
-			WRITE_BYTE( m_iId );
+			WRITE_BYTE( m_pWeaponLogic->m_iId );
 		MESSAGE_END();
 		return TRUE;
 	}
@@ -77,9 +76,16 @@ void CCrossbow::Precache( void )
 	UTIL_PrecacheOther( "crossbow_bolt" );
 }
 
-int CCrossbow::GetItemInfo(ItemInfo *p)
+CCrossbowWeaponLogic::CCrossbowWeaponLogic(IWeaponLogicFuncs *funcs) :
+	CBaseWeaponLogic(funcs)
 {
-	p->pszName = STRING(pev->classname);
+	m_iId = WEAPON_CROSSBOW;
+	m_iDefaultAmmo = CROSSBOW_DEFAULT_GIVE;
+}
+
+int CCrossbowWeaponLogic::GetItemInfo(ItemInfo *p)
+{
+	p->pszName = m_pFuncs->GetWeaponClassname(); //STRING(pev->classname);
 	p->pszAmmo1 = "bolts";
 	p->iMaxAmmo1 = BOLT_MAX_CARRY;
 	p->pszAmmo2 = NULL;
@@ -93,14 +99,14 @@ int CCrossbow::GetItemInfo(ItemInfo *p)
 	return 1;
 }
 
-BOOL CCrossbow::Deploy( )
+BOOL CCrossbowWeaponLogic::Deploy( )
 {
 	if (m_iClip)
 		return DefaultDeploy( "models/v_crossbow.mdl", "models/p_crossbow.mdl", CROSSBOW_DRAW1, "bow" );
 	return DefaultDeploy( "models/v_crossbow.mdl", "models/p_crossbow.mdl", CROSSBOW_DRAW2, "bow" );
 }
 
-void CCrossbow::Holster( void )
+void CCrossbowWeaponLogic::Holster( void )
 {
 	m_fInReload = FALSE;// cancel any reload in progress.
 
@@ -117,7 +123,7 @@ void CCrossbow::Holster( void )
 		SendWeaponAnim( CROSSBOW_HOLSTER2 );
 }
 
-void CCrossbow::PrimaryAttack( void )
+void CCrossbowWeaponLogic::PrimaryAttack( void )
 {
 	if ( m_fInZoom && g_pGameRules->IsMultiplayer() )
 	{
@@ -129,7 +135,7 @@ void CCrossbow::PrimaryAttack( void )
 }
 
 // this function only gets called in multiplayer
-void CCrossbow::FireSniperBolt()
+void CCrossbowWeaponLogic::FireSniperBolt()
 {
 	m_flNextPrimaryAttack = gpGlobals->time + 0.75;
 
@@ -210,7 +216,7 @@ void CCrossbow::FireSniperBolt()
 	}
 }
 
-void CCrossbow::FireBolt( void )
+void CCrossbowWeaponLogic::FireBolt( void )
 {
 	TraceResult tr;
 
@@ -292,7 +298,7 @@ void CCrossbow::FireBolt( void )
 	m_pPlayer->pev->punchangle.x -= 2;
 }
 
-void CCrossbow::SecondaryAttack( void )
+void CCrossbowWeaponLogic::SecondaryAttack( void )
 {
 	// do not switch zoom when player stay button is pressed
 	if (m_fZoomInUse)
@@ -315,7 +321,7 @@ void CCrossbow::SecondaryAttack( void )
 	m_flTimeWeaponIdle = gpGlobals->time + 5.0;
 }
 
-void CCrossbow::Reload( void )
+void CCrossbowWeaponLogic::Reload( void )
 {
 	if ( m_fInZoom )
 	{
@@ -329,7 +335,7 @@ void CCrossbow::Reload( void )
 	}
 }
 
-void CCrossbow::WeaponIdle( void )
+void CCrossbowWeaponLogic::WeaponIdle( void )
 {
 	m_pPlayer->GetAutoaimVector( AUTOAIM_2DEGREES );  // get the autoaim vector but ignore it;  used for autoaim crosshair in DM
 
