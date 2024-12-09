@@ -496,19 +496,28 @@ static bool R_HandleLightEntity(cl_entity_t *ent)
 			return true;
 		}
 
+		// TODO: move this to a common function in gl_movie.cpp
 		gl_movie_t *cin = &tr.cinematics[hCin];
 
-		// advances cinematic time
-		float cin_time = fmod(entity.GetCinTime(), cin->length);
-
-		// read the next frame
-		int cin_frame = CIN_GET_FRAME_NUMBER(cin->state, cin_time);
-		if (cin_frame != dlight->lastframe)
+		if( !cin->finished )
 		{
-			// upload the new frame
-			byte *raw = CIN_GET_FRAMEDATA(cin->state, cin_frame);
-			CIN_UPLOAD_FRAME(tr.cinTextures[dlight->cinTexturenum - 1], cin->xres, cin->yres, cin->xres, cin->yres, raw);
-			dlight->lastframe = cin_frame;
+			if( !cin->texture_set )
+			{
+				CIN_SET_PARM( cin->state, AVI_RENDER_TEXNUM, tr.cinTextures[dlight->cinTexturenum - 1],
+					AVI_RENDER_W, cin->xres,
+					AVI_RENDER_H, cin->yres,
+					AVI_PARM_LAST );
+				cin->texture_set = true;
+			}
+
+			// running think here because we're usually thinking with audio, but dlight doesn't have audio
+
+			if( !CIN_THINK( cin->state )); // probably should be moved to some kind of global manager that will tick each frame
+			{
+				if( FBitSet( RI->currententity->curstate.iuser1, CF_LOOPED_MOVIE ))
+					CIN_SET_PARM( cin->state, AVI_REWIND, AVI_PARM_LAST );
+				else cin->finished = true;
+			}
 		}
 
 		if (entity.DisableShadows())

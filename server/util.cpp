@@ -2451,16 +2451,19 @@ unsigned short UTIL_PrecacheMovie( string_t iString, int allow_sound )
 unsigned short UTIL_PrecacheMovie( const char *s, int allow_sound )
 {
 	int iCompare;
-	char path[64], temp[64];
+	char path[128];
 
-	Q_snprintf( path, sizeof( path ), "media/%s", s );
-	Q_snprintf( temp, sizeof( temp ), "%s%s", allow_sound ? "*" : "", s );
+	if( Q_snprintf( path, sizeof( path ), "media/%s", s ) < 0 )
+	{
+		ALERT( at_console, "Error: video (%s) name too long\n", path );
+		return 0;
+	}
 
 	// verify file exists
 	// g-cont. idea! use COMPARE_FILE_TIME instead of LOAD_FILE_FOR_ME
 	if( COMPARE_FILE_TIME( path, path, &iCompare ))
 	{
-		return g_engfuncs.pfnPrecacheGeneric( temp );
+		return g_engfuncs.pfnPrecacheGeneric( path );
 	}
 
 	ALERT( at_console, "Warning: video (%s) not found!\n", path );

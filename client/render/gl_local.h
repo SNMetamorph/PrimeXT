@@ -229,9 +229,13 @@ typedef struct gl_fbo_s
 typedef struct gl_movie_s
 {
 	char		name[32];
-	void		*state;
+	struct movie_state_s *state;
 	float		length;		// total cinematic length
 	int			xres, yres;	// size of cinematic
+
+	bool finished;
+	bool sound_set;
+	bool texture_set;
 } gl_movie_t;
 
 typedef struct gl_texbuffer_s

@@ -115,9 +115,11 @@ inline void PlaySound( int iSound, float vol ) { gEngfuncs.pfnPlaySoundByIndex( 
 #define FREE_CINEMATIC		(*gRenderfuncs.AVI_FreeVideo)
 #define CIN_IS_ACTIVE		(*gRenderfuncs.AVI_IsActive)
 #define CIN_GET_VIDEO_INFO		(*gRenderfuncs.AVI_GetVideoInfo)
-#define CIN_GET_FRAME_NUMBER		(*gRenderfuncs.AVI_GetVideoFrameNumber)
-#define CIN_GET_FRAMEDATA		(*gRenderfuncs.AVI_GetVideoFrame)
-#define CIN_UPDATE_SOUND		(*gRenderfuncs.AVI_StreamSound)
+// #define CIN_GET_FRAME_NUMBER		(*gRenderfuncs.AVI_GetVideoFrameNumber)
+// #define CIN_GET_FRAMEDATA		(*gRenderfuncs.AVI_GetVideoFrame)
+// #define CIN_UPDATE_SOUND		(*gRenderfuncs.AVI_StreamSound)
+#define CIN_THINK		(*gRenderfuncs.AVI_Think)
+#define CIN_SET_PARM	(*gRenderfuncs.AVI_SetParm)
 
 // glcommands
 #define GL_SelectTexture		(*gRenderfuncs.GL_SelectTexture)
