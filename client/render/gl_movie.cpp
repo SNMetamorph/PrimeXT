@@ -26,13 +26,9 @@ int R_PrecacheCinematic( const char *cinname )
 	if( !cinname || !*cinname )
 		return -1;
 
-	if( *cinname == '*' )
-	{
-		cinname++;
-	}
-
 	// not AVI file
-	if( Q_stricmp( UTIL_FileExtension( cinname ), "avi" ))
+	const char *ext = UTIL_FileExtension( cinname );
+	if( Q_stricmp( ext, "avi" ) && Q_stricmp( ext, "webm" )) // with ffmpeg we don't really have a limit here
 		return -1;
 
 	int i;
@@ -68,7 +64,13 @@ int R_PrecacheCinematic( const char *cinname )
 	}
 
 	ALERT( at_console, "Loading cinematic %s [%s]\n", cinname, "sound" );
-	tr.cinematics[i].state = OPEN_CINEMATIC( tr.cinematics[i].name, true );
+
+	// FIXME: engine is hardcoded to load file in media/ folder, must be fixed on engine side
+	const char *p = tr.cinematics[i].name;
+	if( !Q_strnicmp( p, "media/", 6 ))
+		p += 6;
+
+	tr.cinematics[i].state = (movie_state_s *)OPEN_CINEMATIC( p, true );
 
 	// grab info about movie
 	if( tr.cinematics[i].state != NULL )
@@ -79,6 +81,8 @@ int R_PrecacheCinematic( const char *cinname )
 
 void R_InitCinematics( void )
 {
+	// a1ba: this function is useless lmao
+	// it's called before WORLD_HAS_MOVIES bit set
 	const char *name, *ext;
 
 	// make sure what we have texture to draw cinematics
@@ -162,6 +166,7 @@ void R_UpdateCinematic( const msurface_t *surf )
 	if( cinhandle >= 0 && es->cintexturenum <= 0 )
 		es->cintexturenum = R_AllocateCinematicTexture( TF_NOMIPMAP );
 
+	// a1ba: isn't this kinda stupid? If movie isn't active anymore, we will never draw movie on it again
 	if( cinhandle == -1 || es->cintexturenum <= 0 || CIN_IS_ACTIVE( tr.cinematics[cinhandle].state ) == false )
 	{
 		// cinematic textures limit exceeded, so remove SURF_MOVIE flag
@@ -170,28 +175,18 @@ void R_UpdateCinematic( const msurface_t *surf )
 	}
 
 	gl_movie_t *cin = &tr.cinematics[cinhandle];
-	float cin_time;
 
-	if( FBitSet( RI->currententity->curstate.iuser1, CF_LOOPED_MOVIE ))
-	{
-		// advances cinematic time
-		cin_time = fmod( RI->currententity->curstate.fuser2, cin->length );
-	}
-	else
-	{
-		cin_time = RI->currententity->curstate.fuser2;
-	}
+	if( cin->finished )
+		return;
 
-	// read the next frame
-	int cin_frame = CIN_GET_FRAME_NUMBER( cin->state, cin_time );
-
-	// upload the new frame
-	if( cin_frame != es->checkcount )
+	if( !cin->texture_set )
 	{
-		GL_SelectTexture( GL_TEXTURE0 ); // doesn't matter. select 0-th unit just as default
-		byte *raw = CIN_GET_FRAMEDATA( cin->state, cin_frame );
-		CIN_UPLOAD_FRAME( tr.cinTextures[es->cintexturenum-1], cin->xres, cin->yres, cin->xres, cin->yres, raw );
-		es->checkcount = cin_frame;
+		CIN_SET_PARM( cin->state,
+			AVI_RENDER_TEXNUM, tr.cinTextures[es->cintexturenum-1],
+			AVI_RENDER_W, cin->xres,
+			AVI_RENDER_H, cin->yres,
+			AVI_PARM_LAST );
+		cin->texture_set = true;
 	}
 }
 
@@ -208,18 +203,24 @@ void R_UpdateCinSound( cl_entity_t *e )
 		return;
 
 	gl_movie_t *cin = &tr.cinematics[cinhandle];
-	float cin_time;
 
-	if( FBitSet( e->curstate.iuser1, CF_LOOPED_MOVIE ))
+	if( cin->finished )
+		return;
+
+	if( !cin->sound_set )
 	{
-		// advances cinematic time
-		cin_time = fmod( e->curstate.fuser2, cin->length );
-	}
-	else
-	{
-		cin_time = e->curstate.fuser2;
+		CIN_SET_PARM( cin->state,
+			AVI_ENTNUM, e->index,
+			AVI_VOLUME, static_cast<int>( VOL_NORM * 255 ),
+			AVI_ATTN, ATTN_NORM,
+			AVI_PARM_LAST );
+		cin->sound_set = true;
 	}
 
-	// stream avi sound
-	CIN_UPDATE_SOUND( cin->state, e->index, VOL_NORM, ATTN_IDLE, cin_time );
+	if( !CIN_THINK( cin->state )) // TODO: make a video manager that will call this each frame
+	{
+		if( FBitSet( RI->currententity->curstate.iuser1, CF_LOOPED_MOVIE ))
+			CIN_SET_PARM( cin->state, AVI_REWIND, AVI_PARM_LAST );
+		else cin->finished = true;
+	}
 }
