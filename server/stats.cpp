@@ -109,7 +109,7 @@ void UpdateStats( CBasePlayer *pPlayer )
 
 			int index = pPlayer->GetAmmoIndex(II.pszAmmo1);
 			if ( index >= 0 )
-				ammoCount[ index ] += ((CBasePlayerWeapon *)p)->m_iClip;
+				ammoCount[ index ] += ((CBasePlayerWeapon *)p)->m_pWeaponLogic->m_iClip;
 			
 			p = p->m_pNext;
 		}
