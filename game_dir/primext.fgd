@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 23 November 2024)
+// PrimeXT FGD (last updated 14 December 2024)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -2287,7 +2287,7 @@
 	dmg(integer) : "Damage inflicted when blocked" : 0
 ]
 
-@SolidClass base(Targetname, Parent, Reflection, ZHLT) = func_screenmovie : "Plays silent video on a brush" 
+@SolidClass base(Targetname, Parent, Reflection, ZHLT) = func_screenmovie : "Plays video on a brush" 
 [
 	movie(string) : "Path to Video" : "valve.avi"
 	spawnflags(flags) =
@@ -2296,6 +2296,7 @@
 		2: "Passable" : 0
 		4: "Looped" : 1
 		8: "Black|White" : 0
+		16: "Allow Sound" : 1
 	]
 ]
 
