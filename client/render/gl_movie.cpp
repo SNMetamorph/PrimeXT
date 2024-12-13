@@ -228,7 +228,7 @@ bool R_UpdateCinematicDynLight( int videoFileIndex, CDynLight *dlight )
 
 void R_UpdateCinSound( cl_entity_t *e )
 {
-	if( !e->curstate.body || !FBitSet( e->curstate.iuser1, CF_MOVIE_SOUND ))
+	if( !e->curstate.body )
 		return; // just disabled
 
 	// found the corresponding cinstate
@@ -245,9 +245,10 @@ void R_UpdateCinSound( cl_entity_t *e )
 
 	if( !cin->sound_set )
 	{
+		int volume = FBitSet(e->curstate.iuser1, CF_MOVIE_SOUND) ? static_cast<int>(VOL_NORM * 255) : 0;
 		CIN_SET_PARM( cin->state,
 			AVI_ENTNUM, e->index,
-			AVI_VOLUME, static_cast<int>( VOL_NORM * 255 ),
+			AVI_VOLUME, volume,
 			AVI_ATTN, ATTN_NORM,
 			AVI_PARM_LAST );
 		cin->sound_set = true;
