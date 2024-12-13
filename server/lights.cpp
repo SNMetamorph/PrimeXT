@@ -657,9 +657,8 @@ void CDynamicLight::Precache()
 
 	if (!FStringNull(pev->message))
 	{
-		const char *ext = UTIL_FileExtension(STRING(pev->message));
-
-		if (!Q_stricmp(ext, "avi"))
+		const char *filepath = STRING(pev->message);
+		if (UTIL_ValidMovieFileExtension(filepath))
 		{
 			// 0 if movie not found
 			pev->sequence = UTIL_PrecacheMovie(pev->message);
