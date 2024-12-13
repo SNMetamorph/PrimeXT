@@ -11,27 +11,6 @@
 
 #pragma warning(disable : 4244)	// MIPS
 
-//============
-// UTIL_FileExtension
-// returns file extension
-//============
-const char *UTIL_FileExtension( const char *in )
-{
-	const char *separator, *backslash, *colon, *dot;
-
-	separator = Q_strrchr( in, '/' );
-	backslash = Q_strrchr( in, '\\' );
-	if( !separator || separator < backslash )
-		separator = backslash;
-	colon = Q_strrchr( in, ':' );
-	if( !separator || separator < colon )
-		separator = colon;
-	dot = Q_strrchr( in, '.' );
-	if( dot == NULL || (separator && ( dot < separator )))
-		return "";
-	return dot + 1;
-}
-
 void Q_strnupr( const char *in, char *out, size_t size_out )
 {
 	if( size_out == 0 ) return;
@@ -604,4 +583,27 @@ void _Q_timestring( int seconds, char *msg, size_t size )
 	else if ( nMin > 0 )
 		Q_snprintf( msg, size, "%d minute%s, %d second%s", nMin, ext[nMin != 1], nSec, ext[nSec != 1] );
 	else Q_snprintf( msg, size, "%d second%s", nSec, ext[nSec != 1] );
+}
+
+const char *UTIL_FileExtension( const char *in )
+{
+	const char *separator, *backslash, *colon, *dot;
+
+	separator = Q_strrchr( in, '/' );
+	backslash = Q_strrchr( in, '\\' );
+	if( !separator || separator < backslash )
+		separator = backslash;
+	colon = Q_strrchr( in, ':' );
+	if( !separator || separator < colon )
+		separator = colon;
+	dot = Q_strrchr( in, '.' );
+	if( dot == NULL || (separator && ( dot < separator )))
+		return "";
+	return dot + 1;
+}
+
+bool UTIL_ValidMovieFileExtension( const char *filepath )
+{
+	const char *ext = UTIL_FileExtension(filepath);
+	return (Q_stricmp(ext, "avi") == 0 || Q_stricmp(ext, "webm") == 0 || Q_stricmp(ext, "mp4") == 0);
 }
