@@ -26,10 +26,8 @@ int R_PrecacheCinematic( const char *cinname )
 	if( !cinname || !*cinname )
 		return -1;
 
-	// not AVI file
-	const char *ext = UTIL_FileExtension( cinname );
-	if( Q_stricmp( ext, "avi" ) && Q_stricmp( ext, "webm" )) // with ffmpeg we don't really have a limit here
-		return -1;
+	if( !UTIL_ValidMovieFileExtension( cinname )) 
+		return -1; // skip unsupported video formats
 
 	int i;
 	// first check for co-existing
@@ -83,7 +81,7 @@ void R_InitCinematics( void )
 {
 	// a1ba: this function is useless lmao
 	// it's called before WORLD_HAS_MOVIES bit set
-	const char *name, *ext;
+	const char *name;
 
 	// make sure what we have texture to draw cinematics
 	if( !FBitSet( world->features, WORLD_HAS_MOVIES ))
@@ -95,8 +93,7 @@ void R_InitCinematics( void )
 
 		if( !name || !*name ) break; // end of files array
 
-		ext = UTIL_FileExtension( name );
-		if( Q_stricmp( ext, "avi" )) continue;	// not AVI
+		if( !UTIL_ValidMovieFileExtension( name )) continue; // not supported video format
 
 		if( R_PrecacheCinematic( name ) == -1 )
 			break; // full
