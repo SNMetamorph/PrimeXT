@@ -2295,7 +2295,7 @@
 		1: "Start ON" : 0
 		2: "Passable" : 0
 		4: "Looped" : 1
-		8: "Black|White" : 0
+		8: "Monochrome" : 0
 		16: "Allow Sound" : 1
 	]
 ]
