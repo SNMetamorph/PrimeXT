@@ -216,7 +216,7 @@ void R_UpdateCinSound( cl_entity_t *e )
 
 	if( !CIN_THINK( cin->state )) // TODO: make a video manager that will call this each frame
 	{
-		if( FBitSet( RI->currententity->curstate.iuser1, CF_LOOPED_MOVIE ))
+		if( FBitSet( e->curstate.iuser1, CF_LOOPED_MOVIE ))
 			CIN_SET_PARM( cin->state, AVI_REWIND, AVI_PARM_LAST );
 		else cin->finished = true;
 	}
