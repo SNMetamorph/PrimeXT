@@ -167,6 +167,10 @@ void main( void )
 	albedo = colormap2D( u_ColorMap, vec_TexDiffuse );
 #endif
 
+#if defined( MONOCHROME )
+	albedo.rgb = vec3(GetLuminance(albedo.rgb));
+#endif
+
 #if !defined( ALPHA_BLENDING ) && !defined( USING_SCREENCOPY ) && !defined( APPLY_TERRAIN )
 	albedo.a = AlphaRescaling( u_ColorMap, vec_TexDiffuse, albedo.a );
 #endif
