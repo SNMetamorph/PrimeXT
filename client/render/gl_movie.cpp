@@ -79,23 +79,21 @@ int R_PrecacheCinematic( const char *cinname )
 
 void R_InitCinematics( void )
 {
-	// a1ba: this function is useless lmao
-	// it's called before WORLD_HAS_MOVIES bit set
-	const char *name;
-
 	// make sure what we have texture to draw cinematics
-	if( !FBitSet( world->features, WORLD_HAS_MOVIES ))
+	if (!FBitSet(world->features, WORLD_HAS_MOVIES))
 		return;
 
-	for( int i = 1; i < 1024; i++ )
+	for (int i = 1; i < 1024; i++)
 	{
-		name = gRenderfuncs.GetFileByIndex( i );
+		const char *name = gRenderfuncs.GetFileByIndex(i);
 
-		if( !name || !*name ) break; // end of files array
+		if (!name || !*name) 
+			break; // end of files array
 
-		if( !UTIL_ValidMovieFileExtension( name )) continue; // not supported video format
+		if (!UTIL_ValidMovieFileExtension(name)) 
+			continue; // not supported video format
 
-		if( R_PrecacheCinematic( name ) == -1 )
+		if (R_PrecacheCinematic(name) == -1)
 			break; // full
 	}
 }
@@ -185,6 +183,47 @@ void R_UpdateCinematic( const msurface_t *surf )
 			AVI_PARM_LAST );
 		cin->texture_set = true;
 	}
+}
+
+bool R_UpdateCinematicDynLight( int videoFileIndex, CDynLight *dlight )
+{
+	// found the corresponding cinstate
+	const char *cinname = gRenderfuncs.GetFileByIndex(videoFileIndex);
+	int hCin = R_PrecacheCinematic(cinname);
+
+	if (hCin >= 0 && !dlight->cinTexturenum)
+		dlight->cinTexturenum = R_AllocateCinematicTexture(TF_SPOTLIGHT);
+
+	if (hCin == -1 || dlight->cinTexturenum <= 0 || !CIN_IS_ACTIVE(tr.cinematics[hCin].state))
+	{
+		// cinematic textures limit exceeded or movie not found
+		dlight->spotlightTexture = tr.spotlightTexture[1];
+		return false;
+	}
+
+	gl_movie_t *cin = &tr.cinematics[hCin];
+
+	if( !cin->finished )
+	{
+		if( !cin->texture_set )
+		{
+			CIN_SET_PARM( cin->state, AVI_RENDER_TEXNUM, tr.cinTextures[dlight->cinTexturenum - 1],
+				AVI_RENDER_W, cin->xres,
+				AVI_RENDER_H, cin->yres,
+				AVI_PARM_LAST );
+			cin->texture_set = true;
+		}
+
+		// running think here because we're usually thinking with audio, but dlight doesn't have audio
+
+		if( !CIN_THINK( cin->state )); // probably should be moved to some kind of global manager that will tick each frame
+		{
+			if( FBitSet( RI->currententity->curstate.iuser1, CF_LOOPED_MOVIE ))
+				CIN_SET_PARM( cin->state, AVI_REWIND, AVI_PARM_LAST );
+			else cin->finished = true;
+		}
+	}
+	return true;
 }
 
 void R_UpdateCinSound( cl_entity_t *e )

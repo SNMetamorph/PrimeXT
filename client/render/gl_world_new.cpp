@@ -2006,9 +2006,6 @@ static void Mod_LoadWorld( model_t *mod, const byte *buf )
 	tr.glsl_valid_sequence = 1;
 	tr.params_changed = false;
 
-	// precache and upload cinematics
-	R_InitCinematics();
-
 	// prepare visibility and setup leaf extradata
 	Mod_SetupLeafExtradata( &header->lumps[LUMP_LEAFS], &header->lumps[LUMP_VISIBILITY], buf );
 
@@ -2108,6 +2105,9 @@ static void Mod_LoadWorld( model_t *mod, const byte *buf )
 
 	Mod_FinalizeWorld();
 	Mod_CreateBufferObject();
+
+	// precache and upload cinematics
+	R_InitCinematics();
 
 	// helper to precache shaders
 	R_InitDefaultLights();

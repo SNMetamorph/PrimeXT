@@ -51,7 +51,7 @@ int CEntityEnvDynlight::GetSpotlightTextureIndex() const
     return bound(0, m_pEntity->curstate.rendermode, 7);
 }
 
-int CEntityEnvDynlight::GetAviFileIndex() const
+int CEntityEnvDynlight::GetVideoFileIndex() const
 {
     return m_pEntity->curstate.sequence;
 }

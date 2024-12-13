@@ -454,7 +454,7 @@ static bool R_HandleLightEntity(cl_entity_t *ent)
 	
 	if (!entity.Cinematic()) // dynamic light
 	{
-		if (entity.Spotlight()) // spotlight
+		if (entity.Spotlight()) // dynamic light with texture projection
 		{
 			tex = tr.spotlightTexture[entity.GetSpotlightTextureIndex()];
 			type = LIGHT_SPOT;
@@ -471,54 +471,19 @@ static bool R_HandleLightEntity(cl_entity_t *ent)
 		if (entity.EnableLensFlare())
 			flags |= DLF_LENSFLARE;
 	}
-	else // dynamic light with avi file
+	else // dynamic light with video file projection
 	{
-		if (!entity.GetAviFileIndex())
-			return true; // bad avi file
+		if (!entity.GetVideoFileIndex())
+			return true; // invalid file index
 
 		if (dlight->spotlightTexture == tr.spotlightTexture[1])
-			return true; // bad avi file
+			return true; // invalid texture?
 
 		flags = DLF_ASPECT3X4;	// fit to film01.avi aspect
 		type = LIGHT_SPOT;
 
-		// found the corresponding cinstate
-		const char *cinname = gRenderfuncs.GetFileByIndex(entity.GetAviFileIndex());
-		int hCin = R_PrecacheCinematic(cinname);
-
-		if (hCin >= 0 && !dlight->cinTexturenum)
-			dlight->cinTexturenum = R_AllocateCinematicTexture(TF_SPOTLIGHT);
-
-		if (hCin == -1 || dlight->cinTexturenum <= 0 || !CIN_IS_ACTIVE(tr.cinematics[hCin].state))
-		{
-			// cinematic textures limit exceeded or movie not found
-			dlight->spotlightTexture = tr.spotlightTexture[1];
-			return true;
-		}
-
-		// TODO: move this to a common function in gl_movie.cpp
-		gl_movie_t *cin = &tr.cinematics[hCin];
-
-		if( !cin->finished )
-		{
-			if( !cin->texture_set )
-			{
-				CIN_SET_PARM( cin->state, AVI_RENDER_TEXNUM, tr.cinTextures[dlight->cinTexturenum - 1],
-					AVI_RENDER_W, cin->xres,
-					AVI_RENDER_H, cin->yres,
-					AVI_PARM_LAST );
-				cin->texture_set = true;
-			}
-
-			// running think here because we're usually thinking with audio, but dlight doesn't have audio
-
-			if( !CIN_THINK( cin->state )); // probably should be moved to some kind of global manager that will tick each frame
-			{
-				if( FBitSet( RI->currententity->curstate.iuser1, CF_LOOPED_MOVIE ))
-					CIN_SET_PARM( cin->state, AVI_REWIND, AVI_PARM_LAST );
-				else cin->finished = true;
-			}
-		}
+		if (!R_UpdateCinematicDynLight(entity.GetVideoFileIndex(), dlight))
+			return true; 
 
 		if (entity.DisableShadows())
 			flags |= DLF_NOSHADOWS;

@@ -37,7 +37,7 @@ public:
     void GetLightVectors(Vector &origin, Vector &angles) const;
 
     // cinematic stuff
-    int GetAviFileIndex() const;
+    int GetVideoFileIndex() const;
     bool Cinematic() const;
     float GetCinTime() const;
 

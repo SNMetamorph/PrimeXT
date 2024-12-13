@@ -914,6 +914,7 @@ void R_FreeCinematics( void );
 int R_PrecacheCinematic( const char *cinname );
 int R_AllocateCinematicTexture( unsigned int txFlags );
 void R_UpdateCinematic( const msurface_t *surf );
+bool R_UpdateCinematicDynLight( int videoFileIndex, CDynLight *dlight );
 void R_UpdateCinSound( cl_entity_t *e );
 
 //
