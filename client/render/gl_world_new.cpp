@@ -795,7 +795,8 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 	// mirror is actual only if we has actual screen texture!
 	bool surf_monitor = FBitSet(s->flags, SURF_SCREEN);
 	bool surf_portal = FBitSet(s->flags, SURF_PORTAL);
-	bool mirror = Surf_CheckSubview( s->info ) && !surf_monitor && !surf_portal;
+	bool surf_movie = FBitSet(s->flags, SURF_MOVIE);
+	bool mirror = Surf_CheckSubview( s->info ) && !surf_monitor && !surf_portal && !surf_movie;
 
 	if( es->forwardScene[mirror].IsValid() && es->lastRenderMode == e->curstate.rendermode )
 		return es->forwardScene[mirror].GetHandle(); // valid
@@ -868,8 +869,16 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 			GL_AddShaderDirective( options, "HAS_LUMA" );
 	}
 
-	if (surf_monitor) {
-		GL_AddShaderDirective( options, "MONITOR_BRUSH" );
+	if (surf_monitor) 
+	{
+		GL_AddShaderDirective(options, "MONITOR_BRUSH");
+		if (FBitSet(e->curstate.iuser1, CF_MONOCHROME))
+			GL_AddShaderDirective(options, "MONOCHROME");
+	}
+	else if (surf_movie)
+	{
+		if (FBitSet(e->curstate.iuser1, CF_MONOCHROME))
+			GL_AddShaderDirective(options, "MONOCHROME");
 	}
 
 	if( FBitSet( mat->flags, BRUSH_MULTI_LAYERS ) && landscape && landscape->terrain )
