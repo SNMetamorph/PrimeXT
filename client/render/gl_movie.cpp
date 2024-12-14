@@ -214,13 +214,22 @@ bool R_UpdateCinematicDynLight( int videoFileIndex, CDynLight *dlight )
 			cin->texture_set = true;
 		}
 
-		// running think here because we're usually thinking with audio, but dlight doesn't have audio
-
-		if( !CIN_THINK( cin->state )); // probably should be moved to some kind of global manager that will tick each frame
+		if( !cin->sound_set )
 		{
-			if( FBitSet( RI->currententity->curstate.iuser1, CF_LOOPED_MOVIE ))
-				CIN_SET_PARM( cin->state, AVI_REWIND, AVI_PARM_LAST );
-			else cin->finished = true;
+			CIN_SET_PARM( cin->state,
+				AVI_ENTNUM, -1,
+				AVI_VOLUME, 0,
+				AVI_ATTN, ATTN_NORM,
+				AVI_PARM_LAST );
+			cin->sound_set = true;
+		}
+
+		// running think here because we're usually thinking with audio, but dlight doesn't have audio
+		// probably should be moved to some kind of global manager that will tick each frame
+		if( !CIN_THINK( cin->state )) 
+		{
+			// for now, video playback with dlights is always looped
+			CIN_SET_PARM( cin->state, AVI_REWIND, AVI_PARM_LAST );
 		}
 	}
 	return true;
