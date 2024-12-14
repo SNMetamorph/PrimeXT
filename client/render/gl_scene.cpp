@@ -479,7 +479,7 @@ static bool R_HandleLightEntity(cl_entity_t *ent)
 		if (dlight->spotlightTexture == tr.spotlightTexture[1])
 			return true; // invalid texture?
 
-		flags = DLF_ASPECT3X4;	// fit to film01.avi aspect
+		flags = DLF_ASPECT3X4 | DLF_MOVIE;	// fit to film01.avi aspect
 		type = LIGHT_SPOT;
 
 		if (!R_UpdateCinematicDynLight(entity.GetVideoFileIndex(), dlight))

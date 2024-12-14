@@ -96,15 +96,19 @@ void CL_DecayLights( void )
 	float time = GET_CLIENT_TIME();
 	CDynLight *pl = tr.dlights;
 
-	for( int i = 0; i < MAX_DLIGHTS; i++, pl++ )
+	for (int i = 0; i < MAX_DLIGHTS; i++, pl++)
 	{
-		if( !pl->radius ) continue;
+		if (!pl->radius)
+			continue;
+
+		if (FBitSet(pl->flags, DLF_MOVIE))
+			continue; // don't clean up dlights that used for video projecting
 
 		pl->radius -= tr.frametime * pl->decay;
-		if( pl->radius < 0.0f ) pl->radius = 0.0f;
+		if (pl->radius < 0.0f) pl->radius = 0.0f;
 
-		if( pl->Expired( )) 
-			memset( pl, 0, sizeof( *pl ));
+		if (pl->Expired())
+			memset(pl, 0, sizeof(*pl));
 	}
 }
 

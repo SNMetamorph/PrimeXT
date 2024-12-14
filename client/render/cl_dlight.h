@@ -33,6 +33,7 @@ GNU General Public License for more details.
 #define DLF_ASPECT4X3				BIT( 5 )
 #define DLF_FLIPTEXTURE				BIT( 6 )
 #define DLF_PARENTENTITY_NOSHADOW	BIT( 7 )
+#define DLF_MOVIE					BIT( 8 )
 
 class CDynLight
 {
