@@ -16,6 +16,8 @@
 #define ENGINECALLBACK_H
 #pragma once
 
+#include "edict.h"
+#include "eiface.h"
 #include "event_flags.h"
 
 // Must be provided by user of this code

@@ -4915,7 +4915,7 @@ void CBasePlayer::DropPlayerItem ( char *pszItemName )
 
 			UTIL_MakeVectors ( GetAbsAngles() ); 
 
-			RemoveWeapon( pWeapon->m_iId );	// take item off hud
+			RemoveWeapon( pWeapon->iWeaponID() );	// take item off hud
 
 			CWeaponBox *pWeaponBox = (CWeaponBox *)CBaseEntity::Create( "weaponbox", GetAbsOrigin() + gpGlobals->v_forward * 10, GetAbsAngles(), edict() );
 			Vector vecAngles = pWeaponBox->GetAbsAngles();

@@ -48,6 +48,7 @@ list(APPEND SVDLL_SOURCES
 	"user_messages.cpp"
 	"util.cpp"
 	"weapons.cpp"
+	"weapon_logic_funcs_impl.cpp"
 	"world.cpp"
 )
 
@@ -65,6 +66,7 @@ list(APPEND SVDLL_SOURCES
 	"${CMAKE_SOURCE_DIR}/game_shared/vector.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/virtualfs.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/trace.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/weapon_logic.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/meshdesc.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/meshdesc_factory.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/filesystem_utils.cpp"
