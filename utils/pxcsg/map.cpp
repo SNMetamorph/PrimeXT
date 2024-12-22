@@ -885,7 +885,7 @@ static int GetDefaultSurfaceExtent(mapent_t *mapent)
 		return MAX_SURFACE_EXTENT;
 	}
 	else {
-		return Q_max(0, IntForKey((entity_t *)mapent, "zhlt_texturestep"));
+		return Q_max(0, IntForKey((entity_t *)mapent, "zhlt_maxextent"));
 	}
 }
 
