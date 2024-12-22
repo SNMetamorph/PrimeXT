@@ -28,7 +28,7 @@ list(APPEND DIR_SOURCES
 )
 
 # add version info and manifest
-if(MSVC)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	list(APPEND DIR_SOURCES
 		"pxmv.rc"
 		"pxmv.manifest"
