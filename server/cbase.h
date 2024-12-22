@@ -66,6 +66,7 @@ CBaseEntity
 #include "physic.h"
 
 #include "exportdef.h"
+#include <cstring>
 
 // C functions for external declarations that call the appropriate C++ methods
 
