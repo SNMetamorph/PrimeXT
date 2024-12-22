@@ -93,7 +93,7 @@ file(GLOB WEAPONS_SOURCES "weapons/*.cpp")
 file(GLOB GAMERULES_SOURCES "gamerules/*.cpp")
 
 # add .def file to sources
-if(MSVC)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	list(APPEND SVDLL_SOURCES "server.def")
 endif()
 
