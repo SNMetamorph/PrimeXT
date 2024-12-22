@@ -548,7 +548,8 @@ void OnFreeEntPrivateData( edict_s *pEdict )
 	{
 		CBaseEntity *pEntity = CBaseEntity::Instance(pEdict);
 		pEntity->UpdateOnRemove();
-		pEntity->~CBaseEntity();
+		delete pEntity;
+		pEdict->pvPrivateData = nullptr; // zero this out so the engine doesn't try to free it again
 	}
 }
 
