@@ -48,6 +48,7 @@ list(APPEND SVDLL_SOURCES
 	"user_messages.cpp"
 	"util.cpp"
 	"weapons.cpp"
+	"server_weapon_layer_impl.cpp"
 	"world.cpp"
 )
 
@@ -65,6 +66,8 @@ list(APPEND SVDLL_SOURCES
 	"${CMAKE_SOURCE_DIR}/game_shared/vector.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/virtualfs.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/trace.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/weapon_context.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/seeded_random_generator.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/meshdesc.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/meshdesc_factory.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/filesystem_utils.cpp"
@@ -91,6 +94,7 @@ file(GLOB ENTITIES_SOURCES "entities/*.cpp")
 file(GLOB MONSTERS_SOURCES "monsters/*.cpp")
 file(GLOB WEAPONS_SOURCES "weapons/*.cpp")
 file(GLOB GAMERULES_SOURCES "gamerules/*.cpp")
+file(GLOB WEAPONS_SHARED_SOURCES "${CMAKE_SOURCE_DIR}/game_shared/weapons/*.cpp")
 
 # add .def file to sources
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -101,6 +105,7 @@ list(APPEND SVDLL_SOURCES ${ENTITIES_SOURCES})
 list(APPEND SVDLL_SOURCES ${MONSTERS_SOURCES})
 list(APPEND SVDLL_SOURCES ${WEAPONS_SOURCES})
 list(APPEND SVDLL_SOURCES ${GAMERULES_SOURCES})
+list(APPEND SVDLL_SOURCES ${WEAPONS_SHARED_SOURCES})
 add_library(${PROJECT_NAME} SHARED ${SVDLL_SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE

@@ -12,46 +12,20 @@
 *   without written permission from Valve LLC.
 *
 ****/
-/*
-
-===== h_cycler.cpp ========================================================
-
-  The Halflife Cycler Monsters
-
-*/
 
 #pragma once
-
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
 #include "monsters.h"
-#include "animation.h"
 #include "weapons.h"
+#include "nodes.h"
 #include "player.h"
 
-//Weapon Cycler
-class CWeaponCycler : public CBasePlayerWeapon
+class CGlock : public CBasePlayerWeapon
 {
-	DECLARE_CLASS( CWeaponCycler, CBasePlayerWeapon );
+	DECLARE_CLASS( CGlock, CBasePlayerWeapon );
 public:
 	void Spawn( void );
-	int GetItemInfo(ItemInfo *p);
-
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
-	BOOL Deploy( void );
-	void Holster( void );
-	void KeyValue( KeyValueData *pkvd );
-
-	DECLARE_DATADESC();
-private:
-	string_t	m_iPlayerModel;
-	string_t	m_iWorldModel;
-	string_t	m_iViewModel;
-
-	struct {
-		bool primary = false;
-		bool secondary = false;
-	} m_bActiveAnims;
+	void Precache( void );
 };

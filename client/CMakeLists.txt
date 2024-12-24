@@ -57,6 +57,8 @@ list(APPEND CLDLL_SOURCES
 	"${CMAKE_SOURCE_DIR}/game_shared/stringlib.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/virtualfs.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/trace.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/weapon_context.cpp"
+	"${CMAKE_SOURCE_DIR}/game_shared/seeded_random_generator.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/filesystem_utils.cpp"
 	"${CMAKE_SOURCE_DIR}/game_shared/filesystem_manager.cpp"
 	"${CMAKE_SOURCE_DIR}/public/crclib.cpp"
@@ -67,6 +69,9 @@ file(GLOB RENDER_SOURCES "render/*.cpp")
 
 # entity wrappers source files
 file(GLOB ENTITIES_SOURCES "entities/*.cpp")
+
+# weapon shared code source files
+file(GLOB WEAPONS_SHARED_SOURCES "${CMAKE_SOURCE_DIR}/game_shared/weapons/*.cpp")
 
 # ImGui source files
 if(NOT ENABLE_VGUI_COMPATIBILITY)
@@ -84,6 +89,7 @@ endif()
 
 list(APPEND CLDLL_SOURCES ${RENDER_SOURCES})
 list(APPEND CLDLL_SOURCES ${ENTITIES_SOURCES})
+list(APPEND CLDLL_SOURCES ${WEAPONS_SHARED_SOURCES})
 add_library(${PROJECT_NAME} SHARED ${CLDLL_SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
