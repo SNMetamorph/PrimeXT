@@ -14,29 +14,27 @@
 ****/
 
 #pragma once
-#include "extdll.h"
-#include "util.h"
-#include "cbase.h"
-#include "monsters.h"
-#include "weapons.h"
-#include "nodes.h"
-#include "player.h"
+#include "weapon_context.h"
+#include "weapon_layer.h"
 
-class CGlock : public CBasePlayerWeapon
+#define WEAPON_GLOCK		2
+#define GLOCK_WEIGHT		10
+#define GLOCK_MAX_CLIP		17
+#define GLOCK_DEFAULT_GIVE	17
+#define GLOCK_CLASSNAME		weapon_glock
+
+class CGlockWeaponLogic : public CBaseWeaponContext
 {
-	DECLARE_CLASS( CGlock, CBasePlayerWeapon );
 public:
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 2; }
-	int GetItemInfo(ItemInfo *p);
+	CGlockWeaponLogic() = delete;
+	CGlockWeaponLogic(IWeaponLayer *funcs);
 
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
+	int iItemSlot() override { return 2; }
+	int GetItemInfo(ItemInfo *p) override;
+	void PrimaryAttack() override;
+	void SecondaryAttack() override;
+	bool Deploy() override;
+	void Reload() override;
+	void WeaponIdle() override;
 	void GlockFire( float flSpread, float flCycleTime, BOOL fUseAutoAim );
-	BOOL Deploy( void );
-	void Reload( void );
-	void WeaponIdle( void );
-private:
-	int m_iShell;
 };

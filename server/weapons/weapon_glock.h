@@ -21,39 +21,11 @@
 #include "weapons.h"
 #include "nodes.h"
 #include "player.h"
-#include "gamerules.h"
-#include "user_messages.h"
-#include "weapon_layer.h"
 
-class CCrossbowWeaponLogic : public CBaseWeaponContext
+class CGlock : public CBasePlayerWeapon
 {
-public:
-	CCrossbowWeaponLogic() = delete;
-	CCrossbowWeaponLogic(IWeaponLayer *funcs);
-
-	int iItemSlot( ) { return 3; }
-	int GetItemInfo(ItemInfo *p);
-
-	void FireBolt( void );
-	void FireSniperBolt( void );
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
-	bool Deploy( void );
-	void Holster( void );
-	void Reload( void );
-	void WeaponIdle( void );
-
-	int m_fInZoom; // don't save this
-	int m_fZoomInUse;
-};
-
-class CCrossbow : public CBasePlayerWeapon
-{
-	DECLARE_CLASS( CCrossbow, CBasePlayerWeapon );
+	DECLARE_CLASS( CGlock, CBasePlayerWeapon );
 public:
 	void Spawn( void );
 	void Precache( void );
-	int AddToPlayer( CBasePlayer *pPlayer );
-
-	DECLARE_DATADESC();
 };

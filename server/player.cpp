@@ -668,7 +668,7 @@ void CBasePlayer::PackDeadPlayerItems( void )
 	// pack the ammo
 	while ( iPackAmmo[iPA] != -1 )
 	{
-		pWeaponBox->PackAmmo( MAKE_STRING( CBasePlayerItem::AmmoInfoArray[iPackAmmo[iPA]].pszName ), m_rgAmmo[iPackAmmo[iPA]] );
+		pWeaponBox->PackAmmo( MAKE_STRING( CBaseWeaponContext::AmmoInfoArray[iPackAmmo[iPA]].pszName ), m_rgAmmo[iPackAmmo[iPA]] );
 		iPA++;
 	}
 
@@ -4090,10 +4090,10 @@ int CBasePlayer::GetAmmoIndex(const char *psz)
 
 	for (i = 1; i < MAX_AMMO_SLOTS; i++)
 	{
-		if ( !CBasePlayerItem::AmmoInfoArray[i].pszName )
+		if ( !CBaseWeaponContext::AmmoInfoArray[i].pszName )
 			continue;
 
-		if (stricmp( psz, CBasePlayerItem::AmmoInfoArray[i].pszName ) == 0)
+		if (stricmp( psz, CBaseWeaponContext::AmmoInfoArray[i].pszName ) == 0)
 			return i;
 	}
 
@@ -4449,7 +4449,7 @@ void CBasePlayer :: UpdateClientData( void )
 
 		for (i = 0; i < MAX_WEAPONS; i++)
 		{
-			ItemInfo& II = CBasePlayerItem::ItemInfoArray[i];
+			ItemInfo& II = CBaseWeaponContext::ItemInfoArray[i];
 
 			if ( !II.iId )
 				continue;
@@ -4915,7 +4915,7 @@ void CBasePlayer::DropPlayerItem ( char *pszItemName )
 
 			UTIL_MakeVectors ( GetAbsAngles() ); 
 
-			RemoveWeapon( pWeapon->m_iId );	// take item off hud
+			RemoveWeapon( pWeapon->iWeaponID() );	// take item off hud
 
 			CWeaponBox *pWeaponBox = (CWeaponBox *)CBaseEntity::Create( "weaponbox", GetAbsOrigin() + gpGlobals->v_forward * 10, GetAbsAngles(), edict() );
 			Vector vecAngles = pWeaponBox->GetAbsAngles();

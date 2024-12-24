@@ -15,6 +15,18 @@
 
 #include "glock.h"
 
+#ifdef CLIENT_DLL
+
+#else
+#include "extdll.h"
+#include "util.h"
+#include "cbase.h"
+#include "monsters.h"
+#include "weapons.h"
+#include "nodes.h"
+#include "player.h"
+#endif
+
 enum glock_e
 {
 	GLOCK_IDLE1 = 0,
@@ -29,40 +41,16 @@ enum glock_e
 	GLOCK_ADD_SILENCER
 };
 
-LINK_ENTITY_TO_CLASS( weapon_glock, CGlock );
-LINK_ENTITY_TO_CLASS( weapon_9mmhandgun, CGlock );
-
-void CGlock::Spawn( )
+CGlockWeaponLogic::CGlockWeaponLogic(IWeaponLayer *funcs) :
+	CBaseWeaponContext(funcs)
 {
-	pev->classname = MAKE_STRING( "weapon_9mmhandgun" ); // hack to allow for old names
-	Precache( );
-	m_iId = WEAPON_GLOCK;
-	SET_MODEL( edict(), "models/w_9mmhandgun.mdl" );
-
 	m_iDefaultAmmo = GLOCK_DEFAULT_GIVE;
-
-	FallInit();// get ready to fall down.
+	m_iId = WEAPON_GLOCK;
 }
 
-void CGlock::Precache( void )
+int CGlockWeaponLogic::GetItemInfo(ItemInfo *p)
 {
-	PRECACHE_MODEL("models/v_9mmhandgun.mdl");
-	PRECACHE_MODEL("models/w_9mmhandgun.mdl");
-	PRECACHE_MODEL("models/p_9mmhandgun.mdl");
-
-	m_iShell = PRECACHE_MODEL ("models/shell.mdl");// brass shell
-
-	PRECACHE_SOUND("items/9mmclip1.wav");
-	PRECACHE_SOUND("items/9mmclip2.wav");
-
-	PRECACHE_SOUND ("weapons/pl_gun1.wav");//silenced handgun
-	PRECACHE_SOUND ("weapons/pl_gun2.wav");//silenced handgun
-	PRECACHE_SOUND ("weapons/pl_gun3.wav");//handgun
-}
-
-int CGlock::GetItemInfo(ItemInfo *p)
-{
-	p->pszName = STRING(pev->classname);
+	p->pszName = CLASSNAME_STR(GLOCK_CLASSNAME);
 	p->pszAmmo1 = "9mm";
 	p->iMaxAmmo1 = _9MM_MAX_CARRY;
 	p->pszAmmo2 = NULL;
@@ -71,29 +59,29 @@ int CGlock::GetItemInfo(ItemInfo *p)
 	p->iSlot = 1;
 	p->iPosition = 0;
 	p->iFlags = 0;
-	p->iId = m_iId = WEAPON_GLOCK;
+	p->iId = m_iId;
 	p->iWeight = GLOCK_WEIGHT;
 
 	return 1;
 }
 
-BOOL CGlock::Deploy( )
+bool CGlockWeaponLogic::Deploy( )
 {
 	// pev->body = 1;
 	return DefaultDeploy( "models/v_9mmhandgun.mdl", "models/p_9mmhandgun.mdl", GLOCK_DRAW, "onehanded" );
 }
 
-void CGlock::SecondaryAttack( void )
+void CGlockWeaponLogic::SecondaryAttack( void )
 {
 	GlockFire( 0.1, 0.2, FALSE );
 }
 
-void CGlock::PrimaryAttack( void )
+void CGlockWeaponLogic::PrimaryAttack( void )
 {
 	GlockFire( 0.01, 0.3, TRUE );
 }
 
-void CGlock::GlockFire( float flSpread , float flCycleTime, BOOL fUseAutoAim )
+void CGlockWeaponLogic::GlockFire( float flSpread , float flCycleTime, BOOL fUseAutoAim )
 {
 	if (m_iClip <= 0)
 	{
@@ -125,10 +113,10 @@ void CGlock::GlockFire( float flSpread , float flCycleTime, BOOL fUseAutoAim )
 							 + gpGlobals->v_up * RANDOM_FLOAT(100,150) 
 							 + gpGlobals->v_forward * 25;
 	EjectBrass ( m_pPlayer->EyePosition() + gpGlobals->v_up * -12 + gpGlobals->v_forward * 32 + gpGlobals->v_right * 6,
-	vecShellVelocity, m_pPlayer->GetAbsAngles().y, m_iShell, TE_BOUNCE_SHELL ); 
+	vecShellVelocity, m_pPlayer->GetAbsAngles().y, MODEL_INDEX("models/shell.mdl"), TE_BOUNCE_SHELL);
 
 	// silenced
-	if (pev->body == 1)
+	if (m_pFuncs->GetWeaponBodygroup() == 1)
 	{
 		m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME;
 		m_pPlayer->m_iWeaponFlash = DIM_GUN_FLASH;
@@ -175,7 +163,7 @@ void CGlock::GlockFire( float flSpread , float flCycleTime, BOOL fUseAutoAim )
 	m_pPlayer->pev->punchangle.x -= 2;
 }
 
-void CGlock::Reload( void )
+void CGlockWeaponLogic::Reload( void )
 {
 	int iResult;
 
@@ -190,7 +178,7 @@ void CGlock::Reload( void )
 	}
 }
 
-void CGlock::WeaponIdle( void )
+void CGlockWeaponLogic::WeaponIdle( void )
 {
 	ResetEmptySound( );
 
