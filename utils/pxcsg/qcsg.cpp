@@ -35,6 +35,9 @@ static FILE	*out_detbrush[MAX_MAP_HULLS];
 vec3_t		world_mins, world_maxs, world_size;
 static FILE	*test_mapfile = NULL;
 
+// diffusioncubemaps
+char global_mapname[1024];
+
 //======================================================================
 /*
 ===========
@@ -775,6 +778,9 @@ int main( int argc, char **argv )
 	Sys_InitLog( va( "%s.log", source ));
 
 	Q_snprintf( mapname, sizeof( mapname ), "%s.map", source );
+
+	// diffusioncubemaps
+	Q_snprintf(global_mapname, sizeof(global_mapname), "%s", source);
 
 	// trying to extract wadpath from the mapname
 	if( Q_stristr( mapname, "maps" ))

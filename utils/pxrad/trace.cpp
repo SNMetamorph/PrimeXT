@@ -912,6 +912,11 @@ void InitWorldTrace( void )
 				SetBits( flags, FMESH_VERTEX_LIGHTING );
 			if( BoolForKey( e, "zhlt_selfshadow" ))
 				SetBits( flags, FMESH_SELF_SHADOW );
+			if (BoolForKey(e, "zhlt_vlight_twoside"))
+			{
+				SetBits(flags, FMESH_VLIGHT_TWOSIDE);
+				SetBits(flags, FMESH_SELF_SHADOW);
+			}
 			if( BoolForKey( e, "zhlt_nosmooth" ))
 				SetBits( flags, FMESH_DONT_SMOOTH );
 			LinkEdict( e, mod_unknown, t, flags );
@@ -927,6 +932,11 @@ void InitWorldTrace( void )
 				SetBits( flags, FMESH_CAST_SHADOW );
 			if( BoolForKey( e, "zhlt_selfshadow" ))
 				SetBits( flags, FMESH_SELF_SHADOW );
+			if (BoolForKey(e, "zhlt_vlight_twoside"))
+			{
+				SetBits(flags, FMESH_VLIGHT_TWOSIDE);
+				SetBits(flags, FMESH_SELF_SHADOW);
+			}
 			if( BoolForKey( e, "zhlt_nosmooth" ))
 				SetBits( flags, FMESH_DONT_SMOOTH );
 			LinkEdict( e, mod_unknown, t, flags );

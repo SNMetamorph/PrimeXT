@@ -32,6 +32,11 @@ const char *g_sMapType[BRUSH_COUNT] =
 "QuArK"
 };
 
+// diffusioncubemaps
+extern char global_mapname[1024];
+FILE *cubemap_info;
+static bool cubemap_file_opened = false;
+
 /*
 =================
 AllocSide
@@ -432,6 +437,18 @@ static void SetupSideParams( mapent_t *mapent, brush_t *brush, side_t *side )
 	{
 		SetBits( side->flags, FSIDE_NOLIGHTMAP );
 		SetBits( brush->flags, FBRUSH_NOCSG );
+	}
+
+	// diffusion
+	if (BoolForKey((entity_t *)mapent, "zhlt_nolightmap") || !Q_stricmp(side->name, "black"))
+	{
+		SetBits(side->flags, FSIDE_NOLIGHTMAP);
+	}
+
+	// diffusion
+	if (BoolForKey((entity_t *)mapent, "zhlt_nullifyhull"))
+	{
+		SetBits(brush->flags, FBRUSH_CLIPONLY);
 	}
 
 	// for each face of each brush of this entity
@@ -852,6 +869,25 @@ static void ParseBrush( mapent_t *mapent, short entindex, short faceinfo, short 
 			SetKeyValue( (entity_t *)mapent, "origin", string );
 		}
 	}
+	else // diffusioncubemaps
+	{
+		const char *classname = ValueForKey((entity_t *)mapent, "classname");
+		if (!Q_stricmp("cubemap_box", classname))
+		{
+			Msg("Cubemap box: found\n");
+			SetBits(brush->flags, FBRUSH_REMOVE);
+
+			CreateBrushFaces(brush); // to get sizes
+			DeleteBrushFaces(brush);
+
+			if (brush->entitynum != 0)
+			{
+				// write mins/maxs
+				VectorCopy(brush->hull[0].mins, mapent->absmin);
+				VectorCopy(brush->hull[0].maxs, mapent->absmax);
+			}
+		}
+	}
 
 	// brush will no longer used and should be removed
 	if( FBitSet( brush->flags, FBRUSH_REMOVE ))
@@ -1121,6 +1157,45 @@ bool ParseMapEntity( CUtlArray<mapent_t> *entities, bool external = false )
 		MoveBrushesToEntity( entities, &entities->Element( 0 ), mapent );
 		FreeMapEntity( mapent ); // throw all key-value pairs
 		entities->Remove( index );
+
+		return true;
+	}
+
+	// diffusioncubemaps
+	if (!Q_stricmp("cubemap_box", classname))
+	{
+		if (VectorIsNull(mapent->origin)) // no origin brush, just get center
+			VectorAverage(mapent->absmin, mapent->absmax, mapent->origin);
+
+		Msg("Cubemap box: mins %.2f %.2f %.2f, maxs %.2f %.2f %.2f, org %.2f %.2f %.2f\n",
+			mapent->absmin[0], mapent->absmin[1], mapent->absmin[2],
+			mapent->absmax[0], mapent->absmax[1], mapent->absmax[2],
+			mapent->origin[0], mapent->origin[1], mapent->origin[2]);
+
+		char path[1024];
+		Q_snprintf(path, sizeof(path), "%s_cubemaps.txt", global_mapname);
+		if (!cubemap_file_opened) // first time, open the empty file
+		{
+			cubemap_file_opened = true;
+			cubemap_info = fopen(path, "w");
+			if (cubemap_info)
+				Msg("Cubemap box: opened file %s\n", path);
+		}
+
+		if (cubemap_info)
+		{
+			Msg("Cubemap box: writing cubemap info...\n");
+			fprintf(cubemap_info, "cmbox \"%.2f %.2f %.2f\" \"%.2f %.2f %.2f\" \"%.2f %.2f %.2f\" 512\n",
+				mapent->absmin[0], mapent->absmin[1], mapent->absmin[2],
+				mapent->absmax[0], mapent->absmax[1], mapent->absmax[2],
+				mapent->origin[0], mapent->origin[1], mapent->origin[2]);
+		}
+		else
+			Msg("Cubemap box: error while writing cubemap info!\n");
+
+		Msg("Cubemap box: deleting entity\n");
+		FreeMapEntity(mapent); // throw all key-value pairs
+		entities->Remove(index);
 
 		return true;
 	}

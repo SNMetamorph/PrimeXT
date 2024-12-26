@@ -17,6 +17,7 @@
 #define FMESH_CAST_SHADOW		BIT( 2 )
 #define FMESH_SELF_SHADOW		BIT( 3 )
 #define FMESH_DONT_SMOOTH		BIT( 4 )
+#define FMESH_VLIGHT_TWOSIDE	BIT( 5 ) // zhlt_vlight_twoside
 #define TEX_ALPHATEST		BIT( 31 )	// virtual flag
 
 #define PLANECHECK_POSITIVE		1

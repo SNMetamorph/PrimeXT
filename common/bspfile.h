@@ -48,8 +48,8 @@ BRUSH MODELS
 #define MAX_MAP_HULLS		4		// MAX_HULLS
 #define MIPLEVELS			4		// software renderer mipmap count
 
-#define WORLD_MINS			-32768
-#define WORLD_MAXS			32768
+#define WORLD_MINS			-65536 // diffusion - was 32768
+#define WORLD_MAXS			65536
 #define WORLD_SIZE			( WORLD_MAXS - WORLD_MINS )
 #define BOGUS_RANGE			WORLD_SIZE * 1.74	// half-diagonal
 

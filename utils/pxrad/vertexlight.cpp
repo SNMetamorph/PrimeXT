@@ -260,6 +260,27 @@ void BuildVertexLights( int indexnum, int thread = -1 )
 	// grab indirect lighting for vertex from light_environment or lighting vertex in -fast mode
 	GatherSampleLight( thread, -1, point, leaf, normal, light, delux, shadow, styles, NULL, 1, ignoreent );
 
+	// diffusion - two-sided foliage should be lit from both sides. This is some kind of a workaround (empirical research!)
+	if (FBitSet(mesh->flags, FMESH_VLIGHT_TWOSIDE))
+	{
+		for (int k = 0; k < MAXLIGHTMAPS; k++)
+		{
+			VectorScale(light[k], 0.65f, light[k]);
+		}
+
+		normal[0] = -normal[0];
+		normal[1] = -normal[1];
+		normal[2] = -normal[2];
+
+		// gather direct lighting for our vertex
+		GatherSampleLight(thread, -1, point, leaf, normal, light, delux, shadow, styles, vislight, 0, ignoreent);
+
+		for (int k = 0; k < MAXLIGHTMAPS; k++)
+		{
+			VectorScale(light[k], 0.65f, light[k]);
+		}
+	}
+
 	// store results back into the vertex
 	for( j = 0; j < MAXLIGHTMAPS && styles[j] != 255; j++ )
 	{
