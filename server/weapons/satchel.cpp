@@ -317,32 +317,3 @@ void CSatchel::WeaponIdle( void )
 	}
 	m_flTimeWeaponIdle = gpGlobals->time + RANDOM_FLOAT ( 10, 15 );// how long till we do this again.
 }
-
-//=========================================================
-// DeactivateSatchels - removes all satchels owned by
-// the provided player. Should only be used upon death.
-//
-// Made this global on purpose.
-//=========================================================
-void DeactivateSatchels( CBasePlayer *pOwner )
-{
-	edict_t *pFind; 
-
-	pFind = FIND_ENTITY_BY_CLASSNAME( NULL, "monster_satchel" );
-
-	while ( !FNullEnt( pFind ) )
-	{
-		CBaseEntity *pEnt = CBaseEntity::Instance( pFind );
-		CSatchelCharge *pSatchel = (CSatchelCharge *)pEnt;
-
-		if ( pSatchel )
-		{
-			if ( pSatchel->pev->owner == pOwner->edict() )
-			{
-				pSatchel->Deactivate();
-			}
-		}
-
-		pFind = FIND_ENTITY_BY_CLASSNAME( pFind, "monster_satchel" );
-	}
-}
