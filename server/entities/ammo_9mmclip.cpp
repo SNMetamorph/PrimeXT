@@ -14,6 +14,9 @@
 ****/
 
 #include "ammo_9mmclip.h"
+#include "weapons/glock.h"
+
+#define AMMO_GLOCKCLIP_GIVE	GLOCK_MAX_CLIP
 
 LINK_ENTITY_TO_CLASS( ammo_glockclip, CGlockAmmo );
 LINK_ENTITY_TO_CLASS( ammo_9mmclip, CGlockAmmo );
