@@ -68,6 +68,8 @@ file(GLOB RENDER_SOURCES "render/*.cpp")
 # entity wrappers source files
 file(GLOB ENTITIES_SOURCES "entities/*.cpp")
 
+# game events source files
+file(GLOB GAME_EVENTS_SOURCES "events/*.cpp")
 # ImGui source files
 if(NOT ENABLE_VGUI_COMPATIBILITY)
 	list(APPEND IMGUI_SOURCES
@@ -84,6 +86,7 @@ endif()
 
 list(APPEND CLDLL_SOURCES ${RENDER_SOURCES})
 list(APPEND CLDLL_SOURCES ${ENTITIES_SOURCES})
+list(APPEND CLDLL_SOURCES ${GAME_EVENTS_SOURCES})
 add_library(${PROJECT_NAME} SHARED ${CLDLL_SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE

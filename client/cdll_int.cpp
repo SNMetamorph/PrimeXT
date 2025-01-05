@@ -28,6 +28,7 @@
 #include "tri.h"
 #include "mobility_int.h"
 #include "imgui_manager.h"
+#include "events/game_event_manager.h"
 #include "utils.h"
 #include "pm_shared.h"
 #include "filesystem_utils.h"
@@ -38,6 +39,7 @@ int g_iXashEngineBuildNumber;
 cl_enginefunc_t gEngfuncs;
 mobile_engfuncs_t gMobileAPI;
 render_api_t gRenderfuncs;
+static CGameEventManager *g_pEventManager;
 CHud gHUD;
 
 /*
@@ -149,6 +151,8 @@ int Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion )
 		BuildInfo::GetArchitecture(),
 		BuildInfo::GetPlatform()
 	);
+
+	g_pEventManager = new CGameEventManager();
 	return 1;
 }
 
@@ -193,6 +197,10 @@ void DLLEXPORT HUD_Shutdown( void )
 
 	if (g_fRenderInitialized)
 		GL_Shutdown();
+
+	if (g_pEventManager) {
+		delete g_pEventManager;
+	}
 }
 
 /*
