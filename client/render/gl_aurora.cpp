@@ -363,6 +363,7 @@ CParticleSystem :: CParticleSystem( cl_entity_t *ent, const char *szFilename, in
 	enable = true;
 
 	entityMatrix.Identity();
+	ClearBounds(m_vecAbsMin, m_vecAbsMax);
 
 	if( !c_bCosTableInit )
 	{
@@ -877,6 +878,10 @@ AURSTATE CParticleSystem :: UpdateSystem( float frametime )
 	CParticle	*pParticle = m_pActiveParticle;
 	CParticle	*pLast = NULL;
 
+	if (tr.frametime != 0.0) {
+		ClearBounds(m_vecAbsMin, m_vecAbsMax);
+	}
+
 	while( pParticle )
 	{
 		if( UpdateParticle( pParticle, frametime ))
@@ -905,7 +910,12 @@ AURSTATE CParticleSystem :: UpdateSystem( float frametime )
 		}
 	}
 
-	return AURORA_DRAW;
+	if (!Mod_CheckBoxVisible(m_vecAbsMin, m_vecAbsMax)) {
+		return AURORA_INVISIBLE; // culled with PVS check
+	}
+	else {
+		return AURORA_DRAW;
+	}
 }
 
 void CParticleSystem :: DrawSystem( void )
@@ -1042,6 +1052,10 @@ bool CParticleSystem :: UpdateParticle( CParticle *part, float frametime )
 		part->m_fAngle += part->m_fAngleStep * frametime;
 		while( part->m_fAngle < 0 ) part->m_fAngle += 360;
 		while( part->m_fAngle > 360 ) part->m_fAngle -= 360;
+	}
+
+	if (tr.frametime != 0.0) {
+		AddPointToBounds(part->origin, m_vecAbsMin, m_vecAbsMax);
 	}
 
 	return true;

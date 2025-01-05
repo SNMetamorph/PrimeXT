@@ -174,6 +174,8 @@ public:
 	matrix3x3		entityMatrix;
 	int		m_fHasProjectionLighting;
 	float		m_fLifeTime;	// for auto-removed particles
+	Vector		m_vecAbsMin;
+	Vector		m_vecAbsMax;
 	bool		enable;
 
 private:
