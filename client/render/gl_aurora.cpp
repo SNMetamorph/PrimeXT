@@ -25,7 +25,7 @@ void UTIL_CreateAurora( cl_entity_t *ent, const char *file, int attachment, floa
 
 	// verify file exists
 	// g-cont. idea! use COMPARE_FILE_TIME instead of LOAD_FILE
-	if( COMPARE_FILE_TIME( file, file, &iCompare ))
+	if( !g_fRenderInitialized || COMPARE_FILE_TIME( file, file, &iCompare ))
 	{
 		CParticleSystem *pSystem = new CParticleSystem( ent, file, attachment, lifetime );
 		g_pParticleSystems.AddSystem( pSystem );
@@ -823,10 +823,10 @@ AURSTATE CParticleSystem :: UpdateSystem( float frametime )
 
 		// check for contents to remove
 		if( m_iKillCondition == POINT_CONTENTS( m_pEntity->origin ))
-          	{
+        {
 			m_pEntity = NULL;
-          		enable = false;
-          	}
+          	enable = false;
+        }
 	}
 	else
 	{
@@ -1046,6 +1046,10 @@ bool CParticleSystem :: UpdateParticle( CParticle *part, float frametime )
 	part->m_fGreen += part->m_fGreenStep * frametime;
 	part->m_fBlue += part->m_fBlueStep * frametime;
 	part->frame += part->m_fFrameStep * frametime;
+
+	if (!part->m_pEntity && (part->m_fSize <= 0.0f || part->m_fAlpha <= 0.0f)) {
+		return false;
+	}
 
 	if( part->m_fAngleStep )
 	{
