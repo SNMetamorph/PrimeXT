@@ -1,0 +1,259 @@
+#include "server_weapon_layer_impl.h"
+#include "gamerules.h"
+#include "game.h"
+
+CServerWeaponLayerImpl::CServerWeaponLayerImpl(CBasePlayerWeapon *weaponEntity) :
+	m_pWeapon(weaponEntity)
+{
+}
+
+int CServerWeaponLayerImpl::GetWeaponBodygroup()
+{
+	return m_pWeapon->pev->body;
+}
+
+Vector CServerWeaponLayerImpl::GetGunPosition()
+{
+	return m_pWeapon->m_pPlayer->pev->origin + m_pWeapon->m_pPlayer->pev->view_ofs;
+}
+
+matrix3x3 CServerWeaponLayerImpl::GetCameraOrientation()
+{
+	CBasePlayer *player = m_pWeapon->m_pPlayer;
+	return matrix3x3(player->pev->v_angle + player->pev->punchangle);
+}
+
+Vector CServerWeaponLayerImpl::GetAutoaimVector(float delta)
+{
+	CBasePlayer *player = m_pWeapon->m_pPlayer;
+
+	if (g_iSkillLevel == SKILL_HARD)
+	{
+		UTIL_MakeVectors( player->pev->v_angle + player->pev->punchangle );
+		return gpGlobals->v_forward;
+	}
+
+	Vector vecSrc = GetGunPosition( );
+	float flDist = 8192;
+
+	// always use non-sticky autoaim
+	// UNDONE: use sever variable to chose!
+	if (1 || g_iSkillLevel == SKILL_MEDIUM)
+	{
+		player->m_vecAutoAim = Vector( 0, 0, 0 );
+		// flDelta *= 0.5;
+	}
+
+	BOOL m_fOldTargeting = player->m_fOnTarget;
+	Vector angles = player->AutoaimDeflection(vecSrc, flDist, delta );
+
+	// update ontarget if changed
+	if ( !g_pGameRules->AllowAutoTargetCrosshair() )
+		player->m_fOnTarget = 0;
+	else if (m_fOldTargeting != player->m_fOnTarget)
+	{
+		player->m_pActiveItem->UpdateItemInfo( );
+	}
+
+	if (angles.x > 180)
+		angles.x -= 360;
+	if (angles.x < -180)
+		angles.x += 360;
+	if (angles.y > 180)
+		angles.y -= 360;
+	if (angles.y < -180)
+		angles.y += 360;
+
+	if (angles.x > 25)
+		angles.x = 25;
+	if (angles.x < -25)
+		angles.x = -25;
+	if (angles.y > 12)
+		angles.y = 12;
+	if (angles.y < -12)
+		angles.y = -12;
+
+
+	// always use non-sticky autoaim
+	// UNDONE: use sever variable to chose!
+	if (0 || g_iSkillLevel == SKILL_EASY)
+	{
+		player->m_vecAutoAim = player->m_vecAutoAim * 0.67 + angles * 0.33;
+	}
+	else
+	{
+		player->m_vecAutoAim = angles * 0.9;
+	}
+
+	// m_vecAutoAim = m_vecAutoAim * 0.99;
+
+	// Don't send across network if sv_aim is 0
+	if ( g_psv_aim->value != 0 )
+	{
+		if ( player->m_vecAutoAim.x != player->m_lastx ||
+			 player->m_vecAutoAim.y != player->m_lasty )
+		{
+			SET_CROSSHAIRANGLE( player->edict(), -player->m_vecAutoAim.x, player->m_vecAutoAim.y );
+			
+			player->m_lastx = player->m_vecAutoAim.x;
+			player->m_lasty = player->m_vecAutoAim.y;
+		}
+	}
+
+	// ALERT( at_console, "%f %f\n", angles.x, angles.y );
+
+	UTIL_MakeVectors( player->pev->v_angle + player->pev->punchangle + player->m_vecAutoAim );
+	return gpGlobals->v_forward;
+}
+
+Vector CServerWeaponLayerImpl::FireBullets(int bullets, Vector origin, matrix3x3 orientation, float distance, float spread, int bulletType, uint32_t seed, int damage)
+{
+	float x, y, z;
+	TraceResult tr;
+	CBasePlayer *player = m_pWeapon->m_pPlayer;
+
+	ClearMultiDamage();
+	gMultiDamage.type = DMG_BULLET | DMG_NEVERGIB;
+
+	for (uint32_t i = 1; i <= bullets; i++)
+	{
+		// use player's random seed, get circular gaussian spread
+		x = m_randomGenerator.GetFloat(seed + i, -0.5f, 0.5f) + m_randomGenerator.GetFloat(seed + 1 + i, -0.5f, 0.5f);
+		y = m_randomGenerator.GetFloat(seed + 2 + i, -0.5f, 0.5f) + m_randomGenerator.GetFloat(seed + 3 + i, -0.5f, 0.5f);
+		z = x * x + y * y;
+
+		Vector vecDir = orientation.GetForward() +
+						x * spread * orientation.GetRight() +
+						y * spread * orientation.GetUp();
+		Vector vecEnd = origin + vecDir * distance;
+
+		SetBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
+		UTIL_TraceLine(origin, vecEnd, dont_ignore_monsters, ENT(player->pev), &tr);
+		ClearBits(gpGlobals->trace_flags, FTRACE_MATERIAL_TRACE);
+
+		// do damage, paint decals
+		if (tr.flFraction != 1.0)
+		{
+			CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
+
+			if ( damage )
+			{
+				pEntity->TraceAttack(player->pev, damage, vecDir, &tr, DMG_BULLET | ((damage > 16) ? DMG_ALWAYSGIB : DMG_NEVERGIB) );
+				
+				TEXTURETYPE_PlaySound(&tr, origin, vecEnd, bulletType);
+				DecalGunshot( &tr, bulletType, origin, vecEnd );
+			} 
+			else switch(bulletType)
+			{
+			default:
+			case BULLET_PLAYER_9MM:		
+				pEntity->TraceAttack(player->pev, gSkillData.plrDmg9MM, vecDir, &tr, DMG_BULLET); 
+				break;
+
+			case BULLET_PLAYER_MP5:		
+				pEntity->TraceAttack(player->pev, gSkillData.plrDmgMP5, vecDir, &tr, DMG_BULLET); 
+				break;
+
+			case BULLET_PLAYER_BUCKSHOT:	
+				 // make distance based!
+				pEntity->TraceAttack(player->pev, gSkillData.plrDmgBuckshot, vecDir, &tr, DMG_BULLET); 
+				break;
+			
+			case BULLET_PLAYER_357:		
+				pEntity->TraceAttack(player->pev, gSkillData.plrDmg357, vecDir, &tr, DMG_BULLET); 
+				break;
+				
+			case BULLET_NONE: // FIX 
+				pEntity->TraceAttack(player->pev, 50, vecDir, &tr, DMG_CLUB);
+				TEXTURETYPE_PlaySound(&tr, origin, vecEnd, bulletType);
+				if ( !FNullEnt(tr.pHit) && VARS(tr.pHit)->rendermode != 0) // only decal glass
+				{
+					UTIL_DecalTrace( &tr, "{break1" );
+				}
+
+				break;
+			}
+		}
+		// make bullet trails
+		UTIL_BubbleTrail( origin, tr.vecEndPos, (distance * tr.flFraction) / 64.0 );
+	}
+
+	ApplyMultiDamage(player->pev, player->pev);
+	return Vector( x * spread, y * spread, 0.0 );
+}
+
+int CServerWeaponLayerImpl::GetPlayerAmmo(int ammoType)
+{
+	return m_pWeapon->m_pPlayer->m_rgAmmo[ammoType];
+}
+
+void CServerWeaponLayerImpl::SetPlayerAmmo(int ammoType, int count)
+{
+	m_pWeapon->m_pPlayer->m_rgAmmo[ammoType] = count;
+}
+
+void CServerWeaponLayerImpl::SetPlayerWeaponAnim(int anim)
+{
+	m_pWeapon->m_pPlayer->pev->weaponanim = anim;
+}
+
+void CServerWeaponLayerImpl::SetPlayerViewmodel(int model)
+{
+	m_pWeapon->m_pPlayer->pev->viewmodel = model;
+}
+
+bool CServerWeaponLayerImpl::CheckPlayerButtonFlag(int buttonMask)
+{
+	return FBitSet(m_pWeapon->m_pPlayer->pev->button, buttonMask);
+}
+
+void CServerWeaponLayerImpl::ClearPlayerButtonFlag(int buttonMask)
+{
+	ClearBits(m_pWeapon->m_pPlayer->pev->button, buttonMask);
+}
+
+float CServerWeaponLayerImpl::GetPlayerNextAttackTime()
+{
+	return m_pWeapon->m_pPlayer->m_flNextAttack; 
+}
+
+void CServerWeaponLayerImpl::SetPlayerNextAttackTime(float value)
+{
+	m_pWeapon->m_pPlayer->m_flNextAttack = value;
+}
+
+float CServerWeaponLayerImpl::GetWeaponTimeBase()
+{
+	return gpGlobals->time;
+	//return 0.0f; // zero because predicting enabled
+}
+
+uint32_t CServerWeaponLayerImpl::GetRandomSeed()
+{
+	return m_pWeapon->m_pPlayer->random_seed;
+}
+
+uint32_t CServerWeaponLayerImpl::GetRandomInt(uint32_t seed, int32_t min, int32_t max)
+{
+	return m_randomGenerator.GetInteger(seed, min, max);
+}
+
+float CServerWeaponLayerImpl::GetRandomFloat(uint32_t seed, float min, float max)
+{
+	return m_randomGenerator.GetFloat(seed, min, max);
+}
+
+uint16_t CServerWeaponLayerImpl::PrecacheEvent(const char *eventName)
+{
+	return g_engfuncs.pfnPrecacheEvent(1, eventName);
+}
+
+void CServerWeaponLayerImpl::PlaybackWeaponEvent(const WeaponEventParams &params)
+{
+	g_engfuncs.pfnPlaybackEvent(static_cast<int>(params.flags), m_pWeapon->m_pPlayer->edict(),
+		params.eventindex, params.delay, 
+		params.origin, params.angles, 
+		params.fparam1, params.fparam2, 
+		params.iparam1, params.iparam2, 
+		params.bparam1, params.bparam2);
+}
