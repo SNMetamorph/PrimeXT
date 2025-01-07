@@ -109,7 +109,7 @@ void UpdateStats( CBasePlayer *pPlayer )
 
 			int index = pPlayer->GetAmmoIndex(II.pszAmmo1);
 			if ( index >= 0 )
-				ammoCount[ index ] += ((CBasePlayerWeapon *)p)->m_iClip;
+				ammoCount[ index ] += ((CBasePlayerWeapon *)p)->m_pWeaponContext->m_iClip;
 			
 			p = p->m_pNext;
 		}
@@ -118,7 +118,7 @@ void UpdateStats( CBasePlayer *pPlayer )
 	float ammo = 0;
 	for (i = 1; i < MAX_AMMO_SLOTS; i++)
 	{
-		ammo += ammoCount[i] * AmmoDamage( CBasePlayerItem::AmmoInfoArray[i].pszName );
+		ammo += ammoCount[i] * AmmoDamage( CBaseWeaponContext::AmmoInfoArray[i].pszName );
 	}
 
 	float health = pPlayer->pev->health + pPlayer->pev->armorvalue * 2;	// Armor is 2X health
