@@ -15,7 +15,10 @@
 #ifndef WEAPONS_H
 #define WEAPONS_H
 
+#include "cbase.h"
 #include "effects.h"
+#include "item_info.h"
+#include "weapon_context.h"
 
 class CBasePlayer;
 
@@ -29,7 +32,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 
 #define WEAPON_NONE				0
 #define WEAPON_CROWBAR			1
-#define WEAPON_GLOCK			2
 #define WEAPON_PYTHON			3
 #define WEAPON_MP5				4
 #define WEAPON_CYCLER			5
@@ -44,14 +46,10 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define WEAPON_SATCHEL			14
 #define WEAPON_SNARK			15
 
-#define WEAPON_ALLWEAPONS		(~(1<<WEAPON_SUIT))
-
 #define MAX_NORMAL_BATTERY	100
-
 
 // weapon weight factors (for auto-switching)   (-1 = noswitch)
 #define CROWBAR_WEIGHT		0
-#define GLOCK_WEIGHT		10
 #define PYTHON_WEIGHT		15
 #define MP5_WEIGHT			15
 #define SHOTGUN_WEIGHT		15
@@ -65,26 +63,8 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define SATCHEL_WEIGHT		-10
 #define TRIPMINE_WEIGHT		-10
 
-
-// weapon clip/carry ammo capacities
-#define URANIUM_MAX_CARRY		100
-#define	_9MM_MAX_CARRY			250
-#define _357_MAX_CARRY			36
-#define BUCKSHOT_MAX_CARRY		125
-#define BOLT_MAX_CARRY			50
-#define ROCKET_MAX_CARRY		5
-#define HANDGRENADE_MAX_CARRY	10
-#define SATCHEL_MAX_CARRY		5
-#define TRIPMINE_MAX_CARRY		5
-#define SNARK_MAX_CARRY			15
-#define HORNET_MAX_CARRY		8
-#define M203_GRENADE_MAX_CARRY	10
-
 // the maximum amount of ammo each weapon's clip can hold
-#define WEAPON_NOCLIP			-1
-
 //#define CROWBAR_MAX_CLIP		WEAPON_NOCLIP
-#define GLOCK_MAX_CLIP			17
 #define PYTHON_MAX_CLIP			6
 #define MP5_MAX_CLIP			50
 #define MP5_DEFAULT_AMMO		25
@@ -99,9 +79,7 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define TRIPMINE_MAX_CLIP		WEAPON_NOCLIP
 #define SNARK_MAX_CLIP			WEAPON_NOCLIP
 
-
 // the default amount of ammo that comes with each gun when it spawns
-#define GLOCK_DEFAULT_GIVE			17
 #define PYTHON_DEFAULT_GIVE			6
 #define MP5_DEFAULT_GIVE			25
 #define MP5_DEFAULT_AMMO			25
@@ -119,7 +97,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 
 // The amount of ammo given to a player by an ammo item.
 #define AMMO_URANIUMBOX_GIVE	20
-#define AMMO_GLOCKCLIP_GIVE		GLOCK_MAX_CLIP
 #define AMMO_357BOX_GIVE		PYTHON_MAX_CLIP
 #define AMMO_MP5CLIP_GIVE		MP5_MAX_CLIP
 #define AMMO_CHAINBOX_GIVE		200
@@ -130,50 +107,7 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define AMMO_URANIUMBOX_GIVE	20
 #define AMMO_SNARKBOX_GIVE		5
 
-// bullet types
-typedef	enum
-{
-	BULLET_NONE = 0,
-	BULLET_PLAYER_9MM, // glock
-	BULLET_PLAYER_MP5, // mp5
-	BULLET_PLAYER_357, // python
-	BULLET_PLAYER_BUCKSHOT, // shotgun
-	BULLET_PLAYER_CROWBAR, // crowbar swipe
-
-	BULLET_MONSTER_9MM,
-	BULLET_MONSTER_MP5,
-	BULLET_MONSTER_12MM,
-} Bullet;
-
-
-#define ITEM_FLAG_SELECTONEMPTY		1
-#define ITEM_FLAG_NOAUTORELOAD		2
-#define ITEM_FLAG_NOAUTOSWITCHEMPTY	4
-#define ITEM_FLAG_LIMITINWORLD		8
-#define ITEM_FLAG_EXHAUSTIBLE		16 // A player can totally exhaust their ammo supply and lose this weapon
-
 #define WEAPON_IS_ONTARGET 0x40
-
-typedef struct
-{
-	int		iSlot;
-	int		iPosition;
-	const char	*pszAmmo1;	// ammo 1 type
-	int		iMaxAmmo1;		// max ammo 1
-	const char	*pszAmmo2;	// ammo 2 type
-	int		iMaxAmmo2;		// max ammo 2
-	const char	*pszName;
-	int		iMaxClip;
-	int		iId;
-	int		iFlags;
-	int		iWeight;// this value used to determine this weapon's importance in autoselection.
-} ItemInfo;
-
-typedef struct
-{
-	const char *pszName;
-	int iId;
-} AmmoInfo;
 
 // Items that the player has in their inventory that they can use
 class CBasePlayerItem : public CBaseAnimating
@@ -198,7 +132,6 @@ public:
 	virtual BOOL CanDeploy( void ) { return TRUE; };
 	virtual BOOL Deploy( ) { return TRUE; };		// returns is deploy was successful
 		 
-
 	virtual BOOL CanHolster( void ) { return TRUE; };		// can this weapon be put away right now?
 	virtual void Holster( void );
 	virtual void UpdateItemInfo( void ) { return; };
@@ -217,24 +150,20 @@ public:
 
 	virtual CBasePlayerItem *GetWeaponPtr( void ) { return NULL; };
 
-	static ItemInfo ItemInfoArray[ MAX_WEAPONS ];
-	static AmmoInfo AmmoInfoArray[ MAX_AMMO_SLOTS ];
-
 	CBasePlayer	*m_pPlayer;
 	CBasePlayerItem	*m_pNext;
-	int		m_iId;				// WEAPON_???
 
-	virtual int iItemSlot( void ) { return 0; }		// return 0 to MAX_ITEMS_SLOTS, used in hud
-
-	int		iItemPosition( void ) { return ItemInfoArray[ m_iId ].iPosition; }
-	const char	*pszAmmo1( void )	{ return ItemInfoArray[ m_iId ].pszAmmo1; }
-	int		iMaxAmmo1( void )	{ return ItemInfoArray[ m_iId ].iMaxAmmo1; }
-	const char	*pszAmmo2( void )	{ return ItemInfoArray[ m_iId ].pszAmmo2; }
-	int		iMaxAmmo2( void )	{ return ItemInfoArray[ m_iId ].iMaxAmmo2; }
-	const char	*pszName( void )	{ return ItemInfoArray[ m_iId ].pszName; }
-	int		iMaxClip( void )	{ return ItemInfoArray[ m_iId ].iMaxClip; }
-	int		iWeight( void )	{ return ItemInfoArray[ m_iId ].iWeight; }
-	int		iFlags( void )	{ return ItemInfoArray[ m_iId ].iFlags; }
+	virtual int	iItemSlot() = 0;
+	virtual int	iItemPosition() = 0;
+	virtual const char *pszAmmo1() = 0;
+	virtual int	iMaxAmmo1() = 0;
+	virtual const char *pszAmmo2() = 0;
+	virtual int	iMaxAmmo2() = 0;
+	virtual const char *pszName() = 0;
+	virtual int	iMaxClip() = 0;
+	virtual int	iWeight() = 0;
+	virtual int	iFlags() = 0;
+	virtual int	iWeaponID() = 0;
 };
 
 // inventory items that 
@@ -244,67 +173,55 @@ class CBasePlayerWeapon : public CBasePlayerItem
 public:
 	DECLARE_DATADESC();
 
+	CBasePlayerWeapon();
+	~CBasePlayerWeapon();
+
 	// generic weapon versions of CBasePlayerItem calls
-	virtual int AddToPlayer( CBasePlayer *pPlayer );
-	virtual int AddDuplicate( CBasePlayerItem *pItem );
+	virtual int AddToPlayer( CBasePlayer *pPlayer ) override; 
+	virtual int AddDuplicate( CBasePlayerItem *pItem ) override;
+	
+	int UpdateClientData( CBasePlayer *pPlayer ) override;	// sends hud info to client dll, if things have changed
 
-	virtual int ExtractAmmo( CBasePlayerWeapon *pWeapon );		// Return TRUE if you can add ammo to yourself when picked up
-	virtual int ExtractClipAmmo( CBasePlayerWeapon *pWeapon );		// Return TRUE if you can add ammo to yourself when picked up
+	// declare it here, but in future move to the bottom
+	CBaseWeaponContext *m_pWeaponContext;
 
-	virtual int AddWeapon( void ) { ExtractAmmo( this ); return TRUE; };	// Return TRUE if you want to add yourself to the player
+	virtual void ItemPostFrame() override;	// called each frame by the player PostThink
+
+	int	PrimaryAmmoIndex() override { return m_pWeaponContext->PrimaryAmmoIndex(); }; // forward to weapon logic
+	int	SecondaryAmmoIndex() override { return m_pWeaponContext->SecondaryAmmoIndex(); }; // forward to weapon logic
+
+	virtual int GetItemInfo(ItemInfo *p) override { return m_pWeaponContext->GetItemInfo(p); };	// returns 0 if struct not filled out
+	virtual BOOL CanDeploy( void ) override { return m_pWeaponContext->CanDeploy(); };
+	virtual BOOL Deploy() override { return m_pWeaponContext->Deploy(); };					// returns is deploy was successful	 
+	virtual BOOL CanHolster( void ) override { return m_pWeaponContext->CanHolster(); };	// can this weapon be put away right nxow?
+	virtual void Holster(void) override { m_pWeaponContext->Holster(); };
+
+	void UpdateItemInfo( void ) override {};	// updates HUD state
+	CBasePlayerItem *GetWeaponPtr( void ) override { return (CBasePlayerItem *)this; };
+
+	int iItemSlot() override		{ return m_pWeaponContext->iItemSlot(); }
+	int	iItemPosition() override	{ return m_pWeaponContext->iItemPosition(); }
+	const char *pszAmmo1() override	{ return m_pWeaponContext->pszAmmo1(); }
+	int iMaxAmmo1() override		{ return m_pWeaponContext->iMaxAmmo1(); }
+	const char *pszAmmo2() override	{ return m_pWeaponContext->pszAmmo2(); }
+	int	iMaxAmmo2() override		{ return m_pWeaponContext->iMaxAmmo2(); }
+	const char *pszName() override	{ return m_pWeaponContext->pszName(); }
+	int	iMaxClip() override			{ return m_pWeaponContext->iMaxClip(); }
+	int	iWeight() override			{ return m_pWeaponContext->iWeight(); }
+	int	iFlags() override			{ return m_pWeaponContext->iFlags(); }
+	int iWeaponID() override		{ return m_pWeaponContext->m_iId; }
+
+protected:
+	int ExtractAmmo( CBasePlayerWeapon *pWeapon );		// Return TRUE if you can add ammo to yourself when picked up
+	int ExtractClipAmmo( CBasePlayerWeapon *pWeapon );		// Return TRUE if you can add ammo to yourself when picked up
+
+	int AddWeapon( void ) { ExtractAmmo( this ); return TRUE; };	// Return TRUE if you want to add yourself to the player
+	void RetireWeapon( void );
 
 	// generic "shared" ammo handlers
 	BOOL AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int iMaxCarry );
 	BOOL AddSecondaryAmmo( int iCount, char *szName, int iMaxCarry );
-
-	virtual void UpdateItemInfo( void ) {};	// updates HUD state
-
-	int m_iPlayEmptySound;
-	int m_fFireOnEmpty;		// True when the gun is empty and the player is still holding down the
-							// attack key(s)
-	virtual BOOL PlayEmptySound( void );
-	virtual void ResetEmptySound( void );
-
-	virtual void SendWeaponAnim( int iAnim, int skiplocal = 1, int body = 0 );  // skiplocal is 1 if client is predicting weapon animations
-
-	virtual BOOL CanDeploy( void );
-	virtual BOOL IsUseable( void );
-	BOOL DefaultDeploy( char *szViewModel, char *szWeaponModel, int iAnim, char *szAnimExt, int skiplocal = 0, int body = 0 );
-	int DefaultReload( int iClipSize, int iAnim, float fDelay, int body = 0 );
-
-	virtual void ItemPostFrame( void );	// called each frame by the player PostThink
-	// called by CBasePlayerWeapons ItemPostFrame()
-	virtual void PrimaryAttack( void ) { return; }				// do "+ATTACK"
-	virtual void SecondaryAttack( void ) { return; }			// do "+ATTACK2"
-	virtual void Reload( void ) { return; }						// do "+RELOAD"
-	virtual void WeaponIdle( void ) { return; }					// called when no buttons pressed
-	virtual int UpdateClientData( CBasePlayer *pPlayer );		// sends hud info to client dll, if things have changed
-	virtual void RetireWeapon( void );
-	virtual BOOL ShouldWeaponIdle( void ) {return FALSE; };
-	virtual void Holster( void );
-	virtual BOOL UseDecrement( void ) { return FALSE; };
-	
-	int	PrimaryAmmoIndex(); 
-	int	SecondaryAmmoIndex(); 
-
 	void PrintState( void );
-
-	virtual CBasePlayerItem *GetWeaponPtr( void ) { return (CBasePlayerItem *)this; };
-
-	float m_flPumpTime;
-	int	m_fInSpecialReload;			// Are we in the middle of a reload for the shotguns
-	float	m_flNextPrimaryAttack;		// soonest time ItemPostFrame will call PrimaryAttack
-	float	m_flNextSecondaryAttack;		// soonest time ItemPostFrame will call SecondaryAttack
-	float	m_flTimeWeaponIdle;			// soonest time ItemPostFrame will call WeaponIdle
-	int	m_iPrimaryAmmoType;			// "primary" ammo index into players m_rgAmmo[]
-	int	m_iSecondaryAmmoType;		// "secondary" ammo index into players m_rgAmmo[]
-	int	m_iClip;				// number of shots left in the primary weapon clip, -1 it not used
-	int	m_iClientClip;			// the last version of m_iClip sent to hud dll
-	int	m_iClientWeaponState;		// the last version of the weapon state sent to hud dll (is current weapon, is on target)
-	int	m_fInReload;			// Are we in the middle of a reload;
-
-	int	m_iDefaultAmmo;// how much ammo you get when you pick up this weapon as placed by a level designer.
-
 };
 
 class CBasePlayerAmmo : public CBaseEntity
