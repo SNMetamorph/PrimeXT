@@ -100,7 +100,7 @@ public:
 	virtual void SetPlayerNextAttackTime(float value) = 0;
 
 	// miscellaneous things
-	virtual float GetWeaponTimeBase() = 0;
+	virtual float GetWeaponTimeBase(bool usePredicting) = 0;
 	virtual uint32_t GetRandomSeed() = 0;
 	virtual uint32_t GetRandomInt(uint32_t seed, int32_t min, int32_t max) = 0;
 	virtual float GetRandomFloat(uint32_t seed, float min, float max) = 0;
