@@ -180,11 +180,13 @@ typedef struct clientdata_s
 
 #include "weaponinfo.h"
 
+#define MAX_LOCAL_WEAPONS	64	// max weapons that can be predicted on the client
+
 typedef struct local_state_s
 {
 	entity_state_t	playerstate;
 	clientdata_t	client;
-	weapon_data_t	weapondata[32];
+	weapon_data_t	weapondata[MAX_LOCAL_WEAPONS];
 } local_state_t;
 
 #endif//ENTITY_STATE_H
