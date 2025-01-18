@@ -222,10 +222,9 @@ void CServerWeaponLayerImpl::SetPlayerNextAttackTime(float value)
 	m_pWeapon->m_pPlayer->m_flNextAttack = value;
 }
 
-float CServerWeaponLayerImpl::GetWeaponTimeBase()
+float CServerWeaponLayerImpl::GetWeaponTimeBase(bool usePredicting)
 {
-	return gpGlobals->time;
-	//return 0.0f; // zero because predicting enabled
+	return usePredicting ? 0.0f : gpGlobals->time;
 }
 
 uint32_t CServerWeaponLayerImpl::GetRandomSeed()
