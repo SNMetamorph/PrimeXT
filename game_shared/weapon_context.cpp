@@ -60,7 +60,7 @@ CBaseWeaponContext::~CBaseWeaponContext()
 
 void CBaseWeaponContext::ItemPostFrame()
 {
-	if ((m_fInReload) && m_pLayer->GetPlayerNextAttackTime() <= m_pLayer->GetWeaponTimeBase())
+	if ((m_fInReload) && m_pLayer->GetPlayerNextAttackTime() <= m_pLayer->GetWeaponTimeBase(false))
 	{
 		// complete the reload. 
 		int j = Q_min( iMaxClip() - m_iClip, m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) );	
@@ -72,7 +72,7 @@ void CBaseWeaponContext::ItemPostFrame()
 		m_fInReload = FALSE;
 	}
 
-	if (m_pLayer->CheckPlayerButtonFlag(IN_ATTACK2) && m_flNextSecondaryAttack <= m_pLayer->GetWeaponTimeBase() )
+	if (m_pLayer->CheckPlayerButtonFlag(IN_ATTACK2) && m_flNextSecondaryAttack <= m_pLayer->GetWeaponTimeBase(UseDecrement()) )
 	{
 		if ( pszAmmo2() && !m_pLayer->GetPlayerAmmo(SecondaryAmmoIndex()) )
 		{
@@ -82,7 +82,7 @@ void CBaseWeaponContext::ItemPostFrame()
 		SecondaryAttack();
 		m_pLayer->ClearPlayerButtonFlag(IN_ATTACK2);
 	}
-	else if (m_pLayer->CheckPlayerButtonFlag(IN_ATTACK) && m_flNextPrimaryAttack <= m_pLayer->GetWeaponTimeBase() )
+	else if (m_pLayer->CheckPlayerButtonFlag(IN_ATTACK) && m_flNextPrimaryAttack <= m_pLayer->GetWeaponTimeBase(UseDecrement()) )
 	{
 		if ( (m_iClip == 0 && pszAmmo1()) || (iMaxClip() == -1 && !m_pLayer->GetPlayerAmmo(PrimaryAmmoIndex())) )
 		{
@@ -102,12 +102,12 @@ void CBaseWeaponContext::ItemPostFrame()
 
 		m_fFireOnEmpty = FALSE;
 #ifndef CLIENT_DLL // we don't need this branch on client side, because client is not responsible for changing weapons
-		if ( !IsUseable() && m_flNextPrimaryAttack < m_pLayer->GetWeaponTimeBase() ) 
+		if ( !IsUseable() && m_flNextPrimaryAttack < m_pLayer->GetWeaponTimeBase(UseDecrement()) ) 
 		{
-			// weapon isn't useable, switch. GetNextBestWeapon exactly does weapon switching
+			// weapon isn't useable, switch. GetNextBestWeapon does weapon switching
 			if ( !(iFlags() & ITEM_FLAG_NOAUTOSWITCHEMPTY) && g_pGameRules->GetNextBestWeapon( m_pLayer->GetWeaponEntity()->m_pPlayer, m_pLayer->GetWeaponEntity() ))
 			{
-				m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase() + 0.3;
+				m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.3;
 				return;
 			}
 		}
@@ -115,7 +115,7 @@ void CBaseWeaponContext::ItemPostFrame()
 #endif
 		{
 			// weapon is useable. Reload if empty and weapon has waited as long as it has to after firing
-			if ( m_iClip == 0 && !(iFlags() & ITEM_FLAG_NOAUTORELOAD) && m_flNextPrimaryAttack < m_pLayer->GetWeaponTimeBase() )
+			if ( m_iClip == 0 && !(iFlags() & ITEM_FLAG_NOAUTORELOAD) && m_flNextPrimaryAttack < m_pLayer->GetWeaponTimeBase(UseDecrement()) )
 			{
 				Reload();
 				return;
@@ -207,8 +207,8 @@ bool CBaseWeaponContext :: DefaultDeploy( char *szViewModel, char *szWeaponModel
 #endif
 	SendWeaponAnim( iAnim, skiplocal, body );
 
-	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase() + 0.5);
-	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase() + 1.0;
+	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5);
+	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.0;
 	return TRUE;
 }
 
@@ -222,14 +222,14 @@ BOOL CBaseWeaponContext :: DefaultReload( int iClipSize, int iAnim, float fDelay
 	if (j == 0)
 		return FALSE;
 
-	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase() + fDelay);
+	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + fDelay);
 
 	//!!UNDONE -- reload sound goes here !!!
 	SendWeaponAnim( iAnim, UseDecrement() ? 1 : 0, body );
 
 	m_fInReload = TRUE;
 
-	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase() + 3;
+	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 3;
 	return TRUE;
 }
 
