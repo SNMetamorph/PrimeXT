@@ -29,7 +29,7 @@ public:
 	float GetPlayerNextAttackTime() override;
 	void SetPlayerNextAttackTime(float value) override;
 
-	float GetWeaponTimeBase() override;
+	float GetWeaponTimeBase(bool usePredicting) override;
 	uint32_t GetRandomSeed() override;
 	uint32_t GetRandomInt(uint32_t seed, int32_t min, int32_t max) override;
 	float GetRandomFloat(uint32_t seed, float min, float max) override;
