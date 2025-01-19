@@ -37,6 +37,7 @@
 #include "hltv.h"
 #include "user_messages.h"
 #include "ropes/CRope.h"
+#include <algorithm>
 
 // #define DUCKFIX
 
@@ -2584,6 +2585,69 @@ void CBasePlayer :: UpdatePlayerSound ( void )
 		m_iWeaponFlash = 0;
 }
 
+
+void CBasePlayer::UpdatePlayerTimers()
+{
+	m_flNextAttack -= gpGlobals->frametime;
+	if ( m_flNextAttack < -0.001 )
+		m_flNextAttack = -0.001;
+	
+	//if ( m_flNextAmmoBurn != 1000 )
+	//{
+	//	m_flNextAmmoBurn -= gpGlobals->frametime;
+	//	
+	//	if ( m_flNextAmmoBurn < -0.001 )
+	//		m_flNextAmmoBurn = -0.001;
+	//}
+
+	//if ( m_flAmmoStartCharge != 1000 )
+	//{
+	//	m_flAmmoStartCharge -= gpGlobals->frametime;
+	//	
+	//	if ( m_flAmmoStartCharge < -0.001 )
+	//		m_flAmmoStartCharge = -0.001;
+	//}
+}
+
+void CBasePlayer::UpdateWeaponTimers()
+{
+	for (int i = 0; i < MAX_ITEM_TYPES; i++)
+	{
+		CBasePlayerItem *pPlayerItem = m_rgpPlayerItems[i];
+		if (pPlayerItem)
+		{
+			while (pPlayerItem)
+			{
+				CBasePlayerWeapon *gun = (CBasePlayerWeapon *)pPlayerItem->GetWeaponPtr();
+				CBaseWeaponContext *ctx = gun->m_pWeaponContext;
+
+				if (gun && ctx->UseDecrement())
+				{
+					ctx->m_flNextPrimaryAttack = std::max(ctx->m_flNextPrimaryAttack - gpGlobals->frametime, -1.0f);
+					ctx->m_flNextSecondaryAttack = std::max(ctx->m_flNextSecondaryAttack - gpGlobals->frametime, -0.001f);
+
+					if (ctx->m_flTimeWeaponIdle != 1000)
+					{
+						ctx->m_flTimeWeaponIdle = std::max(ctx->m_flTimeWeaponIdle - gpGlobals->frametime, -0.001f);
+					}
+
+					if (gun->pev->fuser1 != 1000)
+					{
+						gun->pev->fuser1 = std::max(gun->pev->fuser1 - gpGlobals->frametime, -0.001f);
+					}
+
+					// Only decrement if not flagged as NO_DECREMENT
+					//	if ( gun->m_flPumpTime != 1000 )
+					//	{
+					//		gun->m_flPumpTime = max( gun->m_flPumpTime - gpGlobals->frametime, -0.001f );
+					//	}
+				}
+				pPlayerItem = pPlayerItem->m_pNext;
+			}
+		}
+	}
+}
+
 void CBasePlayer::PostThink()
 {
 	if ( g_fGameOver )
@@ -2697,6 +2761,8 @@ void CBasePlayer::PostThink()
 	CheckPowerups(pev);
 
 	UpdatePlayerSound();
+	UpdatePlayerTimers();
+	UpdateWeaponTimers();
 
 	// Track button info so we can detect 'pressed' and 'released' buttons next frame
 	m_afButtonLast = pev->button;
@@ -3248,6 +3314,11 @@ int CBasePlayer::Restore( CRestore &restore )
 	g_engfuncs.pfnSetPhysicsKeyValue( edict(), "incar", va( "%d", m_iInCarState ));
 
 	RenewItems();
+
+	// HACK:	This variable is saved/restored in CBaseMonster as a time variable, but we're using it
+	//			as just a counter.  Ideally, this needs its own variable that's saved as a plain float.
+	//			Barring that, we clear it out here instead of using the incorrect restored time value.
+	m_flNextAttack = 0.0f;
 
 	return status;
 }
@@ -4030,7 +4101,7 @@ Called every frame by the player PreThink
 */
 void CBasePlayer::ItemPreFrame()
 {
-	if ( gpGlobals->time < m_flNextAttack )
+	if ( m_flNextAttack > 0.0f )
 	{
 		return;
 	}
@@ -4059,7 +4130,7 @@ void CBasePlayer::ItemPostFrame()
 
 	ImpulseCommands();
 
-	if ( gpGlobals->time < m_flNextAttack )
+	if ( m_flNextAttack > 0.0f )
 		return;
 
 	if( FBitSet( m_iHideHUD, HIDEHUD_WEAPONS ))
