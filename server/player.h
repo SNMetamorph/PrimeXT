@@ -272,6 +272,8 @@ public:
 	void		FlashlightTurnOff( void );
 	
 	void UpdatePlayerSound ( void );
+	void UpdatePlayerTimers();
+	void UpdateWeaponTimers();
 	void DeathSound ( void );
 
 	void TransferReset( void );
