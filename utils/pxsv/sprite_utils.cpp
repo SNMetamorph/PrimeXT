@@ -350,8 +350,8 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 		numPaletteColors = (short *)(pinhl + 1);
 	}
 
-	// last color are transparent
-	m_palette[255 * 4 + 0] = m_palette[255 * 4 + 1] = m_palette[255 * 4 + 2] = m_palette[255 * 4 + 3] = 0;
+	// initialize palette with fully transparent color
+	memset(m_palette, 0x0, sizeof(m_palette));
 	m_loadframe = 0;
 
 	if (!numPaletteColors)
@@ -367,47 +367,47 @@ msprite_t *SpriteModel :: LoadSprite( const char *spritename )
 		}
 		pframetype = (dframetype_t *)(pinq1 + 1);
 	}
-	else if (*numPaletteColors == 256)
+	else if (*numPaletteColors <= 256)
 	{
 		const uint8_t *pal = reinterpret_cast<const uint8_t*>(numPaletteColors + 1);
+		const size_t colors = *numPaletteColors;
 
 		// install palette
-		switch (psprite->texFormat)
+		if (psprite->texFormat == SPR_INDEXALPHA)
 		{
-			case SPR_INDEXALPHA:
-				for (i = 0; i < 256; i++)
-				{
-					m_palette[i * 4 + 0] = pal[765];
-					m_palette[i * 4 + 1] = pal[766];
-					m_palette[i * 4 + 2] = pal[767];
-					m_palette[i * 4 + 3] = i;
-				}
-				break;
-			case SPR_ALPHTEST:
-				for (i = 0; i < 255; i++)
-				{
-					m_palette[i * 4 + 0] = pal[i * 3 + 0];
-					m_palette[i * 4 + 1] = pal[i * 3 + 1];
-					m_palette[i * 4 + 2] = pal[i * 3 + 2];
-					m_palette[i * 4 + 3] = 0xFF;
-				}
-				break;
-			default:
-				for (i = 0; i < 256; i++)
-				{
-					m_palette[i * 4 + 0] = pal[i * 3 + 0];
-					m_palette[i * 4 + 1] = pal[i * 3 + 1];
-					m_palette[i * 4 + 2] = pal[i * 3 + 2];
-					m_palette[i * 4 + 3] = 0xFF;
-				}
-				break;
+			for (i = 0; i < colors; i++)
+			{
+				m_palette[i * 4 + 0] = pal[colors * 3 - 3];
+				m_palette[i * 4 + 1] = pal[colors * 3 - 2];
+				m_palette[i * 4 + 2] = pal[colors * 3 - 1];
+				m_palette[i * 4 + 3] = i;
+			}
 		}
-
-		pframetype = (dframetype_t *)(pal + 768);
+		else if (psprite->texFormat == SPR_ALPHTEST)
+		{
+			for (i = 0; i < (colors - 1); i++)
+			{
+				m_palette[i * 4 + 0] = pal[i * 3 + 0];
+				m_palette[i * 4 + 1] = pal[i * 3 + 1];
+				m_palette[i * 4 + 2] = pal[i * 3 + 2];
+				m_palette[i * 4 + 3] = 0xFF;
+			}
+		}
+		else 
+		{
+			for (i = 0; i < colors; i++)
+			{
+				m_palette[i * 4 + 0] = pal[i * 3 + 0];
+				m_palette[i * 4 + 1] = pal[i * 3 + 1];
+				m_palette[i * 4 + 2] = pal[i * 3 + 2];
+				m_palette[i * 4 + 3] = 0xFF;
+			}
+		}
+		pframetype = (dframetype_t *)(pal + colors * 3);
 	}
 	else 
 	{
-		mxMessageBox( g_GlWindow, "Sprite has wrong number of palette colors (only 256 supported)\n", g_appTitle, MX_MB_OK | MX_MB_ERROR );
+		mxMessageBox( g_GlWindow, "Sprite has wrong number of palette colors (supported only 256 or less)\n", g_appTitle, MX_MB_OK | MX_MB_ERROR );
 		Mem_Free(m_pspritehdr);
 		m_pspritehdr = nullptr;
 		m_iFileSize = 0;
