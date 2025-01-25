@@ -24,6 +24,12 @@ We need interested people to work on this SDK with us! Main goals of this projec
 Full list of project goals you can see on documetation site, it's available [here](https://snmetamorph.github.io/PrimeXT/), but now it's still in progress. 
 Therefore, you can tell suggestion about what should be documented at first.  
 
+## Projects that are based on PrimeXT
+- [Ionization](https://www.moddb.com/games/ionization)
+- [Half-Life: History of Kumertau](https://www.moddb.com/mods/half-life-history-of-kumertau)
+- ["Zemlya Rodnaya" in Novy Urengoy](https://www.moddb.com/mods/school-2-in-novy-urengoy-recreated-on-xash3d)
+- [Metro 2031: Last Chance](https://www.moddb.com/mods/metro-2031-last-chance)
+
 ## Installation
 Detailed installation guide you can read on our documentation site: available on [english](https://snmetamorph.github.io/PrimeXT/docs/eng/installation) and [russian](https://snmetamorph.github.io/PrimeXT/docs/rus/installation).
 
