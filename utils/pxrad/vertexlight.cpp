@@ -320,6 +320,7 @@ bool AddPatchStyleToMesh( trace_t *trace, tmesh_t *mesh, tvert_t *tv, vec3_t *s_
 
 			const vec_t *b = GetTotalLight( p, p->totalstyle[j] );
 			VectorScale( b, (1.0), v );
+			VectorMultiply( v, p->reflectivity, v );
 			VectorAdd( sampled_light[lightstyles], v, sampled_light[lightstyles] );
 
 			const vec_t *d = GetTotalDirection(p, p->totalstyle[j] );

@@ -2205,6 +2205,8 @@ void BounceLight( int threadnum )
 					if( m < MAXLIGHTMAPS )
 					{
 						VectorScale( emitlight[patchnum][emitstyle], (float)(*tData), v );
+						VectorMultiply( v, emitpatch->reflectivity, v );
+
 						if( !VectorIsFinite( v )) continue;
 
 						if( VectorMaximum( v ) < EQUAL_EPSILON )
