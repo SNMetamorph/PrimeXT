@@ -40,7 +40,7 @@ public:
 	virtual bool CanHolster() { return true; };		// can this weapon be put away right nxow?
 	virtual void Holster();
 	virtual bool IsUseable();
-	virtual bool UseDecrement() { return false; }; // always true because weapon prediction enabled regardless of anything
+	virtual bool UseDecrement() { return true; }; // always true because weapon prediction enabled regardless of anything
 	
 	virtual int GetItemInfo(ItemInfo *p) { return 0; };	// returns 0 if struct not filled out
 	virtual int	PrimaryAmmoIndex(); 
