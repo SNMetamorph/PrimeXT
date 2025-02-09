@@ -1,3 +1,18 @@
+/*
+server_weapon_layer_impl.h - part of server-side weapons predicting implementation
+Copyright (C) 2025 SNMetamorph
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+*/
+
 #pragma once
 #include "weapon_layer.h"
 #include "extdll.h"
@@ -12,6 +27,7 @@ class CServerWeaponLayerImpl : public IWeaponLayer
 {
 public:
 	CServerWeaponLayerImpl(CBasePlayerWeapon *weaponEntity);
+	~CServerWeaponLayerImpl() = default;
 
 	int GetWeaponBodygroup() override;
 	Vector GetGunPosition() override;
@@ -24,6 +40,7 @@ public:
 	void SetPlayerAmmo(int ammoType, int count) override;
 	void SetPlayerWeaponAnim(int anim) override;
 	void SetPlayerViewmodel(int model) override;
+	int GetPlayerViewmodel() override;
 	bool CheckPlayerButtonFlag(int buttonMask) override;
 	void ClearPlayerButtonFlag(int buttonMask) override;
 	float GetPlayerNextAttackTime() override;
@@ -35,6 +52,7 @@ public:
 	float GetRandomFloat(uint32_t seed, float min, float max) override;
 	uint16_t PrecacheEvent(const char *eventName) override;
 	void PlaybackWeaponEvent(const WeaponEventParams &params) override;
+	bool ShouldRunFuncs() override;
 
 private:
 	CBasePlayerWeapon *m_pWeapon;
