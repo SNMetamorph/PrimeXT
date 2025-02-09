@@ -98,9 +98,7 @@ void CGlockWeaponLogic::GlockFire( float flSpread , float flCycleTime, bool fUse
 
 	m_iClip--;
 
-	if (m_pLayer->ShouldRunFuncs()) {
-		SendWeaponAnim(m_iClip != 0 ? GLOCK_SHOOT : GLOCK_SHOOT_EMPTY);
-	}
+	SendWeaponAnim(m_iClip != 0 ? GLOCK_SHOOT : GLOCK_SHOOT_EMPTY);
 
 #ifndef CLIENT_DLL
 	// player "shoot" animation
