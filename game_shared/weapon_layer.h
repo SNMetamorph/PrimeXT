@@ -94,6 +94,7 @@ public:
 	virtual void SetPlayerAmmo(int ammoType, int count) = 0;
 	virtual void SetPlayerWeaponAnim(int anim) = 0;
 	virtual void SetPlayerViewmodel(int model) = 0;
+	virtual int GetPlayerViewmodel() = 0;
 	virtual bool CheckPlayerButtonFlag(int buttonMask) = 0;
 	virtual void ClearPlayerButtonFlag(int buttonMask) = 0;
 	virtual float GetPlayerNextAttackTime() = 0;
@@ -106,4 +107,5 @@ public:
 	virtual float GetRandomFloat(uint32_t seed, float min, float max) = 0;
 	virtual uint16_t PrecacheEvent(const char *eventName) = 0;
 	virtual void PlaybackWeaponEvent(const WeaponEventParams &params) = 0;
+	virtual bool ShouldRunFuncs() = 0;
 };

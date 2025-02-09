@@ -98,27 +98,28 @@ void CGlockWeaponLogic::GlockFire( float flSpread , float flCycleTime, bool fUse
 
 	m_iClip--;
 
-	if (m_iClip != 0)
-		SendWeaponAnim( GLOCK_SHOOT );
-	else
-		SendWeaponAnim( GLOCK_SHOOT_EMPTY );
+	if (m_pLayer->ShouldRunFuncs()) {
+		SendWeaponAnim(m_iClip != 0 ? GLOCK_SHOOT : GLOCK_SHOOT_EMPTY);
+	}
 
 #ifndef CLIENT_DLL
 	// player "shoot" animation
-	m_pLayer->GetWeaponEntity()->m_pPlayer->SetAnimation( PLAYER_ATTACK1 );
-	m_pLayer->GetWeaponEntity()->m_pPlayer->pev->effects = (int)(m_pLayer->GetWeaponEntity()->m_pPlayer->pev->effects) | EF_MUZZLEFLASH;
+	CBasePlayer *player = m_pLayer->GetWeaponEntity()->m_pPlayer;
+
+	player->SetAnimation( PLAYER_ATTACK1 );
+	player->pev->effects = (int)(player->pev->effects) | EF_MUZZLEFLASH;
 
 	// silenced
 	if (m_pLayer->GetWeaponBodygroup() == 1)
 	{
-		m_pLayer->GetWeaponEntity()->m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME;
-		m_pLayer->GetWeaponEntity()->m_pPlayer->m_iWeaponFlash = DIM_GUN_FLASH;
+		player->m_iWeaponVolume = QUIET_GUN_VOLUME;
+		player->m_iWeaponFlash = DIM_GUN_FLASH;
 	}
 	else
 	{
 		// non-silenced
-		m_pLayer->GetWeaponEntity()->m_pPlayer->m_iWeaponVolume = NORMAL_GUN_VOLUME;
-		m_pLayer->GetWeaponEntity()->m_pPlayer->m_iWeaponFlash = NORMAL_GUN_FLASH;
+		player->m_iWeaponVolume = NORMAL_GUN_VOLUME;
+		player->m_iWeaponFlash = NORMAL_GUN_FLASH;
 	}
 #endif
 
@@ -133,7 +134,7 @@ void CGlockWeaponLogic::GlockFire( float flSpread , float flCycleTime, bool fUse
 	m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + flCycleTime;
 
 	WeaponEventParams params;
-	params.flags = WeaponEventFlags::None; //WeaponEventFlags::NotHost;
+	params.flags = WeaponEventFlags::NotHost;
 	params.eventindex = fUseAutoAim ? m_usFireGlock1 : m_usFireGlock2;
 	params.delay = 0.0f;
 	params.origin = vecSrc;
@@ -144,7 +145,10 @@ void CGlockWeaponLogic::GlockFire( float flSpread , float flCycleTime, bool fUse
 	params.iparam2 = 0;
 	params.bparam1 = (m_iClip == 0) ? 1 : 0;
 	params.bparam2 = 0;
-	m_pLayer->PlaybackWeaponEvent(params);
+
+	if (m_pLayer->ShouldRunFuncs()) {
+		m_pLayer->PlaybackWeaponEvent(params);
+	}
 
 	// PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), fUseAutoAim ? m_usFireGlock1 : m_usFireGlock2, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, vecDir.x, vecDir.y, 0, 0, ( m_iClip == 0 ) ? 1 : 0, 0 );
 
