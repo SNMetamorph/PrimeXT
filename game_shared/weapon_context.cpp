@@ -244,7 +244,9 @@ void CBaseWeaponContext::SendWeaponAnim( int iAnim, int skiplocal, int body )
 	m_pLayer->SetPlayerWeaponAnim(iAnim);
 
 #ifdef CLIENT_DLL
-	gEngfuncs.pfnWeaponAnim( iAnim, body );
+	if (m_pLayer->ShouldRunFuncs()) {
+		gEngfuncs.pfnWeaponAnim(iAnim, body);
+	}
 #else
 	CBasePlayer *player = m_pLayer->GetWeaponEntity()->m_pPlayer;
 

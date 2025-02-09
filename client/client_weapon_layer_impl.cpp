@@ -76,7 +76,12 @@ void CClientWeaponLayerImpl::SetPlayerAmmo(int ammoType, int count)
 void CClientWeaponLayerImpl::SetPlayerWeaponAnim(int anim)
 {
 	m_playerState.weaponanim = anim;
-	m_playerState.cached.weaponanim = anim;
+	if (m_playerState.runfuncs) 
+	{
+		// to avoid animation desync, this should changed only when runfuncs is true.
+		// i don't know why it works like this, but this is the only way.
+		m_playerState.activeWeaponanim = anim;
+	}
 }
 
 void CClientWeaponLayerImpl::SetPlayerViewmodel(int model)
