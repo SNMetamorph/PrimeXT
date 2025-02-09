@@ -60,10 +60,10 @@ void CWeaponPredictingContext::PostThink(local_state_t *from, local_state_t *to,
 		}
 
 		// check for desync between local & server-side weapon animation
-		if (runfuncs && (m_playerState.cached.weaponanim != m_playerState.weaponanim))
+		if (runfuncs && (m_playerState.activeWeaponanim != m_playerState.weaponanim))
 		{
 			gEngfuncs.pfnWeaponAnim( m_playerState.weaponanim, 0 );
-			m_playerState.cached.weaponanim = m_playerState.weaponanim;
+			m_playerState.activeWeaponanim = m_playerState.weaponanim;
 		}
 	}
 
