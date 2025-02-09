@@ -36,6 +36,7 @@ public:
 		int32_t deadflag;
 		int32_t waterlevel;
 		int32_t weaponanim;
+		int32_t activeWeaponanim;
 		int32_t viewmodel;
 		Vector viewAngles;
 		Vector viewOffset;
@@ -55,7 +56,6 @@ public:
 		struct {
 			float health;
 			int32_t buttons;
-			int32_t weaponanim;
 		} cached;
 	};
 
