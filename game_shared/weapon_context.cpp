@@ -16,6 +16,10 @@ GNU General Public License for more details.
 #include "weapon_context.h"
 #ifdef CLIENT_DLL
 #include "const.h"
+#include "hud.h"
+#include "utils.h"
+#include "event_api.h"
+#include "event_args.h"
 #else
 #include "extdll.h"
 #include "util.h"
@@ -198,12 +202,14 @@ bool CBaseWeaponContext :: DefaultDeploy( char *szViewModel, char *szWeaponModel
 		return FALSE;
 
 #ifndef CLIENT_DLL
-	//m_pLayer->GetWeaponEntity()->m_pPlayer->TabulateAmmo();
-	m_pLayer->GetWeaponEntity()->m_pPlayer->pev->viewmodel = MAKE_STRING(szViewModel);
-	m_pLayer->GetWeaponEntity()->m_pPlayer->pev->weaponmodel = MAKE_STRING(szWeaponModel);
-	strcpy( m_pLayer->GetWeaponEntity()->m_pPlayer->m_szAnimExtention, szAnimExt );
+	CBasePlayer *player = m_pLayer->GetWeaponEntity()->m_pPlayer;
+	player->pev->viewmodel = MAKE_STRING(szViewModel);
+	player->pev->weaponmodel = MAKE_STRING(szWeaponModel);
+	strcpy( player->m_szAnimExtention, szAnimExt );
+	//player->TabulateAmmo();
 #else
-	// gEngfuncs.CL_LoadModel( szViewModel, &m_pPlayer->pev->viewmodel );
+	int modelIndex = m_pLayer->GetPlayerViewmodel();
+	gEngfuncs.CL_LoadModel( szViewModel, &modelIndex );
 #endif
 	SendWeaponAnim( iAnim, skiplocal, body );
 
@@ -238,17 +244,19 @@ void CBaseWeaponContext::SendWeaponAnim( int iAnim, int skiplocal, int body )
 	m_pLayer->SetPlayerWeaponAnim(iAnim);
 
 #ifdef CLIENT_DLL
-	// HUD_SendWeaponAnim( iAnim, body, 0 );
+	gEngfuncs.pfnWeaponAnim( iAnim, body );
 #else
+	CBasePlayer *player = m_pLayer->GetWeaponEntity()->m_pPlayer;
+
 	if ( UseDecrement() )
 		skiplocal = 1;
 	else
 		skiplocal = 0;
 
-	if ( skiplocal && ENGINE_CANSKIP( m_pLayer->GetWeaponEntity()->m_pPlayer->edict() ) )
+	if ( skiplocal && ENGINE_CANSKIP( player->edict() ) )
 		return;
 
-	MESSAGE_BEGIN( MSG_ONE, SVC_WEAPONANIM, NULL, m_pLayer->GetWeaponEntity()->m_pPlayer->pev );
+	MESSAGE_BEGIN( MSG_ONE, SVC_WEAPONANIM, NULL, player->pev );
 		WRITE_BYTE( iAnim );							// sequence number
 		WRITE_BYTE( m_pLayer->GetWeaponBodygroup() );	// weaponmodel bodygroup.
 	MESSAGE_END();
