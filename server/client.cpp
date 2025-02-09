@@ -1712,10 +1712,10 @@ void UpdateClientData ( const struct edict_s *ent, int sendweapons, struct clien
 				weapon->GetItemInfo(&itemInfo);
 
 				cd->m_iId = itemInfo.iId;
-				//cd->vuser3.z = weapon->m_iSecondaryAmmoType;
-				//cd->vuser4.x = weapon->m_iPrimaryAmmoType;
-				//cd->vuser4.y = player->m_rgAmmo[weapon->m_iPrimaryAmmoType];
-				//cd->vuser4.z = player->m_rgAmmo[weapon->m_iSecondaryAmmoType];
+				cd->vuser3.z = weapon->m_pWeaponContext->m_iSecondaryAmmoType;
+				cd->vuser4.x = weapon->m_pWeaponContext->m_iPrimaryAmmoType;
+				cd->vuser4.y = player->m_rgAmmo[weapon->m_pWeaponContext->m_iPrimaryAmmoType];
+				cd->vuser4.z = player->m_rgAmmo[weapon->m_pWeaponContext->m_iSecondaryAmmoType];
 
 				//if (weapon->iWeaponID() == WEAPON_RPG)
 				//{
