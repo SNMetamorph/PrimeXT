@@ -1,3 +1,18 @@
+/*
+server_weapon_layer_impl.cpp - part of server-side weapons predicting implementation
+Copyright (C) 2025 SNMetamorph
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+*/
+
 #include "server_weapon_layer_impl.h"
 #include "gamerules.h"
 #include "game.h"
@@ -202,6 +217,11 @@ void CServerWeaponLayerImpl::SetPlayerViewmodel(int model)
 	m_pWeapon->m_pPlayer->pev->viewmodel = model;
 }
 
+int CServerWeaponLayerImpl::GetPlayerViewmodel()
+{
+	return m_pWeapon->m_pPlayer->pev->viewmodel;
+}
+
 bool CServerWeaponLayerImpl::CheckPlayerButtonFlag(int buttonMask)
 {
 	return FBitSet(m_pWeapon->m_pPlayer->pev->button, buttonMask);
@@ -255,4 +275,9 @@ void CServerWeaponLayerImpl::PlaybackWeaponEvent(const WeaponEventParams &params
 		params.fparam1, params.fparam2, 
 		params.iparam1, params.iparam2, 
 		params.bparam1, params.bparam2);
+}
+
+bool CServerWeaponLayerImpl::ShouldRunFuncs()
+{
+	return true; // always true, because server do not any kind of subticking for weapons
 }
