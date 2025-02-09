@@ -38,6 +38,8 @@ list(APPEND CLDLL_SOURCES
 	"r_view.cpp"
 	"postfx_controller.cpp"
 	"postfx_parameters.cpp"
+	"client_weapon_layer_impl.cpp"
+	"weapon_predicting_context.cpp"
 )
 
 # shared source files
