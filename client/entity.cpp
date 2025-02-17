@@ -251,7 +251,7 @@ void DLLEXPORT HUD_TxferPredictionData ( struct entity_state_s *ps, const struct
 	pcd->vuser3 = ppcd->vuser3;
 	pcd->vuser4 = ppcd->vuser4;
 
-	memcpy( wd, pwd, 32 * sizeof( weapon_data_t ) );
+	memcpy( wd, pwd, MAX_LOCAL_WEAPONS * sizeof( weapon_data_t ) );
 }
 
 /*
