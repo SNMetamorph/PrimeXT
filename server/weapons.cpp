@@ -402,15 +402,25 @@ BEGIN_DATADESC( CBasePlayerItem )
 	DEFINE_FUNCTION( AttemptToMaterialize ),
 END_DATADESC()
 
+#define DEFINE_BASEPLAYERWEAPON_FIELD( x, ft ) \
+	DEFINE_CUSTOM_FIELD( x, ft, [](CBaseEntity *pEntity, void *pData, size_t dataSize) { \
+		CBasePlayerWeapon *p = reinterpret_cast<CBasePlayerWeapon*>(pEntity); \
+		std::memcpy(pData, &p->m_pWeaponContext->x, dataSize); \
+	}, \
+	[](CBaseEntity *pEntity, const void *pData, size_t dataSize) { \
+		CBasePlayerWeapon *p = reinterpret_cast<CBasePlayerWeapon*>(pEntity); \
+		std::memcpy(&p->m_pWeaponContext->x, pData, dataSize); \
+	})
+	
 BEGIN_DATADESC( CBasePlayerWeapon )
-	//DEFINE_FIELD( m_flNextPrimaryAttack, FIELD_TIME ),
-	//DEFINE_FIELD( m_flNextSecondaryAttack, FIELD_TIME ),
-	//DEFINE_FIELD( m_flTimeWeaponIdle, FIELD_TIME ),
-	//DEFINE_FIELD( m_iPrimaryAmmoType, FIELD_INTEGER ),
-	//DEFINE_FIELD( m_iSecondaryAmmoType, FIELD_INTEGER ),
-	//DEFINE_FIELD( m_iClip, FIELD_INTEGER ),
-	//DEFINE_FIELD( m_iDefaultAmmo, FIELD_INTEGER ),
-	//DEFINE_FIELD( m_iId, FIELD_INTEGER ),
+	DEFINE_BASEPLAYERWEAPON_FIELD( m_flNextPrimaryAttack, FIELD_TIME ),
+	DEFINE_BASEPLAYERWEAPON_FIELD( m_flNextSecondaryAttack, FIELD_TIME ),
+	DEFINE_BASEPLAYERWEAPON_FIELD( m_flTimeWeaponIdle, FIELD_TIME ),
+	DEFINE_BASEPLAYERWEAPON_FIELD( m_iPrimaryAmmoType, FIELD_INTEGER ),
+	DEFINE_BASEPLAYERWEAPON_FIELD( m_iSecondaryAmmoType, FIELD_INTEGER ),
+	DEFINE_BASEPLAYERWEAPON_FIELD( m_iClip, FIELD_INTEGER ),
+	DEFINE_BASEPLAYERWEAPON_FIELD( m_iDefaultAmmo, FIELD_INTEGER ),
+	DEFINE_BASEPLAYERWEAPON_FIELD( m_iId, FIELD_INTEGER ),
 END_DATADESC()
 
 void CBasePlayerItem :: SetObjectCollisionBox( void )

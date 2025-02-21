@@ -14,6 +14,7 @@
 #include "utlarray.h"
 #include "ehandle.h"
 #include <stdint.h>
+#include <functional>
 
 // SINGLE_INHERITANCE restricts the size of CBaseEntity pointers-to-member-functions to 4 bytes
 class __single_inheritance CBaseEntity;
@@ -72,8 +73,10 @@ DECLARE_FIELD_SIZE( FIELD_TIME,			sizeof(float),			sizeof(float) )
 DECLARE_FIELD_SIZE( FIELD_MODELNAME,	sizeof(int),			sizeof(int) )
 DECLARE_FIELD_SIZE( FIELD_SOUNDNAME,	sizeof(int),			sizeof(int) )
 
-#define _FIELD(name, fieldtype, count, flags, mapname )		{ fieldtype, #name, offsetof(classNameTypedef, name), count, flags, mapname, NULL }
-#define _EFIELD(name, fieldtype, count, flags, mapname )		{ fieldtype, #name, offsetof(entvars_t, name), count, flags, mapname, NULL }
+#define _FIELD( name, fieldtype, count, flags, mapname )	{ fieldtype, #name, offsetof(classNameTypedef, name), count, flags, mapname, NULL, NULL, NULL }
+#define _EFIELD( name, fieldtype, count, flags, mapname )	{ fieldtype, #name, offsetof(entvars_t, name), count, flags, mapname, NULL, NULL, NULL }
+#define _CFIELD( name, fieldtype, count, flags, mapname, getter, setter )	{ fieldtype, #name, 0, count, flags, mapname, NULL, getter, setter }
+
 #define DEFINE_FIELD_NULL					{ FIELD_VOID, 0, 0, 0, 0, 0, 0 }
 #define DEFINE_FIELD(name, fieldtype)				_FIELD(name, fieldtype, 1, FTYPEDESC_SAVE, NULL )
 #define DEFINE_KEYFIELD(name, fieldtype, mapname)			_FIELD(name, fieldtype, 1, FTYPEDESC_KEY|FTYPEDESC_SAVE, mapname )
@@ -83,6 +86,7 @@ DECLARE_FIELD_SIZE( FIELD_SOUNDNAME,	sizeof(int),			sizeof(int) )
 #define DEFINE_ENTITY_GLOBAL_FIELD(name, fieldtype)		_EFIELD(name, fieldtype, 1, FTYPEDESC_KEY|FTYPEDESC_SAVE|FTYPEDESC_GLOBAL, #name )
 #define DEFINE_GLOBAL_FIELD(name, fieldtype)			_FIELD(name, fieldtype, 1, FTYPEDESC_GLOBAL|FTYPEDESC_SAVE, NULL )
 #define DEFINE_GLOBAL_KEYFIELD(name, fieldtype, mapname)		_FIELD(name, fieldtype, 1, FTYPEDESC_GLOBAL|FTYPEDESC_KEY|FTYPEDESC_SAVE, mapname )
+#define DEFINE_CUSTOM_FIELD(name, fieldtype, getter, setter)	_CFIELD(name, fieldtype, 1, FTYPEDESC_SAVE|FTYPEDESC_CUSTOMCALLBACK, NULL, getter, setter )
 
 // replaces EXPORT table for portability and non-DLL based systems (xbox)
 #define DEFINE_FUNCTION_RAW( function, func_type )		{ FIELD_VOID, nameHolder.GenerateName(#function), 0, 1, FTYPEDESC_FUNCTIONTABLE, NULL, (func_t)((func_type)(&classNameTypedef::function)) }
@@ -91,7 +95,9 @@ DECLARE_FIELD_SIZE( FIELD_SOUNDNAME,	sizeof(int),			sizeof(int) )
 //
 // Generic function prototype.
 //
-typedef void (CBaseEntity::*func_t)(void);
+using func_t = void (CBaseEntity::*)(void);
+using field_getter_t = std::function<void(CBaseEntity*, void*, size_t)>;
+using field_setter_t = std::function<void(CBaseEntity*, const void*, size_t)>;
 
 typedef struct typedescription_s
 {
@@ -100,8 +106,10 @@ typedef struct typedescription_s
 	int		fieldOffset;
 	unsigned short	fieldSize;
 	short		flags;
-	const char	*mapName;				// a name of keyfield on a map (e.g. "origin", "spawnflags" etc)	
-	func_t		func;				// pointer to a function 
+	const char	*mapName;		// a name of keyfield on a map (e.g. "origin", "spawnflags" etc)	
+	func_t		func;			// pointer to a function 
+	field_getter_t storeCallback;
+	field_setter_t loadCallback;
 } TYPEDESCRIPTION;
 
 
