@@ -354,8 +354,8 @@ typedef enum _fieldtypes
 	FIELD_TIME,		// a floating point time (these are fixed up automatically too!)
 	FIELD_MODELNAME,		// Engine string that is a model name (needs precache)
 	FIELD_SOUNDNAME,		// Engine string that is a sound name (needs precache)
+	// do not modify order of lines above, it is shared with engine
 	FIELD_VOID,		// No type or value
- 
 	FIELD_TYPECOUNT,		// MUST BE LAST
 } FIELDTYPE;
 
@@ -366,6 +366,7 @@ typedef struct datamap_s		DATAMAP;
 #define FTYPEDESC_SAVE		0x0002		// This field is saved to disk
 #define FTYPEDESC_KEY		0x0004		// This field can be requested and written to by string name at load time
 #define FTYPEDESC_FUNCTIONTABLE	0x0008		// This is a table entry for a member function pointer
+#define FTYPEDESC_CUSTOMCALLBACK 0x0010		// This field uses custom getter/setter instead of obtaining value by offset from entity pdata
 
 // NOTE: engine typedescription is shorter than game typedescription
 typedef struct 
