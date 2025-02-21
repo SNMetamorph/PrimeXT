@@ -18,8 +18,8 @@
 #include "weapons/glock.h"
 #include "server_weapon_layer_impl.h"
 
-LINK_ENTITY_TO_CLASS( GLOCK_CLASSNAME, CGlock );
 LINK_ENTITY_TO_CLASS( weapon_9mmhandgun, CGlock );
+LINK_ENTITY_TO_CLASS( weapon_glock, CGlock );
 
 CGlock::CGlock()
 {

@@ -21,7 +21,7 @@
 #define GLOCK_WEIGHT		10
 #define GLOCK_MAX_CLIP		17
 #define GLOCK_DEFAULT_GIVE	17
-#define GLOCK_CLASSNAME		weapon_glock
+#define GLOCK_CLASSNAME		weapon_9mmhandgun
 
 class CGlockWeaponLogic : public CBaseWeaponContext
 {
