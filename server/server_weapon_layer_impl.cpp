@@ -158,35 +158,35 @@ Vector CServerWeaponLayerImpl::FireBullets(int bullets, Vector origin, matrix3x3
 				TEXTURETYPE_PlaySound(&tr, origin, vecEnd, bulletType);
 				DecalGunshot( &tr, bulletType, origin, vecEnd );
 			} 
-			else switch(bulletType)
+			else
 			{
-			default:
-			case BULLET_PLAYER_9MM:		
-				pEntity->TraceAttack(player->pev, gSkillData.plrDmg9MM, vecDir, &tr, DMG_BULLET); 
-				break;
-
-			case BULLET_PLAYER_MP5:		
-				pEntity->TraceAttack(player->pev, gSkillData.plrDmgMP5, vecDir, &tr, DMG_BULLET); 
-				break;
-
-			case BULLET_PLAYER_BUCKSHOT:	
-				 // make distance based!
-				pEntity->TraceAttack(player->pev, gSkillData.plrDmgBuckshot, vecDir, &tr, DMG_BULLET); 
-				break;
-			
-			case BULLET_PLAYER_357:		
-				pEntity->TraceAttack(player->pev, gSkillData.plrDmg357, vecDir, &tr, DMG_BULLET); 
-				break;
-				
-			case BULLET_NONE: // FIX 
-				pEntity->TraceAttack(player->pev, 50, vecDir, &tr, DMG_CLUB);
-				TEXTURETYPE_PlaySound(&tr, origin, vecEnd, bulletType);
-				if ( !FNullEnt(tr.pHit) && VARS(tr.pHit)->rendermode != 0) // only decal glass
+				switch (bulletType)
 				{
-					UTIL_DecalTrace( &tr, "{break1" );
+					default:
+					case BULLET_PLAYER_9MM:
+						pEntity->TraceAttack(player->pev, gSkillData.plrDmg9MM, vecDir, &tr, DMG_BULLET);
+						break;
+
+					case BULLET_PLAYER_MP5:
+						pEntity->TraceAttack(player->pev, gSkillData.plrDmgMP5, vecDir, &tr, DMG_BULLET);
+						break;
+
+					case BULLET_PLAYER_BUCKSHOT:
+						// make distance based!
+						pEntity->TraceAttack(player->pev, gSkillData.plrDmgBuckshot, vecDir, &tr, DMG_BULLET);
+						break;
+
+					case BULLET_PLAYER_357:
+						pEntity->TraceAttack(player->pev, gSkillData.plrDmg357, vecDir, &tr, DMG_BULLET);
+						break;
+
+					case BULLET_NONE: // FIX 
+						pEntity->TraceAttack(player->pev, 50, vecDir, &tr, DMG_CLUB);
+						break;
 				}
 
-				break;
+				TEXTURETYPE_PlaySound(&tr, origin, vecEnd, bulletType);
+				DecalGunshot(&tr, bulletType, origin, vecEnd);
 			}
 		}
 		// make bullet trails
