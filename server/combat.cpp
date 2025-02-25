@@ -29,6 +29,7 @@
 #include "animation.h"
 #include "weapons.h"
 #include "func_break.h"
+#include "monster_satchel.h"
 
 extern DLL_GLOBAL Vector		g_vecAttackDir;
 extern DLL_GLOBAL int		g_iSkillLevel;
@@ -1661,3 +1662,31 @@ void CBaseMonster :: MakeDamageBloodDecal ( int cCount, float flNoise, TraceResu
 	}
 }
 
+//=========================================================
+// DeactivateSatchels - removes all satchels owned by
+// the provided player. Should only be used upon death.
+//
+// Made this global on purpose.
+//=========================================================
+void DeactivateSatchels( CBasePlayer *pOwner )
+{
+	edict_t *pFind; 
+
+	pFind = FIND_ENTITY_BY_CLASSNAME( NULL, "monster_satchel" );
+
+	while ( !FNullEnt( pFind ) )
+	{
+		CBaseEntity *pEnt = CBaseEntity::Instance( pFind );
+		CSatchelCharge *pSatchel = (CSatchelCharge *)pEnt;
+
+		if ( pSatchel )
+		{
+			if ( pSatchel->pev->owner == pOwner->edict() )
+			{
+				pSatchel->Deactivate();
+			}
+		}
+
+		pFind = FIND_ENTITY_BY_CLASSNAME( pFind, "monster_satchel" );
+	}
+}

@@ -23,6 +23,7 @@
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
+#include <vector>
 
 #define ENTVARS_COUNT	ARRAYSIZE( gEntvarsDescription )
 
@@ -367,6 +368,17 @@ unsigned short CSaveRestoreBuffer :: TokenHash( const char *pszToken )
 	return 0;
 }
 
+int CSaveRestoreBuffer::GetFieldSize(TYPEDESCRIPTION *type)
+{
+	// TODO add out-of-bounds checks?
+	return gSizes[type->fieldType];
+}
+
+int CSaveRestoreBuffer::GetFieldInputSize(TYPEDESCRIPTION *type)
+{
+	return gInputSizes[type->fieldType];
+}
+
 void CSave :: Log( DATAMAP *pMap, const char *pName, const char *pFieldName, FIELDTYPE fieldType, void *value, int count )
 {
 	// Check to see if we are logging.
@@ -687,15 +699,28 @@ int CSave :: WriteFields( const char *pname, const void *pBaseData, DATAMAP *pMa
 {
 	int i, j, actualCount, emptyCount;
 	int entityArray[MAX_ENTITYARRAY];
+	std::vector<uint8_t> dataBuffer;
 	TYPEDESCRIPTION *pTest;
+	void *pOutputData;
 
 	// Precalculate the number of empty fields
 	emptyCount = 0;
 	for ( i = 0; i < fieldCount; i++ )
 	{
-		void *pOutputData;
-		pOutputData = ((char *)pBaseData + pFields[i].fieldOffset );
-		if ( DataEmpty( (const char *)pOutputData, pFields[i].fieldSize * gSizes[pFields[i].fieldType] ) )
+		pTest = &pFields[ i ];
+
+		if (!FBitSet(pTest->flags, FTYPEDESC_CUSTOMCALLBACK)) {
+			pOutputData = ((char *)pBaseData + pTest->fieldOffset);
+		}
+		else 
+		{
+			size_t dataSize = GetFieldSize(pTest);
+			dataBuffer.resize(dataSize);
+			pTest->storeCallback((CBaseEntity*)pBaseData, dataBuffer.data(), dataSize);
+			pOutputData = dataBuffer.data();
+		}
+
+		if ( DataEmpty( (const char *)pOutputData, pFields[i].fieldSize * GetFieldSize(pTest) ) )
 			emptyCount++;
 	}
 
@@ -705,12 +730,21 @@ int CSave :: WriteFields( const char *pname, const void *pBaseData, DATAMAP *pMa
 
 	for ( i = 0; i < fieldCount; i++ )
 	{
-		void *pOutputData;
 		pTest = &pFields[ i ];
-		pOutputData = ((char *)pBaseData + pTest->fieldOffset );
+
+		if (!FBitSet(pTest->flags, FTYPEDESC_CUSTOMCALLBACK)) {
+			pOutputData = ((char *)pBaseData + pTest->fieldOffset);
+		}
+		else 
+		{
+			size_t dataSize = GetFieldSize(pTest);
+			dataBuffer.resize(dataSize);
+			pTest->storeCallback((CBaseEntity*)pBaseData, dataBuffer.data(), dataSize);
+			pOutputData = dataBuffer.data();
+		}
 
 		// UNDONE: Must we do this twice?
-		if ( DataEmpty( (const char *)pOutputData, pTest->fieldSize * gSizes[pTest->fieldType] ) )
+		if ( DataEmpty( (const char *)pOutputData, pTest->fieldSize * GetFieldSize(pTest) ) )
 			continue;
 
 #ifdef _DEBUG
@@ -856,6 +890,7 @@ int CRestore::ReadField( const void *pBaseData, DATAMAP *pMap, TYPEDESCRIPTION *
 	Vector	position;
 	edict_t	*pent;
 	char	*pString;
+	std::vector<uint8_t> dataBuffer;
 
 	time = 0;
 	position = Vector(0,0,0);
@@ -877,8 +912,18 @@ int CRestore::ReadField( const void *pBaseData, DATAMAP *pMap, TYPEDESCRIPTION *
 			{
 				for ( j = 0; j < pTest->fieldSize; j++ )
 				{
-					void *pOutputData = ((char *)pBaseData + pTest->fieldOffset + (j*gSizes[pTest->fieldType]) );
-					void *pInputData = (char *)pData + j * gInputSizes[pTest->fieldType];
+					void *pOutputData;
+					void *pInputData = (char *)pData + j * GetFieldInputSize(pTest);
+					size_t dataSize = GetFieldSize(pTest);
+
+					if (!FBitSet(pTest->flags, FTYPEDESC_CUSTOMCALLBACK)) {
+						pOutputData = ((char *)pBaseData + pTest->fieldOffset + (j * GetFieldSize(pTest)));
+					}
+					else 
+					{
+						dataBuffer.resize(dataSize);
+						pOutputData = dataBuffer.data();
+					}
 
 					switch( pTest->fieldType )
 					{
@@ -988,6 +1033,12 @@ int CRestore::ReadField( const void *pBaseData, DATAMAP *pMap, TYPEDESCRIPTION *
 					default:
 						ALERT( at_error, "Bad field type\n" );
 					}
+
+					// value was written to buffer, then make external code aware of this
+					// and pass these data to that external code
+					if (FBitSet(pTest->flags, FTYPEDESC_CUSTOMCALLBACK)) {
+						pTest->loadCallback((CBaseEntity*)pBaseData, dataBuffer.data(), dataSize);
+					}
 				}
 			}
 			return fieldNumber;
@@ -1027,9 +1078,12 @@ int CRestore::ReadFields( const char *pname, const void *pBaseData, DATAMAP *pMa
 	// Clear out base data
 	for (int i = 0; i < fieldCount; i++)
 	{
-		// Don't clear global fields
-		if (!m_global || !(pFields[i].flags & FTYPEDESC_GLOBAL))
-			memset(((char *)pBaseData + pFields[i].fieldOffset), 0, pFields[i].fieldSize * gSizes[pFields[i].fieldType]);
+		if (!FBitSet(pFields[i].flags, FTYPEDESC_CUSTOMCALLBACK))
+		{
+			// Don't clear global fields
+			if (!m_global || !(pFields[i].flags & FTYPEDESC_GLOBAL))
+				memset(((char *)pBaseData + pFields[i].fieldOffset), 0, pFields[i].fieldSize * GetFieldSize(&pFields[i]));
+		}
 	}
 
 	for (int i = 0; i < fileCount; i++)

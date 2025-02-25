@@ -874,7 +874,7 @@ float CHalfLifeMultiplay :: FlWeaponRespawnTime( CBasePlayerItem *pWeapon )
 //=========================================================
 float CHalfLifeMultiplay :: FlWeaponTryRespawn( CBasePlayerItem *pWeapon )
 {
-	if ( pWeapon && pWeapon->m_iId && (pWeapon->iFlags() & ITEM_FLAG_LIMITINWORLD) )
+	if ( pWeapon && pWeapon->iWeaponID() && (pWeapon->iFlags() & ITEM_FLAG_LIMITINWORLD))
 	{
 		if ( NUMBER_OF_ENTITIES() < (gpGlobals->maxEntities - ENTITY_INTOLERANCE) )
 			return 0;
@@ -927,7 +927,7 @@ BOOL CHalfLifeMultiplay::CanHavePlayerItem( CBasePlayer *pPlayer, CBasePlayerIte
 
 			while ( it != NULL )
 			{
-				if ( it->m_iId == pItem->m_iId )
+				if ( it->iWeaponID() == pItem->iWeaponID())
 				{
 					return FALSE;
 				}

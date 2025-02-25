@@ -16,6 +16,8 @@
 #ifndef SAVERESTORE_H
 #define SAVERESTORE_H
 
+#include "eiface.h"
+
 class CBaseEntity;
 
 class CSaveRestoreBuffer
@@ -37,6 +39,10 @@ public:
 
 	unsigned short	TokenHash( const char *pszToken );
 	Vector GetLandmark() const { return ( m_pdata->fUseLandmark ) ? m_pdata->vecLandmarkOffset : g_vecZero; }
+
+	static int GetFieldSize(TYPEDESCRIPTION *type);
+	static int GetFieldInputSize(TYPEDESCRIPTION *type);
+	
 	Vector		modelSpaceOffset; // used only for globaly entity brushes modelled in different coordinate systems.
 	Vector		modelOriginOffset;
 protected:

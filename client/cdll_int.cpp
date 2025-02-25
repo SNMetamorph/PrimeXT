@@ -28,7 +28,8 @@
 #include "tri.h"
 #include "mobility_int.h"
 #include "imgui_manager.h"
-#include "utils.h"
+#include "events/game_event_manager.h"
+#include "weapon_predicting_context.h"
 #include "pm_shared.h"
 #include "filesystem_utils.h"
 #include "build_info.h"
@@ -38,6 +39,8 @@ int g_iXashEngineBuildNumber;
 cl_enginefunc_t gEngfuncs;
 mobile_engfuncs_t gMobileAPI;
 render_api_t gRenderfuncs;
+static CGameEventManager *g_pEventManager;
+static CWeaponPredictingContext g_WeaponPredicting;
 CHud gHUD;
 
 /*
@@ -149,6 +152,8 @@ int Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion )
 		BuildInfo::GetArchitecture(),
 		BuildInfo::GetPlatform()
 	);
+
+	g_pEventManager = new CGameEventManager();
 	return 1;
 }
 
@@ -193,6 +198,10 @@ void DLLEXPORT HUD_Shutdown( void )
 
 	if (g_fRenderInitialized)
 		GL_Shutdown();
+
+	if (g_pEventManager) {
+		delete g_pEventManager;
+	}
 }
 
 /*
@@ -323,8 +332,11 @@ extern "C" int DLLEXPORT HUD_Key_Event( int down, int keynum, const char *pszCur
 	return g_ImGuiManager.KeyInput(down != 0, keynum, pszCurrentBinding) ? 1 : 0;
 }
 
-extern "C" void DLLEXPORT HUD_PostRunCmd( struct local_state_s*, local_state_s *, struct usercmd_s*, int, double, unsigned int )
+extern "C" void DLLEXPORT HUD_PostRunCmd(local_state_t *from, local_state_t *to, usercmd_t *cmd, int runfuncs, double time, unsigned int random_seed)
 {
+	if (CVAR_GET_FLOAT("cl_lw") > 0.0f) {
+		g_WeaponPredicting.PostThink(from, to, cmd, runfuncs != 0, time, random_seed);
+	}
 }
 
 /*
