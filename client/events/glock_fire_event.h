@@ -15,6 +15,7 @@ GNU General Public License for more details.
 
 #pragma once
 #include "base_game_event.h"
+#include "matrix.h"
 
 class CGlockFireEvent : public CBaseGameEvent
 {
@@ -26,4 +27,5 @@ public:
 
 private:
 	bool ClipEmpty() const;
+	Vector GetShootDirection(const matrix3x3 &camera) const;
 };
