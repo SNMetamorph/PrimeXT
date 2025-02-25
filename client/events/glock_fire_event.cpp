@@ -57,6 +57,7 @@ void CGlockFireEvent::Execute()
 	Vector shellOrigin = GetOrigin() + up * -12.0f + forward * 20.0f + right * 4.0f;
 
 	GameEventUtils::EjectBrass(shellOrigin, GetAngles(), shellVelocity, brassModelIndex, TE_BOUNCE_SHELL);
+	GameEventUtils::FireBullet(m_arguments->entindex, cameraMatrix, GetOrigin(), forward, 1);
 	gEngfuncs.pEventAPI->EV_PlaySound( GetEntityIndex(), GetOrigin(), CHAN_WEAPON, "weapons/pl_gun3.wav", gEngfuncs.pfnRandomFloat(0.92, 1.0), ATTN_NORM, 0, 98 + gEngfuncs.pfnRandomLong(0, 3));
 }
 
