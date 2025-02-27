@@ -108,4 +108,5 @@ public:
 	virtual uint16_t PrecacheEvent(const char *eventName) = 0;
 	virtual void PlaybackWeaponEvent(const WeaponEventParams &params) = 0;
 	virtual bool ShouldRunFuncs() = 0;
+	virtual bool IsMultiplayer() = 0;
 };

@@ -158,3 +158,8 @@ bool CClientWeaponLayerImpl::ShouldRunFuncs()
 {
 	return m_playerState.runfuncs;
 }
+
+bool CClientWeaponLayerImpl::IsMultiplayer()
+{
+	return gEngfuncs.GetMaxClients() > 1;
+}

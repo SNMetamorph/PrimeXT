@@ -48,6 +48,7 @@ public:
 	uint16_t PrecacheEvent(const char *eventName) override;
 	void PlaybackWeaponEvent(const WeaponEventParams &params) override;
 	bool ShouldRunFuncs() override;
+	bool IsMultiplayer() override;
 
 private:
 	CSeededRandomGenerator m_randomGenerator;
