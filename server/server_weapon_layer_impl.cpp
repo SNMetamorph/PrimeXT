@@ -281,3 +281,8 @@ bool CServerWeaponLayerImpl::ShouldRunFuncs()
 {
 	return true; // always true, because server do not any kind of subticking for weapons
 }
+
+bool CServerWeaponLayerImpl::IsMultiplayer()
+{
+	return g_pGameRules->IsMultiplayer();
+}
