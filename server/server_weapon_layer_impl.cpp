@@ -242,6 +242,17 @@ void CServerWeaponLayerImpl::SetPlayerNextAttackTime(float value)
 	m_pWeapon->m_pPlayer->m_flNextAttack = value;
 }
 
+void CServerWeaponLayerImpl::SetPlayerFOV(float value)
+{
+	m_pWeapon->m_pPlayer->pev->fov = value;
+	m_pWeapon->m_pPlayer->m_iFOV = value;
+}
+
+float CServerWeaponLayerImpl::GetPlayerFOV()
+{
+	return m_pWeapon->m_pPlayer->pev->fov;
+}
+
 float CServerWeaponLayerImpl::GetWeaponTimeBase(bool usePredicting)
 {
 	return usePredicting ? 0.0f : gpGlobals->time;

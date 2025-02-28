@@ -114,6 +114,16 @@ void CClientWeaponLayerImpl::SetPlayerNextAttackTime(float value)
 	m_playerState.nextAttack = value;
 }
 
+void CClientWeaponLayerImpl::SetPlayerFOV(float value)
+{
+	m_playerState.fov = value;
+}
+
+float CClientWeaponLayerImpl::GetPlayerFOV()
+{
+	return m_playerState.fov;
+}
+
 float CClientWeaponLayerImpl::GetWeaponTimeBase(bool usePredicting)
 {
 	return usePredicting ? 0.0f : m_playerState.time;

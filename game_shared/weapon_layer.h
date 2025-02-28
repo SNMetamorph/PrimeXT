@@ -99,6 +99,8 @@ public:
 	virtual void ClearPlayerButtonFlag(int buttonMask) = 0;
 	virtual float GetPlayerNextAttackTime() = 0;
 	virtual void SetPlayerNextAttackTime(float value) = 0;
+	virtual void SetPlayerFOV(float value) = 0;
+	virtual float GetPlayerFOV() = 0;
 
 	// miscellaneous things
 	virtual float GetWeaponTimeBase(bool usePredicting) = 0;
