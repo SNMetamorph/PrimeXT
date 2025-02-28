@@ -18,7 +18,6 @@ GNU General Public License for more details.
 #include "mathlib.h"
 #include "usercmd.h"
 #include "entity_state.h"
-#include "weapon_layer.h"
 #include "weapon_context.h"
 #include <stdint.h>
 #include <memory>
@@ -74,6 +73,5 @@ private:
 	CBaseWeaponContext* GetWeaponContext(uint32_t weaponID);
 
 	PlayerState m_playerState;
-	std::unique_ptr<IWeaponLayer> m_pWeaponLayer;
 	std::unordered_map<uint32_t, std::unique_ptr<CBaseWeaponContext>> m_weaponsState;
 };
