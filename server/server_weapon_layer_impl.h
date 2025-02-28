@@ -45,6 +45,8 @@ public:
 	void ClearPlayerButtonFlag(int buttonMask) override;
 	float GetPlayerNextAttackTime() override;
 	void SetPlayerNextAttackTime(float value) override;
+	void SetPlayerFOV(float value) override;
+	float GetPlayerFOV() override;
 
 	float GetWeaponTimeBase(bool usePredicting) override;
 	uint32_t GetRandomSeed() override;
