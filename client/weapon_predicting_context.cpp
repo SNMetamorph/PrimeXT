@@ -20,8 +20,7 @@ GNU General Public License for more details.
 #include "utils.h"
 #include <cstring>
 
-CWeaponPredictingContext::CWeaponPredictingContext() :
-	m_pWeaponLayer(std::make_unique<CClientWeaponLayerImpl>(m_playerState))
+CWeaponPredictingContext::CWeaponPredictingContext()
 {
 }
 
@@ -254,7 +253,7 @@ CBaseWeaponContext* CWeaponPredictingContext::GetWeaponContext(uint32_t weaponID
 		switch (weaponID)
 		{
 			case WEAPON_GLOCK:  
-				m_weaponsState[weaponID] = std::make_unique<CGlockWeaponLogic>(m_pWeaponLayer.get());
+				m_weaponsState[weaponID] = std::make_unique<CGlockWeaponLogic>(new CClientWeaponLayerImpl(m_playerState));
 				break;
 			default: 
 				return nullptr;
