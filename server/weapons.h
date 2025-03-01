@@ -36,7 +36,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define WEAPON_PYTHON			3
 #define WEAPON_MP5				4
 #define WEAPON_CYCLER			5
-#define WEAPON_CROSSBOW			6
 #define WEAPON_SHOTGUN			7
 #define WEAPON_RPG				8
 #define WEAPON_GAUSS			9
@@ -54,7 +53,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define PYTHON_WEIGHT		15
 #define MP5_WEIGHT			15
 #define SHOTGUN_WEIGHT		15
-#define CROSSBOW_WEIGHT		10
 #define RPG_WEIGHT			20
 #define GAUSS_WEIGHT		20
 #define EGON_WEIGHT			20
@@ -70,7 +68,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define MP5_MAX_CLIP			50
 #define MP5_DEFAULT_AMMO		25
 #define SHOTGUN_MAX_CLIP		8
-#define CROSSBOW_MAX_CLIP		5
 #define RPG_MAX_CLIP			1
 #define GAUSS_MAX_CLIP			WEAPON_NOCLIP
 #define EGON_MAX_CLIP			WEAPON_NOCLIP
@@ -86,7 +83,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define MP5_DEFAULT_AMMO			25
 #define MP5_M203_DEFAULT_GIVE		0
 #define SHOTGUN_DEFAULT_GIVE		12
-#define CROSSBOW_DEFAULT_GIVE		5
 #define RPG_DEFAULT_GIVE			1
 #define GAUSS_DEFAULT_GIVE			20
 #define EGON_DEFAULT_GIVE			20
@@ -103,7 +99,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define AMMO_CHAINBOX_GIVE		200
 #define AMMO_M203BOX_GIVE		2
 #define AMMO_BUCKSHOTBOX_GIVE	12
-#define AMMO_CROSSBOWCLIP_GIVE	CROSSBOW_MAX_CLIP
 #define AMMO_RPGCLIP_GIVE		RPG_MAX_CLIP
 #define AMMO_URANIUMBOX_GIVE	20
 #define AMMO_SNARKBOX_GIVE		5

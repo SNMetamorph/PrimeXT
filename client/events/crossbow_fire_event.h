@@ -1,6 +1,6 @@
 /*
-game_event_manager.h - class that responsible for registering game events handlers
-Copyright (C) 2024 SNMetamorph
+crossbow_fire_event.h
+Copyright (C) 2025 SNMetamorph
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -14,19 +14,18 @@ GNU General Public License for more details.
 */
 
 #pragma once
+#include "base_game_event.h"
+#include "matrix.h"
 
-class CGameEventManager
+class CCrossbowFireEvent : public CBaseGameEvent
 {
 public:
-	CGameEventManager();
-	~CGameEventManager() = default;
+	CCrossbowFireEvent(event_args_t *args);
+	~CCrossbowFireEvent() = default;
+
+	void Execute();
 
 private:
-	CGameEventManager(const CGameEventManager&) = delete;
-	CGameEventManager(CGameEventManager&&) = delete;
-	CGameEventManager& operator=(const CGameEventManager&) = delete;
-	CGameEventManager& operator=(CGameEventManager&&) = delete;
-
-	void RegisterGlockEvents();
-	void RegisterCrossbowEvents();
+	bool ClipEmpty();
+	bool OutOfAmmo();
 };
