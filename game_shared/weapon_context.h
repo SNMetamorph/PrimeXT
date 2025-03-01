@@ -18,12 +18,13 @@ GNU General Public License for more details.
 #include "item_info.h"
 #include "cdll_dll.h"
 #include "weapon_layer.h"
+#include <memory>
 #include <stdint.h>
 
 class CBaseWeaponContext
 {
 public:
-	CBaseWeaponContext(IWeaponLayer *layer);
+	CBaseWeaponContext(std::unique_ptr<IWeaponLayer> &&layer);
 	virtual ~CBaseWeaponContext();
 
 	// called by CBasePlayerWeapons ItemPostFrame()
@@ -81,5 +82,5 @@ public:
 	int	m_iClientWeaponState;			// the last version of the weapon state sent to hud dll (is current weapon, is on target)
 	int	m_fInReload;					// Are we in the middle of a reload;
 	int	m_iDefaultAmmo;					// how much ammo you get when you pick up this weapon as placed by a level designer.
-	IWeaponLayer *m_pLayer;
+	std::unique_ptr<IWeaponLayer> m_pLayer;
 };

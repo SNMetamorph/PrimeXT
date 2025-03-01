@@ -16,6 +16,7 @@
 #pragma once
 #include "weapon_context.h"
 #include "weapon_layer.h"
+#include <utility>
 
 #define WEAPON_GLOCK		2
 #define GLOCK_WEIGHT		10
@@ -27,8 +28,9 @@ class CGlockWeaponLogic : public CBaseWeaponContext
 {
 public:
 	CGlockWeaponLogic() = delete;
-	CGlockWeaponLogic(IWeaponLayer *layer);
-
+	~CGlockWeaponLogic() = default;
+	CGlockWeaponLogic(std::unique_ptr<IWeaponLayer> &&layer);
+	
 	int iItemSlot() override { return 2; }
 	int GetItemInfo(ItemInfo *p) override;
 	void PrimaryAttack() override;

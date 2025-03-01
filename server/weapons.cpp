@@ -668,9 +668,6 @@ CBasePlayerWeapon::CBasePlayerWeapon() :
 
 CBasePlayerWeapon::~CBasePlayerWeapon()
 {
-	if (m_pWeaponContext) {
-		delete m_pWeaponContext;
-	}
 }
 
 int CBasePlayerWeapon::AddToPlayer( CBasePlayer *pPlayer )

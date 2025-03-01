@@ -14,6 +14,8 @@ GNU General Public License for more details.
 */
 
 #include "weapon_context.h"
+#include <utility>
+
 #ifdef CLIENT_DLL
 #include "const.h"
 #include "hud.h"
@@ -36,8 +38,8 @@ GNU General Public License for more details.
 ItemInfo CBaseWeaponContext::ItemInfoArray[ MAX_WEAPONS ];
 AmmoInfo CBaseWeaponContext::AmmoInfoArray[ MAX_AMMO_SLOTS ];
 
-CBaseWeaponContext::CBaseWeaponContext(IWeaponLayer *layer) :
-	m_pLayer(layer),
+CBaseWeaponContext::CBaseWeaponContext(std::unique_ptr<IWeaponLayer> &&layer) :
+	m_pLayer(std::move(layer)),
 	m_fFireOnEmpty(false),
 	m_fInReload(false),
 	m_fInSpecialReload(false),
@@ -51,15 +53,13 @@ CBaseWeaponContext::CBaseWeaponContext(IWeaponLayer *layer) :
 	m_iDefaultAmmo(0),
 	m_iPlayEmptySound(false),
 	m_iPrimaryAmmoType(0),
-	m_iSecondaryAmmoType(0)
+	m_iSecondaryAmmoType(0),
+	m_iId(-1)
 {
 }
 
 CBaseWeaponContext::~CBaseWeaponContext()
 {
-	if (m_pLayer) {
-		delete m_pLayer;
-	}
 }
 
 void CBaseWeaponContext::ItemPostFrame()

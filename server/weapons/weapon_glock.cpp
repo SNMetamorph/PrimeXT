@@ -23,7 +23,9 @@ LINK_ENTITY_TO_CLASS( weapon_glock, CGlock );
 
 CGlock::CGlock()
 {
-	m_pWeaponContext = new CGlockWeaponLogic(new CServerWeaponLayerImpl(this));
+	auto layerImpl = std::make_unique<CServerWeaponLayerImpl>(this);
+	auto logicImpl = std::make_unique<CGlockWeaponLogic>(std::move(layerImpl));
+	m_pWeaponContext = std::move(logicImpl);
 }
 
 void CGlock::Spawn( )
