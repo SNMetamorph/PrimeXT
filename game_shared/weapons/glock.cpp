@@ -16,7 +16,6 @@
 #include "glock.h"
 
 #ifdef CLIENT_DLL
-
 #else
 #include "extdll.h"
 #include "util.h"
@@ -41,8 +40,8 @@ enum glock_e
 	GLOCK_ADD_SILENCER
 };
 
-CGlockWeaponLogic::CGlockWeaponLogic(IWeaponLayer *layer) :
-	CBaseWeaponContext(layer)
+CGlockWeaponLogic::CGlockWeaponLogic(std::unique_ptr<IWeaponLayer> &&layer) :
+	CBaseWeaponContext(std::move(layer))
 {
 	m_iDefaultAmmo = GLOCK_DEFAULT_GIVE;
 	m_iId = WEAPON_GLOCK;

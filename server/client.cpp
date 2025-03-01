@@ -1617,7 +1617,7 @@ int GetWeaponData( struct edict_s *player, struct weapon_data_s *info )
 			while (item)
 			{
 				CBasePlayerWeapon *weapon = dynamic_cast<CBasePlayerWeapon*>(item->GetWeaponPtr());
-				CBaseWeaponContext *ctx = weapon->m_pWeaponContext;
+				CBaseWeaponContext *ctx = weapon->m_pWeaponContext.get();
 				if (weapon && ctx->UseDecrement())
 				{
 					ItemInfo itemInfo;

@@ -2619,7 +2619,7 @@ void CBasePlayer::UpdateWeaponTimers()
 			while (pPlayerItem)
 			{
 				CBasePlayerWeapon *gun = (CBasePlayerWeapon *)pPlayerItem->GetWeaponPtr();
-				CBaseWeaponContext *ctx = gun->m_pWeaponContext;
+				CBaseWeaponContext *ctx = gun->m_pWeaponContext.get();
 
 				if (gun && ctx->UseDecrement())
 				{

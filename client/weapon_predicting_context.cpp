@@ -253,7 +253,7 @@ CBaseWeaponContext* CWeaponPredictingContext::GetWeaponContext(uint32_t weaponID
 		switch (weaponID)
 		{
 			case WEAPON_GLOCK:  
-				m_weaponsState[weaponID] = std::make_unique<CGlockWeaponLogic>(new CClientWeaponLayerImpl(m_playerState));
+				m_weaponsState[weaponID] = std::make_unique<CGlockWeaponLogic>(std::make_unique<CClientWeaponLayerImpl>(m_playerState));
 				break;
 			default: 
 				return nullptr;

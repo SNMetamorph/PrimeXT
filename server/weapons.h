@@ -19,6 +19,7 @@
 #include "effects.h"
 #include "item_info.h"
 #include "weapon_context.h"
+#include <memory>
 
 class CBasePlayer;
 
@@ -183,7 +184,7 @@ public:
 	int UpdateClientData( CBasePlayer *pPlayer ) override;	// sends hud info to client dll, if things have changed
 
 	// declare it here, but in future move to the bottom
-	CBaseWeaponContext *m_pWeaponContext;
+	std::unique_ptr<CBaseWeaponContext> m_pWeaponContext;
 
 	virtual void ItemPostFrame() override;	// called each frame by the player PostThink
 
