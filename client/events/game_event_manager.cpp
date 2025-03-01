@@ -19,10 +19,12 @@ GNU General Public License for more details.
 #include "event_api.h"
 #include "event_args.h"
 #include "glock_fire_event.h"
+#include "crossbow_fire_event.h"
 
 CGameEventManager::CGameEventManager()
 {
 	RegisterGlockEvents();
+	RegisterCrossbowEvents();
 }
 
 void CGameEventManager::RegisterGlockEvents()
@@ -33,6 +35,18 @@ void CGameEventManager::RegisterGlockEvents()
 	});
 	gEngfuncs.pfnHookEvent("events/glock2.sc", [](event_args_s *args) {
 		CGlockFireEvent event(args);
+		event.Execute();
+	});
+}
+
+void CGameEventManager::RegisterCrossbowEvents()
+{
+	gEngfuncs.pfnHookEvent("events/crossbow1.sc", [](event_args_s *args) {
+		CCrossbowFireEvent event(args);
+		event.Execute();
+	});
+	gEngfuncs.pfnHookEvent("events/crossbow2.sc", [](event_args_s *args) {
+		CCrossbowFireEvent event(args);
 		event.Execute();
 	});
 }

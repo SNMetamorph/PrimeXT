@@ -14,10 +14,11 @@ GNU General Public License for more details.
 */
 
 #include "weapon_predicting_context.h"
-#include "weapons/glock.h"
 #include "client_weapon_layer_impl.h"
 #include "hud.h"
 #include "utils.h"
+#include "weapons/glock.h"
+#include "weapons/crossbow.h"
 #include <cstring>
 
 CWeaponPredictingContext::CWeaponPredictingContext()
@@ -254,6 +255,9 @@ CBaseWeaponContext* CWeaponPredictingContext::GetWeaponContext(uint32_t weaponID
 		{
 			case WEAPON_GLOCK:  
 				m_weaponsState[weaponID] = std::make_unique<CGlockWeaponLogic>(std::make_unique<CClientWeaponLayerImpl>(m_playerState));
+				break;
+			case WEAPON_CROSSBOW:
+				m_weaponsState[weaponID] = std::make_unique<CCrossbowWeaponLogic>(std::make_unique<CClientWeaponLayerImpl>(m_playerState));
 				break;
 			default: 
 				return nullptr;
