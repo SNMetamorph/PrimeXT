@@ -99,6 +99,11 @@ int CClientWeaponLayerImpl::GetPlayerViewmodel()
 	return m_playerState.viewmodel;
 }
 
+int CClientWeaponLayerImpl::GetPlayerWaterlevel()
+{
+	return m_playerState.waterlevel;
+}
+
 bool CClientWeaponLayerImpl::CheckPlayerButtonFlag(int buttonMask)
 {
 	return FBitSet(m_playerState.buttons, buttonMask);

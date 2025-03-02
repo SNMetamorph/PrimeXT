@@ -227,6 +227,11 @@ int CServerWeaponLayerImpl::GetPlayerViewmodel()
 	return m_pWeapon->m_pPlayer->pev->viewmodel;
 }
 
+int CServerWeaponLayerImpl::GetPlayerWaterlevel()
+{
+	return m_pWeapon->m_pPlayer->pev->waterlevel;
+}
+
 bool CServerWeaponLayerImpl::CheckPlayerButtonFlag(int buttonMask)
 {
 	return FBitSet(m_pWeapon->m_pPlayer->pev->button, buttonMask);
