@@ -96,6 +96,7 @@ public:
 	virtual void SetPlayerWeaponAnim(int anim) = 0;
 	virtual void SetPlayerViewmodel(int model) = 0;
 	virtual int GetPlayerViewmodel() = 0;
+	virtual int GetPlayerWaterlevel() = 0;
 	virtual bool CheckPlayerButtonFlag(int buttonMask) = 0;
 	virtual void ClearPlayerButtonFlag(int buttonMask) = 0;
 	virtual float GetPlayerNextAttackTime() = 0;

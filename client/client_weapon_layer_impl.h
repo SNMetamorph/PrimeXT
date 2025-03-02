@@ -37,6 +37,7 @@ public:
 	void SetPlayerWeaponAnim(int anim) override;
 	void SetPlayerViewmodel(int model) override;
 	int GetPlayerViewmodel() override;
+	int GetPlayerWaterlevel() override;
 	bool CheckPlayerButtonFlag(int buttonMask) override;
 	void ClearPlayerButtonFlag(int buttonMask) override;
 	float GetPlayerNextAttackTime() override;
