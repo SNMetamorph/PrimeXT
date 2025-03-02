@@ -83,6 +83,7 @@ public:
 
 	// accessing weapon entity state
 	virtual int GetWeaponBodygroup() = 0;
+	virtual void SetWeaponBodygroup(int value) = 0;
 	virtual Vector GetGunPosition() = 0;
 	virtual matrix3x3 GetCameraOrientation() = 0;
 	virtual Vector GetAutoaimVector(float delta) = 0;

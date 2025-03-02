@@ -27,6 +27,11 @@ int CServerWeaponLayerImpl::GetWeaponBodygroup()
 	return m_pWeapon->pev->body;
 }
 
+void CServerWeaponLayerImpl::SetWeaponBodygroup(int value)
+{
+	m_pWeapon->pev->body = value;
+}
+
 Vector CServerWeaponLayerImpl::GetGunPosition()
 {
 	return m_pWeapon->m_pPlayer->pev->origin + m_pWeapon->m_pPlayer->pev->view_ofs;

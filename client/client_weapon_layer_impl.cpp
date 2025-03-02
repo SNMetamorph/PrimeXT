@@ -31,6 +31,11 @@ int CClientWeaponLayerImpl::GetWeaponBodygroup()
 	return 0; 
 }
 
+void CClientWeaponLayerImpl::SetWeaponBodygroup(int value)
+{
+	// also stub for now, investigate it later
+}
+
 Vector CClientWeaponLayerImpl::GetGunPosition()
 {
 	return m_playerState.origin + m_playerState.viewOffset;
