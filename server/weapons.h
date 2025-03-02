@@ -33,7 +33,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 
 #define WEAPON_NONE				0
 #define WEAPON_CROWBAR			1
-#define WEAPON_MP5				4
 #define WEAPON_CYCLER			5
 #define WEAPON_SHOTGUN			7
 #define WEAPON_RPG				8
@@ -49,7 +48,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 
 // weapon weight factors (for auto-switching)   (-1 = noswitch)
 #define CROWBAR_WEIGHT		0
-#define MP5_WEIGHT			15
 #define SHOTGUN_WEIGHT		15
 #define RPG_WEIGHT			20
 #define GAUSS_WEIGHT		20
@@ -62,8 +60,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 
 // the maximum amount of ammo each weapon's clip can hold
 //#define CROWBAR_MAX_CLIP		WEAPON_NOCLIP
-#define MP5_MAX_CLIP			50
-#define MP5_DEFAULT_AMMO		25
 #define SHOTGUN_MAX_CLIP		8
 #define RPG_MAX_CLIP			1
 #define GAUSS_MAX_CLIP			WEAPON_NOCLIP
@@ -75,8 +71,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define SNARK_MAX_CLIP			WEAPON_NOCLIP
 
 // the default amount of ammo that comes with each gun when it spawns
-#define MP5_DEFAULT_GIVE			25
-#define MP5_DEFAULT_AMMO			25
 #define MP5_M203_DEFAULT_GIVE		0
 #define SHOTGUN_DEFAULT_GIVE		12
 #define RPG_DEFAULT_GIVE			1
@@ -90,7 +84,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 
 // The amount of ammo given to a player by an ammo item.
 #define AMMO_URANIUMBOX_GIVE	20
-#define AMMO_MP5CLIP_GIVE		MP5_MAX_CLIP
 #define AMMO_CHAINBOX_GIVE		200
 #define AMMO_M203BOX_GIVE		2
 #define AMMO_BUCKSHOTBOX_GIVE	12

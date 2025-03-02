@@ -30,4 +30,5 @@ private:
 	void RegisterGlockEvents();
 	void RegisterCrossbowEvents();
 	void RegisterPythonEvents();
+	void RegisterMP5Events();
 };

@@ -19,28 +19,15 @@
 #include "cbase.h"
 #include "monsters.h"
 #include "weapons.h"
-#include "nodes.h"
-#include "player.h"
-#include "soundent.h"
-#include "gamerules.h"
-#include "ggrenade.h"
 
 class CMP5 : public CBasePlayerWeapon
 {
 	DECLARE_CLASS( CMP5, CBasePlayerWeapon );
-public:
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 3; }
-	int GetItemInfo(ItemInfo *p);
-	int AddToPlayer( CBasePlayer *pPlayer );
 
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
-	int SecondaryAmmoIndex( void );
-	BOOL Deploy( void );
-	void Reload( void );
-	void WeaponIdle( void );
-	float m_flNextAnimTime;
-	int m_iShell;
+public:
+	CMP5();
+
+	void Spawn();
+	void Precache();
+	int AddToPlayer(CBasePlayer *pPlayer);
 };

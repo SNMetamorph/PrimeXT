@@ -20,6 +20,7 @@ GNU General Public License for more details.
 #include "weapons/glock.h"
 #include "weapons/crossbow.h"
 #include "weapons/python.h"
+#include "weapons/mp5.h"
 #include <cstring>
 
 CWeaponPredictingContext::CWeaponPredictingContext()
@@ -262,6 +263,9 @@ CBaseWeaponContext* CWeaponPredictingContext::GetWeaponContext(uint32_t weaponID
 				break;
 			case WEAPON_PYTHON:
 				m_weaponsState[weaponID] = std::make_unique<CPythonWeaponContext>(std::make_unique<CClientWeaponLayerImpl>(m_playerState));
+				break;
+			case WEAPON_MP5:
+				m_weaponsState[weaponID] = std::make_unique<CMP5WeaponContext>(std::make_unique<CClientWeaponLayerImpl>(m_playerState));
 				break;
 			default: 
 				return nullptr;
