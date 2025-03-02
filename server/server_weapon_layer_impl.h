@@ -30,6 +30,7 @@ public:
 	~CServerWeaponLayerImpl() = default;
 
 	int GetWeaponBodygroup() override;
+	void SetWeaponBodygroup(int value) override;
 	Vector GetGunPosition() override;
 	matrix3x3 GetCameraOrientation() override;
 	Vector GetAutoaimVector(float delta) override;
