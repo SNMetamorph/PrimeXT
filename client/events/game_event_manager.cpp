@@ -21,12 +21,14 @@ GNU General Public License for more details.
 #include "glock_fire_event.h"
 #include "crossbow_fire_event.h"
 #include "python_fire_event.h"
+#include "mp5_fire_event.h"
 
 CGameEventManager::CGameEventManager()
 {
 	RegisterGlockEvents();
 	RegisterCrossbowEvents();
 	RegisterPythonEvents();
+	RegisterMP5Events();
 }
 
 void CGameEventManager::RegisterGlockEvents()
@@ -58,5 +60,17 @@ void CGameEventManager::RegisterPythonEvents()
 	gEngfuncs.pfnHookEvent("events/python.sc", [](event_args_s *args) {
 		CPythonFireEvent event(args);
 		event.Execute();
+	});
+}
+
+void CGameEventManager::RegisterMP5Events()
+{
+	gEngfuncs.pfnHookEvent("events/mp5.sc", [](event_args_s *args) {
+		CMP5FireEvent event(args);
+		event.Execute(false);
+	});
+	gEngfuncs.pfnHookEvent("events/mp52.sc", [](event_args_s *args) {
+		CMP5FireEvent event(args);
+		event.Execute(true);
 	});
 }
