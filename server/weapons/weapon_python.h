@@ -26,21 +26,12 @@
 
 class CPython : public CBasePlayerWeapon
 {
-	DECLARE_CLASS(CPython, CBasePlayerWeapon);
-public:
-	void Spawn(void);
-	void Precache(void);
-	int iItemSlot(void) { return 2; }
-	int GetItemInfo(ItemInfo *p);
-	int AddToPlayer(CBasePlayer *pPlayer);
-	void PrimaryAttack(void);
-	void SecondaryAttack(void);
-	BOOL Deploy(void);
-	void Holster(void);
-	void Reload(void);
-	void WeaponIdle(void);
-	float m_flSoundDelay;
+	DECLARE_CLASS( CPython, CBasePlayerWeapon );
 
-	BOOL m_fInZoom;// don't save this. 
-	int m_iShell;
+public:
+	CPython();
+
+	void Spawn();
+	void Precache();
+	int AddToPlayer(CBasePlayer *pPlayer);
 };
