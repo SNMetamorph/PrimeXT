@@ -14,6 +14,7 @@
 ****/
 
 #include "ammo_357.h"
+#include "weapons/python.h"
 
 LINK_ENTITY_TO_CLASS(ammo_357, CPythonAmmo);
 
@@ -30,7 +31,7 @@ void CPythonAmmo::Precache(void)
 }
 BOOL CPythonAmmo::AddAmmo(CBaseEntity *pOther)
 {
-	if (pOther->GiveAmmo(AMMO_357BOX_GIVE, "357", _357_MAX_CARRY) != -1)
+	if (pOther->GiveAmmo(PYTHON_MAX_CLIP, "357", _357_MAX_CARRY) != -1)
 	{
 		EMIT_SOUND(ENT(pev), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM);
 		return TRUE;

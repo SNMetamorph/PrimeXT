@@ -20,11 +20,13 @@ GNU General Public License for more details.
 #include "event_args.h"
 #include "glock_fire_event.h"
 #include "crossbow_fire_event.h"
+#include "python_fire_event.h"
 
 CGameEventManager::CGameEventManager()
 {
 	RegisterGlockEvents();
 	RegisterCrossbowEvents();
+	RegisterPythonEvents();
 }
 
 void CGameEventManager::RegisterGlockEvents()
@@ -47,6 +49,14 @@ void CGameEventManager::RegisterCrossbowEvents()
 	});
 	gEngfuncs.pfnHookEvent("events/crossbow2.sc", [](event_args_s *args) {
 		CCrossbowFireEvent event(args);
+		event.Execute();
+	});
+}
+
+void CGameEventManager::RegisterPythonEvents()
+{
+	gEngfuncs.pfnHookEvent("events/python.sc", [](event_args_s *args) {
+		CPythonFireEvent event(args);
 		event.Execute();
 	});
 }
