@@ -20,27 +20,15 @@
 #include "weapons.h"
 #include "nodes.h"
 #include "player.h"
-#include "gamerules.h"
-#include "user_messages.h"
 
 class CShotgun : public CBasePlayerWeapon
 {
-	DECLARE_CLASS(CShotgun, CBasePlayerWeapon);
+	DECLARE_CLASS( CShotgun, CBasePlayerWeapon );
+
 public:
-	void Spawn(void);
-	void Precache(void);
-	int iItemSlot() { return 3; }
-	int GetItemInfo(ItemInfo *p);
+	CShotgun();
+
+	void Spawn();
+	void Precache();
 	int AddToPlayer(CBasePlayer *pPlayer);
-
-	DECLARE_DATADESC();
-
-	void PrimaryAttack(void);
-	void SecondaryAttack(void);
-	BOOL Deploy();
-	void Reload(void);
-	void WeaponIdle(void);
-	int m_fInReload;
-	float m_flNextReload;
-	int m_iShell;
 };
