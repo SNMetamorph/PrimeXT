@@ -32,4 +32,5 @@ private:
 	void RegisterPythonEvents();
 	void RegisterMP5Events();
 	void RegisterShotgunEvents();
+	void RegisterCrowbarEvents();
 };

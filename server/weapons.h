@@ -32,7 +32,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define ITEM_BATTERY		4
 
 #define WEAPON_NONE				0
-#define WEAPON_CROWBAR			1
 #define WEAPON_CYCLER			5
 #define WEAPON_RPG				8
 #define WEAPON_GAUSS			9
@@ -46,7 +45,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define MAX_NORMAL_BATTERY	100
 
 // weapon weight factors (for auto-switching)   (-1 = noswitch)
-#define CROWBAR_WEIGHT		0
 #define RPG_WEIGHT			20
 #define GAUSS_WEIGHT		20
 #define EGON_WEIGHT			20

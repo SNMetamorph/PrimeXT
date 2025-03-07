@@ -14,32 +14,37 @@
 ****/
 
 #pragma once
+#include "weapon_context.h"
+#include "weapon_layer.h"
+#include <memory>
+
+#ifndef CLIENT_DLL
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
-#include "monsters.h"
-#include "weapons.h"
-#include "nodes.h"
-#include "player.h"
-#include "gamerules.h"
+#endif
 
-class CCrowbar : public CBasePlayerWeapon
+#define WEAPON_CROWBAR		1
+#define CROWBAR_WEIGHT		0
+#define CROWBAR_CLASSNAME	weapon_crowbar
+
+class CCrowbarWeaponContext : public CBaseWeaponContext
 {
-	DECLARE_CLASS( CCrowbar, CBasePlayerWeapon );
 public:
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 1; }
-	void SwingAgain( void );
-	void Smack( void );
-	int GetItemInfo(ItemInfo *p);
+	CCrowbarWeaponContext() = delete;
+	~CCrowbarWeaponContext() = default;
+	CCrowbarWeaponContext(std::unique_ptr<IWeaponLayer> &&layer);
 
-	DECLARE_DATADESC();
+	int iItemSlot() override { return 1; }
+	int GetItemInfo(ItemInfo *p) override;
+	void PrimaryAttack() override;
+	bool Deploy() override;
+	void Holster() override;
+	bool Swing(bool fFirst);
 
-	void PrimaryAttack( void );
-	int Swing( int fFirst );
-	BOOL Deploy( void );
-	void Holster( void );
 	int m_iSwing;
+	uint16_t m_usCrowbar;
+#ifndef CLIENT_DLL
 	TraceResult m_trHit;
+#endif
 };
