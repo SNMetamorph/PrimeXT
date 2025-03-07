@@ -23,6 +23,7 @@ GNU General Public License for more details.
 #include "python_fire_event.h"
 #include "mp5_fire_event.h"
 #include "shotgun_fire_event.h"
+#include "crowbar_swing_event.h"
 
 CGameEventManager::CGameEventManager()
 {
@@ -31,6 +32,7 @@ CGameEventManager::CGameEventManager()
 	RegisterPythonEvents();
 	RegisterMP5Events();
 	RegisterShotgunEvents();
+	RegisterCrowbarEvents();
 }
 
 void CGameEventManager::RegisterGlockEvents()
@@ -86,5 +88,13 @@ void CGameEventManager::RegisterShotgunEvents()
 	gEngfuncs.pfnHookEvent("events/shotgun2.sc", [](event_args_s *args) {
 		CShotgunFireEvent event(args);
 		event.Execute(false);
+	});
+}
+
+void CGameEventManager::RegisterCrowbarEvents()
+{
+	gEngfuncs.pfnHookEvent("events/crowbar.sc", [](event_args_s *args) {
+		CCrowbarSwingEvent event(args);
+		event.Execute();
 	});
 }
