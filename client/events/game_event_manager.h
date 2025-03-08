@@ -34,4 +34,5 @@ private:
 	void RegisterShotgunEvents();
 	void RegisterCrowbarEvents();
 	void RegisterTripmineEvents();
+	void RegisterSnarkEvents();
 };

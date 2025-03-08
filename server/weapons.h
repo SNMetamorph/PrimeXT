@@ -39,7 +39,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define WEAPON_HORNETGUN		11
 #define WEAPON_HANDGRENADE		12
 #define WEAPON_SATCHEL			14
-#define WEAPON_SNARK			15
 
 #define MAX_NORMAL_BATTERY	100
 
@@ -49,7 +48,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define EGON_WEIGHT			20
 #define HORNETGUN_WEIGHT	10
 #define HANDGRENADE_WEIGHT	5
-#define SNARK_WEIGHT		5
 #define SATCHEL_WEIGHT		-10
 
 // the maximum amount of ammo each weapon's clip can hold
@@ -60,7 +58,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define HORNETGUN_MAX_CLIP		WEAPON_NOCLIP
 #define HANDGRENADE_MAX_CLIP	WEAPON_NOCLIP
 #define SATCHEL_MAX_CLIP		WEAPON_NOCLIP
-#define SNARK_MAX_CLIP			WEAPON_NOCLIP
 
 // the default amount of ammo that comes with each gun when it spawns
 #define MP5_M203_DEFAULT_GIVE		0
@@ -69,7 +66,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define EGON_DEFAULT_GIVE			20
 #define HANDGRENADE_DEFAULT_GIVE	1
 #define SATCHEL_DEFAULT_GIVE		1
-#define SNARK_DEFAULT_GIVE			5
 #define HIVEHAND_DEFAULT_GIVE		8
 
 // The amount of ammo given to a player by an ammo item.
