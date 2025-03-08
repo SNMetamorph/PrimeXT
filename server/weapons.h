@@ -38,7 +38,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define WEAPON_EGON				10
 #define WEAPON_HORNETGUN		11
 #define WEAPON_HANDGRENADE		12
-#define WEAPON_TRIPMINE			13
 #define WEAPON_SATCHEL			14
 #define WEAPON_SNARK			15
 
@@ -52,7 +51,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define HANDGRENADE_WEIGHT	5
 #define SNARK_WEIGHT		5
 #define SATCHEL_WEIGHT		-10
-#define TRIPMINE_WEIGHT		-10
 
 // the maximum amount of ammo each weapon's clip can hold
 //#define CROWBAR_MAX_CLIP		WEAPON_NOCLIP
@@ -62,7 +60,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define HORNETGUN_MAX_CLIP		WEAPON_NOCLIP
 #define HANDGRENADE_MAX_CLIP	WEAPON_NOCLIP
 #define SATCHEL_MAX_CLIP		WEAPON_NOCLIP
-#define TRIPMINE_MAX_CLIP		WEAPON_NOCLIP
 #define SNARK_MAX_CLIP			WEAPON_NOCLIP
 
 // the default amount of ammo that comes with each gun when it spawns
@@ -72,7 +69,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define EGON_DEFAULT_GIVE			20
 #define HANDGRENADE_DEFAULT_GIVE	1
 #define SATCHEL_DEFAULT_GIVE		1
-#define TRIPMINE_DEFAULT_GIVE		1
 #define SNARK_DEFAULT_GIVE			5
 #define HIVEHAND_DEFAULT_GIVE		8
 
@@ -176,6 +172,7 @@ public:
 
 	void UpdateItemInfo( void ) override {};	// updates HUD state
 	CBasePlayerItem *GetWeaponPtr( void ) override { return (CBasePlayerItem *)this; };
+	void RetireWeapon( void );
 
 	int iItemSlot() override		{ return m_pWeaponContext->iItemSlot(); }
 	int	iItemPosition() override	{ return m_pWeaponContext->iItemPosition(); }
@@ -194,7 +191,6 @@ protected:
 	int ExtractClipAmmo( CBasePlayerWeapon *pWeapon );		// Return TRUE if you can add ammo to yourself when picked up
 
 	int AddWeapon( void ) { ExtractAmmo( this ); return TRUE; };	// Return TRUE if you want to add yourself to the player
-	void RetireWeapon( void );
 
 	// generic "shared" ammo handlers
 	BOOL AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int iMaxCarry );

@@ -24,6 +24,7 @@ GNU General Public License for more details.
 #include "mp5_fire_event.h"
 #include "shotgun_fire_event.h"
 #include "crowbar_swing_event.h"
+#include "tripmine_deploy_event.h"
 
 CGameEventManager::CGameEventManager()
 {
@@ -33,6 +34,7 @@ CGameEventManager::CGameEventManager()
 	RegisterMP5Events();
 	RegisterShotgunEvents();
 	RegisterCrowbarEvents();
+	RegisterTripmineEvents();
 }
 
 void CGameEventManager::RegisterGlockEvents()
@@ -95,6 +97,14 @@ void CGameEventManager::RegisterCrowbarEvents()
 {
 	gEngfuncs.pfnHookEvent("events/crowbar.sc", [](event_args_s *args) {
 		CCrowbarSwingEvent event(args);
+		event.Execute();
+	});
+}
+
+void CGameEventManager::RegisterTripmineEvents()
+{
+	gEngfuncs.pfnHookEvent("events/tripfire.sc", [](event_args_s *args) {
+		CTripmineDeployEvent event(args);
 		event.Execute();
 	});
 }
