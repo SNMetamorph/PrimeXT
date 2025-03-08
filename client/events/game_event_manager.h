@@ -33,4 +33,5 @@ private:
 	void RegisterMP5Events();
 	void RegisterShotgunEvents();
 	void RegisterCrowbarEvents();
+	void RegisterTripmineEvents();
 };

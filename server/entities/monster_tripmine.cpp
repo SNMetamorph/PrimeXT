@@ -13,7 +13,7 @@
 *
 ****/
 #include "monster_tripmine.h"
-#include "tripmine.h"
+#include "weapons/tripmine.h"
 
 LINK_ENTITY_TO_CLASS(monster_tripmine, CTripmineGrenade);
 
