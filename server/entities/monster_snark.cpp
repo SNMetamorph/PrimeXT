@@ -14,7 +14,7 @@
 ****/
 
 #include "monster_snark.h"
-#include "squeakgrenade.h"
+#include "weapons/snark.h"
 
 #define SQUEEK_DETONATE_DELAY		15.0
 

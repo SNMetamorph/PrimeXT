@@ -29,22 +29,7 @@ class CSqueak : public CBasePlayerWeapon
 {
 	DECLARE_CLASS(CSqueak, CBasePlayerWeapon);
 public:
-	void Spawn(void);
-	void Precache(void);
-	int iItemSlot(void) { return 5; }
-	int GetItemInfo(ItemInfo *p);
-
-	void PrimaryAttack(void);
-	BOOL Deploy(void);
-	void Holster(void);
-	void WeaponIdle(void);
-	int m_fJustThrown;
-};
-
-enum w_squeak_e
-{
-	WSQUEAK_IDLE1 = 0,
-	WSQUEAK_FIDGET,
-	WSQUEAK_JUMP,
-	WSQUEAK_RUN,
+	CSqueak();
+	void Spawn();
+	void Precache();
 };
