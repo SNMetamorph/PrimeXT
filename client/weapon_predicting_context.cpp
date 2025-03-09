@@ -25,6 +25,7 @@ GNU General Public License for more details.
 #include "weapons/crowbar.h"
 #include "weapons/tripmine.h"
 #include "weapons/snark.h"
+#include "weapons/hornetgun.h"
 #include <cstring>
 
 CWeaponPredictingContext::CWeaponPredictingContext()
@@ -282,6 +283,9 @@ CBaseWeaponContext* CWeaponPredictingContext::GetWeaponContext(uint32_t weaponID
 				break;
 			case WEAPON_SNARK:
 				m_weaponsState[weaponID] = std::make_unique<CSqueakWeaponContext>(std::make_unique<CClientWeaponLayerImpl>(m_playerState));
+				break;
+			case WEAPON_HORNETGUN:
+				m_weaponsState[weaponID] = std::make_unique<CHornetgunWeaponContext>(std::make_unique<CClientWeaponLayerImpl>(m_playerState));
 				break;
 			default: 
 				return nullptr;

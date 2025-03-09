@@ -35,4 +35,5 @@ private:
 	void RegisterCrowbarEvents();
 	void RegisterTripmineEvents();
 	void RegisterSnarkEvents();
+	void RegisterHornetgunEvents();
 };

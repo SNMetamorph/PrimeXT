@@ -36,7 +36,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define WEAPON_RPG				8
 #define WEAPON_GAUSS			9
 #define WEAPON_EGON				10
-#define WEAPON_HORNETGUN		11
 #define WEAPON_HANDGRENADE		12
 #define WEAPON_SATCHEL			14
 
@@ -46,7 +45,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define RPG_WEIGHT			20
 #define GAUSS_WEIGHT		20
 #define EGON_WEIGHT			20
-#define HORNETGUN_WEIGHT	10
 #define HANDGRENADE_WEIGHT	5
 #define SATCHEL_WEIGHT		-10
 
@@ -55,7 +53,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define RPG_MAX_CLIP			1
 #define GAUSS_MAX_CLIP			WEAPON_NOCLIP
 #define EGON_MAX_CLIP			WEAPON_NOCLIP
-#define HORNETGUN_MAX_CLIP		WEAPON_NOCLIP
 #define HANDGRENADE_MAX_CLIP	WEAPON_NOCLIP
 #define SATCHEL_MAX_CLIP		WEAPON_NOCLIP
 
@@ -66,7 +63,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define EGON_DEFAULT_GIVE			20
 #define HANDGRENADE_DEFAULT_GIVE	1
 #define SATCHEL_DEFAULT_GIVE		1
-#define HIVEHAND_DEFAULT_GIVE		8
 
 // The amount of ammo given to a player by an ammo item.
 #define AMMO_URANIUMBOX_GIVE	20

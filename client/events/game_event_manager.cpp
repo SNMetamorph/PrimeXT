@@ -26,6 +26,7 @@ GNU General Public License for more details.
 #include "crowbar_swing_event.h"
 #include "tripmine_deploy_event.h"
 #include "snark_throw_event.h"
+#include "hornetgun_fire_event.h"
 
 CGameEventManager::CGameEventManager()
 {
@@ -37,6 +38,7 @@ CGameEventManager::CGameEventManager()
 	RegisterCrowbarEvents();
 	RegisterTripmineEvents();
 	RegisterSnarkEvents();
+	RegisterHornetgunEvents();
 }
 
 void CGameEventManager::RegisterGlockEvents()
@@ -115,6 +117,14 @@ void CGameEventManager::RegisterSnarkEvents()
 {
 	gEngfuncs.pfnHookEvent("events/snarkfire.sc", [](event_args_s *args) {
 		CSnarkThrowEvent event(args);
+		event.Execute();
+	});
+}
+
+void CGameEventManager::RegisterHornetgunEvents()
+{
+	gEngfuncs.pfnHookEvent("events/firehornet.sc", [](event_args_s *args) {
+		CHornetgunFireEvent event(args);
 		event.Execute();
 	});
 }
