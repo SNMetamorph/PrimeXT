@@ -25,25 +25,13 @@
 #include "gamerules.h"
 #include "user_messages.h"
 
-class CHgun : public CBasePlayerWeapon
+class CHornetgun : public CBasePlayerWeapon
 {
-	DECLARE_CLASS( CHgun, CBasePlayerWeapon );
+	DECLARE_CLASS( CHornetgun, CBasePlayerWeapon );
 public:
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 4; }
-	int GetItemInfo(ItemInfo *p);
-	int AddToPlayer( CBasePlayer *pPlayer );
+	CHornetgun();
 
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
-	BOOL Deploy( void );
-	BOOL IsUseable( void ){ return TRUE; };
-	void Holster( void );
-	void Reload( void );
-	void WeaponIdle( void );
-
-	float m_flNextAnimTime;
-	float m_flRechargeTime;
-	int m_iFirePhase;// don't save me.
+	void Spawn();
+	void Precache();
+	int AddToPlayer(CBasePlayer *pPlayer);
 };
