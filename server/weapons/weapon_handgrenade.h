@@ -27,17 +27,7 @@ class CHandGrenade : public CBasePlayerWeapon
 {
 	DECLARE_CLASS( CHandGrenade, CBasePlayerWeapon );
 public:
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 5; }
-	int GetItemInfo(ItemInfo *p);
-
-	void PrimaryAttack( void );
-	BOOL Deploy( void );
-	BOOL CanHolster( void );
-	void Holster( void );
-	void WeaponIdle( void );
-
-	float m_flStartThrow;
-	float m_flReleaseThrow;
+	CHandGrenade();
+	void Spawn();
+	void Precache();
 };
