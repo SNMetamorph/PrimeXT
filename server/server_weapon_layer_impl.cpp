@@ -43,6 +43,11 @@ matrix3x3 CServerWeaponLayerImpl::GetCameraOrientation()
 	return matrix3x3(player->pev->v_angle + player->pev->punchangle);
 }
 
+Vector CServerWeaponLayerImpl::GetViewAngles()
+{
+	return m_pWeapon->m_pPlayer->pev->v_angle;
+}
+
 Vector CServerWeaponLayerImpl::GetAutoaimVector(float delta)
 {
 	CBasePlayer *player = m_pWeapon->m_pPlayer;
