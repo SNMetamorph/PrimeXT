@@ -28,6 +28,7 @@ public:
 	void SetWeaponBodygroup(int value) override;
 	Vector GetGunPosition() override;
 	matrix3x3 GetCameraOrientation() override;
+	Vector GetViewAngles() override;
 	Vector GetAutoaimVector(float delta) override;
 	Vector FireBullets(int bullets, Vector origin, matrix3x3 orientation, float distance, float spread, int bulletType, uint32_t seed, int damage = 0) override;
 	CBasePlayerWeapon* GetWeaponEntity() override { return nullptr; };

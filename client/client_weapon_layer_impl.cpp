@@ -46,6 +46,11 @@ matrix3x3 CClientWeaponLayerImpl::GetCameraOrientation()
 	return matrix3x3(m_playerState.viewAngles);
 }
 
+Vector CClientWeaponLayerImpl::GetViewAngles()
+{
+	return m_playerState.viewAngles;
+}
+
 Vector CClientWeaponLayerImpl::GetAutoaimVector(float delta)
 {
 	matrix3x3 camera(m_playerState.viewAngles);
