@@ -268,6 +268,11 @@ float CServerWeaponLayerImpl::GetWeaponTimeBase(bool usePredicting)
 	return usePredicting ? 0.0f : gpGlobals->time;
 }
 
+float CServerWeaponLayerImpl::GetTime()
+{
+	return gpGlobals->time;
+}
+
 uint32_t CServerWeaponLayerImpl::GetRandomSeed()
 {
 	return m_pWeapon->m_pPlayer->random_seed;
