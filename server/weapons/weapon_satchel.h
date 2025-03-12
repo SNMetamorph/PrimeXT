@@ -31,20 +31,9 @@ class CSatchel : public CBasePlayerWeapon
 public:
 	DECLARE_DATADESC();
 
-	void Spawn(void);
-	void Precache(void);
-	int iItemSlot(void) { return 5; }
-	int GetItemInfo(ItemInfo *p);
-	int AddToPlayer(CBasePlayer *pPlayer);
-	void PrimaryAttack(void);
-	void SecondaryAttack(void);
-	int AddDuplicate(CBasePlayerItem *pOriginal);
-	BOOL CanDeploy(void);
-	BOOL Deploy(void);
-	BOOL IsUseable(void);
-
-	void Holster(void);
-	void WeaponIdle(void);
-	void Throw(void);
-	int m_chargeReady;
+	CSatchel();
+	void Spawn() override;
+	void Precache() override;
+	int AddToPlayer(CBasePlayer *pPlayer) override;
+	int AddDuplicate(CBasePlayerItem *pOriginal) override;
 };
