@@ -140,7 +140,7 @@ void CBaseWeaponContext::ItemPostFrame()
 void CBaseWeaponContext::Holster()
 { 
 	m_fInReload = FALSE; // cancel any reload in progress.
-	m_pLayer->SetPlayerViewmodel(0);
+	m_pLayer->DisablePlayerViewmodel();
 #ifndef CLIENT_DLL
 	m_pLayer->GetWeaponEntity()->m_pPlayer->pev->weaponmodel = 0;
 #endif
@@ -203,14 +203,11 @@ bool CBaseWeaponContext :: DefaultDeploy( char *szViewModel, char *szWeaponModel
 
 #ifndef CLIENT_DLL
 	CBasePlayer *player = m_pLayer->GetWeaponEntity()->m_pPlayer;
-	player->pev->viewmodel = MAKE_STRING(szViewModel);
 	player->pev->weaponmodel = MAKE_STRING(szWeaponModel);
 	strcpy( player->m_szAnimExtention, szAnimExt );
 	//player->TabulateAmmo();
-#else
-	int modelIndex = m_pLayer->GetPlayerViewmodel();
-	gEngfuncs.CL_LoadModel( szViewModel, &modelIndex );
 #endif
+	m_pLayer->SetPlayerViewmodel(szViewModel);
 	SendWeaponAnim( iAnim, skiplocal, body );
 
 	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5);

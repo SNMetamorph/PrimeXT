@@ -41,7 +41,8 @@ public:
 	int GetPlayerAmmo(int ammoType) override;
 	void SetPlayerAmmo(int ammoType, int count) override;
 	void SetPlayerWeaponAnim(int anim) override;
-	void SetPlayerViewmodel(int model) override;
+	void SetPlayerViewmodel(std::string_view model) override;
+	void DisablePlayerViewmodel() override;
 	int GetPlayerViewmodel() override;
 	int GetPlayerWaterlevel() override;
 	bool CheckPlayerButtonFlag(int buttonMask) override;

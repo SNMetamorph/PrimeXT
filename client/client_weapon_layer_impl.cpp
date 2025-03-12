@@ -94,9 +94,16 @@ void CClientWeaponLayerImpl::SetPlayerWeaponAnim(int anim)
 	}
 }
 
-void CClientWeaponLayerImpl::SetPlayerViewmodel(int model)
+void CClientWeaponLayerImpl::SetPlayerViewmodel(std::string_view model)
 {
-	m_playerState.viewmodel = model;
+	int modelIndex;
+	gEngfuncs.CL_LoadModel(model.data(), &modelIndex);
+	m_playerState.viewmodel = modelIndex;
+}
+
+void CClientWeaponLayerImpl::DisablePlayerViewmodel()
+{
+	m_playerState.viewmodel = 0;
 }
 
 int CClientWeaponLayerImpl::GetPlayerViewmodel()
