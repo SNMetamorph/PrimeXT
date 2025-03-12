@@ -222,9 +222,14 @@ void CServerWeaponLayerImpl::SetPlayerWeaponAnim(int anim)
 	m_pWeapon->m_pPlayer->pev->weaponanim = anim;
 }
 
-void CServerWeaponLayerImpl::SetPlayerViewmodel(int model)
+void CServerWeaponLayerImpl::SetPlayerViewmodel(std::string_view model)
 {
-	m_pWeapon->m_pPlayer->pev->viewmodel = model;
+	m_pWeapon->m_pPlayer->pev->viewmodel = MAKE_STRING(model.data());
+}
+
+void CServerWeaponLayerImpl::DisablePlayerViewmodel()
+{
+	m_pWeapon->m_pPlayer->pev->viewmodel = iStringNull;
 }
 
 int CServerWeaponLayerImpl::GetPlayerViewmodel()

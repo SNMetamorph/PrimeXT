@@ -16,6 +16,7 @@ GNU General Public License for more details.
 #pragma once
 #include "vector.h"
 #include "matrix.h"
+#include <string_view>
 #include <stdint.h>
 
 #define _CLASSNAME_STR(s) (#s)
@@ -95,7 +96,8 @@ public:
 	virtual int GetPlayerAmmo(int ammoType) = 0;
 	virtual void SetPlayerAmmo(int ammoType, int count) = 0;
 	virtual void SetPlayerWeaponAnim(int anim) = 0;
-	virtual void SetPlayerViewmodel(int model) = 0;
+	virtual void SetPlayerViewmodel(std::string_view model) = 0;
+	virtual void DisablePlayerViewmodel() = 0;
 	virtual int GetPlayerViewmodel() = 0;
 	virtual int GetPlayerWaterlevel() = 0;
 	virtual bool CheckPlayerButtonFlag(int buttonMask) = 0;
