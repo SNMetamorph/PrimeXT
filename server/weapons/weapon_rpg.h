@@ -29,27 +29,12 @@ class CRpg : public CBasePlayerWeapon
 {
 	DECLARE_CLASS(CRpg, CBasePlayerWeapon);
 public:
-	void Spawn(void);
-	void Precache(void);
-	void Reload(void);
-	int iItemSlot(void) { return 4; }
-	int GetItemInfo(ItemInfo *p);
-	int AddToPlayer(CBasePlayer *pPlayer);
+	CRpg();
+	void Spawn() override;
+	void Precache() override;
+	int AddToPlayer(CBasePlayer *pPlayer) override;
+	void AddActiveRocket();
+	void RemoveActiveRocket();
 
 	DECLARE_DATADESC();
-
-	BOOL Deploy(void);
-	BOOL CanHolster(void);
-	void Holster(void);
-
-	void PrimaryAttack(void);
-	void SecondaryAttack(void);
-	void WeaponIdle(void);
-
-	void UpdateSpot(void);
-	BOOL ShouldWeaponIdle(void) { return TRUE; };	// laser spot give updates from WeaponIdle
-
-	CLaserSpot *m_pSpot;
-	int m_cActiveRockets;// how many missiles in flight from this launcher right now?
-	int m_fSpotActive;
 };
