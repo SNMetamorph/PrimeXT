@@ -33,26 +33,22 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 
 #define WEAPON_NONE				0
 #define WEAPON_CYCLER			5
-#define WEAPON_RPG				8
 #define WEAPON_GAUSS			9
 #define WEAPON_EGON				10
 
 #define MAX_NORMAL_BATTERY	100
 
 // weapon weight factors (for auto-switching)   (-1 = noswitch)
-#define RPG_WEIGHT			20
 #define GAUSS_WEIGHT		20
 #define EGON_WEIGHT			20
 
 // the maximum amount of ammo each weapon's clip can hold
 //#define CROWBAR_MAX_CLIP		WEAPON_NOCLIP
-#define RPG_MAX_CLIP			1
 #define GAUSS_MAX_CLIP			WEAPON_NOCLIP
 #define EGON_MAX_CLIP			WEAPON_NOCLIP
 
 // the default amount of ammo that comes with each gun when it spawns
 #define MP5_M203_DEFAULT_GIVE		0
-#define RPG_DEFAULT_GIVE			1
 #define GAUSS_DEFAULT_GIVE			20
 #define EGON_DEFAULT_GIVE			20
 
@@ -61,7 +57,7 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define AMMO_CHAINBOX_GIVE		200
 #define AMMO_M203BOX_GIVE		2
 #define AMMO_BUCKSHOTBOX_GIVE	12
-#define AMMO_RPGCLIP_GIVE		RPG_MAX_CLIP
+#define AMMO_RPGCLIP_GIVE		1
 #define AMMO_URANIUMBOX_GIVE	20
 #define AMMO_SNARKBOX_GIVE		5
 

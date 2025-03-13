@@ -28,6 +28,7 @@ GNU General Public License for more details.
 #include "weapons/hornetgun.h"
 #include "weapons/handgrenade.h"
 #include "weapons/satchel.h"
+#include "weapons/rpg.h"
 #include <cstring>
 
 CWeaponPredictingContext::CWeaponPredictingContext()
@@ -294,6 +295,9 @@ CBaseWeaponContext* CWeaponPredictingContext::GetWeaponContext(uint32_t weaponID
 				break;
 			case WEAPON_SATCHEL:
 				m_weaponsState[weaponID] = std::make_unique<CSatchelWeaponContext>(std::make_unique<CClientWeaponLayerImpl>(m_playerState));
+				break;
+			case WEAPON_RPG:
+				m_weaponsState[weaponID] = std::make_unique<CRpgWeaponContext>(std::make_unique<CClientWeaponLayerImpl>(m_playerState));
 				break;
 			default: 
 				return nullptr;
