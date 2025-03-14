@@ -320,5 +320,7 @@ bool CServerWeaponLayerImpl::ShouldRunFuncs()
 
 bool CServerWeaponLayerImpl::IsMultiplayer()
 {
-	return g_pGameRules->IsMultiplayer();
+	// in case gamerules not available at the moment, likely this is singleplayer
+	// and we're loading from save-file. therefore return false as default value.
+	return g_pGameRules ? g_pGameRules->IsMultiplayer() : false;
 }
