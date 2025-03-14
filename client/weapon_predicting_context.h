@@ -68,6 +68,8 @@ private:
 	void UpdateWeaponTimers(CBaseWeaponContext *weapon, const usercmd_t *cmd);
 	void ReadWeaponsState(const local_state_t *from);
 	void WriteWeaponsState(local_state_t *to, const usercmd_t *cmd);
+	void ReadWeaponSpecificData(CBaseWeaponContext *weapon, const local_state_t *from);
+	void WriteWeaponSpecificData(CBaseWeaponContext *weapon, local_state_t *to);
 	void HandlePlayerSpawnDeath(local_state_t *to, CBaseWeaponContext *weapon);
 	void HandleWeaponSwitch(const local_state_t *from, local_state_t *to, const usercmd_t *cmd, CBaseWeaponContext *weapon);
 	CBaseWeaponContext* GetWeaponContext(uint32_t weaponID);

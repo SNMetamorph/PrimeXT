@@ -194,6 +194,8 @@ void CWeaponPredictingContext::ReadWeaponsState(const local_state_t *from)
 			weapon->m_iPrimaryAmmoType = static_cast<int>(from->client.vuser4.x);
 			m_playerState.ammo[weapon->m_iPrimaryAmmoType] = static_cast<int>(from->client.vuser4.y);
 			m_playerState.ammo[weapon->m_iSecondaryAmmoType] = static_cast<int>(from->client.vuser4.z);
+
+			ReadWeaponSpecificData(weapon, from);
 		}
 	}
 }
@@ -225,7 +227,54 @@ void CWeaponPredictingContext::WriteWeaponsState(local_state_t *to, const usercm
 			//data.iuser1					= weapon->m_chargeReady;
 			//data.iuser2					= weapon->m_fInAttack;
 			//data.iuser3					= weapon->m_fireState;
+
+			WriteWeaponSpecificData(weapon, to);
 		}
+	}
+}
+
+// don't forget to check that according information are being sent in UpdateClientData/GetWeaponData within server/client.cpp 
+void CWeaponPredictingContext::ReadWeaponSpecificData(CBaseWeaponContext *weapon, const local_state_t *from)
+{
+	const weapon_data_t &data = from->weapondata[weapon->m_iId];
+	if (weapon->m_iId == WEAPON_RPG)
+	{
+		CRpgWeaponContext *ctx = static_cast<CRpgWeaponContext*>(weapon);
+		ctx->m_fSpotActive = static_cast<int>(from->client.vuser2.y);
+		ctx->m_fSpotActive = static_cast<int>(from->client.vuser2.z);
+	}
+	else if (weapon->m_iId == WEAPON_SATCHEL)
+	{
+		CSatchelWeaponContext *ctx = static_cast<CSatchelWeaponContext*>(weapon);
+		ctx->m_chargeReady = data.iuser1;
+	}
+	else if (weapon->m_iId == WEAPON_HANDGRENADE)
+	{
+		CHandGrenadeWeaponContext *ctx = static_cast<CHandGrenadeWeaponContext*>(weapon);
+		ctx->m_flStartThrow = data.fuser1;
+		ctx->m_flReleaseThrow = data.fuser2;
+	}
+}
+
+void CWeaponPredictingContext::WriteWeaponSpecificData(CBaseWeaponContext *weapon, local_state_t *to)
+{
+	weapon_data_t &data = to->weapondata[weapon->m_iId];
+	if (weapon->m_iId == WEAPON_RPG)
+	{
+		CRpgWeaponContext *ctx = static_cast<CRpgWeaponContext*>(weapon);
+		to->client.vuser2.y = ctx->m_fSpotActive;
+		to->client.vuser2.z = ctx->m_cActiveRockets;
+	}
+	else if (weapon->m_iId == WEAPON_SATCHEL)
+	{
+		CSatchelWeaponContext *ctx = static_cast<CSatchelWeaponContext*>(weapon);
+		data.iuser1 = ctx->m_chargeReady;
+	}
+	else if (weapon->m_iId == WEAPON_HANDGRENADE)
+	{
+		CHandGrenadeWeaponContext *ctx = static_cast<CHandGrenadeWeaponContext*>(weapon);
+		data.fuser1 = ctx->m_flStartThrow;
+		data.fuser2 = ctx->m_flReleaseThrow;
 	}
 }
 
