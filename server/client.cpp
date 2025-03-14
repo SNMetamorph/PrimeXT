@@ -36,6 +36,9 @@
 #include "customentity.h"
 #include "weapons.h"
 #include "weaponinfo.h"
+#include "weapons/rpg.h"
+#include "weapons/satchel.h"
+#include "weapons/handgrenade.h"
 #include "usercmd.h"
 #include "netadr.h"
 #include "user_messages.h"
@@ -1636,6 +1639,18 @@ int GetWeaponData( struct edict_s *player, struct weapon_data_s *info )
 						data->m_fInReload = ctx->m_fInReload;
 						data->m_fInSpecialReload = ctx->m_fInSpecialReload;
 						data->fuser1 = std::max(weapon->pev->fuser1, -0.001f);
+
+						if (itemInfo.iId == WEAPON_SATCHEL)
+						{
+							CSatchelWeaponContext *pSatchel = static_cast<CSatchelWeaponContext*>(ctx);
+							data->iuser1 = pSatchel->m_chargeReady;
+						}
+						else if (itemInfo.iId == WEAPON_HANDGRENADE)
+						{
+							CHandGrenadeWeaponContext *pHandGrenade = static_cast<CHandGrenadeWeaponContext*>(ctx);
+							data->fuser1 = pHandGrenade->m_flStartThrow;
+							data->fuser2 = pHandGrenade->m_flReleaseThrow;
+						}
 					}
 				}
 				item = item->m_pNext;
@@ -1717,11 +1732,12 @@ void UpdateClientData ( const struct edict_s *ent, int sendweapons, struct clien
 				cd->vuser4.y = player->m_rgAmmo[weapon->m_pWeaponContext->m_iPrimaryAmmoType];
 				cd->vuser4.z = player->m_rgAmmo[weapon->m_pWeaponContext->m_iSecondaryAmmoType];
 
-				//if (weapon->iWeaponID() == WEAPON_RPG)
-				//{
-				//	cd->vuser2.y = ((CRpg *)item)->m_fSpotActive;
-				//	cd->vuser2.z = ((CRpg *)item)->m_cActiveRockets;
-				//}
+				if (itemInfo.iId == WEAPON_RPG)
+				{
+					CRpgWeaponContext *ctx = static_cast<CRpgWeaponContext*>(weapon->m_pWeaponContext.get());
+					cd->vuser2.y = ctx->m_fSpotActive;
+					cd->vuser2.z = ctx->m_cActiveRockets;
+				}
 			}
 		}
 	}
