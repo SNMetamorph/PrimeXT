@@ -16,6 +16,7 @@ GNU General Public License for more details.
 #pragma once
 #include "vector.h"
 #include "matrix.h"
+#include "bitops_traits.h"
 #include <string_view>
 #include <stdint.h>
 
@@ -58,6 +59,8 @@ enum class WeaponEventFlags : int
 	// Only issue event client side ( from shared code )
 	Client = (1<<6)
 };
+
+DEFINE_ENUM_BITOPS( WeaponEventFlags );
 
 struct WeaponEventParams
 {
