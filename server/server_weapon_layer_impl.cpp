@@ -34,7 +34,7 @@ void CServerWeaponLayerImpl::SetWeaponBodygroup(int value)
 
 Vector CServerWeaponLayerImpl::GetGunPosition()
 {
-	return m_pWeapon->m_pPlayer->pev->origin + m_pWeapon->m_pPlayer->pev->view_ofs;
+	return m_pWeapon->m_pPlayer->GetAbsOrigin() + m_pWeapon->m_pPlayer->pev->view_ofs;
 }
 
 matrix3x3 CServerWeaponLayerImpl::GetCameraOrientation()
@@ -271,6 +271,16 @@ void CServerWeaponLayerImpl::SetPlayerFOV(float value)
 float CServerWeaponLayerImpl::GetPlayerFOV()
 {
 	return m_pWeapon->m_pPlayer->pev->fov;
+}
+
+Vector CServerWeaponLayerImpl::GetPlayerVelocity()
+{
+	return m_pWeapon->m_pPlayer->GetAbsVelocity();
+}
+
+void CServerWeaponLayerImpl::SetPlayerVelocity(Vector value)
+{
+	m_pWeapon->m_pPlayer->SetAbsVelocity(value);
 }
 
 float CServerWeaponLayerImpl::GetWeaponTimeBase(bool usePredicting)
