@@ -22,6 +22,7 @@
 #include "gl_cvars.h"
 #include "gl_rpart.h"
 #include "exportdef.h"
+#include "events/egon_fire_event.h"
 
 void Game_AddObjects( void );
 
@@ -251,7 +252,7 @@ void DLLEXPORT HUD_TxferPredictionData ( struct entity_state_s *ps, const struct
 	pcd->vuser3 = ppcd->vuser3;
 	pcd->vuser4 = ppcd->vuser4;
 
-	memcpy( wd, pwd, 32 * sizeof( weapon_data_t ) );
+	memcpy( wd, pwd, MAX_LOCAL_WEAPONS * sizeof( weapon_data_t ) );
 }
 
 /*
@@ -268,6 +269,7 @@ void DLLEXPORT HUD_CreateEntities( void )
 	// Call gEngfuncs.CL_CreateVisibleEntity to add it to the visedicts list
 
 	//GetClientVoiceMgr()->CreateEntities();
+	CEgonFireEvent::UpdateBeams();
 
 	// used to draw legs
 	HUD_AddEntity( ET_PLAYER, GET_LOCAL_PLAYER(), GET_LOCAL_PLAYER()->model->name );

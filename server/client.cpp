@@ -36,10 +36,15 @@
 #include "customentity.h"
 #include "weapons.h"
 #include "weaponinfo.h"
+#include "weapons/rpg.h"
+#include "weapons/satchel.h"
+#include "weapons/handgrenade.h"
+#include "weapons/egon.h"
 #include "usercmd.h"
 #include "netadr.h"
 #include "user_messages.h"
 #include "beam.h"
+#include <algorithm>
 #include <locale>
 
 extern DLL_GLOBAL ULONG		g_ulModelIndexPlayer;
@@ -1600,8 +1605,63 @@ void RegisterEncoders( void )
 
 int GetWeaponData( struct edict_s *player, struct weapon_data_s *info )
 {
-	memset( info, 0, 32 * sizeof( weapon_data_t ) );
+	entvars_t *pev = &player->v;
+	CBasePlayer *playerEntity = dynamic_cast<CBasePlayer*>(CBasePlayer::Instance(&player->v));
+	
+	memset(info, 0, MAX_LOCAL_WEAPONS * sizeof(weapon_data_t));
 
+	if (!player)
+		return 1;
+
+	for (int i = 0; i < MAX_ITEM_TYPES; i++)
+	{
+		CBasePlayerItem *item = playerEntity->m_rgpPlayerItems[i];
+		if (item)
+		{
+			while (item)
+			{
+				CBasePlayerWeapon *weapon = dynamic_cast<CBasePlayerWeapon*>(item->GetWeaponPtr());
+				CBaseWeaponContext *ctx = weapon->m_pWeaponContext.get();
+				if (weapon && ctx->UseDecrement())
+				{
+					ItemInfo itemInfo;
+					memset(&itemInfo, 0, sizeof(itemInfo));
+					weapon->GetItemInfo(&itemInfo);
+
+					if (itemInfo.iId >= 0 && itemInfo.iId < MAX_LOCAL_WEAPONS)
+					{
+						weapon_data_t *data = &info[itemInfo.iId];
+
+						data->m_iId = itemInfo.iId;
+						data->m_iClip = ctx->m_iClip;
+						data->m_flTimeWeaponIdle = std::max(ctx->m_flTimeWeaponIdle, -0.001f);
+						data->m_flNextPrimaryAttack = std::max(ctx->m_flNextPrimaryAttack, -0.001f);
+						data->m_flNextSecondaryAttack = std::max(ctx->m_flNextSecondaryAttack, -0.001f);
+						data->m_fInReload = ctx->m_fInReload;
+						data->m_fInSpecialReload = ctx->m_fInSpecialReload;
+
+						if (itemInfo.iId == WEAPON_SATCHEL)
+						{
+							CSatchelWeaponContext *pSatchel = static_cast<CSatchelWeaponContext*>(ctx);
+							data->iuser1 = pSatchel->m_chargeReady;
+						}
+						else if (itemInfo.iId == WEAPON_HANDGRENADE)
+						{
+							CHandGrenadeWeaponContext *pHandGrenade = static_cast<CHandGrenadeWeaponContext*>(ctx);
+							data->fuser1 = pHandGrenade->m_flStartThrow;
+							data->fuser2 = pHandGrenade->m_flReleaseThrow;
+						}
+						else if (itemInfo.iId == WEAPON_EGON)
+						{
+							CEgonWeaponContext *pEgon = static_cast<CEgonWeaponContext*>(ctx);
+							data->fuser1 = std::max(pEgon->m_flAttackCooldown, -0.001f);
+						}
+					}
+				}
+				item = item->m_pNext;
+			}
+		}
+	}
 	return 1;
 }
 
@@ -1615,34 +1675,77 @@ engine sets cd to 0 before calling.
 */
 void UpdateClientData ( const struct edict_s *ent, int sendweapons, struct clientdata_s *cd )
 {
-	cd->flags			= ent->v.flags;
-	cd->health			= ent->v.health;
+	if (!ent || !ent->pvPrivateData)
+		return;
 
-	cd->viewmodel		= MODEL_INDEX( STRING( ent->v.viewmodel ) );
+	entvars_t *pev		= const_cast<entvars_t *>(&ent->v);
+	CBasePlayer *player	= dynamic_cast<CBasePlayer *>(CBasePlayer::Instance(pev));
 
-	cd->waterlevel		= ent->v.waterlevel;
-	cd->watertype		= ent->v.watertype;
-	cd->weapons		= 0; // not used
+	cd->flags			= pev->flags;
+	cd->health			= pev->health;
+	cd->viewmodel		= MODEL_INDEX(STRING(pev->viewmodel));
+	cd->waterlevel		= pev->waterlevel;
+	cd->watertype		= pev->watertype;
+	cd->weapons			= 0; // not used
 
 	// Vectors
-	cd->origin			= ent->v.origin;
-	cd->velocity		= ent->v.velocity;
-	cd->view_ofs		= ent->v.view_ofs;
-	cd->punchangle		= ent->v.punchangle;
+	cd->origin			= pev->origin;
+	cd->velocity		= pev->velocity;
+	cd->view_ofs		= pev->view_ofs;
+	cd->punchangle		= pev->punchangle;
 
-	cd->bInDuck			= ent->v.bInDuck;
-	cd->flTimeStepSound = ent->v.flTimeStepSound;
-	cd->flDuckTime		= ent->v.flDuckTime;
-	cd->flSwimTime		= ent->v.flSwimTime;
-	cd->waterjumptime	= ent->v.teleport_time;
+	cd->bInDuck			= pev->bInDuck;
+	cd->flTimeStepSound = pev->flTimeStepSound;
+	cd->flDuckTime		= pev->flDuckTime;
+	cd->flSwimTime		= pev->flSwimTime;
+	cd->waterjumptime	= pev->teleport_time;
 
-	strcpy( cd->physinfo, ENGINE_GETPHYSINFO( ent ) );
+	strncpy(cd->physinfo, ENGINE_GETPHYSINFO(ent), sizeof(cd->physinfo));
 
-	cd->maxspeed		= ent->v.maxspeed;
-	cd->fov				= ent->v.fov;
-	cd->weaponanim		= ent->v.weaponanim;
+	cd->maxspeed		= pev->maxspeed;
+	cd->fov				= pev->fov;
+	cd->weaponanim		= pev->weaponanim;
+	cd->pushmsec		= pev->pushmsec;
 
-	cd->pushmsec		= ent->v.pushmsec;
+	if (sendweapons && player)
+	{
+		cd->m_flNextAttack = player->m_flNextAttack;
+		//cd->fuser2 = player->m_flNextAmmoBurn;
+		//cd->fuser3 = player->m_flAmmoStartCharge;
+		//cd->vuser1.x = player->ammo_9mm;
+		//cd->vuser1.y = player->ammo_357;
+		//cd->vuser1.z = player->ammo_argrens;
+		//cd->ammo_nails = player->ammo_bolts;
+		//cd->ammo_shells = player->ammo_buckshot;
+		//cd->ammo_rockets = player->ammo_rockets;
+		//cd->ammo_cells = player->ammo_uranium;
+		//cd->vuser2.x = player->ammo_hornets;
+
+		CBasePlayerItem *item = player->m_pActiveItem;
+		if (item)
+		{
+			CBasePlayerWeapon *weapon = static_cast<CBasePlayerWeapon*>(item->GetWeaponPtr());
+			if (weapon && weapon->m_pWeaponContext->UseDecrement())
+			{
+				ItemInfo itemInfo;
+				memset(&itemInfo, 0, sizeof(itemInfo));
+				weapon->GetItemInfo(&itemInfo);
+
+				cd->m_iId = itemInfo.iId;
+				cd->vuser3.z = weapon->m_pWeaponContext->m_iSecondaryAmmoType;
+				cd->vuser4.x = weapon->m_pWeaponContext->m_iPrimaryAmmoType;
+				cd->vuser4.y = player->m_rgAmmo[weapon->m_pWeaponContext->m_iPrimaryAmmoType];
+				cd->vuser4.z = player->m_rgAmmo[weapon->m_pWeaponContext->m_iSecondaryAmmoType];
+
+				if (itemInfo.iId == WEAPON_RPG)
+				{
+					CRpgWeaponContext *ctx = static_cast<CRpgWeaponContext*>(weapon->m_pWeaponContext.get());
+					cd->vuser2.y = ctx->m_fSpotActive;
+					cd->vuser2.z = ctx->m_cActiveRockets;
+				}
+			}
+		}
+	}
 }
 
 /*

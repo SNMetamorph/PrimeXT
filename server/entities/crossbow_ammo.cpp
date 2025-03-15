@@ -14,6 +14,7 @@
 ****/
 
 #include "crossbow_ammo.h"
+#include "weapons/crossbow.h"
 
 LINK_ENTITY_TO_CLASS( ammo_crossbow, CCrossbowAmmo );
 
@@ -32,7 +33,7 @@ void CCrossbowAmmo::Precache( void )
 
 BOOL CCrossbowAmmo::AddAmmo( CBaseEntity *pOther ) 
 { 
-	if (pOther->GiveAmmo( AMMO_CROSSBOWCLIP_GIVE, "bolts", BOLT_MAX_CARRY ) != -1)
+	if (pOther->GiveAmmo( CROSSBOW_MAX_CLIP, "bolts", BOLT_MAX_CARRY ) != -1)
 	{
 		EMIT_SOUND(ENT(pev), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM);
 		return TRUE;

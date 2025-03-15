@@ -28,10 +28,12 @@ GNU General Public License for more details.
 #include "gl_debug.h"
 #include "gl_unit_cube.h"
 #include "r_weather.h"
-#include "meshdesc_factory.h"
 
 #define DEFAULT_SMOOTHNESS	0.0f
 #define FILTER_SIZE		2
+
+// defined in cdll_int.cpp
+extern void CL_NewMap();
 
 /*
 ==================
@@ -897,10 +899,6 @@ void R_NewMap( void )
 		tr.ambient_color = g_vecZero;
 		tr.smoothing_threshold = 0.642788f; // 50 degrees
 	}
-
-	// flush collision meshes cache on clientside
-	auto &meshDescFactory = CMeshDescFactory::Instance();
-	meshDescFactory.ClearCache();
 }
 
 /*
@@ -934,6 +932,8 @@ Called always when map is changed or restarted
 */
 void GL_MapChanged( void )
 {
+	CL_NewMap();
+
 	if( !g_fRenderInitialized )
 		return;
 

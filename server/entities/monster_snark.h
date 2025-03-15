@@ -51,13 +51,3 @@ class CSqueakGrenade : public CGrenade
 	EHANDLE m_hOwner;
 	int m_iMyClass;
 };
-
-enum squeak_e
-{
-	SQUEAK_IDLE1 = 0,
-	SQUEAK_FIDGETFIT,
-	SQUEAK_FIDGETNIP,
-	SQUEAK_DOWN,
-	SQUEAK_UP,
-	SQUEAK_THROW
-};

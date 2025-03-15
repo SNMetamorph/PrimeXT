@@ -37,6 +37,8 @@
 #include "hltv.h"
 #include "user_messages.h"
 #include "ropes/CRope.h"
+#include "weapons/egon.h"
+#include <algorithm>
 
 // #define DUCKFIX
 
@@ -668,7 +670,7 @@ void CBasePlayer::PackDeadPlayerItems( void )
 	// pack the ammo
 	while ( iPackAmmo[iPA] != -1 )
 	{
-		pWeaponBox->PackAmmo( MAKE_STRING( CBasePlayerItem::AmmoInfoArray[iPackAmmo[iPA]].pszName ), m_rgAmmo[iPackAmmo[iPA]] );
+		pWeaponBox->PackAmmo( MAKE_STRING( CBaseWeaponContext::AmmoInfoArray[iPackAmmo[iPA]].pszName ), m_rgAmmo[iPackAmmo[iPA]] );
 		iPA++;
 	}
 
@@ -2584,6 +2586,73 @@ void CBasePlayer :: UpdatePlayerSound ( void )
 		m_iWeaponFlash = 0;
 }
 
+
+void CBasePlayer::UpdatePlayerTimers()
+{
+	m_flNextAttack -= gpGlobals->frametime;
+	if ( m_flNextAttack < -0.001 )
+		m_flNextAttack = -0.001;
+	
+	//if ( m_flNextAmmoBurn != 1000 )
+	//{
+	//	m_flNextAmmoBurn -= gpGlobals->frametime;
+	//	
+	//	if ( m_flNextAmmoBurn < -0.001 )
+	//		m_flNextAmmoBurn = -0.001;
+	//}
+
+	//if ( m_flAmmoStartCharge != 1000 )
+	//{
+	//	m_flAmmoStartCharge -= gpGlobals->frametime;
+	//	
+	//	if ( m_flAmmoStartCharge < -0.001 )
+	//		m_flAmmoStartCharge = -0.001;
+	//}
+}
+
+void CBasePlayer::UpdateWeaponTimers()
+{
+	for (int i = 0; i < MAX_ITEM_TYPES; i++)
+	{
+		CBasePlayerItem *pPlayerItem = m_rgpPlayerItems[i];
+		if (pPlayerItem)
+		{
+			while (pPlayerItem)
+			{
+				CBasePlayerWeapon *gun = (CBasePlayerWeapon *)pPlayerItem->GetWeaponPtr();
+				CBaseWeaponContext *ctx = gun->m_pWeaponContext.get();
+
+				if (gun && ctx->UseDecrement())
+				{
+					ctx->m_flNextPrimaryAttack = std::max(ctx->m_flNextPrimaryAttack - gpGlobals->frametime, -1.0f);
+					ctx->m_flNextSecondaryAttack = std::max(ctx->m_flNextSecondaryAttack - gpGlobals->frametime, -0.001f);
+
+					if (ctx->m_flTimeWeaponIdle != 1000)
+					{
+						ctx->m_flTimeWeaponIdle = std::max(ctx->m_flTimeWeaponIdle - gpGlobals->frametime, -0.001f);
+					}
+
+					if (ctx->m_iId == WEAPON_EGON)
+					{
+						CEgonWeaponContext *pEgon = static_cast<CEgonWeaponContext*>(ctx);
+						if (pEgon->m_flAttackCooldown != 1000)
+						{
+							pEgon->m_flAttackCooldown = std::max(pEgon->m_flAttackCooldown - gpGlobals->frametime, -0.001f);
+						}
+					}
+
+					// Only decrement if not flagged as NO_DECREMENT
+					//	if ( gun->m_flPumpTime != 1000 )
+					//	{
+					//		gun->m_flPumpTime = max( gun->m_flPumpTime - gpGlobals->frametime, -0.001f );
+					//	}
+				}
+				pPlayerItem = pPlayerItem->m_pNext;
+			}
+		}
+	}
+}
+
 void CBasePlayer::PostThink()
 {
 	if ( g_fGameOver )
@@ -2623,7 +2692,7 @@ void CBasePlayer::PostThink()
 	}
 
 // do weapon stuff
-	ItemPostFrame( );
+	ItemPostFrame();
 
 // check to see if player landed hard enough to make a sound
 // falling farther than half of the maximum safe distance, but not as far a max safe distance will
@@ -2697,6 +2766,8 @@ void CBasePlayer::PostThink()
 	CheckPowerups(pev);
 
 	UpdatePlayerSound();
+	UpdatePlayerTimers();
+	UpdateWeaponTimers();
 
 	// Track button info so we can detect 'pressed' and 'released' buttons next frame
 	m_afButtonLast = pev->button;
@@ -3248,6 +3319,11 @@ int CBasePlayer::Restore( CRestore &restore )
 	g_engfuncs.pfnSetPhysicsKeyValue( edict(), "incar", va( "%d", m_iInCarState ));
 
 	RenewItems();
+
+	// HACK:	This variable is saved/restored in CBaseMonster as a time variable, but we're using it
+	//			as just a counter.  Ideally, this needs its own variable that's saved as a plain float.
+	//			Barring that, we clear it out here instead of using the incorrect restored time value.
+	m_flNextAttack = 0.0f;
 
 	return status;
 }
@@ -4030,7 +4106,7 @@ Called every frame by the player PreThink
 */
 void CBasePlayer::ItemPreFrame()
 {
-	if ( gpGlobals->time < m_flNextAttack )
+	if ( m_flNextAttack > 0.0f )
 	{
 		return;
 	}
@@ -4059,7 +4135,7 @@ void CBasePlayer::ItemPostFrame()
 
 	ImpulseCommands();
 
-	if ( gpGlobals->time < m_flNextAttack )
+	if ( m_flNextAttack > 0.0f )
 		return;
 
 	if( FBitSet( m_iHideHUD, HIDEHUD_WEAPONS ))
@@ -4068,7 +4144,7 @@ void CBasePlayer::ItemPostFrame()
 	if (!m_pActiveItem)
 		return;
 
-	m_pActiveItem->ItemPostFrame( );
+	m_pActiveItem->ItemPostFrame();
 }
 
 int CBasePlayer::AmmoInventory( int iAmmoIndex )
@@ -4090,10 +4166,10 @@ int CBasePlayer::GetAmmoIndex(const char *psz)
 
 	for (i = 1; i < MAX_AMMO_SLOTS; i++)
 	{
-		if ( !CBasePlayerItem::AmmoInfoArray[i].pszName )
+		if ( !CBaseWeaponContext::AmmoInfoArray[i].pszName )
 			continue;
 
-		if (stricmp( psz, CBasePlayerItem::AmmoInfoArray[i].pszName ) == 0)
+		if (stricmp( psz, CBaseWeaponContext::AmmoInfoArray[i].pszName ) == 0)
 			return i;
 	}
 
@@ -4449,7 +4525,7 @@ void CBasePlayer :: UpdateClientData( void )
 
 		for (i = 0; i < MAX_WEAPONS; i++)
 		{
-			ItemInfo& II = CBasePlayerItem::ItemInfoArray[i];
+			ItemInfo& II = CBaseWeaponContext::ItemInfoArray[i];
 
 			if ( !II.iId )
 				continue;
@@ -4604,91 +4680,6 @@ void CBasePlayer :: HideWeapons( BOOL fHideWeapons )
 #define DOT_15DEGREE  0.9659258262891
 #define DOT_20DEGREE  0.9396926207859
 #define DOT_25DEGREE  0.9063077870367
-
-//=========================================================
-// Autoaim
-// set crosshair position to point to enemey
-//=========================================================
-Vector CBasePlayer :: GetAutoaimVector( float flDelta )
-{
-	if (g_iSkillLevel == SKILL_HARD)
-	{
-		UTIL_MakeVectors( pev->v_angle + pev->punchangle );
-		return gpGlobals->v_forward;
-	}
-
-	Vector vecSrc = GetGunPosition( );
-	float flDist = 8192;
-
-	// always use non-sticky autoaim
-	// UNDONE: use server variable to chose!
-	if (1 || g_iSkillLevel == SKILL_MEDIUM)
-	{
-		m_vecAutoAim = Vector( 0, 0, 0 );
-		// flDelta *= 0.5;
-	}
-
-	BOOL m_fOldTargeting = m_fOnTarget;
-	Vector angles = AutoaimDeflection(vecSrc, flDist, flDelta );
-
-	// update ontarget if changed
-	if ( !g_pGameRules->AllowAutoTargetCrosshair() )
-		m_fOnTarget = 0;
-	else if (m_fOldTargeting != m_fOnTarget)
-	{
-		m_pActiveItem->UpdateItemInfo( );
-	}
-
-	if (angles.x > 180)
-		angles.x -= 360;
-	if (angles.x < -180)
-		angles.x += 360;
-	if (angles.y > 180)
-		angles.y -= 360;
-	if (angles.y < -180)
-		angles.y += 360;
-
-	if (angles.x > 25)
-		angles.x = 25;
-	if (angles.x < -25)
-		angles.x = -25;
-	if (angles.y > 12)
-		angles.y = 12;
-	if (angles.y < -12)
-		angles.y = -12;
-
-
-	// always use non-sticky autoaim
-	// UNDONE: use sever variable to chose!
-	if (0 || g_iSkillLevel == SKILL_EASY)
-	{
-		m_vecAutoAim = m_vecAutoAim * 0.67 + angles * 0.33;
-	}
-	else
-	{
-		m_vecAutoAim = angles * 0.9;
-	}
-
-	// m_vecAutoAim = m_vecAutoAim * 0.99;
-
-	// Don't send across network if sv_aim is 0
-	if ( g_psv_aim->value != 0 )
-	{
-		if ( m_vecAutoAim.x != m_lastx || m_vecAutoAim.y != m_lasty )
-		{
-			SET_CROSSHAIRANGLE( edict(), -m_vecAutoAim.x, m_vecAutoAim.y );
-			
-			m_lastx = m_vecAutoAim.x;
-			m_lasty = m_vecAutoAim.y;
-		}
-	}
-
-	// ALERT( at_console, "%f %f\n", angles.x, angles.y );
-
-	UTIL_MakeVectors( pev->v_angle + pev->punchangle + m_vecAutoAim );
-	return gpGlobals->v_forward;
-}
-
 
 Vector CBasePlayer :: AutoaimDeflection( Vector &vecSrc, float flDist, float flDelta  )
 {
@@ -4915,7 +4906,7 @@ void CBasePlayer::DropPlayerItem ( char *pszItemName )
 
 			UTIL_MakeVectors ( GetAbsAngles() ); 
 
-			RemoveWeapon( pWeapon->m_iId );	// take item off hud
+			RemoveWeapon( pWeapon->iWeaponID() );	// take item off hud
 
 			CWeaponBox *pWeaponBox = (CWeaponBox *)CBaseEntity::Create( "weaponbox", GetAbsOrigin() + gpGlobals->v_forward * 10, GetAbsAngles(), edict() );
 			Vector vecAngles = pWeaponBox->GetAbsAngles();

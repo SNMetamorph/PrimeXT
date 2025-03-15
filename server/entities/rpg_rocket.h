@@ -24,7 +24,7 @@
 #include "gamerules.h"
 #include "user_messages.h"
 #include "ggrenade.h"
-#include "rpg.h"
+#include "weapon_rpg.h"
 
 class CRpgRocket : public CGrenade
 {

@@ -14,6 +14,7 @@
 ****/
 
 #include "ammo_mp5clip.h"
+#include "weapons/mp5.h"
 
 LINK_ENTITY_TO_CLASS( ammo_mp5clip, CMP5AmmoClip );
 LINK_ENTITY_TO_CLASS( ammo_9mmAR, CMP5AmmoClip );
@@ -32,7 +33,7 @@ void CMP5AmmoClip::Precache()
 
 BOOL CMP5AmmoClip::AddAmmo( CBaseEntity *pOther ) 
 { 
-	int bResult = (pOther->GiveAmmo( AMMO_MP5CLIP_GIVE, "9mm", _9MM_MAX_CARRY) != -1);
+	int bResult = (pOther->GiveAmmo( MP5_MAX_CLIP, "9mm", _9MM_MAX_CARRY) != -1);
 	if (bResult)
 	{
 		EMIT_SOUND(ENT(pev), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM);
