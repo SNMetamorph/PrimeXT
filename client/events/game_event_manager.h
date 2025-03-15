@@ -37,4 +37,5 @@ private:
 	void RegisterSnarkEvents();
 	void RegisterHornetgunEvents();
 	void RegisterRPGEvents();
+	void RegisterEgonEvents();
 };

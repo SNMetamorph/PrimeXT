@@ -39,6 +39,7 @@
 #include "weapons/rpg.h"
 #include "weapons/satchel.h"
 #include "weapons/handgrenade.h"
+#include "weapons/egon.h"
 #include "usercmd.h"
 #include "netadr.h"
 #include "user_messages.h"
@@ -1638,7 +1639,6 @@ int GetWeaponData( struct edict_s *player, struct weapon_data_s *info )
 						data->m_flNextSecondaryAttack = std::max(ctx->m_flNextSecondaryAttack, -0.001f);
 						data->m_fInReload = ctx->m_fInReload;
 						data->m_fInSpecialReload = ctx->m_fInSpecialReload;
-						data->fuser1 = std::max(weapon->pev->fuser1, -0.001f);
 
 						if (itemInfo.iId == WEAPON_SATCHEL)
 						{
@@ -1650,6 +1650,11 @@ int GetWeaponData( struct edict_s *player, struct weapon_data_s *info )
 							CHandGrenadeWeaponContext *pHandGrenade = static_cast<CHandGrenadeWeaponContext*>(ctx);
 							data->fuser1 = pHandGrenade->m_flStartThrow;
 							data->fuser2 = pHandGrenade->m_flReleaseThrow;
+						}
+						else if (itemInfo.iId == WEAPON_EGON)
+						{
+							CEgonWeaponContext *pEgon = static_cast<CEgonWeaponContext*>(ctx);
+							data->fuser1 = std::max(pEgon->m_flAttackCooldown, -0.001f);
 						}
 					}
 				}

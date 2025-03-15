@@ -28,6 +28,8 @@ GNU General Public License for more details.
 #include "snark_throw_event.h"
 #include "hornetgun_fire_event.h"
 #include "rpg_fire_event.h"
+#include "egon_stop_event.h"
+#include "egon_fire_event.h"
 
 CGameEventManager::CGameEventManager()
 {
@@ -41,6 +43,7 @@ CGameEventManager::CGameEventManager()
 	RegisterSnarkEvents();
 	RegisterHornetgunEvents();
 	RegisterRPGEvents();
+	RegisterEgonEvents();
 }
 
 void CGameEventManager::RegisterGlockEvents()
@@ -135,6 +138,18 @@ void CGameEventManager::RegisterRPGEvents()
 {
 	gEngfuncs.pfnHookEvent("events/rpg.sc", [](event_args_s *args) {
 		CRpgFireEvent event(args);
+		event.Execute();
+	});
+}
+
+void CGameEventManager::RegisterEgonEvents()
+{
+	gEngfuncs.pfnHookEvent("events/egon_fire.sc", [](event_args_s *args) {
+		CEgonFireEvent event(args);
+		event.Execute();
+	});
+	gEngfuncs.pfnHookEvent("events/egon_stop.sc", [](event_args_s *args) {
+		CEgonStopEvent event(args);
 		event.Execute();
 	});
 }

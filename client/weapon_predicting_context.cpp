@@ -29,6 +29,7 @@ GNU General Public License for more details.
 #include "weapons/handgrenade.h"
 #include "weapons/satchel.h"
 #include "weapons/rpg.h"
+#include "weapons/egon.h"
 #include <cstring>
 
 CWeaponPredictingContext::CWeaponPredictingContext()
@@ -147,7 +148,6 @@ void CWeaponPredictingContext::UpdateWeaponTimers(CBaseWeaponContext *weapon, co
 	weapon->m_flTimeWeaponIdle			-= cmd->msec / 1000.0;
 	//weapon->m_flNextReload			-= cmd->msec / 1000.0;
 	//weapon->m_fNextAimBonus			-= cmd->msec / 1000.0;
-	//weapon->fuser1					-= cmd->msec / 1000.0;
 
 	if (weapon->m_flNextPrimaryAttack < -1.0)
 		weapon->m_flNextPrimaryAttack = -1.0;
@@ -158,14 +158,19 @@ void CWeaponPredictingContext::UpdateWeaponTimers(CBaseWeaponContext *weapon, co
 	if (weapon->m_flTimeWeaponIdle < -0.001)
 		weapon->m_flTimeWeaponIdle = -0.001;
 
+	if (weapon->m_iId == WEAPON_EGON)
+	{
+		CEgonWeaponContext *ctx = static_cast<CEgonWeaponContext*>(weapon);
+		ctx->m_flAttackCooldown -= cmd->msec / 1000.0;
+		if (ctx->m_flAttackCooldown < -0.001)
+			ctx->m_flAttackCooldown = -0.001;
+	}
+
 	//if (weapon->m_fNextAimBonus < -1.0)
 	//	weapon->m_fNextAimBonus = -1.0;
 
 	//if (weapon->m_flNextReload < -0.001)
 	//	weapon->m_flNextReload = -0.001;
-
-	//if (weapon->fuser1 < -0.001)
-	//	weapon->fuser1 = -0.001;
 }
 
 void CWeaponPredictingContext::ReadWeaponsState(const local_state_t *from)
@@ -254,6 +259,11 @@ void CWeaponPredictingContext::ReadWeaponSpecificData(CBaseWeaponContext *weapon
 		ctx->m_flStartThrow = data.fuser1;
 		ctx->m_flReleaseThrow = data.fuser2;
 	}
+	else if (weapon->m_iId == WEAPON_EGON)
+	{
+		CEgonWeaponContext *ctx = static_cast<CEgonWeaponContext*>(weapon);
+		ctx->m_flAttackCooldown = data.fuser1;
+	}
 }
 
 void CWeaponPredictingContext::WriteWeaponSpecificData(CBaseWeaponContext *weapon, local_state_t *to)
@@ -275,6 +285,11 @@ void CWeaponPredictingContext::WriteWeaponSpecificData(CBaseWeaponContext *weapo
 		CHandGrenadeWeaponContext *ctx = static_cast<CHandGrenadeWeaponContext*>(weapon);
 		data.fuser1 = ctx->m_flStartThrow;
 		data.fuser2 = ctx->m_flReleaseThrow;
+	}
+	else if (weapon->m_iId == WEAPON_EGON)
+	{
+		CEgonWeaponContext *ctx = static_cast<CEgonWeaponContext*>(weapon);
+		data.fuser1 = ctx->m_flAttackCooldown;
 	}
 }
 
@@ -347,6 +362,9 @@ CBaseWeaponContext* CWeaponPredictingContext::GetWeaponContext(uint32_t weaponID
 				break;
 			case WEAPON_RPG:
 				m_weaponsState[weaponID] = std::make_unique<CRpgWeaponContext>(std::make_unique<CClientWeaponLayerImpl>(m_playerState));
+				break;
+			case WEAPON_EGON:
+				m_weaponsState[weaponID] = std::make_unique<CEgonWeaponContext>(std::make_unique<CClientWeaponLayerImpl>(m_playerState));
 				break;
 			default: 
 				return nullptr;

@@ -37,6 +37,7 @@
 #include "hltv.h"
 #include "user_messages.h"
 #include "ropes/CRope.h"
+#include "weapons/egon.h"
 #include <algorithm>
 
 // #define DUCKFIX
@@ -2631,9 +2632,13 @@ void CBasePlayer::UpdateWeaponTimers()
 						ctx->m_flTimeWeaponIdle = std::max(ctx->m_flTimeWeaponIdle - gpGlobals->frametime, -0.001f);
 					}
 
-					if (gun->pev->fuser1 != 1000)
+					if (ctx->m_iId == WEAPON_EGON)
 					{
-						gun->pev->fuser1 = std::max(gun->pev->fuser1 - gpGlobals->frametime, -0.001f);
+						CEgonWeaponContext *pEgon = static_cast<CEgonWeaponContext*>(ctx);
+						if (pEgon->m_flAttackCooldown != 1000)
+						{
+							pEgon->m_flAttackCooldown = std::max(pEgon->m_flAttackCooldown - gpGlobals->frametime, -0.001f);
+						}
 					}
 
 					// Only decrement if not flagged as NO_DECREMENT
