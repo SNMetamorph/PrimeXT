@@ -109,6 +109,8 @@ public:
 	virtual void SetPlayerNextAttackTime(float value) = 0;
 	virtual void SetPlayerFOV(float value) = 0;
 	virtual float GetPlayerFOV() = 0;
+	virtual Vector GetPlayerVelocity() = 0;
+	virtual void SetPlayerVelocity(Vector value) = 0;
 
 	// miscellaneous things
 	virtual float GetWeaponTimeBase(bool usePredicting) = 0;

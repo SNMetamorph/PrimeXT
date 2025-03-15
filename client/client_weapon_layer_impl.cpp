@@ -146,6 +146,16 @@ float CClientWeaponLayerImpl::GetPlayerFOV()
 	return m_playerState.fov;
 }
 
+Vector CClientWeaponLayerImpl::GetPlayerVelocity()
+{
+	return m_playerState.velocity;
+}
+
+void CClientWeaponLayerImpl::SetPlayerVelocity(Vector value)
+{
+	m_playerState.velocity = value;
+}
+
 float CClientWeaponLayerImpl::GetWeaponTimeBase(bool usePredicting)
 {
 	return usePredicting ? 0.0f : m_playerState.time;

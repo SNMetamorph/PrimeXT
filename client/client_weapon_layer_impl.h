@@ -46,6 +46,8 @@ public:
 	void SetPlayerNextAttackTime(float value) override;
 	void SetPlayerFOV(float value) override;
 	float GetPlayerFOV() override;
+	Vector GetPlayerVelocity() override;
+	void SetPlayerVelocity(Vector value) override;
 
 	float GetWeaponTimeBase(bool usePredicting) override;
 	float GetTime() override;

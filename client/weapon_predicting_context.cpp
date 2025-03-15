@@ -120,6 +120,7 @@ void CWeaponPredictingContext::WritePlayerState(local_state_t *to)
 	//to->client.fuser2					= m_playerState.m_flNextAmmoBurn;
 	//to->client.fuser3					= m_playerState.m_flAmmoStartCharge;
 	to->client.maxspeed					= m_playerState.maxSpeed;
+	to->client.velocity					= m_playerState.velocity;
 }
 
 void CWeaponPredictingContext::UpdatePlayerTimers(const usercmd_t *cmd)
