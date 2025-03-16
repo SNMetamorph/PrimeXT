@@ -315,9 +315,13 @@ uint16_t CServerWeaponLayerImpl::PrecacheEvent(const char *eventName)
 
 void CServerWeaponLayerImpl::PlaybackWeaponEvent(const WeaponEventParams &params)
 {
+	// this weird division-multiplying by 3 is somehow relatable to stupid quake bug
+	// TODO maybe create new features flag in engine to get rid of this hack entirely?
+	Vector anglesFixed = params.angles;
+	anglesFixed[PITCH] /= 3.f;
 	g_engfuncs.pfnPlaybackEvent(static_cast<int>(params.flags), m_pWeapon->m_pPlayer->edict(),
 		params.eventindex, params.delay, 
-		params.origin, params.angles, 
+		params.origin, anglesFixed, 
 		params.fparam1, params.fparam2, 
 		params.iparam1, params.iparam2, 
 		params.bparam1, params.bparam2);
