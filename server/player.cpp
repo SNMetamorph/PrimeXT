@@ -39,6 +39,7 @@
 #include "ropes/CRope.h"
 #include "weapons/egon.h"
 #include "weapons/gauss.h"
+#include "cycler_weapon.h"
 #include <algorithm>
 
 // #define DUCKFIX

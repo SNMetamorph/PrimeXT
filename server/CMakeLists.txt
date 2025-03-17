@@ -92,7 +92,7 @@ endif()
 
 file(GLOB ENTITIES_SOURCES "entities/*.cpp")
 file(GLOB MONSTERS_SOURCES "monsters/*.cpp")
-file(GLOB WEAPONS_SOURCES "weapons/weapon_*.cpp")
+file(GLOB WEAPONS_SOURCES "weapons/*.cpp")
 file(GLOB GAMERULES_SOURCES "gamerules/*.cpp")
 file(GLOB WEAPONS_SHARED_SOURCES "${CMAKE_SOURCE_DIR}/game_shared/weapons/*.cpp")
 
