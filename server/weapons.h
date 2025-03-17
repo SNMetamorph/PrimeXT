@@ -32,7 +32,6 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 #define ITEM_BATTERY		4
 
 #define WEAPON_NONE				0
-#define WEAPON_CYCLER			5
 
 #define MAX_NORMAL_BATTERY	100
 
