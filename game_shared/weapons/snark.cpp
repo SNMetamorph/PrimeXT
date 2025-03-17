@@ -30,7 +30,7 @@ CSqueakWeaponContext::CSqueakWeaponContext(std::unique_ptr<IWeaponLayer>&& layer
 	m_usSnarkFire = m_pLayer->PrecacheEvent("events/snarkfire.sc");
 }
 
-int CSqueakWeaponContext::GetItemInfo(ItemInfo *p)
+int CSqueakWeaponContext::GetItemInfo(ItemInfo *p) const
 {
 	p->pszName = CLASSNAME_STR(SNARK_CLASSNAME);
 	p->pszAmmo1 = "Snarks";

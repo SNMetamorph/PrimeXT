@@ -43,7 +43,7 @@ CHandGrenadeWeaponContext::CHandGrenadeWeaponContext(std::unique_ptr<IWeaponLaye
 	m_flStartThrow = 0.0f;
 }
 
-int CHandGrenadeWeaponContext::GetItemInfo(ItemInfo *p)
+int CHandGrenadeWeaponContext::GetItemInfo(ItemInfo *p) const
 {
 	p->pszName = CLASSNAME_STR(HANDGRENADE_CLASSNAME);
 	p->pszAmmo1 = "Hand Grenade";

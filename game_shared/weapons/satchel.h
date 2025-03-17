@@ -32,7 +32,7 @@ public:
 	~CSatchelWeaponContext() = default;
 
 	int iItemSlot() override { return 5; }
-	int GetItemInfo(ItemInfo *p) override;
+	int GetItemInfo(ItemInfo *p) const override;
 	void PrimaryAttack() override;
 	void SecondaryAttack() override;
 	bool CanDeploy() override;

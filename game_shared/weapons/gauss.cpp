@@ -54,7 +54,7 @@ CGaussWeaponContext::CGaussWeaponContext(std::unique_ptr<IWeaponLayer>&& layer) 
 	m_usGaussSpin = m_pLayer->PrecacheEvent("events/gaussspin.sc");
 }
 
-int CGaussWeaponContext::GetItemInfo(ItemInfo *p)
+int CGaussWeaponContext::GetItemInfo(ItemInfo *p) const
 {
 	p->pszName = CLASSNAME_STR(GAUSS_CLASSNAME);
 	p->pszAmmo1 = "uranium";

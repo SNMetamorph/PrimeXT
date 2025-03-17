@@ -50,7 +50,7 @@ CMP5WeaponContext::CMP5WeaponContext(std::unique_ptr<IWeaponLayer> &&layer) :
 	m_usEvent2 = m_pLayer->PrecacheEvent("events/mp52.sc");
 }
 
-int CMP5WeaponContext::GetItemInfo(ItemInfo *p)
+int CMP5WeaponContext::GetItemInfo(ItemInfo *p) const
 {
 	p->pszName = CLASSNAME_STR(MP5_CLASSNAME);
 	p->pszAmmo1 = "9mm";

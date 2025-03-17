@@ -53,7 +53,7 @@ CCrowbarWeaponContext::CCrowbarWeaponContext(std::unique_ptr<IWeaponLayer> &&lay
 	m_usCrowbar = m_pLayer->PrecacheEvent("events/crowbar.sc");
 }
 
-int CCrowbarWeaponContext::GetItemInfo(ItemInfo *p)
+int CCrowbarWeaponContext::GetItemInfo(ItemInfo *p) const
 {
 	p->pszName = CLASSNAME_STR(CROWBAR_CLASSNAME);
 	p->pszAmmo1 = NULL;

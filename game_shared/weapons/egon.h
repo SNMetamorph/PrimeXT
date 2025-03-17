@@ -68,7 +68,7 @@ public:
 	~CEgonWeaponContext() = default;
 
 	int iItemSlot() override { return 4; }
-	int GetItemInfo(ItemInfo *p) override;
+	int GetItemInfo(ItemInfo *p) const override;
 	bool Deploy() override;
 	void Holster() override;
 	void PrimaryAttack() override;

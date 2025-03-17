@@ -50,7 +50,7 @@ CPythonWeaponContext::CPythonWeaponContext(std::unique_ptr<IWeaponLayer>&& layer
 	m_usFirePython = m_pLayer->PrecacheEvent("events/python.sc");
 }
 
-int CPythonWeaponContext::GetItemInfo(ItemInfo *p)
+int CPythonWeaponContext::GetItemInfo(ItemInfo *p) const
 {
 	p->pszName = CLASSNAME_STR(PYTHON_CLASSNAME);
 	p->pszAmmo1 = "357";
@@ -61,7 +61,7 @@ int CPythonWeaponContext::GetItemInfo(ItemInfo *p)
 	p->iFlags = 0;
 	p->iSlot = 1;
 	p->iPosition = 1;
-	p->iId = m_iId = WEAPON_PYTHON;
+	p->iId = m_iId;
 	p->iWeight = PYTHON_WEIGHT;
 	return 1;
 }

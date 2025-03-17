@@ -53,7 +53,7 @@ CShotgunWeaponContext::CShotgunWeaponContext(std::unique_ptr<IWeaponLayer> &&lay
 	m_usDoubleFire = m_pLayer->PrecacheEvent("events/shotgun2.sc");
 }
 
-int CShotgunWeaponContext::GetItemInfo(ItemInfo *p)
+int CShotgunWeaponContext::GetItemInfo(ItemInfo *p) const
 {
 	p->pszName = CLASSNAME_STR(SHOTGUN_CLASSNAME);
 	p->pszAmmo1 = "buckshot";

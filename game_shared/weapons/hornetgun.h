@@ -42,7 +42,7 @@ public:
 	CHornetgunWeaponContext(std::unique_ptr<IWeaponLayer> &&layer);
 
 	int iItemSlot() override { return 4; }
-	int GetItemInfo(ItemInfo *p) override;
+	int GetItemInfo(ItemInfo *p) const override;
 	void PrimaryAttack() override;
 	void SecondaryAttack() override;
 	bool Deploy() override;
