@@ -38,4 +38,5 @@ private:
 	void RegisterHornetgunEvents();
 	void RegisterRPGEvents();
 	void RegisterEgonEvents();
+	void RegisterGaussEvents();
 };

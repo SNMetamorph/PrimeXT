@@ -40,6 +40,7 @@
 #include "weapons/satchel.h"
 #include "weapons/handgrenade.h"
 #include "weapons/egon.h"
+#include "weapons/gauss.h"
 #include "usercmd.h"
 #include "netadr.h"
 #include "user_messages.h"
@@ -1655,6 +1656,13 @@ int GetWeaponData( struct edict_s *player, struct weapon_data_s *info )
 						{
 							CEgonWeaponContext *pEgon = static_cast<CEgonWeaponContext*>(ctx);
 							data->fuser1 = std::max(pEgon->m_flAttackCooldown, -0.001f);
+						}
+						else if (itemInfo.iId == WEAPON_GAUSS)
+						{
+							CGaussWeaponContext *pGauss = static_cast<CGaussWeaponContext*>(ctx);
+							data->fuser1 = std::max(pGauss->m_flAmmoStartCharge, -0.001f);
+							data->fuser2 = std::max(pGauss->m_flNextAmmoBurn, -0.001f);
+							data->iuser1 = pGauss->m_fInAttack;
 						}
 					}
 				}

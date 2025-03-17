@@ -30,6 +30,8 @@ GNU General Public License for more details.
 #include "rpg_fire_event.h"
 #include "egon_stop_event.h"
 #include "egon_fire_event.h"
+#include "gauss_fire_event.h"
+#include "gauss_spin_event.h"
 
 CGameEventManager::CGameEventManager()
 {
@@ -44,6 +46,7 @@ CGameEventManager::CGameEventManager()
 	RegisterHornetgunEvents();
 	RegisterRPGEvents();
 	RegisterEgonEvents();
+	RegisterGaussEvents();
 }
 
 void CGameEventManager::RegisterGlockEvents()
@@ -150,6 +153,18 @@ void CGameEventManager::RegisterEgonEvents()
 	});
 	gEngfuncs.pfnHookEvent("events/egon_stop.sc", [](event_args_s *args) {
 		CEgonStopEvent event(args);
+		event.Execute();
+	});
+}
+
+void CGameEventManager::RegisterGaussEvents()
+{
+	gEngfuncs.pfnHookEvent("events/gauss.sc", [](event_args_s *args) {
+		CGaussFireEvent event(args);
+		event.Execute();
+	});
+	gEngfuncs.pfnHookEvent("events/gaussspin.sc", [](event_args_s *args) {
+		CGaussSpinEvent event(args);
 		event.Execute();
 	});
 }

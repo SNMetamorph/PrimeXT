@@ -38,6 +38,7 @@
 #include "user_messages.h"
 #include "ropes/CRope.h"
 #include "weapons/egon.h"
+#include "weapons/gauss.h"
 #include <algorithm>
 
 // #define DUCKFIX
@@ -2638,6 +2639,16 @@ void CBasePlayer::UpdateWeaponTimers()
 						if (pEgon->m_flAttackCooldown != 1000)
 						{
 							pEgon->m_flAttackCooldown = std::max(pEgon->m_flAttackCooldown - gpGlobals->frametime, -0.001f);
+						}
+					}
+					else if (ctx->m_iId == WEAPON_GAUSS)
+					{
+						CGaussWeaponContext *pGauss = static_cast<CGaussWeaponContext*>(ctx);
+						if (pGauss->m_flNextAmmoBurn != 1000) {
+							pGauss->m_flNextAmmoBurn = std::max(pGauss->m_flNextAmmoBurn - gpGlobals->frametime, -0.001f);
+						}
+						if (pGauss->m_flAmmoStartCharge != 1000) {
+							pGauss->m_flAmmoStartCharge = std::max(pGauss->m_flAmmoStartCharge - gpGlobals->frametime, -0.001f);
 						}
 					}
 
