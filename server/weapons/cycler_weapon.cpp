@@ -56,7 +56,7 @@ CCyclerWeaponContext::CCyclerWeaponContext(std::unique_ptr<IWeaponLayer>&& layer
 	m_iId = WEAPON_CYCLER;
 }
 
-int CCyclerWeaponContext::GetItemInfo(ItemInfo *p)
+int CCyclerWeaponContext::GetItemInfo(ItemInfo *p) const
 {
 	p->pszName = "weapon_question";	// need for right HUD displaying
 	p->pszAmmo1 = NULL;

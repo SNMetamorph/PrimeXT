@@ -43,7 +43,7 @@ public:
 	virtual bool IsUseable();
 	virtual bool UsePredicting() { return true; }; // always true because weapon prediction enabled regardless of anything
 	
-	virtual int GetItemInfo(ItemInfo *p) { return 0; };	// returns 0 if struct not filled out
+	virtual int GetItemInfo(ItemInfo *p) const { return 0; };	// returns 0 if struct not filled out
 	virtual int	PrimaryAmmoIndex(); 
 	virtual int	SecondaryAmmoIndex(); 
 

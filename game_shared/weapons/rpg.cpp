@@ -35,7 +35,7 @@ CRpgWeaponContext::CRpgWeaponContext(std::unique_ptr<IWeaponLayer>&& layer) :
 #endif
 }
 
-int CRpgWeaponContext::GetItemInfo(ItemInfo *p)
+int CRpgWeaponContext::GetItemInfo(ItemInfo *p) const
 {
 	p->pszName = CLASSNAME_STR(RPG_CLASSNAME);
 	p->pszAmmo1 = "rockets";

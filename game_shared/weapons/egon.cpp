@@ -57,7 +57,7 @@ void CEgonWeaponContext::Holster()
 	EndAttack();
 }
 
-int CEgonWeaponContext::GetItemInfo(ItemInfo *p)
+int CEgonWeaponContext::GetItemInfo(ItemInfo *p) const
 {
 	p->pszName = CLASSNAME_STR(EGON_CLASSNAME);
 	p->pszAmmo1 = "uranium";

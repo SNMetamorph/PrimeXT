@@ -49,7 +49,7 @@ CGlockWeaponLogic::CGlockWeaponLogic(std::unique_ptr<IWeaponLayer> &&layer) :
 	m_usFireGlock2 = m_pLayer->PrecacheEvent("events/glock2.sc");
 }
 
-int CGlockWeaponLogic::GetItemInfo(ItemInfo *p)
+int CGlockWeaponLogic::GetItemInfo(ItemInfo *p) const
 {
 	p->pszName = CLASSNAME_STR(GLOCK_CLASSNAME);
 	p->pszAmmo1 = "9mm";

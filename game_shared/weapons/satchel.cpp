@@ -46,7 +46,7 @@ CSatchelWeaponContext::CSatchelWeaponContext(std::unique_ptr<IWeaponLayer>&& lay
 	m_chargeReady = 0;
 }
 
-int CSatchelWeaponContext::GetItemInfo(ItemInfo *p)
+int CSatchelWeaponContext::GetItemInfo(ItemInfo *p) const
 {
 	p->pszName = CLASSNAME_STR(SATCHEL_CLASSNAME);
 	p->pszAmmo1 = "Satchel Charge";

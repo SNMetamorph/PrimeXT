@@ -41,7 +41,7 @@ public:
 	CCyclerWeaponContext(std::unique_ptr<IWeaponLayer> &&layer);
 	~CCyclerWeaponContext() = default;
 
-	int GetItemInfo(ItemInfo *p) override;
+	int GetItemInfo(ItemInfo *p) const override;
 	void PrimaryAttack() override;
 	void SecondaryAttack() override;
 	bool Deploy() override;

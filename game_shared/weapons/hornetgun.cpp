@@ -35,7 +35,7 @@ CHornetgunWeaponContext::CHornetgunWeaponContext(std::unique_ptr<IWeaponLayer>&&
 	m_flRechargeTime = 0.0f;
 }
 
-int CHornetgunWeaponContext::GetItemInfo(ItemInfo *p)
+int CHornetgunWeaponContext::GetItemInfo(ItemInfo *p) const
 {
 	p->pszName = CLASSNAME_STR(HORNETGUN_CLASSNAME);
 	p->pszAmmo1 = "Hornets";

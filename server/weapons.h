@@ -68,7 +68,7 @@ public:
 	CBaseEntity* Respawn ( void );// copy a weapon
 	void FallInit( void );
 	void CheckRespawn( void );
-	virtual int GetItemInfo(ItemInfo *p) { return 0; };	// returns 0 if struct not filled out
+	virtual int GetItemInfo(ItemInfo *p) const { return 0; };	// returns 0 if struct not filled out
 	virtual BOOL CanDeploy( void ) { return TRUE; };
 	virtual BOOL Deploy( ) { return TRUE; };		// returns is deploy was successful
 		 
@@ -126,7 +126,7 @@ public:
 	int	PrimaryAmmoIndex() override { return m_pWeaponContext->PrimaryAmmoIndex(); }; // forward to weapon logic
 	int	SecondaryAmmoIndex() override { return m_pWeaponContext->SecondaryAmmoIndex(); }; // forward to weapon logic
 
-	virtual int GetItemInfo(ItemInfo *p) override { return m_pWeaponContext->GetItemInfo(p); };	// returns 0 if struct not filled out
+	virtual int GetItemInfo(ItemInfo *p) const override { return m_pWeaponContext->GetItemInfo(p); };	// returns 0 if struct not filled out
 	virtual BOOL CanDeploy( void ) override { return m_pWeaponContext->CanDeploy(); };
 	virtual BOOL Deploy() override { return m_pWeaponContext->Deploy(); };					// returns is deploy was successful	 
 	virtual BOOL CanHolster( void ) override { return m_pWeaponContext->CanHolster(); };	// can this weapon be put away right nxow?
