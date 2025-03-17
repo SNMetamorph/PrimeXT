@@ -58,7 +58,7 @@ bool CHornetgunWeaponContext::Deploy( void )
 
 void CHornetgunWeaponContext::Holster( void )
 {
-	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f);
+	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f);
 	SendWeaponAnim(HGUN_DOWN);
 
 	//!!!HACKHACK - can't select hornetgun if it's empty! no way to get ammo for it, either.
@@ -109,17 +109,17 @@ void CHornetgunWeaponContext::PrimaryAttack( void )
 	}
 
 	m_pLayer->SetPlayerAmmo(m_iPrimaryAmmoType, m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) - 1);
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.25f;
+	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.25f;
 
-	if (m_flNextPrimaryAttack < m_pLayer->GetWeaponTimeBase(UseDecrement()))
+	if (m_flNextPrimaryAttack < m_pLayer->GetWeaponTimeBase(UsePredicting()))
 	{
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.25f;
+		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.25f;
 	}
 	if (m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) < 1)
 	{
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + GetRechargeTime();
+		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + GetRechargeTime();
 	}
-	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
+	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
 }
 
 void CHornetgunWeaponContext::SecondaryAttack( void )
@@ -205,16 +205,16 @@ void CHornetgunWeaponContext::SecondaryAttack( void )
 		m_pLayer->PlaybackWeaponEvent(params);
 	}
 
-	m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.1f;
+	m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.1f;
 	if (m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) < 1)
 	{
 #ifndef CLIENT_DLL
 		m_flRechargeTime = gpGlobals->time + GetRechargeTime();
 #endif
-		m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f;
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f;
+		m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
+		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
 	}
-	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
+	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
 }
 
 void CHornetgunWeaponContext::Reload( void )
@@ -236,7 +236,7 @@ void CHornetgunWeaponContext::WeaponIdle( void )
 {
 	Reload();
 
-	if (m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UseDecrement()))
+	if (m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UsePredicting()))
 		return;
 
 	int iAnim;
@@ -244,17 +244,17 @@ void CHornetgunWeaponContext::WeaponIdle( void )
 	if (flRand <= 0.75)
 	{
 		iAnim = HGUN_IDLE1;
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 30.0 / 16 * (2);
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 30.0 / 16 * (2);
 	}
 	else if (flRand <= 0.875)
 	{
 		iAnim = HGUN_FIDGETSWAY;
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 40.0 / 16.0;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 40.0 / 16.0;
 	}
 	else
 	{
 		iAnim = HGUN_FIDGETSHAKE;
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 35.0 / 16.0;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 35.0 / 16.0;
 	}
 	SendWeaponAnim( iAnim );
 }

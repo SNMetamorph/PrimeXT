@@ -88,7 +88,7 @@ void CCrossbowWeaponLogic::Holster( void )
 		SecondaryAttack( );
 	}
 
-	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f);
+	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f);
 
 	if (m_iClip)
 		SendWeaponAnim( CROSSBOW_HOLSTER1 );
@@ -110,7 +110,7 @@ void CCrossbowWeaponLogic::PrimaryAttack( void )
 // this function only gets called in multiplayer
 void CCrossbowWeaponLogic::FireSniperBolt()
 {
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.75f;
+	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75f;
 
 	if (m_iClip == 0)
 	{
@@ -268,13 +268,13 @@ void CCrossbowWeaponLogic::FireBolt( void )
 		// HEV suit - indicate out of ammo condition
 		player->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.75;
-	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.75;
+	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75;
+	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75;
 
 	if (m_iClip != 0)
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 5.0;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 5.0;
 	else
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.75;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75;
 
 	// m_pPlayer->pev->punchangle.x -= 2;
 #endif
@@ -293,8 +293,8 @@ void CCrossbowWeaponLogic::SecondaryAttack( void )
 		m_fInZoom = true;
 	}
 	
-	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.3;
-	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 5.0;
+	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.3;
+	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 5.0;
 }
 
 void CCrossbowWeaponLogic::Reload( void )
@@ -322,7 +322,7 @@ void CCrossbowWeaponLogic::WeaponIdle( void )
 
 	ResetEmptySound( );
 
-	if (m_flTimeWeaponIdle < m_pLayer->GetWeaponTimeBase(UseDecrement()))
+	if (m_flTimeWeaponIdle < m_pLayer->GetWeaponTimeBase(UsePredicting()))
 	{
 		float flRand = m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 0.f, 1.f);
 		if (flRand <= 0.75f)
@@ -335,19 +335,19 @@ void CCrossbowWeaponLogic::WeaponIdle( void )
 			{
 				SendWeaponAnim( CROSSBOW_IDLE2 );
 			}
-			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.f, 15.f);
+			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.f, 15.f);
 		}
 		else
 		{
 			if (m_iClip)
 			{
 				SendWeaponAnim( CROSSBOW_FIDGET1 );
-				m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 90.0 / 30.0;
+				m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 90.0 / 30.0;
 			}
 			else
 			{
 				SendWeaponAnim( CROSSBOW_FIDGET2 );
-				m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 80.0 / 30.0;
+				m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 80.0 / 30.0;
 			}
 		}
 	}

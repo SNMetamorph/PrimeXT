@@ -80,7 +80,7 @@ void CShotgunWeaponContext::PrimaryAttack()
 	if (m_pLayer->GetPlayerWaterlevel() == 3)
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.15;
+		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.15;
 		return;
 	}
 
@@ -130,14 +130,14 @@ void CShotgunWeaponContext::PrimaryAttack()
 		player->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 #endif
 
-	//m_flPumpTime = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5; // ??? is it correct
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.75;
-	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.75;
+	//m_flPumpTime = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5; // ??? is it correct
+	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75;
+	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75;
 
 	if (m_iClip != 0)
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 5.0;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 5.0;
 	else
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.75;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75;
 
 	m_fInSpecialReload = 0;
 }
@@ -148,7 +148,7 @@ void CShotgunWeaponContext::SecondaryAttack()
 	if (m_pLayer->GetPlayerWaterlevel() == 3)
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.15;
+		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.15;
 		return;
 	}
 
@@ -199,15 +199,15 @@ void CShotgunWeaponContext::SecondaryAttack()
 		player->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 #endif
 
-	m_flPumpTime = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.95; // ??? is it correct
+	m_flPumpTime = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.95; // ??? is it correct
 
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.5;
-	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.5;
+	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.5;
+	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.5;
 
 	if (m_iClip != 0)
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 6.0;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 6.0;
 	else
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.5;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.5;
 
 	m_fInSpecialReload = 0;
 }
@@ -218,7 +218,7 @@ void CShotgunWeaponContext::Reload()
 		return;
 
 	// don't reload until recoil is done
-	if (m_flNextPrimaryAttack > m_pLayer->GetWeaponTimeBase(UseDecrement()))
+	if (m_flNextPrimaryAttack > m_pLayer->GetWeaponTimeBase(UsePredicting()))
 		return;
 
 	// check to see if we're ready to reload
@@ -226,16 +226,16 @@ void CShotgunWeaponContext::Reload()
 	{
 		m_fInSpecialReload = 1;
 		SendWeaponAnim(SHOTGUN_START_RELOAD);
-		m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.6);
+		m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.6);
 
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.6;
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.0;
-		m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.0;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.6;
+		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0;
+		m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0;
 		return;
 	}
 	else if (m_fInSpecialReload == 1)
 	{
-		if (m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UseDecrement()))
+		if (m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UsePredicting()))
 			return;
 
 		// was waiting for gun to move to side
@@ -250,7 +250,7 @@ void CShotgunWeaponContext::Reload()
 #endif
 
 		SendWeaponAnim(SHOTGUN_RELOAD);
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5;
 	}
 	else
 	{
@@ -267,7 +267,7 @@ void CShotgunWeaponContext::WeaponIdle()
 
 	m_pLayer->GetAutoaimVector( AUTOAIM_5DEGREES );
 
-	if (m_flTimeWeaponIdle < m_pLayer->GetWeaponTimeBase(UseDecrement()))
+	if (m_flTimeWeaponIdle < m_pLayer->GetWeaponTimeBase(UsePredicting()))
 	{
 		if (m_iClip == 0 && m_fInSpecialReload == 0 && m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) > 0)
 		{
@@ -289,7 +289,7 @@ void CShotgunWeaponContext::WeaponIdle()
 				EMIT_SOUND_DYN(ENT(player->pev), CHAN_ITEM, "weapons/scock1.wav", 1, ATTN_NORM, 0, 95 + RANDOM_LONG(0,0x1f));
 #endif
 				m_fInSpecialReload = 0;
-				m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.5;
+				m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.5;
 			}
 		}
 		else
@@ -299,17 +299,17 @@ void CShotgunWeaponContext::WeaponIdle()
 			if (flRand <= 0.8f)
 			{
 				iAnim = SHOTGUN_IDLE_DEEP;
-				m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + (60.0/12.0);// * RANDOM_LONG(2, 5);
+				m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + (60.0/12.0);// * RANDOM_LONG(2, 5);
 			}
 			else if (flRand <= 0.95f)
 			{
 				iAnim = SHOTGUN_IDLE;
-				m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + (20.0/9.0);
+				m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + (20.0/9.0);
 			}
 			else
 			{
 				iAnim = SHOTGUN_IDLE4;
-				m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + (20.0/9.0);
+				m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + (20.0/9.0);
 			}
 			SendWeaponAnim( iAnim );
 		}

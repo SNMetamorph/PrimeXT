@@ -89,7 +89,7 @@ void CGlockWeaponLogic::GlockFire( float flSpread , float flCycleTime, bool fUse
 		if (m_fFireOnEmpty)
 		{
 			PlayEmptySound();
-			m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.2;
+			m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.2;
 		}
 
 		return;
@@ -128,7 +128,7 @@ void CGlockWeaponLogic::GlockFire( float flSpread , float flCycleTime, bool fUse
 	}
 
 	Vector vecDir = m_pLayer->FireBullets(1, vecSrc, aimMatrix, 8192, flSpread, BULLET_PLAYER_9MM, m_pLayer->GetRandomSeed());
-	m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + flCycleTime;
+	m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + flCycleTime;
 
 	WeaponEventParams params;
 	params.flags = WeaponEventFlags::NotHost;
@@ -154,7 +154,7 @@ void CGlockWeaponLogic::GlockFire( float flSpread , float flCycleTime, bool fUse
 		// HEV suit - indicate out of ammo condition
 		m_pLayer->GetWeaponEntity()->m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 #endif
-	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.f, 15.f);
+	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.f, 15.f);
 	//m_pPlayer->pev->punchangle.x -= 2;
 }
 
@@ -169,7 +169,7 @@ void CGlockWeaponLogic::Reload( void )
 
 	if (iResult)
 	{
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
 	}
 }
 
@@ -179,7 +179,7 @@ void CGlockWeaponLogic::WeaponIdle( void )
 
 	m_pLayer->GetAutoaimVector( AUTOAIM_10DEGREES );
 
-	if (m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UseDecrement()))
+	if (m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UsePredicting()))
 		return;
 
 	// only idle if the slid isn't back
@@ -190,17 +190,17 @@ void CGlockWeaponLogic::WeaponIdle( void )
 		if (flRand <= 0.3 + 0 * 0.75)
 		{
 			iAnim = GLOCK_IDLE3;
-			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 49.0 / 16;
+			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 49.0 / 16;
 		}
 		else if (flRand <= 0.6 + 0 * 0.875)
 		{
 			iAnim = GLOCK_IDLE1;
-			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 60.0 / 16.0;
+			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 60.0 / 16.0;
 		}
 		else
 		{
 			iAnim = GLOCK_IDLE2;
-			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 40.0 / 16.0;
+			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 40.0 / 16.0;
 		}
 		SendWeaponAnim( iAnim );
 	}

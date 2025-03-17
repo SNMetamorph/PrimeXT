@@ -100,8 +100,8 @@ bool CSatchelWeaponContext::CanDeploy( void )
 
 bool CSatchelWeaponContext::Deploy( void )
 {
-	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.0f);
-	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
+	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0f);
+	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
 
 	if ( m_chargeReady )
 		return DefaultDeploy( "models/v_satchel_radio.mdl", "models/p_satchel_radio.mdl", SATCHEL_RADIO_DRAW, "hive" );
@@ -110,7 +110,7 @@ bool CSatchelWeaponContext::Deploy( void )
 
 void CSatchelWeaponContext::Holster( void )
 {
-	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f);
+	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f);
 	
 	SendWeaponAnim( m_chargeReady ? SATCHEL_RADIO_HOLSTER : SATCHEL_DROP );
 
@@ -154,9 +154,9 @@ void CSatchelWeaponContext::PrimaryAttack( void )
 		}
 #endif
 		m_chargeReady = 2;
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f;
-		m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f;
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f;
+		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
+		m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
 	}
 }
 
@@ -194,14 +194,14 @@ void CSatchelWeaponContext::Throw( void )
 
 		m_chargeReady = 1;
 		m_pLayer->SetPlayerAmmo(PrimaryAmmoIndex(), m_pLayer->GetPlayerAmmo(PrimaryAmmoIndex()) - 1);
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.0;
-		m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5;
+		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0;
+		m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5;
 	}
 }
 
 void CSatchelWeaponContext::WeaponIdle( void )
 {
-	if (m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UseDecrement()))
+	if (m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UsePredicting()))
 		return;
 
 #ifndef CLIENT_DLL
@@ -242,10 +242,10 @@ void CSatchelWeaponContext::WeaponIdle( void )
 		m_pLayer->SetPlayerViewmodel("models/v_satchel.mdl");
 		SendWeaponAnim( SATCHEL_DRAW );
 
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f;
-		m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f;
+		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
+		m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
 		m_chargeReady = 0;
 		break;
 	}
-	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
+	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
 }

@@ -73,7 +73,7 @@ bool CRpgWeaponContext::CanHolster()
 void CRpgWeaponContext::Holster()
 {
 	m_fInReload = FALSE; // cancel any reload in progress.
-	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f);
+	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f);
 	SendWeaponAnim( RPG_HOLSTER1 );
 
 #ifndef CLIENT_DLL
@@ -125,8 +125,8 @@ void CRpgWeaponContext::PrimaryAttack()
 		}
 
 		m_iClip--; 
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.5f;
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.5f;
+		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.5f;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.5f;
 		// m_pPlayer->pev->punchangle.x -= 5;
 		ResetEmptySound();
 	}
@@ -147,7 +147,7 @@ void CRpgWeaponContext::SecondaryAttack()
 		m_pSpot = nullptr;
 	}
 #endif
-	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.2f;
+	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.2f;
 }
 
 void CRpgWeaponContext::Reload( void )
@@ -173,7 +173,7 @@ void CRpgWeaponContext::Reload( void )
 	// Set the next attack time into the future so that WeaponIdle will get called more often
 	// than reload, allowing the RPG LTD to be updated
 	
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f;
+	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
 
 	if ( m_cActiveRockets && m_fSpotActive )
 	{
@@ -186,7 +186,7 @@ void CRpgWeaponContext::Reload( void )
 	if (m_pSpot && m_fSpotActive)
 	{
 		m_pSpot->Suspend( 2.1f );
-		m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 2.1f;
+		m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 2.1f;
 	}
 #endif
 
@@ -197,7 +197,7 @@ void CRpgWeaponContext::Reload( void )
 
 	if (iResult)
 	{
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
 	}
 }
 
@@ -205,7 +205,7 @@ void CRpgWeaponContext::WeaponIdle( void )
 {
 	UpdateSpot( );
 
-	if (m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UseDecrement()))
+	if (m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UsePredicting()))
 		return;
 
 	if (m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType))
@@ -219,7 +219,7 @@ void CRpgWeaponContext::WeaponIdle( void )
 			else
 				iAnim = RPG_IDLE;
 
-			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 90.0f / 15.0f;
+			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 90.0f / 15.0f;
 		}
 		else
 		{
@@ -228,7 +228,7 @@ void CRpgWeaponContext::WeaponIdle( void )
 			else
 				iAnim = RPG_FIDGET;
 
-			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 3.0f;
+			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 3.0f;
 		}
 
 		ResetEmptySound( );
@@ -236,7 +236,7 @@ void CRpgWeaponContext::WeaponIdle( void )
 	}
 	else
 	{
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.0f;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0f;
 	}
 }
 

@@ -59,7 +59,7 @@ bool CTripmineWeaponContext::Deploy( )
 
 void CTripmineWeaponContext::Holster( void )
 {
-	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f);
+	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f);
 
 	if (!m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType))
 	{
@@ -145,13 +145,13 @@ void CTripmineWeaponContext::PrimaryAttack( void )
 		}
 	}
 #endif
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.3f;
-	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
+	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.3f;
+	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
 }
 
 void CTripmineWeaponContext::WeaponIdle()
 {
-	if ( m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UseDecrement()) )
+	if ( m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UsePredicting()) )
 		return;
 
 	if ( m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) > 0 )
@@ -172,17 +172,17 @@ void CTripmineWeaponContext::WeaponIdle()
 	if (flRand <= 0.25)
 	{
 		iAnim = TRIPMINE_IDLE1;
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 90.0 / 30.0;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 90.0 / 30.0;
 	}
 	else if (flRand <= 0.75)
 	{
 		iAnim = TRIPMINE_IDLE2;
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 60.0 / 30.0;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 60.0 / 30.0;
 	}
 	else
 	{
 		iAnim = TRIPMINE_FIDGET;
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 100.0 / 30.0;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 100.0 / 30.0;
 	}
 
 	SendWeaponAnim( iAnim );

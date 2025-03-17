@@ -79,7 +79,7 @@ bool CGaussWeaponContext::Deploy()
 void CGaussWeaponContext::Holster()
 {
 	m_fInAttack = 0;
-	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f);
+	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f);
 	SendWeaponAnim( GAUSS_HOLSTER );
 	// EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM);
 }
@@ -90,14 +90,14 @@ void CGaussWeaponContext::PrimaryAttack()
 	if (m_pLayer->GetPlayerWaterlevel() == 3)
 	{
 		PlayEmptySound();
-		m_flNextSecondaryAttack = m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.15f;
+		m_flNextSecondaryAttack = m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.15f;
 		return;
 	}
 
 	if (m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) < 2)
 	{
 		PlayEmptySound();
-		m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f);
+		m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f);
 		return;
 	}
 
@@ -111,8 +111,8 @@ void CGaussWeaponContext::PrimaryAttack()
 
 	StartFire();
 	m_fInAttack = 0;
-	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.0f;
-	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.2f);
+	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0f;
+	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.2f);
 }
 
 void CGaussWeaponContext::SecondaryAttack()
@@ -140,7 +140,7 @@ void CGaussWeaponContext::SecondaryAttack()
 			PlayEmptySound( );
 		}
 
-		m_flNextSecondaryAttack = m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f;
+		m_flNextSecondaryAttack = m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
 		return;
 	}
 
@@ -149,19 +149,19 @@ void CGaussWeaponContext::SecondaryAttack()
 		if ( m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) < 1 )
 		{
 			PlayEmptySound( );
-			m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f);
+			m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f);
 			return;
 		}
 
 		m_fPrimaryFire = FALSE;
 		m_pLayer->SetPlayerAmmo(m_iPrimaryAmmoType, m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) - 1); // take one ammo just to start the spin
-		m_flNextAmmoBurn = m_pLayer->GetWeaponTimeBase(UseDecrement());
+		m_flNextAmmoBurn = m_pLayer->GetWeaponTimeBase(UsePredicting());
 		
 		SendWeaponAnim( GAUSS_SPINUP );
 		m_fInAttack = 1;
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5;
 		m_flStartCharge = m_pLayer->GetTime();
-		m_flAmmoStartCharge = m_pLayer->GetWeaponTimeBase(UseDecrement()) + GetFullChargeTime();
+		m_flAmmoStartCharge = m_pLayer->GetWeaponTimeBase(UsePredicting()) + GetFullChargeTime();
 
 		WeaponEventParams params;
 		params.flags = WeaponEventFlags::NotHost;
@@ -188,7 +188,7 @@ void CGaussWeaponContext::SecondaryAttack()
 	}
 	else if (m_fInAttack == 1)
 	{
-		if (m_flTimeWeaponIdle < m_pLayer->GetWeaponTimeBase(UseDecrement()))
+		if (m_flTimeWeaponIdle < m_pLayer->GetWeaponTimeBase(UsePredicting()))
 		{
 			SendWeaponAnim( GAUSS_SPIN );
 			m_fInAttack = 2;
@@ -197,17 +197,17 @@ void CGaussWeaponContext::SecondaryAttack()
 	else
 	{
 		// during the charging process, eat one bit of ammo every once in a while
-		if ( m_pLayer->GetWeaponTimeBase(UseDecrement()) >= m_flNextAmmoBurn && m_flNextAmmoBurn != 1000 )
+		if ( m_pLayer->GetWeaponTimeBase(UsePredicting()) >= m_flNextAmmoBurn && m_flNextAmmoBurn != 1000 )
 		{
 			if ( m_pLayer->IsMultiplayer() )
 			{
 				m_pLayer->SetPlayerAmmo(m_iPrimaryAmmoType, m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) - 1);
-				m_flNextAmmoBurn = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.1f;
+				m_flNextAmmoBurn = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.1f;
 			}
 			else
 			{
 				m_pLayer->SetPlayerAmmo(m_iPrimaryAmmoType, m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) - 1);
-				m_flNextAmmoBurn = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.3f;
+				m_flNextAmmoBurn = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.3f;
 			}
 		}
 
@@ -216,12 +216,12 @@ void CGaussWeaponContext::SecondaryAttack()
 			// out of ammo! force the gun to fire
 			StartFire();
 			m_fInAttack = 0;
-			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.0f;
-			m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.0f);
+			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0f;
+			m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0f);
 			return;
 		}
 		
-		if ( m_pLayer->GetWeaponTimeBase(UseDecrement()) >= m_flAmmoStartCharge )
+		if ( m_pLayer->GetWeaponTimeBase(UsePredicting()) >= m_flAmmoStartCharge )
 		{
 			// don't eat any more ammo after gun is fully charged.
 			m_flNextAmmoBurn = 1000;
@@ -265,8 +265,8 @@ void CGaussWeaponContext::SecondaryAttack()
 			EMIT_SOUND_DYN(ENT(pWeapon->m_pPlayer->pev), CHAN_ITEM, "weapons/electro6.wav", 1.0, ATTN_NORM, 0, 75 + RANDOM_LONG(0, 0x3f));
 #endif		
 			m_fInAttack = 0;
-			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.0f;
-			m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.0f);
+			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0f;
+			m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0f);
 #ifndef CLIENT_DLL
 			pWeapon->m_pPlayer->TakeDamage(VARS(eoNullEntity), VARS(eoNullEntity), 50, DMG_SHOCK);
 			UTIL_ScreenFade(pWeapon-> m_pPlayer, Vector(255,128,0), 2, 0.5, 128, FFADE_IN);
@@ -562,14 +562,14 @@ void CGaussWeaponContext::WeaponIdle()
 		m_flPlayAftershock = 0.0f;
 	}
 
-	if (m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UseDecrement()))
+	if (m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UsePredicting()))
 		return;
 
 	if (m_fInAttack != 0)
 	{
 		StartFire();
 		m_fInAttack = 0;
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 2.0f;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 2.0f;
 	}
 	else
 	{
@@ -578,17 +578,17 @@ void CGaussWeaponContext::WeaponIdle()
 		if (flRand <= 0.5f)
 		{
 			iAnim = GAUSS_IDLE;
-			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.f, 15.f);
+			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.f, 15.f);
 		}
 		else if (flRand <= 0.75f)
 		{
 			iAnim = GAUSS_IDLE2;
-			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.f, 15.f);
+			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.f, 15.f);
 		}
 		else
 		{
 			iAnim = GAUSS_FIDGET;
-			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 3.0f;
+			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 3.0f;
 		}
 		SendWeaponAnim( iAnim );
 	}

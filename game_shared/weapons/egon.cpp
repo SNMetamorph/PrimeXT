@@ -52,7 +52,7 @@ bool CEgonWeaponContext::Deploy()
 
 void CEgonWeaponContext::Holster()
 {
-	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f);
+	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f);
 	SendWeaponAnim( EGON_HOLSTER );
 	EndAttack();
 }
@@ -116,7 +116,7 @@ void CEgonWeaponContext::Attack()
 		{
 			if (!HasAmmo())
 			{
-				m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.25;
+				m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.25;
 				PlayEmptySound();
 				return;
 			}
@@ -144,8 +144,8 @@ void CEgonWeaponContext::Attack()
 			pWeapon->m_pPlayer->m_iWeaponVolume = EGON_PRIMARY_VOLUME;
 #endif
 			m_shakeTime = 0.0f;
-			m_flAttackCooldown = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 2.f;
-			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.1f;
+			m_flAttackCooldown = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 2.f;
+			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.1f;
 			m_fireState = FIRE_CHARGE;
 		}
 		break;
@@ -156,7 +156,7 @@ void CEgonWeaponContext::Attack()
 			Fire( vecSrc, vecAiming );
 			pWeapon->m_pPlayer->m_iWeaponVolume = EGON_PRIMARY_VOLUME;
 #endif
-			if (m_flAttackCooldown <= m_pLayer->GetWeaponTimeBase(UseDecrement()))
+			if (m_flAttackCooldown <= m_pLayer->GetWeaponTimeBase(UsePredicting()))
 			{
 				// PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fireMode, 0, 0 );
 				WeaponEventParams params;
@@ -183,7 +183,7 @@ void CEgonWeaponContext::Attack()
 			{
 				EndAttack();
 				m_fireState = FIRE_OFF;
-				m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.0;
+				m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0;
 			}
 		}
 		break;
@@ -456,8 +456,8 @@ void CEgonWeaponContext::EndAttack()
 		m_pLayer->PlaybackWeaponEvent(params);
 	}
 
-	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 2.0f;
-	m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f;
+	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 2.0f;
+	m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
 	m_fireState = FIRE_OFF;
 
 	DestroyEffect();
@@ -467,7 +467,7 @@ void CEgonWeaponContext::WeaponIdle()
 {
 	ResetEmptySound();
 
-	if (m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UseDecrement()))
+	if (m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UsePredicting()))
 		return;
 
 	if (m_fireState != FIRE_OFF)
@@ -479,12 +479,12 @@ void CEgonWeaponContext::WeaponIdle()
 	if (flRand <= 0.5)
 	{
 		iAnim = EGON_IDLE1;
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
 	}
 	else
 	{
 		iAnim = EGON_FIDGET1;
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 3;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 3;
 	}
 
 	SendWeaponAnim(iAnim);

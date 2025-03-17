@@ -76,7 +76,7 @@ void CBaseWeaponContext::ItemPostFrame()
 		m_fInReload = FALSE;
 	}
 
-	if (m_pLayer->CheckPlayerButtonFlag(IN_ATTACK2) && m_flNextSecondaryAttack <= m_pLayer->GetWeaponTimeBase(UseDecrement()) )
+	if (m_pLayer->CheckPlayerButtonFlag(IN_ATTACK2) && m_flNextSecondaryAttack <= m_pLayer->GetWeaponTimeBase(UsePredicting()) )
 	{
 		if ( pszAmmo2() && !m_pLayer->GetPlayerAmmo(SecondaryAmmoIndex()) )
 		{
@@ -86,7 +86,7 @@ void CBaseWeaponContext::ItemPostFrame()
 		SecondaryAttack();
 		m_pLayer->ClearPlayerButtonFlag(IN_ATTACK2);
 	}
-	else if (m_pLayer->CheckPlayerButtonFlag(IN_ATTACK) && m_flNextPrimaryAttack <= m_pLayer->GetWeaponTimeBase(UseDecrement()) )
+	else if (m_pLayer->CheckPlayerButtonFlag(IN_ATTACK) && m_flNextPrimaryAttack <= m_pLayer->GetWeaponTimeBase(UsePredicting()) )
 	{
 		if ( (m_iClip == 0 && pszAmmo1()) || (iMaxClip() == -1 && !m_pLayer->GetPlayerAmmo(PrimaryAmmoIndex())) )
 		{
@@ -106,12 +106,12 @@ void CBaseWeaponContext::ItemPostFrame()
 
 		m_fFireOnEmpty = FALSE;
 #ifndef CLIENT_DLL // we don't need this branch on client side, because client is not responsible for changing weapons
-		if ( !IsUseable() && m_flNextPrimaryAttack < m_pLayer->GetWeaponTimeBase(UseDecrement()) ) 
+		if ( !IsUseable() && m_flNextPrimaryAttack < m_pLayer->GetWeaponTimeBase(UsePredicting()) ) 
 		{
 			// weapon isn't useable, switch. GetNextBestWeapon does weapon switching
 			if ( !(iFlags() & ITEM_FLAG_NOAUTOSWITCHEMPTY) && g_pGameRules->GetNextBestWeapon( m_pLayer->GetWeaponEntity()->m_pPlayer, m_pLayer->GetWeaponEntity() ))
 			{
-				m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.3;
+				m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.3;
 				return;
 			}
 		}
@@ -119,7 +119,7 @@ void CBaseWeaponContext::ItemPostFrame()
 #endif
 		{
 			// weapon is useable. Reload if empty and weapon has waited as long as it has to after firing
-			if ( m_iClip == 0 && !(iFlags() & ITEM_FLAG_NOAUTORELOAD) && m_flNextPrimaryAttack < m_pLayer->GetWeaponTimeBase(UseDecrement()) )
+			if ( m_iClip == 0 && !(iFlags() & ITEM_FLAG_NOAUTORELOAD) && m_flNextPrimaryAttack < m_pLayer->GetWeaponTimeBase(UsePredicting()) )
 			{
 				Reload();
 				return;
@@ -196,7 +196,7 @@ bool CBaseWeaponContext :: CanDeploy()
 	return TRUE;
 }
 
-bool CBaseWeaponContext :: DefaultDeploy( char *szViewModel, char *szWeaponModel, int iAnim, char *szAnimExt, int skiplocal /* = 0 */, int body )
+bool CBaseWeaponContext :: DefaultDeploy( char *szViewModel, char *szWeaponModel, int iAnim, char *szAnimExt, int body )
 {
 	if (!CanDeploy( ))
 		return FALSE;
@@ -205,13 +205,12 @@ bool CBaseWeaponContext :: DefaultDeploy( char *szViewModel, char *szWeaponModel
 	CBasePlayer *player = m_pLayer->GetWeaponEntity()->m_pPlayer;
 	player->pev->weaponmodel = MAKE_STRING(szWeaponModel);
 	strcpy( player->m_szAnimExtention, szAnimExt );
-	//player->TabulateAmmo();
 #endif
 	m_pLayer->SetPlayerViewmodel(szViewModel);
-	SendWeaponAnim( iAnim, skiplocal, body );
+	SendWeaponAnim( iAnim, body );
 
-	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5);
-	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.0;
+	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5);
+	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0;
 	return TRUE;
 }
 
@@ -225,18 +224,18 @@ BOOL CBaseWeaponContext :: DefaultReload( int iClipSize, int iAnim, float fDelay
 	if (j == 0)
 		return FALSE;
 
-	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + fDelay);
+	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + fDelay);
 
 	//!!UNDONE -- reload sound goes here !!!
-	SendWeaponAnim( iAnim, UseDecrement() ? 1 : 0, body );
+	SendWeaponAnim( iAnim, body );
 
 	m_fInReload = TRUE;
 
-	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 3;
+	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 3;
 	return TRUE;
 }
 
-void CBaseWeaponContext::SendWeaponAnim( int iAnim, int skiplocal, int body )
+void CBaseWeaponContext::SendWeaponAnim( int iAnim, int body )
 {
 	m_pLayer->SetPlayerWeaponAnim(iAnim);
 
@@ -247,12 +246,7 @@ void CBaseWeaponContext::SendWeaponAnim( int iAnim, int skiplocal, int body )
 #else
 	CBasePlayer *player = m_pLayer->GetWeaponEntity()->m_pPlayer;
 
-	if ( UseDecrement() )
-		skiplocal = 1;
-	else
-		skiplocal = 0;
-
-	if ( skiplocal && ENGINE_CANSKIP( player->edict() ) )
+	if ( UsePredicting() && ENGINE_CANSKIP( player->edict() ) )
 		return;
 
 	MESSAGE_BEGIN( MSG_ONE, SVC_WEAPONANIM, NULL, player->pev );
@@ -267,7 +261,9 @@ bool CBaseWeaponContext :: PlayEmptySound()
 	if (m_iPlayEmptySound)
 	{
 #ifdef CLIENT_DLL
-		// HUD_PlaySound( "weapons/357_cock1.wav", 0.8 );
+		if (m_pLayer->ShouldRunFuncs()) {
+			gEngfuncs.pfnPlaySoundByNameAtLocation("weapons/357_cock1.wav", 0.8, m_pLayer->GetGunPosition());
+		}
 #else
 		EMIT_SOUND(ENT(m_pLayer->GetWeaponEntity()->m_pPlayer->pev), CHAN_WEAPON, "weapons/357_cock1.wav", 0.8, ATTN_NORM);
 #endif
