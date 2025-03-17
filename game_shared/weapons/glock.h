@@ -16,7 +16,7 @@
 #pragma once
 #include "weapon_context.h"
 #include "weapon_layer.h"
-#include <utility>
+#include <memory>
 
 #define WEAPON_GLOCK		2
 #define GLOCK_WEIGHT		10
@@ -24,12 +24,26 @@
 #define GLOCK_DEFAULT_GIVE	17
 #define GLOCK_CLASSNAME		weapon_9mmhandgun
 
-class CGlockWeaponLogic : public CBaseWeaponContext
+enum glock_e
+{
+	GLOCK_IDLE1 = 0,
+	GLOCK_IDLE2,
+	GLOCK_IDLE3,
+	GLOCK_SHOOT,
+	GLOCK_SHOOT_EMPTY,
+	GLOCK_RELOAD,
+	GLOCK_RELOAD_NOT_EMPTY,
+	GLOCK_DRAW,
+	GLOCK_HOLSTER,
+	GLOCK_ADD_SILENCER
+};
+
+class CGlockWeaponContext : public CBaseWeaponContext
 {
 public:
-	CGlockWeaponLogic() = delete;
-	~CGlockWeaponLogic() = default;
-	CGlockWeaponLogic(std::unique_ptr<IWeaponLayer> &&layer);
+	CGlockWeaponContext() = delete;
+	CGlockWeaponContext(std::unique_ptr<IWeaponLayer> &&layer);
+	~CGlockWeaponContext() = default;
 	
 	int iItemSlot() override { return 2; }
 	int GetItemInfo(ItemInfo *p) const override;

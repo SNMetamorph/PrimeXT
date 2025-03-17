@@ -20,20 +20,7 @@ GNU General Public License for more details.
 #include "utils.h"
 #include "event_api.h"
 #include "event_args.h"
-
-enum shotgun_e
-{
-	SHOTGUN_IDLE = 0,
-	SHOTGUN_FIRE,
-	SHOTGUN_FIRE2,
-	SHOTGUN_RELOAD,
-	SHOTGUN_PUMP,
-	SHOTGUN_START_RELOAD,
-	SHOTGUN_DRAW,
-	SHOTGUN_HOLSTER,
-	SHOTGUN_IDLE4,
-	SHOTGUN_IDLE_DEEP
-};
+#include "weapons/shotgun.h"
 
 CShotgunFireEvent::CShotgunFireEvent(event_args_t *args) :
 	CBaseGameEvent(args)

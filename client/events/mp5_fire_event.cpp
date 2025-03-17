@@ -20,18 +20,7 @@ GNU General Public License for more details.
 #include "utils.h"
 #include "event_api.h"
 #include "event_args.h"
-
-enum mp5_e
-{
-	MP5_LONGIDLE = 0,
-	MP5_IDLE1,
-	MP5_LAUNCH,
-	MP5_RELOAD,
-	MP5_DEPLOY,
-	MP5_FIRE1,
-	MP5_FIRE2,
-	MP5_FIRE3,
-};
+#include "weapons/mp5.h"
 
 CMP5FireEvent::CMP5FireEvent(event_args_t *args) :
 	CBaseGameEvent(args)

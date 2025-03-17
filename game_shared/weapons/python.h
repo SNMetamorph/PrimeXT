@@ -25,6 +25,18 @@
 #define PYTHON_DEFAULT_GIVE		6
 #define PYTHON_CLASSNAME		weapon_357
 
+enum python_e
+{
+	PYTHON_IDLE1 = 0,
+	PYTHON_FIDGET,
+	PYTHON_FIRE1,
+	PYTHON_RELOAD,
+	PYTHON_HOLSTER,
+	PYTHON_DRAW,
+	PYTHON_IDLE2,
+	PYTHON_IDLE3
+};
+
 class CPythonWeaponContext : public CBaseWeaponContext
 {
 public:

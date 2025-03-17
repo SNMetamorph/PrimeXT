@@ -14,6 +14,7 @@
 ****/
 
 #include "glock.h"
+#include <utility>
 
 #ifdef CLIENT_DLL
 #else
@@ -26,21 +27,7 @@
 #include "player.h"
 #endif
 
-enum glock_e
-{
-	GLOCK_IDLE1 = 0,
-	GLOCK_IDLE2,
-	GLOCK_IDLE3,
-	GLOCK_SHOOT,
-	GLOCK_SHOOT_EMPTY,
-	GLOCK_RELOAD,
-	GLOCK_RELOAD_NOT_EMPTY,
-	GLOCK_DRAW,
-	GLOCK_HOLSTER,
-	GLOCK_ADD_SILENCER
-};
-
-CGlockWeaponLogic::CGlockWeaponLogic(std::unique_ptr<IWeaponLayer> &&layer) :
+CGlockWeaponContext::CGlockWeaponContext(std::unique_ptr<IWeaponLayer> &&layer) :
 	CBaseWeaponContext(std::move(layer))
 {
 	m_iDefaultAmmo = GLOCK_DEFAULT_GIVE;
@@ -49,7 +36,7 @@ CGlockWeaponLogic::CGlockWeaponLogic(std::unique_ptr<IWeaponLayer> &&layer) :
 	m_usFireGlock2 = m_pLayer->PrecacheEvent("events/glock2.sc");
 }
 
-int CGlockWeaponLogic::GetItemInfo(ItemInfo *p) const
+int CGlockWeaponContext::GetItemInfo(ItemInfo *p) const
 {
 	p->pszName = CLASSNAME_STR(GLOCK_CLASSNAME);
 	p->pszAmmo1 = "9mm";
@@ -62,27 +49,26 @@ int CGlockWeaponLogic::GetItemInfo(ItemInfo *p) const
 	p->iFlags = 0;
 	p->iId = m_iId;
 	p->iWeight = GLOCK_WEIGHT;
-
 	return 1;
 }
 
-bool CGlockWeaponLogic::Deploy( )
+bool CGlockWeaponContext::Deploy( )
 {
 	// pev->body = 1;
 	return DefaultDeploy( "models/v_9mmhandgun.mdl", "models/p_9mmhandgun.mdl", GLOCK_DRAW, "onehanded" );
 }
 
-void CGlockWeaponLogic::SecondaryAttack( void )
+void CGlockWeaponContext::SecondaryAttack( void )
 {
 	GlockFire( 0.1, 0.2, FALSE );
 }
 
-void CGlockWeaponLogic::PrimaryAttack( void )
+void CGlockWeaponContext::PrimaryAttack( void )
 {
 	GlockFire( 0.01, 0.3, TRUE );
 }
 
-void CGlockWeaponLogic::GlockFire( float flSpread , float flCycleTime, bool fUseAutoAim )
+void CGlockWeaponContext::GlockFire( float flSpread , float flCycleTime, bool fUseAutoAim )
 {
 	if (m_iClip <= 0)
 	{
@@ -158,7 +144,7 @@ void CGlockWeaponLogic::GlockFire( float flSpread , float flCycleTime, bool fUse
 	//m_pPlayer->pev->punchangle.x -= 2;
 }
 
-void CGlockWeaponLogic::Reload( void )
+void CGlockWeaponContext::Reload( void )
 {
 	int iResult;
 
@@ -173,7 +159,7 @@ void CGlockWeaponLogic::Reload( void )
 	}
 }
 
-void CGlockWeaponLogic::WeaponIdle( void )
+void CGlockWeaponContext::WeaponIdle( void )
 {
 	ResetEmptySound( );
 

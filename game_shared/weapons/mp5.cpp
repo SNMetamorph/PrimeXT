@@ -29,18 +29,6 @@
 #include "ggrenade.h"
 #endif
 
-enum mp5_e
-{
-	MP5_LONGIDLE = 0,
-	MP5_IDLE1,
-	MP5_LAUNCH,
-	MP5_RELOAD,
-	MP5_DEPLOY,
-	MP5_FIRE1,
-	MP5_FIRE2,
-	MP5_FIRE3,
-};
-
 CMP5WeaponContext::CMP5WeaponContext(std::unique_ptr<IWeaponLayer> &&layer) :
 	CBaseWeaponContext(std::move(layer))
 {

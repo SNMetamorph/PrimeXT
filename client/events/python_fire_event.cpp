@@ -20,18 +20,7 @@ GNU General Public License for more details.
 #include "utils.h"
 #include "event_api.h"
 #include "event_args.h"
-
-enum python_e
-{
-	PYTHON_IDLE1 = 0,
-	PYTHON_FIDGET,
-	PYTHON_FIRE1,
-	PYTHON_RELOAD,
-	PYTHON_HOLSTER,
-	PYTHON_DRAW,
-	PYTHON_IDLE2,
-	PYTHON_IDLE3
-};
+#include "weapons/python.h"
 
 CPythonFireEvent::CPythonFireEvent(event_args_t *args) :
 	CBaseGameEvent(args)
