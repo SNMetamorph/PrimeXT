@@ -75,7 +75,7 @@ bool CCrowbarWeaponContext::Deploy( )
 
 void CCrowbarWeaponContext::Holster()
 {
-	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f);
+	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f);
 	SendWeaponAnim( CROWBAR_HOLSTER );
 }
 
@@ -160,7 +160,7 @@ bool CCrowbarWeaponContext::Swing(bool fFirst)
 		}
 
 		// miss
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f;
+		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
 	}
 	return false;
 #else
@@ -215,7 +215,7 @@ bool CCrowbarWeaponContext::Swing(bool fFirst)
 		if (fFirst)
 		{
 			// miss
-			m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f;
+			m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
 			
 			// player "shoot" animation
 			player->SetAnimation( PLAYER_ATTACK1 );
@@ -244,7 +244,7 @@ bool CCrowbarWeaponContext::Swing(bool fFirst)
 
 		// JoshA: Changed from < -> <= to fix the full swing logic since client weapon prediction.
 		// -1.0f + 1.0f = 0.0f. UTIL_WeaponTimeBase is always 0 with client weapon prediction (0 time base vs curtime base)
-		if ( ( m_flNextPrimaryAttack + 1.0f <= m_pLayer->GetWeaponTimeBase(UseDecrement()) ) || m_pLayer->IsMultiplayer() )
+		if ( ( m_flNextPrimaryAttack + 1.0f <= m_pLayer->GetWeaponTimeBase(UsePredicting()) ) || m_pLayer->IsMultiplayer() )
 		{
 			// first swing does full damage
 			pEntity->TraceAttack(player->pev, gSkillData.plrDmgCrowbar, gpGlobals->v_forward, &tr, DMG_CLUB ); 
@@ -316,7 +316,7 @@ bool CCrowbarWeaponContext::Swing(bool fFirst)
 		}
 
 		player->m_iWeaponVolume = flVol * CROWBAR_WALLHIT_VOLUME;
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.25f;
+		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.25f;
 		weapon->SetThink( &CCrowbar::Smack );
 		weapon->pev->nextthink = gpGlobals->time + 0.2f;
 	}

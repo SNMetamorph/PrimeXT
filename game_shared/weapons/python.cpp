@@ -89,8 +89,8 @@ void CPythonWeaponContext::Holster()
 		SecondaryAttack();
 	}
 
-	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.0f);
-	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.f, 15.f);
+	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0f);
+	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.f, 15.f);
 	SendWeaponAnim(PYTHON_HOLSTER);
 }
 
@@ -112,7 +112,7 @@ void CPythonWeaponContext::SecondaryAttack()
 		m_fInZoom = true;
 	}
 
-	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5f;
+	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
 }
 
 void CPythonWeaponContext::PrimaryAttack()
@@ -121,7 +121,7 @@ void CPythonWeaponContext::PrimaryAttack()
 	if (m_pLayer->GetPlayerWaterlevel() == 3)
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.15f;
+		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.15f;
 		return;
 	}
 
@@ -134,7 +134,7 @@ void CPythonWeaponContext::PrimaryAttack()
 		else
 		{
 			PlayEmptySound();
-			m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.15f;
+			m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.15f;
 		}
 
 		return;
@@ -178,8 +178,8 @@ void CPythonWeaponContext::PrimaryAttack()
 #endif
 
 	// m_pPlayer->pev->punchangle.x -= 10;
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.75f;
-	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.f, 15.f);
+	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75f;
+	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.f, 15.f);
 }
 
 void CPythonWeaponContext::Reload()
@@ -202,7 +202,7 @@ void CPythonWeaponContext::WeaponIdle()
 
 	m_pLayer->GetAutoaimVector(AUTOAIM_10DEGREES);
 
-	if (m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UseDecrement()))
+	if (m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UsePredicting()))
 		return;
 
 	int iAnim;
@@ -228,5 +228,5 @@ void CPythonWeaponContext::WeaponIdle()
 		m_flTimeWeaponIdle = (170.0 / 30.0);
 	}
 
-	SendWeaponAnim(iAnim, UseDecrement() ? 1 : 0, m_pLayer->IsMultiplayer() ? 1 : 0);
+	SendWeaponAnim(iAnim, m_pLayer->IsMultiplayer() ? 1 : 0);
 }

@@ -41,7 +41,7 @@ public:
 	virtual bool CanHolster() { return true; };		// can this weapon be put away right nxow?
 	virtual void Holster();
 	virtual bool IsUseable();
-	virtual bool UseDecrement() { return true; }; // always true because weapon prediction enabled regardless of anything
+	virtual bool UsePredicting() { return true; }; // always true because weapon prediction enabled regardless of anything
 	
 	virtual int GetItemInfo(ItemInfo *p) { return 0; };	// returns 0 if struct not filled out
 	virtual int	PrimaryAmmoIndex(); 
@@ -58,9 +58,9 @@ public:
 	virtual int	iWeight();
 	virtual	int iFlags();
 
-	bool DefaultDeploy( char *szViewModel, char *szWeaponModel, int iAnim, char *szAnimExt, int skiplocal = 0, int body = 0 );
+	bool DefaultDeploy( char *szViewModel, char *szWeaponModel, int iAnim, char *szAnimExt, int body = 0 );
 	int DefaultReload( int iClipSize, int iAnim, float fDelay, int body = 0 );
-	void SendWeaponAnim( int iAnim, int skiplocal = 1, int body = 0 );  // skiplocal is 1 if client is predicting weapon animations
+	void SendWeaponAnim( int iAnim, int body = 0 );  // skiplocal is 1 if client is predicting weapon animations
 	bool PlayEmptySound();
 	void ResetEmptySound();
 

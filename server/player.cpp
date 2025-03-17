@@ -2623,7 +2623,7 @@ void CBasePlayer::UpdateWeaponTimers()
 				CBasePlayerWeapon *gun = (CBasePlayerWeapon *)pPlayerItem->GetWeaponPtr();
 				CBaseWeaponContext *ctx = gun->m_pWeaponContext.get();
 
-				if (gun && ctx->UseDecrement())
+				if (gun && ctx->UsePredicting())
 				{
 					ctx->m_flNextPrimaryAttack = std::max(ctx->m_flNextPrimaryAttack - gpGlobals->frametime, -1.0f);
 					ctx->m_flNextSecondaryAttack = std::max(ctx->m_flNextSecondaryAttack - gpGlobals->frametime, -0.001f);

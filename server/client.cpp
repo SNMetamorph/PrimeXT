@@ -1623,7 +1623,7 @@ int GetWeaponData( struct edict_s *player, struct weapon_data_s *info )
 			{
 				CBasePlayerWeapon *weapon = dynamic_cast<CBasePlayerWeapon*>(item->GetWeaponPtr());
 				CBaseWeaponContext *ctx = weapon->m_pWeaponContext.get();
-				if (weapon && ctx->UseDecrement())
+				if (weapon && ctx->UsePredicting())
 				{
 					ItemInfo itemInfo;
 					memset(&itemInfo, 0, sizeof(itemInfo));
@@ -1733,7 +1733,7 @@ void UpdateClientData ( const struct edict_s *ent, int sendweapons, struct clien
 		if (item)
 		{
 			CBasePlayerWeapon *weapon = static_cast<CBasePlayerWeapon*>(item->GetWeaponPtr());
-			if (weapon && weapon->m_pWeaponContext->UseDecrement())
+			if (weapon && weapon->m_pWeaponContext->UsePredicting())
 			{
 				ItemInfo itemInfo;
 				memset(&itemInfo, 0, sizeof(itemInfo));

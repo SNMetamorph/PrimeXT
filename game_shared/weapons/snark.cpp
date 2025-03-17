@@ -65,7 +65,7 @@ bool CSqueakWeaponContext::Deploy()
 
 void CSqueakWeaponContext::Holster()
 {
-	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.5);
+	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5);
 	if (m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) < 1)
 	{
 #ifndef CLIENT_DLL
@@ -139,14 +139,14 @@ void CSqueakWeaponContext::PrimaryAttack()
 		}
 
 		m_fJustThrown = true;
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 0.3f;
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 1.0f;
+		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.3f;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0f;
 	}
 }
 
 void CSqueakWeaponContext::WeaponIdle()
 {
-	if (m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UseDecrement()))
+	if (m_flTimeWeaponIdle > m_pLayer->GetWeaponTimeBase(UsePredicting()))
 		return;
 
 	if (m_fJustThrown)
@@ -162,7 +162,7 @@ void CSqueakWeaponContext::WeaponIdle()
 		}
 
 		SendWeaponAnim(SQUEAK_UP);
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.f, 15.f);
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.f, 15.f);
 		return;
 	}
 
@@ -171,17 +171,17 @@ void CSqueakWeaponContext::WeaponIdle()
 	if (flRand <= 0.75)
 	{
 		iAnim = SQUEAK_IDLE1;
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 30.0 / 16 * (2);
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 30.0 / 16 * (2);
 	}
 	else if (flRand <= 0.875)
 	{
 		iAnim = SQUEAK_FIDGETFIT;
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 70.0 / 16.0;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 70.0 / 16.0;
 	}
 	else
 	{
 		iAnim = SQUEAK_FIDGETNIP;
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UseDecrement()) + 80.0 / 16.0;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 80.0 / 16.0;
 	}
 	SendWeaponAnim(iAnim);
 }
