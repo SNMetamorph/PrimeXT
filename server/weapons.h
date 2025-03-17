@@ -122,10 +122,6 @@ public:
 	virtual int AddDuplicate( CBasePlayerItem *pItem ) override;
 	
 	int UpdateClientData( CBasePlayer *pPlayer ) override;	// sends hud info to client dll, if things have changed
-
-	// declare it here, but in future move to the bottom
-	std::unique_ptr<CBaseWeaponContext> m_pWeaponContext;
-
 	virtual void ItemPostFrame() override;	// called each frame by the player PostThink
 
 	int	PrimaryAmmoIndex() override { return m_pWeaponContext->PrimaryAmmoIndex(); }; // forward to weapon logic
@@ -152,6 +148,8 @@ public:
 	int	iWeight() override			{ return m_pWeaponContext->iWeight(); }
 	int	iFlags() override			{ return m_pWeaponContext->iFlags(); }
 	int iWeaponID() override		{ return m_pWeaponContext->m_iId; }
+
+	std::unique_ptr<CBaseWeaponContext> m_pWeaponContext;
 
 protected:
 	int ExtractAmmo( CBasePlayerWeapon *pWeapon );		// Return TRUE if you can add ammo to yourself when picked up

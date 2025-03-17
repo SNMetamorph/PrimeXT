@@ -2593,22 +2593,6 @@ void CBasePlayer::UpdatePlayerTimers()
 	m_flNextAttack -= gpGlobals->frametime;
 	if ( m_flNextAttack < -0.001 )
 		m_flNextAttack = -0.001;
-	
-	//if ( m_flNextAmmoBurn != 1000 )
-	//{
-	//	m_flNextAmmoBurn -= gpGlobals->frametime;
-	//	
-	//	if ( m_flNextAmmoBurn < -0.001 )
-	//		m_flNextAmmoBurn = -0.001;
-	//}
-
-	//if ( m_flAmmoStartCharge != 1000 )
-	//{
-	//	m_flAmmoStartCharge -= gpGlobals->frametime;
-	//	
-	//	if ( m_flAmmoStartCharge < -0.001 )
-	//		m_flAmmoStartCharge = -0.001;
-	//}
 }
 
 void CBasePlayer::UpdateWeaponTimers()
@@ -2651,12 +2635,6 @@ void CBasePlayer::UpdateWeaponTimers()
 							pGauss->m_flAmmoStartCharge = std::max(pGauss->m_flAmmoStartCharge - gpGlobals->frametime, -0.001f);
 						}
 					}
-
-					// Only decrement if not flagged as NO_DECREMENT
-					//	if ( gun->m_flPumpTime != 1000 )
-					//	{
-					//		gun->m_flPumpTime = max( gun->m_flPumpTime - gpGlobals->frametime, -0.001f );
-					//	}
 				}
 				pPlayerItem = pPlayerItem->m_pNext;
 			}

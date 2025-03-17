@@ -1718,16 +1718,6 @@ void UpdateClientData ( const struct edict_s *ent, int sendweapons, struct clien
 	if (sendweapons && player)
 	{
 		cd->m_flNextAttack = player->m_flNextAttack;
-		//cd->fuser2 = player->m_flNextAmmoBurn;
-		//cd->fuser3 = player->m_flAmmoStartCharge;
-		//cd->vuser1.x = player->ammo_9mm;
-		//cd->vuser1.y = player->ammo_357;
-		//cd->vuser1.z = player->ammo_argrens;
-		//cd->ammo_nails = player->ammo_bolts;
-		//cd->ammo_shells = player->ammo_buckshot;
-		//cd->ammo_rockets = player->ammo_rockets;
-		//cd->ammo_cells = player->ammo_uranium;
-		//cd->vuser2.x = player->ammo_hornets;
 
 		CBasePlayerItem *item = player->m_pActiveItem;
 		if (item)
