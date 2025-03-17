@@ -33,20 +33,11 @@ void DeactivateSatchels( CBasePlayer *pOwner );
 
 #define WEAPON_NONE				0
 #define WEAPON_CYCLER			5
-#define WEAPON_GAUSS			9
 
 #define MAX_NORMAL_BATTERY	100
 
-// weapon weight factors (for auto-switching)   (-1 = noswitch)
-#define GAUSS_WEIGHT		20
-
-// the maximum amount of ammo each weapon's clip can hold
-//#define CROWBAR_MAX_CLIP		WEAPON_NOCLIP
-#define GAUSS_MAX_CLIP			WEAPON_NOCLIP
-
 // the default amount of ammo that comes with each gun when it spawns
 #define MP5_M203_DEFAULT_GIVE		0
-#define GAUSS_DEFAULT_GIVE			20
 
 // The amount of ammo given to a player by an ammo item.
 #define AMMO_URANIUMBOX_GIVE	20

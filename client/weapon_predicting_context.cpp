@@ -30,6 +30,7 @@ GNU General Public License for more details.
 #include "weapons/satchel.h"
 #include "weapons/rpg.h"
 #include "weapons/egon.h"
+#include "weapons/gauss.h"
 #include <cstring>
 
 CWeaponPredictingContext::CWeaponPredictingContext()
@@ -120,7 +121,7 @@ void CWeaponPredictingContext::WritePlayerState(local_state_t *to)
 	//to->client.fuser2					= m_playerState.m_flNextAmmoBurn;
 	//to->client.fuser3					= m_playerState.m_flAmmoStartCharge;
 	to->client.maxspeed					= m_playerState.maxSpeed;
-	to->client.velocity					= m_playerState.velocity;
+	//to->client.velocity				= m_playerState.velocity;
 }
 
 void CWeaponPredictingContext::UpdatePlayerTimers(const usercmd_t *cmd)
@@ -165,6 +166,17 @@ void CWeaponPredictingContext::UpdateWeaponTimers(CBaseWeaponContext *weapon, co
 		ctx->m_flAttackCooldown -= cmd->msec / 1000.0;
 		if (ctx->m_flAttackCooldown < -0.001)
 			ctx->m_flAttackCooldown = -0.001;
+	}
+	else if (weapon->m_iId == WEAPON_GAUSS)
+	{
+		CGaussWeaponContext *ctx = static_cast<CGaussWeaponContext*>(weapon);
+		ctx->m_flNextAmmoBurn -= cmd->msec / 1000.0;
+		if (ctx->m_flNextAmmoBurn < -0.001)
+			ctx->m_flNextAmmoBurn = -0.001;
+
+		ctx->m_flAmmoStartCharge -= cmd->msec / 1000.0;
+		if (ctx->m_flAmmoStartCharge < -0.001)
+			ctx->m_flAmmoStartCharge = -0.001;
 	}
 
 	//if (weapon->m_fNextAimBonus < -1.0)
@@ -265,6 +277,13 @@ void CWeaponPredictingContext::ReadWeaponSpecificData(CBaseWeaponContext *weapon
 		CEgonWeaponContext *ctx = static_cast<CEgonWeaponContext*>(weapon);
 		ctx->m_flAttackCooldown = data.fuser1;
 	}
+	else if (weapon->m_iId == WEAPON_GAUSS)
+	{
+		CGaussWeaponContext *ctx = static_cast<CGaussWeaponContext*>(weapon);
+		ctx->m_flAmmoStartCharge = data.fuser1;
+		ctx->m_flNextAmmoBurn = data.fuser2;
+		ctx->m_fInAttack = data.iuser1;
+	}
 }
 
 void CWeaponPredictingContext::WriteWeaponSpecificData(CBaseWeaponContext *weapon, local_state_t *to)
@@ -291,6 +310,13 @@ void CWeaponPredictingContext::WriteWeaponSpecificData(CBaseWeaponContext *weapo
 	{
 		CEgonWeaponContext *ctx = static_cast<CEgonWeaponContext*>(weapon);
 		data.fuser1 = ctx->m_flAttackCooldown;
+	}
+	else if (weapon->m_iId == WEAPON_GAUSS)
+	{
+		CGaussWeaponContext *ctx = static_cast<CGaussWeaponContext*>(weapon);
+		data.fuser1 = ctx->m_flAmmoStartCharge;
+		data.fuser2 = ctx->m_flNextAmmoBurn;
+		data.iuser1 = ctx->m_fInAttack;
 	}
 }
 
@@ -366,6 +392,9 @@ CBaseWeaponContext* CWeaponPredictingContext::GetWeaponContext(uint32_t weaponID
 				break;
 			case WEAPON_EGON:
 				m_weaponsState[weaponID] = std::make_unique<CEgonWeaponContext>(std::make_unique<CClientWeaponLayerImpl>(m_playerState));
+				break;
+			case WEAPON_GAUSS:
+				m_weaponsState[weaponID] = std::make_unique<CGaussWeaponContext>(std::make_unique<CClientWeaponLayerImpl>(m_playerState));
 				break;
 			default: 
 				return nullptr;
