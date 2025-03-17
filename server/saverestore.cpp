@@ -1082,7 +1082,7 @@ int CRestore::ReadFields( const char *pname, const void *pBaseData, DATAMAP *pMa
 		{
 			// Don't clear global fields
 			if (!m_global || !(pFields[i].flags & FTYPEDESC_GLOBAL))
-				memset(((char *)pBaseData + pFields[i].fieldOffset), 0, pFields[i].fieldSize * GetFieldSize(&pFields[i]));
+				memset(((char *)pBaseData + pFields[i].fieldOffset), 0, static_cast<size_t>(pFields[i].fieldSize) * GetFieldSize(&pFields[i]));
 		}
 	}
 
