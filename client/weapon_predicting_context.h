@@ -62,7 +62,7 @@ public:
 	void PostThink(local_state_t *from, local_state_t *to, usercmd_t *cmd, bool runfuncs, double time, uint32_t randomSeed);
 
 private:
-	void ReadPlayerState(const local_state_t *from, usercmd_t *cmd);
+	void ReadPlayerState(const local_state_t *from, const local_state_t *to, usercmd_t *cmd);
 	void WritePlayerState(local_state_t *to);
 	void UpdatePlayerTimers(const usercmd_t *cmd);
 	void UpdateWeaponTimers(CBaseWeaponContext *weapon, const usercmd_t *cmd);
