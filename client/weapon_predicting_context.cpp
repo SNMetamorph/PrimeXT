@@ -42,7 +42,7 @@ void CWeaponPredictingContext::PostThink(local_state_t *from, local_state_t *to,
 	m_playerState.time = time;
 	m_playerState.randomSeed = randomSeed;
 	m_playerState.runfuncs = runfuncs;
-	ReadPlayerState(from, cmd);
+	ReadPlayerState(from, to, cmd);
 	ReadWeaponsState(from);
 
 	const bool playerAlive = m_playerState.deadflag != (DEAD_DISCARDBODY + 1);
@@ -84,7 +84,7 @@ void CWeaponPredictingContext::PostThink(local_state_t *from, local_state_t *to,
 	WriteWeaponsState(to, cmd);
 }
 
-void CWeaponPredictingContext::ReadPlayerState(const local_state_t *from, usercmd_t *cmd)
+void CWeaponPredictingContext::ReadPlayerState(const local_state_t *from, const local_state_t *to, usercmd_t *cmd)
 {
 	m_playerState.cached.buttons = from->playerstate.oldbuttons;
 	int32_t buttonsChanged = (m_playerState.cached.buttons ^ cmd->buttons);
@@ -92,11 +92,7 @@ void CWeaponPredictingContext::ReadPlayerState(const local_state_t *from, usercm
 	m_playerState.buttonsReleased = buttonsChanged & (~cmd->buttons);
 
 	m_playerState.viewAngles = cmd->viewangles;
-	m_playerState.viewOffset = from->client.view_ofs;
-	m_playerState.origin = from->playerstate.origin;
-
 	m_playerState.buttons = cmd->buttons;
-	m_playerState.velocity = from->client.velocity;
 	m_playerState.flags = from->client.flags;
 
 	m_playerState.deadflag = from->client.deadflag;
@@ -107,8 +103,13 @@ void CWeaponPredictingContext::ReadPlayerState(const local_state_t *from, usercm
 	m_playerState.weaponanim = from->client.weaponanim;
 	m_playerState.viewmodel = from->client.viewmodel;
 	m_playerState.nextAttack = from->client.m_flNextAttack;
-	//m_playerState.m_flNextAmmoBurn = from->client.fuser2;
-	//m_playerState.m_flAmmoStartCharge = from->client.fuser3;
+
+	// it's counterintuitive, but for some things we should take value from "to" state
+	// because player movement prediction spits out calculations results in there
+	// see CL_FinishPMove engine function to see list of such things.
+	m_playerState.velocity = to->client.velocity;
+	m_playerState.viewOffset = to->client.view_ofs;
+	m_playerState.origin = to->playerstate.origin;
 }
 
 void CWeaponPredictingContext::WritePlayerState(local_state_t *to)
@@ -118,10 +119,8 @@ void CWeaponPredictingContext::WritePlayerState(local_state_t *to)
 	to->client.fov						= m_playerState.fov;
 	to->client.weaponanim				= m_playerState.weaponanim;
 	to->client.m_flNextAttack			= m_playerState.nextAttack;
-	//to->client.fuser2					= m_playerState.m_flNextAmmoBurn;
-	//to->client.fuser3					= m_playerState.m_flAmmoStartCharge;
 	to->client.maxspeed					= m_playerState.maxSpeed;
-	//to->client.velocity				= m_playerState.velocity;
+	to->client.velocity					= m_playerState.velocity;
 }
 
 void CWeaponPredictingContext::UpdatePlayerTimers(const usercmd_t *cmd)
@@ -129,18 +128,6 @@ void CWeaponPredictingContext::UpdatePlayerTimers(const usercmd_t *cmd)
 	m_playerState.nextAttack -= cmd->msec / 1000.0;
 	if (m_playerState.nextAttack < -0.001)
 		m_playerState.nextAttack = -0.001;
-
-	//m_playerState.fuser2 -= cmd->msec / 1000.0;
-	//if (m_playerState.fuser2 < -0.001)
-	//{
-	//	m_playerState.fuser2 = -0.001;
-	//}
-
-	//m_playerState.fuser3 -= cmd->msec / 1000.0;
-	//if (m_playerState.fuser3 < -0.001)
-	//{
-	//	m_playerState.fuser3 = -0.001;
-	//}
 }
 
 void CWeaponPredictingContext::UpdateWeaponTimers(CBaseWeaponContext *weapon, const usercmd_t *cmd)
@@ -148,8 +135,6 @@ void CWeaponPredictingContext::UpdateWeaponTimers(CBaseWeaponContext *weapon, co
 	weapon->m_flNextPrimaryAttack		-= cmd->msec / 1000.0;
 	weapon->m_flNextSecondaryAttack		-= cmd->msec / 1000.0;
 	weapon->m_flTimeWeaponIdle			-= cmd->msec / 1000.0;
-	//weapon->m_flNextReload			-= cmd->msec / 1000.0;
-	//weapon->m_fNextAimBonus			-= cmd->msec / 1000.0;
 
 	if (weapon->m_flNextPrimaryAttack < -1.0)
 		weapon->m_flNextPrimaryAttack = -1.0;
@@ -178,12 +163,6 @@ void CWeaponPredictingContext::UpdateWeaponTimers(CBaseWeaponContext *weapon, co
 		if (ctx->m_flAmmoStartCharge < -0.001)
 			ctx->m_flAmmoStartCharge = -0.001;
 	}
-
-	//if (weapon->m_fNextAimBonus < -1.0)
-	//	weapon->m_fNextAimBonus = -1.0;
-
-	//if (weapon->m_flNextReload < -0.001)
-	//	weapon->m_flNextReload = -0.001;
 }
 
 void CWeaponPredictingContext::ReadWeaponsState(const local_state_t *from)
@@ -196,17 +175,10 @@ void CWeaponPredictingContext::ReadWeaponsState(const local_state_t *from)
 		{
 			weapon->m_fInReload				= data.m_fInReload;
 			weapon->m_fInSpecialReload		= data.m_fInSpecialReload;
-			//weapon->m_flPumpTime			= data.m_flPumpTime;
 			weapon->m_iClip					= data.m_iClip;
 			weapon->m_flNextPrimaryAttack	= data.m_flNextPrimaryAttack;
 			weapon->m_flNextSecondaryAttack	= data.m_flNextSecondaryAttack;
 			weapon->m_flTimeWeaponIdle		= data.m_flTimeWeaponIdle;
-			//weapon->pev->fuser1			= data.fuser1;
-			//weapon->m_flStartThrow		= data.fuser2;
-			//weapon->m_flReleaseThrow		= data.fuser3;
-			//weapon->m_chargeReady			= data.iuser1;
-			//weapon->m_fInAttack			= data.iuser2;
-			//weapon->m_fireState			= data.iuser3;
 
 			weapon->m_iSecondaryAmmoType = static_cast<int>(from->client.vuser3.z);
 			weapon->m_iPrimaryAmmoType = static_cast<int>(from->client.vuser4.x);
@@ -234,18 +206,10 @@ void CWeaponPredictingContext::WriteWeaponsState(local_state_t *to, const usercm
 			UpdateWeaponTimers(weapon, cmd);
 			data.m_fInReload				= weapon->m_fInReload;
 			data.m_fInSpecialReload			= weapon->m_fInSpecialReload;
-			//data.m_flPumpTime				= pCurrent->m_flPumpTime;
 			data.m_iClip					= weapon->m_iClip; 
 			data.m_flNextPrimaryAttack		= weapon->m_flNextPrimaryAttack;
 			data.m_flNextSecondaryAttack	= weapon->m_flNextSecondaryAttack;
 			data.m_flTimeWeaponIdle			= weapon->m_flTimeWeaponIdle;
-			//data.fuser1					= pCurrent->pev->fuser1;
-			//data.fuser2					= weapon->m_flStartThrow;
-			//data.fuser3					= weapon->m_flReleaseThrow;
-			//data.iuser1					= weapon->m_chargeReady;
-			//data.iuser2					= weapon->m_fInAttack;
-			//data.iuser3					= weapon->m_fireState;
-
 			WriteWeaponSpecificData(weapon, to);
 		}
 	}
