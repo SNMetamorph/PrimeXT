@@ -29,18 +29,6 @@
 // check VECTOR_CONE_1DEGREES macro
 #define CONE_1DEGREES 0.00873
 
-enum python_e
-{
-	PYTHON_IDLE1 = 0,
-	PYTHON_FIDGET,
-	PYTHON_FIRE1,
-	PYTHON_RELOAD,
-	PYTHON_HOLSTER,
-	PYTHON_DRAW,
-	PYTHON_IDLE2,
-	PYTHON_IDLE3
-};
-
 CPythonWeaponContext::CPythonWeaponContext(std::unique_ptr<IWeaponLayer>&& layer) :
 	CBaseWeaponContext(std::move(layer))
 {

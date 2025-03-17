@@ -25,6 +25,18 @@
 #define MP5_DEFAULT_GIVE	25
 #define MP5_CLASSNAME		weapon_9mmAR
 
+enum mp5_e
+{
+	MP5_LONGIDLE = 0,
+	MP5_IDLE1,
+	MP5_LAUNCH,
+	MP5_RELOAD,
+	MP5_DEPLOY,
+	MP5_FIRE1,
+	MP5_FIRE2,
+	MP5_FIRE3,
+};
+
 class CMP5WeaponContext : public CBaseWeaponContext
 {
 public:

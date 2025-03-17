@@ -30,23 +30,7 @@
 #define BOLT_AIR_VELOCITY	2000
 #define BOLT_WATER_VELOCITY	1000
 
-enum crossbow_e
-{
-	CROSSBOW_IDLE1 = 0,	// full
-	CROSSBOW_IDLE2,	// empty
-	CROSSBOW_FIDGET1,	// full
-	CROSSBOW_FIDGET2,	// empty
-	CROSSBOW_FIRE1,	// full
-	CROSSBOW_FIRE2,	// reload
-	CROSSBOW_FIRE3,	// empty
-	CROSSBOW_RELOAD,	// from empty
-	CROSSBOW_DRAW1,	// full
-	CROSSBOW_DRAW2,	// empty
-	CROSSBOW_HOLSTER1,	// full
-	CROSSBOW_HOLSTER2,	// empty
-};
-
-CCrossbowWeaponLogic::CCrossbowWeaponLogic(std::unique_ptr<IWeaponLayer> &&layer) :
+CCrossbowWeaponContext::CCrossbowWeaponContext(std::unique_ptr<IWeaponLayer> &&layer) :
 	CBaseWeaponContext(std::move(layer))
 {
 	m_iId = WEAPON_CROSSBOW;
@@ -56,7 +40,7 @@ CCrossbowWeaponLogic::CCrossbowWeaponLogic(std::unique_ptr<IWeaponLayer> &&layer
 	m_usCrossbow2 = m_pLayer->PrecacheEvent("events/crossbow2.sc");
 }
 
-int CCrossbowWeaponLogic::GetItemInfo(ItemInfo *p)
+int CCrossbowWeaponContext::GetItemInfo(ItemInfo *p)
 {
 	p->pszName = CLASSNAME_STR(CROSSBOW_CLASSNAME);
 	p->pszAmmo1 = "bolts";
@@ -72,14 +56,14 @@ int CCrossbowWeaponLogic::GetItemInfo(ItemInfo *p)
 	return 1;
 }
 
-bool CCrossbowWeaponLogic::Deploy( )
+bool CCrossbowWeaponContext::Deploy( )
 {
 	if (m_iClip)
 		return DefaultDeploy( "models/v_crossbow.mdl", "models/p_crossbow.mdl", CROSSBOW_DRAW1, "bow" );
 	return DefaultDeploy( "models/v_crossbow.mdl", "models/p_crossbow.mdl", CROSSBOW_DRAW2, "bow" );
 }
 
-void CCrossbowWeaponLogic::Holster( void )
+void CCrossbowWeaponContext::Holster( void )
 {
 	m_fInReload = FALSE;// cancel any reload in progress.
 
@@ -96,7 +80,7 @@ void CCrossbowWeaponLogic::Holster( void )
 		SendWeaponAnim( CROSSBOW_HOLSTER2 );
 }
 
-void CCrossbowWeaponLogic::PrimaryAttack( void )
+void CCrossbowWeaponContext::PrimaryAttack( void )
 {
 	if ( m_fInZoom && m_pLayer->IsMultiplayer() )
 	{
@@ -108,7 +92,7 @@ void CCrossbowWeaponLogic::PrimaryAttack( void )
 }
 
 // this function only gets called in multiplayer
-void CCrossbowWeaponLogic::FireSniperBolt()
+void CCrossbowWeaponContext::FireSniperBolt()
 {
 	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75f;
 
@@ -194,7 +178,7 @@ void CCrossbowWeaponLogic::FireSniperBolt()
 #endif
 }
 
-void CCrossbowWeaponLogic::FireBolt( void )
+void CCrossbowWeaponContext::FireBolt( void )
 {
 	if (m_iClip == 0)
 	{
@@ -280,7 +264,7 @@ void CCrossbowWeaponLogic::FireBolt( void )
 #endif
 }
 
-void CCrossbowWeaponLogic::SecondaryAttack( void )
+void CCrossbowWeaponContext::SecondaryAttack( void )
 {
 	if (m_pLayer->GetPlayerFOV() != 0.0f)
 	{
@@ -297,7 +281,7 @@ void CCrossbowWeaponLogic::SecondaryAttack( void )
 	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 5.0;
 }
 
-void CCrossbowWeaponLogic::Reload( void )
+void CCrossbowWeaponContext::Reload( void )
 {
 	if (m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) < 1)
 		return;
@@ -316,7 +300,7 @@ void CCrossbowWeaponLogic::Reload( void )
 	}
 }
 
-void CCrossbowWeaponLogic::WeaponIdle( void )
+void CCrossbowWeaponContext::WeaponIdle( void )
 {
 	m_pLayer->GetAutoaimVector( AUTOAIM_2DEGREES );  // get the autoaim vector but ignore it;  used for autoaim crosshair in DM
 

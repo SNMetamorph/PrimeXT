@@ -20,18 +20,7 @@ GNU General Public License for more details.
 #include "utils.h"
 #include "event_api.h"
 #include "event_args.h"
-
-enum crowbar_e {
-	CROWBAR_IDLE = 0,
-	CROWBAR_DRAW,
-	CROWBAR_HOLSTER,
-	CROWBAR_ATTACK1HIT,
-	CROWBAR_ATTACK1MISS,
-	CROWBAR_ATTACK2MISS,
-	CROWBAR_ATTACK2HIT,
-	CROWBAR_ATTACK3MISS,
-	CROWBAR_ATTACK3HIT
-};
+#include "weapons/crowbar.h"
 
 int CCrowbarSwingEvent::m_iSwing = 0;
 

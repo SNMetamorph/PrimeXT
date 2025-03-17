@@ -20,22 +20,7 @@ GNU General Public License for more details.
 #include "utils.h"
 #include "event_api.h"
 #include "event_args.h"
-
-enum crossbow_e
-{
-	CROSSBOW_IDLE1 = 0,	// full
-	CROSSBOW_IDLE2,	// empty
-	CROSSBOW_FIDGET1,	// full
-	CROSSBOW_FIDGET2,	// empty
-	CROSSBOW_FIRE1,	// full
-	CROSSBOW_FIRE2,	// reload
-	CROSSBOW_FIRE3,	// empty
-	CROSSBOW_RELOAD,	// from empty
-	CROSSBOW_DRAW1,	// full
-	CROSSBOW_DRAW2,	// empty
-	CROSSBOW_HOLSTER1,	// full
-	CROSSBOW_HOLSTER2,	// empty
-};
+#include "weapons/crossbow.h"
 
 CCrossbowFireEvent::CCrossbowFireEvent(event_args_t *args) :
 	CBaseGameEvent(args)

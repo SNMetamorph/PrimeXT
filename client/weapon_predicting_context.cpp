@@ -319,10 +319,10 @@ CBaseWeaponContext* CWeaponPredictingContext::GetWeaponContext(uint32_t weaponID
 		switch (weaponID)
 		{
 			case WEAPON_GLOCK:  
-				m_weaponsState[weaponID] = std::make_unique<CGlockWeaponLogic>(std::make_unique<CClientWeaponLayerImpl>(m_playerState));
+				m_weaponsState[weaponID] = std::make_unique<CGlockWeaponContext>(std::make_unique<CClientWeaponLayerImpl>(m_playerState));
 				break;
 			case WEAPON_CROSSBOW:
-				m_weaponsState[weaponID] = std::make_unique<CCrossbowWeaponLogic>(std::make_unique<CClientWeaponLayerImpl>(m_playerState));
+				m_weaponsState[weaponID] = std::make_unique<CCrossbowWeaponContext>(std::make_unique<CClientWeaponLayerImpl>(m_playerState));
 				break;
 			case WEAPON_PYTHON:
 				m_weaponsState[weaponID] = std::make_unique<CPythonWeaponContext>(std::make_unique<CClientWeaponLayerImpl>(m_playerState));
