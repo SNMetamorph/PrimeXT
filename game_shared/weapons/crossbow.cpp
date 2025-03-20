@@ -40,7 +40,7 @@ CCrossbowWeaponContext::CCrossbowWeaponContext(std::unique_ptr<IWeaponLayer> &&l
 	m_usCrossbow2 = m_pLayer->PrecacheEvent("events/crossbow2.sc");
 }
 
-int CCrossbowWeaponContext::GetItemInfo(ItemInfo *p)
+int CCrossbowWeaponContext::GetItemInfo(ItemInfo *p) const
 {
 	p->pszName = CLASSNAME_STR(CROSSBOW_CLASSNAME);
 	p->pszAmmo1 = "bolts";
@@ -50,7 +50,7 @@ int CCrossbowWeaponContext::GetItemInfo(ItemInfo *p)
 	p->iMaxClip = CROSSBOW_MAX_CLIP;
 	p->iSlot = 2;
 	p->iPosition = 2;
-	p->iId = WEAPON_CROSSBOW;
+	p->iId = m_iId;
 	p->iFlags = 0;
 	p->iWeight = CROSSBOW_WEIGHT;
 	return 1;

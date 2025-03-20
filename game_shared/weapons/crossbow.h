@@ -16,6 +16,7 @@
 #pragma once
 #include "weapon_context.h"
 #include "weapon_layer.h"
+#include <memory>
 
 #define WEAPON_CROSSBOW			6
 #define CROSSBOW_WEIGHT			10
@@ -43,20 +44,19 @@ class CCrossbowWeaponContext : public CBaseWeaponContext
 {
 public:
 	CCrossbowWeaponContext() = delete;
-	~CCrossbowWeaponContext() = default;
 	CCrossbowWeaponContext(std::unique_ptr<IWeaponLayer> &&layer);
+	~CCrossbowWeaponContext() = default;
 
-	int iItemSlot( ) { return 3; }
-	int GetItemInfo(ItemInfo *p);
-
-	void FireBolt( void );
-	void FireSniperBolt( void );
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
-	bool Deploy( void );
-	void Holster( void );
-	void Reload( void );
-	void WeaponIdle( void );
+	int iItemSlot() { return 3; }
+	int GetItemInfo(ItemInfo *p) const override;
+	void PrimaryAttack() override;
+	void SecondaryAttack() override;
+	bool Deploy() override;
+	void Holster() override;
+	void Reload() override;
+	void WeaponIdle() override;
+	void FireBolt();
+	void FireSniperBolt();
 
 	bool m_fInZoom; // don't save this
 	uint16_t m_usCrossbow;

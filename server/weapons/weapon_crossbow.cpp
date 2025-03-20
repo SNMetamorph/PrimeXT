@@ -28,7 +28,8 @@ END_DATADESC()
 CCrossbow::CCrossbow()
 {
 	auto layerImpl = std::make_unique<CServerWeaponLayerImpl>(this);
-	m_pWeaponContext = std::make_unique<CCrossbowWeaponContext>(std::move(layerImpl));
+	auto contextImpl = std::make_unique<CCrossbowWeaponContext>(std::move(layerImpl));
+	m_pWeaponContext = std::move(contextImpl);
 }
 
 void CCrossbow::Spawn( void )
