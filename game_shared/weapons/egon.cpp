@@ -379,6 +379,8 @@ void CEgonWeaponContext::CreateEffect( void )
 	m_pBeam->SetFlags( BEAM_FSINE );
 	m_pBeam->SetEndAttachment( 1 );
 	m_pBeam->pev->spawnflags |= SF_BEAM_TEMPORARY;	// Flag these to be destroyed on save/restore or level transition
+	m_pBeam->pev->flags |= FL_SKIPLOCALHOST;
+	m_pBeam->pev->owner = pWeapon->m_pPlayer->edict();
 
 	m_pNoise = CBeam::BeamCreate( EGON_BEAM_SPRITE, 55 );
 	m_pNoise->PointEntInit( pWeapon->GetAbsOrigin(), pWeapon->m_pPlayer->entindex() );
@@ -386,11 +388,14 @@ void CEgonWeaponContext::CreateEffect( void )
 	m_pNoise->SetBrightness( 100 );
 	m_pNoise->SetEndAttachment( 1 );
 	m_pNoise->pev->spawnflags |= SF_BEAM_TEMPORARY;
+	m_pNoise->pev->flags |= FL_SKIPLOCALHOST;
+	m_pNoise->pev->owner = pWeapon->m_pPlayer->edict();
 
 	m_pSprite = CSprite::SpriteCreate( EGON_FLARE_SPRITE, pWeapon->GetAbsOrigin(), FALSE );
 	m_pSprite->pev->scale = 1.0;
 	m_pSprite->SetTransparency( kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation );
 	m_pSprite->pev->spawnflags |= SF_SPRITE_TEMPORARY;
+	m_pSprite->pev->owner = pWeapon->m_pPlayer->edict();
 
 	if ( m_fireMode == FIRE_WIDE )
 	{
