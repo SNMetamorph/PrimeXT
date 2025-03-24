@@ -223,7 +223,7 @@ void CWeaponPredictingContext::ReadWeaponSpecificData(CBaseWeaponContext *weapon
 	{
 		CRpgWeaponContext *ctx = static_cast<CRpgWeaponContext*>(weapon);
 		ctx->m_fSpotActive = static_cast<int>(from->client.vuser2.y);
-		ctx->m_fSpotActive = static_cast<int>(from->client.vuser2.z);
+		ctx->m_cActiveRockets = static_cast<int>(from->client.vuser2.z);
 	}
 	else if (weapon->m_iId == WEAPON_SATCHEL)
 	{
