@@ -30,18 +30,19 @@ class CRpgRocket : public CGrenade
 {
 	DECLARE_CLASS(CRpgRocket, CGrenade);
 public:
-	void Spawn(void);
-	void Precache(void);
-	void FollowThink(void);
-	void IgniteThink(void);
-	void RocketTouch(CBaseEntity *pOther);
+	void Spawn();
+	void Precache();
+	void FollowThink();
+	void IgniteThink();
 	static CRpgRocket *CreateRpgRocket(Vector vecOrigin, Vector vecAngles, CBaseEntity *pOwner, CRpg *pLauncher);
-	void CreateTrail(void);
-	virtual void OnTeleport(void);
+	void CreateTrail();
+	void OnTeleport() override;
+	void Explode( TraceResult *pTrace, int bitsDamageType ) override;
+	CRpg *GetLauncher();
 
 	DECLARE_DATADESC();
 
 	int m_iTrail;
 	float m_flIgniteTime;
-	CRpg *m_pLauncher;// pointer back to the launcher that fired me. 
+	EHANDLE m_hLauncher;
 };

@@ -19,10 +19,9 @@ LINK_ENTITY_TO_CLASS(rpg_rocket, CRpgRocket);
 
 BEGIN_DATADESC(CRpgRocket)
 	DEFINE_FIELD(m_flIgniteTime, FIELD_TIME),
-	DEFINE_FIELD(m_pLauncher, FIELD_CLASSPTR),
+	DEFINE_FIELD(m_hLauncher, FIELD_EHANDLE),
 	DEFINE_FUNCTION(FollowThink),
 	DEFINE_FUNCTION(IgniteThink),
-	DEFINE_FUNCTION(RocketTouch),
 END_DATADESC()
 
 
@@ -31,15 +30,13 @@ END_DATADESC()
 CRpgRocket *CRpgRocket::CreateRpgRocket(Vector vecOrigin, Vector vecAngles, CBaseEntity *pOwner, CRpg *pLauncher)
 {
 	CRpgRocket *pRocket = GetClassPtr((CRpgRocket *)NULL);
+	pLauncher->AddActiveRocket(); // register this missile as active for the launcher
 
 	UTIL_SetOrigin(pRocket, vecOrigin);
 	pRocket->SetLocalAngles(vecAngles);
 	pRocket->Spawn();
-	pRocket->SetTouch(&CRpgRocket::RocketTouch);
-	pRocket->m_pLauncher = pLauncher;// remember what RPG fired me. 
-	pRocket->m_pLauncher->AddActiveRocket();// register this missile as active for the launcher
+	pRocket->m_hLauncher = pLauncher; // remember what RPG fired me. 
 	pRocket->pev->owner = pOwner->edict();
-
 	return pRocket;
 }
 
@@ -57,7 +54,7 @@ void CRpgRocket::Spawn(void)
 	RelinkEntity(TRUE);
 
 	pev->classname = MAKE_STRING("rpg_rocket");
-
+	m_hLauncher = NULL;
 	SetThink(&CRpgRocket::IgniteThink);
 	SetTouch(&CGrenade::ExplodeTouch);
 
@@ -72,20 +69,6 @@ void CRpgRocket::Spawn(void)
 	SetNextThink(0.4);
 
 	pev->dmg = gSkillData.plrDmgRPG;
-}
-
-//=========================================================
-//=========================================================
-void CRpgRocket::RocketTouch(CBaseEntity *pOther)
-{
-	if (m_pLauncher)
-	{
-		// my launcher is still around, tell it I'm dead.
-		m_pLauncher->RemoveActiveRocket();
-	}
-
-	STOP_SOUND(edict(), CHAN_VOICE, "weapons/rocket1.wav");
-	ExplodeTouch(pOther);
 }
 
 //=========================================================
@@ -145,6 +128,25 @@ void CRpgRocket::OnTeleport(void)
 	MESSAGE_END();
 
 	CreateTrail();
+}
+
+void CRpgRocket::Explode(TraceResult *pTrace, int bitsDamageType)
+{
+	CRpg *pLauncher = GetLauncher();
+	if (pLauncher)
+	{
+		// my launcher is still around, tell it I'm dead.
+		pLauncher->RemoveActiveRocket();
+		m_hLauncher = NULL;
+	}
+
+	STOP_SOUND( edict(), CHAN_VOICE, "weapons/rocket1.wav" );
+	CGrenade::Explode( pTrace, bitsDamageType );
+}
+
+CRpg *CRpgRocket::GetLauncher()
+{
+	return static_cast<CRpg*>(static_cast<CBaseEntity*>(m_hLauncher));
 }
 
 void CRpgRocket::FollowThink(void)
@@ -215,12 +217,24 @@ void CRpgRocket::FollowThink(void)
 
 		SetLocalVelocity(GetLocalVelocity() * 0.2 + vecTarget * flSpeed * 0.798);
 
-		if (pev->waterlevel == 0 && GetLocalVelocity().Length() < 1500)
-		{
+		if (pev->waterlevel == 0 && GetLocalVelocity().Length() < 1500) {
 			Detonate();
 		}
 	}
-	// ALERT( at_console, "%.0f\n", flSpeed );
 
+	CRpg *pLauncher = GetLauncher();
+	if (pLauncher)
+	{
+		const float flightTime = gpGlobals->time - m_flIgniteTime;
+		const float rocketDistance = (pev->origin - pLauncher->pev->origin).Length();
+		if (rocketDistance > 92680 || flightTime > 6.0f) {
+			Detonate();
+		}
+	}
+
+	if (UTIL_PointContents(pev->origin) == CONTENTS_SKY)
+		Detonate();
+
+	// ALERT( at_console, "%.0f\n", flSpeed );
 	SetNextThink(0.1);
 }

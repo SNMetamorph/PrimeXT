@@ -44,7 +44,6 @@ public:
 	static void UseSatchelCharges( entvars_t *pevOwner, SATCHELCODE code );
 
 	void Explode( Vector vecSrc, Vector vecAim );
-	void Explode( TraceResult *pTrace, int bitsDamageType );
 	void Smoke( void );
 
 	void BounceTouch( CBaseEntity *pOther );
@@ -62,6 +61,7 @@ public:
 	virtual int BloodColor( void ) { return DONT_BLEED; }
 	virtual void Killed( entvars_t *pevAttacker, int iGib );
 	virtual BOOL IsProjectile( void ) { return TRUE; }
+	virtual void Explode( TraceResult *pTrace, int bitsDamageType );
 
 	BOOL m_fRegisteredSound;// whether or not this grenade has issued its DANGER sound to the world sound list yet.
 };
