@@ -82,28 +82,26 @@ void CCrossbowWeaponContext::Holster( void )
 
 void CCrossbowWeaponContext::PrimaryAttack( void )
 {
-	if ( m_fInZoom && m_pLayer->IsMultiplayer() )
+	if (m_iClip < 1)
 	{
-		FireSniperBolt();
-		return;
-	}
-
-	FireBolt();
-}
-
-// this function only gets called in multiplayer
-void CCrossbowWeaponContext::FireSniperBolt()
-{
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75f;
-
-	if (m_iClip == 0)
-	{
-		PlayEmptySound( );
+		PlayEmptySound();
+		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.15f;
 		return;
 	}
 
 	m_iClip--;
 
+	if (m_fInZoom && m_pLayer->IsMultiplayer()) {
+		FireSniperBolt();
+	}
+	else {
+		FireBolt();
+	}
+}
+
+// this function only gets called in multiplayer
+void CCrossbowWeaponContext::FireSniperBolt()
+{
 	WeaponEventParams params;
 	params.flags = WeaponEventFlags::NotHost;
 	params.eventindex = m_usCrossbow2;
@@ -121,6 +119,7 @@ void CCrossbowWeaponContext::FireSniperBolt()
 		m_pLayer->PlaybackWeaponEvent(params);
 	}
 
+	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75f;
 #ifndef CLIENT_DLL
 	CBasePlayer *player = m_pLayer->GetWeaponEntity()->m_pPlayer;
 	player->SetAnimation( PLAYER_ATTACK1 );
@@ -180,14 +179,6 @@ void CCrossbowWeaponContext::FireSniperBolt()
 
 void CCrossbowWeaponContext::FireBolt( void )
 {
-	if (m_iClip == 0)
-	{
-		PlayEmptySound( );
-		return;
-	}
-
-	m_iClip--;
-
 	WeaponEventParams params;
 	params.flags = WeaponEventFlags::NotHost;
 	params.eventindex = m_usCrossbow;
@@ -204,6 +195,15 @@ void CCrossbowWeaponContext::FireBolt( void )
 	if (m_pLayer->ShouldRunFuncs()) {
 		m_pLayer->PlaybackWeaponEvent(params);
 	}
+
+	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75;
+	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75;
+
+	if (m_iClip != 0)
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 5.0;
+	else
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75;
+
 
 #ifndef CLIENT_DLL
 	// player "shoot" animation
@@ -251,14 +251,6 @@ void CCrossbowWeaponContext::FireBolt( void )
 	if (!m_iClip && player->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
 		// HEV suit - indicate out of ammo condition
 		player->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
-
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75;
-	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75;
-
-	if (m_iClip != 0)
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 5.0;
-	else
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75;
 
 	// m_pPlayer->pev->punchangle.x -= 2;
 #endif
