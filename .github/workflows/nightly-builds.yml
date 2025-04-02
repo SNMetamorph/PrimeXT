@@ -28,7 +28,7 @@ jobs:
             cmake_preset: windows-x64-release
             build_conf: RelWithDebInfo
             devenv_arch: amd64
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             cmake_preset: linux-x64-debug
             build_conf: Debug
             devenv_arch: none
