@@ -107,7 +107,7 @@ void CCrossbowWeaponContext::FireSniperBolt()
 	params.eventindex = m_usCrossbow2;
 	params.delay = 0.0f;
 	params.origin = m_pLayer->GetGunPosition();
-	params.angles = m_pLayer->GetCameraOrientation().GetAngles();
+	params.angles = m_pLayer->GetViewAngles();
 	params.fparam1 = 0;
 	params.fparam2 = 0;
 	params.iparam1 = 0;

@@ -96,7 +96,7 @@ void CHornetgunWeaponContext::PrimaryAttack( void )
 	params.eventindex = m_usHornetFire;
 	params.delay = 0.0f;
 	params.origin = m_pLayer->GetGunPosition();
-	params.angles = m_pLayer->GetCameraOrientation();
+	params.angles = m_pLayer->GetViewAngles();
 	params.fparam1 = 0.0f;
 	params.fparam2 = 0.0f;
 	params.iparam1 = FIREMODE_TRACK;
@@ -193,7 +193,7 @@ void CHornetgunWeaponContext::SecondaryAttack( void )
 	params.eventindex = m_usHornetFire;
 	params.delay = 0.0f;
 	params.origin = m_pLayer->GetGunPosition();
-	params.angles = m_pLayer->GetCameraOrientation();
+	params.angles = m_pLayer->GetViewAngles();
 	params.fparam1 = 0.0f;
 	params.fparam2 = 0.0f;
 	params.iparam1 = FIREMODE_FAST;

@@ -140,15 +140,12 @@ void CMP5WeaponContext::SecondaryAttack()
 
 	m_pLayer->SetPlayerAmmo(m_iSecondaryAmmoType, m_pLayer->GetPlayerAmmo(m_iSecondaryAmmoType) - 1);
 
-	Vector vecSrc = m_pLayer->GetGunPosition();
-	matrix3x3 cameraTransform = m_pLayer->GetCameraOrientation();
-
 	WeaponEventParams params;
 	params.flags = WeaponEventFlags::NotHost;
 	params.eventindex = m_usEvent2;
 	params.delay = 0.0f;
-	params.origin = vecSrc;
-	params.angles = cameraTransform.GetAngles();
+	params.origin = m_pLayer->GetGunPosition();
+	params.angles = m_pLayer->GetViewAngles();
 	params.fparam1 = 0;
 	params.fparam2 = 0;
 	params.iparam1 = 0;
