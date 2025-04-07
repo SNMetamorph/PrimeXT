@@ -50,12 +50,12 @@ public:
 	~CTripmineWeaponContext() = default;
 	CTripmineWeaponContext(std::unique_ptr<IWeaponLayer> &&layer);
 
-	int iItemSlot() { return 5; }
-	int GetItemInfo(ItemInfo *p);
-	void PrimaryAttack();
-	bool Deploy();
-	void Holster();
-	void WeaponIdle();
+	int iItemSlot() override { return 5; }
+	int GetItemInfo(ItemInfo *p) const override;
+	void PrimaryAttack() override;
+	bool Deploy() override;
+	void Holster() override;
+	void WeaponIdle() override;
 
 private:
 	uint16_t m_usTripFire;

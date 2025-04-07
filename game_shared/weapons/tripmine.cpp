@@ -35,7 +35,7 @@ CTripmineWeaponContext::CTripmineWeaponContext(std::unique_ptr<IWeaponLayer>&& l
 	m_usTripFire = m_pLayer->PrecacheEvent("events/tripfire.sc");
 }
 
-int CTripmineWeaponContext::GetItemInfo(ItemInfo *p)
+int CTripmineWeaponContext::GetItemInfo(ItemInfo *p) const
 {
 	p->pszName = CLASSNAME_STR(TRIPMINE_CLASSNAME);
 	p->pszAmmo1 = "Trip Mine";
