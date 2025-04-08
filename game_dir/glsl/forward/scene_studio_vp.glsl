@@ -122,38 +122,34 @@ void main( void )
 	// vertex lighting
 	vec3 lightmap = vec3( 0.0 );
 	vec3 deluxmap = vec3( 0.0 );
-	float gammaIndex;
+	float gamma = 1.0 / u_LightGamma;
 
 	if( u_LightStyles.x != 0.0 )
 	{
-		lightmap += UnpackVector( attr_LightColor.x ) * u_LightStyles.x;
+		lightmap += pow( UnpackVector( attr_LightColor.x ), vec3(gamma) ) * u_LightStyles.x;
 		deluxmap += UnpackNormal( attr_LightVecs.x ) * u_LightStyles.x;
 	}
 
 	if( u_LightStyles.y != 0.0 )
 	{
-		lightmap += UnpackVector( attr_LightColor.y ) * u_LightStyles.y;
+		lightmap += pow( UnpackVector( attr_LightColor.y ), vec3(gamma) ) * u_LightStyles.y;
 		deluxmap += UnpackNormal( attr_LightVecs.y ) * u_LightStyles.y;
 	}
 
 	if( u_LightStyles.z != 0.0 )
 	{
-		lightmap += UnpackVector( attr_LightColor.z ) * u_LightStyles.z;
+		lightmap += pow( UnpackVector( attr_LightColor.z ), vec3(gamma) ) * u_LightStyles.z;
 		deluxmap += UnpackNormal( attr_LightVecs.z ) * u_LightStyles.z;
 	}
 
 	if( u_LightStyles.w != 0.0 )
 	{
-		lightmap += UnpackVector( attr_LightColor.w ) * u_LightStyles.w;
+		lightmap += pow( UnpackVector( attr_LightColor.w ), vec3(gamma) ) * u_LightStyles.w;
 		deluxmap += UnpackNormal( attr_LightVecs.w ) * u_LightStyles.w;
 	}
 
-	var_DiffuseLight = min(( lightmap * LIGHTMAP_SHIFT ), 1.0 );
-	srcL = ( deluxmap * LIGHTMAP_SHIFT ); // get lightvector
-
-	// apply gamma-correction for vertex lighting
-	var_DiffuseLight = pow(var_DiffuseLight, vec3(1.0 / u_LightGamma));
-	var_DiffuseLight *= LIGHT_SCALE;
+	var_DiffuseLight = lightmap * LIGHTMAP_SHIFT * LIGHT_SCALE;
+	srcL = deluxmap * LIGHTMAP_SHIFT; // get lightvector	//is it necessary? it will be normalized anyway
 #else 
 	// virtual light source
 	vec3 N = normalize( srcN );
