@@ -65,11 +65,13 @@ bool CSqueakWeaponContext::Deploy()
 
 void CSqueakWeaponContext::Holster()
 {
+#ifndef CLIENT_DLL
+	CSqueak *pWeapon = static_cast<CSqueak*>(m_pLayer->GetWeaponEntity());
+#endif
 	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5);
 	if (m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) < 1)
 	{
 #ifndef CLIENT_DLL
-		CSqueak *pWeapon = static_cast<CSqueak*>(m_pLayer->GetWeaponEntity());
 		pWeapon->m_pPlayer->RemoveWeapon( WEAPON_SNARK );
 		pWeapon->SetThink( &CSqueak::DestroyItem );
 		pWeapon->pev->nextthink = gpGlobals->time + 0.1;
@@ -78,7 +80,9 @@ void CSqueakWeaponContext::Holster()
 	}
 	
 	SendWeaponAnim( SQUEAK_DOWN );
-	// EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM);
+#ifndef CLIENT_DLL
+	EMIT_SOUND(ENT(pWeapon->m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0f, ATTN_NORM);
+#endif
 }
 
 void CSqueakWeaponContext::PrimaryAttack()

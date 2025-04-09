@@ -88,8 +88,10 @@ void CHandGrenadeWeaponContext::Holster()
 		pWeapon->pev->nextthink = gpGlobals->time + 0.1f;
 #endif
 	}
-
-	// EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM);
+#ifndef CLIENT_DLL
+	CHandGrenade *pWeapon = static_cast<CHandGrenade*>(m_pLayer->GetWeaponEntity());
+	EMIT_SOUND(ENT(pWeapon->m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0f, ATTN_NORM);
+#endif
 }
 
 void CHandGrenadeWeaponContext::PrimaryAttack()

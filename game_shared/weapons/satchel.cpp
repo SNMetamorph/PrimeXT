@@ -114,12 +114,14 @@ void CSatchelWeaponContext::Holster( void )
 	
 	SendWeaponAnim( m_chargeReady ? SATCHEL_RADIO_HOLSTER : SATCHEL_DROP );
 
-	// EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM);
+#ifndef CLIENT_DLL
+	CSatchel *pWeapon = static_cast<CSatchel*>(m_pLayer->GetWeaponEntity());
+	EMIT_SOUND(ENT(pWeapon->m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0f, ATTN_NORM);
+#endif
 
 	if ( !m_pLayer->GetPlayerAmmo(PrimaryAmmoIndex()) && !m_chargeReady )
 	{
 #ifndef CLIENT_DLL
-		CSatchel *pWeapon = static_cast<CSatchel*>(m_pLayer->GetWeaponEntity());
 		pWeapon->m_pPlayer->RemoveWeapon( WEAPON_SATCHEL );
 		pWeapon->SetThink( &CSatchel::DestroyItem );
 		pWeapon->pev->nextthink = gpGlobals->time + 0.1f;

@@ -59,13 +59,16 @@ bool CTripmineWeaponContext::Deploy( )
 
 void CTripmineWeaponContext::Holster( void )
 {
+#ifndef CLIENT_DLL
+	CTripmine *pWeapon = static_cast<CTripmine*>(m_pLayer->GetWeaponEntity());
+#endif
+
 	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f);
 
 	if (!m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType))
 	{
 #ifndef CLIENT_DLL
 		// out of mines
-		CTripmine *pWeapon = static_cast<CTripmine*>(m_pLayer->GetWeaponEntity());
 		pWeapon->m_pPlayer->RemoveWeapon( WEAPON_TRIPMINE );
 		pWeapon->SetThink( &CBasePlayerItem::DestroyItem );
 		pWeapon->pev->nextthink = gpGlobals->time + 0.1;
@@ -73,7 +76,9 @@ void CTripmineWeaponContext::Holster( void )
 	}
 
 	SendWeaponAnim( TRIPMINE_HOLSTER );
-	// EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM);
+#ifndef CLIENT_DLL
+	EMIT_SOUND(ENT(pWeapon->m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0f, ATTN_NORM);
+#endif
 }
 
 void CTripmineWeaponContext::PrimaryAttack( void )
