@@ -13,7 +13,9 @@ permissions:
 jobs:
   build-generic:
     runs-on: ${{ matrix.os }}
+    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
@@ -149,6 +151,7 @@ jobs:
 
   build-android:
     runs-on: ubuntu-latest
+    continue-on-error: true
     strategy:
       matrix:
         conf: [Debug]
