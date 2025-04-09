@@ -163,7 +163,7 @@ float CClientWeaponLayerImpl::GetWeaponTimeBase(bool usePredicting)
 
 float CClientWeaponLayerImpl::GetTime()
 {
-	return gEngfuncs.GetClientTime();
+	return static_cast<float>(m_playerState.time);
 }
 
 uint32_t CClientWeaponLayerImpl::GetRandomSeed()
