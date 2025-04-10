@@ -116,20 +116,15 @@ static float *CubeSide( const vec3_t pos, float size, int vert )
 
 static void CubeFace( const vec3_t org, int v0, int v1, int v2, int v3, float size, const byte *color )
 {
-	uint scale = tr.lightstyle[0];
-	uint unclamped[3];
-	int col[3];
+	vec3_t col;
+	float scale = tr.lightstyle[0] / 264.0f;
+	float gamma = 1.0f / tr.light_gamma;
 
-	unclamped[0] = R_LightToTexGamma( color[0] ) * scale;
-	unclamped[1] = R_LightToTexGamma( color[1] ) * scale;
-	unclamped[2] = R_LightToTexGamma( color[2] ) * scale;
+	col[0] = powf( color[0] / 255.0f, gamma ) * scale;
+	col[1] = powf( color[1] / 255.0f, gamma ) * scale;
+	col[2] = powf( color[2] / 255.0f, gamma ) * scale;
 
-	col[0] = Q_min((unclamped[0] >> 7), 255 );
-	col[1] = Q_min((unclamped[1] >> 7), 255 );
-	col[2] = Q_min((unclamped[2] >> 7), 255 );
-
-//	pglColor3ub( col[0], col[1], col[2] );
-	pglColor3ub( color[0], color[1], color[2] );
+	pglColor3fv( col );
 	pglVertex3fv( CubeSide( org, size, v0 ));
 	pglVertex3fv( CubeSide( org, size, v1 ));
 	pglVertex3fv( CubeSide( org, size, v2 ));
