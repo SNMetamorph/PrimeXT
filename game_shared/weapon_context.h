@@ -62,6 +62,7 @@ public:
 	int DefaultReload( int iClipSize, int iAnim, float fDelay, int body = 0 );
 	void SendWeaponAnim( int iAnim, int body = 0 );  // skiplocal is 1 if client is predicting weapon animations
 	float GetNextPrimaryAttackDelay(float delay);
+	bool CanAttack(float attack_time);
 	bool PlayEmptySound();
 	void ResetEmptySound();
 

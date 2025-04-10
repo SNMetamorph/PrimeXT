@@ -14,6 +14,7 @@ GNU General Public License for more details.
 */
 
 #include "weapon_context.h"
+#include <cmath>
 #include <utility>
 
 #ifdef CLIENT_DLL
@@ -83,7 +84,7 @@ void CBaseWeaponContext::ItemPostFrame()
 		m_flLastFireTime = 0.0f;
 	}
 
-	if (m_pLayer->CheckPlayerButtonFlag(IN_ATTACK2) && m_flNextSecondaryAttack <= m_pLayer->GetWeaponTimeBase(UsePredicting()) )
+	if (m_pLayer->CheckPlayerButtonFlag(IN_ATTACK2) && CanAttack(m_flNextSecondaryAttack))
 	{
 		if ( pszAmmo2() && !m_pLayer->GetPlayerAmmo(SecondaryAmmoIndex()) )
 		{
@@ -93,7 +94,7 @@ void CBaseWeaponContext::ItemPostFrame()
 		SecondaryAttack();
 		m_pLayer->ClearPlayerButtonFlag(IN_ATTACK2);
 	}
-	else if (m_pLayer->CheckPlayerButtonFlag(IN_ATTACK) && m_flNextPrimaryAttack <= m_pLayer->GetWeaponTimeBase(UsePredicting()) )
+	else if (m_pLayer->CheckPlayerButtonFlag(IN_ATTACK) && CanAttack(m_flNextPrimaryAttack))
 	{
 		if ( (m_iClip == 0 && pszAmmo1()) || (iMaxClip() == -1 && !m_pLayer->GetPlayerAmmo(PrimaryAmmoIndex())) )
 		{
@@ -289,6 +290,11 @@ float CBaseWeaponContext::GetNextPrimaryAttackDelay(float delay)
  	float flNextAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + delay - flCreep; 
  	m_flPrevPrimaryAttack = flNextAttack - m_pLayer->GetWeaponTimeBase(UsePredicting()); 
  	return flNextAttack; 
+}
+
+bool CBaseWeaponContext::CanAttack(float attack_time)
+{
+	return (static_cast<int>(std::floor(attack_time * 1000.0)) * 1000.0f) <= m_pLayer->GetWeaponTimeBase(UsePredicting());
 }
 
 bool CBaseWeaponContext :: PlayEmptySound()
