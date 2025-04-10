@@ -143,7 +143,7 @@ void CSqueakWeaponContext::PrimaryAttack()
 		}
 
 		m_fJustThrown = true;
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.3f;
+		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.3f);
 		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0f;
 	}
 }

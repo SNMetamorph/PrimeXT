@@ -156,7 +156,7 @@ void CSatchelWeaponContext::PrimaryAttack( void )
 		}
 #endif
 		m_chargeReady = 2;
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
+		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.5f);
 		m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
 		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
 	}
@@ -196,7 +196,7 @@ void CSatchelWeaponContext::Throw( void )
 
 		m_chargeReady = 1;
 		m_pLayer->SetPlayerAmmo(PrimaryAmmoIndex(), m_pLayer->GetPlayerAmmo(PrimaryAmmoIndex()) - 1);
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0;
+		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(1.0f);
 		m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5;
 	}
 }
@@ -244,7 +244,7 @@ void CSatchelWeaponContext::WeaponIdle( void )
 		m_pLayer->SetPlayerViewmodel("models/v_satchel.mdl");
 		SendWeaponAnim( SATCHEL_DRAW );
 
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
+		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.5f);
 		m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
 		m_chargeReady = 0;
 		break;

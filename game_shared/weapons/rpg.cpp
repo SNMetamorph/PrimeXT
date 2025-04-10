@@ -125,7 +125,7 @@ void CRpgWeaponContext::PrimaryAttack()
 		}
 
 		m_iClip--; 
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.5f;
+		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(1.5f);
 		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.5f;
 		// m_pPlayer->pev->punchangle.x -= 5;
 		ResetEmptySound();
@@ -173,7 +173,7 @@ void CRpgWeaponContext::Reload( void )
 	// Set the next attack time into the future so that WeaponIdle will get called more often
 	// than reload, allowing the RPG LTD to be updated
 	
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
+	m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.5f);
 
 	if ( m_cActiveRockets && m_fSpotActive )
 	{

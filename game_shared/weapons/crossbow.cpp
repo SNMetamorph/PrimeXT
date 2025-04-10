@@ -85,7 +85,7 @@ void CCrossbowWeaponContext::PrimaryAttack( void )
 	if (m_iClip < 1)
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.15f;
+		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.15f);
 		return;
 	}
 
@@ -119,7 +119,7 @@ void CCrossbowWeaponContext::FireSniperBolt()
 		m_pLayer->PlaybackWeaponEvent(params);
 	}
 
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75f;
+	m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.75f);
 #ifndef CLIENT_DLL
 	CBasePlayer *player = m_pLayer->GetWeaponEntity()->m_pPlayer;
 	player->SetAnimation( PLAYER_ATTACK1 );
@@ -196,13 +196,13 @@ void CCrossbowWeaponContext::FireBolt( void )
 		m_pLayer->PlaybackWeaponEvent(params);
 	}
 
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75;
-	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75;
+	m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.75f);
+	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75f;
 
 	if (m_iClip != 0)
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 5.0;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 5.0f;
 	else
-		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75;
+		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75f;
 
 
 #ifndef CLIENT_DLL
@@ -269,8 +269,8 @@ void CCrossbowWeaponContext::SecondaryAttack( void )
 		m_fInZoom = true;
 	}
 	
-	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.3;
-	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 5.0;
+	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.3f;
+	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 5.0f;
 }
 
 void CCrossbowWeaponContext::Reload( void )

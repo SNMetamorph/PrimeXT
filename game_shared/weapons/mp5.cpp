@@ -70,14 +70,14 @@ void CMP5WeaponContext::PrimaryAttack()
 	if (m_pLayer->GetPlayerWaterlevel() == 3)
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack = 0.15;
+		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.15f);
 		return;
 	}
 
 	if (m_iClip <= 0)
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack = 0.15;
+		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.15f);
 		return;
 	}
 
@@ -118,7 +118,7 @@ void CMP5WeaponContext::PrimaryAttack()
 		player->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 #endif
 
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.1f;
+	m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.1f);
 	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.f, 15.f);
 }
 
@@ -128,7 +128,7 @@ void CMP5WeaponContext::SecondaryAttack()
 	if (m_pLayer->GetPlayerWaterlevel() == 3)
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.15;
+		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.15f);
 		return;
 	}
 
@@ -175,7 +175,7 @@ void CMP5WeaponContext::SecondaryAttack()
 		player->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 #endif
 
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.f;
+	m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(1.0f);
 	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.f;
 	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 5.f; // idle pretty soon after shooting.
 

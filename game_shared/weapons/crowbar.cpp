@@ -147,7 +147,7 @@ bool CCrowbarWeaponContext::Swing(bool fFirst)
 		}
 
 		// miss
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
+		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.5f);
 	}
 	return false;
 #else
@@ -202,7 +202,7 @@ bool CCrowbarWeaponContext::Swing(bool fFirst)
 		if (fFirst)
 		{
 			// miss
-			m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
+			m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.5f);
 			
 			// player "shoot" animation
 			player->SetAnimation( PLAYER_ATTACK1 );
@@ -303,7 +303,7 @@ bool CCrowbarWeaponContext::Swing(bool fFirst)
 		}
 
 		player->m_iWeaponVolume = flVol * CROWBAR_WALLHIT_VOLUME;
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.25f;
+		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.25f);
 		weapon->SetThink( &CCrowbar::Smack );
 		weapon->pev->nextthink = gpGlobals->time + 0.2f;
 	}

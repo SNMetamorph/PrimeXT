@@ -116,7 +116,8 @@ void CEgonWeaponContext::Attack()
 		{
 			if (!HasAmmo())
 			{
-				m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.25;
+				m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.25f);
+				m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.25f;
 				PlayEmptySound();
 				return;
 			}
@@ -183,7 +184,8 @@ void CEgonWeaponContext::Attack()
 			{
 				EndAttack();
 				m_fireState = FIRE_OFF;
-				m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0;
+				m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(1.0f);
+				m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0f;
 			}
 		}
 		break;
@@ -462,7 +464,8 @@ void CEgonWeaponContext::EndAttack()
 	}
 
 	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 2.0f;
-	m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
+	m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.5f);
+	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
 	m_fireState = FIRE_OFF;
 
 	DestroyEffect();

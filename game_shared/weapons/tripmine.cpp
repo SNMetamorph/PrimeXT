@@ -150,7 +150,7 @@ void CTripmineWeaponContext::PrimaryAttack( void )
 		}
 	}
 #endif
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.3f;
+	m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.3f);
 	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
 }
 

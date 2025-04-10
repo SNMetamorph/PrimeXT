@@ -160,7 +160,7 @@ void CHandGrenadeWeaponContext::WeaponIdle( void )
 
 		m_flReleaseThrow = 0;
 		m_flStartThrow = 0;
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
+		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.5f);
 		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
 
 		m_pLayer->SetPlayerAmmo(m_iPrimaryAmmoType, m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) - 1);
@@ -170,7 +170,10 @@ void CHandGrenadeWeaponContext::WeaponIdle( void )
 			// just threw last grenade
 			// set attack times in the future, and weapon idle in the future so we can see the whole throw
 			// animation, weapon idle will automatically retire the weapon for us.
-			m_flTimeWeaponIdle = m_flNextSecondaryAttack = m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;// ensure that the animation can finish playing
+
+			m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.5f); // ensure that the animation can finish playing
+			m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
+			m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
 		}
 		return;
 	}

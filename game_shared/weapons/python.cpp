@@ -109,7 +109,7 @@ void CPythonWeaponContext::PrimaryAttack()
 	if (m_pLayer->GetPlayerWaterlevel() == 3)
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.15f;
+		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.15f);
 		return;
 	}
 
@@ -122,9 +122,8 @@ void CPythonWeaponContext::PrimaryAttack()
 		else
 		{
 			PlayEmptySound();
-			m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.15f;
+			m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.15f);
 		}
-
 		return;
 	}
 
@@ -166,7 +165,7 @@ void CPythonWeaponContext::PrimaryAttack()
 #endif
 
 	// m_pPlayer->pev->punchangle.x -= 10;
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75f;
+	m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.75f);
 	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.f, 15.f);
 }
 

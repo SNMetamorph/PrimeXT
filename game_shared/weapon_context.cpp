@@ -45,6 +45,8 @@ CBaseWeaponContext::CBaseWeaponContext(std::unique_ptr<IWeaponLayer> &&layer) :
 	m_fInSpecialReload(false),
 	m_flNextPrimaryAttack(0.0f),
 	m_flNextSecondaryAttack(0.0f),
+	m_flPrevPrimaryAttack(0.0f),
+	m_flLastFireTime(0.0f),
 	m_flPumpTime(0.0f),
 	m_flTimeWeaponIdle(0.0f),
 	m_iClientClip(0),
@@ -74,6 +76,11 @@ void CBaseWeaponContext::ItemPostFrame()
 		m_pLayer->SetPlayerAmmo( m_iPrimaryAmmoType,  m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) - j );
 
 		m_fInReload = FALSE;
+	}
+
+	if (!m_pLayer->CheckPlayerButtonFlag(IN_ATTACK))
+	{
+		m_flLastFireTime = 0.0f;
 	}
 
 	if (m_pLayer->CheckPlayerButtonFlag(IN_ATTACK2) && m_flNextSecondaryAttack <= m_pLayer->GetWeaponTimeBase(UsePredicting()) )
@@ -211,6 +218,7 @@ bool CBaseWeaponContext :: DefaultDeploy( char *szViewModel, char *szWeaponModel
 
 	m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5);
 	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0;
+	m_flLastFireTime = 0.0f;
 	return TRUE;
 }
 
@@ -254,6 +262,33 @@ void CBaseWeaponContext::SendWeaponAnim( int iAnim, int body )
 		WRITE_BYTE( m_pLayer->GetWeaponBodygroup() );	// weaponmodel bodygroup.
 	MESSAGE_END();
 #endif
+}
+
+float CBaseWeaponContext::GetNextPrimaryAttackDelay(float delay)
+{
+	if (m_flLastFireTime <= (0.0f + FLT_EPSILON) || m_flNextPrimaryAttack <= (-1.0f + FLT_EPSILON))
+ 	{ 
+ 		// at this point, we are assuming that the client has stopped firing 
+ 		// and we are going to reset our book keeping variables. 
+ 		m_flLastFireTime = m_pLayer->GetTime(); // maybe we should use actual time instead of predicted? not obvious
+ 		m_flPrevPrimaryAttack = delay; 
+ 	} 
+
+ 	// calculate the time between this shot and the previous 
+ 	float flTimeBetweenFires = m_pLayer->GetTime() - m_flLastFireTime; 
+ 	float flCreep = 0.0f; 
+
+	if (flTimeBetweenFires > 0.0f) {
+		flCreep = flTimeBetweenFires - m_flPrevPrimaryAttack;
+	}
+ 	 
+ 	m_flLastFireTime = m_pLayer->GetTime();		 
+ 	 
+	// we need to remember what the m_flNextPrimaryAttack time is set to for each shot,
+ 	// store it as m_flPrevPrimaryAttack. 
+ 	float flNextAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + delay - flCreep; 
+ 	m_flPrevPrimaryAttack = flNextAttack - m_pLayer->GetWeaponTimeBase(UsePredicting()); 
+ 	return flNextAttack; 
 }
 
 bool CBaseWeaponContext :: PlayEmptySound()

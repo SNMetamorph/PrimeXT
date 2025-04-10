@@ -109,15 +109,11 @@ void CHornetgunWeaponContext::PrimaryAttack( void )
 	}
 
 	m_pLayer->SetPlayerAmmo(m_iPrimaryAmmoType, m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) - 1);
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.25f;
+	m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.25f);
 
-	if (m_flNextPrimaryAttack < m_pLayer->GetWeaponTimeBase(UsePredicting()))
-	{
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.25f;
-	}
 	if (m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) < 1)
 	{
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + GetRechargeTime();
+		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(GetRechargeTime());
 	}
 	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
 }
@@ -205,15 +201,18 @@ void CHornetgunWeaponContext::SecondaryAttack( void )
 		m_pLayer->PlaybackWeaponEvent(params);
 	}
 
-	m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.1f;
+	m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.1f);
+	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.1f;
+
 	if (m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) < 1)
 	{
 #ifndef CLIENT_DLL
 		m_flRechargeTime = gpGlobals->time + GetRechargeTime();
 #endif
+		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.5f);
 		m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5f;
 	}
+
 	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.0f, 15.0f);
 }
 

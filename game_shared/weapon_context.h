@@ -61,6 +61,7 @@ public:
 	bool DefaultDeploy( char *szViewModel, char *szWeaponModel, int iAnim, char *szAnimExt, int body = 0 );
 	int DefaultReload( int iClipSize, int iAnim, float fDelay, int body = 0 );
 	void SendWeaponAnim( int iAnim, int body = 0 );  // skiplocal is 1 if client is predicting weapon animations
+	float GetNextPrimaryAttackDelay(float delay);
 	bool PlayEmptySound();
 	void ResetEmptySound();
 
@@ -74,6 +75,8 @@ public:
 	int	m_fInSpecialReload;				// Are we in the middle of a reload for the shotguns
 	float m_flNextPrimaryAttack;		// soonest time ItemPostFrame will call PrimaryAttack
 	float m_flNextSecondaryAttack;		// soonest time ItemPostFrame will call SecondaryAttack
+	float m_flPrevPrimaryAttack;		// required for calculating floating point error correction for primary fire timing
+	float m_flLastFireTime;				// 
 	float m_flTimeWeaponIdle;			// soonest time ItemPostFrame will call WeaponIdle
 	int	m_iPrimaryAmmoType;				// "primary" ammo index into players m_rgAmmo[]
 	int	m_iSecondaryAmmoType;			// "secondary" ammo index into players m_rgAmmo[]

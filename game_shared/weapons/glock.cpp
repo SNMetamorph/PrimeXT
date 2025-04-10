@@ -75,7 +75,7 @@ void CGlockWeaponContext::GlockFire( float flSpread , float flCycleTime, bool fU
 		if (m_fFireOnEmpty)
 		{
 			PlayEmptySound();
-			m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.2;
+			m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.2f);
 		}
 
 		return;
@@ -114,7 +114,8 @@ void CGlockWeaponContext::GlockFire( float flSpread , float flCycleTime, bool fU
 	}
 
 	Vector vecDir = m_pLayer->FireBullets(1, vecSrc, aimMatrix, 8192, flSpread, BULLET_PLAYER_9MM, m_pLayer->GetRandomSeed());
-	m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + flCycleTime;
+	m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(flCycleTime);
+	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + flCycleTime;
 
 	WeaponEventParams params;
 	params.flags = WeaponEventFlags::NotHost;

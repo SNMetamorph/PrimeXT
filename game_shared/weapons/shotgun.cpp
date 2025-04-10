@@ -66,7 +66,7 @@ void CShotgunWeaponContext::PrimaryAttack()
 	if (m_pLayer->GetPlayerWaterlevel() == 3)
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.15;
+		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.15f);
 		return;
 	}
 
@@ -117,7 +117,7 @@ void CShotgunWeaponContext::PrimaryAttack()
 #endif
 
 	//m_flPumpTime = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.5; // ??? is it correct
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75;
+	m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.75f);
 	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75;
 
 	if (m_iClip != 0)
@@ -134,7 +134,7 @@ void CShotgunWeaponContext::SecondaryAttack()
 	if (m_pLayer->GetPlayerWaterlevel() == 3)
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.15;
+		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.15f);
 		return;
 	}
 
@@ -187,7 +187,7 @@ void CShotgunWeaponContext::SecondaryAttack()
 
 	m_flPumpTime = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.95; // ??? is it correct
 
-	m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.5;
+	m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(1.5f);
 	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.5;
 
 	if (m_iClip != 0)
@@ -215,7 +215,7 @@ void CShotgunWeaponContext::Reload()
 		m_pLayer->SetPlayerNextAttackTime(m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.6);
 
 		m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.6;
-		m_flNextPrimaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0;
+		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(1.0f);
 		m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.0;
 		return;
 	}
