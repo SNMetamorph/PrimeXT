@@ -3,9 +3,11 @@ name: documentation-deploy
 on:
   push:
     paths: 
+      - '.github/**'
       - 'documentation/**'
   pull_request:
     paths: 
+      - '.github/**'
       - 'documentation/**'
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
