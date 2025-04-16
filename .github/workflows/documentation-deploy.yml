@@ -8,15 +8,37 @@ on:
     paths: 
       - 'documentation/**'
 
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   deploy:
     name: Deploy to GitHub Pages
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4.1.7
-      - uses: actions/setup-node@v4.0.2
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22.x
+
       - name: Build website
         working-directory: documentation
         run: |
@@ -30,18 +52,14 @@ jobs:
           # Verbose setting SHA when using Pull_Request event trigger to fix #16. (For push even trigger this is not necessary.)
           sha: ${{ github.event.pull_request.head.sha }} 
 
-      # Popular action to deploy to GitHub Pages:
-      # Docs: https://github.com/peaceiris/actions-gh-pages#%EF%B8%8F-docusaurus
+      - name: Upload artifact
+        if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './documentation/build'
+
       - name: Deploy to GitHub Pages
         if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
-        uses: peaceiris/actions-gh-pages@v4.0.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          # Build output to publish to the `gh-pages` branch:
-          publish_dir: ./documentation/build
-          # Assign commit authorship to the official GH-Actions bot for deploys to `gh-pages` branch:
-          # https://github.com/actions/checkout/issues/13#issuecomment-724415212
-          # The GH actions bot is used by default if you didn't specify the two fields.
-          # You can swap them out with your own user credentials.
-          user_name: github-actions[bot]
-          user_email: 41898282+github-actions[bot]@users.noreply.github.com
+        id: deployment
+        uses: actions/deploy-pages@v4
+  
