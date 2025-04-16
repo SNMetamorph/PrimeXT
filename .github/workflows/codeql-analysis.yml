@@ -79,7 +79,6 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo dpkg --add-architecture i386
         sudo apt-get update
         sudo apt-get install gcc-multilib g++-multilib cmake
         sudo apt-get install qtbase5-dev
@@ -124,7 +123,7 @@ jobs:
     - name: Build
       working-directory: ${{ github.workspace }}/build
       # Execute the build. You can specify a specific target with "--target <NAME>"
-      run: cmake --build . --parallel 4
+      run: cmake --build . --parallel $(nproc)
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
