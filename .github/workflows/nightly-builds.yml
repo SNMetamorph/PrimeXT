@@ -57,8 +57,6 @@ jobs:
           fetch-depth: 0
 
       - name: Create build environment
-        # Some projects don't allow in-source building, so create a separate build directory
-        # We'll use this as our working directory for all subsequent commands
         run: cmake -E make_directory ${{ github.workspace }}/build
 
       - uses: ilammy/msvc-dev-cmd@v1.12.1
@@ -108,15 +106,11 @@ jobs:
 
       - name: Configure CMake
         working-directory: ${{ github.workspace }}/build
-        # Note the current convention is to use the -S and -B options here to specify source
-        # and build directories, but this is only available with CMake 3.13 and higher.
-        # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
         run: cmake "${{ github.workspace }}" --preset ${{ matrix.cmake_preset }}
 
       - name: Build
         working-directory: ${{ github.workspace }}/build
-        # Execute the build. You can specify a specific target with "--target <NAME>"
-        run: cmake --build . --parallel 4
+        run: cmake --build . --parallel $(nproc)
 
       - name: Prepare artifacts
         shell: bash
