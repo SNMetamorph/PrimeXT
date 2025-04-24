@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #include "studiomdl.h"
 #include "image_utils.h"
 #include "builtin.h"
+#include <cmath>
 
 void Grab_Skin( s_texture_t *ptexture )
 {
@@ -70,9 +71,32 @@ void Grab_Skin( s_texture_t *ptexture )
 	if( !pic ) pic = ImageUtils::LoadImageMemory( "default.bmp", default_bmp, sizeof( default_bmp ));
 	if( !pic ) COM_FatalError( "%s not found", file1 ); // ???
 
-	int new_width = Q_min(pic->width, store_uv_coords ? MIP_MAXWIDTH : 512);
-	int new_height = Q_min(pic->height, store_uv_coords ? MIP_MAXHEIGHT : 512);
+	size_t new_width = 0;
+	size_t new_height = 0;
 	bool transparent = FBitSet(ptexture->flags, STUDIO_NF_MASKED) && FBitSet(pic->flags, IMAGE_HAS_8BIT_ALPHA);
+
+	if (store_uv_coords)
+	{
+		// keep behavior as it is, this is disscussionable topic
+		new_width = Q_min(pic->width, MIP_MAXWIDTH);
+		new_height = Q_min(pic->height, MIP_MAXHEIGHT);
+	}
+	else
+	{
+		// rescale to fit into goldsrc limits and preserve aspect ratio
+		const size_t imageSizeLimit = 307200;
+		if (pic->width * pic->height > imageSizeLimit) 
+		{
+			double rescalingCoeff = imageSizeLimit / static_cast<double>(pic->width * pic->height);
+			new_width = std::floor(pic->width * rescalingCoeff);
+			new_height = std::floor(pic->height * rescalingCoeff);
+		}
+		else 
+		{
+			new_width = pic->width;
+			new_height = pic->height;
+		}
+	}
 
 	// resample to studio limits
 	pic = Image_Resample(pic, new_width, new_height);
