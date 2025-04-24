@@ -727,8 +727,7 @@ typedef struct
 	s_model_t		*pmodel[MAXSTUDIOMODELS];
 } s_bodypart_t;
 
-EXTERN s_bodypart_t		g_bodypart[MAXSTUDIOBODYPARTS];
-EXTERN int		g_numbodyparts;
+EXTERN CUtlArray<s_bodypart_t> g_bodypart;
 
 typedef struct
 {

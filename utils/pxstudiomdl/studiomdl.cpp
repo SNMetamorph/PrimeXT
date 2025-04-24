@@ -1262,10 +1262,14 @@ void Option_Studio( s_model_t *pmodel )
 int Option_Blank( void )
 {
 	g_model[g_nummodels] = (s_model_t *)Mem_Alloc( sizeof( s_model_t ));
-	g_bodypart[g_numbodyparts].pmodel[g_bodypart[g_numbodyparts].nummodels] = g_model[g_nummodels];
 	Q_strncpy( g_model[g_nummodels]->name, "blank", sizeof( g_model[0]->name ));
 
-	g_bodypart[g_numbodyparts].nummodels++;
+	if (g_bodypart.Count() < 1)
+		g_bodypart.AddToTail();
+
+	s_bodypart_t &part = g_bodypart.Tail();
+	part.pmodel[part.nummodels] = g_model[g_nummodels];
+	part.nummodels++;
 	g_nummodels++;
 
 	return 0;
@@ -1278,9 +1282,17 @@ void Cmd_Bodygroup( void )
 	if( !GetToken( false ))
 		return;
 
-	if( g_numbodyparts == 0 ) g_bodypart[g_numbodyparts].base = 1;
-	else g_bodypart[g_numbodyparts].base = g_bodypart[g_numbodyparts-1].base * g_bodypart[g_numbodyparts-1].nummodels;
-	Q_strncpy( g_bodypart[g_numbodyparts].name, token, sizeof( g_bodypart[g_numbodyparts].name ));
+	if (g_bodypart.Count() < 1) {	
+		g_bodypart[g_bodypart.AddToTail()].base = 1;
+	}
+	else 
+	{
+		int index = g_bodypart.AddToTail();
+		g_bodypart[index].base = g_bodypart[index - 1].base * g_bodypart[index - 1].nummodels;
+	}
+
+	s_bodypart_t &part = g_bodypart.Tail();
+	Q_strncpy( part.name, token, sizeof( part.name ));
 
 	do
 	{
@@ -1302,8 +1314,8 @@ void Cmd_Bodygroup( void )
 		else if( !Q_stricmp( "studio", token ))
 		{
 			g_model[g_nummodels] = (s_model_t *)Mem_Alloc( sizeof( s_model_t ));
-			g_bodypart[g_numbodyparts].pmodel[g_bodypart[g_numbodyparts].nummodels] = g_model[g_nummodels];
-			g_bodypart[g_numbodyparts].nummodels++;
+			part.pmodel[part.nummodels] = g_model[g_nummodels];
+			part.nummodels++;
 
 			Option_Studio( g_model[g_nummodels] );
 			g_nummodels++;
@@ -1317,8 +1329,6 @@ void Cmd_Bodygroup( void )
 			COM_FatalError( "unknown bodygroup option: \"%s\"\n", token );
 		}
 	} while( 1 );
-
-	g_numbodyparts++;
 }
 
 void Cmd_Body( void )
@@ -1326,17 +1336,23 @@ void Cmd_Body( void )
 	if( !GetToken( false ))
 		return;
 
-	if( g_numbodyparts == 0 ) g_bodypart[g_numbodyparts].base = 1;
-	else g_bodypart[g_numbodyparts].base = g_bodypart[g_numbodyparts-1].base * g_bodypart[g_numbodyparts-1].nummodels;
-	Q_strncpy(g_bodypart[g_numbodyparts].name, token, sizeof( g_bodypart[0].name ));
+	if (g_bodypart.Count() < 1) {
+		g_bodypart[g_bodypart.AddToTail()].base = 1;
+	}
+	else {
+		int index = g_bodypart.AddToTail();
+		g_bodypart[index].base = g_bodypart[index - 1].base * g_bodypart[index - 1].nummodels;
+	}
+
+	s_bodypart_t &part = g_bodypart.Tail();
+	Q_strncpy( part.name, token, sizeof( part.name ));
 
 	g_model[g_nummodels] = (s_model_t *)Mem_Alloc( sizeof( s_model_t ));
-	g_bodypart[g_numbodyparts].pmodel[g_bodypart[g_numbodyparts].nummodels] = g_model[g_nummodels];
-	g_bodypart[g_numbodyparts].nummodels = 1;
+	part.pmodel[part.nummodels] = g_model[g_nummodels];
+	part.nummodels = 1;
 
 	Option_Studio( g_model[g_nummodels] );
 
-	g_numbodyparts++;
 	g_nummodels++;
 }
 
@@ -1353,13 +1369,20 @@ int Cmd_Model( void )
 	Q_strncpy( g_model[g_nummodels]->name, token, sizeof( g_model[0]->name ));
 
 	// fake bodypart stuff
-	if( g_numbodyparts == 0 ) g_bodypart[g_numbodyparts].base = 1;
-	else g_bodypart[g_numbodyparts].base = g_bodypart[g_numbodyparts-1].base * g_bodypart[g_numbodyparts-1].nummodels;
-	Q_strncpy(g_bodypart[g_numbodyparts].name, token, sizeof( g_bodypart[0].name ));
+	if (g_bodypart.Count() < 1) {
+		g_bodypart[g_bodypart.AddToTail()].base = 1;
+	}
+	else 
+	{
+		int index = g_bodypart.AddToTail();
+		g_bodypart[index].base = g_bodypart[index - 1].base * g_bodypart[index - 1].nummodels;
+	}
 
-	g_bodypart[g_numbodyparts].pmodel[g_bodypart[g_numbodyparts].nummodels] = g_model[g_nummodels];
-	g_bodypart[g_numbodyparts].nummodels = 1;
-	g_numbodyparts++;
+	s_bodypart_t &part = g_bodypart.Tail();
+	Q_strncpy( part.name, token, sizeof( part.name ));
+
+	part.pmodel[part.nummodels] = g_model[g_nummodels];
+	part.nummodels = 1;
 
 	Option_Studio( g_model[g_nummodels] );
 

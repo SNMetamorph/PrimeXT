@@ -953,14 +953,14 @@ void WriteModel( void )
 	int		total_strips = 0;
 
 	pbodypart = (mstudiobodyparts_t *)pData;
-	phdr->numbodyparts = g_numbodyparts;
+	phdr->numbodyparts = g_bodypart.Count();
 	phdr->bodypartindex = (pData - pStart);
-	pData += g_numbodyparts * sizeof( mstudiobodyparts_t );
+	pData += g_bodypart.Count() * sizeof( mstudiobodyparts_t );
 
 	pmodel = (mstudiomodel_t *)pData;
 	pData += g_nummodels * sizeof( mstudiomodel_t );
 
-	for (i = 0, j = 0; i < g_numbodyparts; i++)
+	for (i = 0, j = 0; i < g_bodypart.Count(); i++)
 	{
 		CopyStringTruncate( pbodypart[i].name, g_bodypart[i].name, sizeof( pbodypart[0].name ));
 		pbodypart[i].nummodels = g_bodypart[i].nummodels;
