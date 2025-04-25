@@ -58,7 +58,7 @@ EXTERN	bool	g_lockbonelengths;
 EXTERN	int	maxseqgroupsize;
 EXTERN	bool	g_multistagegraph;
 EXTERN	int	split_textures;
-EXTERN	int	clip_texcoords;
+EXTERN	bool	clip_texcoords;
 EXTERN	bool	store_uv_coords;
 EXTERN	bool	allow_tileing;
 EXTERN	bool	allow_boneweights;

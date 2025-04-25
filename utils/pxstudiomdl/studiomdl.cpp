@@ -5359,7 +5359,7 @@ void ParseScript( void )
 		}
 		else if( !Q_stricmp( token, "$cliptotextures" ))
 		{
-			clip_texcoords = 1;
+			MsgDev( D_REPORT, "^3$cliptotextures^7 flag is redundant, compiler does not texture clipping by default\n" );
 		}
 		else if( !Q_stricmp( token, "$mergecontrollers" ))
 		{
@@ -5539,6 +5539,7 @@ int main( int argc, char **argv )
 	has_boneweights = 0;
 	g_gamma = 1.8f;
 	g_alpha_threshold = 0.5f;
+	clip_texcoords = true;
 
 	if( argc == 1 )
 	{
