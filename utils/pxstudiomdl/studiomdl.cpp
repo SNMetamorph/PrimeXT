@@ -5355,7 +5355,7 @@ void ParseScript( void )
 		}
 		else if( !Q_stricmp( token, "$externaltextures" ))
 		{
-			split_textures = 1;
+			COM_FatalError( "$externaltextures flag is obsolete, remove it from QC" );
 		}
 		else if( !Q_stricmp( token, "$cliptotextures" ))
 		{

@@ -1184,32 +1184,6 @@ void WriteFile( void )
 		memset( pStart, 0, pseqhdr->length );
 	}
 
-	if( split_textures )
-	{
-		// write textures out to a separate file
-		char texname[128];
-
-		sprintf( texname, "%sT.mdl", outname );
-
-		Msg( "writing %s:\n", texname );
-
-		phdr = (studiohdr_t *)pStart;
-		phdr->ident = IDSTUDIOHEADER;
-		phdr->version = STUDIO_VERSION;
-
-		pData = (byte *)phdr + sizeof( studiohdr_t );
-
-		WriteTextures( );
-
-		phdr->length = pData - pStart;
-		Msg( "textures   %7d bytes\n", phdr->length );
-
-		COM_SaveFile( texname, pStart, phdr->length, true );
-
-		memset( pStart, 0, phdr->length );
-		pData = pStart;
-	}
-
 //
 // write the model output file
 //
@@ -1311,12 +1285,8 @@ void WriteFile( void )
 	Msg( "keyvalues  %7d bytes\n", pData - pStart - total );
 
 	// NOTE: textures must be last!
-	if( !split_textures )
-	{
-		WriteTextures( );
-		Msg( "textures   %7d bytes\n", pData - pStart - total );
-		total  = pData - pStart;
-	}
+	WriteTextures( );
+	Msg( "textures   %7d bytes\n", pData - pStart - total );
 
 	total = pData - pStart;
 

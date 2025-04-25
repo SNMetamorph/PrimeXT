@@ -57,7 +57,6 @@ EXTERN	bool	g_collapse_bones_aggressive;
 EXTERN	bool	g_lockbonelengths;
 EXTERN	int	maxseqgroupsize;
 EXTERN	bool	g_multistagegraph;
-EXTERN	int	split_textures;
 EXTERN	bool	clip_texcoords;
 EXTERN	bool	store_uv_coords;
 EXTERN	bool	allow_tileing;
