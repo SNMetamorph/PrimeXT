@@ -87,7 +87,7 @@ void Grab_Skin( s_texture_t *ptexture )
 		const size_t imageSizeLimit = 307200;
 		if (pic->width * pic->height > imageSizeLimit) 
 		{
-			double rescalingCoeff = imageSizeLimit / static_cast<double>(pic->width * pic->height);
+			double rescalingCoeff = std::sqrt(imageSizeLimit / static_cast<double>(pic->width * pic->height));
 			new_width = std::floor(pic->width * rescalingCoeff);
 			new_height = std::floor(pic->height * rescalingCoeff);
 		}
