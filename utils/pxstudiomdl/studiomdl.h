@@ -1,5 +1,6 @@
 #include <utlarray.h>
 #include "mathlib.h"
+#include <cstring>
 
 #ifndef EXTERN
 #define EXTERN extern
@@ -719,13 +720,21 @@ typedef struct s_model_s
 EXTERN s_model_t		*g_model[MAXSTUDIOMODELS];
 EXTERN int		g_nummodels;
 
-typedef struct
+struct s_bodypart_t
 {
+	s_bodypart_t() :
+		nummodels(0),
+		base(0)
+	{
+		std::memset(name, 0x0, sizeof(name));
+		std::memset(pmodel, 0x0, sizeof(pmodel));
+	}
+		
 	char		name[MAXSRCSTUDIONAME];
 	int		nummodels;
 	int		base;
 	s_model_t		*pmodel[MAXSTUDIOMODELS];
-} s_bodypart_t;
+};
 
 EXTERN CUtlArray<s_bodypart_t> g_bodypart;
 
