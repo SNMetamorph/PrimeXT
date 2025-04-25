@@ -1311,8 +1311,8 @@ int ControlPanel::loadModel (const char *filename, bool centering)
 			g_viewerSettings.sequence = 0;
 			g_viewerSettings.speedScale = 1.0f;
 			slSpeedScale->setValue (40);
-			int i;
-			for (i = 0; i < 32; i++)
+
+			for (int i = 0; i < g_viewerSettings.submodels.size(); i++)
 				g_viewerSettings.submodels[i] = 0;
 
 			mx_setcwd (mx_getpath (filename));

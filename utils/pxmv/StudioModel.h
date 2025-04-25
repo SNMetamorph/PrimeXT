@@ -21,6 +21,7 @@ typedef unsigned char byte;
 #include <stringlib.h>
 #include "bs_defs.h"
 #include "ikcontext.h"
+#include <array>
 
 #define MAX_SEQBLENDS	4		// must be power of two
 #define MASK_SEQBLENDS	(MAX_SEQBLENDS - 1)
@@ -201,7 +202,7 @@ private:
 	mstudiomodel_t	*m_pmodel;
 
 	studiohdr_t	*m_ptexturehdr;
-	studiohdr_t	*m_panimhdr[32];
+	std::array<studiohdr_t*, 32> m_panimhdr;
 
 	float		m_adj[MAXSTUDIOCONTROLLERS];
 

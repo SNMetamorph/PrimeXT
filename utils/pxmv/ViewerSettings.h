@@ -19,6 +19,8 @@
 #define INCLUDED_VIEWERSETTINGS
 
 #include "vector.h"
+#include "studio.h"
+#include <array>
 
 enum // render modes
 {
@@ -69,7 +71,7 @@ typedef struct
 	float speedScale;
 
 	// bodyparts and bonecontrollers
-	int submodels[32];
+	std::array<int, MAXSTUDIOMODELS> submodels;
 
 	// fullscreen
 	int width, height;

@@ -294,7 +294,7 @@ void StudioModel :: FreeModel( void )
 	m_owntexmodel = false;
 	m_numeditfields = 0;
 
-	for (i = 0; i < 32; i++)
+	for (i = 0; i < m_panimhdr.size(); i++)
 	{
 		if (m_panimhdr[i])
 		{
