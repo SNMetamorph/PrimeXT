@@ -84,6 +84,9 @@ jobs:
       shell: bash
       run: mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
 
+    - name: Obtain running job information
+      uses: qoomon/actions--context@v4
+      
     # Restore vcpkg from the GitHub Action cache service. Note that packages are restored by vcpkg's binary caching
     # when it is being run afterwards by CMake.
     - name: Restore cached vcpkg binary assets
@@ -99,8 +102,8 @@ jobs:
           !${{ env.VCPKG_ROOT }}/downloads
           !${{ env.VCPKG_ROOT }}/installed
         # The key is composed in a way that it gets properly invalidated whenever a different version of vcpkg is being used.
-        key: |
-          vcpkg-${{ hashFiles('.git/modules/external/vcpkg/HEAD') }}-${{ runner.os }}
+        key: vcpkg-${{ hashFiles('.git/modules/external/vcpkg/HEAD') }}-${{ runner.os }}-${{ env.GITHUB_JOB_ID }}
+        restore-keys: vcpkg-${{ hashFiles('.git/modules/external/vcpkg/HEAD') }}-${{ runner.os }}
 
     - name: Configure CMake
       working-directory: ${{ github.workspace }}/build
