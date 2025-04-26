@@ -13,7 +13,7 @@ name: "codeql-analysis"
 
 on:
   push:
-    branches: [ 'master', 'codeql-fix' ]
+    branches: [ master ]
     paths-ignore:
       - 'documentation/**'
 
@@ -48,19 +48,8 @@ jobs:
       VCPKG_ROOT: ${{ github.workspace }}/external/vcpkg
       # Tells vcpkg where binary packages are stored.
       VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/external/vcpkg/bincache
-      # Let's use GitHub Action cache as storage for the vcpkg Binary Caching feature.
-      VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'
 
     steps:
-    # Set env vars needed for vcpkg to leverage the GitHub Action cache as a storage
-    # for Binary Caching.
-    - name: Set env vars needed for vcpkg to leverage the GitHub Action cache
-      uses: actions/github-script@v6
-      with:
-        script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
@@ -97,8 +86,8 @@ jobs:
 
     # Restore vcpkg from the GitHub Action cache service. Note that packages are restored by vcpkg's binary caching
     # when it is being run afterwards by CMake.
-    - name: Restore vcpkg
-      uses: actions/cache@v3
+    - name: Caching of vcpkg assets
+      uses: actions/cache@v4
       with:
         # The first path is the location of vcpkg: it contains the vcpkg executable and data files, as long as the
         # built package archives (aka binary cache) which are located by VCPKG_DEFAULT_BINARY_CACHE env var.
@@ -111,7 +100,7 @@ jobs:
           !${{ env.VCPKG_ROOT }}/installed
         # The key is composed in a way that it gets properly invalidated whenever a different version of vcpkg is being used.
         key: |
-          ${{ hashFiles( '.git/modules/external/vcpkg/HEAD' )}}
+          vcpkg-${{ hashFiles('.git/modules/external/vcpkg/HEAD') }}-${{ runner.os }}
 
     - name: Configure CMake
       working-directory: ${{ github.workspace }}/build
