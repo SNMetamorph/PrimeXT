@@ -6,7 +6,8 @@ on:
   pull_request:
     paths-ignore:
       - 'documentation/**'
-
+  workflow_dispatch:
+  
 permissions:
   contents: write
 
