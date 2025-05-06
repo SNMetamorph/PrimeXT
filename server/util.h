@@ -32,6 +32,7 @@
 #include "extdll.h"
 #include "com_model.h"
 #include "sprite.h"
+#include "profiler.h"
 
 // uncomment this to enable custom string pool
 #define HAVE_STRINGPOOL

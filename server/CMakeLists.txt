@@ -163,6 +163,12 @@ if(ENABLE_STATIC_CRT_LINKING)
 	set_compiler_runtime(${PROJECT_NAME} STATIC)
 endif()
 
+if(ENABLE_PROFILER)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE -DENABLE_PROFILER)
+
+	target_link_libraries(${PROJECT_NAME} PRIVATE profiler)
+endif()
+
 # link dependency libraries
 find_package(fmt CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)

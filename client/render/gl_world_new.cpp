@@ -1999,8 +1999,8 @@ static void Mod_LoadWorld( model_t *mod, const byte *buf )
 	extrahdr = (dextrahdr_t *)((byte *)buf + sizeof( dheader_t ));
 
 	if( RENDER_GET_PARM( PARM_FEATURES, 0 ) & ENGINE_LARGE_LIGHTMAPS )
-		glConfig.block_size = BLOCK_SIZE_MAX;
-	else glConfig.block_size = BLOCK_SIZE_DEFAULT;
+		glConfig.block_size = GL_BLOCK_SIZE_MAX;
+	else glConfig.block_size = GL_BLOCK_SIZE_DEFAULT;
 
 	if( RENDER_GET_PARM( PARM_MAP_HAS_DELUXE, 0 ))
 		SetBits( world->features, WORLD_HAS_DELUXEMAP );

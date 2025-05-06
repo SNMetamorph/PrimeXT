@@ -216,6 +216,8 @@ int SV_RestoreDecal(decallist_t *entry, edict_t *pEdict, qboolean adjacent)
 // handle player touching ents
 void PM_PlayerTouch( playermove_t *pmove, edict_t *client )
 {
+	ZoneScoped;
+
 	CBasePlayer *pPlayer = (CBasePlayer *)CBaseEntity :: Instance( client );
 
 	if( !pPlayer || !pmove ) return; // ???

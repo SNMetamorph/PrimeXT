@@ -15,6 +15,7 @@ option(ENABLE_PHYSX "Enable PhysX support" ON)
 option(ENABLE_VGUI_COMPATIBILITY "Enable VGUI compatibility (for better compatibility with old code)" OFF)
 option(ENABLE_ASAN "Enable AddressSanitizer globally" OFF)
 option(ENABLE_STATIC_CRT_LINKING "Enable static runtime linking for project targets" ON)
+option(ENABLE_PROFILER "Enable Tracy profiler" ON)
 set(GAMEDIR "primext" CACHE STRING "Game directory name")
 set(SERVER_INSTALL_DIR "bin" CACHE STRING "Server library path relative to game directory")
 set(CLIENT_INSTALL_DIR "bin" CACHE STRING "Client library path relative to game directory")
@@ -86,6 +87,11 @@ if(ENABLE_ASAN)
 	endif()
 endif()
 
+# Add shared library with Tracy exports
+if (ENABLE_PROFILER)
+	add_subdirectory("${CMAKE_SOURCE_DIR}/external/profiler")
+endif()
+
 if(BUILD_CLIENT)
 	add_subdirectory(client)
 endif()
@@ -131,5 +137,23 @@ if(BUILD_SERVER)
 		ARCHIVE_OUTPUT_DIRECTORY ${DIR_COMMON_OUTPUT}
 		LIBRARY_OUTPUT_DIRECTORY ${DIR_COMMON_OUTPUT}
 		RUNTIME_OUTPUT_DIRECTORY ${DIR_COMMON_OUTPUT}
+	)
+endif()
+
+if(ENABLE_PROFILER)
+	# set build output directory
+	set(DIR_PROFILER_OUTPUT 
+		${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}
+	)
+
+	set_target_properties(profiler PROPERTIES DEBUG_POSTFIX "${XASH_BUILD_POSTFIX}")
+	set_target_properties(profiler PROPERTIES RELEASE_POSTFIX "${XASH_BUILD_POSTFIX}")
+	set_target_properties(profiler PROPERTIES RELWITHDEBINFO_POSTFIX "${XASH_BUILD_POSTFIX}")
+	set_target_properties(profiler PROPERTIES MINSIZEREL_POSTFIX "${XASH_BUILD_POSTFIX}")
+
+	set_target_properties(profiler PROPERTIES 
+		ARCHIVE_OUTPUT_DIRECTORY ${DIR_PROFILER_OUTPUT}
+		LIBRARY_OUTPUT_DIRECTORY ${DIR_PROFILER_OUTPUT}
+		RUNTIME_OUTPUT_DIRECTORY ${DIR_PROFILER_OUTPUT}
 	)
 endif()
