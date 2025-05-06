@@ -39,6 +39,16 @@ jobs:
       # Enables the vcpkg dependency graph integration.
       VCPKG_FEATURE_FLAGS: dependencygraph
     steps:
+      - name: Obtain running job information
+        uses: qoomon/actions--context@v4
+
+      - name: Check for pull request
+        uses: 8BitJonny/gh-get-current-pr@2.2.0
+        id: pr-check
+        with:
+          # Verbose setting SHA when using Pull_Request event trigger to fix #16. (For push even trigger this is not necessary.)
+          sha: ${{ github.event.pull_request.head.sha }} 
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -75,13 +85,11 @@ jobs:
         shell: bash
         run: mkdir -p ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
 
-      - name: Obtain running job information
-        uses: qoomon/actions--context@v4
-
       # Restore vcpkg from the GitHub Action cache service. Note that packages are restored by vcpkg's binary caching
       # when it is being run afterwards by CMake.
-      - name: Caching of vcpkg assets
-        uses: actions/cache@v4
+      - name: Restoring cached vcpkg assets
+        id: vcpkg-cache-restore
+        uses: actions/cache/restore@v4
         with:
           # The first path is the location of vcpkg: it contains the vcpkg executable and data files, as long as the
           # built package archives (aka binary cache) which are located by VCPKG_DEFAULT_BINARY_CACHE env var.
@@ -130,10 +138,22 @@ jobs:
           Compress-Archive -Path publish\* -Destination artifacts\primext-${{ matrix.cmake_preset }}.zip
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4.4.0
+        uses: actions/upload-artifact@v4
         with:
           name: artifact-${{ matrix.cmake_preset }}
           path: artifacts/*
+
+      - name: Saving vcpkg assets to cache
+        uses: actions/cache/save@v4
+        if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
+        with:
+          path: |
+            ${{ env.VCPKG_ROOT }}
+            !${{ env.VCPKG_ROOT }}/buildtrees
+            !${{ env.VCPKG_ROOT }}/packages
+            !${{ env.VCPKG_ROOT }}/downloads
+            !${{ env.VCPKG_ROOT }}/installed
+          key: ${{ steps.vcpkg-cache-restore.outputs.cache-primary-key }}
 
   build-android:
     runs-on: ubuntu-latest
@@ -176,7 +196,7 @@ jobs:
           cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/primext-debug.apk
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4.4.0
+        uses: actions/upload-artifact@v4
         with:
           name: artifact-android-debug
           path: artifacts/*
@@ -195,7 +215,7 @@ jobs:
 
       - name: Fetch artifacts
         if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4
         with:
           path: artifacts/
 
