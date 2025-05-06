@@ -183,6 +183,12 @@ if(WIN32)
 	target_link_libraries(${PROJECT_NAME} PRIVATE user32.lib)
 endif()
 
+if(ENABLE_PROFILER)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE -DENABLE_PROFILER)
+
+	target_link_libraries(${PROJECT_NAME} PRIVATE profiler)
+endif()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	CXX_STANDARD 17
 	CXX_STANDARD_REQUIRED YES

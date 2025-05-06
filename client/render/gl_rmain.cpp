@@ -241,6 +241,8 @@ instead of RecursiveWorldNode
 */
 void R_MarkWorldVisibleFaces( model_t *model )
 {
+	ZoneScoped;
+
 	float		maxdist = 0.0f;
 	msurface_t	**mark;
 	mleaf_t		*leaf;

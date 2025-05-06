@@ -412,6 +412,8 @@ bool CFrustum :: CullSphere( const Vector &centre, float radius, int userClipFla
 // FIXME: could be optimized?
 bool CFrustum :: CullFrustum( CFrustum *frustum )
 {
+	ZoneScoped;
+
 	Vector bbox[8];
 
 	if( CVAR_TO_BOOL( r_nocull ))
