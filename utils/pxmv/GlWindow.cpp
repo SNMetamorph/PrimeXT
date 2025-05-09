@@ -274,6 +274,7 @@ void GlWindow :: setupRenderMode( void )
 		break;
 	case RM_FLATSHADED:
 	case RM_SMOOTHSHADED:
+	case RM_NORMALS:		
 	case RM_BONEWEIGHTS:
 		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 		glDisable( GL_TEXTURE_2D );

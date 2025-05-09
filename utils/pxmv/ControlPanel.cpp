@@ -50,6 +50,7 @@ ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0,
 	cRenderMode->add ("Smooth Shaded");
 	cRenderMode->add ("Texture Shaded");
 	cRenderMode->add ("BoneWeights");
+	cRenderMode->add ("Normals");	
 	cRenderMode->select (3);
 	mxToolTip::add (cRenderMode, "Select Render Mode");
 	lOpacityValue = new mxLabel (wRender, 5, 45, 100, 18, "Opacity: 100%");
