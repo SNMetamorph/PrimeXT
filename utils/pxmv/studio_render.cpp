@@ -1280,6 +1280,10 @@ void StudioModel::DrawPoints ( bool bWireframe )
 		}
 	}
 
+	if( g_viewerSettings.renderMode == RM_NORMALS )
+		for( i = 0; i < m_pmodel->numnorms; i++ )
+			g_lightvalues[i] = g_xformnorms[i] * 0.5f + Vector( 0.5f );
+
 	texEnabled = glIsEnabled( GL_TEXTURE_2D ) ? true : false;
 
 	if( bWireframe )
@@ -1324,7 +1328,7 @@ void StudioModel::DrawPoints ( bool bWireframe )
 
 		for( i = 0; i < pmesh[j].numnorms; i++, k++, lv++, pstudionorms++, pnormbone++ )
 		{
-			if( g_viewerSettings.renderMode != RM_BONEWEIGHTS )
+			if( g_viewerSettings.renderMode != RM_BONEWEIGHTS && g_viewerSettings.renderMode != RM_NORMALS )
             {
 				if( FBitSet( m_pstudiohdr->flags, STUDIO_HAS_BONEWEIGHTS ))
 					Lighting ( *lv, -1, flags, g_xformnorms[k] );
