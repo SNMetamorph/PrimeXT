@@ -29,6 +29,7 @@ GNU General Public License for more details.
 #include "entity_types.h"
 #include "gl_shader.h"
 #include "gl_world.h"
+#include <cmath>
 #include <vector>
 #include <algorithm>
 
@@ -1149,6 +1150,7 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 	mstudiomaterial_t	*pmaterial = (mstudiomaterial_t *)RI->currentmodel->materials;
 	std::vector<Vector> localverts;
 	bool		use_fan_sequence = false;
+	bool		has_invalid_normals = false;
 	dmodelvertlight_t	*dvl = NULL;
 	dmodelfacelight_t	*dfl = NULL;
 	int		i, count;
@@ -1257,17 +1259,16 @@ void CStudioModelRenderer :: SetupSubmodelVerts( const mstudiomodel_t *pSubModel
 				m_arrayxvert[m_nNumArrayVerts].vertex = pstudioverts[ptricmds[0]];
 				m_arrayxvert[m_nNumArrayVerts].normal = pstudionorms[ptricmds[1]];
 
-				// replace null normals with random ones, because null normals causes NaNs in vertex shader
-				// after normalizing. therefore we should avoid null normals in studiomodels
-				// TODO: warn about null normals in studiomodel on loading stage
-				if (m_arrayxvert[m_nNumArrayVerts].normal.Length() < 0.1f) 
+				// warn about invalid normals, because null normals causes NaNs in vertex shader after normalizing.
+				// but since a lot of legacy content has null normals, we need to replace them with something that won't cause NaNs
+				if (std::abs(m_arrayxvert[m_nNumArrayVerts].normal.Length() - 1.0f) >= 0.1f) 
 				{
-					vec3_t randomDirection = vec3_t(
-						RANDOM_FLOAT(-1.0f, 1.0f), 
-						RANDOM_FLOAT(-1.0f, 1.0f), 
-						RANDOM_FLOAT(-1.0f, 1.0f)
-					);
-					m_arrayxvert[m_nNumArrayVerts].normal = randomDirection.Normalize();
+					if (!has_invalid_normals)
+					{
+						ALERT( at_warning, "Invalid normals found in submodel \"%s\" of \"%s\", this may cause visual artifacts.\n", pSubModel->name, RI->currentmodel->name ); 
+						has_invalid_normals = true;
+					}
+					m_arrayxvert[m_nNumArrayVerts].normal = Vector(0.0f, 0.0f, 1.0f);
 				}
 
 				if( m_iTBNState == TBNSTATE_GENERATE || use_fan_sequence )
