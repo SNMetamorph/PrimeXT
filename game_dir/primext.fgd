@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 14 December 2024)
+// PrimeXT FGD (last updated 16 May 2025)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -2967,7 +2967,7 @@
 // lights
 //
 
-@PointClass iconsprite("sprites/fgd/light_bulb.spr") base(Targetname, Light, ZHLT_point) = light : "Invisible lightsource"
+@PointClass iconsprite("sprites/fgd/lightbulb.spr") base(Targetname, Light, ZHLT_point) = light : "Invisible lightsource"
 [
 	spawnflags(Flags) = [ 1 : "Initially dark" : 0 ]
 ]
