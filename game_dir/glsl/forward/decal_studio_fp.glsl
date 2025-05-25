@@ -133,7 +133,7 @@ void main( void )
 #endif // LIGHTING_FULLBRIGHT
 
 #if defined( APPLY_FOG_EXP )
-	result.rgb = CalculateFog(result.rgb, u_FogParams, length(u_ViewOrigin - var_Position));
+	result.rgb = CalculateFog(result.rgb, u_FogParams, gl_FragCoord.z / gl_FragCoord.w);
 #endif
 	gl_FragColor = result;
 }

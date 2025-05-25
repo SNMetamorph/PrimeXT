@@ -44,7 +44,7 @@ void main( void )
 #endif//LIGHTING_FULLBRIGHT
 
 #if defined( APPLY_FOG_EXP )
-	diffuse.rgb = CalculateFog(diffuse.rgb, u_FogParams, length(u_ViewOrigin - var_Position));
+	diffuse.rgb = CalculateFog(diffuse.rgb, u_FogParams, gl_FragCoord.z / gl_FragCoord.w);
 #endif
 	gl_FragColor = diffuse;
 }
