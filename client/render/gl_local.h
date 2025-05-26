@@ -75,9 +75,9 @@ GNU General Public License for more details.
 #define LM_SAMPLE_SIZE	16
 #define LM_SAMPLE_EXTRASIZE	8
 
-#define BLOCK_SIZE		glConfig.block_size		// lightmap blocksize
-#define BLOCK_SIZE_DEFAULT	128			// for keep backward compatibility
-#define BLOCK_SIZE_MAX	2048			// must match with engine const!!!
+#define GL_BLOCK_SIZE		glConfig.block_size		// lightmap blocksize
+#define GL_BLOCK_SIZE_DEFAULT	128			// for keep backward compatibility
+#define GL_BLOCK_SIZE_MAX	2048			// must match with engine const!!!
 #define SHADOW_SIZE		4096			// atlas size
 
 #define WORLD_MATRIX	0			// must be 0 always
@@ -274,7 +274,7 @@ typedef enum
 typedef struct
 {
 	lmstate_t		state;
-	unsigned short	allocated[BLOCK_SIZE_MAX];
+	unsigned short	allocated[GL_BLOCK_SIZE_MAX];
 	TextureHandle	lightmap;
 	TextureHandle	deluxmap;	
 } gl_lightmap_t;

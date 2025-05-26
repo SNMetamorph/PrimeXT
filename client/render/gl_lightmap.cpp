@@ -37,8 +37,8 @@ static int LM_AllocBlock( unsigned short w, unsigned short h, unsigned short *x,
 	gl_lightmap_t *lms = &tr.lightmaps[tr.current_lightmap_texture];
 	int	j, best, best2;
 
-	best = BLOCK_SIZE;
-	for (int i = 0; i < BLOCK_SIZE - w; i++)
+	best = GL_BLOCK_SIZE;
+	for (int i = 0; i < GL_BLOCK_SIZE - w; i++)
 	{
 		best2 = 0;
 		for (j = 0; j < w; j++)
@@ -57,7 +57,7 @@ static int LM_AllocBlock( unsigned short w, unsigned short h, unsigned short *x,
 		}
 	}
 
-	if (best + h > BLOCK_SIZE)
+	if (best + h > GL_BLOCK_SIZE)
 	{
 		// current lightmap is full
 		lms->state = LM_DONE;
@@ -105,7 +105,7 @@ static void LM_UploadPages( bool lightmap, bool deluxmap )
 		if( lightmap && !lms->lightmap.Initialized() )
 		{
 			Q_snprintf( lmName, sizeof( lmName ), "*diffuse%i", i );
-			lms->lightmap = CREATE_TEXTURE( lmName, BLOCK_SIZE, BLOCK_SIZE, NULL, TF_LIGHTMAP ); 
+			lms->lightmap = CREATE_TEXTURE( lmName, GL_BLOCK_SIZE, GL_BLOCK_SIZE, NULL, TF_LIGHTMAP ); 
 
 			// also loading dummy blackpixel
 			GL_Bind( GL_TEXTURE0, lms->lightmap );
@@ -115,7 +115,7 @@ static void LM_UploadPages( bool lightmap, bool deluxmap )
 		if( deluxmap && !lms->deluxmap.Initialized() )
 		{
 			Q_snprintf( lmName, sizeof( lmName ), "*normals%i", i );
-			lms->deluxmap = CREATE_TEXTURE( lmName, BLOCK_SIZE, BLOCK_SIZE, NULL, TF_DELUXMAP );
+			lms->deluxmap = CREATE_TEXTURE( lmName, GL_BLOCK_SIZE, GL_BLOCK_SIZE, NULL, TF_DELUXMAP );
 
 			// also loading dummy blackpixel
 			GL_Bind( GL_TEXTURE0, lms->deluxmap );
@@ -634,13 +634,13 @@ void R_LightmapCoords( msurface_t *surf, const Vector &vec, float *coords, int s
 		s -= surf->info->lightmapmins[0];
 		s += esrf->light_s[style+i] * sample_size;
 		s += sample_size * 0.5f;
-		s /= BLOCK_SIZE * sample_size;
+		s /= GL_BLOCK_SIZE * sample_size;
 
 		t = DotProduct( vec, surf->info->lmvecs[1] ) + surf->info->lmvecs[1][3];
 		t -= surf->info->lightmapmins[1];
 		t += esrf->light_t[style+i] * sample_size;
 		t += sample_size * 0.5f;
-		t /= BLOCK_SIZE * sample_size;
+		t /= GL_BLOCK_SIZE * sample_size;
 
 		coords[i*2+0] = s;
 		coords[i*2+1] = t;
@@ -665,8 +665,8 @@ void R_LightmapCoords( mstudiosurface_t *surf, const Vector &vec, const Vector l
 
 		s = DotProduct( vec, lmvecs[0] ) + surf->light_s[style+i] + 0.5f;
 		t = DotProduct( vec, lmvecs[1] ) + surf->light_t[style+i] + 0.5f;
-		s /= (float)BLOCK_SIZE;
-		t /= (float)BLOCK_SIZE;
+		s /= (float)GL_BLOCK_SIZE;
+		t /= (float)GL_BLOCK_SIZE;
 
 		coords[i*2+0] = s;
 		coords[i*2+1] = t;
