@@ -2721,8 +2721,7 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 			u->SetValue( es->texofs[0], es->texofs[1] );
 			break;
 		case UT_VIEWORIGIN:
-			if( pl ) u->SetValue( GetVieworg().x, GetVieworg().y, GetVieworg().z );
-			else u->SetValue( tr.modelorg.x, tr.modelorg.y, tr.modelorg.z, e->hCachedMatrix ? 1.0f : 0.0f );
+			u->SetValue( GetVieworg().x, GetVieworg().y, GetVieworg().z );
 			break;
 		case UT_VIEWRIGHT:
 			u->SetValue( GetVRight().x, GetVRight().y, GetVRight().z );
