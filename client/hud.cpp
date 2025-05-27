@@ -30,6 +30,21 @@ void CHud :: Init( void )
 	MsgFunc_ResetHUD( 0, 0, NULL );
 }
 
+CHud :: CHud() : 
+	m_iSpriteCount(0), 
+	m_pHudList(nullptr),
+	m_pSpriteList(nullptr),
+	m_pCvarDraw(nullptr),
+	m_pCvarColorRed(nullptr),
+	m_pCvarColorGreen(nullptr),
+	m_pCvarColorBlue(nullptr),
+	default_fov(nullptr),
+	m_rghSprites(nullptr),
+	m_rgrcRects(nullptr),
+	m_rgszSpriteNames(nullptr)
+{
+}
+
 CHud :: ~CHud()
 {
 	delete [] m_rghSprites;

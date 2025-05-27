@@ -85,7 +85,9 @@ int CHudBattery::Draw( float flTime )
 	// battery can go from 0 to 100 so * 0.01 goes from 0 to 1
 	rc.top += m_iHeight * ((float)( 100 - ( Q_min( 100, m_iBat ))) * 0.01f );
 
-	UnpackRGB( r, g, b, gHUD.m_iHUDColor );
+	r = gHUD.m_color.r;
+	g = gHUD.m_color.g;
+	b = gHUD.m_color.b;
 
 	// Has health changed? Flash the health #
 	if( m_fFade )

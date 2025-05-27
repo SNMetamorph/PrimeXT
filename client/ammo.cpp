@@ -842,7 +842,9 @@ int CHudAmmo::Draw( float flTime )
 	if( m_fFade > 0 )
 		m_fFade -= (gHUD.m_flTimeDelta * 20);
 
-	UnpackRGB( r, g, b, gHUD.m_iHUDColor );
+	r = gHUD.m_color.r;
+	g = gHUD.m_color.g;
+	b = gHUD.m_color.b;
 
 	ScaleColors( r, g, b, a );
 
@@ -870,7 +872,9 @@ int CHudAmmo::Draw( float flTime )
 
 			x += AmmoWidth / 2;
 
-			UnpackRGB( r, g, b, gHUD.m_iHUDColor );
+			r = gHUD.m_color.r;
+			g = gHUD.m_color.g;
+			b = gHUD.m_color.b;
 
 			// draw the | bar
 			FillRGBA( x, y, iBarWidth, gHUD.m_iFontHeight, r, g, b, a );
@@ -941,7 +945,9 @@ int DrawBar( int x, int y, int width, int height, float f )
 		width -= w;
 	}
 
-	UnpackRGB( r, g, b, gHUD.m_iHUDColor );
+	r = gHUD.m_color.r;
+	g = gHUD.m_color.g;
+	b = gHUD.m_color.b;
 
 	FillRGBA( x, y, width, height, r, g, b, 128 );
 
@@ -1009,7 +1015,9 @@ int CHudAmmo::DrawWList( float flTime )
 	{
 		int iWidth;
 
-		UnpackRGB( r, g, b, gHUD.m_iHUDColor );
+		r = gHUD.m_color.r;
+		g = gHUD.m_color.g;
+		b = gHUD.m_color.b;
 	
 		if( iActiveSlot == i )
 			a = 255;
@@ -1062,7 +1070,9 @@ int CHudAmmo::DrawWList( float flTime )
 				if( !p || !p->iId )
 					continue;
 
-				UnpackRGB( r, g, b, gHUD.m_iHUDColor );
+				r = gHUD.m_color.r;
+				g = gHUD.m_color.g;
+				b = gHUD.m_color.b;
 			
 				// if active, then we must have ammo.
 				if( gpActiveSel == p )
@@ -1101,7 +1111,9 @@ int CHudAmmo::DrawWList( float flTime )
 		else
 		{
 			// Draw Row of weapons.
-			UnpackRGB( r, g, b, gHUD.m_iHUDColor );
+			r = gHUD.m_color.r;
+			g = gHUD.m_color.g;
+			b = gHUD.m_color.b;
 
 			for( int iPos = 0; iPos < MAX_WEAPON_POSITIONS; iPos++ )
 			{
@@ -1112,7 +1124,9 @@ int CHudAmmo::DrawWList( float flTime )
 
 				if( gWR.HasAmmo( p ))
 				{
-					UnpackRGB( r, g, b, gHUD.m_iHUDColor );
+					r = gHUD.m_color.r;
+					g = gHUD.m_color.g;
+					b = gHUD.m_color.b;
 					a = 128;
 				}
 				else

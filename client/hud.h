@@ -37,6 +37,7 @@
 #include "screenfade.h"
 #include "r_view.h"
 #include "ammo.h"
+#include "color24.h"
 
 typedef struct cvar_s	cvar_t;
 
@@ -532,26 +533,32 @@ public:
 	int m_Teamplay;
 	int m_iRes;
 	cvar_t *m_pCvarDraw;
+	cvar_t *m_pCvarColorRed;
+	cvar_t *m_pCvarColorGreen;
+	cvar_t *m_pCvarColorBlue;
 	cvar_t *default_fov;
 	int	m_iViewModelIndex;
 	int m_iCameraMode;
 	int m_iFontHeight;
+	color24 m_color;
+
 	int DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, int b );
 	int DrawHudString( int x, int y, int iMaxX, char *szString, int r, int g, int b );
 	int DrawHudStringReverse( int xpos, int ypos, int iMinX, char *szString, int r, int g, int b );
 	int DrawHudNumberString( int xpos, int ypos, int iMinX, int iNumber, int r, int g, int b );
 	int GetNumWidth( int iNumber, int iFlags );
-	int m_iHUDColor;
+
 private:
 	// the memory for these arrays are allocated in the first call to CHud::VidInit()
 	// when the hud.txt and associated sprites are loaded. freed in ~CHud()
 	SpriteHandle *m_rghSprites; // the sprites loaded from hud.txt
 	wrect_t *m_rgrcRects;
 	char *m_rgszSpriteNames;
+
 public:
 	SpriteHandle GetSprite( int index ) { return (index < 0) ? 0 : m_rghSprites[index]; }
 	wrect_t& GetSpriteRect( int index ) { return m_rgrcRects[index]; }
-          int InitHUDMessages( void ); // init hud messages
+    int InitHUDMessages( void ); // init hud messages
 	int GetSpriteIndex( const char *SpriteName ); // gets a sprite index, for use in the m_rghSprites[] array
 
 	CHudAmmo		m_Ammo;
@@ -579,7 +586,7 @@ public:
 	int Redraw( float flTime, int intermission );
 	int UpdateClientData( client_data_t *cdata, float time );
 
-	CHud() : m_iSpriteCount(0), m_pHudList(NULL) {}
+	CHud();
 	~CHud();	// destructor, frees allocated memory
 
 	// user messages
@@ -592,7 +599,6 @@ public:
 	int _cdecl MsgFunc_SetFOV(const char *pszName,  int iSize, void *pbuf);
 	int _cdecl MsgFunc_Concuss( const char *pszName, int iSize, void *pbuf );
 	int _cdecl MsgFunc_RainData( const char *pszName, int iSize, void *pbuf ); 
-	int _cdecl MsgFunc_HUDColor(const char *pszName,  int iSize, void *pbuf);
 	int _cdecl MsgFunc_SetBody( const char *pszName, int iSize, void *pbuf );
 	int _cdecl MsgFunc_SetSkin( const char *pszName, int iSize, void *pbuf );
 	int _cdecl MsgFunc_Particle( const char *pszName, int iSize, void *pbuf );

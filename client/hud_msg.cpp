@@ -26,7 +26,6 @@
 
 // CHud message handlers
 DECLARE_HUDMESSAGE( Logo );
-DECLARE_HUDMESSAGE( HUDColor );
 DECLARE_HUDMESSAGE( Weapons );
 DECLARE_HUDMESSAGE( RainData );
 DECLARE_HUDMESSAGE( SetBody );
@@ -57,7 +56,6 @@ int CHud :: InitHUDMessages( void )
 	HOOK_MESSAGE( SetFOV );
 	HOOK_MESSAGE( Concuss );
 	HOOK_MESSAGE( Weapons );
-	HOOK_MESSAGE( HUDColor );
 	HOOK_MESSAGE( Particle );
 	HOOK_MESSAGE( KillPart );
 	HOOK_MESSAGE( RainData ); 
@@ -72,11 +70,13 @@ int CHud :: InitHUDMessages( void )
 	HOOK_MESSAGE( PostFxSettings );
 
 	m_iFOV = 0;
-	m_iHUDColor = 0x00FFA000; // 255,160,0
 	
 	CVAR_REGISTER( "zoom_sensitivity_ratio", "1.2", 0 );
 	default_fov = CVAR_REGISTER( "default_fov", "90", 0 );
 	m_pCvarDraw = CVAR_REGISTER( "hud_draw", "1", FCVAR_ARCHIVE );
+	m_pCvarColorRed = CVAR_REGISTER( "hud_color_red", "255", FCVAR_ARCHIVE );
+	m_pCvarColorGreen = CVAR_REGISTER( "hud_color_green", "160", FCVAR_ARCHIVE );
+	m_pCvarColorBlue = CVAR_REGISTER( "hud_color_blue", "0", FCVAR_ARCHIVE );
 	m_pSpriteList = NULL;
 
 	// clear any old HUD list
@@ -203,15 +203,6 @@ int CHud::MsgFunc_SetFOV( const char *pszName,  int iSize, void *pbuf )
 
 	END_READ();
 
-	return 1;
-}
-
-int CHud::MsgFunc_HUDColor( const char *pszName, int iSize, void *pbuf )
-{
-	BEGIN_READ( pszName, pbuf, iSize );
-	m_iHUDColor = READ_LONG();
-	END_READ();
-	
 	return 1;
 }
 

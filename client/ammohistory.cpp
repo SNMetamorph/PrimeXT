@@ -120,7 +120,9 @@ int HistoryResource :: DrawAmmoHistory( float flTime )
 				SpriteHandle *spr = gWR.GetAmmoPicFromWeapon( rgAmmoHistory[i].iId, rcPic );
 
 				int r, g, b;
-				UnpackRGB( r, g, b, gHUD.m_iHUDColor );
+				r = gHUD.m_color.r;
+				g = gHUD.m_color.g;
+				b = gHUD.m_color.b;
 				float scale = ( rgAmmoHistory[i].DisplayTime - flTime ) * 80;
 				ScaleColors(r, g, b, Q_min( scale, 255 ));
 
@@ -147,7 +149,9 @@ int HistoryResource :: DrawAmmoHistory( float flTime )
 					return 1;  // we don't know about the weapon yet, so don't draw anything
 
 				int r, g, b;
-				UnpackRGB( r,g,b, gHUD.m_iHUDColor );
+				r = gHUD.m_color.r;
+				g = gHUD.m_color.g;
+				b = gHUD.m_color.b;
 
 				if( !gWR.HasAmmo( weap ))
 					UnpackRGB( r, g, b, RGB_REDISH ); // if the weapon doesn't have ammo, display it as red
@@ -168,8 +172,9 @@ int HistoryResource :: DrawAmmoHistory( float flTime )
 					continue;  // sprite not loaded
 
 				wrect_t rect = gHUD.GetSpriteRect( rgAmmoHistory[i].iId );
-
-				UnpackRGB( r, g, b, gHUD.m_iHUDColor );
+				r = gHUD.m_color.r;
+				g = gHUD.m_color.g;
+				b = gHUD.m_color.b;
 				float scale = ( rgAmmoHistory[i].DisplayTime - flTime ) * 80;
 				ScaleColors( r, g, b, Q_min( scale, 255 ));
 

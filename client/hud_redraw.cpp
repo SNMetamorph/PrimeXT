@@ -41,6 +41,10 @@ void CHud::Think( void )
 		// let players only adjust up in fov, and only if they are not overriden by zoom
 		m_iFOV = Q_max(default_fov->value, 90);
 	}
+
+	m_color.r = static_cast<uint8_t>(m_pCvarColorRed->value);
+	m_color.g = static_cast<uint8_t>(m_pCvarColorGreen->value);
+	m_color.b = static_cast<uint8_t>(m_pCvarColorBlue->value);
 }
 
 int CHud :: Redraw( float flTime, int intermission )
