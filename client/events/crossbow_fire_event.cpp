@@ -1,5 +1,5 @@
 /*
-glock_fire_event.cpp
+crossbow_fire_event.cpp
 Copyright (C) 2024 SNMetamorph
 
 This program is free software: you can redistribute it and/or modify

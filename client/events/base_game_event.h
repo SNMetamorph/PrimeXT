@@ -1,5 +1,5 @@
 /*
-base_game_event.h - 
+base_game_event.h - base class for game events
 Copyright (C) 2024 SNMetamorph
 
 This program is free software: you can redistribute it and/or modify
