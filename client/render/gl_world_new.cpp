@@ -283,7 +283,8 @@ static void Mod_LoadWorldMaterials( void )
 		if( !Q_strncmp( tx->name, "movie", 5 ))
 			SetBits( mat->flags, BRUSH_FULLBRIGHT );
 
-		if (tx->name[0] == '!' || !Q_strncmp(tx->name, "water", 5))
+		bool liquidScrollFlag = !Q_strncmp(tx->name, "!scroll", 7);
+		if (tx->name[0] == '!' || !Q_strncmp(tx->name, "water", 5) || liquidScrollFlag)
 		{
 			// liquid surface should be smooth and reflective
 			SetBits(mat->flags, BRUSH_REFLECT | BRUSH_LIQUID);
@@ -293,6 +294,10 @@ static void Mod_LoadWorldMaterials( void )
 			
 			if (tr.waterTextures[0].Initialized()) {
 				SetBits(mat->flags, BRUSH_HAS_BUMP);
+			}
+
+			if (liquidScrollFlag) {
+				SetBits( mat->flags, BRUSH_CONVEYOR );
 			}
 		}
 
