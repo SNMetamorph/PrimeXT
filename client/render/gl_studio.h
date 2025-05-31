@@ -657,6 +657,7 @@ inline void R_RunViewmodelEvents( void ) { g_StudioRenderer.RunViewModelEvents()
 inline void R_DrawViewModel( void ) 
 { 
 	GL_DEBUG_SCOPE();
+	ZoneScoped;
 	g_StudioRenderer.DrawViewModel(); 
 }
 inline void R_ProcessStudioData( model_t *mod, qboolean create, const byte *buffer )
@@ -687,6 +688,7 @@ inline int R_StudioGetBounds( CSolidEntry *entry, Vector bounds[2] )
 
 inline void R_RenderSolidStudioList( void )
 {
+	ZoneScoped;
 	GL_DEBUG_SCOPE();
 	g_StudioRenderer.RenderSolidStudioList();
 }
@@ -709,6 +711,7 @@ inline void R_RenderShadowStudioList( void )
 
 inline void R_RenderDebugStudioList( bool bViewModel )
 {
+	ZoneScoped;
 	GL_DEBUG_SCOPE();
 	g_StudioRenderer.RenderDebugStudioList( bViewModel );
 }

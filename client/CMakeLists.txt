@@ -157,6 +157,10 @@ if(ENABLE_STATIC_CRT_LINKING)
 	set_compiler_runtime(${PROJECT_NAME} STATIC)
 endif()
 
+if(ENABLE_TRACY_PROFILER)
+	target_link_libraries(${PROJECT_NAME} PRIVATE tracy-client)
+endif()
+
 # linking vgui library if needed
 if(ENABLE_VGUI_COMPATIBILITY)
 	if(MSVC)

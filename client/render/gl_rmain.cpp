@@ -246,6 +246,7 @@ void R_MarkWorldVisibleFaces( model_t *model )
 	mleaf_t		*leaf;
 	int		i, j;
 
+	ZoneScoped;
 	memset( RI->view.visfaces, 0x00, (worldmodel->numsurfaces + 7) >> 3 );
 	memset( RI->view.vislight, 0x00, (world->numworldlights + 7) >> 3 );
 	ClearBounds( RI->view.visMins, RI->view.visMaxs );
@@ -827,6 +828,8 @@ NOTE: particles are drawing with engine methods
 */
 void R_DrawParticles( qboolean trans )
 {
+	ZoneScoped;
+
 	ref_viewpass_t	rvp;
 
 	if( FBitSet( RI->params, ( RP_ENVVIEW|RP_SKYVIEW )))
@@ -874,6 +877,8 @@ R_RenderTransList
 */
 void R_RenderTransList( void )
 {
+	ZoneScoped;
+
 	if( !RI->frame.trans_list.Count() )
 		return;
 
@@ -931,6 +936,8 @@ R_RenderScene
 */
 void R_RenderScene( const ref_viewpass_t *rvp, RefParams params )
 {
+	ZoneScoped;
+
 	// now we know about pass specific
 	RI->params = params;
 
@@ -987,6 +994,7 @@ the client (e.g. playersetup preview)
 */
 int HUD_RenderFrame( const struct ref_viewpass_s *rvp )
 {
+	ZoneScoped;
 	GL_DEBUG_SCOPE();
 
 	RefParams refParams = RP_NONE;
@@ -1039,6 +1047,7 @@ int HUD_RenderFrame( const struct ref_viewpass_s *rvp )
 	defVP = *rvp;
 
 	GL_BackendEndFrame( &defVP, refParams );
+	FrameMark;
 	return 1;
 }
 

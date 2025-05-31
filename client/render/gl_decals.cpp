@@ -1595,6 +1595,8 @@ static void R_RenderTransListDecalsDebug( drawlist_t drawlist_type )
 
 void R_RenderDecalsSolidList( drawlist_t drawlist_type )
 {
+	ZoneScoped;
+
 	if( FBitSet( RI->params, ( RP_ENVVIEW|RP_SKYVIEW )))
 		return;
 

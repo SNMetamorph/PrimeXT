@@ -21,6 +21,7 @@ GNU General Public License for more details.
 #include "cl_entity.h"
 #include "enginecallback.h"
 #include "gl_world.h"
+#include "profiler.h"
 
 typedef unsigned char byte;
 typedef unsigned short word;

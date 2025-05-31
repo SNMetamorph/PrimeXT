@@ -608,6 +608,8 @@ remote cameras etc
 */
 void R_RenderSubview()
 {
+	ZoneScoped;
+
 	ref_instance_t *prevRI;
 	unsigned int oldFBO;
 	ref_viewpass_t rvp;

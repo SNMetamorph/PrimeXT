@@ -853,6 +853,8 @@ R_DrawWeather
 */
 void R_DrawWeather( void )
 {
+	ZoneScoped;
+
 	// it was RP_SKYPORTALVIEW, is it correct?
 	if( FBitSet( RI->params, RP_SKYVIEW))
 		return;

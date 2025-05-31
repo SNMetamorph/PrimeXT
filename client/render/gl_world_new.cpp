@@ -1260,6 +1260,8 @@ if shaders was changed we need to resort them
 */
 void Mod_ResortFaces( void )
 {
+	ZoneScoped;
+
 	int	i;
 
 	if( !tr.params_changed ) return;
@@ -2508,6 +2510,8 @@ R_SetSurfaceUniforms
 */
 void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 {
+	ZoneScoped;
+
 	mextrasurf_t *es = surface->info;
 	Vector4D lightstyles, lightdir;
 	cl_entity_t *e = es->parent;
@@ -3093,6 +3097,8 @@ draw dynamic lights for world and bmodels
 */
 void R_RenderDynLightList( bool solid )
 {
+	ZoneScoped;
+
 	if( FBitSet( RI->params, RP_ENVVIEW|RP_SKYVIEW ))
 		return;
 
@@ -3153,6 +3159,8 @@ R_RenderSolidBrushList
 */
 void R_RenderSolidBrushList( void )
 {
+	ZoneScoped;
+
 	cl_entity_t	*cached_entity = NULL;
 	material_t	*cached_material = NULL;
 	int		cached_mirror = -1;
@@ -3259,6 +3267,7 @@ void R_RenderSolidBrushList( void )
 
 	if( numTempElems )
 	{
+		ZoneScopedN("Surfaces batch draw");
 		pglDrawRangeElements( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
 		r_stats.c_total_tris += (numTempElems / 3);
 		r_stats.num_flushes_total++;

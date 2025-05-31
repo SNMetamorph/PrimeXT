@@ -889,6 +889,8 @@ rendering the grass
 */
 void R_RenderGrassOnList( void )
 {
+	ZoneScoped;
+
 	word	hCachedMatrix = -1;
 	word	hLastShader = -1;
 	word	hCurrentShader;

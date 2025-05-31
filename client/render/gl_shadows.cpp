@@ -600,6 +600,8 @@ void R_RenderShadowCubeSide( CDynLight *pl, int side )
 
 void R_RenderShadowmaps( void )
 {
+	ZoneScoped;
+
 	unsigned int	oldFBO;
 
 	if( R_FullBright() || !CVAR_TO_BOOL( r_shadows ) || tr.fGamePaused )

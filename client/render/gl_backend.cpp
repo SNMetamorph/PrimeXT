@@ -213,6 +213,8 @@ GL_BackendStartFrame
 */
 bool GL_BackendStartFrame( ref_viewpass_t *rvp, RefParams params )
 {
+	ZoneScoped;
+
 	bool allow_dynamic_sun = false;
 	static float cached_lighting = 0.0f;
 	static float shadowmap_size = 0.0f;
@@ -467,6 +469,7 @@ GL_BackendEndFrame
 void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 {
 	GL_DEBUG_SCOPE();
+	ZoneScoped;
 
 	mstudiolight_t	light;
 	bool hdr_rendering = CVAR_TO_BOOL(gl_hdr);

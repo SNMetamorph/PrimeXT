@@ -898,6 +898,7 @@ void RenderTonemap()
 
 void RenderAverageLuminance()
 {
+	ZoneScoped;
 	GL_DEBUG_SCOPE();
 	GL_Setup2D();
 	post.RequestScreenColor();

@@ -163,6 +163,8 @@ R_RenderOcclusionList
 */
 void R_RenderSurfOcclusionList( void )
 {
+	ZoneScoped;
+
 	int	i;
 
 	if( !RP_NORMALPASS() || !CVAR_TO_BOOL( r_occlusion_culling ))

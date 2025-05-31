@@ -369,6 +369,8 @@ void R_DrawSkyBox()
 
 void R_DrawSkyPortal(cl_entity_t *skyPortal)
 {
+	ZoneScoped;
+
 	ref_viewpass_t rvp;
 	const float skyFov = skyPortal->curstate.fuser2;
 	const float skyScale = skyPortal->curstate.scale;

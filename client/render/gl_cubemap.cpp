@@ -647,6 +647,7 @@ loading actual cubemaps into videomemory
 void GL_LoadAndRebuildCubemaps(RefParams refParams)
 {
 	GL_DEBUG_SCOPE();
+	ZoneScoped;
 
 	bool realtimeBaking = CVAR_TO_BOOL(r_cubemap_realtime);
 	if (!world->loading_cubemaps && !realtimeBaking)
