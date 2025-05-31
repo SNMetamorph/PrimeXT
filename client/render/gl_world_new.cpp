@@ -2744,7 +2744,7 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 			{
 				int sum = (e->curstate.rendercolor.r + e->curstate.rendercolor.g + e->curstate.rendercolor.b);
 
-				if(( sum > 0 ) && !FBitSet( s->flags, SURF_CONVEYOR ))
+				if(( sum > 0 ) && !FBitSet( s->flags, SURF_CONVEYOR ) && !FBitSet( mat->flags, BRUSH_CONVEYOR ))
 				{
 					r = e->curstate.rendercolor.r / 255.0f;
 					g = e->curstate.rendercolor.g / 255.0f;

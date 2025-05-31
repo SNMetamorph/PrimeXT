@@ -683,9 +683,10 @@ if this was changed
 */
 void R_UpdateSurfaceParams( msurface_t *surf )
 {
-	mextrasurf_t	*esrf = surf->info;
+	mextrasurf_t *esrf = surf->info;
 	cl_entity_t	*e = RI->currententity;
-	model_t		*clmodel = e->model;
+	model_t *clmodel = e->model;
+	material_t *mat = R_TextureAnimation( surf )->material;
 
 	// check for lightmap modification
 	if( FBitSet( surf->flags, SURF_LM_UPDATE|SURF_DM_UPDATE ))
@@ -695,7 +696,7 @@ void R_UpdateSurfaceParams( msurface_t *surf )
 		R_UpdateCinematic( surf );
 
 	// handle conveyor movement
-	if( FBitSet( clmodel->flags, BIT( 0 )) && FBitSet( surf->flags, SURF_CONVEYOR ))
+	if( FBitSet( clmodel->flags, BIT( 0 )) && FBitSet( surf->flags, SURF_CONVEYOR ) || FBitSet( mat->flags, BRUSH_CONVEYOR ))
 	{
 		float	flRate, flAngle;
 		float	flWidth, flConveyorSpeed;
