@@ -23,7 +23,8 @@
     "utils": {
       "description": "Build utilities",
       "dependencies": [
-        { "name": "miniz", "version>=": "3.0.2" }
+        { "name": "miniz", "version>=": "3.0.2" },
+        { "name": "rapidjson", "version>=": "2025-02-26#0" }
       ]
     },
     "physx": {
