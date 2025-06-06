@@ -176,7 +176,22 @@ mxWindow::setMenuBar (mxMenuBar *menuBar)
 	SetMenu ((HWND) getHandle (), (HMENU) ((mxWidget *) menuBar)->getHandle ());
 }
 
+void
+mxWindow::maximize ()
+{
+	ShowWindow ((HWND) getHandle (), SW_SHOWMAXIMIZED );
+}
 
+bool
+mxWindow::isMaximized ()
+{
+    WINDOWPLACEMENT wp;
+    wp.length = sizeof(WINDOWPLACEMENT);
+    if (GetWindowPlacement(static_cast<HWND>(getHandle()), &wp)) {
+		return wp.showCmd == SW_SHOWMAXIMIZED;
+    } 
+	return false;
+}
 
 int
 mxWindow::doModal ()

@@ -99,3 +99,15 @@ mxWindow::setMenuBar (mxMenuBar *menuBar)
 {
 	d_this->setMenuBar ((QMenuBar *) menuBar->getHandle ());
 }
+
+void
+mxWindow::maximize ()
+{
+	d_this->showMaximized();
+}
+
+bool
+mxWindow::isMaximized ()
+{
+	return d_this->windowState() & Qt::WindowMaximized;
+}

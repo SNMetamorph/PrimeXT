@@ -63,6 +63,8 @@ public:
 
 	int doModal ();
 	void endDialog (int retValue);
+	void maximize();
+	bool isMaximized();
 
 private:
 	// NOT IMPLEMENTED
