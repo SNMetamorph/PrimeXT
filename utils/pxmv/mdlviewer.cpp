@@ -20,30 +20,200 @@
 #include <string.h>
 #include <mx.h>
 #include <gl.h>
+#include <time.h>
 #include <mxTga.h>
+#include <fmt/format.h>
+#include <array>
+
 #include "mdlviewer.h"
 #include "GlWindow.h"
 #include "ControlPanel.h"
 #include "StudioModel.h"
 #include "pakviewer.h"
 #include "FileAssociation.h"
+#include "file_system.h"
 #include "stringlib.h"
 #include "app_info.h"
 #include "build.h"
 #include "build_info.h"
 
 MDLViewer *g_MDLViewer = 0;
-static char recentFiles[8][256] = { "", "", "", "", "", "", "", "" };
 extern bool bUseWeaponOrigin;
 extern bool bUseWeaponLeftHand;
 
+static bool IsAliasModel(const char *path)
+{
+	byte	buffer[256];
+	FILE	*fp;
+	int		remainBytes;
+
+	if (!path) 
+		return false;
+
+	// load the model
+	if ((fp = fopen(path, "rb")) == NULL)
+		return false;
+
+	fread(buffer, sizeof(buffer), 1, fp);
+	remainBytes = ftell(fp);
+	fclose(fp);
+
+	if (remainBytes < 84)
+		return false;
+
+	// skip invalid signature
+	if (Q_strncmp((const char *)buffer, "IDPO", 4))
+		return false;
+
+	// skip unknown version
+	if (*(int *)&buffer[4] != 6)
+		return false;
+
+	return true;
+}
+
+static bool ValidateModel( const char *path )
+{
+	byte		buffer[256];
+	studiohdr_t	*phdr;
+	FILE		*fp;
+	int			remainBytes;
+
+	if (!path)
+		return false;
+
+	// load the model
+	if ((fp = fopen(path, "rb")) == NULL)
+		return false;
+
+	fread(buffer, sizeof(buffer), 1, fp);
+	remainBytes = ftell(fp);
+	fclose(fp);
+
+	if (remainBytes < sizeof(studiohdr_t))
+		return false;
+
+	// skip invalid signature
+	if (Q_strncmp((const char *)buffer, "IDST", 4))
+		return false;
+
+	phdr = (studiohdr_t *)buffer;
+
+	// skip unknown version
+	if (phdr->version != STUDIO_VERSION)
+		return false;
+
+	// skip modelnameT.mdl
+	if (phdr->numbones <= 0)
+		return false;
+
+	return true;
+}
+
+static void AddPathToList( ViewerSettings &settings, const char *path )
+{
+	char	modelPath[256];
+
+	if( settings.numModelPathes >= settings.modelPathList.size() )
+		return; // too many strings
+
+	Q_snprintf( modelPath, sizeof( modelPath ), "%s/%s", settings.oldModelPath, path );
+
+	if( !ValidateModel( modelPath ))
+		return;
+
+	int i = settings.numModelPathes++;
+	settings.modelPathList[i] = modelPath;
+}
+
+static void SortPathList( ViewerSettings &settings )
+{
+	// this is a selection sort (finds the best entry for each slot)
+	std::string temp;
+	for( int i = 0; i < settings.numModelPathes - 1; i++ )
+	{
+		for( int j = i + 1; j < settings.numModelPathes; j++ )
+		{
+			if( Q_strcmp( settings.modelPathList[i].c_str(), settings.modelPathList[j].c_str()) > 0)
+			{
+				temp = std::move(settings.modelPathList[i]);
+				settings.modelPathList[i] = std::move(settings.modelPathList[j]);
+				settings.modelPathList[j] = std::move(temp);
+			}
+		}
+	}
+}
+
+void ListDirectory( ViewerSettings &settings )
+{
+	stringlist_t list;
+	char modelPath[512];
+	
+	COM_ExtractFilePath( settings.modelPath.c_str(), modelPath);
+
+	if (settings.oldModelPath.compare(modelPath) == 0)
+		return;	// not changed
+
+	settings.oldModelPath = modelPath;
+	std::string path = fmt::format("{}/*.mdl", modelPath);
+	settings.numModelPathes = 0;
+
+	stringlistinit( &list );
+	listdirectory( &list, path.c_str(), true);
+
+	if (list.numstrings < 1)
+		return;
+
+	for (int i = 0; i < list.numstrings; i++) {
+		AddPathToList(settings, list.strings[i]);
+	}
+	SortPathList(settings);
+	stringlistfreecontents( &list );
+}
+
+const char *LoadNextModel( ViewerSettings &settings )
+{
+	int	i;
+
+	for( i = 0; i < settings.numModelPathes; i++ )
+	{
+		if (settings.modelPath.compare(settings.modelPathList[i]) == 0)
+		{
+			i++;
+			break;
+		}
+	}
+
+	if( i == settings.numModelPathes )
+		i = 0;
+	return settings.modelPathList[i].c_str();
+}
+
+const char *LoadPrevModel( ViewerSettings &settings )
+{
+	int	i;
+
+	for( i = 0; i < settings.numModelPathes; i++ )
+	{
+		if (settings.modelPath.compare(settings.modelPathList[i]) == 0)
+		{
+			i--;
+			break;
+		}
+	}
+
+	if( i < 0 ) i = settings.numModelPathes - 1;
+	return settings.modelPathList[i].c_str();
+}
+
+
 void MDLViewer::initRecentFiles( void )
 {
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < m_settings.recentFiles.size(); i++)
 	{
-		if (strlen (recentFiles[i]))
+		if (strlen(m_settings.recentFiles[i]))
 		{
-			mb->modify (IDC_FILE_RECENTMODELS1 + i, IDC_FILE_RECENTMODELS1 + i, recentFiles[i]);
+			mb->modify (IDC_FILE_RECENTMODELS1 + i, IDC_FILE_RECENTMODELS1 + i, m_settings.recentFiles[i]);
 		}
 		else
 		{
@@ -53,34 +223,8 @@ void MDLViewer::initRecentFiles( void )
 	}
 }
 
-void MDLViewer::loadRecentFiles( void )
-{
-	char	str[256];
-
-	for( int i = 0; i < 8; i++ )
-	{
-		mx_snprintf( str, sizeof( str ), "RecentFile%i", i );
-		if( !LoadString( str, recentFiles[i] ))
-			break;
-	}
-}
-
-void MDLViewer::saveRecentFiles( void )
-{
-	char	str[256];
-
-	if( !InitRegistry( ))
-		return;
-
-	for( int i = 0; i < 8; i++ )
-	{
-		mx_snprintf( str, sizeof( str ), "RecentFile%i", i );
-		if( !SaveString( str, recentFiles[i] ))
-			break;
-	}
-}
-
-MDLViewer :: MDLViewer() : mxWindow( 0, 0, 0, 0, 0, APP_TITLE_STR, mxWindow::Normal )
+MDLViewer :: MDLViewer() : 
+	mxWindow( 0, 0, 0, 0, 0, APP_TITLE_STR, mxWindow::Normal )
 {
 	// create menu stuff
 	mb = new mxMenuBar (this);
@@ -150,35 +294,39 @@ MDLViewer :: MDLViewer() : mxWindow( 0, 0, 0, 0, 0, APP_TITLE_STR, mxWindow::Nor
 
 	mb->setChecked( IDC_OPTIONS_WEAPONORIGIN, bUseWeaponOrigin );
 	mb->setChecked( IDC_OPTIONS_LEFTHAND, bUseWeaponLeftHand );
-	mb->setChecked( IDC_OPTIONS_AUTOPLAY, g_viewerSettings.sequence_autoplay ? true : false );
-	mb->setChecked( IDC_OPTIONS_BLENDWEIGHTS, g_viewerSettings.studio_blendweights ? true : false );
+	mb->setChecked( IDC_OPTIONS_AUTOPLAY, m_settings.sequence_autoplay ? true : false );
+	mb->setChecked( IDC_OPTIONS_BLENDWEIGHTS, m_settings.studio_blendweights ? true : false );
+
+	m_studioModel = reinterpret_cast<StudioModel*>(malloc(sizeof(StudioModel)));
+	memset(m_studioModel, 0x0, sizeof(StudioModel));
+	new (m_studioModel) StudioModel(m_settings);
 
 	// create the OpenGL window
-	d_GlWindow = new GlWindow (this, 0, 0, 0, 0, "", mxWindow::Normal);
+	d_GlWindow = new GlWindow(this, m_settings, *m_studioModel, 0, 0, 0, 0, "", mxWindow::Normal);
 #ifdef WIN32
 	SetWindowLong ((HWND) d_GlWindow->getHandle (), GWL_EXSTYLE, WS_EX_CLIENTEDGE);
 #endif
 
-	d_cpl = new ControlPanel (this);
+	d_cpl = new ControlPanel(this, m_settings, *m_studioModel);
 	d_cpl->setGlWindow (d_GlWindow);
 	d_GlWindow->setControlPanel(d_cpl);
 	g_GlWindow = d_GlWindow;
 
 	// finally create the pakviewer window
-	d_PAKViewer = new PAKViewer (this);
+	d_PAKViewer = new PAKViewer (this, *m_studioModel);
 	g_FileAssociation = new FileAssociation ();
 
-	loadRecentFiles ();
 	initRecentFiles ();
 
 	setBounds (20, 20, 640, 540);
 	setVisible (true);
 
-	if( g_viewerSettings.showGround )
+	if( m_settings.showGround )
 		d_cpl->setShowGround (true);
 
-	if( g_viewerSettings.groundTexFile[0] )
-		d_GlWindow->loadTexture( g_viewerSettings.groundTexFile, TEXTURE_GROUND );
+	if( m_settings.groundTexFile[0] )
+		d_GlWindow->loadTexture( m_settings.groundTexFile.c_str(), TEXTURE_GROUND);
+
 	else d_GlWindow->loadTexture( NULL, TEXTURE_GROUND );
 }
 
@@ -188,12 +336,14 @@ MDLViewer::~MDLViewer ()
 {
 	// grab some params in case that hasn't updates
 	if( d_cpl )
-		g_viewerSettings.editStep = d_cpl->getEditStep();
+		m_settings.editStep = d_cpl->getEditStep();
 	//g_viewerSettings.showMaximized = isMaximized();
 
-	//saveRecentFiles ();
-	//SaveViewerSettings ();
-	g_studioModel.FreeModel ();
+	//saveRecentFiles();
+	m_settings.Save();
+	m_studioModel->FreeModel();
+	m_studioModel->~StudioModel();
+	free(m_studioModel);
 #ifdef WIN32
 	DeleteFile ("midump.txt");
 #endif
@@ -223,7 +373,7 @@ MDLViewer::handleEvent (mxEvent *event)
 
 				for (i = 0; i < 4; i++)
 				{
-					if (!mx_strcasecmp (recentFiles[i], ptr))
+					if (!mx_strcasecmp (m_settings.recentFiles[i], ptr))
 						break;
 				}
 
@@ -231,18 +381,18 @@ MDLViewer::handleEvent (mxEvent *event)
 				if (i < 4)
 				{
 					char tmp[256];
-					strcpy (tmp, recentFiles[0]);
-					strcpy (recentFiles[0], recentFiles[i]);
-					strcpy (recentFiles[i], tmp);
+					strcpy (tmp, m_settings.recentFiles[0]);
+					strcpy (m_settings.recentFiles[0], m_settings.recentFiles[i]);
+					strcpy (m_settings.recentFiles[i], tmp);
 				}
 
 				// insert recent file
 				else
 				{
 					for (i = 3; i > 0; i--)
-						strcpy (recentFiles[i], recentFiles[i - 1]);
+						strcpy (m_settings.recentFiles[i], m_settings.recentFiles[i - 1]);
 
-					strcpy (recentFiles[0], ptr);
+					strcpy (m_settings.recentFiles[0], ptr);
 				}
 
 				initRecentFiles ();
@@ -252,7 +402,7 @@ MDLViewer::handleEvent (mxEvent *event)
 
 		case IDC_FILE_SAVEMODEL:
 		{
-			char *ptr = (char *) mxGetSaveFileName (this, g_viewerSettings.modelPath, "GoldSrc Model (*.mdl)");
+			char *ptr = (char *) mxGetSaveFileName (this, m_settings.modelPath.c_str(), "GoldSrc Model (*.mdl)");
 			if (!ptr)
 				break;
 
@@ -264,14 +414,14 @@ MDLViewer::handleEvent (mxEvent *event)
 			if( mx_strcasecmp( ext, ".mdl" ))
 				strcat( filename, ".mdl" );
 
-			if( !g_studioModel.SaveModel( filename ))
+			if( !m_studioModel->SaveModel( filename ))
 			{
 				mxMessageBox( this, "Error saving model.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR );
 			}
 			else
 			{
-				strcpy( g_viewerSettings.modelFile, filename );
-				g_viewerSettings.numModelChanges = 0;	// all the settings are handled
+				m_settings.modelFile = filename;
+				m_settings.numModelChanges = 0;	// all the settings are handled
 			}
 		}
 		break;
@@ -321,7 +471,7 @@ MDLViewer::handleEvent (mxEvent *event)
 
 				for (i = 4; i < 8; i++)
 				{
-					if (!mx_strcasecmp (recentFiles[i], ptr))
+					if (!mx_strcasecmp (m_settings.recentFiles[i], ptr))
 						break;
 				}
 
@@ -329,18 +479,18 @@ MDLViewer::handleEvent (mxEvent *event)
 				if (i < 8)
 				{
 					char tmp[256];
-					strcpy (tmp, recentFiles[4]);
-					strcpy (recentFiles[4], recentFiles[i]);
-					strcpy (recentFiles[i], tmp);
+					strcpy (tmp, m_settings.recentFiles[4]);
+					strcpy (m_settings.recentFiles[4], m_settings.recentFiles[i]);
+					strcpy (m_settings.recentFiles[i], tmp);
 				}
 
 				// insert recent file
 				else
 				{
 					for (i = 7; i > 4; i--)
-						strcpy (recentFiles[i], recentFiles[i - 1]);
+						strcpy (m_settings.recentFiles[i], m_settings.recentFiles[i - 1]);
 
-					strcpy (recentFiles[4], ptr);
+					strcpy (m_settings.recentFiles[4], ptr);
 				}
 
 				initRecentFiles ();
@@ -363,12 +513,12 @@ MDLViewer::handleEvent (mxEvent *event)
 		case IDC_FILE_RECENTMODELS4:
 		{
 			int i = event->action - IDC_FILE_RECENTMODELS1;
-			d_cpl->loadModel (recentFiles[i]);
+			d_cpl->loadModel (m_settings.recentFiles[i]);
 
 			char tmp[256];			
-			strcpy (tmp, recentFiles[0]);
-			strcpy (recentFiles[0], recentFiles[i]);
-			strcpy (recentFiles[i], tmp);
+			strcpy (tmp, m_settings.recentFiles[0]);
+			strcpy (m_settings.recentFiles[0], m_settings.recentFiles[i]);
+			strcpy (m_settings.recentFiles[i], tmp);
 
 			initRecentFiles ();
 
@@ -382,12 +532,12 @@ MDLViewer::handleEvent (mxEvent *event)
 		case IDC_FILE_RECENTPAKFILES4:
 		{
 			int i = event->action - IDC_FILE_RECENTPAKFILES1 + 4;
-			d_PAKViewer->openPAKFile (recentFiles[i]);
+			d_PAKViewer->openPAKFile (m_settings.recentFiles[i]);
 
 			char tmp[256];			
-			strcpy (tmp, recentFiles[4]);
-			strcpy (recentFiles[4], recentFiles[i]);
-			strcpy (recentFiles[i], tmp);
+			strcpy (tmp, m_settings.recentFiles[4]);
+			strcpy (m_settings.recentFiles[4], m_settings.recentFiles[i]);
+			strcpy (m_settings.recentFiles[i], tmp);
 
 			initRecentFiles ();
 
@@ -407,7 +557,7 @@ MDLViewer::handleEvent (mxEvent *event)
 		case IDC_OPTIONS_COLORGROUND:
 		case IDC_OPTIONS_COLORLIGHT:
 		{
-			float *cols[3] = { g_viewerSettings.bgColor, g_viewerSettings.gColor, g_viewerSettings.lColor };
+			float *cols[3] = { m_settings.bgColor, m_settings.gColor, m_settings.lColor };
 			float *col = cols[event->action - IDC_OPTIONS_COLORBACKGROUND];
 			int r = (int) (col[0] * 255.0f);
 			int g = (int) (col[1] * 255.0f);
@@ -452,13 +602,13 @@ MDLViewer::handleEvent (mxEvent *event)
 			break;
 
 		case IDC_OPTIONS_AUTOPLAY:
-			g_viewerSettings.sequence_autoplay = !mb->isChecked( IDC_OPTIONS_AUTOPLAY );
-			mb->setChecked( IDC_OPTIONS_AUTOPLAY, g_viewerSettings.sequence_autoplay ? true : false );
+			m_settings.sequence_autoplay = !mb->isChecked( IDC_OPTIONS_AUTOPLAY );
+			mb->setChecked( IDC_OPTIONS_AUTOPLAY, m_settings.sequence_autoplay ? true : false );
 			break;
 
 		case IDC_OPTIONS_BLENDWEIGHTS:
-			g_viewerSettings.studio_blendweights = !mb->isChecked( IDC_OPTIONS_BLENDWEIGHTS );
-			mb->setChecked( IDC_OPTIONS_BLENDWEIGHTS, g_viewerSettings.studio_blendweights ? true : false );
+			m_settings.studio_blendweights = !mb->isChecked( IDC_OPTIONS_BLENDWEIGHTS );
+			mb->setChecked( IDC_OPTIONS_BLENDWEIGHTS, m_settings.studio_blendweights ? true : false );
 			break;
 
 		case IDC_OPTIONS_DUMP:
@@ -534,14 +684,14 @@ MDLViewer::handleEvent (mxEvent *event)
 		{
 			static float lasttime = 0.0f;
 
-			if( lasttime > g_studioModel.getCurrentTime( ))
+			if( lasttime > m_studioModel->getCurrentTime( ))
 				break;
-			lasttime = g_studioModel.getCurrentTime() + 0.1f;
+			lasttime = m_studioModel->getCurrentTime() + 0.1f;
 
-			int iSeq = g_studioModel.GetSequence();
+			int iSeq = m_studioModel->GetSequence();
 
-			if( iSeq == g_studioModel.SetSequence( iSeq + 1 ))
-				g_studioModel.SetSequence( 0 );
+			if( iSeq == m_studioModel->SetSequence( iSeq + 1 ))
+				m_studioModel->SetSequence( 0 );
 		}
 		break;
 
@@ -550,60 +700,60 @@ MDLViewer::handleEvent (mxEvent *event)
 				mx::quit();
 			break;
 		case 37:
-			if( g_viewerSettings.numModelPathes > 0 )
-				d_cpl->loadModel( LoadPrevModel( ));
+			if( m_settings.numModelPathes > 0 )
+				d_cpl->loadModel( LoadPrevModel( m_settings ));
 			break;
 		case 39:
-			if( g_viewerSettings.numModelPathes > 0 )
-				d_cpl->loadModel( LoadNextModel( ));
+			if( m_settings.numModelPathes > 0 )
+				d_cpl->loadModel( LoadNextModel( m_settings ));
 			break;
 #if XASH_WIN32
 		// TODO handle F5 hotkey on Linux too
 		case VK_F5:
 		{
 			bool oldUseWeaponOrigin = bUseWeaponOrigin;
-			d_cpl->loadModel( g_viewerSettings.modelFile, false );
+			d_cpl->loadModel( m_settings.modelFile.c_str(), false);
 			bUseWeaponOrigin = oldUseWeaponOrigin;
 			break;
 		}
 #endif
 		case 'g':
 		case 0xEF:
-			g_viewerSettings.showGround = !g_viewerSettings.showGround;
-			if( !g_viewerSettings.showGround )
-				g_viewerSettings.mirror = false;
+			m_settings.showGround = !m_settings.showGround;
+			if( !m_settings.showGround )
+				m_settings.mirror = false;
 			break;
 		case 'h':
 		case 0xF0:
-			g_viewerSettings.showHitBoxes = !g_viewerSettings.showHitBoxes;
+			m_settings.showHitBoxes = !m_settings.showHitBoxes;
 			break;
 		case 'o':
 		case 0xF9:
-			g_viewerSettings.showBones = !g_viewerSettings.showBones;
+			m_settings.showBones = !m_settings.showBones;
 			break;
 		case '5':
-			g_viewerSettings.transparency -= 0.05f;
-			if( g_viewerSettings.transparency < 0.0f )
-				g_viewerSettings.transparency = 0.0f;
+			m_settings.transparency -= 0.05f;
+			if( m_settings.transparency < 0.0f )
+				m_settings.transparency = 0.0f;
 			break;
 		case '6':
-			g_viewerSettings.transparency += 0.05f;
-			if( g_viewerSettings.transparency > 1.0f )
-				g_viewerSettings.transparency = 1.0f;
+			m_settings.transparency += 0.05f;
+			if( m_settings.transparency > 1.0f )
+				m_settings.transparency = 1.0f;
 			break;
 		case 'b':
 		case 0xE8:
-			g_viewerSettings.showBackground = !g_viewerSettings.showBackground;
+			m_settings.showBackground = !m_settings.showBackground;
 			break;
 		case 's':
 		case 0xFB:
-			g_viewerSettings.useStencil = !g_viewerSettings.useStencil;
+			m_settings.useStencil = !m_settings.useStencil;
 			break;
 		case 'm':
 		case 0xFC:
-			g_viewerSettings.mirror = !g_viewerSettings.mirror;
-			if( g_viewerSettings.mirror )
-				g_viewerSettings.showGround = true;
+			m_settings.mirror = !m_settings.mirror;
+			if( m_settings.mirror )
+				m_settings.showGround = true;
 			break;
 		case 'v':
 		case 0xEC:
@@ -618,24 +768,24 @@ MDLViewer::handleEvent (mxEvent *event)
 
 		case 'w':
 		case 0xF6:
-			g_viewerSettings.studio_blendweights = !mb->isChecked( IDC_OPTIONS_BLENDWEIGHTS );
-			mb->setChecked( IDC_OPTIONS_BLENDWEIGHTS, g_viewerSettings.studio_blendweights ? true : false );
+			m_settings.studio_blendweights = !mb->isChecked( IDC_OPTIONS_BLENDWEIGHTS );
+			mb->setChecked( IDC_OPTIONS_BLENDWEIGHTS, m_settings.studio_blendweights ? true : false );
 			break;
 		case '1':
 		case '2':
 		case '3':
 		case '4':
-			g_viewerSettings.renderMode = event->key - '1';
+			m_settings.renderMode = static_cast<ViewerSettings::RenderMode>(event->key - '1');
 			break;
 		case '-':
-			g_viewerSettings.speedScale -= 0.1f;
-			if( g_viewerSettings.speedScale < 0.0f )
-				g_viewerSettings.speedScale = 0.0f;
+			m_settings.speedScale -= 0.1f;
+			if( m_settings.speedScale < 0.0f )
+				m_settings.speedScale = 0.0f;
 			break;
 		case '+':
-			g_viewerSettings.speedScale += 0.1f;
-			if( g_viewerSettings.speedScale > 5.0f )
-				g_viewerSettings.speedScale = 5.0f;
+			m_settings.speedScale += 0.1f;
+			if( m_settings.speedScale > 5.0f )
+				m_settings.speedScale = 5.0f;
 			break;
 		}
 	}
@@ -665,6 +815,9 @@ int main( int argc, char *argv[] )
 	mx_setcwd (mx::getApplicationPath ());
 	atexit( Sys_CloseLog );
 
+	// init random generator
+	srand( (unsigned)time( NULL ) );
+
 	char cmdline[1024] = "";
 	if (argc > 1)
 	{
@@ -681,10 +834,6 @@ int main( int argc, char *argv[] )
 		// TODO print message q1 alias models deprecated
 		return 0;
 	}
-
-	InitViewerSettings();
-	// TODO use json config file instead registry
-	//LoadViewerSettings();
 
 	//mx::setDisplayMode (0, 0, 0);
 	mx::init (argc, argv);

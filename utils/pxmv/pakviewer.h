@@ -55,7 +55,7 @@ class mxTreeView;
 class mxButton;
 class mxPopupMenu;
 class GlWindow;
-
+class StudioModel;
 
 
 class PAKViewer : public mxWindow
@@ -65,10 +65,11 @@ class PAKViewer : public mxWindow
 	bool d_loadEntirePAK;
 	mxTreeView *tvPAK;
 	mxPopupMenu *pmMenu;
+	StudioModel &m_studioModel;
 
 public:
 	// CREATORS
-	PAKViewer (mxWindow *window);
+	PAKViewer (mxWindow *window, StudioModel &model);
 	~PAKViewer ();
 
 	// MANIPULATORS

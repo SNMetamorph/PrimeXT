@@ -51,18 +51,22 @@ enum // texture names
 
 class StudioModel;
 class ControlPanel;
+class ViewerSettings;
 class mxImage;
 
 class GlWindow : public mxGlWindow
 {
 	int d_textureNames[TEXTURE_COUNT];
 
-	matrix4x4	m_projection;
-	matrix4x4	m_modelview;
-	ControlPanel *d_cpl;
+	matrix4x4		m_projection;
+	matrix4x4		m_modelview;
+	ControlPanel	*d_cpl;
+	StudioModel		&m_studioModel;
+	ViewerSettings	&m_settings;
+
 public:
 	// CREATORS
-	GlWindow (mxWindow *parent, int x, int y, int w, int h, const char *label, int style);
+	GlWindow (mxWindow *parent, ViewerSettings &settings, StudioModel &model, int x, int y, int w, int h, const char *label, int style);
 	~GlWindow ();
 
 	// MANIPULATORS

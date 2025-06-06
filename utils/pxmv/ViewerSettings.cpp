@@ -20,358 +20,255 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mx.h>
-#include <time.h>
+#include <fstream>
+#include <filesystem>
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/prettywriter.h>
+#include <rapidjson/istreamwrapper.h>
 #include "StudioModel.h"
-#include "stringlib.h"
 #include "conprint.h"
 #include "file_system.h"
 
 #if XASH_WIN32
 #include <io.h>
+#else
+#include <unistd.h>
 #endif
 
-ViewerSettings g_viewerSettings;
-
-void InitViewerSettings( void )
+ViewerSettings::ViewerSettings() :
+	rot(Vector(0.f, 0.f, 0.f)),
+	trans(Vector(0.f, 0.f, 0.f)),
+	movementScale(1.0f),
+	editStep(1.0f),
+	editMode(EDIT_SOURCE),
+	editSize(false),
+	renderMode(RM_TEXTURED),
+	transparency(1.0f),
+	showBackground(false),
+	showGround(false),
+	showHitBoxes(false),
+	showBones(false),
+	showTexture(false),
+	showAttachments(false),
+	showNormals(false),
+	showWireframeOverlay(false),
+	enableIK(false),
+	texture(0),
+	textureScale(1.0f),
+	skin(0),
+	mirror(false),
+	useStencil(false),
+	pending_export_uvmap(false),
+	sequence(0),
+	speedScale(1.0f),
+	submodels{ 0 },
+	width(0),
+	height(0),
+	cds(false),
+	showMaximized(false),
+	bgColor{ 0.5f, 0.5f, 0.5f, 0.0f },
+	lColor{ 1.0f, 1.0f, 1.0f, 0.0f },
+	gColor{ 0.85f, 0.85f, 0.69f, 0.0f },
+	gLightVec{ 0.0f, 0.0f, -1.0f },
+	sequence_autoplay(true),
+	studio_blendweights(true),
+	topcolor(0),
+	bottomcolor(0),
+	show_uv_map(false),
+	overlay_uv_map(false),
+	anti_alias_lines(false),
+	textureLimit(256),
+	pause(false),
+	drawn_polys(0),
+	numModelChanges(0),
+	numSourceChanges(0),
+	modelFile{ 0 },
+	modelPath{ 0 },
+	oldModelPath{ 0 },
+	backgroundTexFile{ 0 },
+	groundTexFile{ 0 },
+	uvmapPath{ 0 },
+	modelPathList{ },
+	recentFiles{ "", "", "", "", "", "", "", "" },
+	numModelPathes(0)
 {
-	memset (&g_viewerSettings, 0, sizeof (ViewerSettings));
-
-	g_viewerSettings.renderMode = RM_TEXTURED;
-	g_viewerSettings.transparency = 1.0f;
-	g_viewerSettings.movementScale = 1.0f;
-	g_viewerSettings.enableIK = false;
-
-	g_viewerSettings.bgColor[0] = 0.5f;
-	g_viewerSettings.bgColor[1] = 0.5f;
-	g_viewerSettings.bgColor[2] = 0.5f;
-
-	g_viewerSettings.gColor[0] = 0.85f;
-	g_viewerSettings.gColor[1] = 0.85f;
-	g_viewerSettings.gColor[2] = 0.69f;
-
-	g_viewerSettings.lColor[0] = 1.0f;
-	g_viewerSettings.lColor[1] = 1.0f;
-	g_viewerSettings.lColor[2] = 1.0f;
-
-	g_viewerSettings.gLightVec[0] = 0.0f;
-	g_viewerSettings.gLightVec[1] = 0.0f;
-	g_viewerSettings.gLightVec[2] = -1.0f;
-
-	g_viewerSettings.speedScale = 1.0f;
-	g_viewerSettings.textureLimit = 256;
-	g_viewerSettings.showGround = 0;
-	g_viewerSettings.showMaximized = 0;
-
-	g_viewerSettings.textureScale = 1.0f;
-	g_viewerSettings.sequence_autoplay = true;
-	g_viewerSettings.studio_blendweights = true;
-	g_viewerSettings.topcolor = 0;
-	g_viewerSettings.bottomcolor = 0;
-
-	g_viewerSettings.editStep = 1.0f;
-	g_viewerSettings.editMode = EDIT_SOURCE;
-	g_viewerSettings.editSize = false;
-
-	// init random generator
-	srand( (unsigned)time( NULL ) );
-}
-
-bool InitRegistry( void )
-{
-	// TODO use json config file instead registry
-	//return mx::regCreateKey( HKEY_CURRENT_USER, "Software\\XashXT Group\\Paranoia 2 ModelViewer" );
-	return false;
-}
-
-bool SaveString( const char *pKey, char *pValue )
-{
-	//return mx::regSetValue( HKEY_CURRENT_USER, "Software\\XashXT Group\\Paranoia 2 ModelViewer", pKey, pValue );
-	return false;
-}
-
-bool LoadString( const char *pKey, char *pValue )
-{
-	//return mx::regGetValue( HKEY_CURRENT_USER, "Software\\XashXT Group\\Paranoia 2 ModelViewer", pKey, pValue );
-	return false;
-}
-
-void SaveVector4D( const char *pName, float *pValue )
-{
-	char	str[256];
-
-	mx_snprintf( str, sizeof( str ), "%g %g %g %g", pValue[0], pValue[1], pValue[2], pValue[3] );
-	SaveString( pName, str );
-}
-
-void LoadVector4D( const char *pName, float *pValue )
-{
-	char	str[256];
-
-	if( LoadString( pName, str ))
-	{
-		sscanf( str, "%g %g %g %g", &pValue[0], &pValue[1], &pValue[2], &pValue[3] );
+	if (std::filesystem::exists(ViewerSettings::fileName)) {
+		Load();
+	}
+	else {
+		Save();
 	}
 }
 
-void SaveVector3D( const char *pName, float *pValue )
+static std::filesystem::path GetExecutableDirectory()
 {
-	char	str[256];
-
-	mx_snprintf( str, sizeof( str ), "%g %g %g", pValue[0], pValue[1], pValue[2] );
-	SaveString( pName, str );
+	char path[512] = { 0 };
+#ifdef _WIN32
+    GetModuleFileNameA(nullptr, path, sizeof(path));
+    return std::filesystem::path(path).parent_path().string();
+#else
+    ssize_t count = readlink("/proc/self/exe", path, sizeof(path));
+    return std::filesystem::path(std::string(path, (count > 0) ? count: 0)).parent_path().string();
+#endif
 }
 
-void LoadVector3D( const char *pName, float *pValue )
+void JsonSaveString( rapidjson::Document &doc, const char *pName, std::string_view pValue )
 {
-	char	str[256];
+	rapidjson::Value jsonValue;
+	auto& allocator = doc.GetAllocator();
+	jsonValue.SetString(rapidjson::StringRef(pValue.data(), pValue.size()));
+	doc.AddMember(rapidjson::StringRef(pName), jsonValue, allocator);
+}
 
-	if( LoadString( pName, str ))
-	{
-		sscanf( str, "%g %g %g", &pValue[0], &pValue[1], &pValue[2] );
+void JsonLoadString( const rapidjson::Document &doc, const char *pName, std::string &pValue )
+{
+	pValue = doc[pName].GetString();
+}
+
+void JsonSaveVector4D( rapidjson::Document &doc, const char *pName, float *pValue )
+{
+	rapidjson::Value jsonValue;
+	auto& allocator = doc.GetAllocator();
+	jsonValue.SetArray()
+		.PushBack(pValue[0], allocator)
+		.PushBack(pValue[1], allocator)
+		.PushBack(pValue[2], allocator)
+		.PushBack(pValue[3], allocator);
+	doc.AddMember(rapidjson::StringRef(pName), jsonValue, allocator);
+}
+
+void JsonLoadVector4D( const rapidjson::Document &doc, const char *pName, float *pValue )
+{
+	const rapidjson::Value& array = doc[pName];
+	pValue[0] = array[0].GetFloat();
+	pValue[1] = array[1].GetFloat();
+	pValue[2] = array[2].GetFloat();
+	pValue[3] = array[3].GetFloat();
+}
+
+void JsonSaveVector3D( rapidjson::Document &doc, const char *pName, float *pValue )
+{
+	rapidjson::Value jsonValue;
+	auto& allocator = doc.GetAllocator();
+	jsonValue.SetArray()
+		.PushBack(pValue[0], allocator)
+		.PushBack(pValue[1], allocator)
+		.PushBack(pValue[2], allocator);
+	doc.AddMember(rapidjson::StringRef(pName), jsonValue, allocator);
+}
+
+void JsonLoadVector3D( const rapidjson::Document &doc, const char *pName, float *pValue )
+{
+	const rapidjson::Value& array = doc[pName];
+	pValue[0] = array[0].GetFloat();
+	pValue[1] = array[1].GetFloat();
+	pValue[2] = array[2].GetFloat();
+}
+
+void JsonSaveFloat( rapidjson::Document &doc, const char *pName, float fValue )
+{
+	rapidjson::Value jsonValue;
+	auto& allocator = doc.GetAllocator();
+	jsonValue.SetFloat(fValue);
+	doc.AddMember(rapidjson::StringRef(pName), jsonValue, allocator);
+}
+
+void JsonLoadFloat( const rapidjson::Value &doc, const char *pName, float &fValue )
+{
+	fValue = doc[pName].GetFloat();
+}
+
+template<class T>
+void JsonSaveInt( rapidjson::Document &doc, const char *pName, const T &iValue )
+{
+	rapidjson::Value jsonValue;
+	auto& allocator = doc.GetAllocator();
+	jsonValue.SetInt(static_cast<int>(iValue));
+	doc.AddMember(rapidjson::StringRef(pName), jsonValue, allocator);
+}
+
+template<class T>
+void JsonLoadInt( const rapidjson::Document &doc, const char *pName, T &iValue )
+{
+	iValue = static_cast<T>(doc[pName].GetInt());
+}
+
+bool ViewerSettings::Load()
+{
+	std::ifstream file;
+	rapidjson::Document doc;
+	std::filesystem::path configFilePath = GetExecutableDirectory() / ViewerSettings::fileName.data();
+
+	file.open(configFilePath, std::ios::in | std::ios::binary);
+	rapidjson::IStreamWrapper isw(file);
+	doc.ParseStream(isw);
+
+	JsonLoadVector4D( doc, "backgroundColor", bgColor );
+	JsonLoadVector4D( doc, "lightColor", lColor );
+	JsonLoadVector4D( doc, "groundColor", gColor );
+	JsonLoadVector3D( doc, "lightVector", gLightVec );
+	JsonLoadInt( doc, "sequenceAutoPlay", sequence_autoplay );
+	JsonLoadInt( doc, "studioBlendWeights", studio_blendweights );
+	JsonLoadInt( doc, "topColor", topcolor );
+	JsonLoadInt( doc, "bottomColor", bottomcolor );
+	JsonLoadFloat( doc, "editStep", editStep );
+	JsonLoadInt( doc, "editMode", editMode );
+	JsonLoadInt( doc, "allowIK", enableIK );
+	JsonLoadInt( doc, "showGround", showGround );
+	JsonLoadString( doc, "groundTexPath", groundTexFile );
+	JsonLoadInt( doc, "showMaximized", showMaximized );
+
+	// load recent files array
+	rapidjson::Value &list = doc["recentFiles"];
+	for (int i = 0; i < recentFiles.size(); i++) {
+		std::strncpy(recentFiles[i], list[i].GetString(), sizeof(recentFiles[i]));
 	}
-}
 
-void SaveInt( const char *pName, int iValue )
-{
-	char	str[256];
-
-	mx_snprintf( str, sizeof( str ), "%d", iValue );
-	SaveString( pName, str );
-}
-
-void LoadInt( const char *pName, int *iValue )
-{
-	char	str[256];
-
-	if( LoadString( pName, str ))
-	{
-		sscanf( str, "%d", iValue );
-	}
-}
-
-void SaveFloat( const char *pName, float fValue )
-{
-	char	str[256];
-
-	mx_snprintf( str, sizeof( str ), "%f", fValue );
-	SaveString( pName, str );
-}
-
-void LoadFloat( const char *pName, float *fValue )
-{
-	char	str[256];
-
-	if( LoadString( pName, str ))
-          {
-		sscanf( str, "%f", fValue );
-	}
-}
-
-int LoadViewerSettings( void )
-{
-	LoadVector4D( "Background Color", g_viewerSettings.bgColor );
-	LoadVector4D( "Light Color", g_viewerSettings.lColor );
-	LoadVector4D( "Ground Color", g_viewerSettings.gColor );
-	LoadVector3D( "Light Vector", g_viewerSettings.gLightVec );
-	LoadInt( "Sequence AutoPlay", &g_viewerSettings.sequence_autoplay );
-	LoadInt( "Studio BlendWeights", &g_viewerSettings.studio_blendweights );
-	LoadInt( "Top Color", &g_viewerSettings.topcolor );
-	LoadInt( "Bottom Color", &g_viewerSettings.bottomcolor );
-	LoadFloat( "Edit Step", &g_viewerSettings.editStep );
-	LoadInt( "Edit Mode", &g_viewerSettings.editMode );
-	LoadInt( "Allow IK", &g_viewerSettings.enableIK );
-	LoadInt( "Show Ground", &g_viewerSettings.showGround );
-	LoadString( "Ground TexPath", g_viewerSettings.groundTexFile );
-	LoadInt( "Show Maximized", &g_viewerSettings.showMaximized );
 	return 1;
 }
 
-int SaveViewerSettings( void )
+bool ViewerSettings::Save()
 {
-	if( !InitRegistry( ))
-		return 0;
+	std::ofstream file;
+	rapidjson::Document doc;
+	std::filesystem::path configFilePath = GetExecutableDirectory() / ViewerSettings::fileName.data();
+	doc.SetObject();
 
-	SaveVector4D( "Background Color", g_viewerSettings.bgColor );
-	SaveVector4D( "Light Color", g_viewerSettings.lColor );
-	SaveVector4D( "Ground Color", g_viewerSettings.gColor );
-	SaveVector3D( "Light Vector", g_viewerSettings.gLightVec );
-	SaveInt( "Sequence AutoPlay", g_viewerSettings.sequence_autoplay );
-	SaveInt( "Studio BlendWeights", g_viewerSettings.studio_blendweights );
-	SaveInt( "Top Color", g_viewerSettings.topcolor );
-	SaveInt( "Bottom Color", g_viewerSettings.bottomcolor );
-	SaveFloat( "Edit Step", g_viewerSettings.editStep );
-	SaveInt( "Edit Mode", g_viewerSettings.editMode );
-	SaveInt( "Allow IK", g_viewerSettings.enableIK );
-	SaveInt( "Show Ground", g_viewerSettings.showGround );
-	SaveString( "Ground TexPath", g_viewerSettings.groundTexFile );
-	SaveInt( "Show Maximized", g_viewerSettings.showMaximized );
+	JsonSaveVector4D(doc, "backgroundColor", bgColor);
+	JsonSaveVector4D(doc, "lightColor", lColor);
+	JsonSaveVector4D(doc, "groundColor", gColor);
+	JsonSaveVector3D(doc, "lightVector", gLightVec);
+	JsonSaveInt(doc, "sequenceAutoPlay", sequence_autoplay);
+	JsonSaveInt(doc, "studioBlendWeights", studio_blendweights);
+	JsonSaveInt(doc, "topColor", topcolor);
+	JsonSaveInt(doc, "bottomColor", bottomcolor);
+	JsonSaveFloat(doc, "editStep", editStep);
+	JsonSaveInt(doc, "editMode", editMode);
+	JsonSaveInt(doc, "allowIK", enableIK);
+	JsonSaveInt(doc, "showGround", showGround);
+	JsonSaveString(doc, "groundTexPath", groundTexFile);
+	JsonSaveInt(doc, "showMaximized", showMaximized);
 
+	// save recent files list
+	rapidjson::Value jsonValue;
+	auto& allocator = doc.GetAllocator();
+	jsonValue.SetArray();
+	for (int i = 0; i < recentFiles.size(); i++) {
+		jsonValue.PushBack(rapidjson::StringRef(recentFiles[i]), allocator);
+	}
+	doc.AddMember("recentFiles", jsonValue, allocator);
+
+	rapidjson::StringBuffer buffer;
+	rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+	doc.Accept(writer);
+
+	file.open(configFilePath, std::ios::out | std::ios::binary);
+	if (file.is_open())
+	{
+		file.write(buffer.GetString(), buffer.GetSize());
+		file.close();
+	}
 	return 1;
-}
-
-bool IsAliasModel(const char *path)
-{
-	byte	buffer[256];
-	FILE	*fp;
-	int		remainBytes;
-
-	if (!path) 
-		return false;
-
-	// load the model
-	if ((fp = fopen(path, "rb")) == NULL)
-		return false;
-
-	fread(buffer, sizeof(buffer), 1, fp);
-	remainBytes = ftell(fp);
-	fclose(fp);
-
-	if (remainBytes < 84)
-		return false;
-
-	// skip invalid signature
-	if (Q_strncmp((const char *)buffer, "IDPO", 4))
-		return false;
-
-	// skip unknown version
-	if (*(int *)&buffer[4] != 6)
-		return false;
-
-	return true;
-}
-
-static bool ValidateModel( const char *path )
-{
-	byte		buffer[256];
-	studiohdr_t	*phdr;
-	FILE		*fp;
-	int			remainBytes;
-
-	if (!path)
-		return false;
-
-	// load the model
-	if ((fp = fopen(path, "rb")) == NULL)
-		return false;
-
-	fread(buffer, sizeof(buffer), 1, fp);
-	remainBytes = ftell(fp);
-	fclose(fp);
-
-	if (remainBytes < sizeof(studiohdr_t))
-		return false;
-
-	// skip invalid signature
-	if (Q_strncmp((const char *)buffer, "IDST", 4))
-		return false;
-
-	phdr = (studiohdr_t *)buffer;
-
-	// skip unknown version
-	if (phdr->version != STUDIO_VERSION)
-		return false;
-
-	// skip modelnameT.mdl
-	if (phdr->numbones <= 0)
-		return false;
-
-	return true;
-}
-
-static void AddPathToList( const char *path )
-{
-	char	modelPath[256];
-
-	if( g_viewerSettings.numModelPathes >= 2048 )
-		return; // too many strings
-
-	Q_snprintf( modelPath, sizeof( modelPath ), "%s/%s", g_viewerSettings.oldModelPath, path );
-
-	if( !ValidateModel( modelPath ))
-		return;
-
-	int i = g_viewerSettings.numModelPathes++;
-
-	Q_strncpy( g_viewerSettings.modelPathList[i], modelPath, sizeof( g_viewerSettings.modelPathList[0] ));
-}
-
-static void SortPathList( void )
-{
-	char	temp[256];
-	int	i, j;
-
-	// this is a selection sort (finds the best entry for each slot)
-	for( i = 0; i < g_viewerSettings.numModelPathes - 1; i++ )
-	{
-		for( j = i + 1; j < g_viewerSettings.numModelPathes; j++ )
-		{
-			if( Q_strcmp( g_viewerSettings.modelPathList[i], g_viewerSettings.modelPathList[j] ) > 0 )
-			{
-				Q_strncpy( temp, g_viewerSettings.modelPathList[i], sizeof( temp ));
-				Q_strncpy( g_viewerSettings.modelPathList[i], g_viewerSettings.modelPathList[j], sizeof( temp ));
-				Q_strncpy( g_viewerSettings.modelPathList[j], temp, sizeof( temp ));
-			}
-		}
-	}
-}
-
-void ListDirectory( void )
-{
-	stringlist_t list;
-	char modelPath[256];
-	
-	COM_ExtractFilePath( g_viewerSettings.modelPath, modelPath );
-	if( !Q_stricmp( modelPath, g_viewerSettings.oldModelPath ))
-		return;	// not changed
-
-	Q_strncpy( g_viewerSettings.oldModelPath, modelPath, sizeof( g_viewerSettings.oldModelPath ));
-	Q_strncat( modelPath, "/*.mdl", sizeof( modelPath ));
-	g_viewerSettings.numModelPathes = 0;
-
-	stringlistinit( &list );
-	listdirectory( &list, modelPath, true );
-
-	if (list.numstrings < 1)
-		return;
-
-	for (int i = 0; i < list.numstrings; i++) {
-		AddPathToList(list.strings[i]);
-	}
-	SortPathList();
-	stringlistfreecontents( &list );
-}
-
-const char *LoadNextModel( void )
-{
-	int	i;
-
-	for( i = 0; i < g_viewerSettings.numModelPathes; i++ )
-	{
-		if( !Q_stricmp( g_viewerSettings.modelPathList[i], g_viewerSettings.modelPath ))
-		{
-			i++;
-			break;
-		}
-	}
-
-	if( i == g_viewerSettings.numModelPathes )
-		i = 0;
-	return g_viewerSettings.modelPathList[i];
-}
-
-const char *LoadPrevModel( void )
-{
-	int	i;
-
-	for( i = 0; i < g_viewerSettings.numModelPathes; i++ )
-	{
-		if( !Q_stricmp( g_viewerSettings.modelPathList[i], g_viewerSettings.modelPath ))
-		{
-			i--;
-			break;
-		}
-	}
-
-	if( i < 0 ) i = g_viewerSettings.numModelPathes - 1;
-	return g_viewerSettings.modelPathList[i];
 }

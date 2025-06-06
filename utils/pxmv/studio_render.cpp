@@ -47,9 +47,8 @@ Vector		g_chromeright[MAXSTUDIOBONES];	// chrome vector "right" in bone referenc
 bool		bUseWeaponOrigin = false;
 bool		bUseWeaponLeftHand = false;
 bool		bUseParanoiaFOV = false;
-extern bool	g_bStopPlaying;
 
-CBaseBoneSetup	g_boneSetup;			// new blender implementation with IK :-)
+extern bool	g_bStopPlaying;
 
 static float hullcolor[8][3] = 
 {
@@ -63,17 +62,27 @@ static float hullcolor[8][3] =
 { 1.0f, 1.0f, 1.0f },
 };
 
+StudioModel::StudioModel(ViewerSettings &settings) : 
+	m_settings(settings),
+	m_boneSetup(*this)
+{
+	memset(&m_pbonetransform, 0x0, sizeof(m_pbonetransform));
+	memset(&m_plocaltransform, 0x0, sizeof(m_plocaltransform));
+	memset(&m_pworldtransform, 0x0, sizeof(m_pworldtransform));
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Keeps a global clock to autoplay sequences to run from
 //			Also deals with speedScale changes
 //-----------------------------------------------------------------------------
-float GetAutoPlayTime()
+float StudioModel::GetAutoPlayTime()
 {
 	static double prevTime;
 	static float g_time = 0.0f;
 
 	double currentTime = I_FloatTime();
-	g_time += (currentTime - prevTime) * g_viewerSettings.speedScale;
+	g_time += (currentTime - prevTime) * m_settings.speedScale;
 	prevTime = currentTime;
 
 	return g_time;
@@ -82,7 +91,7 @@ float GetAutoPlayTime()
 //-----------------------------------------------------------------------------
 // Purpose: Keeps a global clock for "realtime" overlays to run from
 //-----------------------------------------------------------------------------
-float GetRealtimeTime()
+float StudioModel::GetRealtimeTime()
 {
 	// renamed static's so debugger doesn't get confused and show the wrong one
 	static double g_prevRealtime;
@@ -131,22 +140,22 @@ void StudioModel :: centerView( bool reset )
 
 	if( reset )
 	{
-		g_viewerSettings.trans[0] = 0;
-		g_viewerSettings.trans[1] = 0;
-		g_viewerSettings.trans[2] = 0;
+		m_settings.trans[0] = 0;
+		m_settings.trans[1] = 0;
+		m_settings.trans[2] = 0;
 	}
 	else
 	{
-		g_viewerSettings.trans[0] = 0;
-		g_viewerSettings.trans[1] = min[2] + dz / 2.0f;
-		g_viewerSettings.trans[2] = d * 1.0f;
+		m_settings.trans[0] = 0;
+		m_settings.trans[1] = min[2] + dz / 2.0f;
+		m_settings.trans[2] = d * 1.0f;
 	}
 
-	g_viewerSettings.rot[0] = -90.0f;
-	g_viewerSettings.rot[1] = -90.0f;
-	g_viewerSettings.rot[2] = 0.0f;
+	m_settings.rot[0] = -90.0f;
+	m_settings.rot[1] = -90.0f;
+	m_settings.rot[2] = 0.0f;
 
-	g_viewerSettings.movementScale = Q_max( 1.0f, d * 0.01f );
+	m_settings.movementScale = Q_max( 1.0f, d * 0.01f );
 }
 
 bool StudioModel :: AdvanceFrame( float dt )
@@ -167,7 +176,7 @@ bool StudioModel :: AdvanceFrame( float dt )
 		{
 			m_cycle += (dt / t);
 
-			if( pseqdesc->flags & STUDIO_LOOPING || g_viewerSettings.sequence_autoplay )
+			if( pseqdesc->flags & STUDIO_LOOPING || m_settings.sequence_autoplay )
 				m_cycle -= (int)(m_cycle);
 			else m_cycle = bound( 0.0f, m_cycle, 1.0f );
 		}
@@ -197,7 +206,7 @@ float StudioModel::GetFrame( void )
 
 int StudioModel::GetMaxFrame( void )
 {
-	return g_boneSetup.LocalMaxFrame( m_sequence );
+	return m_boneSetup.LocalMaxFrame( m_sequence );
 }
 
 int StudioModel :: SetFrame( int frame )
@@ -230,7 +239,7 @@ void StudioModel :: SetupTransform( bool bMirror )
 	if( !bUseWeaponOrigin && FBitSet( m_pstudiohdr->flags, STUDIO_ROTATE ))
 		angles[1] = anglemod( 100.0f * m_flTime );
 
-	if( g_viewerSettings.editMode == EDIT_SOURCE )
+	if( m_settings.editMode == ViewerSettings::EDIT_SOURCE )
 		origin = m_editfields[0].origin;
 
 	// build the rotation matrix
@@ -269,7 +278,7 @@ void StudioModel :: BlendSequence( Vector pos[], Vector4D q[], blend_sequence_t 
 			s = 1.0f;
 		}
 
-		g_boneSetup.AccumulatePose( &m_ik, pos, q, seqblend->sequence, seqblend->cycle, s );
+		m_boneSetup.AccumulatePose( &m_ik, pos, q, seqblend->sequence, seqblend->cycle, s );
 	}
 }
 
@@ -291,29 +300,29 @@ void StudioModel :: SetUpBones( bool bMirror )
 	Vector	a1 = m_protationmatrix.GetAngles();
 	Vector	p1 = m_protationmatrix.GetOrigin();
 
-	m_ik.Init( &g_boneSetup, a1, p1, GetRealtimeTime(), m_iFramecounter );
+	m_ik.Init( &m_boneSetup, a1, p1, GetRealtimeTime(), m_iFramecounter );
 	pIK = NULL;
 
-	if( g_viewerSettings.enableIK && !bMirror )
+	if( m_settings.enableIK && !bMirror )
 	{
 		pIK = &m_ik;
 	}
 
-	g_boneSetup.InitPose( pos, q );
-	g_boneSetup.UpdateRealTime( GetRealtimeTime() );
-	g_boneSetup.CalcBoneAdj( adj, m_controller, m_mouth );	
-	g_boneSetup.AccumulatePose( pIK, pos, q, m_sequence, m_cycle, 1.0 );
+	m_boneSetup.InitPose( pos, q );
+	m_boneSetup.UpdateRealTime( GetRealtimeTime() );
+	m_boneSetup.CalcBoneAdj( adj, m_controller, m_mouth );	
+	m_boneSetup.AccumulatePose( pIK, pos, q, m_sequence, m_cycle, 1.0 );
 
 	// blends from previous sequences
 	for( i = 0; i < MAX_SEQBLENDS; i++ )
 		BlendSequence( pos, q, &m_seqblend[i] );
 
 	CIKContext auto_ik;
-	auto_ik.Init( &g_boneSetup, a1, p1, 0.0f, 0 );
+	auto_ik.Init( &m_boneSetup, a1, p1, 0.0f, 0 );
 
-	g_boneSetup.UpdateRealTime( GetAutoPlayTime() );
-	g_boneSetup.CalcAutoplaySequences( &auto_ik, pos, q );
-//	g_boneSetup.CalcBoneAdj( pos, q, m_controller, m_mouth );
+	m_boneSetup.UpdateRealTime( GetAutoPlayTime() );
+	m_boneSetup.CalcAutoplaySequences( &auto_ik, pos, q );
+//	m_boneSetup.CalcBoneAdj( pos, q, m_controller, m_mouth );
 
 	if( pIK )
 	{
@@ -329,7 +338,7 @@ void StudioModel :: SetUpBones( bool bMirror )
 		glDisable (GL_TEXTURE_2D);
 		glDisable (GL_CULL_FACE);
 
-		if (g_viewerSettings.transparency < 1.0f)
+		if (m_settings.transparency < 1.0f)
 			glDisable (GL_DEPTH_TEST);
 		else
 			glEnable (GL_DEPTH_TEST);
@@ -609,7 +618,7 @@ void StudioModel::MuzzleFlash( int attachment, int type )
 		muzzle->scale = 0.5f;
 
 	// don't rotate on paused
-	if( !g_viewerSettings.pause && !g_bStopPlaying )
+	if( !m_settings.pause && !g_bStopPlaying )
 	{
 		if( muzzle->texture == 0 )
 			muzzle->rotate = RANDOM_LONG( 0, 20 ); // rifle flash
@@ -617,7 +626,7 @@ void StudioModel::MuzzleFlash( int attachment, int type )
 	}
 
 	bool isInEditMode = (g_ControlPanel->getTableIndex() == TAB_MODELEDITOR) ? true : false;
-	bool isEditSource = (g_viewerSettings.editMode == EDIT_SOURCE) ? true : false;
+	bool isEditSource = (m_settings.editMode == ViewerSettings::EDIT_SOURCE) ? true : false;
 
 	if( isInEditMode && isEditSource )
 	{
@@ -638,7 +647,7 @@ void StudioModel::MuzzleFlash( int attachment, int type )
 		muzzle->origin = m_pbonetransform[pattachment->bone].VectorTransform( pattachment->org );
 	}
 
-	if( !g_viewerSettings.pause && !g_bStopPlaying )
+	if( !m_settings.pause && !g_bStopPlaying )
 		muzzle->time = m_flTime + 0.015f;
 	else muzzle->time = m_flTime + 0.0099f;
 }
@@ -655,7 +664,7 @@ void StudioModel::ClientEvents( void )
 	if( pseqdesc->numevents == 0 )
 		return;
 
-	start = GetFrame() - g_viewerSettings.speedScale * m_flFrameTime * pseqdesc->fps;
+	start = GetFrame() - m_settings.speedScale * m_flFrameTime * pseqdesc->fps;
 	end = GetFrame();
 
 	if( sequence_reset )
@@ -705,13 +714,13 @@ void StudioModel::SetupLighting ( )
 	g_ambientlight = 95;
 	g_shadelight = 160;
 
-	g_lightvec[0] = g_viewerSettings.gLightVec[0];
-	g_lightvec[1] = g_viewerSettings.gLightVec[1];
-	g_lightvec[2] = g_viewerSettings.gLightVec[2];
+	g_lightvec[0] = m_settings.gLightVec[0];
+	g_lightvec[1] = m_settings.gLightVec[1];
+	g_lightvec[2] = m_settings.gLightVec[2];
 
-	g_lightcolor[0] = g_viewerSettings.lColor[0];
-	g_lightcolor[1] = g_viewerSettings.lColor[1];
-	g_lightcolor[2] = g_viewerSettings.lColor[2];
+	g_lightcolor[0] = m_settings.lColor[0];
+	g_lightcolor[1] = m_settings.lColor[1];
+	g_lightcolor[2] = m_settings.lColor[2];
 
 	g_lightvec = g_lightvec.Normalize();
 
@@ -864,9 +873,9 @@ void StudioModel :: DrawModel( bool bMirror )
 		return;
 
 	bool isInEditMode = (g_ControlPanel->getTableIndex() == TAB_MODELEDITOR) ? true : false;
-	bool drawEyePos = g_viewerSettings.showAttachments;
-	bool drawAttachments = g_viewerSettings.showAttachments;
-	bool drawHitboxes = g_viewerSettings.showHitBoxes;
+	bool drawEyePos = m_settings.showAttachments;
+	bool drawAttachments = m_settings.showAttachments;
+	bool drawHitboxes = m_settings.showHitBoxes;
 	bool drawAbsBox = false;
 	int drawIndex = -1; // draw all
 	int colorIndex = -1;
@@ -883,7 +892,7 @@ void StudioModel :: DrawModel( bool bMirror )
 		{
 			mstudiobbox_t *phitbox = (mstudiobbox_t *) ((byte *) m_pstudiohdr + m_pstudiohdr->hitboxindex) + m_pedit->id;
 
-			if( g_viewerSettings.editMode == EDIT_MODEL )
+			if( m_settings.editMode == ViewerSettings::EDIT_MODEL )
 				colorIndex = (phitbox->group % 8);
 			else colorIndex = (m_pedit->hitgroup % 8);
 		}
@@ -905,10 +914,10 @@ void StudioModel :: DrawModel( bool bMirror )
 	{
 		SetupModel( i );
 
-		if( g_viewerSettings.transparency > 0.0f )
+		if( m_settings.transparency > 0.0f )
 			DrawPoints();
 
-		if( g_viewerSettings.showWireframeOverlay && g_viewerSettings.renderMode != RM_WIREFRAME )
+		if( m_settings.showWireframeOverlay && m_settings.renderMode != ViewerSettings::RM_WIREFRAME )
 			DrawPoints( true );
 	}
 
@@ -931,7 +940,7 @@ void StudioModel :: DrawModel( bool bMirror )
 		glColor3f( 1.0f, 0.5f, 1.0f );
 
 		glBegin( GL_POINTS );
-			if( isInEditMode && m_pedit && g_viewerSettings.editMode == EDIT_SOURCE )
+			if( isInEditMode && m_pedit && m_settings.editMode == ViewerSettings::EDIT_SOURCE )
 				glVertex3fv( m_protationmatrix.VectorTransform( m_pedit->origin ));
 			else glVertex3fv( m_protationmatrix.VectorTransform( m_pstudiohdr->eyeposition ));
 		glEnd();
@@ -949,7 +958,7 @@ void StudioModel :: DrawModel( bool bMirror )
 		glDisable (GL_CULL_FACE);
 		glDisable( GL_BLEND );
 
-		if (g_viewerSettings.transparency < 1.0f)
+		if (m_settings.transparency < 1.0f)
 			glDisable (GL_DEPTH_TEST);
 		else
 			glEnable (GL_DEPTH_TEST);
@@ -972,7 +981,7 @@ void StudioModel :: DrawModel( bool bMirror )
 				bbox[j] = tmp;
 			}
 		}
-		else if( g_viewerSettings.editMode == EDIT_MODEL )
+		else if( m_settings.editMode == ViewerSettings::EDIT_MODEL )
 		{
 			if( m_pedit->type == TYPE_BBOX )
 			{
@@ -1026,7 +1035,7 @@ void StudioModel :: DrawModel( bool bMirror )
 	}
 
 	// draw bones
-	if( g_viewerSettings.showBones )
+	if( m_settings.showBones )
 	{
 		mstudiobone_t *pbones = (mstudiobone_t *)((byte *) m_pstudiohdr + m_pstudiohdr->boneindex);
 		glDisable( GL_MULTISAMPLE );
@@ -1091,7 +1100,7 @@ void StudioModel :: DrawModel( bool bMirror )
 			local.SetRight( pattachments[i].vectors[1] );
 			local.SetUp( pattachments[i].vectors[2] );
 
-			if( drawIndex != -1 && g_viewerSettings.editMode == EDIT_SOURCE )
+			if( drawIndex != -1 && m_settings.editMode == ViewerSettings::EDIT_SOURCE )
 				local.SetOrigin( m_pedit->origin );
 			else local.SetOrigin( pattachments[i].org );
 
@@ -1127,7 +1136,7 @@ void StudioModel :: DrawModel( bool bMirror )
 		glDisable (GL_CULL_FACE);
 		glDisable( GL_BLEND );
 
-		if (g_viewerSettings.transparency < 1.0f)
+		if (m_settings.transparency < 1.0f)
 			glDisable (GL_DEPTH_TEST);
 		else
 			glEnable (GL_DEPTH_TEST);
@@ -1144,7 +1153,7 @@ void StudioModel :: DrawModel( bool bMirror )
 		{
 			int	bone;
 
-			if( g_viewerSettings.showHitBoxes && isInEditMode )
+			if( m_settings.showHitBoxes && isInEditMode )
 			{
 				if( i != drawIndex )
 					glColor4f( 1.0f, 0.0f, 0.0f, 1.0f );
@@ -1159,7 +1168,7 @@ void StudioModel :: DrawModel( bool bMirror )
 			mstudiobbox_t *pbboxes = (mstudiobbox_t *) ((byte *) m_pstudiohdr + m_pstudiohdr->hitboxindex);
 			Vector v[8], v2[8], bbmin, bbmax;
 
-			if( g_viewerSettings.showHitBoxes && isInEditMode && g_viewerSettings.editMode == EDIT_SOURCE )
+			if( m_settings.showHitBoxes && isInEditMode && m_settings.editMode == ViewerSettings::EDIT_SOURCE )
 			{
 				for( int j = 0; j < m_numeditfields; j++ )
 				{
@@ -1176,7 +1185,7 @@ void StudioModel :: DrawModel( bool bMirror )
 			}
 			else
 			{
-				if( drawIndex != -1 && g_viewerSettings.editMode == EDIT_SOURCE )
+				if( drawIndex != -1 && m_settings.editMode == ViewerSettings::EDIT_SOURCE )
 				{
 					bbmin = m_pedit->mins;
 					bbmax = m_pedit->maxs;
@@ -1257,7 +1266,7 @@ void StudioModel::DrawPoints ( bool bWireframe )
 			ComputeSkinMatrix( &pnormweight[i], skinMat );
 			g_xformnorms[i] = skinMat.VectorRotate( pstudionorms[i] );
 
-			if( g_viewerSettings.renderMode == RM_BONEWEIGHTS )
+			if( m_settings.renderMode == ViewerSettings::RM_BONEWEIGHTS )
 				ComputeWeightColor( &pnormweight[i], g_lightvalues[i] );
 		}
 	}
@@ -1273,14 +1282,14 @@ void StudioModel::DrawPoints ( bool bWireframe )
 			g_xformnorms[i] = m_pbonetransform[pnormbone[i]].VectorRotate( pstudionorms[i] );
 		}
 
-		if( g_viewerSettings.renderMode == RM_BONEWEIGHTS )
+		if( m_settings.renderMode == ViewerSettings::RM_BONEWEIGHTS )
 		{
 			for( i = 0; i < m_pmodel->numnorms; i++ )
 				g_lightvalues[i] = Vector( 0.0f, 1.0f, 0.0f );
 		}
 	}
 
-	if( g_viewerSettings.renderMode == RM_NORMALS )
+	if( m_settings.renderMode == ViewerSettings::RM_NORMALS )
 		for( i = 0; i < m_pmodel->numnorms; i++ )
 			g_lightvalues[i] = g_xformnorms[i] * 0.5f + Vector( 0.5f );
 
@@ -1299,7 +1308,7 @@ void StudioModel::DrawPoints ( bool bWireframe )
 		glHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
 		glHint( GL_POLYGON_SMOOTH_HINT, GL_NICEST );
 	}
-	else if (g_viewerSettings.transparency < 1.0f)
+	else if (m_settings.transparency < 1.0f)
 	{
 		glEnable (GL_BLEND);
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1328,7 +1337,7 @@ void StudioModel::DrawPoints ( bool bWireframe )
 
 		for( i = 0; i < pmesh[j].numnorms; i++, k++, lv++, pstudionorms++, pnormbone++ )
 		{
-			if( g_viewerSettings.renderMode != RM_BONEWEIGHTS && g_viewerSettings.renderMode != RM_NORMALS )
+			if( m_settings.renderMode != ViewerSettings::RM_BONEWEIGHTS && m_settings.renderMode != ViewerSettings::RM_NORMALS )
             {
 				if( FBitSet( m_pstudiohdr->flags, STUDIO_HAS_BONEWEIGHTS ))
 					Lighting ( *lv, -1, flags, g_xformnorms[k] );
@@ -1350,7 +1359,7 @@ void StudioModel::DrawPoints ( bool bWireframe )
 	for (j = 0; j < m_pmodel->nummesh; j++) 
 	{
 		float 	s, t;
-		float	transparency = g_viewerSettings.transparency;
+		float	transparency = m_settings.transparency;
 		short	*ptricmds;
 
 		pmesh = (mstudiomesh_t *)((byte *)m_pstudiohdr + m_pmodel->meshindex) + j;
@@ -1383,7 +1392,7 @@ void StudioModel::DrawPoints ( bool bWireframe )
 				glBlendFunc( GL_ONE, GL_ONE );
 //				glDepthMask( GL_FALSE );
 			}
-			else if (g_viewerSettings.transparency < 1.0f)
+			else if (m_settings.transparency < 1.0f)
 			{
 				glEnable( GL_BLEND );
 				glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -1406,7 +1415,7 @@ void StudioModel::DrawPoints ( bool bWireframe )
 				}
 
 				if( bWireframe == false )
-					g_viewerSettings.drawn_polys += (i - 2);
+					m_settings.drawn_polys += (i - 2);
 
 				for( ; i > 0; i--, ptricmds += 4)
 				{
@@ -1440,7 +1449,7 @@ void StudioModel::DrawPoints ( bool bWireframe )
 				}
 
 				if( bWireframe == false )
-					g_viewerSettings.drawn_polys += (i - 2);
+					m_settings.drawn_polys += (i - 2);
 
 				for( ; i > 0; i--, ptricmds += 4)
 				{
@@ -1472,7 +1481,7 @@ void StudioModel::DrawPoints ( bool bWireframe )
 			if (ptexture[pskinref[pmesh->skinref]].flags & STUDIO_NF_MASKED)
 				glDisable( GL_ALPHA_TEST );
 
-			if (ptexture[pskinref[pmesh->skinref]].flags & STUDIO_NF_ADDITIVE || g_viewerSettings.transparency < 1.0f)
+			if (ptexture[pskinref[pmesh->skinref]].flags & STUDIO_NF_ADDITIVE || m_settings.transparency < 1.0f)
 			{
 				glDepthMask( GL_TRUE );
 				glDisable( GL_BLEND );
@@ -1493,7 +1502,7 @@ void StudioModel::DrawPoints ( bool bWireframe )
 		glDisable( GL_MULTISAMPLE );
 	}
 
-	if( g_viewerSettings.showNormals )
+	if( m_settings.showNormals )
 	{
 		if( texEnabled ) glDisable( GL_TEXTURE_2D );
 		glColor4f( 0.3f, 0.4f, 0.5f, 0.99f ); 
@@ -1572,7 +1581,7 @@ void StudioModel::DrawUVMapPoints()
 			pmesh = (mstudiomesh_t *)((byte *)m_pstudiohdr + m_pmodel->meshindex) + j;
 			ptricmds = (short *)((byte *)m_pstudiohdr + pmesh->triindex);
 
-			if( pskinref[pmesh->skinref] != g_viewerSettings.texture )
+			if( pskinref[pmesh->skinref] != m_settings.texture )
 				continue;
 
 			tex_w = (float)ptexture[pskinref[pmesh->skinref]].width;
@@ -1612,8 +1621,8 @@ void StudioModel::DrawUVMapPoints()
 						y = (float)ptricmds[3];
 					}
 
-					x *= g_viewerSettings.textureScale;
-					y *= g_viewerSettings.textureScale;
+					x *= m_settings.textureScale;
+					y *= m_settings.textureScale;
 
 					glVertex2f( offset_x + x, offset_y + y );
 				}
@@ -1688,7 +1697,7 @@ void StudioModel :: ConvertTexCoords( void )
 							{
 								ptricmds[2] = FloatToHalf((float)ptricmds[2] * (1.0f / 32768.0f));
 								ptricmds[3] = FloatToHalf((float)ptricmds[3] * (1.0f / 32768.0f));
-								g_viewerSettings.numModelChanges++;
+								m_settings.numModelChanges++;
 							}
 						}
 					}	

@@ -33,8 +33,12 @@ ControlPanel *g_ControlPanel = 0;
 bool g_bStopPlaying = false;
 bool g_bEndOfSequence = false;
 static int g_nCurrFrame = 0;
+extern void ListDirectory( ViewerSettings &settings );
 
-ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0, "Control Panel", mxWindow::Normal )
+ControlPanel :: ControlPanel( mxWindow *parent, ViewerSettings &settings, StudioModel &model ) : 
+	mxWindow( parent, 0, 0, 0, 0, "Control Panel", mxWindow::Normal ),
+	m_studioModel( model ),
+	m_settings( settings )
 {
 	// create tabcontrol with subdialog windows
 	tab = new mxTab (this, 0, 0, 0, 0, IDC_TAB);
@@ -63,7 +67,7 @@ ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0,
 	mxCheckBox *cbNormals = new mxCheckBox (wRender, 140, 65, 120, 20, "Show Normals", IDC_NORMALS);
 
 	cbGround = new mxCheckBox (wRender, 260, 5, 130, 20, "Show Ground", IDC_GROUND);
-	cbGround->setChecked( g_viewerSettings.showGround ? true : false );
+	cbGround->setChecked( m_settings.showGround ? true : false );
 
 	cbMirror = new mxCheckBox (wRender, 260, 25, 130, 20, "Mirror Model On Ground", IDC_MIRROR);
 	cbBackground = new mxCheckBox (wRender, 260, 45, 130, 20, "Show Background", IDC_BACKGROUND);
@@ -195,8 +199,8 @@ ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0,
 	new mxLabel( wMisc, 467, 40, 75, 18, "Bottom Color" );
 	slTopColor->setRange( 0, 255 );
 	slBottomColor->setRange( 0, 255 );
-	slTopColor->setValue( g_viewerSettings.topcolor );
-	slBottomColor->setValue( g_viewerSettings.bottomcolor );
+	slTopColor->setValue( m_settings.topcolor );
+	slBottomColor->setValue( m_settings.bottomcolor );
 
 	mxWindow *wControls = new mxWindow (this, 0, 0, 0, 0);
 	tab->add (wControls, "Controls");
@@ -230,7 +234,7 @@ ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0,
 	mxLabel *CtrlValueLabel = new mxLabel (wControls, 455, 33, 55, 20, "Value");
 
 	cbEnableIK = new mxCheckBox (wControls, 335, 55, 100, 22, "Run IK", IDC_ENABLE_IK);
-	cbEnableIK->setChecked( g_viewerSettings.enableIK ? true : false );
+	cbEnableIK->setChecked( m_settings.enableIK ? true : false );
 
 	mxWindow *wEdit = new mxWindow (this, 0, 0, 0, 0);
 	tab->add (wEdit, "Editor");
@@ -244,10 +248,10 @@ ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0,
 	mxToolTip::add (cEditMode, "Select editor mode (change current model or grab values to put them into QC source)");
 	cEditMode->add ("QC Source");
 	cEditMode->add ("Real Model");
-	cEditMode->select (g_viewerSettings.editMode);
+	cEditMode->select (m_settings.editMode);
 
 	mxLabel *EidtLabel3 = new mxLabel (wEdit, 125, 3, 120, 20, "Step Size");
-	leEditStep = new mxLineEdit (wEdit, 125, 19, 50, 18, va( "%g", g_viewerSettings.editStep ));
+	leEditStep = new mxLineEdit (wEdit, 125, 19, 50, 18, va( "%g", m_settings.editStep ));
 	mxToolTip::add (leEditStep, "Editor movement step size");
 	cbEditSize = new mxCheckBox (wEdit, 125, 39, 50, 22, "size", IDC_EDIT_SIZE );
 	mxToolTip::add (cbEditSize, "switch between editing the origin and size e.g. for hitboxes");
@@ -255,9 +259,10 @@ ControlPanel :: ControlPanel( mxWindow *parent ) : mxWindow( parent, 0, 0, 0, 0,
 	mxLabel *EidtLabel4 = new mxLabel (wEdit, 185, 3, 170, 20, "QC source code:");
 	leEditString = new mxLineEdit (wEdit, 185, 19, 290, 18, "" );
 
-	if( g_viewerSettings.editMode == EDIT_SOURCE )
+	if( m_settings.editMode == ViewerSettings::EDIT_SOURCE )
 		leEditString->setEnabled( true );
-	else leEditString->setEnabled( false );
+	else 
+		leEditString->setEnabled( false );
 
 	tbMovePosX = new mxButton (wEdit, 185, 43, 55, 20, "Move +X", IDC_MOVE_PX );
 	tbMoveNegX = new mxButton (wEdit, 185, 64, 55, 20, "Move -X", IDC_MOVE_NX );
@@ -304,7 +309,7 @@ ControlPanel::handleEvent (mxEvent *event)
 
 			float value =  atof( lePoseParameter[index]->getLabel() );
 			setBlend( poseparam, value );
-			slPoseParameter[index]->setValue( g_studioModel.GetPoseParameter( poseparam ) );
+			slPoseParameter[index]->setValue( m_studioModel.GetPoseParameter( poseparam ) );
 			return 1;
 		}
 		return 1;
@@ -314,7 +319,7 @@ ControlPanel::handleEvent (mxEvent *event)
 	{
 		case IDC_TAB:
 		{
-			g_viewerSettings.showTexture = (tab->getSelectedIndex () == TAB_TEXTURES);
+			m_settings.showTexture = (tab->getSelectedIndex () == TAB_TEXTURES);
 		}
 		break;
 
@@ -331,7 +336,7 @@ ControlPanel::handleEvent (mxEvent *event)
 		case IDC_TRANSPARENCY:
 		{
 			int value = slTransparency->getValue ();
-			g_viewerSettings.transparency = (float) value / 100.0f; 
+			m_settings.transparency = (float) value / 100.0f; 
 			lOpacityValue->setLabel( va("Opacity: %d%%", value) ); 
 		}
 		break;
@@ -349,27 +354,27 @@ ControlPanel::handleEvent (mxEvent *event)
 			break;
 
 		case IDC_HITBOXES:
-			g_viewerSettings.showHitBoxes = ((mxCheckBox *) event->widget)->isChecked ();
+			m_settings.showHitBoxes = ((mxCheckBox *) event->widget)->isChecked ();
 			break;
 
 		case IDC_BONES:
-			g_viewerSettings.showBones = ((mxCheckBox *) event->widget)->isChecked ();
+			m_settings.showBones = ((mxCheckBox *) event->widget)->isChecked ();
 			break;
 
 		case IDC_ATTACHMENTS:
-			g_viewerSettings.showAttachments = ((mxCheckBox *) event->widget)->isChecked ();
+			m_settings.showAttachments = ((mxCheckBox *) event->widget)->isChecked ();
 			break;
 
 		case IDC_NORMALS:
-			g_viewerSettings.showNormals = ((mxCheckBox *) event->widget)->isChecked ();
+			m_settings.showNormals = ((mxCheckBox *) event->widget)->isChecked ();
 			break;
 
 		case IDC_WIREFRAME:
-			g_viewerSettings.showWireframeOverlay = ((mxCheckBox *) event->widget)->isChecked ();
+			m_settings.showWireframeOverlay = ((mxCheckBox *) event->widget)->isChecked ();
 			break;
 
 		case IDC_ENABLE_IK:
-			g_viewerSettings.enableIK = ((mxCheckBox *) event->widget)->isChecked ();
+			m_settings.enableIK = ((mxCheckBox *) event->widget)->isChecked ();
 			break;
 
 		case IDC_SEQUENCE:
@@ -386,35 +391,37 @@ ControlPanel::handleEvent (mxEvent *event)
 		case IDC_SPEEDSCALE:
 		{
 			int v = ((mxSlider *)event->widget)->getValue ();
-			g_viewerSettings.speedScale = (float) (v * 5) / 200.0f;
+			m_settings.speedScale = (float) (v * 5) / 200.0f;
 		}
 		break;
 
 		case IDC_BLENDER0:
 		{
 			int v = ((mxSlider *)event->widget)->getValue();
-			g_studioModel.SetBlendValue( 0, v );
+			m_studioModel.SetBlendValue( 0, v );
 		}
 		break;
 
 		case IDC_BLENDER1:
 		{
 			int v = ((mxSlider *)event->widget)->getValue();
-			g_studioModel.SetBlendValue( 1, v );
+			m_studioModel.SetBlendValue( 1, v );
 		}
 		break;
 
 		case IDC_LOOPANIM:
 		{
-			studiohdr_t *hdr = g_studioModel.getStudioHeader ();
+			studiohdr_t *hdr = m_studioModel.getStudioHeader ();
 			if( hdr )
 			{
-				mstudioseqdesc_t *pseqdesc = (mstudioseqdesc_t *) ((byte *) hdr + hdr->seqindex) + g_viewerSettings.sequence;
+				mstudioseqdesc_t *pseqdesc = (mstudioseqdesc_t *) ((byte *) hdr + hdr->seqindex) + m_settings.sequence;
+
 				if (cbLoopAnim->isChecked ())
 					pseqdesc->flags |= STUDIO_LOOPING;
 				else
 					pseqdesc->flags &= ~STUDIO_LOOPING;
-				g_viewerSettings.numModelChanges++;
+
+				m_settings.numModelChanges++;
 			}
 		}
 		break;
@@ -425,7 +432,7 @@ ControlPanel::handleEvent (mxEvent *event)
 			{
 				tbStop->setLabel ("Play");
 				g_bStopPlaying = true;
-				g_nCurrFrame = g_studioModel.SetFrame (-1);
+				g_nCurrFrame = m_studioModel.SetFrame (-1);
 				leFrame->setLabel (va("%d", g_nCurrFrame));
 				bPrevFrame->setEnabled (true);
 				leFrame->setEnabled (true);
@@ -436,7 +443,7 @@ ControlPanel::handleEvent (mxEvent *event)
 				tbStop->setLabel ("Stop");
 				g_bStopPlaying = false;
 				if( g_bEndOfSequence )
-					g_nCurrFrame = g_studioModel.SetFrame( 0 );
+					g_nCurrFrame = m_studioModel.SetFrame( 0 );
 				bPrevFrame->setEnabled (false);
 				leFrame->setEnabled (false);
 				bNextFrame->setEnabled (false);
@@ -447,7 +454,7 @@ ControlPanel::handleEvent (mxEvent *event)
 
 		case IDC_PREVFRAME:
 		{
-			g_nCurrFrame = g_studioModel.SetFrame (g_nCurrFrame - 1);
+			g_nCurrFrame = m_studioModel.SetFrame (g_nCurrFrame - 1);
 			leFrame->setLabel (va("%d", g_nCurrFrame));
 			g_bEndOfSequence = false;
 		}
@@ -456,14 +463,14 @@ ControlPanel::handleEvent (mxEvent *event)
 		case IDC_FRAME:
 		{
 			g_nCurrFrame = atoi (leFrame->getLabel ());
-			g_nCurrFrame = g_studioModel.SetFrame (g_nCurrFrame);
+			g_nCurrFrame = m_studioModel.SetFrame (g_nCurrFrame);
 			g_bEndOfSequence = false;
 		}
 		break;
 
 		case IDC_NEXTFRAME:
 		{
-			g_nCurrFrame = g_studioModel.SetFrame (g_nCurrFrame + 1);
+			g_nCurrFrame = m_studioModel.SetFrame (g_nCurrFrame + 1);
 			leFrame->setLabel (va("%d", g_nCurrFrame));
 			g_bEndOfSequence = false;
 		}
@@ -474,7 +481,7 @@ ControlPanel::handleEvent (mxEvent *event)
 			if (cSequence->getItemCount() > 0)
 			{
 				int index = cSequence->getSelectedIndex();
-				studiohdr_t *hdr = g_studioModel.getStudioHeader();
+				studiohdr_t *hdr = m_studioModel.getStudioHeader();
 				if (hdr)
 				{
 					mstudioseqdesc_t *pseqdescs = (mstudioseqdesc_t *)((byte *)hdr + hdr->seqindex);
@@ -536,8 +543,8 @@ ControlPanel::handleEvent (mxEvent *event)
 			int index = cSkin->getSelectedIndex ();
 			if (index >= 0)
 			{
-				g_studioModel.SetSkin (index);
-				g_viewerSettings.skin = index;
+				m_studioModel.SetSkin (index);
+				m_settings.skin = index;
 				d_GlWindow->redraw ();
 			}
 		}
@@ -548,8 +555,8 @@ ControlPanel::handleEvent (mxEvent *event)
 			int index = cTextures->getSelectedIndex ();
 			if (index >= 0)
 			{
-				g_viewerSettings.texture = index;
-				studiohdr_t *hdr = g_studioModel.getTextureHeader ();
+				m_settings.texture = index;
+				studiohdr_t *hdr = m_studioModel.getTextureHeader ();
 				if (hdr)
 				{
 					mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + index;
@@ -568,18 +575,18 @@ ControlPanel::handleEvent (mxEvent *event)
 				d_GlWindow->redraw ();
 			}
 
-			cbShowUVMap->setChecked (g_viewerSettings.show_uv_map);
-			cbOverlayUVMap->setChecked (g_viewerSettings.overlay_uv_map);
-			cbAntiAliasLines->setChecked (g_viewerSettings.anti_alias_lines);
+			cbShowUVMap->setChecked (m_settings.show_uv_map);
+			cbOverlayUVMap->setChecked (m_settings.overlay_uv_map);
+			cbAntiAliasLines->setChecked (m_settings.anti_alias_lines);
 		}
 		break;
 
 		case IDC_CHROME:
 		{
-			studiohdr_t *hdr = g_studioModel.getTextureHeader ();
+			studiohdr_t *hdr = m_studioModel.getTextureHeader ();
 			if (hdr)
 			{
-				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + g_viewerSettings.texture;
+				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + m_settings.texture;
 				if (cbChrome->isChecked ())
 				{
 					ptexture->flags |= STUDIO_NF_CHROME|STUDIO_NF_FLATSHADE;
@@ -591,40 +598,40 @@ ControlPanel::handleEvent (mxEvent *event)
 					ptexture->flags &= ~STUDIO_NF_FLATSHADE;
 					cbFlatshade->setChecked (false);
 				}
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 			}
 		}
 		break;
 
 		case IDC_ADDITIVE:
 		{
-			studiohdr_t *hdr = g_studioModel.getTextureHeader ();
+			studiohdr_t *hdr = m_studioModel.getTextureHeader ();
 			if (hdr)
 			{
-				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + g_viewerSettings.texture;
+				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + m_settings.texture;
 				if (cbAdditive->isChecked ())
 					ptexture->flags |= STUDIO_NF_ADDITIVE;
 				else
 					ptexture->flags &= ~STUDIO_NF_ADDITIVE;
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 			}
 		}
 		break;
 
 		case IDC_TRANSPARENT:
 		{
-			studiohdr_t *hdr = g_studioModel.getTextureHeader ();
+			studiohdr_t *hdr = m_studioModel.getTextureHeader ();
 			if (hdr)
 			{
-				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + g_viewerSettings.texture;
+				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + m_settings.texture;
 				if (cbTransparent->isChecked ())
 					ptexture->flags |= STUDIO_NF_MASKED;
 				else
 					ptexture->flags &= ~STUDIO_NF_MASKED;
 
 				// reload texture in case palette was changed
-				g_studioModel.UploadTexture (ptexture, (byte *) hdr + ptexture->index, (byte *) hdr + ptexture->index + ptexture->width * ptexture->height, TEXTURE_COUNT + g_viewerSettings.texture );
-				g_viewerSettings.numModelChanges++;
+				m_studioModel.UploadTexture (ptexture, (byte *) hdr + ptexture->index, (byte *) hdr + ptexture->index + ptexture->width * ptexture->height, TEXTURE_COUNT + m_settings.texture );
+				m_settings.numModelChanges++;
 				updateTexFlagsCheckBoxes();
 			}
 		}
@@ -632,75 +639,75 @@ ControlPanel::handleEvent (mxEvent *event)
 
 		case IDC_FULLBRIGHT:
 		{
-			studiohdr_t *hdr = g_studioModel.getTextureHeader ();
+			studiohdr_t *hdr = m_studioModel.getTextureHeader ();
 			if (hdr)
 			{
-				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + g_viewerSettings.texture;
+				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + m_settings.texture;
 				if (cbFullbright->isChecked ())
 					ptexture->flags |= STUDIO_NF_FULLBRIGHT;
 				else
 					ptexture->flags &= ~STUDIO_NF_FULLBRIGHT;
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 			}
 		}
 		break;
 
 		case IDC_FLATSHADE:
 		{
-			studiohdr_t *hdr = g_studioModel.getTextureHeader ();
+			studiohdr_t *hdr = m_studioModel.getTextureHeader ();
 			if (hdr)
 			{
-				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + g_viewerSettings.texture;
+				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + m_settings.texture;
 				if (cbFlatshade->isChecked ())
 					ptexture->flags |= STUDIO_NF_FLATSHADE;
 				else
 					ptexture->flags &= ~STUDIO_NF_FLATSHADE;
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 			}
 		}
 		break;
 
 		case IDC_TWO_SIDED:
 		{
-			studiohdr_t *hdr = g_studioModel.getTextureHeader ();
+			studiohdr_t *hdr = m_studioModel.getTextureHeader ();
 			if (hdr)
 			{
-				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + g_viewerSettings.texture;
+				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + m_settings.texture;
 				if (cbTwoSided->isChecked ())
 					ptexture->flags |= STUDIO_NF_TWOSIDE;
 				else
 					ptexture->flags &= ~STUDIO_NF_TWOSIDE;
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 			}
 		}
 		break;
 
 		case IDC_ALPHA_TO_COVERAGE:
 		{
-			studiohdr_t *hdr = g_studioModel.getTextureHeader ();
+			studiohdr_t *hdr = m_studioModel.getTextureHeader ();
 			if (hdr)
 			{
-				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + g_viewerSettings.texture;
+				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + m_settings.texture;
 				if (cbAlphaToCoverage->isChecked ())
 					ptexture->flags |= STUDIO_NF_ALPHATOCOVERAGE;
 				else
 					ptexture->flags &= ~STUDIO_NF_ALPHATOCOVERAGE;
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 			}
 		}
 		break;
 
 		case IDC_SOLID_GEOM:
 		{
-			studiohdr_t *hdr = g_studioModel.getTextureHeader ();
+			studiohdr_t *hdr = m_studioModel.getTextureHeader ();
 			if (hdr)
 			{
-				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + g_viewerSettings.texture;
+				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) hdr + hdr->textureindex) + m_settings.texture;
 				if (cbSolidGeom->isChecked ())
 					ptexture->flags |= STUDIO_NF_SOLIDGEOM;
 				else
 					ptexture->flags &= ~STUDIO_NF_SOLIDGEOM;
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 			}
 		}
 		break;
@@ -708,24 +715,27 @@ ControlPanel::handleEvent (mxEvent *event)
 		case IDC_SHOW_UV_MAP:
 		{
 			if (cbShowUVMap->isChecked ())
-				g_viewerSettings.show_uv_map = true;
-			else g_viewerSettings.show_uv_map = false;
+				m_settings.show_uv_map = true;
+			else 
+				m_settings.show_uv_map = false;
 		}
 		break;
 
 		case IDC_OVERLAY_UV_MAP:
 		{
 			if (cbOverlayUVMap->isChecked ())
-				g_viewerSettings.overlay_uv_map = true;
-			else g_viewerSettings.overlay_uv_map = false;
+				m_settings.overlay_uv_map = true;
+			else 
+				m_settings.overlay_uv_map = false;
 		}
 		break;
 
 		case IDC_ANTI_ALIAS_LINES:
 		{
 			if (cbAntiAliasLines->isChecked ())
-				g_viewerSettings.anti_alias_lines = true;
-			else g_viewerSettings.anti_alias_lines = false;
+				m_settings.anti_alias_lines = true;
+			else 
+				m_settings.anti_alias_lines = false;
 		}
 		break;
 
@@ -743,11 +753,11 @@ ControlPanel::handleEvent (mxEvent *event)
 			if (mx_strcasecmp (ext, ".bmp"))
 				strcat (filename, ".bmp");
 
-			studiohdr_t *phdr = g_studioModel.getTextureHeader ();
+			studiohdr_t *phdr = m_studioModel.getTextureHeader ();
 			if (phdr)
 			{
 				mxImage image;
-				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) phdr + phdr->textureindex) + g_viewerSettings.texture;
+				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) phdr + phdr->textureindex) + m_settings.texture;
 				image.width = ptexture->width;
 				image.height = ptexture->height;
 				image.bpp = 8;
@@ -789,17 +799,17 @@ ControlPanel::handleEvent (mxEvent *event)
 				return 1;
 			}
 
-			studiohdr_t *phdr = g_studioModel.getTextureHeader ();
+			studiohdr_t *phdr = m_studioModel.getTextureHeader ();
 			if (phdr)
 			{
-				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) phdr + phdr->textureindex) + g_viewerSettings.texture;
+				mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) phdr + phdr->textureindex) + m_settings.texture;
 				if (image->width == ptexture->width && image->height == ptexture->height)
 				{
 					memcpy ((byte *) phdr + ptexture->index, image->data, image->width * image->height);
 					memcpy ((byte *) phdr + ptexture->index + image->width * image->height, image->palette, 768);
 
-					g_studioModel.UploadTexture (ptexture, (byte *) phdr + ptexture->index, (byte *) phdr + ptexture->index + image->width * image->height, TEXTURE_COUNT + g_viewerSettings.texture );
-					g_viewerSettings.numModelChanges++;
+					m_studioModel.UploadTexture (ptexture, (byte *) phdr + ptexture->index, (byte *) phdr + ptexture->index + image->width * image->height, TEXTURE_COUNT + m_settings.texture );
+					m_settings.numModelChanges++;
 				}
 				else
 					mxMessageBox (this, "Texture must be of same size.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
@@ -818,31 +828,33 @@ ControlPanel::handleEvent (mxEvent *event)
 
 			char ext[16];
 
-			strcpy (g_viewerSettings.uvmapPath, ptr);
-			strcpy (ext, mx_getextension (g_viewerSettings.uvmapPath));
-			if (mx_strcasecmp (ext, ".bmp"))
-				strcat (g_viewerSettings.uvmapPath, ".bmp");
-			g_viewerSettings.pending_export_uvmap = true;
+			m_settings.uvmapPath = ptr;
+			strncpy(ext, mx_getextension(m_settings.uvmapPath.c_str()), sizeof(ext));
+
+			if (mx_strcasecmp(ext, ".bmp"))
+				m_settings.uvmapPath = ".bmp";
+
+			m_settings.pending_export_uvmap = true;
 		}
 		break;
 
 		case IDC_SET_TEXTURE_NAME:
 		{
-			studiohdr_t *phdr = g_studioModel.getTextureHeader ();
-			mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) phdr + phdr->textureindex) + g_viewerSettings.texture;
+			studiohdr_t *phdr = m_studioModel.getTextureHeader ();
+			mstudiotexture_t *ptexture = (mstudiotexture_t *) ((byte *) phdr + phdr->textureindex) + m_settings.texture;
 
 			// compare with original name
 			if( Q_strncmp( ptexture->name, leTextureName->getLabel(), 64 ))
 			{
 				Q_strncpy( ptexture->name, leTextureName->getLabel(), 64 );
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 
 				// refresh choise
 				cTextures->removeAll ();
 				mstudiotexture_t *ptextures = (mstudiotexture_t *) ((byte *)phdr + phdr->textureindex);
 				for( int i = 0; i < phdr->numtextures; i++ )
 					cTextures->add( ptextures[i].name );
-					cTextures->select( g_viewerSettings.texture );
+					cTextures->select( m_settings.texture );
 			}
 		}
 		break;
@@ -851,165 +863,165 @@ ControlPanel::handleEvent (mxEvent *event)
 		{
 			float sliderFraction = ((mxSlider *)event->widget)->getValue() / 100.0f * 4.0f;
 			if (sliderFraction >= 0.0f)
-				g_viewerSettings.textureScale = sliderFraction + 1.0f;
+				m_settings.textureScale = sliderFraction + 1.0f;
 			else
-				g_viewerSettings.textureScale = 1.0f / (1.0f - sliderFraction);
+				m_settings.textureScale = 1.0f / (1.0f - sliderFraction);
 
-			lTexScale->setLabel( va("Scale Texture View (%.2fx)", g_viewerSettings.textureScale) );
+			lTexScale->setLabel( va("Scale Texture View (%.2fx)", m_settings.textureScale) );
 			d_GlWindow->redraw ();
 		}
 		break;
 
 		case IDC_MISC:
 		{
-			slTopColor->setValue( g_viewerSettings.topcolor );
-			slBottomColor->setValue( g_viewerSettings.bottomcolor );
+			slTopColor->setValue( m_settings.topcolor );
+			slBottomColor->setValue( m_settings.bottomcolor );
 		}
 		break;
 
 		case IDC_STUDIO_ROCKET:
 		{
-			studiohdr_t *phdr = g_studioModel.getStudioHeader ();
+			studiohdr_t *phdr = m_studioModel.getStudioHeader ();
 			if( phdr )
 			{
 				if (cbFlagRocket->isChecked ())
 					phdr->flags |= STUDIO_ROCKET;
 				else phdr->flags &= ~STUDIO_ROCKET;
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 			}
 		}
 
 		case IDC_STUDIO_GRENADE:
 		{
-			studiohdr_t *phdr = g_studioModel.getStudioHeader ();
+			studiohdr_t *phdr = m_studioModel.getStudioHeader ();
 			if( phdr )
 			{
 				if (cbFlagGrenade->isChecked ())
 					phdr->flags |= STUDIO_GRENADE;
 				else phdr->flags &= ~STUDIO_GRENADE;
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 			}
 		}
 
 		case IDC_STUDIO_GIB:
 		{
-			studiohdr_t *phdr = g_studioModel.getStudioHeader ();
+			studiohdr_t *phdr = m_studioModel.getStudioHeader ();
 			if( phdr )
 			{
 				if (cbFlagGib->isChecked ())
 					phdr->flags |= STUDIO_GIB;
 				else phdr->flags &= ~STUDIO_GIB;
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 			}
 		}
 
 		case IDC_STUDIO_ROTATE:
 		{
-			studiohdr_t *phdr = g_studioModel.getStudioHeader ();
+			studiohdr_t *phdr = m_studioModel.getStudioHeader ();
 			if( phdr )
 			{
 				if (cbFlagRotate->isChecked ())
 					phdr->flags |= STUDIO_ROTATE;
 				else phdr->flags &= ~STUDIO_ROTATE;
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 			}
 		}
 
 		case IDC_STUDIO_TRACER:
 		{
-			studiohdr_t *phdr = g_studioModel.getStudioHeader ();
+			studiohdr_t *phdr = m_studioModel.getStudioHeader ();
 			if( phdr )
 			{
 				if (cbFlagTracer->isChecked ())
 					phdr->flags |= STUDIO_TRACER;
 				else phdr->flags &= ~STUDIO_TRACER;
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 			}
 		}
 
 		case IDC_STUDIO_ZOMGIB:
 		{
-			studiohdr_t *phdr = g_studioModel.getStudioHeader ();
+			studiohdr_t *phdr = m_studioModel.getStudioHeader ();
 			if( phdr )
 			{
 				if (cbFlagZomgib->isChecked ())
 					phdr->flags |= STUDIO_ZOMGIB;
 				else phdr->flags &= ~STUDIO_ZOMGIB;
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 			}
 		}
 
 		case IDC_STUDIO_TRACER2:
 		{
-			studiohdr_t *phdr = g_studioModel.getStudioHeader ();
+			studiohdr_t *phdr = m_studioModel.getStudioHeader ();
 			if( phdr )
 			{
 				if (cbFlagTracer2->isChecked ())
 					phdr->flags |= STUDIO_TRACER2;
 				else phdr->flags &= ~STUDIO_TRACER2;
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 			}
 		}
 
 		case IDC_STUDIO_TRACER3:
 		{
-			studiohdr_t *phdr = g_studioModel.getStudioHeader ();
+			studiohdr_t *phdr = m_studioModel.getStudioHeader ();
 			if( phdr )
 			{
 				if (cbFlagTracer3->isChecked ())
 					phdr->flags |= STUDIO_TRACER3;
 				else phdr->flags &= ~STUDIO_TRACER3;
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 			}
 		}
 
 		case IDC_STUDIO_AMBIENT_LIGHT:
 		{
-			studiohdr_t *phdr = g_studioModel.getStudioHeader ();
+			studiohdr_t *phdr = m_studioModel.getStudioHeader ();
 			if( phdr )
 			{
 				if (cbFlagAmbientLight->isChecked ())
 					phdr->flags |= STUDIO_AMBIENT_LIGHT;
 				else phdr->flags &= ~STUDIO_AMBIENT_LIGHT;
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 			}
 		}
 
 		case IDC_STUDIO_TRACE_HITBOX:
 		{
-			studiohdr_t *phdr = g_studioModel.getStudioHeader ();
+			studiohdr_t *phdr = m_studioModel.getStudioHeader ();
 			if( phdr )
 			{
 				if (cbFlagTraceHitbox->isChecked ())
 					phdr->flags |= STUDIO_TRACE_HITBOX;
 				else phdr->flags &= ~STUDIO_TRACE_HITBOX;
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 			}
 		}
 
 		case IDC_STUDIO_FORCE_SKYLIGHT:
 		{
-			studiohdr_t *phdr = g_studioModel.getStudioHeader ();
+			studiohdr_t *phdr = m_studioModel.getStudioHeader ();
 			if( phdr )
 			{
 				if (cbFlagForceSkylight->isChecked ())
 					phdr->flags |= STUDIO_FORCE_SKYLIGHT;
 				else phdr->flags &= ~STUDIO_FORCE_SKYLIGHT;
-				g_viewerSettings.numModelChanges++;
+				m_settings.numModelChanges++;
 			}
 		}
 
 		case IDC_TOPCOLOR:
 		{
 			int v = ((mxSlider *)event->widget)->getValue();
-			g_studioModel.SetTopColor( v );
+			m_studioModel.SetTopColor( v );
 		}
 		break;
 
 		case IDC_BOTTOMCOLOR:
 		{
 			int v = ((mxSlider *)event->widget)->getValue();
-			g_studioModel.SetBottomColor( v );
+			m_studioModel.SetBottomColor( v );
 		}
 		break;
 
@@ -1018,17 +1030,17 @@ ControlPanel::handleEvent (mxEvent *event)
 			int index = cEditMode->getSelectedIndex ();
 			if (index >= 0)
 			{
-				if( !g_studioModel.SetEditMode (index))
+				if( !m_studioModel.SetEditMode (index))
 				{
 					// edit mode is cancelled
-					cEditMode->select (g_viewerSettings.editMode);
+					cEditMode->select (m_settings.editMode);
 				}
 				else
 				{
-					if( g_viewerSettings.editMode == EDIT_SOURCE )
+					if( m_settings.editMode == ViewerSettings::EDIT_SOURCE )
 						leEditString->setEnabled( true );
 					else leEditString->setEnabled( false );
-					leEditString->setLabel( g_studioModel.getQCcode( ));
+					leEditString->setLabel( m_studioModel.getQCcode( ));
 				}
 			}
 		}
@@ -1039,10 +1051,10 @@ ControlPanel::handleEvent (mxEvent *event)
 			int index = cEditType->getSelectedIndex ();
 			if (index >= 0)
 			{
-				bool editSize = g_studioModel.SetEditType (index);
-				leEditString->setLabel( g_studioModel.getQCcode( ));
+				bool editSize = m_studioModel.SetEditType (index);
+				leEditString->setLabel( m_studioModel.getQCcode( ));
 
-				if( !editSize && g_viewerSettings.editSize )
+				if( !editSize && m_settings.editSize )
 				{
 					cbEditSize->setChecked( false );
 					toggleMoveSize( false );
@@ -1058,9 +1070,9 @@ ControlPanel::handleEvent (mxEvent *event)
 		case IDC_MOVE_PZ:
 		case IDC_MOVE_NZ:
 		{
-			g_viewerSettings.editStep = (float)atof (leEditStep->getLabel ());
-			g_studioModel.editPosition( g_viewerSettings.editStep, event->action );
-			leEditString->setLabel( g_studioModel.getQCcode( ));
+			m_settings.editStep = (float)atof (leEditStep->getLabel ());
+			m_studioModel.editPosition( m_settings.editStep, event->action );
+			leEditString->setLabel( m_studioModel.getQCcode( ));
 		}
 		break;
 
@@ -1070,7 +1082,7 @@ ControlPanel::handleEvent (mxEvent *event)
 
 			Q_strcpy( str, "there is no reliable methods to autodetect changes between half-float and old fixed point.\nIf model will seems to be broken after proceed don't save her!\nIf you not sure what it is should doing, just press 'No' and forget about this tool" );
 			if( mxMessageBox( g_GlWindow, str, APP_TITLE_STR, MX_MB_YESNO | MX_MB_QUESTION | MX_MB_WARNING ) == 0 )
-				g_studioModel.ConvertTexCoords();
+				m_studioModel.ConvertTexCoords();
 		}
 		break;
 
@@ -1083,7 +1095,7 @@ ControlPanel::handleEvent (mxEvent *event)
 			float scale = (float) atof (leMeshScale->getLabel ());
 			if (scale > 0.0f)
 			{
-				g_studioModel.scaleMeshes (scale);
+				m_studioModel.scaleMeshes (scale);
 			}
 		}
 		break;
@@ -1093,7 +1105,7 @@ ControlPanel::handleEvent (mxEvent *event)
 			float scale = (float) atof (leBoneScale->getLabel ());
 			if (scale > 0.0f)
 			{
-				g_studioModel.scaleBones (scale);
+				m_studioModel.scaleBones (scale);
 			}
 		}
 		break;
@@ -1106,11 +1118,11 @@ ControlPanel::handleEvent (mxEvent *event)
 				int poseparam = cPoseParameter[index]->getSelectedIndex();
 
 				float flMin, flMax;
-				if (g_studioModel.GetPoseParameterRange( poseparam, &flMin, &flMax ))
+				if (m_studioModel.GetPoseParameterRange( poseparam, &flMin, &flMax ))
 				{
 					slPoseParameter[index]->setRange( flMin, flMax );
-					slPoseParameter[index]->setValue( g_studioModel.GetPoseParameter( poseparam ) );
-					lePoseParameter[index]->setLabel( va("%.1f", g_studioModel.GetPoseParameter( poseparam )) );
+					slPoseParameter[index]->setValue( m_studioModel.GetPoseParameter( poseparam ) );
+					lePoseParameter[index]->setLabel( va("%.1f", m_studioModel.GetPoseParameter( poseparam )) );
 				}
 			}
 			else if (event->action >= IDC_POSEPARAMETER_SCALE && event->action < IDC_POSEPARAMETER_SCALE + NUM_POSEPARAMETERS)
@@ -1129,7 +1141,7 @@ ControlPanel::handleEvent (mxEvent *event)
 					if( cPoseParameter[i]->getSelectedIndex() == poseparam )
 					{
 						setBlend( poseparam, ((mxSlider *) event->widget)->getValue() );
-						slPoseParameter[i]->setValue( g_studioModel.GetPoseParameter( poseparam ) );
+						slPoseParameter[i]->setValue( m_studioModel.GetPoseParameter( poseparam ) );
 					}
 				}
 			}
@@ -1150,7 +1162,7 @@ void ControlPanel::toggleMoveSize ( bool size )
 		tbMoveNegY->setLabel ("Size -Y");
 		tbMovePosZ->setLabel ("Size +Z");
 		tbMoveNegZ->setLabel ("Size -Z");
-		g_viewerSettings.editSize = true;
+		m_settings.editSize = true;
 	}
 	else
 	{
@@ -1160,14 +1172,14 @@ void ControlPanel::toggleMoveSize ( bool size )
 		tbMoveNegY->setLabel ("Move -Y");
 		tbMovePosZ->setLabel ("Move +Z");
 		tbMoveNegZ->setLabel ("Move -Z");
-		g_viewerSettings.editSize = false;
+		m_settings.editSize = false;
 	}
 }
 
 void ControlPanel::dumpModelInfo ()
 {
 #if 0
-	studiohdr_t *hdr = g_studioModel.getStudioHeader ();
+	studiohdr_t *hdr = m_studioModel.getStudioHeader ();
 	if (hdr)
 	{
 		DeleteFile ("midump.txt");
@@ -1243,7 +1255,7 @@ void ControlPanel::dumpModelInfo ()
 				fprintf (file, "\nseqgroup %d.data: %d\n", i + 1, pseqgroups[i].data);
 			}
 */
-			hdr = g_studioModel.getTextureHeader ();
+			hdr = m_studioModel.getTextureHeader ();
 			fprintf (file, "\nnumtextures: %d\n", hdr->numtextures);
 			fprintf (file, "textureindex: %d\n", hdr->textureindex);
 			fprintf (file, "texturedataindex: %d\n", hdr->texturedataindex);
@@ -1257,7 +1269,7 @@ void ControlPanel::dumpModelInfo ()
 				fprintf (file, "texture %d.index: %d\n", i + 1, ptextures[i].index);
 			}
 
-			hdr = g_studioModel.getStudioHeader ();
+			hdr = m_studioModel.getStudioHeader ();
 			fprintf (file, "\nnumskinref: %d\n", hdr->numskinref);
 			fprintf (file, "numskinfamilies: %d\n", hdr->numskinfamilies);
 
@@ -1290,10 +1302,10 @@ void ControlPanel::dumpModelInfo ()
 
 int ControlPanel::loadModel (const char *filename, bool centering)
 {
-	g_studioModel.FreeModel ();
-	if (g_studioModel.LoadModel ((char *) filename))
+	m_studioModel.FreeModel ();
+	if (m_studioModel.LoadModel ((char *) filename))
 	{
-		if (g_studioModel.PostLoadModel ((char *) filename))
+		if (m_studioModel.PostLoadModel ((char *) filename))
 		{
 			char str[256], basename[64], basepath[256];
 
@@ -1306,15 +1318,15 @@ int ControlPanel::loadModel (const char *filename, bool centering)
 				centerView (false);
 			initEditModes ();
 			setModelFlags ();
-			strcpy (g_viewerSettings.modelFile, filename);
-			Q_strncpy( g_viewerSettings.modelPath, filename, sizeof( g_viewerSettings.modelPath ));
+			m_settings.modelFile = filename;
+			m_settings.modelPath = filename;
 			setModelInfo ();
-			g_viewerSettings.sequence = 0;
-			g_viewerSettings.speedScale = 1.0f;
+			m_settings.sequence = 0;
+			m_settings.speedScale = 1.0f;
 			slSpeedScale->setValue (40);
 
-			for (int i = 0; i < g_viewerSettings.submodels.size(); i++)
-				g_viewerSettings.submodels[i] = 0;
+			for (int i = 0; i < m_settings.submodels.size(); i++)
+				m_settings.submodels[i] = 0;
 
 			mx_setcwd (mx_getpath (filename));
 			setSequence( 0 );
@@ -1325,13 +1337,13 @@ int ControlPanel::loadModel (const char *filename, bool centering)
 
 			COM_ExtractFilePath( filename, basepath );
 //			Sys_InitLog( va( "%s/%s.log", basepath, basename ));
-			ListDirectory();
+			ListDirectory( m_settings );
 
 			return 1;
 		}
 		else
 		{
-			Q_strncpy( g_viewerSettings.modelPath, filename, sizeof( g_viewerSettings.modelPath ));
+			m_settings.modelPath = filename;
 			mxMessageBox (this, "Error post-loading model.", APP_TITLE_STR, MX_MB_ERROR | MX_MB_OK);
 		}
 	}
@@ -1351,7 +1363,7 @@ void ControlPanel :: resetPlayingSequence( void )
 	{
 		tbStop->setLabel ("Play");
 		g_bStopPlaying = true;
-		g_nCurrFrame = g_studioModel.SetFrame( -1 );
+		g_nCurrFrame = m_studioModel.SetFrame( -1 );
 		sprintf (str, "%d", g_nCurrFrame);
 		leFrame->setLabel (str);
 		bPrevFrame->setEnabled (true);
@@ -1369,7 +1381,7 @@ void ControlPanel :: setPlaySequence( void )
 	{
 		tbStop->setLabel ("Stop");
 		g_bStopPlaying = false;
-		g_nCurrFrame = g_studioModel.SetFrame( 0 );
+		g_nCurrFrame = m_studioModel.SetFrame( 0 );
 		sprintf (str, "%d", g_nCurrFrame);
 		leFrame->setLabel (str);
 		bPrevFrame->setEnabled (false);
@@ -1381,7 +1393,7 @@ void ControlPanel :: setPlaySequence( void )
 
 void ControlPanel::setRenderMode( int mode )
 {
-	g_viewerSettings.renderMode = mode;
+	m_settings.renderMode = static_cast<ViewerSettings::RenderMode>(mode);
 	d_GlWindow->redraw ();
 }
 
@@ -1393,7 +1405,7 @@ ControlPanel::updatePoseParameters( )
 		if (slPoseParameter[i]->isEnabled())
 		{
 			int j = cPoseParameter[i]->getSelectedIndex();
-			float value = g_studioModel.GetPoseParameter( j );
+			float value = m_studioModel.GetPoseParameter( j );
 
 			float temp = atof( lePoseParameter[i]->getLabel( ) );
 
@@ -1409,12 +1421,12 @@ ControlPanel::updatePoseParameters( )
 void
 ControlPanel::setShowGround (bool b)
 {
-	g_viewerSettings.showGround = b;
+	m_settings.showGround = b;
 	cbGround->setChecked (b);
 	if (!b)
 	{
 		cbMirror->setChecked (b);
-		g_viewerSettings.mirror = b;
+		m_settings.mirror = b;
 	}
 }
 
@@ -1423,13 +1435,13 @@ ControlPanel::setShowGround (bool b)
 void
 ControlPanel::setMirror (bool b)
 {
-	g_viewerSettings.useStencil = b;
-	g_viewerSettings.mirror = b;
+	m_settings.useStencil = b;
+	m_settings.mirror = b;
 	cbMirror->setChecked (b);
 	if (b)
 	{
 		cbGround->setChecked (b);
-		g_viewerSettings.showGround = b;
+		m_settings.showGround = b;
 	}
 }
 
@@ -1438,7 +1450,7 @@ ControlPanel::setMirror (bool b)
 void
 ControlPanel::setShowBackground (bool b)
 {
-	g_viewerSettings.showBackground = b;
+	m_settings.showBackground = b;
 	cbBackground->setChecked (b);
 }
 
@@ -1447,7 +1459,7 @@ ControlPanel::setShowBackground (bool b)
 void
 ControlPanel::initSequences ()
 {
-	studiohdr_t *hdr = g_studioModel.getStudioHeader ();
+	studiohdr_t *hdr = m_studioModel.getStudioHeader ();
 	if (hdr)
 	{
 		mstudioseqdesc_t *pseqdescs = (mstudioseqdesc_t *) ((byte *) hdr + hdr->seqindex);
@@ -1483,19 +1495,19 @@ ControlPanel::initSequences ()
 	float flMin, flMax;
 	for (int i = 0; i < NUM_POSEPARAMETERS; i++)
 	{
-		if (g_studioModel.GetPoseParameterRange( i, &flMin, &flMax ))
+		if (m_studioModel.GetPoseParameterRange( i, &flMin, &flMax ))
 		{
 			cPoseParameter[i]->removeAll();
-			for (int j = 0; j < g_boneSetup.CountPoseParameters(); j++)
+			for (int j = 0; j < m_studioModel.m_boneSetup.CountPoseParameters(); j++)
 			{
-				cPoseParameter[i]->add( g_boneSetup.pPoseParameter(j)->name );
+				cPoseParameter[i]->add( m_studioModel.m_boneSetup.pPoseParameter(j)->name );
 			}
 			cPoseParameter[i]->select( i );
 			cPoseParameter[i]->setEnabled( true );
 
 			slPoseParameter[i]->setEnabled( true );
 			slPoseParameter[i]->setRange( flMin, flMax );
-			mxToolTip::add (slPoseParameter[i], g_boneSetup.pPoseParameter(i)->name );
+			mxToolTip::add (slPoseParameter[i], m_studioModel.m_boneSetup.pPoseParameter(i)->name );
 			lePoseParameter[i]->setLabel( va("%.1f", 0.0) );
 			lePoseParameter[i]->setEnabled( true );
 		}
@@ -1511,7 +1523,7 @@ ControlPanel::initSequences ()
 
 	if ( hdr )
 	{
-		for (int i = 0; i < g_boneSetup.CountPoseParameters(); i++)
+		for (int i = 0; i < m_studioModel.m_boneSetup.CountPoseParameters(); i++)
 		{
 			setBlend( i, 0.0 );
 		}
@@ -1521,16 +1533,16 @@ ControlPanel::initSequences ()
 void ControlPanel :: setSequence( int index )
 {
 	cSequence->select( iSequenceToSelection[index] );
-	g_studioModel.SetSequence( index );
-	g_viewerSettings.sequence = index;
+	m_studioModel.SetSequence( index );
+	m_settings.sequence = index;
 
-	int numSequenceBlends = g_studioModel.getNumBlendings();
+	int numSequenceBlends = m_studioModel.getNumBlendings();
 
-	if( g_studioModel.hasLocalBlending( ))
+	if( m_studioModel.hasLocalBlending( ))
 	{
 		// reset blending values and move sliders into 'default' positions
-		slBlender0->setValue( g_studioModel.SetBlending( 0, 0.0 ));
-		slBlender1->setValue( g_studioModel.SetBlending( 1, 0.0 ));
+		slBlender0->setValue( m_studioModel.SetBlending( 0, 0.0 ));
+		slBlender1->setValue( m_studioModel.SetBlending( 1, 0.0 ));
 	}
 	else numSequenceBlends = 0;
 
@@ -1552,10 +1564,10 @@ void ControlPanel :: setSequence( int index )
 	}
 
 	// update animation looping
-	studiohdr_t *hdr = g_studioModel.getStudioHeader ();
+	studiohdr_t *hdr = m_studioModel.getStudioHeader ();
 	if( hdr )
 	{
-		mstudioseqdesc_t *pseqdesc = (mstudioseqdesc_t *) ((byte *) hdr + hdr->seqindex) + g_viewerSettings.sequence;
+		mstudioseqdesc_t *pseqdesc = (mstudioseqdesc_t *) ((byte *) hdr + hdr->seqindex) + m_settings.sequence;
 		cbLoopAnim->setChecked( pseqdesc->flags & STUDIO_LOOPING );
 	}
 
@@ -1565,13 +1577,13 @@ void ControlPanel :: setSequence( int index )
 
 void ControlPanel::addEditType ( const char *name, int type, int id )
 {
-	if( g_studioModel.AddEditField( type, id ))
+	if( m_studioModel.AddEditField( type, id ))
 		cEditType->add (name);
 }
 
 void ControlPanel::initEditModes( void )
 {
-	studiohdr_t *hdr = g_studioModel.getStudioHeader ();
+	studiohdr_t *hdr = m_studioModel.getStudioHeader ();
 	if (hdr)
 	{
 		char	str[256];
@@ -1603,10 +1615,10 @@ void ControlPanel::initEditModes( void )
 			addEditType (str, TYPE_HITBOX, i );
 		}
 
-		g_studioModel.SetEditType (0);
+		m_studioModel.SetEditType (0);
 		cEditType->select (0);
 
-		leEditString->setLabel( g_studioModel.getQCcode( ));
+		leEditString->setLabel( m_studioModel.getQCcode( ));
 		cbEditSize->setEnabled( false );
 		toggleMoveSize( false );
 	}
@@ -1614,7 +1626,7 @@ void ControlPanel::initEditModes( void )
 
 void ControlPanel::initBodyparts ()
 {
-	studiohdr_t *hdr = g_studioModel.getStudioHeader ();
+	studiohdr_t *hdr = m_studioModel.getStudioHeader ();
 	if (hdr)
 	{
 		int i;
@@ -1647,7 +1659,7 @@ void ControlPanel::initBodyparts ()
 void
 ControlPanel::setBodypart (int index)
 {
-	studiohdr_t *hdr = g_studioModel.getStudioHeader ();
+	studiohdr_t *hdr = m_studioModel.getStudioHeader ();
 	if (hdr)
 	{
 		//cBodypart->setEn
@@ -1664,7 +1676,7 @@ ControlPanel::setBodypart (int index)
 				cSubmodel->add (str);
 			}
 			cSubmodel->select (0);
-			//g_studioModel.SetBodygroup (index, 0);
+			//m_studioModel.SetBodygroup (index, 0);
 		}
 	}
 }
@@ -1673,13 +1685,13 @@ ControlPanel::setBodypart (int index)
 
 int ControlPanel::setSubmodel (int index)
 {
-	g_viewerSettings.submodels[cBodypart->getSelectedIndex ()] = index;
-	return g_studioModel.SetBodygroup (cBodypart->getSelectedIndex (), index);
+	m_settings.submodels[cBodypart->getSelectedIndex ()] = index;
+	return m_studioModel.SetBodygroup (cBodypart->getSelectedIndex (), index);
 }
 
 void ControlPanel :: initBoneControllers( void )
 {
-	studiohdr_t *hdr = g_studioModel.getStudioHeader ();
+	studiohdr_t *hdr = m_studioModel.getStudioHeader ();
 	if (hdr)
 	{
 		int	i, controllerused[MAX_BONECTRLS];
@@ -1727,7 +1739,7 @@ void ControlPanel :: initBoneControllers( void )
 
 void ControlPanel :: setBoneController( int index )
 {
-	studiohdr_t *hdr = g_studioModel.getStudioHeader ();
+	studiohdr_t *hdr = m_studioModel.getStudioHeader ();
 	if( hdr )
 	{
 		mstudiobonecontroller_t *pbonecontroller = (mstudiobonecontroller_t *) ((byte *) hdr + hdr->bonecontrollerindex);
@@ -1747,20 +1759,20 @@ void ControlPanel :: setBoneController( int index )
 
 void ControlPanel :: setBoneControllerValue( int index, float value )
 {
-	studiohdr_t *hdr = g_studioModel.getStudioHeader ();
+	studiohdr_t *hdr = m_studioModel.getStudioHeader ();
 	if (hdr)
 	{
 		index = controllerindex[index];
 
-		if (index == STUDIO_MOUTH) g_studioModel.SetMouth (value);
-		else g_studioModel.SetController (index, value);
+		if (index == STUDIO_MOUTH) m_studioModel.SetMouth (value);
+		else m_studioModel.SetController (index, value);
 		controllervalues[index] = value;
 	}
 }
 
 void ControlPanel::setBlend(int index, float value )
 {
-	g_studioModel.SetPoseParameter( index, value );
+	m_studioModel.SetPoseParameter( index, value );
 	// reset number of frames....
 //	updateFrameSelection( );
 
@@ -1769,7 +1781,7 @@ void ControlPanel::setBlend(int index, float value )
 
 void ControlPanel::initSkins ()
 {
-	studiohdr_t *hdr = g_studioModel.getStudioHeader ();
+	studiohdr_t *hdr = m_studioModel.getStudioHeader ();
 	if (hdr)
 	{
 		cSkin->setEnabled (hdr->numskinfamilies > 0);
@@ -1783,8 +1795,8 @@ void ControlPanel::initSkins ()
 		}
 
 		cSkin->select (0);
-		g_studioModel.SetSkin (0);
-		g_viewerSettings.skin = 0;
+		m_studioModel.SetSkin (0);
+		m_settings.skin = 0;
 	}
 }
 
@@ -1792,7 +1804,7 @@ void ControlPanel :: updateDrawnPolys( void )
 {
 	static char str[64];
 
-	sprintf (str, "Drawn Polys: %d", g_viewerSettings.drawn_polys );
+	sprintf (str, "Drawn Polys: %d", m_settings.drawn_polys );
 	lDrawnPolys->setLabel( str ); 
 	lDrawnPolys2->setLabel( str );
 }
@@ -1806,7 +1818,7 @@ void ControlPanel::updateTexFlagsCheckBoxes()
 void ControlPanel::setModelInfo ()
 {
 	static char str[2048];
-	studiohdr_t *hdr = g_studioModel.getStudioHeader ();
+	studiohdr_t *hdr = m_studioModel.getStudioHeader ();
 
 	if (!hdr)
 		return;
@@ -1846,12 +1858,12 @@ void ControlPanel::setModelInfo ()
 void ControlPanel::setSequenceInfo ()
 {
 	static char str[2048];
-	studiohdr_t *hdr = g_studioModel.getStudioHeader ();
+	studiohdr_t *hdr = m_studioModel.getStudioHeader ();
 
 	if (!hdr)
 		return;
 
-	mstudioseqdesc_t *pseqdesc = (mstudioseqdesc_t *)((byte *)hdr + hdr->seqindex) + g_viewerSettings.sequence;
+	mstudioseqdesc_t *pseqdesc = (mstudioseqdesc_t *)((byte *)hdr + hdr->seqindex) + m_settings.sequence;
 
 	sprintf (str,
 		"Sequence#: %d\n"
@@ -1859,7 +1871,7 @@ void ControlPanel::setSequenceInfo ()
 		"FPS: %.f\n"
 		"Blends: %d\n"
 		"# of events: %d\n",
-		g_viewerSettings.sequence,
+		m_settings.sequence,
 		pseqdesc->numframes,
 		pseqdesc->fps,
 		pseqdesc->numblends,
@@ -1871,7 +1883,7 @@ void ControlPanel::setSequenceInfo ()
 
 void ControlPanel::setModelFlags( void )
 {
-	studiohdr_t *phdr = g_studioModel.getStudioHeader ();
+	studiohdr_t *phdr = m_studioModel.getStudioHeader ();
 	if (phdr)
 	{
 		cbFlagRocket->setChecked ((phdr->flags & STUDIO_ROCKET) == STUDIO_ROCKET);
@@ -1891,7 +1903,7 @@ void ControlPanel::setModelFlags( void )
 void
 ControlPanel::initTextures ()
 {
-	studiohdr_t *hdr = g_studioModel.getTextureHeader ();
+	studiohdr_t *hdr = m_studioModel.getTextureHeader ();
 	if (hdr)
 	{
 		cTextures->removeAll ();
@@ -1899,7 +1911,7 @@ ControlPanel::initTextures ()
 		for (int i = 0; i < hdr->numtextures; i++)
 			cTextures->add (ptextures[i].name);
 		cTextures->select (0);
-		g_viewerSettings.texture = 0;
+		m_settings.texture = 0;
 		if (hdr->numtextures > 0)
 		{
 			char str[32];
@@ -1919,7 +1931,7 @@ ControlPanel::initTextures ()
 #if 0
 		if( hdr->numbones <= 0 )
 		{
-			g_viewerSettings.showTexture = true;
+			m_settings.showTexture = true;
 			tab->select( 2 ); // probably we load "T.mdl" force to select textures view
 		}
 #endif
@@ -1933,6 +1945,6 @@ float ControlPanel :: getEditStep( void )
 
 void ControlPanel :: centerView( bool reset )
 {
-	g_studioModel.centerView( reset );
+	m_studioModel.centerView( reset );
 	d_GlWindow->redraw ();
 }

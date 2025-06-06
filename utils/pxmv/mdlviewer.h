@@ -18,13 +18,11 @@
 #ifndef INCLUDED_MDLVIEWER
 #define INCLUDED_MDLVIEWER
 
-
+#include "ViewerSettings.h"
 
 #ifndef INCLUDED_MXWINDOW
 #include <mx/mxWindow.h>
 #endif
-
-
 
 #define IDC_FILE_LOADMODEL			1001
 #define IDC_FILE_SAVEMODEL			1002
@@ -62,13 +60,12 @@
 #define IDC_HELP_ABOUT			1302
 
 
-
 class mxMenuBar;
 class GlWindow;
 class ControlPanel;
 class PAKViewer;
-
-
+class ViewerSettings;
+class StudioModel;
 
 class MDLViewer : public mxWindow
 {
@@ -76,9 +73,9 @@ class MDLViewer : public mxWindow
 	GlWindow *d_GlWindow;
 	ControlPanel *d_cpl;
 	PAKViewer *d_PAKViewer;
+	ViewerSettings m_settings;
+	StudioModel *m_studioModel;
 
-	void loadRecentFiles ();
-	void saveRecentFiles ();
 	void initRecentFiles ();
 
 public:
@@ -95,7 +92,6 @@ public:
 	mxMenuBar *getMenuBar () const { return mb; }
 	GlWindow *getGlWindow () const { return d_GlWindow; }
 	PAKViewer *getPAKViewer () const { return d_PAKViewer; }
-
 };
 
 extern MDLViewer *g_MDLViewer;

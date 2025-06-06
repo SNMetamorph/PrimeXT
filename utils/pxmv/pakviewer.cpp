@@ -87,8 +87,9 @@ pak_ExtractFile (const char *pakFile, const char *lumpName, char *outFile)
 
 
 
-PAKViewer::PAKViewer (mxWindow *window)
-: mxWindow (window, 0, 0, 0, 0, "", mxWindow::Normal)
+PAKViewer::PAKViewer (mxWindow *window, StudioModel &model) : 
+	mxWindow (window, 0, 0, 0, 0, "", mxWindow::Normal),
+	m_studioModel(model)
 {
 	strcpy (d_pakFile, "");
 	strcpy (d_currLumpName, "");
@@ -303,8 +304,8 @@ PAKViewer::OnLoadModel ()
 		return 1;
 	}
 
-	g_studioModel.FreeModel ();
-	studiohdr_t *hdr = g_studioModel.LoadModel (str2);
+	m_studioModel.FreeModel ();
+	studiohdr_t *hdr = m_studioModel.LoadModel (str2);
 	if (!hdr)
 	{
 //		mxMessageBox (this, "Error reading model header.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
@@ -323,7 +324,7 @@ PAKViewer::OnLoadModel ()
 
 		if (!pak_ExtractFile (d_pakFile, texturename, str2))
 		{
-			g_studioModel.FreeModel ();
+			m_studioModel.FreeModel ();
 			mxMessageBox (this, "Error extracting from PAK file 1.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 			return 1;
 		}
@@ -343,14 +344,14 @@ PAKViewer::OnLoadModel ()
 
 			if (!pak_ExtractFile (d_pakFile, seqgroupname, str2))
 			{
-				g_studioModel.FreeModel ();
+				m_studioModel.FreeModel ();
 				mxMessageBox (this, "Error extracting from PAK file 2.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 				return 1;
 			}
 		}
 	}
 
-	g_studioModel.FreeModel ();
+	m_studioModel.FreeModel ();
 
 	strcpy (suffix, ".mdl");
 	_makeTempFileName (str2, suffix);

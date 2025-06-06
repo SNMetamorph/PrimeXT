@@ -45,7 +45,10 @@ extern bool bUseParanoiaFOV;
 
 GlWindow *g_GlWindow = 0;
 
-GlWindow :: GlWindow( mxWindow *parent, int x, int y, int w, int h, const char *label, int style ) : mxGlWindow( parent, x, y, w, h, label, style )
+GlWindow :: GlWindow( mxWindow *parent, ViewerSettings &settings, StudioModel &model, int x, int y, int w, int h, const char *label, int style ) : 
+	mxGlWindow( parent, x, y, w, h, label, style ),
+	m_studioModel( model ),
+	m_settings( settings )
 {
 	glDepthFunc( GL_LEQUAL );
 
@@ -91,17 +94,17 @@ int GlWindow :: handleEvent( mxEvent *event )
 			return 1;
 		}
 #endif
-		g_studioModel.updateTimings( curr, dt );
+		m_studioModel.updateTimings( curr, dt );
 
 		rand (); // keep the random time dependent
 
-		if( !g_bStopPlaying && !g_viewerSettings.pause && prev != 0.0 )
+		if( !g_bStopPlaying && !m_settings.pause && prev != 0.0 )
 		{
-			if( !g_studioModel.AdvanceFrame( dt * g_viewerSettings.speedScale ))
+			if( !m_studioModel.AdvanceFrame( dt * m_settings.speedScale ))
 				d_cpl->resetPlayingSequence(); // hit the end of sequence
 		}
 
-		if( !g_viewerSettings.pause )
+		if( !m_settings.pause )
 			redraw();
 
 		// update counter every 0.2 secs
@@ -119,22 +122,22 @@ int GlWindow :: handleEvent( mxEvent *event )
 
 	case mxEvent::MouseUp:
 	{
-		g_viewerSettings.pause = false;
+		m_settings.pause = false;
 	}
 	break;
 
 	case mxEvent::MouseDown:
 	{
-		oldrx = g_viewerSettings.rot[0];
-		oldry = g_viewerSettings.rot[1];
-		oldtx = g_viewerSettings.trans[0];
-		oldty = g_viewerSettings.trans[1];
-		oldtz = g_viewerSettings.trans[2];
-		oldlx = g_viewerSettings.gLightVec[0];
-		oldly = g_viewerSettings.gLightVec[1];
+		oldrx = m_settings.rot[0];
+		oldry = m_settings.rot[1];
+		oldtx = m_settings.trans[0];
+		oldty = m_settings.trans[1];
+		oldtz = m_settings.trans[2];
+		oldlx = m_settings.gLightVec[0];
+		oldly = m_settings.gLightVec[1];
 		oldx = event->x;
 		oldy = event->y;
-		g_viewerSettings.pause = true;
+		m_settings.pause = true;
 
 #if XASH_WIN32
 		// HACKHACK: reset focus to main window to catch hot-keys again
@@ -148,7 +151,7 @@ int GlWindow :: handleEvent( mxEvent *event )
 
 	case mxEvent::MouseDrag:
 	{
-		if( g_viewerSettings.showTexture )
+		if( m_settings.showTexture )
 		{
 			redraw ();
 			return 1;
@@ -157,8 +160,8 @@ int GlWindow :: handleEvent( mxEvent *event )
 		{
 			if( event->modifiers & mxEvent::KeyShift )
 			{
-				g_viewerSettings.trans[0] = oldtx - (float)(event->x - oldx) * g_viewerSettings.movementScale;
-				g_viewerSettings.trans[1] = oldty + (float)(event->y - oldy) * g_viewerSettings.movementScale;
+				m_settings.trans[0] = oldtx - (float)(event->x - oldx) * m_settings.movementScale;
+				m_settings.trans[1] = oldty + (float)(event->y - oldy) * m_settings.movementScale;
 			}
 			else if( event->modifiers & mxEvent::KeyCtrl )
 			{
@@ -171,19 +174,19 @@ int GlWindow :: handleEvent( mxEvent *event )
 				SinCos( yaw, &sy, &cy );
 				SinCos( pitch, &sp, &cp );
 
-				g_viewerSettings.gLightVec[0] = (cp*cy);
-				g_viewerSettings.gLightVec[1] = (-sy);
-				g_viewerSettings.gLightVec[2] = (sp*cy);
+				m_settings.gLightVec[0] = (cp*cy);
+				m_settings.gLightVec[1] = (-sy);
+				m_settings.gLightVec[2] = (sp*cy);
 			}
 			else
 			{
-				g_viewerSettings.rot[0] = oldrx + (float)(event->y - oldy);
-				g_viewerSettings.rot[1] = oldry + (float)(event->x - oldx);
+				m_settings.rot[0] = oldrx + (float)(event->y - oldy);
+				m_settings.rot[1] = oldry + (float)(event->x - oldx);
 			}
 		}
 		else if( event->buttons & mxEvent::MouseRightButton )
 		{
-			g_viewerSettings.trans[2] = oldtz + (float)(event->y - oldy) * g_viewerSettings.movementScale;
+			m_settings.trans[2] = oldtz + (float)(event->y - oldy) * m_settings.movementScale;
 		}
 
 		redraw ();
@@ -211,7 +214,7 @@ void GlWindow :: drawFloor( int texture )
 		Vector deltaPos;
 		Vector deltaAngles;
 
-		g_studioModel.GetMovement( g_studioModel.m_prevGroundCycle, deltaPos, deltaAngles );
+		m_studioModel.GetMovement( m_studioModel.m_prevGroundCycle, deltaPos, deltaAngles );
 
 		float dpdd = scale / dist;
 
@@ -264,24 +267,24 @@ void GlWindow :: drawFloor( int texture )
 
 void GlWindow :: setupRenderMode( void )
 {
-	switch( g_viewerSettings.renderMode )
+	switch( m_settings.renderMode )
 	{
-	case RM_WIREFRAME:
+	case ViewerSettings::RM_WIREFRAME:
 		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 		glDisable( GL_TEXTURE_2D );
 		glDisable( GL_CULL_FACE );
 		glEnable( GL_DEPTH_TEST );
 		break;
-	case RM_FLATSHADED:
-	case RM_SMOOTHSHADED:
-	case RM_NORMALS:		
-	case RM_BONEWEIGHTS:
+	case ViewerSettings::RM_FLATSHADED:
+	case ViewerSettings::RM_SMOOTHSHADED:
+	case ViewerSettings::RM_NORMALS:		
+	case ViewerSettings::RM_BONEWEIGHTS:
 		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 		glDisable( GL_TEXTURE_2D );
 		glEnable( GL_CULL_FACE );
 		glEnable( GL_DEPTH_TEST );
 
-		if( g_viewerSettings.renderMode == RM_FLATSHADED )
+		if( m_settings.renderMode == ViewerSettings::RM_FLATSHADED )
 			glShadeModel( GL_FLAT );
 		else glShadeModel( GL_SMOOTH );
 		break;
@@ -353,9 +356,9 @@ void GlWindow :: ResetModelviewMatrix( void )
 
 void GlWindow :: draw( void )
 {
-	glClearColor( g_viewerSettings.bgColor[0], g_viewerSettings.bgColor[1], g_viewerSettings.bgColor[2], 0.0f );
+	glClearColor( m_settings.bgColor[0], m_settings.bgColor[1], m_settings.bgColor[2], 0.0f );
 
-	if( g_viewerSettings.useStencil )
+	if( m_settings.useStencil )
 		glClear (GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT );
 	else glClear( GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT );
 
@@ -363,31 +366,31 @@ void GlWindow :: draw( void )
 	glDisable( GL_MULTISAMPLE );
 
 	// remap textures if changed
-	g_studioModel.RemapTextures();
+	m_studioModel.RemapTextures();
 
 	//
 	// show textures
 	//
-	if( g_viewerSettings.showTexture )
+	if( m_settings.showTexture )
 	{
 		m_projection.CreateOrtho( 0.0f, w2(), h2(), 0.0f, 1.0f, -1.0f );
 		SetProjectionMatrix( m_projection );
 		glDisable( GL_MULTISAMPLE );
 
-		studiohdr_t *hdr = g_studioModel.getTextureHeader();
+		studiohdr_t *hdr = m_studioModel.getTextureHeader();
 
 		if( hdr )
 		{
 			mstudiotexture_t *ptextures = (mstudiotexture_t *)((byte *)hdr + hdr->textureindex);
-			float w = (float) ptextures[g_viewerSettings.texture].width * g_viewerSettings.textureScale;
-			float h = (float) ptextures[g_viewerSettings.texture].height * g_viewerSettings.textureScale;
+			float w = (float) ptextures[m_settings.texture].width * m_settings.textureScale;
+			float h = (float) ptextures[m_settings.texture].height * m_settings.textureScale;
 
 			ResetModelviewMatrix();
 
 			glDisable( GL_CULL_FACE );
 			glDisable( GL_BLEND );
 
-			if( ptextures[g_viewerSettings.texture].flags & STUDIO_NF_MASKED )
+			if( ptextures[m_settings.texture].flags & STUDIO_NF_MASKED )
 			{
 				glEnable( GL_ALPHA_TEST );
 				glAlphaFunc( GL_GREATER, 0.25f );
@@ -398,7 +401,7 @@ void GlWindow :: draw( void )
 			float x = ((float)w2 () - w) / 2;
 			float y = ((float)h2 () - h) / 2;
 
-			if(( g_viewerSettings.show_uv_map || g_viewerSettings.pending_export_uvmap ) && !g_viewerSettings.overlay_uv_map )
+			if(( m_settings.show_uv_map || m_settings.pending_export_uvmap ) && !m_settings.overlay_uv_map )
 			{
 				glColor4f (0.0f, 0.0f, 0.0f, 1.0f);
 				glDisable (GL_TEXTURE_2D);
@@ -407,7 +410,7 @@ void GlWindow :: draw( void )
 			{
 				glEnable (GL_TEXTURE_2D);
 				glColor4f (1.0f, 1.0f, 1.0f, 1.0f);
-				glBindTexture (GL_TEXTURE_2D, TEXTURE_COUNT + g_viewerSettings.texture );
+				glBindTexture (GL_TEXTURE_2D, TEXTURE_COUNT + m_settings.texture );
 			}
 
 			glBegin( GL_TRIANGLE_STRIP );
@@ -421,9 +424,9 @@ void GlWindow :: draw( void )
 				glVertex2f( x + w, y + h );
 			glEnd();
 
-			if( g_viewerSettings.show_uv_map || g_viewerSettings.pending_export_uvmap || g_viewerSettings.overlay_uv_map )
+			if( m_settings.show_uv_map || m_settings.pending_export_uvmap || m_settings.overlay_uv_map )
 			{
-				if( g_viewerSettings.anti_alias_lines )
+				if( m_settings.anti_alias_lines )
 				{
 					glEnable( GL_LINE_SMOOTH );
 					glEnable( GL_POLYGON_SMOOTH );
@@ -433,17 +436,17 @@ void GlWindow :: draw( void )
 					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 				}
 
-				g_studioModel.SetOffset2D( x, y );
-				g_studioModel.DrawModelUVMap();
+				m_studioModel.SetOffset2D( x, y );
+				m_studioModel.DrawModelUVMap();
 
-				if( g_viewerSettings.anti_alias_lines )
+				if( m_settings.anti_alias_lines )
 				{
 					glDisable( GL_LINE_SMOOTH );
 					glDisable(GL_POLYGON_SMOOTH);
 				}
                               }
 
-			if( g_viewerSettings.pending_export_uvmap && g_viewerSettings.uvmapPath[0] )
+			if( m_settings.pending_export_uvmap && m_settings.uvmapPath[0] )
 			{
 				mxImage *image = (mxImage *)Mem_Alloc(sizeof(mxImage));
 				new (image) mxImage();
@@ -455,13 +458,13 @@ void GlWindow :: draw( void )
 
 					image->flip_vertical();
 
-					if( !mxBmpWrite( g_viewerSettings.uvmapPath, image ))
+					if( !mxBmpWrite( m_settings.uvmapPath.c_str(), image))
 						mxMessageBox( this, "Error writing .BMP texture.", APP_TITLE_STR, MX_MB_OK|MX_MB_ERROR );
 				}
 
 				// cleanup
-				memset( g_viewerSettings.uvmapPath, 0, sizeof( g_viewerSettings.uvmapPath ));
-				g_viewerSettings.pending_export_uvmap = false;
+				m_settings.uvmapPath.clear();
+				m_settings.pending_export_uvmap = false;
 				Mem_Free(image);
 			}
 
@@ -474,7 +477,7 @@ void GlWindow :: draw( void )
 	//
 	// draw background
 	//
-	if( g_viewerSettings.showBackground && d_textureNames[TEXTURE_BACKGROUND] && !g_viewerSettings.showTexture )
+	if( m_settings.showBackground && d_textureNames[TEXTURE_BACKGROUND] && !m_settings.showTexture )
 	{
 		m_projection.CreateOrtho( 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, -1.0f );
 		SetProjectionMatrix( m_projection );
@@ -521,16 +524,16 @@ void GlWindow :: draw( void )
 	else
 	{
 		m_modelview.Identity();
-		m_modelview.ConcatTranslate( -g_viewerSettings.trans[0], -g_viewerSettings.trans[1], -g_viewerSettings.trans[2] );
-		m_modelview.ConcatRotate( g_viewerSettings.rot[0], 1, 0, 0 );
-		m_modelview.ConcatRotate( g_viewerSettings.rot[1], 0, 0, 1 );
-		vectors = matrix3x3( Vector( 180.0f - g_viewerSettings.rot[0], 270.0f - g_viewerSettings.rot[1], 0.0f ));
+		m_modelview.ConcatTranslate( -m_settings.trans[0], -m_settings.trans[1], -m_settings.trans[2] );
+		m_modelview.ConcatRotate( m_settings.rot[0], 1, 0, 0 );
+		m_modelview.ConcatRotate( m_settings.rot[1], 0, 0, 1 );
+		vectors = matrix3x3( Vector( 180.0f - m_settings.rot[0], 270.0f - m_settings.rot[1], 0.0f ));
 	}
 
 	SetModelviewMatrix( m_modelview );
 
 	// setup stencil buffer
-	if( g_viewerSettings.useStencil && !bUseWeaponOrigin )
+	if( m_settings.useStencil && !bUseWeaponOrigin )
 	{
 		// Don't update color or depth.
 		glDisable( GL_DEPTH_TEST );
@@ -553,7 +556,7 @@ void GlWindow :: draw( void )
 		glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
 	}
 
-	if( g_viewerSettings.mirror && !bUseWeaponOrigin )
+	if( m_settings.mirror && !bUseWeaponOrigin )
 	{
 		const GLdouble flClipPlane[] = { 0.0, 0.0, -1.0, 0.0 };
 
@@ -561,13 +564,13 @@ void GlWindow :: draw( void )
 		glCullFace( GL_BACK );
 		glEnable( GL_CLIP_PLANE0 );
 		glClipPlane( GL_CLIP_PLANE0, flClipPlane );
-		g_studioModel.DrawModel( true );
+		m_studioModel.DrawModel( true );
 		glDisable( GL_CLIP_PLANE0 );
 	}
 
-	g_viewerSettings.drawn_polys = 0;
+	m_settings.drawn_polys = 0;
 
-	if( g_viewerSettings.useStencil )
+	if( m_settings.useStencil )
 		glDisable( GL_STENCIL_TEST );
 
 	setupRenderMode();
@@ -576,18 +579,18 @@ void GlWindow :: draw( void )
 		glCullFace( GL_BACK );
 	else glCullFace( GL_FRONT );
 
-	g_studioModel.DrawModel();
+	m_studioModel.DrawModel();
 
 	//
 	// draw ground
 	//
-	if( g_viewerSettings.showGround && !bUseWeaponOrigin )
+	if( m_settings.showGround && !bUseWeaponOrigin )
 	{
 		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 		glEnable( GL_DEPTH_TEST );
 		glEnable( GL_CULL_FACE );
 
-		if( g_viewerSettings.useStencil )
+		if( m_settings.useStencil )
 			glFrontFace( GL_CW );
 		else glDisable( GL_CULL_FACE );
 
@@ -596,7 +599,7 @@ void GlWindow :: draw( void )
 		if( !d_textureNames[TEXTURE_GROUND] )
 		{
 			glDisable( GL_TEXTURE_2D );
-			glColor4f( g_viewerSettings.gColor[0], g_viewerSettings.gColor[1], g_viewerSettings.gColor[2], 0.7f );
+			glColor4f( m_settings.gColor[0], m_settings.gColor[1], m_settings.gColor[2], 0.7f );
 			glBindTexture( GL_TEXTURE_2D, 0 );
 		}
 		else
@@ -610,7 +613,7 @@ void GlWindow :: draw( void )
 		drawFloor( d_textureNames[TEXTURE_GROUND] );
 		glDisable( GL_BLEND );
 
-		if( g_viewerSettings.useStencil )
+		if( m_settings.useStencil )
 		{
 			glCullFace( GL_BACK );
 			glColor4f( 0.1f, 0.1f, 0.1f, 1.0f );
@@ -655,7 +658,7 @@ void GlWindow :: draw( void )
 		glEnable( GL_TEXTURE_2D );
 	}
 
-	g_studioModel.incrementFramecounter();
+	m_studioModel.incrementFramecounter();
 }
 
 int GlWindow :: loadTextureImage( mxImage *image, int name )
@@ -673,7 +676,7 @@ int GlWindow :: loadTextureImage( mxImage *image, int name )
 			texture.height = image->height;
 			texture.flags = 0;
 
-			g_studioModel.UploadTexture( &texture, (byte *)image->data, (byte *)image->palette, name );
+			m_studioModel.UploadTexture( &texture, (byte *)image->data, (byte *)image->palette, name );
 		}
 		else if( image->bpp == 24 )
 		{
@@ -733,9 +736,9 @@ int GlWindow :: loadTexture( const char *filename, int name )
 			d_textureNames[name] = TEXTURE_UNUSED;
 
 			if( name == TEXTURE_BACKGROUND )
-				strcpy( g_viewerSettings.backgroundTexFile, "" );
+				m_settings.backgroundTexFile = "";
 			else if( name == TEXTURE_GROUND )
-				strcpy( g_viewerSettings.groundTexFile, "" );
+				m_settings.groundTexFile = "";
 		}
 		return TEXTURE_UNUSED;
 	}
@@ -755,9 +758,9 @@ int GlWindow :: loadTexture( const char *filename, int name )
 	if( image )
 	{
 		if( name == TEXTURE_BACKGROUND )
-			strcpy( g_viewerSettings.backgroundTexFile, filename );
+			m_settings.backgroundTexFile = filename;
 		else if( name == TEXTURE_GROUND )
-			strcpy( g_viewerSettings.groundTexFile, filename );
+			m_settings.groundTexFile = filename;
 	}
 
 	return loadTextureImage( image, name );

@@ -82,10 +82,16 @@ if(MSVC)
 	target_link_options(${PROJECT_NAME} PRIVATE /SUBSYSTEM:WINDOWS)
 endif()
 
-# add depedency libraries
+# link dependencies libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE
 	mxtk
 )
+
+find_package(RapidJSON CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE RapidJSON rapidjson)
+
+find_package(fmt CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
 
 if(MSVC)
 	target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -97,7 +103,7 @@ else()
 endif()
 
 if(WIN32)
-	# so, we can't use static linking on Linux because of Qt
+	# we cannot use static runtime linking on Linux, because of Qt
 	if(ENABLE_STATIC_CRT_LINKING)
 		set_compiler_runtime(${PROJECT_NAME} STATIC)
 	endif()

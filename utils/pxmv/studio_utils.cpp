@@ -27,7 +27,6 @@
 #include "mdlviewer.h"
 #include "app_info.h"
 
-StudioModel g_studioModel;
 extern bool bUseWeaponOrigin;
 extern bool bUseParanoiaFOV;
 
@@ -53,7 +52,7 @@ mstudioanim_t *CBaseBoneSetup :: GetAnimSourceData( mstudioseqdesc_t *pseqdesc )
 	if( pseqdesc->seqgroup == 0 )
 		return (mstudioanim_t *)((byte *)m_pStudioHeader + pseqgroup->data + pseqdesc->animindex);
 
-	return (mstudioanim_t *)((byte *)g_studioModel.getAnimHeader( pseqdesc->seqgroup ) + pseqdesc->animindex);
+	return (mstudioanim_t *)((byte *)m_studioModel.getAnimHeader( pseqdesc->seqgroup ) + pseqdesc->animindex);
 }
 
 void CBaseBoneSetup :: debugLine( const Vector& origin, const Vector& dest, int r, int g, int b, bool noDepthTest, float duration )
@@ -106,8 +105,8 @@ void StudioModel::UploadTexture(mstudiotexture_t *ptexture, byte *data, byte *sr
 
 		if( !Q_strnicmp( ptexture->name, "DM_Base", 7 ))
 		{
-			PaletteHueReplace( pal, g_viewerSettings.topcolor, PLATE_HUE_START, PLATE_HUE_END );
-			PaletteHueReplace( pal, g_viewerSettings.bottomcolor, SUIT_HUE_START, SUIT_HUE_END );
+			PaletteHueReplace( pal, m_settings.topcolor, PLATE_HUE_START, PLATE_HUE_END );
+			PaletteHueReplace( pal, m_settings.bottomcolor, SUIT_HUE_START, SUIT_HUE_END );
 		}
 		else
 		{
@@ -134,8 +133,8 @@ void StudioModel::UploadTexture(mstudiotexture_t *ptexture, byte *data, byte *sr
 					}
 					else high = 0;
 
-					PaletteHueReplace( pal, g_viewerSettings.topcolor, low, mid );
-					if( high ) PaletteHueReplace( pal, g_viewerSettings.bottomcolor, mid + 1, high );
+					PaletteHueReplace( pal, m_settings.topcolor, low, mid );
+					if( high ) PaletteHueReplace( pal, m_settings.bottomcolor, mid + 1, high );
 				}
 			}
 #else
@@ -147,8 +146,8 @@ void StudioModel::UploadTexture(mstudiotexture_t *ptexture, byte *data, byte *sr
 			Q_strncpy( sz, ptexture->name + 15, 4 ); 
 			high = bound( 0, Q_atoi( sz ), 255 );
 
-			PaletteHueReplace( pal, g_viewerSettings.topcolor, low, mid );
-			if( high ) PaletteHueReplace( pal, g_viewerSettings.bottomcolor, mid + 1, high );
+			PaletteHueReplace( pal, m_settings.topcolor, low, mid );
+			if( high ) PaletteHueReplace( pal, m_settings.bottomcolor, mid + 1, high );
 #endif
 		}
 	}
@@ -239,11 +238,11 @@ void StudioModel::UploadTexture(mstudiotexture_t *ptexture, byte *data, byte *sr
 
 void StudioModel :: FreeModel( void )
 {
-	if( g_viewerSettings.numModelChanges )
+	if( m_settings.numModelChanges )
 	{
 		if( !mxMessageBox( g_GlWindow, "Model has changes. Do you wish to save them?", APP_TITLE_STR, MX_MB_YESNO | MX_MB_QUESTION ))
 		{
-			char *ptr = (char *)mxGetSaveFileName( g_GlWindow, g_viewerSettings.modelPath, "GoldSrc Model (*.mdl)" );
+			char *ptr = (char *)mxGetSaveFileName( g_GlWindow, m_settings.modelPath.c_str(), "GoldSrc Model (*.mdl)");
 			if( ptr )
 			{
 				char filename[256];
@@ -254,12 +253,12 @@ void StudioModel :: FreeModel( void )
 				if( mx_strcasecmp( ext, ".mdl" ))
 					strcat( filename, ".mdl" );
 
-				if( !g_studioModel.SaveModel( filename ))
+				if( !SaveModel( filename ))
 					mxMessageBox( g_GlWindow, "Error saving model.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 			}
 		}
 
-		g_viewerSettings.numModelChanges = 0;	// all the settings are handled or invalidated
+		m_settings.numModelChanges = 0;	// all the settings are handled or invalidated
 	}
 
 	if (m_pJiggleBones)
@@ -286,9 +285,9 @@ void StudioModel :: FreeModel( void )
 	if (m_ptexturehdr && m_owntexmodel)
 		Mem_Free(m_ptexturehdr);
 
-	g_boneSetup.SetStudioPointers( NULL, NULL );
+	m_boneSetup.SetStudioPointers( NULL, NULL );
 
-	g_viewerSettings.numSourceChanges = 0;
+	m_settings.numSourceChanges = 0;
 	m_pstudiohdr = m_ptexturehdr = 0;
 	remap_textures = false;
 	m_owntexmodel = false;
@@ -478,14 +477,14 @@ bool StudioModel::PostLoadModel( char *modelname )
 	}
 
 	// reset all the changes
-	g_viewerSettings.numModelChanges = 0;
-	g_viewerSettings.numSourceChanges = 0;
+	m_settings.numModelChanges = 0;
+	m_settings.numSourceChanges = 0;
 	bUseParanoiaFOV = false;
 
-	g_boneSetup.SetStudioPointers( m_pstudiohdr, m_poseparameter );
+	m_boneSetup.SetStudioPointers( m_pstudiohdr, m_poseparameter );
 
 	// set poseparam sliders to their default values
-	g_boneSetup.CalcDefaultPoseParameters( m_poseparameter );
+	m_boneSetup.CalcDefaultPoseParameters( m_poseparameter );
 
 	if( FBitSet( m_pstudiohdr->flags, STUDIO_HAS_BONEINFO ))
 	{
@@ -724,7 +723,7 @@ void StudioModel :: ExtractBbox( Vector &mins, Vector &maxs )
 
 float StudioModel :: GetDuration( int iSequence )
 {
-	return g_boneSetup.LocalDuration( iSequence );
+	return m_boneSetup.LocalDuration( iSequence );
 }
 
 float StudioModel :: GetDuration( void )
@@ -766,7 +765,7 @@ void StudioModel :: GetMovement( float &prevCycle, Vector &vecPos, Vector &vecAn
   		prevCycle = prevCycle - 1.0f;
   	}
  
-	g_boneSetup.SeqMovement( m_sequence, prevCycle, m_cycle, vecPos, vecAngles );
+	m_boneSetup.SeqMovement( m_sequence, prevCycle, m_cycle, vecPos, vecAngles );
 	prevCycle = m_cycle;
 }
 
@@ -843,9 +842,9 @@ int StudioModel :: LookupPoseParameter( char const *szName )
 	if( !m_pstudiohdr )
 		return false;
 
-	for( int iParameter = 0; iParameter < g_boneSetup.CountPoseParameters(); iParameter++ )
+	for( int iParameter = 0; iParameter < m_boneSetup.CountPoseParameters(); iParameter++ )
 	{
-		const mstudioposeparamdesc_t *pPose = g_boneSetup.pPoseParameter( iParameter );
+		const mstudioposeparamdesc_t *pPose = m_boneSetup.pPoseParameter( iParameter );
 
 		if( !Q_stricmp( szName, pPose->name ))
 		{
@@ -866,7 +865,7 @@ float StudioModel::SetPoseParameter( int iParameter, float flValue )
 	if( !m_pstudiohdr )
 		return 0.0f;
 
-	return g_boneSetup.SetPoseParameter( iParameter, flValue, m_poseparameter[iParameter] );
+	return m_boneSetup.SetPoseParameter( iParameter, flValue, m_poseparameter[iParameter] );
 }
 
 float StudioModel::GetPoseParameter( char const *szName )
@@ -884,7 +883,7 @@ float StudioModel::GetPoseParameter( int iParameter )
 	if( !m_pstudiohdr )
 		return 0.0f;
 
-	return g_boneSetup.GetPoseParameter( iParameter, m_poseparameter[iParameter] );
+	return m_boneSetup.GetPoseParameter( iParameter, m_poseparameter[iParameter] );
 }
 
 bool StudioModel::GetPoseParameterRange( int iParameter, float *pflMin, float *pflMax )
@@ -895,10 +894,10 @@ bool StudioModel::GetPoseParameterRange( int iParameter, float *pflMin, float *p
 	if( !m_pstudiohdr )
 		return false;
 
-	if( iParameter < 0 || iParameter >= g_boneSetup.CountPoseParameters( ))
+	if( iParameter < 0 || iParameter >= m_boneSetup.CountPoseParameters( ))
 		return false;
 
-	const mstudioposeparamdesc_t *pPose = g_boneSetup.pPoseParameter( iParameter );
+	const mstudioposeparamdesc_t *pPose = m_boneSetup.pPoseParameter( iParameter );
 
 	*pflMin = pPose->start;
 	*pflMax = pPose->end;
@@ -1054,7 +1053,7 @@ void StudioModel::ComputeWeightColor( mstudioboneweight_t *boneweights, Vector &
 			numbones++;
 	}
 
-	if( !g_viewerSettings.studio_blendweights )
+	if( !m_settings.studio_blendweights )
 		numbones = 1;
 
 	switch( numbones )
@@ -1091,7 +1090,7 @@ void StudioModel::ComputeSkinMatrix( mstudioboneweight_t *boneweights, matrix3x4
 			numbones++;
 	}
 
-	if( !g_viewerSettings.studio_blendweights )
+	if( !m_settings.studio_blendweights )
 		numbones = 1;
 
 	if( numbones == 4 )
@@ -1210,7 +1209,7 @@ void StudioModel::scaleMeshes (float scale)
 	}
 
 	// maybe scale exeposition, pivots, attachments
-	g_viewerSettings.numModelChanges++;
+	m_settings.numModelChanges++;
 }
 
 
@@ -1230,21 +1229,21 @@ void StudioModel::scaleBones (float scale)
 		}
 	}	
 
-	g_viewerSettings.numModelChanges++;
+	m_settings.numModelChanges++;
 }
 
 void StudioModel::SetTopColor( int color )
 {
-	if( g_viewerSettings.topcolor != color )
+	if( m_settings.topcolor != color )
 		remap_textures = true;
-	g_viewerSettings.topcolor = color;
+	m_settings.topcolor = color;
 }
 
 void StudioModel::SetBottomColor( int color )
 {
-	if( g_viewerSettings.bottomcolor != color )
+	if( m_settings.bottomcolor != color )
 		remap_textures = true;
-	g_viewerSettings.bottomcolor = color;
+	m_settings.bottomcolor = color;
 }
 
 bool StudioModel::SetEditType( int type )
@@ -1267,7 +1266,7 @@ bool StudioModel::SetEditMode( int mode )
 {
 	char	str[256];
 
-	if( mode == EDIT_MODEL && g_viewerSettings.editMode == EDIT_SOURCE && g_viewerSettings.numSourceChanges > 0 )
+	if( mode == ViewerSettings::EDIT_MODEL && m_settings.editMode == ViewerSettings::EDIT_SOURCE && m_settings.numSourceChanges > 0 )
 	{
 		Q_strcpy( str, "we have some virtual changes for QC-code.\nApply them to real model or all the changes will be lost?" );
 		int ret = mxMessageBox( g_GlWindow, str, APP_TITLE_STR, MX_MB_YESNOCANCEL | MX_MB_QUESTION );
@@ -1278,7 +1277,7 @@ bool StudioModel::SetEditMode( int mode )
 		else UpdateEditFields( false );
 	}
 
-	g_viewerSettings.editMode = mode;
+	m_settings.editMode = static_cast<ViewerSettings::EditMode>(mode);
 	return true;
 }
 
@@ -1375,12 +1374,12 @@ void StudioModel::WriteEditField( studiohdr_t *phdr, edit_field_t *ed )
 	default:	return;
 	}
 
-	g_viewerSettings.numModelChanges++;
+	m_settings.numModelChanges++;
 }
 
 void StudioModel::UpdateEditFields( bool write_to_model )
 {
-	studiohdr_t *phdr = g_studioModel.getStudioHeader ();
+	studiohdr_t *phdr = getStudioHeader ();
 
 	for( int i = 0; i < m_numeditfields; i++ )
 	{
@@ -1392,7 +1391,7 @@ void StudioModel::UpdateEditFields( bool write_to_model )
 	}
 
 	if( write_to_model && phdr )
-		g_viewerSettings.numSourceChanges = 0;
+		m_settings.numSourceChanges = 0;
 }
 
 bool StudioModel::AddEditField( int type, int id )
@@ -1403,7 +1402,7 @@ bool StudioModel::AddEditField( int type, int id )
 		return false;
 	}
 
-	studiohdr_t *phdr = g_studioModel.getStudioHeader ();
+	studiohdr_t *phdr = getStudioHeader ();
 
 	if( phdr )
 	{
@@ -1429,7 +1428,7 @@ bool StudioModel::AddEditField( int type, int id )
 
 const char *StudioModel::getQCcode( void )
 {
-	studiohdr_t *phdr = g_studioModel.getStudioHeader ();
+	studiohdr_t *phdr = getStudioHeader ();
 	static char str[256];
 
 	if( !m_pedit ) return "";
@@ -1443,7 +1442,7 @@ const char *StudioModel::getQCcode( void )
 	switch( ed->type )
 	{
 	case TYPE_ORIGIN:
-		if( g_viewerSettings.editMode == EDIT_SOURCE )
+		if( m_settings.editMode == ViewerSettings::EDIT_SOURCE )
 			Q_snprintf( str, sizeof( str ), "$origin %g %g %g", -ed->origin.y, ed->origin.x, -ed->origin.z );
 		break;
 	case TYPE_BBOX:
@@ -1484,7 +1483,7 @@ void StudioModel::editPosition( float step, int type )
 {
 	if( !m_pedit ) return;
 
-	if( g_viewerSettings.editSize )
+	if( m_settings.editSize )
 	{
 		switch( type )
 		{
@@ -1560,7 +1559,7 @@ void StudioModel::editPosition( float step, int type )
 		}
 	}
 
-	if( g_viewerSettings.editMode == EDIT_MODEL )
+	if( m_settings.editMode == ViewerSettings::EDIT_MODEL )
 		update_model = true;
-	else g_viewerSettings.numSourceChanges++;
+	else m_settings.numSourceChanges++;
 }

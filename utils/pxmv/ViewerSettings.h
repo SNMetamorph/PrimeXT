@@ -15,51 +15,58 @@
 // email:          mete@swissquake.ch
 // web:            http://www.swissquake.ch/chumbalum-soft/
 //
-#ifndef INCLUDED_VIEWERSETTINGS
-#define INCLUDED_VIEWERSETTINGS
-
+#pragma once
 #include "vector.h"
 #include "studio.h"
 #include <array>
+#include <string>
+#include <string_view>
 
-enum // render modes
+class ViewerSettings
 {
-	RM_WIREFRAME,
-	RM_FLATSHADED,
-	RM_SMOOTHSHADED,
-	RM_TEXTURED,
-	RM_BONEWEIGHTS,
-	RM_NORMALS
-};
+public:
+	static constexpr std::string_view fileName = "settings.json";
 
-enum
-{
-	EDIT_SOURCE = 0,
-	EDIT_MODEL,
-};
+	enum EditMode
+	{
+		EDIT_SOURCE = 0,
+		EDIT_MODEL,
+	};
 
-typedef struct
-{
+	enum RenderMode
+	{
+		RM_WIREFRAME,
+		RM_FLATSHADED,
+		RM_SMOOTHSHADED,
+		RM_TEXTURED,
+		RM_BONEWEIGHTS,
+		RM_NORMALS
+	};
+
+	ViewerSettings();
+	bool Save();
+	bool Load();
+
 	// model 
 	Vector rot;
 	Vector trans;
 	float movementScale;
 	float editStep;
-	int editMode;
+	EditMode editMode;
 	bool editSize;
 
 	// render
-	int renderMode;
+	RenderMode renderMode;
 	float transparency;
 	bool showBackground;
-	int showGround;
+	bool showGround;
 	bool showHitBoxes;
 	bool showBones;
 	bool showTexture;
 	bool showAttachments;
 	bool showNormals;
 	bool showWireframeOverlay;
-	int enableIK;
+	bool enableIK;
 	int texture;
 	float textureScale;
 	int skin;
@@ -85,8 +92,8 @@ typedef struct
 	float gColor[4];
 	float gLightVec[3];
 
-	int sequence_autoplay;
-	int studio_blendweights;
+	bool sequence_autoplay;
+	bool studio_blendweights;
 	int topcolor;
 	int bottomcolor;
 
@@ -102,40 +109,14 @@ typedef struct
 	int numSourceChanges;	// editor counter
 
 	// only used for fullscreen mode
-	char modelFile[256];
-	char modelPath[256];
-	char oldModelPath[256];
-	char backgroundTexFile[256];
-	char groundTexFile[256];
-	char uvmapPath[256];
+	std::string modelFile;
+	std::string modelPath;
+	std::string oldModelPath;
+	std::string backgroundTexFile;
+	std::string groundTexFile;
+	std::string uvmapPath;
 
-	char modelPathList[2048][256];
+	std::array<std::string, 2048> modelPathList;
+	std::array<char[512], 8> recentFiles;
 	int numModelPathes;
-} ViewerSettings;
-
-
-
-extern ViewerSettings g_viewerSettings;
-
-bool InitRegistry( void );
-bool SaveString( const char *pKey, char *pValue );
-bool LoadString( const char *pKey, char *pValue );
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void InitViewerSettings (void);
-int LoadViewerSettings (void);
-int SaveViewerSettings (void);
-void ListDirectory( void );
-const char *LoadNextModel( void );
-const char *LoadPrevModel( void );
-bool IsAliasModel( const char *path );
-#ifdef __cplusplus
-}
-#endif
-
-
-
-#endif // INCLUDED_VIEWERSETTINGS
+};

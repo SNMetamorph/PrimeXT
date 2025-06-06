@@ -17,8 +17,6 @@
 #ifndef INCLUDED_CONTROLPANEL
 #define INCLUDED_CONTROLPANEL
 
-
-
 #ifndef INCLUDED_MXWINDOW
 #include <mxWindow.h>
 #endif
@@ -125,8 +123,8 @@ class mxButton;
 class mxToggleButton;
 class GlWindow;
 class TextureWindow;
-
-
+class ViewerSettings;
+class StudioModel;
 
 class ControlPanel : public mxWindow
 {
@@ -204,6 +202,8 @@ class ControlPanel : public mxWindow
 
 	GlWindow *d_GlWindow;
 	TextureWindow *d_textureWindow;
+	StudioModel	&m_studioModel;
+	ViewerSettings &m_settings;
 
 	// sequence remapping
 	int	*iSelectionToSequence; // selection to sequence
@@ -212,8 +212,8 @@ class ControlPanel : public mxWindow
 	int	controllerindex[MAX_BONECTRLS];
 public:
 	// CREATORS
-	ControlPanel (mxWindow *parent);
-	virtual ~ControlPanel ();
+	ControlPanel(mxWindow *parent, ViewerSettings &settings, StudioModel &model);
+	virtual ~ControlPanel();
 
 	// MANIPULATORS
 	int handleEvent (mxEvent *event);
