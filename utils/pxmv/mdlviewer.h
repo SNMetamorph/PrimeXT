@@ -84,9 +84,10 @@ public:
 	~MDLViewer ();
 
 	// MANIPULATORS
-	virtual int handleEvent (mxEvent *event);
+	virtual int handleEvent(mxEvent *event);
 	void checkboxSet( int id, bool bState );
-	void redraw ();
+	void redraw();
+	bool shouldMaximizeWindow();
 
 	// ACCESSORS
 	mxMenuBar *getMenuBar () const { return mb; }

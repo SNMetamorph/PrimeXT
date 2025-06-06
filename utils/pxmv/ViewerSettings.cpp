@@ -205,20 +205,20 @@ bool ViewerSettings::Load()
 	rapidjson::IStreamWrapper isw(file);
 	doc.ParseStream(isw);
 
-	JsonLoadVector4D( doc, "backgroundColor", bgColor );
-	JsonLoadVector4D( doc, "lightColor", lColor );
-	JsonLoadVector4D( doc, "groundColor", gColor );
-	JsonLoadVector3D( doc, "lightVector", gLightVec );
-	JsonLoadInt( doc, "sequenceAutoPlay", sequence_autoplay );
-	JsonLoadInt( doc, "studioBlendWeights", studio_blendweights );
-	JsonLoadInt( doc, "topColor", topcolor );
-	JsonLoadInt( doc, "bottomColor", bottomcolor );
-	JsonLoadFloat( doc, "editStep", editStep );
-	JsonLoadInt( doc, "editMode", editMode );
-	JsonLoadInt( doc, "allowIK", enableIK );
-	JsonLoadInt( doc, "showGround", showGround );
-	JsonLoadString( doc, "groundTexPath", groundTexFile );
-	JsonLoadInt( doc, "showMaximized", showMaximized );
+	JsonLoadVector4D(doc, "backgroundColor", bgColor);
+	JsonLoadVector4D(doc, "lightColor", lColor);
+	JsonLoadVector4D(doc, "groundColor", gColor);
+	JsonLoadVector3D(doc, "lightVector", gLightVec);
+	JsonLoadInt(doc, "sequenceAutoPlay", sequence_autoplay);
+	JsonLoadInt(doc, "studioBlendWeights", studio_blendweights);
+	JsonLoadInt(doc, "topColor", topcolor);
+	JsonLoadInt(doc, "bottomColor", bottomcolor);
+	JsonLoadFloat(doc, "editStep", editStep);
+	JsonLoadInt(doc, "editMode", editMode);
+	JsonLoadInt(doc, "allowIK", enableIK);
+	JsonLoadInt(doc, "showGround", showGround);
+	JsonLoadString(doc, "groundTexPath", groundTexFile);
+	JsonLoadInt(doc, "showMaximized", showMaximized);
 
 	// load recent files array
 	rapidjson::Value &list = doc["recentFiles"];

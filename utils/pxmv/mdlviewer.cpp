@@ -337,9 +337,9 @@ MDLViewer::~MDLViewer ()
 	// grab some params in case that hasn't updates
 	if( d_cpl )
 		m_settings.editStep = d_cpl->getEditStep();
-	//g_viewerSettings.showMaximized = isMaximized();
 
-	//saveRecentFiles();
+	m_settings.showMaximized = isMaximized();
+
 	m_settings.Save();
 	m_studioModel->FreeModel();
 	m_studioModel->~StudioModel();
@@ -807,6 +807,11 @@ MDLViewer::redraw ()
 	handleEvent (&event);
 }
 
+bool MDLViewer::shouldMaximizeWindow()
+{
+	return m_settings.showMaximized;
+}
+
 int main( int argc, char *argv[] )
 {
 	//
@@ -842,9 +847,8 @@ int main( int argc, char *argv[] )
 	g_MDLViewer->setBounds (20, 20, 640, 540);
 	g_MDLViewer->setVisible (true);
 
-	// TODO implement for other platforms
-	//if( g_viewerSettings.showMaximized )
-	//	g_MDLViewer->Maximize();
+	if( g_MDLViewer->shouldMaximizeWindow() )
+		g_MDLViewer->maximize();
 
 	if (Q_stristr (cmdline, ".mdl"))
 	{
