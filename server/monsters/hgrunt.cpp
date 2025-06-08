@@ -817,13 +817,17 @@ void CHGrunt :: Spawn()
 		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/hgrunt.mdl");
+
 	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
 
 	pev->solid			= SOLID_SLIDEBOX;
 	pev->movetype		= MOVETYPE_STEP;
 	m_bloodColor		= BLOOD_COLOR_RED;
 	pev->effects		= 0;
-	if (!pev->health) pev->health	= gSkillData.hgruntHealth;
+
+	if (!pev->health) 
+		pev->health	= gSkillData.hgruntHealth;
+
 	m_flFieldOfView		= 0.2;// indicates the width of this monster's forward view cone ( as a dotproduct result )
 	m_MonsterState		= MONSTERSTATE_NONE;
 	m_flNextGrenadeCheck = gpGlobals->time + 1;
@@ -858,11 +862,6 @@ void CHGrunt :: Spawn()
 	}
 	m_cAmmoLoaded		= m_cClipSize;
 
-	if (RANDOM_LONG( 0, 99 ) < 80)
-		pev->skin = 0;	// light skin
-	else
-		pev->skin = 1;	// dark skin
-
 	if ( HasWeapon( HGRUNT_SHOTGUN ))
 	{
 		SetBodygroup( HEAD_GROUP, HEAD_SHOTGUN);
@@ -870,7 +869,6 @@ void CHGrunt :: Spawn()
 	else if ( HasWeapon( HGRUNT_GRENADELAUNCHER ))
 	{
 		SetBodygroup( HEAD_GROUP, HEAD_M203 );
-		pev->skin = 1; // alway dark skin
 	}
 
 	CTalkMonster::g_talkWaitTime = 0;
