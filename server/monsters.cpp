@@ -3054,13 +3054,14 @@ void CBaseMonster :: KeyValue( KeyValueData *pkvd )
 	{
 		int	weapons = atoi( pkvd->szValue );
 
-		if( weapons ) m_bHaveWeapons = TRUE;
+		if( weapons ) 
+			m_bHaveWeapons = TRUE;
 
 		// convert bits to weapons
 		for( int i = 0; i < 32; i++ )
 		{
 			if( FBitSet( weapons, BIT( i )))
-				AddWeapon( i );
+				AddWeapon( i + 1 );
 		}
 
 		pkvd->fHandled = TRUE;
