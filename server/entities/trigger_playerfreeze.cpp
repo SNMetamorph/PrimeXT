@@ -23,12 +23,18 @@ void CTriggerPlayerFreeze::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, U
 	if ( !pActivator || !pActivator->IsPlayer() )
 		pActivator = CBaseEntity::Instance(INDEXENT( 1 ));
 
-	if( !pActivator || !ShouldToggle( useType, FBitSet( pActivator->pev->flags, FL_FROZEN )))
+	bool playerFrozen = FBitSet( pActivator->pev->flags, FL_FROZEN );
+	if( !pActivator || !ShouldToggle( useType, playerFrozen ))
 		return;
 
-	if (pActivator->pev->flags & FL_FROZEN)
-		((CBasePlayer *)((CBaseEntity *)pActivator))->EnableControl(TRUE);
-	else ((CBasePlayer *)((CBaseEntity *)pActivator))->EnableControl(FALSE);
+	CBasePlayer *pPlayer = static_cast<CBasePlayer*>(pActivator);
+
+	if (useType == USE_TOGGLE)
+		pPlayer->EnableControl(playerFrozen ? true : false);
+	else if (useType == USE_ON)
+		pPlayer->EnableControl(false);
+	else if (useType == USE_OFF)
+		pPlayer->EnableControl(true);
 
 	SUB_UseTargets( pActivator, USE_TOGGLE, 0 );
 }
