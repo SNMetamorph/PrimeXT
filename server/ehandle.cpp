@@ -42,6 +42,11 @@ edict_t *EHANDLE::Set(edict_t *pent)
 	return pent;
 }
 
+CBaseEntity *EHANDLE::GetPointer()
+{
+	return (CBaseEntity *)GET_PRIVATE(Get());
+}
+
 EHANDLE::operator CBaseEntity*(void)
 {
 	return (CBaseEntity *)GET_PRIVATE(Get());

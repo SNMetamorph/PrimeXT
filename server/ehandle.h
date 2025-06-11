@@ -29,6 +29,7 @@ private:
 public:
 	edict_t *Get( void );
 	edict_t *Set( edict_t *pent );
+	CBaseEntity *GetPointer();
 
 	operator int ( void );
 
