@@ -170,7 +170,7 @@ void CGaussWeaponContext::SecondaryAttack()
 		params.eventindex = m_usGaussSpin;
 		params.delay = 0.0f;
 		params.origin = m_pLayer->GetGunPosition();
-		params.angles = m_pLayer->GetCameraOrientation().GetAngles();
+		params.angles = m_pLayer->GetViewAngles();
 		params.fparam1 = 0.0f;
 		params.fparam2 = 0.0f;
 		params.iparam1 = 110;
