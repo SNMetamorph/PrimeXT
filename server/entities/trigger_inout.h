@@ -15,6 +15,7 @@
 
 #pragma once
 #include "triggers.h"
+#include "ehandle.h"
 #include "inout_register.h"
 
 class CTriggerInOut : public CBaseTrigger
@@ -29,12 +30,11 @@ public:
 	virtual void FireOnLeaving( CBaseEntity *pOther );
 	virtual void OnRemove( void );
 	void KeyValue( KeyValueData *pkvd );
+	STATE GetState();
 
 	DECLARE_DATADESC();
 
-	STATE GetState() { return m_pRegister->IsEmpty() ? STATE_OFF : STATE_ON; }
-
 	string_t m_iszAltTarget;
 	string_t m_iszBothTarget;
-	CInOutRegister *m_pRegister;
+	EHANDLE m_hRegister;
 };

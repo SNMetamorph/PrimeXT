@@ -20,7 +20,7 @@ LINK_ENTITY_TO_CLASS( trigger_inout, CTriggerInOut );
 BEGIN_DATADESC( CTriggerInOut )
 	DEFINE_KEYFIELD( m_iszAltTarget, FIELD_STRING, "m_iszAltTarget" ),
 	DEFINE_KEYFIELD( m_iszBothTarget, FIELD_STRING, "m_iszBothTarget" ),
-	DEFINE_FIELD( m_pRegister, FIELD_CLASSPTR ),
+	DEFINE_FIELD( m_hRegister, FIELD_EHANDLE ),
 END_DATADESC()
 
 void CTriggerInOut::KeyValue( KeyValueData *pkvd )
@@ -41,13 +41,13 @@ void CTriggerInOut::KeyValue( KeyValueData *pkvd )
 
 int CTriggerInOut :: Restore( CRestore &restore )
 {
-	CInOutRegister *pRegister;
+	EHANDLE pRegister;
 
 	if( restore.IsGlobalMode() )
 	{
 		// we already have the valid chain.
 		// Don't break it with bad pointers from previous level
-		pRegister = m_pRegister;
+		pRegister = m_hRegister;
 	}
 
 	int status = BaseClass::Restore(restore);
@@ -57,7 +57,7 @@ int CTriggerInOut :: Restore( CRestore &restore )
 	if( restore.IsGlobalMode() )
 	{
 		// restore our chian here
-		m_pRegister = pRegister;
+		m_hRegister = pRegister;
 	}
 
 	return status;
@@ -67,11 +67,12 @@ void CTriggerInOut :: Spawn( void )
 {
 	InitTrigger();
 	// create a null-terminator for the registry
-	m_pRegister = GetClassPtr( (CInOutRegister*)NULL );
-	m_pRegister->m_hValue = NULL;
-	m_pRegister->m_pNext = NULL;
-	m_pRegister->m_pField = this;
-	m_pRegister->pev->classname = MAKE_STRING("inout_register");
+	m_hRegister = GetClassPtr( (CInOutRegister*)NULL );
+	CInOutRegister *pRegister = dynamic_cast<CInOutRegister*>(m_hRegister.GetPointer());
+	pRegister->m_hValue = NULL;
+	pRegister->m_pNext = NULL;
+	pRegister->m_pField = this;
+	pRegister->pev->classname = MAKE_STRING("inout_register");
 }
 
 void CTriggerInOut :: Touch( CBaseEntity *pOther )
@@ -79,18 +80,20 @@ void CTriggerInOut :: Touch( CBaseEntity *pOther )
 	if( !CanTouch( pOther ))
 		return;
 
-	m_pRegister = m_pRegister->Add( pOther );
+	CInOutRegister *pRegister = dynamic_cast<CInOutRegister*>(m_hRegister.GetPointer());
+	pRegister = pRegister->Add( pOther );
 
-	if( pev->nextthink <= 0.0f && !m_pRegister->IsEmpty( ))
+	if( pev->nextthink <= 0.0f && !pRegister->IsEmpty( ))
 		SetNextThink( 0.05 );
 }
 
 void CTriggerInOut :: Think( void )
 {
 	// Prune handles all Intersects tests and fires targets as appropriate
-	m_pRegister = m_pRegister->Prune();
+	CInOutRegister *pRegister = dynamic_cast<CInOutRegister*>(m_hRegister.GetPointer());
+	m_hRegister = pRegister->Prune();
 
-	if (m_pRegister->IsEmpty())
+	if (pRegister->IsEmpty())
 		DontThink();
 	else
 		SetNextThink( 0.05 );
@@ -118,8 +121,16 @@ void CTriggerInOut :: FireOnLeaving( CBaseEntity *pOther )
 
 void CTriggerInOut :: OnRemove( void )
 {
-	if( !m_pRegister ) return; // e.g. moved from another level
+	if( !m_hRegister ) 
+		return; // e.g. moved from another level
 
 	// Prune handles all Intersects tests and fires targets as appropriate
-	m_pRegister = m_pRegister->Prune();
+	CInOutRegister *pRegister = dynamic_cast<CInOutRegister*>(m_hRegister.GetPointer());
+	m_hRegister = pRegister->Prune();
+}
+
+STATE CTriggerInOut :: GetState() 
+{
+	CInOutRegister *pRegister = dynamic_cast<CInOutRegister*>(m_hRegister.GetPointer());
+	return pRegister->IsEmpty() ? STATE_OFF : STATE_ON; 
 }
