@@ -54,6 +54,7 @@ public:
 	bool Deploy() override;
 	void Holster() override;
 	bool Swing(bool fFirst);
+	void PlaybackEvent();
 
 	int m_iSwing;
 	uint16_t m_usCrowbar;

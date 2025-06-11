@@ -38,6 +38,9 @@ CCrowbarWeaponContext::CCrowbarWeaponContext(std::unique_ptr<IWeaponLayer> &&lay
 	m_iClip = -1;
 	m_iSwing = 0;
 	m_usCrowbar = m_pLayer->PrecacheEvent("events/crowbar.sc");
+#ifndef CLIENT_DLL
+	m_trHit = { 0 };
+#endif
 }
 
 int CCrowbarWeaponContext::GetItemInfo(ItemInfo *p) const
@@ -129,31 +132,14 @@ bool CCrowbarWeaponContext::Swing(bool fFirst)
 #ifdef CLIENT_DLL
 	if (fFirst)
 	{
-		WeaponEventParams params;
-		params.flags = WeaponEventFlags::NotHost;
-		params.eventindex = m_usCrowbar;
-		params.delay = 0.0f;
-		params.origin = m_pLayer->GetGunPosition();
-		params.angles = m_pLayer->GetViewAngles();
-		params.fparam1 = 0.0f;
-		params.fparam2 = 0.0f;
-		params.iparam1 = 0;
-		params.iparam2 = 0;
-		params.bparam1 = 0;
-		params.bparam2 = 0;
-
-		if (m_pLayer->ShouldRunFuncs()) {
-			m_pLayer->PlaybackWeaponEvent(params);
-		}
-
-		// miss
+		PlaybackEvent();
 		m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.5f);
 	}
 	return false;
 #else
 	bool fDidHit = false;
 
-	TraceResult tr;
+	TraceResult &tr = m_trHit;
 	CCrowbar *weapon = static_cast<CCrowbar*>(m_pLayer->GetWeaponEntity());
 	CBasePlayer *player = weapon->m_pPlayer;
 
@@ -177,24 +163,8 @@ bool CCrowbarWeaponContext::Swing(bool fFirst)
 		}
 	}
 
-	if (fFirst)
-	{
-		WeaponEventParams params;
-		params.flags = WeaponEventFlags::NotHost;
-		params.eventindex = m_usCrowbar;
-		params.delay = 0.0f;
-		params.origin = m_pLayer->GetGunPosition();
-		params.angles = m_pLayer->GetViewAngles();
-		params.fparam1 = 0.0f;
-		params.fparam2 = 0.0f;
-		params.iparam1 = 0;
-		params.iparam2 = 0;
-		params.bparam1 = 0;
-		params.bparam2 = 0;
-
-		if (m_pLayer->ShouldRunFuncs()) {
-			m_pLayer->PlaybackWeaponEvent(params);
-		}
+	if (fFirst) {
+		PlaybackEvent();
 	}
 
 	if ( tr.flFraction >= 1.0 )
@@ -297,9 +267,6 @@ bool CCrowbarWeaponContext::Swing(bool fFirst)
 				EMIT_SOUND_DYN(ENT(player->pev), CHAN_ITEM, "weapons/cbar_hit2.wav", fvolbar, ATTN_NORM, 0, 98 + RANDOM_LONG(0,3)); 
 				break;
 			}
-
-			// delay the decal a bit
-			m_trHit = tr;
 		}
 
 		player->m_iWeaponVolume = flVol * CROWBAR_WALLHIT_VOLUME;
@@ -309,4 +276,24 @@ bool CCrowbarWeaponContext::Swing(bool fFirst)
 	}
 	return fDidHit;
 #endif
+}
+
+void CCrowbarWeaponContext::PlaybackEvent()
+{
+	WeaponEventParams params;
+	params.flags = WeaponEventFlags::NotHost;
+	params.eventindex = m_usCrowbar;
+	params.delay = 0.0f;
+	params.origin = m_pLayer->GetGunPosition();
+	params.angles = m_pLayer->GetViewAngles();
+	params.fparam1 = 0.0f;
+	params.fparam2 = 0.0f;
+	params.iparam1 = 0;
+	params.iparam2 = 0;
+	params.bparam1 = 0;
+	params.bparam2 = 0;
+
+	if (m_pLayer->ShouldRunFuncs()) {
+		m_pLayer->PlaybackWeaponEvent(params);
+	}
 }
