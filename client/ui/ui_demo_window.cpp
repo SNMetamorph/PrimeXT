@@ -6,7 +6,7 @@ bool CImGuiDemoWindow::m_ShowWindow = false;
 
 void CImGuiDemoWindow::Initialize()
 {
-    gEngfuncs.pfnAddCommand("imgui_showdemo", CImGuiDemoWindow::CmdShowDemoWindow);
+    gEngfuncs.pfnAddCommand("ui_imgui_demo", CImGuiDemoWindow::CmdShowDemoWindow);
 }
 
 void CImGuiDemoWindow::VidInitialize()
