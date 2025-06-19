@@ -294,9 +294,12 @@ void CPhysicPhysX :: RemoveBody( edict_t *pEdict )
 	CBaseEntity *pEntity = CBaseEntity::Instance( pEdict );
 	PxActor *pActor = ActorFromEntity( pEntity );
 
-	if( pActor ) 
+	if (pActor)
+	{
+		m_pScene->removeActor(*pActor);
 		pActor->release();
-	pEntity->m_pUserData = NULL;
+	}
+	pEntity->m_pUserData = nullptr;
 }
 
 PxConvexMesh *CPhysicPhysX :: ConvexMeshFromBmodel( entvars_t *pev, int modelindex )
