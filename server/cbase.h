@@ -159,6 +159,7 @@ public:
 	DECLARE_DATADESC();
 
 	// Always keep this virtual destructor, so derived classes can be properly destructed
+	CBaseEntity();
 	virtual ~CBaseEntity() {}
 
 	// path corners

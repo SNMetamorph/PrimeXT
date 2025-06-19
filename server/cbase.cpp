@@ -33,6 +33,11 @@ extern DLL_GLOBAL Vector		g_vecAttackDir;
 extern CGraph			WorldGraph;
 static CUtlArray<CBaseEntity *>	g_TeleportStack;
 
+CBaseEntity::CBaseEntity() :
+	m_pUserData(nullptr)
+{
+}
+
 void CBaseEntity :: DontThink( void )
 {
 	pev->nextthink = 0;
