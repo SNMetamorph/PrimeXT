@@ -102,7 +102,10 @@ vec3 ConvertSRGBToLinear(vec3 color)
 #if 1
 	vec3 linearRGBLo = color / 12.92;
 	vec3 linearRGBHi = pow((color + 0.055) / 1.055, vec3(2.4));
-	vec3 linearRGB = mix(linearRGBLo, linearRGBHi, step(0.04045, color));
+	vec3 linearRGB;
+	linearRGB.r = color.r > 0.04045 ? linearRGBHi.r : linearRGBLo.r;
+	linearRGB.g = color.g > 0.04045 ? linearRGBHi.g : linearRGBLo.g;
+	linearRGB.b = color.b > 0.04045 ? linearRGBHi.b : linearRGBLo.b;
 	return linearRGB;
 #else
 	return pow(color, vec3(2.2));
@@ -114,7 +117,10 @@ vec3 ConvertLinearToSRGB(vec3 color)
 #if 1
 	vec3 sRGBLo = color * 12.92;
 	vec3 sRGBHi = (pow(abs(color), vec3(1.0 / 2.4)) * 1.055) - 0.055;
-	vec3 sRGB = mix(sRGBLo, sRGBHi, step(0.0031308, color));
+	vec3 sRGB;
+	sRGB.r = color.r > 0.0031308 ? sRGBHi.r : sRGBLo.r;
+	sRGB.g = color.g > 0.0031308 ? sRGBHi.g : sRGBLo.g;
+	sRGB.b = color.b > 0.0031308 ? sRGBHi.b : sRGBLo.b;
 	return sRGB;
 #else
 	return pow(color, vec3(1.0 / 2.2));
