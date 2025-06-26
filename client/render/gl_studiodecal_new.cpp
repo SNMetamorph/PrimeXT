@@ -1083,14 +1083,15 @@ void CStudioModelRenderer :: AddDecalToModel( DecalBuildInfo_t& buildInfo )
 	Vector *pstudionorms = (Vector *)((byte *)m_pStudioHeader + m_pSubModel->normindex);
 	byte *pvertbone = ((byte *)m_pStudioHeader + m_pSubModel->vertinfoindex);
 	bool has_boneweights = FBitSet(m_pStudioHeader->flags, STUDIO_HAS_BONEWEIGHTS) != 0;
-	short *pskinref;
+	short *pskinref = (short *)((byte *)m_pStudioHeader + m_pStudioHeader->skinindex);
 	int i, numVerts;
+	
+	std::vector<StudioMesh_t> decalMeshBuffer;
+	decalMeshBuffer.resize(m_pSubModel->nummesh);
+	StudioMesh_t *pDecalMesh = decalMeshBuffer.data();
 
-	// if weights was missed their offsets just equal to 0
-	mstudioboneweight_t	*pvertweight = (mstudioboneweight_t *)((byte *)m_pStudioHeader + m_pSubModel->blendvertinfoindex);
-	StudioMesh_t *pDecalMesh = (StudioMesh_t *)stackalloc( m_pSubModel->nummesh * sizeof( StudioMesh_t ));
-	pskinref = (short *)((byte *)m_pStudioHeader + m_pStudioHeader->skinindex);
-	if( !pDecalMesh ) return; // empty mesh?
+	if( !pDecalMesh ) 
+		return; // empty mesh?
 
 	buildInfo.m_pVertexLight = NULL;
 
@@ -1111,6 +1112,9 @@ void CStudioModelRenderer :: AddDecalToModel( DecalBuildInfo_t& buildInfo )
 
 	m_nNumArrayVerts = m_nNumArrayElems = 0;
 	m_nNumLightVerts = 0;
+
+	// if weights was missed their offsets just equal to 0
+	mstudioboneweight_t	*pvertweight = (mstudioboneweight_t *)((byte *)m_pStudioHeader + m_pSubModel->blendvertinfoindex);
 
 	// build all the data for current submodel
 	for( i = 0; i < m_pSubModel->nummesh; i++ ) 
@@ -1241,7 +1245,9 @@ void CStudioModelRenderer :: AddDecalToModel( DecalBuildInfo_t& buildInfo )
 	}
 
 	// should keep all the verts of this submodel, because we use direct access by vertex number
-	buildInfo.m_pVertexInfo = (DecalVertexInfo_t *)stackalloc( m_nNumArrayVerts * sizeof( DecalVertexInfo_t ));
+	std::vector<DecalVertexInfo_t> decalVertexInfoBuffer;
+	decalVertexInfoBuffer.resize(m_nNumArrayVerts);
+	buildInfo.m_pVertexInfo = decalVertexInfoBuffer.data();
 
 	// project all vertices for this group into decal space
 	// Note we do this work at a mesh level instead of a model level
