@@ -67,7 +67,9 @@ GNU General Public License for more details.
 #define WATER_TEXTURES	29
 #define WATER_ANIMTIME	20.0f
 
-#define INVALID_HANDLE	0xFFFF	// studio cache
+// should match with engine, used for XashXT studio cache system
+// defined in engine/client/client.h
+#define INVALID_HANDLE	0xFFFF
 
 #define FLASHLIGHT_KEY	-666
 #define SUNLIGHT_KEY	-777

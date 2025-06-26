@@ -19,9 +19,9 @@ GNU General Public License for more details.
 
 #include "pmtrace.h"
 #include "studio.h"
-#include <utllinkedlist.h>
-#include <utlarray.h>
-#include <stringlib.h>
+#include "utllinkedlist.h"
+#include "utlarray.h"
+#include "stringlib.h"
 #include "gl_decals.h"
 #include "gl_studiodecal.h"
 #include "gl_debug.h"
@@ -32,11 +32,13 @@ GNU General Public License for more details.
 #include "jigglebones.h"
 #include "tbnfile.h"
 #include "studio_material.h"
+#include <stdint.h>
 
 #define EVENT_CLIENT	5000		// less than this value it's a server-side studio events
 #define MAX_MODEL_MESHES	(MAXSTUDIOBODYPARTS * MAXSTUDIOMODELS)
 #define SHADE_LAMBERT	1.495f
 #define MAXARRAYVERTS	320000		// max vertices per studio submodel
+#define INVALID_VERTEX_INDEX (-1)
 
 #define MAX_SEQBLENDS	8		// must be power of two
 #define MASK_SEQBLENDS	(MAX_SEQBLENDS - 1)
@@ -116,7 +118,7 @@ typedef struct xvert_s
 	float		light[MAXLIGHTMAPS];	// packed color
 	float		deluxe[MAXLIGHTMAPS];	// packed lightdir
 	byte		styles[MAXLIGHTMAPS];	// lightstyles
-	word		m_MeshVertexIndex;		// index into the mesh's vertex list (decals only)
+	int32_t		m_MeshVertexIndex;		// index into the mesh's vertex list (decals only)
 } svert_t;
 
 typedef void (*pfnCreateStudioBuffer)( vbomesh_t *pOut, svert_t *arrayxvert );
@@ -433,7 +435,7 @@ private:
 	};
 
 	// keep model instances for each entity
-	CUtlLinkedList< ModelInstance_t, word > m_ModelInstances;
+	CUtlLinkedList< ModelInstance_t, int32_t > m_ModelInstances;
 
 	// decal stuff
 	bool ComputePoseToDecal( const Vector &vecStart, const Vector &vecEnd );
@@ -451,8 +453,8 @@ private:
 	void ConvertMeshVertexToDecalVertex( DecalBuildInfo_t& build, int vertIndex, svert_t *out );
 	void ClipTriangleAgainstPlane( DecalClipState_t& state, int normalInd, int flag, float val );
 	int IntersectPlane( DecalClipState_t& state, int start, int end, int normalInd, float val );
-	word AddVertexToDecal( DecalBuildInfo_t& build, int vertIndex );
-	word AddVertexToDecal( DecalBuildInfo_t& build, svert_t *vert );
+	int32_t AddVertexToDecal( DecalBuildInfo_t& build, int vertIndex );
+	int32_t AddVertexToDecal( DecalBuildInfo_t& build, svert_t *vert );
 	void AddClippedDecalToTriangle( DecalBuildInfo_t& build, DecalClipState_t& clipState );
 	void ComputeDecalTBN( DecalBuildInfo_t& build );
 	void PurgeDecals( ModelInstance_t *inst );

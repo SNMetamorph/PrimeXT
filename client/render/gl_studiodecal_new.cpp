@@ -424,7 +424,7 @@ void CStudioModelRenderer :: ProjectDecalOntoMesh( DecalBuildInfo_t& build )
 		svert_t *vert = &m_arrayxvert[j];
 
 		// No decal vertex yet...
-		build.m_pVertexInfo[j].m_VertexIndex = INVALID_HANDLE;
+		build.m_pVertexInfo[j].m_VertexIndex = INVALID_VERTEX_INDEX;
 
 		// We need to know if the normal is pointing in the negative direction
 		// if so, blow off all triangles connected to that vertex.
@@ -492,12 +492,12 @@ Adds a vertex to the list of vertices
 for this studiomesh
 ====================
 */
-word CStudioModelRenderer :: AddVertexToDecal( DecalBuildInfo_t& build, int vertIndex )
+int32_t CStudioModelRenderer :: AddVertexToDecal( DecalBuildInfo_t& build, int vertIndex )
 {
 	DecalVertexInfo_t* pVertexInfo = build.m_pVertexInfo;
 
 	// If we've never seen this vertex before, we need to add a new decal vert
-	if( pVertexInfo[vertIndex].m_VertexIndex == INVALID_HANDLE )
+	if( pVertexInfo[vertIndex].m_VertexIndex == INVALID_VERTEX_INDEX )
 	{
 		int v = build.m_Vertices.AddToTail();
 
@@ -525,7 +525,7 @@ AddVertexToDecal
 This creates a unique vertex
 ====================
 */
-word CStudioModelRenderer :: AddVertexToDecal( DecalBuildInfo_t& build, svert_t *vert )
+int32_t CStudioModelRenderer :: AddVertexToDecal( DecalBuildInfo_t& build, svert_t *vert )
 {
 	// Try to see if the clipped vertex already exists in our decal list...
 	// Only search for matches with verts appearing in the current decal
@@ -534,7 +534,7 @@ word CStudioModelRenderer :: AddVertexToDecal( DecalBuildInfo_t& build, svert_t 
 		svert_t *test = &build.m_Vertices[i];
 
 		// Only bother to check against clipped vertices
-		if( test->m_MeshVertexIndex != INVALID_HANDLE )
+		if( test->m_MeshVertexIndex != INVALID_VERTEX_INDEX )
 			continue;
 
 		if( !VectorCompareEpsilon( test->vertex, vert->vertex, 1e-3 ))
@@ -572,7 +572,7 @@ int CStudioModelRenderer :: IntersectPlane( DecalClipState_t& state, int start, 
 	int newVert = state.m_ClipVertCount++;
 
 	// the clipped vertex has no analogue in the original mesh
-	out->m_MeshVertexIndex = INVALID_HANDLE;
+	out->m_MeshVertexIndex = INVALID_VERTEX_INDEX;
 
 	// just select bone by interpolation factor
 	if( t <= 0.5f )
@@ -682,7 +682,7 @@ Adds the clipped triangle to the decal
 */
 void CStudioModelRenderer :: AddClippedDecalToTriangle( DecalBuildInfo_t& build, DecalClipState_t& clipState )
 {
-	word indices[7];
+	int32_t indices[7];
 	int i;
 
 	ASSERT( clipState.m_VertCount <= 7 );

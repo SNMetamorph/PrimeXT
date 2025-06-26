@@ -16,6 +16,7 @@ GNU General Public License for more details.
 #ifndef GL_STUDIODECAL_H
 #define GL_STUDIODECAL_H
 #include "gl_studio_userdata.h"
+#include <stdint.h>
 
 enum
 {
@@ -27,8 +28,8 @@ enum
 
 typedef struct
 {
-	Vector2D		m_UV;
-	word		m_VertexIndex;		// index into the DecalVertex_t list
+	Vector2D	m_UV;
+	int32_t		m_VertexIndex;		// index into the DecalVertex_t list
 	bool		m_FrontFacing;
 	bool		m_InValidArea;
 } DecalVertexInfo_t;
