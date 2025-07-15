@@ -155,7 +155,7 @@ if(MSVC)
 
 	# release mode compiler flags
 	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release,RelWithDebInfo>:/O2>) # enable optimizing to maximize speed
-	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release,RelWithDebInfo>:/GL>) # enable whole program optimization
+	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release>:/GL>) # enable whole program optimization
 
 	# enable dynamic debugging feature for release mode
 	target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RelWithDebInfo>:/dynamicdeopt>)
