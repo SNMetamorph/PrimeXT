@@ -20,7 +20,7 @@ Modernized toolkit for Xash3D FWGS engine, with extended physics, improved graph
 - Eliminated many of limits that were presented in GoldSrc and vanilla Xash3D
 
 ## Projects that are based on PrimeXT
-- [Ionization](https://www.moddb.com/games/ionization)
+- [Ionization](https://www.moddb.com/mods/ionization)
 - [Half-Life: History of Kumertau](https://www.moddb.com/mods/half-life-history-of-kumertau)
 - ["Zemlya Rodnaya" in Novy Urengoy](https://www.moddb.com/mods/school-2-in-novy-urengoy-recreated-on-xash3d)
 - [Metro 2031: Last Chance](https://www.moddb.com/mods/metro-2031-last-chance)
