@@ -366,26 +366,18 @@ static int StudioCreateMeshFromTriangles( entity_t *ent, studiohdr_t *phdr, cons
 		Q_snprintf( diffuse, sizeof( diffuse ), "textures/%s/%s", mdlname, texname );
 
 #ifdef HLRAD_EXTERNAL_TEXTURES
-		if (FBitSet(tex->flags, STUDIO_NF_ADDITIVE | STUDIO_NF_MASKED))
+		//we have to load all textures for colored gi, but only alpha will be kept for tracing
+		rgbdata_t *test = COM_LoadImage(diffuse, true, FS_LoadFile);
+		if(test)
 		{
-			rgbdata_t *test = COM_LoadImage(diffuse, false, FS_LoadFile);
+			MsgDev(D_REPORT, "Load external texture %s\n", diffuse);
+			external_textures[i] = test;
 
-			// external texture has alpha - use it
-			if (test)
-			{
+			if (FBitSet(tex->flags, STUDIO_NF_ADDITIVE | STUDIO_NF_MASKED))	
 				if (FBitSet(test->flags, IMAGE_HAS_ALPHA))
-				{
-					MsgDev(D_REPORT, "Load external texture %s\n", diffuse);
-					texdata_size += test->width * test->height;
-					external_textures[i] = test;
-				}
-				else
-				{
-					// has no alpha
-					Mem_Free(test);
-				}
-			}
+					texdata_size += test->width * test->height;			
 		}
+
 #endif
 		if( external_textures[i] ) continue; // already loaded
 
@@ -460,6 +452,57 @@ static int StudioCreateMeshFromTriangles( entity_t *ent, studiohdr_t *phdr, cons
 			mesh->verts[i].light = (lvert_t *)meshdata;
 			meshdata += sizeof( lvert_t );
 			VectorCopy( mesh->verts[i].point, mesh->verts[i].light->pos );
+
+			VectorClear( mesh->verts[i].light->pos );
+		}
+	}
+
+	//move every vertex lighting pos closer to the face center to prevent selfshadowing in the corners
+	if( FBitSet( flags, FMESH_VERTEX_LIGHTING ))	
+	{
+		for( i = 0; i < mesh->numfaces; i++ )
+		{
+			vec3_t	origin, delta;
+			vec_t	dist, dot;
+			tvert_t	*tv[3];
+
+			tv[0] = &mesh->verts[mesh->faces[i].a];
+			tv[1] = &mesh->verts[mesh->faces[i].b];
+			tv[2] = &mesh->verts[mesh->faces[i].c];
+/*
+			VectorCopy( tv[0]->point, origin );
+			VectorAdd( origin, tv[1]->point, origin );
+			VectorAdd( origin, tv[2]->point, origin );
+			VectorScale( origin, 0.333333333f, origin );
+*/
+			//incenter seems to be better than centroid
+			TriangleIncenter( tv[0]->point, tv[1]->point, tv[2]->point, origin );
+
+			for( j = 0; j < 3; j++ )
+			{
+				VectorSubtract( origin, tv[j]->point, delta );
+
+				dist = VectorNormalize( delta );
+
+				dot = DotProduct( delta, tv[j]->normal );
+
+				if( dot < 0.0f )
+				{
+					VectorMA( delta, -dot, tv[j]->normal, delta );	//project offset vector to the tangent plane
+				}
+				
+				dist = Q_min( dist, 1.0f );
+				VectorMA( tv[j]->light->pos, dist, delta, tv[j]->light->pos );
+			}
+		}
+
+		for( i = 0; i < numVerts; i++ )
+		{
+			vec_t	dist;
+			dist = VectorNormalize( mesh->verts[i].light->pos );
+			dist = Q_min( dist, 1.0f );
+
+			VectorMA( mesh->verts[i].point, dist, mesh->verts[i].light->pos, mesh->verts[i].light->pos );
 		}
 	}
 
@@ -475,7 +518,79 @@ static int StudioCreateMeshFromTriangles( entity_t *ent, studiohdr_t *phdr, cons
 	for( int l = 0; l < MAXLIGHTMAPS; l++ )
 		mesh->styles[l] = 255;
 
-	// store only texdata where we has alpha-testing
+
+	//diffuse color for faces, also mark two-sided vertices
+	for( i = 0; i < mesh->numfaces; i++ )
+	{
+		tface_t				*face = &mesh->faces[i];
+		mstudiotexture_t	*tex = &ptexture[face->skinref];
+		rgbdata_t 			*extex = external_textures[face->skinref];
+		tvert_t	*tv[3];
+		byte	color_id;
+		vec3_t	temp_color = {0,0,0};
+		byte	weight_sum = 0;
+
+		tv[0] = &mesh->verts[face->a];
+		tv[1] = &mesh->verts[face->b];
+		tv[2] = &mesh->verts[face->c];		
+
+		for( j = 0; j < 3; j++ )
+			tv[j]->twosided = FBitSet( tex->flags, STUDIO_NF_TWOSIDE );
+
+		vec_t	face_s = ( tv[0]->st[0] + tv[1]->st[0] + tv[2]->st[0] ) * 0.3333333f;
+		vec_t	face_t = ( tv[0]->st[1] + tv[1]->st[1] + tv[2]->st[1] ) * 0.3333333f;
+
+		//sample texture 4 times - in the centroid and halfway to vertices, hopefully that's enough
+		for( j = 0; j < 4; j++ )
+		{
+			vec_t s, t;
+			if ( j < 3 )
+			{
+				s = tv[j]->st[0]; t = tv[j]->st[1];
+			}
+			else
+			{
+				s = face_s; t = face_t;
+			}
+
+			s = (s + face_s) * 0.5f;
+			t = (t + face_t) * 0.5f;
+
+			if( extex )
+			{
+				int	x = fix_coord( s * extex->width, extex->width - 1 );
+				int	y = fix_coord( t * extex->height, extex->height - 1 );
+				
+				weight_sum++;
+				for( k = 0; k < 3; k++ )
+					temp_color[k] += TextureToLinear( extex->buffer[(y * extex->width + x) * 4 + k] );					
+			}
+			else
+			{
+				int	x = fix_coord( s * tex->width, tex->width - 1 );
+				int	y = fix_coord( t * tex->height, tex->height - 1 );	
+
+				color_id = *((byte *)phdr + tex->index + tex->width * y + x);			
+
+				if( color_id != 255 )	//skip transparent alpha 
+				{	
+					weight_sum++;
+					for( k = 0; k < 3; k++ )
+						temp_color[k] += TextureToLinear( *((byte *)phdr + tex->index + tex->width * tex->height + color_id * 3 + k) );	
+				}
+			}
+		}
+
+		if( weight_sum > 0 )
+			VectorScale( temp_color, 1.0f / (float)weight_sum, temp_color );
+
+		for( k = 0; k < 3; k++ )
+			face->color[k] = LinearToTexture( temp_color[k] );
+		//Msg( "face color %d %d %d\n", face->color[0],face->color[1],face->color[2]);
+	}
+	
+
+	// store only texdata where we have alpha-testing
 	for( i = 0; i < phdr->numtextures; i++ )
 	{
 		mstudiotexture_t	*src = &ptexture[i];
@@ -488,20 +603,26 @@ static int StudioCreateMeshFromTriangles( entity_t *ent, studiohdr_t *phdr, cons
 		if( external_textures[i] )
 		{
 			rgbdata_t *test = external_textures[i];
-			dst->data = meshdata;
-			dst->width = test->width;
-			dst->height = test->height;
 
-			// copy alpha channel from external texture
-			for( j = 0; j < test->width * test->height; j++ )
-				dst->data[j] = test->buffer[j*4+3] < 255 ? 255 : 0; // because we used palette index, not alpha value
-			meshdata += test->width * test->height; // move pointer
+			if (FBitSet(src->flags, STUDIO_NF_ADDITIVE | STUDIO_NF_MASKED))
+				if (FBitSet(test->flags, IMAGE_HAS_ALPHA))
+				{
+					dst->data = meshdata;
+					dst->width = test->width;
+					dst->height = test->height;
+
+					// copy alpha channel from external texture
+					for( j = 0; j < test->width * test->height; j++ )
+						dst->data[j] = test->buffer[j*4+3] < 128 ? 255 : 0; // because we used palette index, not alpha value
+					meshdata += test->width * test->height; // move pointer
+				}
+
 			external_textures[i] = NULL;
 			Mem_Free( test );
 		}
 		else if( FBitSet( src->flags, STUDIO_NF_MASKED ))
 		{
-			// NOTE: store the only pixels, we doesn't need a palette
+			// NOTE: store the only pixels, we don't need a palette
 			dst->data = meshdata;
 			memcpy( dst->data, (byte *)phdr + src->index, src->width * src->height );
 			meshdata += src->width * src->height; // move pointer
@@ -589,29 +710,6 @@ bool StudioConstructMesh( entity_t *ent, void *extradata, const char *modname, u
 
 	tmesh_t	*mesh = (tmesh_t *)ent->cache;
 	size_t	memsize = Mem_Size( ent->cache );
-	int	maxDepth = AREA_MIN_DEPTH;
-
-	// FIXME: check this efficiency
-	if( numFaces < 1000 )
-		maxDepth = AREA_MIN_DEPTH;
-	else if( numFaces >= 1000 && numFaces <= 10000 )
-		maxDepth = 5;
-	else if( numFaces >= 10000 && numFaces <= 20000 )
-		maxDepth = 6;
-	else if( numFaces >= 20000 && numFaces <= 50000 )
-		maxDepth = 7;
-	else if( numFaces >= 50000 && numFaces <= 100000 )
-		maxDepth = 8;
-	else if( numFaces >= 100000 && numFaces <= 200000 )
-		maxDepth = 9;
-	else maxDepth = AREA_MAX_DEPTH;
-
-	// create AABB tree for speedup reasons
-	CreateAreaNode( &mesh->face_tree, 0, maxDepth, mesh->absmin, mesh->absmax );
-
-	for( i = 0; i < numFaces; i++ )
-		StudioRelinkFace( &mesh->face_tree, &mesh->faces[i] );
-
 	ent->modtype = mod_studio; // now our mesh is valid and ready to trace
 	mesh->modelCRC = modelCRC;
 	VectorCopy( origin, mesh->origin );
