@@ -143,5 +143,41 @@ private:
 	float BoxSurfaceArea( const vec3_t boxmin, const vec3_t boxmax );
 };
 
+
+
+#define BVH_EXIT_NODE		INT_MAX
+
+struct bbox_t
+{
+	vec3_t	min, max;	
+};
+
+struct bvhnode_t
+{
+	int		start_id, end_id;
+	int 	hit, miss;
+	bbox_t	bbox;
+};
+
+class CWorldRayTraceBVH
+{
+private:
+	bvhnode_t	*nodes;
+	tmesh_t		*mesh;	
+public:
+	CWorldRayTraceBVH()
+	{
+		nodes = NULL;
+		mesh = NULL;
+	}
+
+	void BuildTree( tmesh_t *src );
+
+	void TraceRay( const vec3_t start, const vec3_t stop, trace_t *trace, bool stop_on_first_intersection = false  );
+private:
+	float SAH( const bbox_t box );
+	bool TraceTexture( const tface_t *face, float u, float v, float w );	
+};
+
 #endif//RAYTRACER_H
 #endif//HLRAD_RAYTRACE
