@@ -20,7 +20,7 @@ GNU General Public License for more details.
 #include <stdint.h>
 
 #define GAMMA		( 2.2f )		// Valve Software gamma
-#define INVGAMMA	( 1.0f / 2.2f )	// back to 1.0
+#define INVGAMMA	( 1.0f / GAMMA )	// back to 1.0
 
 /*
 ========================================================================
@@ -242,7 +242,7 @@ rgbdata_t *COM_LoadImage( const char *filename, bool quiet = false, pfnLoadFileI
 const imgtype_t *Image_ImageTypeFromHint( char value );
 bool COM_SaveImage( const char *filename, rgbdata_t *pix );
 bool Image_ValidSize( const char *name, int width, int height );
-void Image_BuildMipMap( byte *in, int width, int height, bool isNormalMap );
+void Image_BuildMipMap( byte *in, int width, int height, bool isNormalMap, bool gammaCorrect = false );
 rgbdata_t *Image_Resample( rgbdata_t *pic, int new_width, int new_height );
 rgbdata_t *Image_MergeColorAlpha( rgbdata_t *color, rgbdata_t *alpha );
 rgbdata_t *Image_CreateCubemap( rgbdata_t *images[6], bool skybox = false, bool nomips = false );

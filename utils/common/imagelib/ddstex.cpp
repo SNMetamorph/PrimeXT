@@ -887,7 +887,17 @@ rgbdata_t *DDSToRGBA( const char *name, const byte *buffer, size_t filesize )
 		squish::DecompressImage(pic->buffer, header.dwWidth, header.dwHeight, fin, sqFlags);
 	}
 	else {
-		memcpy(pic->buffer, fin, header.dwWidth * header.dwHeight * FBitSet(flags, IMAGE_HAS_ALPHA) ? 4 : 3);
+		//uncompressed dds stores bgr/bgra, we need rgba, can't just copy
+		byte *out = pic->buffer;
+		byte pixel_size = FBitSet(flags, IMAGE_HAS_ALPHA) ? 4 : 3;
+		byte *bufend = fin + header.dwWidth * header.dwHeight * pixel_size;
+		for (; fin < bufend; fin += pixel_size)
+		{
+			*out++ = fin[2];
+			*out++ = fin[1];
+			*out++ = fin[0];
+			*out++ = FBitSet(flags, IMAGE_HAS_ALPHA) ? fin[3] : 255;
+		}
 	}
 
 	pic->flags = flags;
