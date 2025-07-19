@@ -546,14 +546,40 @@ void CWorldRayTrace :: TraceRay( vec_t p1f, vec_t p2f, const vec3_t start, const
 						// Therefore we pass them back in 1, 2, 0 order
 						// Also B2 is currently B1 + B0 and needs to be 1 - (B1+B0) in order to be a real
 						// barycentric coordinate.  Compute that now and pass it to the callback
-						if( !TraceTexture( face, 1.0 - B2, B0, B1 ))
+						if( !TraceTexture( face, 1.0f - B2, B0, B1 ))
 							continue;	// passed through alpha-pixel
 					}
 
 					if( trace->fraction > isect_t )
 					{ 
 						trace->contents = face->contents;
-						trace->fraction = isect_t;
+						trace->fraction = isect_t;					
+
+						//studio gi
+						if( (DotProduct( direction, face->normal ) < 0.0f)||FBitSet( face->texture->flags, STUDIO_NF_TWOSIDE ) )
+						{
+							trace->surface = STUDIO_SURFACE_HIT;
+							for( int style = 0; style < MAXLIGHTMAPS; style++ )
+							{
+								trace->styles[style] = mesh->styles[style];
+								VectorClear( trace->light[style] );
+								if( mesh->verts[face->a].light )
+									VectorMA( trace->light[style], B1, mesh->verts[face->a].light->light[style], trace->light[style] );
+								if( mesh->verts[face->b].light )
+									VectorMA( trace->light[style], 1.0f - B2, mesh->verts[face->b].light->light[style], trace->light[style] );
+								if( mesh->verts[face->c].light )
+									VectorMA( trace->light[style], B0, mesh->verts[face->c].light->light[style], trace->light[style] );
+
+								trace->light[style][0] *= TextureToLinear( face->color[0] );
+								trace->light[style][1] *= TextureToLinear( face->color[1] );
+								trace->light[style][2] *= TextureToLinear( face->color[2] );
+
+								if( FBitSet( face->texture->flags, STUDIO_NF_TWOSIDE ) )
+									VectorScale( trace->light[style], 0.31831f, trace->light[style] );	//not very accurate								
+							}
+						}
+						else
+							trace->surface = -1;
 					}
 				}
 			} while( --ntris );
@@ -572,4 +598,349 @@ void CWorldRayTrace :: TraceRay( vec_t p1f, vec_t p2f, const vec3_t start, const
 		stack_ptr++;
 	}
 }
+
+
+
+float CWorldRayTraceBVH :: SAH( const bbox_t box )
+{
+	vec3_t	boxdim;
+	VectorSubtract( box.max, box.min, boxdim );
+	return 2.0f * ((boxdim[0] * boxdim[2]) + (boxdim[0] * boxdim[1]) + (boxdim[1] * boxdim[2]));
+}
+
+bool CWorldRayTraceBVH :: TraceTexture( const tface_t *face, float u, float v, float w )
+{
+	// calculate st from uvw (barycentric) coordinates
+	float	s = w * mesh->verts[face->a].st[0] + u * mesh->verts[face->b].st[0] + v * mesh->verts[face->c].st[0];
+	float	t = w * mesh->verts[face->a].st[1] + u * mesh->verts[face->b].st[1] + v * mesh->verts[face->c].st[1];
+
+	s *= face->texture->width;
+	t *= face->texture->height;
+
+	int x = fix_coord( floorf(s), face->texture->width );
+	int y = fix_coord( ceilf(t), face->texture->height );
+
+	return (face->texture->data[(face->texture->width * y) + x] != 255);	
+}
+
+int CompareBBoxCentroidsX(const void* a,const void* b) 
+{
+	bbox_t	*box1 = *(bbox_t**)a;
+	bbox_t	*box2 = *(bbox_t**)b;
+  	return box1->max[0] + box1->min[0] - box2->max[0] - box2->min[0];
+}
+
+int CompareBBoxCentroidsY(const void* a,const void* b) 
+{
+	bbox_t	*box1 = *(bbox_t**)a;
+	bbox_t	*box2 = *(bbox_t**)b;
+  	return box1->max[1] + box1->min[1] - box2->max[1] - box2->min[1];
+}
+
+int CompareBBoxCentroidsZ(const void* a,const void* b) 
+{
+	bbox_t	*box1 = *(bbox_t**)a;
+	bbox_t	*box2 = *(bbox_t**)b;
+  	return box1->max[2] + box1->min[2] - box2->max[2] - box2->min[2];
+}
+
+void CWorldRayTraceBVH :: BuildTree( tmesh_t *src )
+{
+	int	i,j,k;
+	int box_count, node_count;
+
+	bbox_t		*boxes;
+	bbox_t		**boxes_id[3];
+	bbox_t		*boxsah_left, *boxsah_right;
+	vec_t		tempSAH;
+	vec_t		minSAH;
+	int			minSAH_axis;
+	int			minSAH_separator;
+	bbox_t		minSAH_boxleft, minSAH_boxright;
+	bvhnode_t	*node_cur;
+	bvhnode_t	*node_last;	
+	bbox_t		*box_cur;
+	int			*faces_id;
+	tface_t 	*face;
+
+	mesh = src;
+
+	box_count = 0;
+	for( i = 0; i < mesh->numfaces; i++ )
+		if( mesh->faces[i].shadow )
+			box_count++;
+
+	node_count = box_count * 2 - 1;
+
+	boxes = new bbox_t[box_count];
+	boxsah_left = new bbox_t[box_count];
+	boxsah_right = new bbox_t[box_count];
+	boxes_id[0] = new bbox_t*[box_count];
+	boxes_id[1] = new bbox_t*[box_count];
+	boxes_id[2] = new bbox_t*[box_count];
+	faces_id = new int[box_count];
+
+	nodes = new bvhnode_t[node_count];
+	nodes[0].start_id = 0;
+	nodes[0].end_id = box_count - 1;
+	nodes[0].hit = BVH_EXIT_NODE;
+	nodes[0].miss = BVH_EXIT_NODE;	
+	VectorSet( nodes[0].bbox.min,  FLT_MAX,  FLT_MAX,  FLT_MAX );
+	VectorSet( nodes[0].bbox.max, -FLT_MAX, -FLT_MAX, -FLT_MAX );	
+
+
+	for( i = 0, j = 0, box_cur = &boxes[0]; i < box_count; i++, j++, box_cur++ )
+	{
+		while( true )
+		{
+			face = &mesh->faces[j];
+			if( face->shadow )
+				break;
+			j++;
+		}
+		faces_id[i] = j;
+
+		VectorCopy( mesh->verts[face->a].point, box_cur->min );
+		VectorCopy( mesh->verts[face->a].point, box_cur->max );
+		VectorCompareMin( mesh->verts[face->b].point, box_cur->min, box_cur->min );
+		VectorCompareMax( mesh->verts[face->b].point, box_cur->max, box_cur->max );
+		VectorCompareMin( mesh->verts[face->c].point, box_cur->min, box_cur->min );
+		VectorCompareMax( mesh->verts[face->c].point, box_cur->max, box_cur->max );
+
+		VectorCompareMin( nodes[0].bbox.min, box_cur->min, nodes[0].bbox.min );
+		VectorCompareMax( nodes[0].bbox.max, box_cur->max, nodes[0].bbox.max );		
+
+		boxes_id[0][i] = box_cur;
+		boxes_id[1][i] = box_cur;
+		boxes_id[2][i] = box_cur;
+	}
+
+	
+	
+	node_last = &nodes[0];
+	
+	for( i = 0, node_cur = &nodes[0]; i < node_count; i++, node_cur++ )
+		if( node_cur->end_id > node_cur->start_id )
+		{
+			minSAH = FLT_MAX;
+			
+			for( j = 0; j < 3; j++ )
+			{
+				switch( j )
+				{
+					case 0: qsort( &boxes_id[0][node_cur->start_id], node_cur->end_id - node_cur->start_id + 1, sizeof(bbox_t*), CompareBBoxCentroidsX ); break;
+					case 1: qsort( &boxes_id[1][node_cur->start_id], node_cur->end_id - node_cur->start_id + 1, sizeof(bbox_t*), CompareBBoxCentroidsY ); break;
+					case 2: qsort( &boxes_id[2][node_cur->start_id], node_cur->end_id - node_cur->start_id + 1, sizeof(bbox_t*), CompareBBoxCentroidsZ ); break;
+				}
+				
+				
+				VectorCopy( boxes_id[j][node_cur->start_id]->min, boxsah_left[node_cur->start_id].min );
+				VectorCopy( boxes_id[j][node_cur->start_id]->max, boxsah_left[node_cur->start_id].max );
+				for( k = node_cur->start_id + 1; k <= node_cur->end_id; k++ )
+				{
+					VectorCompareMin( boxsah_left[k-1].min, boxes_id[j][k]->min, boxsah_left[k].min );
+					VectorCompareMax( boxsah_left[k-1].max, boxes_id[j][k]->max, boxsah_left[k].max );
+				}
+				
+				VectorCopy( boxes_id[j][node_cur->end_id]->min, boxsah_right[node_cur->end_id].min );
+				VectorCopy( boxes_id[j][node_cur->end_id]->max, boxsah_right[node_cur->end_id].max );
+				for( k = node_cur->end_id - 1; k >= node_cur->start_id; k-- )
+				{
+					VectorCompareMin( boxsah_right[k+1].min, boxes_id[j][k]->min, boxsah_right[k].min );
+					VectorCompareMax( boxsah_right[k+1].max, boxes_id[j][k]->max, boxsah_right[k].max );
+				}
+
+				for( k = node_cur->start_id; k < node_cur->end_id; k++ )
+				{
+					tempSAH = SAH( boxsah_left[k] ) * ( k - node_cur->start_id + 1 );
+					tempSAH += SAH( boxsah_right[k+1] ) * ( node_cur->end_id - k ); 
+
+					if( tempSAH < minSAH )
+					{
+						minSAH = tempSAH;
+						minSAH_axis = j;
+						minSAH_separator = k;
+						memcpy( &minSAH_boxleft, &boxsah_left[k], sizeof( bbox_t ));
+						memcpy( &minSAH_boxright, &boxsah_right[k+1], sizeof( bbox_t ));
+					}
+				}
+			}
+
+			//splitting current node
+			node_last++;
+			node_cur->hit = node_last - &nodes[0];
+			//child1
+			node_last->start_id = node_cur->start_id;
+			node_last->end_id = minSAH_separator;
+			node_last->hit = node_cur->hit + 1;
+			node_last->miss = node_cur->hit + 1;
+			memcpy( &node_last->bbox, &minSAH_boxleft, sizeof( bbox_t ));
+			//child2
+			node_last++;
+			node_last->start_id = minSAH_separator + 1;
+			node_last->end_id = node_cur->end_id;
+			node_last->hit = node_cur->miss;
+			node_last->miss = node_cur->miss;
+			memcpy( &node_last->bbox, &minSAH_boxright, sizeof( bbox_t ));
+
+			//Msg(" bvh node num %d, split pos %d, split axis %d\n", i , minSAH_separator, minSAH_axis );
+
+			//copy boxes_id from the split axis to others
+			for( j = 0; j < 3; j++ )
+				if( j != minSAH_axis )
+					memcpy( &boxes_id[j][node_cur->start_id], &boxes_id[minSAH_axis][node_cur->start_id], (node_cur->end_id - node_cur->start_id + 1) * sizeof(bbox_t*) );			
+		}
+
+
+	for( i = 0, node_cur = &nodes[0]; i < node_count; i++, node_cur++ )
+		if( node_cur->end_id == node_cur->start_id )	//leaf node, negative hit points to a face
+			node_cur->hit = - faces_id[(boxes_id[0][node_cur->start_id] - &boxes[0])]; 
+		
+
+	delete[] boxes;
+	delete[] boxsah_left;
+	delete[] boxsah_right;
+	delete[] boxes_id[0];
+	delete[] boxes_id[1];
+	delete[] boxes_id[2];
+	delete[] faces_id;
+}
+
+void CWorldRayTraceBVH :: TraceRay( const vec3_t start, const vec3_t stop, trace_t *trace, bool stop_on_first_intersection )
+{
+	vec3_t	ray_dir, inv_ray_dir, ray_origin;
+	vec_t	dist;
+
+	VectorCopy( start, ray_origin );
+	VectorSubtract( stop, start, ray_dir );
+	dist = VectorNormalize( ray_dir );
+	trace->fraction = dist;
+
+	ray_dir[0] = (ray_dir[0] == 0.0f) ? FLT_EPSILON : ray_dir[0];
+	ray_dir[1] = (ray_dir[1] == 0.0f) ? FLT_EPSILON : ray_dir[1];
+	ray_dir[2] = (ray_dir[2] == 0.0f) ? FLT_EPSILON : ray_dir[2];
+	VectorRecip( ray_dir, inv_ray_dir );
+
+
+	bvhnode_t	*node_cur;
+	vec3_t tbot, ttop, tmin, tmax;
+	vec2_t t;
+	vec_t t0, t1;
+	vec2_t hit;
+
+	vec3_t p0, e0, e1, pv;
+	vec_t inv_det;
+	vec3_t tv, qv;
+	vec4_t uvt;
+	bool tri_hit;
+
+	//int counter = 0;
+	//int tris_counter = 0;
+
+	int node_cur_id = 0;
+	while( node_cur_id != BVH_EXIT_NODE )
+	{
+		//counter++;
+		node_cur = &nodes[node_cur_id];
+		
+		VectorSubtract( node_cur->bbox.min, ray_origin, tbot );
+		VectorMultiply( tbot, inv_ray_dir, tbot );
+
+		VectorSubtract( node_cur->bbox.max, ray_origin, ttop );
+		VectorMultiply( ttop, inv_ray_dir, ttop );
+
+		VectorCompareMin( ttop, tbot, tmin );
+		VectorCompareMax( ttop, tbot, tmax );
+
+		t[0] = Q_max( tmin[0], tmin[1] );
+		t[1] = Q_max( tmin[0], tmin[2] );
+		t0 = Q_max( t[0], t[1] );
+
+		t[0] = Q_min( tmax[0], tmax[1] );
+		t[1] = Q_min( tmax[0], tmax[2] );
+		t1 = Q_min( t[0], t[1] );
+
+		if( ( t1 >= Q_max( t0, 0.0f ) )&&( t0 <= trace->fraction ) )	//box hit
+		{
+			if( node_cur->hit <= 0 )	//leaf node, check face intersection
+			{
+				//tris_counter++;
+
+				node_cur_id = node_cur->miss;
+
+				const tface_t *face = &mesh->faces[-node_cur->hit];
+				VectorCopy( mesh->verts[face->a].point, p0 );
+				VectorSubtract( mesh->verts[face->b].point, p0, e0 );
+				VectorSubtract( mesh->verts[face->c].point, p0, e1 );
+
+				CrossProduct( ray_dir, e1, pv );
+				inv_det = 1.0f / DotProduct( e0, pv );
+
+				VectorSubtract( ray_origin, p0, tv );
+				CrossProduct( tv, e0, qv );
+
+				uvt[0] = DotProduct( tv, pv ) * inv_det;
+				uvt[1] = DotProduct( ray_dir, qv ) * inv_det;
+				uvt[2] = 1.0f - uvt[0] - uvt[1];				
+				uvt[3] = DotProduct( e1, qv ) * inv_det;
+
+				tri_hit = uvt[0] >= 0.0f;
+				tri_hit = tri_hit && ( uvt[1] >= 0.0f );
+				tri_hit = tri_hit && ( uvt[2] >= 0.0f );
+				tri_hit = tri_hit && ( uvt[3] >= 0.0f );
+
+				if( tri_hit )
+				{
+					if( face->texture->data )
+						if( !TraceTexture( face, uvt[0], uvt[1], uvt[2]) )
+							continue;
+
+					trace->fraction = uvt[3];
+					trace->contents = face->contents;
+
+					if( stop_on_first_intersection )
+					{	
+						trace->surface = -1;
+						trace->fraction /= dist;
+						return;
+					}
+
+					//studio gi
+					if( (DotProduct( ray_dir, face->normal ) < 0.0f )||FBitSet( face->texture->flags, STUDIO_NF_TWOSIDE ) )
+					{
+						trace->surface = STUDIO_SURFACE_HIT;
+						for( int style = 0; style < MAXLIGHTMAPS; style++ )
+						{
+							trace->styles[style] = mesh->styles[style];
+							VectorClear( trace->light[style] );
+							if( mesh->verts[face->a].light )
+								VectorMA( trace->light[style], uvt[2], mesh->verts[face->a].light->light[style], trace->light[style] );
+							if( mesh->verts[face->b].light )
+								VectorMA( trace->light[style], uvt[0], mesh->verts[face->b].light->light[style], trace->light[style] );
+							if( mesh->verts[face->c].light )
+								VectorMA( trace->light[style], uvt[1], mesh->verts[face->c].light->light[style], trace->light[style] );
+
+							trace->light[style][0] *= TextureToLinear( face->color[0] );
+							trace->light[style][1] *= TextureToLinear( face->color[1] );
+							trace->light[style][2] *= TextureToLinear( face->color[2] );
+
+							if( FBitSet( face->texture->flags, STUDIO_NF_TWOSIDE ) )
+								VectorScale( trace->light[style], 0.31831f, trace->light[style] );	//not very accurate
+						}
+					}
+					else
+						trace->surface = -1;
+				}
+			}
+			else
+				node_cur_id = node_cur->hit;
+		}
+		else
+			node_cur_id = node_cur->miss;
+	}
+
+	trace->fraction /= dist;	
+	//Msg( " fraction %f, counter %d, tris_counter %d\n", trace->fraction, counter, tris_counter );
+}
+
 #endif
