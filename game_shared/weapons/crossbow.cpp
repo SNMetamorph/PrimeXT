@@ -196,7 +196,6 @@ void CCrossbowWeaponContext::FireBolt( void )
 		m_pLayer->PlaybackWeaponEvent(params);
 	}
 
-	m_pLayer->AddPlayerPunchangle(-2.f, 0.f, 0.f);
 	m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.75f);
 	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 0.75f;
 
@@ -252,6 +251,8 @@ void CCrossbowWeaponContext::FireBolt( void )
 		// HEV suit - indicate out of ammo condition
 		player->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 #endif
+
+	m_pLayer->AddPlayerPunchangle(-2.f, 0.f, 0.f);
 }
 
 void CCrossbowWeaponContext::SecondaryAttack( void )
