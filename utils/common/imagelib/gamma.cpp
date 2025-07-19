@@ -22,13 +22,14 @@ GNU General Public License for more details.
 #include "stringlib.h"
 #include "conprint.h"
 
-#define GAMMA		( 2.2f )		// Valve Software gamma
-#define INVGAMMA		( 1.0f / 2.2f )	// back to 1.0
+#define GAMMA			( 2.2f )		// Valve Software gamma
+#define INVGAMMA		( 1.0f / GAMMA )// back to 1.0
 #define TEXGAMMA		( 0.7f )
 #define TEXINTENSITY	( 1.2f )
 
 static float	texturetolinear[256];	// texture (0..255) to linear (0..1)
 static int	lineartotexture[1024];	// linear (0..1) to texture (0..255)
+static int	lineartotextureprecise[1024];	//more precision for values < 1/64
 static byte	s_gammatable[256];
 static byte	s_intensitytable[256];
 
@@ -42,10 +43,10 @@ void BuildGammaTable( void )
 	for( i = 0; i < 256; i++ )
 	{
 		// convert from nonlinear texture space (0..255) to linear space (0..1)
-		texturetolinear[i] =  pow( i / 255.0f, INVGAMMA );
+		texturetolinear[i] =  powf( i / 255.0f, GAMMA );
 
 		if( g == 1.0f ) inf = i;
-		else inf = 255 * pow( i / 255.0f, 1.0f / g ) + 0.5f;
+		else inf = 255 * powf( i / 255.0f, 1.0f / g ) + 0.5f;
 		s_gammatable[i] = bound( 0, inf, 255 );
 
 		inf = i * TEXINTENSITY;
@@ -55,7 +56,8 @@ void BuildGammaTable( void )
 	for( i = 0; i < 1024; i++ )
 	{
 		// convert from linear space (0..1) to nonlinear texture space (0..255)
-		lineartotexture[i] =  pow( i / 1023.0, INVGAMMA ) * 255;
+		lineartotexture[i] =  powf( i / 1023.0f, INVGAMMA ) * 255.0f + 0.5f;
+		lineartotextureprecise[i] =  powf( i / 65472.0f, INVGAMMA ) * 255.0f + 0.5f;
 	}
 }
 
@@ -63,6 +65,9 @@ void BuildGammaTable( void )
 float TextureToLinear( int c ) { return texturetolinear[bound( 0, c, 255 )]; }
 
 // convert texture to linear 0..1 value
-int LinearToTexture( float f ) { return lineartotexture[bound( 0, (int)(f * 1023), 1023 )]; }
+int LinearToTexture( float f )
+{ 
+	return (f > (1.0f / 64.0f)) ? lineartotexture[bound( 0, (int)(f * 1023.0f + 0.5f), 1023 )] :lineartotextureprecise[bound( 0, (int)(f * 65472.0f + 0.5f), 1023 )];
+} 
 
 byte TextureLightScale( byte c ) { return s_gammatable[s_intensitytable[c]]; }
