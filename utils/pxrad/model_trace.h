@@ -42,6 +42,10 @@ typedef struct lvert_s
 	vec3_t		light[MAXLIGHTMAPS];	// lightvalue
 	vec3_t		deluxe[MAXLIGHTMAPS];	// deluxe vectors
 	vec_t		shadow[MAXLIGHTMAPS];	// shadow values
+	hvec3_t		gi[MAXLIGHTMAPS];
+	hvec3_t		gi_prev[MAXLIGHTMAPS];
+	hvec3_t		gi_dlx[MAXLIGHTMAPS];
+	int			face_counter;			// need for blurring
 #endif
 } lvert_t;
 
@@ -55,6 +59,7 @@ typedef struct tvert_s
 	vec3_t		normal;			// smoothed normal
 #endif
 	lvert_t		*light;			// vertex lighting only (may be NULL)
+	bool		twosided;
 } tvert_t;
 
 typedef struct lface_s
@@ -81,9 +86,11 @@ struct tface_t
 	byte		pcoord0;		// coords selection
 	byte		pcoord1;
 	bool		shadow;		// this face is used for traceline
-	int		a, b, c;		// face indices
+	int			a, b, c;		// face indices
 	vec3_t		normal;		// triangle unsmoothed normal
 	float		NdotP1;
+
+	byte		color[3];	// diffuse color for gi
 
 	union
 	{
@@ -197,6 +204,7 @@ struct tmesh_t
 	aabb_tree_t	face_tree;
 #ifdef HLRAD_RAYTRACE
 	CWorldRayTrace	ray;
+	CWorldRayTraceBVH	rayBVH;
 #endif
 };
 
