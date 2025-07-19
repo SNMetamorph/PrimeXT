@@ -134,7 +134,7 @@ void CGlockWeaponContext::GlockFire( float flSpread , float flCycleTime, bool fU
 		m_pLayer->PlaybackWeaponEvent(params);
 	}
 
-	// PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), fUseAutoAim ? m_usFireGlock1 : m_usFireGlock2, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, vecDir.x, vecDir.y, 0, 0, ( m_iClip == 0 ) ? 1 : 0, 0 );
+	m_pLayer->AddPlayerPunchangle(-2.f, 0.f, 0.f);
 
 #ifndef CLIENT_DLL
 	if (!m_iClip && m_pLayer->GetPlayerAmmo(m_iPrimaryAmmoType) <= 0)
@@ -142,7 +142,6 @@ void CGlockWeaponContext::GlockFire( float flSpread , float flCycleTime, bool fU
 		m_pLayer->GetWeaponEntity()->m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 #endif
 	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.f, 15.f);
-	//m_pPlayer->pev->punchangle.x -= 2;
 }
 
 void CGlockWeaponContext::Reload( void )

@@ -320,6 +320,7 @@ void CGaussWeaponContext::StartFire()
 #else 
 		flDamage = gSkillData.plrDmgGauss;
 #endif
+		m_pLayer->AddPlayerPunchangle(-2.f, 0.f, 0.f);
 	}
 
 	if (m_fInAttack != 3)

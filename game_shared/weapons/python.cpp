@@ -151,6 +151,8 @@ void CPythonWeaponContext::PrimaryAttack()
 		m_pLayer->PlaybackWeaponEvent(params);
 	}
 
+	m_pLayer->AddPlayerPunchangle(-10.f, 0.f, 0.f);
+
 #ifndef CLIENT_DLL
 	CBasePlayer *player = m_pLayer->GetWeaponEntity()->m_pPlayer;
 
@@ -164,7 +166,6 @@ void CPythonWeaponContext::PrimaryAttack()
 		player->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 #endif
 
-	// m_pPlayer->pev->punchangle.x -= 10;
 	m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(0.75f);
 	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), 10.f, 15.f);
 }

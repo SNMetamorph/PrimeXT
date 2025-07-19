@@ -106,6 +106,8 @@ void CMP5WeaponContext::PrimaryAttack()
 		m_pLayer->PlaybackWeaponEvent(params);
 	}
 
+	m_pLayer->AddPlayerPunchangle(m_pLayer->GetRandomFloat(m_pLayer->GetRandomSeed(), -2.f, 2.f), 0.f, 0.f);
+
 #ifndef CLIENT_DLL
 	CBasePlayer *player = m_pLayer->GetWeaponEntity()->m_pPlayer;
 	player->m_iWeaponVolume = NORMAL_GUN_VOLUME;
