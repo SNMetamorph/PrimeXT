@@ -656,12 +656,17 @@ static void LinkEdict( entity_t *ent, modtype_t modtype, const char *modname, in
 	{
 		tmesh_t	*mesh = (tmesh_t *)ent->cache;
 
-		for( int i = 0; i < mesh->numfaces; i++ )
-			mesh->ray.AddTriangle( &mesh->faces[i] );
-		mesh->ray.BuildTree( mesh );
+		if( !g_studiolegacy )
+			mesh->rayBVH.BuildTree( mesh );
+		else
+		{	
+			for( int i = 0; i < mesh->numfaces; i++ )
+				mesh->ray.AddTriangle( &mesh->faces[i] );
+			mesh->ray.BuildTree( mesh );
 
-		// set backfraction if specified
-		mesh->ray.SetBackFraction( FloatForKey( ent, "zhlt_backfrac" ));
+			// set backfraction if specified
+			mesh->ray.SetBackFraction( FloatForKey( ent, "zhlt_backfrac" ));
+		}
 	}
 #endif
 	// find the first node that the ent's box crosses
@@ -973,7 +978,7 @@ Handles selection or creation of a clipping hull, and offseting (and
 eventually rotation) of the end points
 ==================
 */
-void ClipMoveToEntity( entity_t *ent, const vec3_t start, const vec3_t end, trace_t *trace )
+void ClipMoveToEntity( entity_t *ent, const vec3_t start, const vec3_t end, trace_t *trace, bool stop_on_first_solid = false )
 {
 	trace->contents = CONTENTS_EMPTY;
 	trace->fraction = 1.0f;
@@ -996,12 +1001,27 @@ void ClipMoveToEntity( entity_t *ent, const vec3_t start, const vec3_t end, trac
 
 		// run through studio triangles
 #ifdef HLRAD_RAYTRACE
-		clip.mesh->ray.TraceRay( start, end, &clip.trace );
+		if( !g_studiolegacy )
+			clip.mesh->rayBVH.TraceRay( start, end, &clip.trace, stop_on_first_solid );
+		else
+			clip.mesh->ray.TraceRay( start, end, &clip.trace );
 #else
 		ClipToTriangles( clip.mesh->face_tree.areanodes, &clip );
 #endif
 		trace->contents = clip.trace.contents;
 		trace->fraction = clip.trace.fraction;
+
+		//studio gi
+		if( clip.trace.surface == STUDIO_SURFACE_HIT )
+		{	
+			trace->surface = clip.trace.surface;
+			for( int i = 0; i < MAXLIGHTMAPS; i++ )
+			{
+				trace->styles[i] = clip.trace.styles[i];
+				VectorCopy( clip.trace.light[i], trace->light[i] );
+			}
+		}
+
 	}
 	else if( ent->modtype == mod_brush )
 	{
@@ -1026,7 +1046,7 @@ ClipToLinks
 Mins and maxs enclose the entire area swept by the move
 ====================
 */
-static void ClipToLinks( areanode_t *node, moveclip_t *clip )
+static void ClipToLinks( areanode_t *node, moveclip_t *clip, bool stop_on_first_solid = true )
 {
 	link_t	*l, *next;
 	entity_t	*touch;
@@ -1046,13 +1066,13 @@ loc0:
 			continue;
 
 		// might intersect, so do an exact clip
-		if( clip->trace.contents == CONTENTS_SOLID )
+		if(( clip->trace.contents == CONTENTS_SOLID )&&(stop_on_first_solid))
 			return;
 
 		if( clip->nomodels && ( touch->modtype == mod_studio || touch->modtype == mod_alias ))
 			continue;
 
-		ClipMoveToEntity( touch, clip->start, clip->end, &trace );
+		ClipMoveToEntity( touch, clip->start, clip->end, &trace, stop_on_first_solid );
 
 		clip->trace = CombineTraces( &clip->trace, &trace );
 	}
@@ -1063,7 +1083,7 @@ loc0:
 	if( clip->boxmaxs[node->axis] > node->dist)
 	{
 		if( clip->boxmins[node->axis] < node->dist )
-			ClipToLinks( node->children[1], clip );
+			ClipToLinks( node->children[1], clip, stop_on_first_solid );
 		node = node->children[0];
 		goto loc0;
 	}
@@ -1120,7 +1140,7 @@ TestLine
 trace world only
 ==================
 */
-void TestLine( int threadnum, const vec3_t start, const vec3_t stop, trace_t *trace )
+void TestLine( int threadnum, const vec3_t start, const vec3_t stop, trace_t *trace, bool nomodels, entity_t *ignoreent )
 {
 	trace->contents = CONTENTS_EMPTY;
 	trace->fraction = 0.0f;
@@ -1128,210 +1148,128 @@ void TestLine( int threadnum, const vec3_t start, const vec3_t stop, trace_t *tr
 
 	// trace world first
 	TestLine_r( (tnode_t *)g_entities->cache, 0, 0.0f, 1.0f, start, stop, trace );
+	
+	moveclip_t	clip;
+	if(( numsolidedicts > 0 ) && ( trace->fraction != 0.0f ))
+	{
+		vec3_t	trace_endpos;
+
+		VectorLerp( start, trace->fraction, stop, trace_endpos );
+		clip.trace.contents = CONTENTS_EMPTY;
+		clip.trace.surface = trace->surface;
+		clip.trace.fraction = 1.0f;
+		clip.nomodels = nomodels;
+		clip.start = start;
+		clip.end = trace_endpos;
+		clip.ignore = ignoreent;
+
+		MoveBounds( start, trace_endpos, clip.boxmins, clip.boxmaxs );
+		ClipToLinks( entity_tree.areanodes, &clip, false );
+
+		if( clip.trace.contents == CONTENTS_EMPTY )
+			return;
+
+		trace->contents = clip.trace.contents;
+		trace->fraction *= clip.trace.fraction;
+		trace->surface = clip.trace.surface;
+
+		//studio gi
+		if( clip.trace.surface == STUDIO_SURFACE_HIT )
+			for( int i = 0; i < MAXLIGHTMAPS; i++ )
+			{
+				trace->styles[i] = clip.trace.styles[i];
+				VectorCopy( clip.trace.light[i], trace->light[i] );
+			}
+	}	
 }
 
-typedef double	point_t[3];
-
-typedef struct
-{
-	int	point[2];
-	bool	divided;
-	int	child[2];
-} edge_t;
-
-typedef struct
-{
-	int	edge[3];
-	int	dir[3];
-} triangle_t;
-
-void CopyToSkynormals( int skylevel, int numpoints, point_t *points, int numedges, edge_t *edges, int numtriangles, triangle_t *triangles )
-{
-	double	totalsize = 0;
-	int	j, k;
-
-	ASSERT( numpoints == ( 1 << ( 2 * skylevel )) + 2 );
-	ASSERT( numedges == ( 1 << ( 2 * skylevel )) * 4 - 4 );
-	ASSERT( numtriangles == ( 1 << ( 2 * skylevel )) * 2 );
-
-	g_skynormalsizes[skylevel] = (vec_t *)Mem_Alloc( numpoints * sizeof( vec_t ));
-	g_skynormals[skylevel] = (vec3_t *)Mem_Alloc( numpoints * sizeof( vec3_t ));
-	g_numskynormals[skylevel] = numpoints;
-
-	for( j = 0; j < numpoints; j++ )
-	{
-		VectorCopy( points[j], g_skynormals[skylevel][j] );
-		g_skynormalsizes[skylevel][j] = 0;
-	}
-
-	for( j = 0; j < numtriangles; j++ )
-	{
-		double	currentsize;
-		double	tmp[3];
-		int	pt[3];
-
-		for( k = 0; k < 3; k++ )
-			pt[k] = edges[triangles[j].edge[k]].point[triangles[j].dir[k]];
-
-
-		CrossProduct( points[pt[0]], points[pt[1]], tmp );
-		currentsize = DotProduct( tmp, points[pt[2]] );
-
-		ASSERT( currentsize > 0 );
-
-		g_skynormalsizes[skylevel][pt[0]] += currentsize / 3.0;
-		g_skynormalsizes[skylevel][pt[1]] += currentsize / 3.0;
-		g_skynormalsizes[skylevel][pt[2]] += currentsize / 3.0;
-		totalsize += currentsize;
-	}
-
-	for( j = 0; j < numpoints; j++ )
-	{
-		g_skynormalsizes[skylevel][j] /= totalsize;
-	}
-}
 
 void BuildDiffuseNormals( void )
 {
-	int	numpoints = 6;
-	int	numedges = 12;
-	int	numtriangles = 8;
-	int	i, j, k;
-
+	//fibonacci spiral
 	g_numskynormals[0] = 0;
 	g_skynormals[0] = NULL; //don't use this
-	g_skynormalsizes[0] = NULL;
 
-	point_t		*points = (point_t *)Mem_Alloc((( 1 << ( 2 * SKYLEVELMAX )) + 2 ) * sizeof( point_t ), C_TEMPORARY );
-	edge_t		*edges = (edge_t *)Mem_Alloc((( 1 << ( 2 * SKYLEVELMAX )) * 4 - 4 ) * sizeof( edge_t ), C_TEMPORARY );
-	triangle_t	*triangles = (triangle_t *)Mem_Alloc((( 1 << ( 2 * SKYLEVELMAX )) * 2 ) * sizeof( triangle_t ), C_TEMPORARY );
+	int numpoints = 1;
+	vec_t goldenRatio = (1.0 + sqrt(5.0)) / 2.0;
 
-	VectorSet( points[0], 1.0, 0.0, 0.0 );
-	VectorSet( points[1],-1.0, 0.0, 0.0 );
-	VectorSet( points[2], 0.0, 1.0, 0.0 );
-	VectorSet( points[3], 0.0,-1.0, 0.0 );
-	VectorSet( points[4], 0.0, 0.0, 1.0 );
-	VectorSet( points[5], 0.0, 0.0,-1.0 );
-
-	edges[0].point[0] = 0, edges[0].point[1] = 2, edges[0].divided = false;
-	edges[1].point[0] = 2, edges[1].point[1] = 1, edges[1].divided = false;
-	edges[2].point[0] = 1, edges[2].point[1] = 3, edges[2].divided = false;
-	edges[3].point[0] = 3, edges[3].point[1] = 0, edges[3].divided = false;
-	edges[4].point[0] = 2, edges[4].point[1] = 4, edges[4].divided = false;
-	edges[5].point[0] = 4, edges[5].point[1] = 3, edges[5].divided = false;
-	edges[6].point[0] = 3, edges[6].point[1] = 5, edges[6].divided = false;
-	edges[7].point[0] = 5, edges[7].point[1] = 2, edges[7].divided = false;
-	edges[8].point[0] = 4, edges[8].point[1] = 0, edges[8].divided = false;
-	edges[9].point[0] = 0, edges[9].point[1] = 5, edges[9].divided = false;
-	edges[10].point[0] = 5, edges[10].point[1] = 1, edges[10].divided = false;
-	edges[11].point[0] = 1, edges[11].point[1] = 4, edges[11].divided = false;
-
-	triangles[0].edge[0] = 0, triangles[0].dir[0] = 0, triangles[0].edge[1] = 4;
-	triangles[0].dir[1] = 0, triangles[0].edge[2] = 8, triangles[0].dir[2] = 0;
-	triangles[1].edge[0] = 1, triangles[1].dir[0] = 0, triangles[1].edge[1] = 11;
-	triangles[1].dir[1] = 0, triangles[1].edge[2] = 4, triangles[1].dir[2] = 1;
-	triangles[2].edge[0] = 2, triangles[2].dir[0] = 0, triangles[2].edge[1] = 5;
-	triangles[2].dir[1] = 1, triangles[2].edge[2] = 11, triangles[2].dir[2] = 1;
-	triangles[3].edge[0] = 3, triangles[3].dir[0] = 0, triangles[3].edge[1] = 8;
-	triangles[3].dir[1] = 1, triangles[3].edge[2] = 5, triangles[3].dir[2] = 0;
-	triangles[4].edge[0] = 0, triangles[4].dir[0] = 1, triangles[4].edge[1] = 9;
-	triangles[4].dir[1] = 0, triangles[4].edge[2] = 7, triangles[4].dir[2] = 0;
-	triangles[5].edge[0] = 1, triangles[5].dir[0] = 1, triangles[5].edge[1] = 7;
-	triangles[5].dir[1] = 1, triangles[5].edge[2] = 10, triangles[5].dir[2] = 0;
-	triangles[6].edge[0] = 2, triangles[6].dir[0] = 1, triangles[6].edge[1] = 10;
-	triangles[6].dir[1] = 1, triangles[6].edge[2] = 6, triangles[6].dir[2] = 1;
-	triangles[7].edge[0] = 3, triangles[7].dir[0] = 1, triangles[7].edge[1] = 6;
-	triangles[7].dir[1] = 0, triangles[7].edge[2] = 9, triangles[7].dir[2] = 1;
-
-	CopyToSkynormals( 1, numpoints, points, numedges, edges, numtriangles, triangles );
-
-	for( i = 1; i < SKYLEVELMAX; i++ )
+	for( int skylevel = 1; skylevel <= SKYLEVELMAX; skylevel++ )
 	{
-		int	oldnumtriangles = numtriangles;
-		int	oldnumedges = numedges;
+		numpoints *= 4;
+		g_numskynormals[skylevel] = numpoints;
+		g_skynormals[skylevel] = (vec3_t *)Mem_Alloc( numpoints * sizeof( vec3_t ));
 
-		for( j = 0; j < oldnumedges; j++ )
+		for( int i = 0; i < numpoints; i++ )
 		{
-			if( !edges[j].divided )
-			{
-				point_t	mid;
-				double	len;
-				int	p2;
+			vec_t theta = 2.0f * M_PI * (float)i / goldenRatio;
+ 			vec_t phi = AcosFast(1.0f - 2.0f * ((float)i + 0.5f) / (float)numpoints);
 
-				ASSERT( numpoints < ( 1 << ( 2 * SKYLEVELMAX )) + 2 );
-
-				VectorAdd( points[edges[j].point[0]], points[edges[j].point[1]], mid );
-				len = VectorLength( mid );
-
-				ASSERT( len > 0.2 );
-
-				VectorScale( mid, 1.0 / len, mid );
-				p2 = numpoints;
-				VectorCopy( mid, points[numpoints] );
-				numpoints++;
-
-				ASSERT( numedges < ( 1 << ( 2 * SKYLEVELMAX )) * 4 - 4 );
-				edges[j].child[0] = numedges;
-				edges[numedges].divided = false;
-				edges[numedges].point[0] = edges[j].point[0];
-				edges[numedges].point[1] = p2;
-				numedges++;
-
-				ASSERT( numedges < ( 1 << ( 2 * SKYLEVELMAX )) * 4 - 4 );
-
-				edges[j].child[1] = numedges;
-				edges[numedges].divided = false;
-				edges[numedges].point[0] = p2;
-				edges[numedges].point[1] = edges[j].point[1];
-				numedges++;
-				edges[j].divided = true;
-			}
+			g_skynormals[skylevel][i][0] = cos(theta) * sin(phi);
+			g_skynormals[skylevel][i][1] = sin(theta) * sin(phi);
+			g_skynormals[skylevel][i][2] = cos(phi);
 		}
-
-		for( j = 0; j < oldnumtriangles; j++ )
-		{
-			int	mid[3];
-
-			for( k = 0; k < 3; k++ )
-			{
-				ASSERT( numtriangles < ( 1 << ( 2 * SKYLEVELMAX )) * 2 );
-				mid[k] = edges[edges[triangles[j].edge[k]].child[0]].point[1];
-				triangles[numtriangles].edge[0] = edges[triangles[j].edge[k]].child[1 - triangles[j].dir[k]];
-				triangles[numtriangles].dir[0] = triangles[j].dir[k];
-				triangles[numtriangles].edge[1] = edges[triangles[j].edge[(k+1)%3]].child[triangles[j].dir[(k+1)%3]];
-				triangles[numtriangles].dir[1] = triangles[j].dir[(k+1)%3];
-				triangles[numtriangles].edge[2] = numedges + k;
-				triangles[numtriangles].dir[2] = 1;
-				numtriangles++;
-			}
-
-			for( k = 0; k < 3; k++ )
-			{
-				ASSERT( numedges < ( 1 << ( 2 * SKYLEVELMAX )) * 4 - 4 );
-				triangles[j].edge[k] = numedges;
-				triangles[j].dir[k] = 0;
-				edges[numedges].divided = false;
-				edges[numedges].point[0] = mid[k];
-				edges[numedges].point[1] = mid[(k+1)%3];
-				numedges++;
-			}
-		}
-
-		CopyToSkynormals( i + 1, numpoints, points, numedges, edges, numtriangles, triangles );
 	}
 
-	Mem_Free( triangles, C_TEMPORARY );
-	Mem_Free( points, C_TEMPORARY );
-	Mem_Free( edges, C_TEMPORARY );
+	//sorted skynormals for incremental uniform sampling in every pass
+	if( g_numstudiobounce == 0 )	//no bounces, only sky lighting
+	{
+		numpoints = STUDIO_SAMPLES_SKY;	
+		g_numstudioskynormals = STUDIO_SAMPLES_SKY;
+	}
+	else
+	{
+		numpoints = g_numstudiobounce * STUDIO_SAMPLES_PER_PASS;
+		g_numstudioskynormals = STUDIO_SAMPLES_PER_PASS;
+	}
+	g_studioskynormals = (vec3_t *)Mem_Alloc( numpoints * sizeof( vec3_t ));
+	for( int i = 0; i < numpoints; i++ )
+	{
+		vec_t theta = 2.0f * M_PI * (float)i / goldenRatio;
+		vec_t phi = AcosFast(1.0f - 2.0f * ((float)i + 0.5f) / (float)numpoints);
+
+		g_studioskynormals[i][0] = cos(theta) * sin(phi);
+		g_studioskynormals[i][1] = sin(theta) * sin(phi);
+		g_studioskynormals[i][2] = cos(phi);
+	}	
+	//sorting	
+	for( int i = 1; i < numpoints-1; i++ )
+	{
+		vec_t best_dot = 1.0f;
+		int best_j = i;
+		
+		for( int j = i; j < numpoints; j++ )
+		{
+			vec_t cur_dot = -1.0f;
+			for( int k = 0; k < i; k++ )
+			{
+				cur_dot = Q_max( cur_dot, DotProduct(g_studioskynormals[k], g_studioskynormals[j]) );
+				if( cur_dot >= best_dot )
+					break;
+			}
+
+			if( cur_dot < best_dot )
+			{
+				best_dot = cur_dot;
+				best_j = j;
+			}
+		}
+
+		if( best_j != i )
+		{
+			vec3_t temp_vec;
+			VectorCopy( g_studioskynormals[i], temp_vec );
+			VectorCopy( g_studioskynormals[best_j], g_studioskynormals[i] );
+			VectorCopy( temp_vec, g_studioskynormals[best_j] );
+		}
+	}
 }
 
 void FreeDiffuseNormals( void )
 {
 	for( int i = 0; i < SKYLEVELMAX + 1; i++ )
 	{
-		Mem_Free( g_skynormalsizes[i] );
 		Mem_Free( g_skynormals[i] );
-		g_skynormalsizes[i] = NULL;
 		g_skynormals[i] = NULL;
 	}
+	Mem_Free( g_studioskynormals );
 }
