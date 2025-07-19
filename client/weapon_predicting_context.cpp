@@ -110,6 +110,7 @@ void CWeaponPredictingContext::ReadPlayerState(const local_state_t *from, const 
 	m_playerState.velocity = to->client.velocity;
 	m_playerState.viewOffset = to->client.view_ofs;
 	m_playerState.origin = to->playerstate.origin;
+	m_playerState.punchAngle = to->client.punchangle;
 }
 
 void CWeaponPredictingContext::WritePlayerState(local_state_t *to)
@@ -121,6 +122,7 @@ void CWeaponPredictingContext::WritePlayerState(local_state_t *to)
 	to->client.m_flNextAttack			= m_playerState.nextAttack;
 	to->client.maxspeed					= m_playerState.maxSpeed;
 	to->client.velocity					= m_playerState.velocity;
+	to->client.punchangle				= m_playerState.punchAngle;
 }
 
 void CWeaponPredictingContext::UpdatePlayerTimers(const usercmd_t *cmd)

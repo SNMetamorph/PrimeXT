@@ -37,6 +37,7 @@ public:
 		int32_t weaponanim;
 		int32_t activeWeaponanim;
 		int32_t viewmodel;
+		Vector punchAngle;
 		Vector viewAngles;
 		Vector viewOffset;
 		Vector origin;

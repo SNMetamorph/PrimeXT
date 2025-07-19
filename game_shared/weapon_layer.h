@@ -111,6 +111,7 @@ public:
 	virtual float GetPlayerFOV() = 0;
 	virtual Vector GetPlayerVelocity() = 0;
 	virtual void SetPlayerVelocity(Vector value) = 0;
+	virtual void AddPlayerPunchangle(float pitch, float yaw, float roll) = 0;
 
 	// miscellaneous things
 	virtual float GetWeaponTimeBase(bool usePredicting) = 0;

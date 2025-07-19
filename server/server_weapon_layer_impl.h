@@ -53,6 +53,7 @@ public:
 	float GetPlayerFOV() override;
 	Vector GetPlayerVelocity() override;
 	void SetPlayerVelocity(Vector value) override;
+	void AddPlayerPunchangle(float pitch, float yaw, float roll) override;
 
 	float GetWeaponTimeBase(bool usePredicting) override;
 	float GetTime() override;

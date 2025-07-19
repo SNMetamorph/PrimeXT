@@ -156,6 +156,11 @@ void CClientWeaponLayerImpl::SetPlayerVelocity(Vector value)
 	m_playerState.velocity = value;
 }
 
+void CClientWeaponLayerImpl::AddPlayerPunchangle(float pitch, float yaw, float roll)
+{
+	m_playerState.punchAngle += Vector(pitch, yaw, roll);
+}
+
 float CClientWeaponLayerImpl::GetWeaponTimeBase(bool usePredicting)
 {
 	return usePredicting ? 0.0f : m_playerState.time;
