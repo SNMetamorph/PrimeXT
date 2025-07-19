@@ -49,7 +49,7 @@ typedef half	hvec3_t[3];
 
 // euler angle order
 #define PITCH		0
-#define YAW		1
+#define YAW			1
 #define ROLL		2
 
 #ifndef M_PI
@@ -73,7 +73,7 @@ typedef half	hvec3_t[3];
 
 #define SIDE_FRONT		0
 #define SIDE_BACK		1
-#define SIDE_ON		2
+#define SIDE_ON			2
 #define SIDE_CROSS		-2
 
 #define PLANE_X		0	// 0 - 2 are axial planes
@@ -197,7 +197,7 @@ inline vec_t VectorNormalize( vec3_t v )
 	length = DotProduct( v, v );
 	length = sqrt( length );
 
-	if( length < 1e-6 )
+	if( length == 0.0 )
 	{
 		VectorClear( v );
 		return 0.0;
@@ -252,6 +252,12 @@ float RandomFloat( float flLow, float flHigh );
 float ColorNormalize( const vec3_t in, vec3_t out );
 unsigned short FloatToHalf( float v );
 float HalfToFloat( unsigned short h );
+
+float AcosFast( float x );
+float Atan2Fast( float y, float x );
+void TriangleIncenter( const vec3_t a, const vec3_t b, const vec3_t c, vec3_t out );
+void WorldToTangent( const vec3_t v, const vec3_t t, const vec3_t b, const vec3_t n, vec3_t out );
+void TangentToWorld( const vec3_t v, const vec3_t t, const vec3_t b, const vec3_t n, vec3_t out );
 
 //
 // Bounding Box operations
