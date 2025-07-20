@@ -2466,7 +2466,7 @@ vec_t GetLightDenominator( const directlight_t *dl, vec_t dist )
 }
 
 //this was a part of GatherSampleLight
-__forceinline void AddSampleLight( int threadnum, bool topatch, vec3_t add, vec3_t add_direction, int lightstyle, vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles )
+_forceinline void AddSampleLight( int threadnum, bool topatch, vec3_t add, vec3_t add_direction, int lightstyle, vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles )
 {
 	int		style_index = 0;
 #ifdef HLRAD_PARANOIA_BUMP

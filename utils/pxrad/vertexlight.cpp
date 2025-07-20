@@ -490,6 +490,7 @@ void VertexBlendGI( int modelnum, int threadnum = -1 )
 				VectorAdd( tv->light->deluxe[k], tv->light->gi_dlx[k], tv->light->deluxe[k] );	
 		}
 	}
+}
 
 //for vertex sorting and blur
 int CompareVertexPointers(const void* a,const void* b) 
