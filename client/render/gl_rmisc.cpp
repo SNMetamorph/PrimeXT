@@ -28,6 +28,7 @@ GNU General Public License for more details.
 #include "gl_debug.h"
 #include "gl_unit_cube.h"
 #include "r_weather.h"
+#include "visualizer/debug_visualizer.h"
 
 #define DEFAULT_SMOOTHNESS	0.0f
 #define FILTER_SIZE		2
@@ -915,6 +916,7 @@ void R_VidInit( void )
 	glState.height = RENDER_GET_PARM( PARM_SCREEN_HEIGHT, 0 );
 
 	COpenGLUnitCube::GetInstance().Initialize();
+	CDebugVisualizer::GetInstance().Initialize();
 	R_InitCommonTextures();
 	R_InitCubemapShaders();
 
