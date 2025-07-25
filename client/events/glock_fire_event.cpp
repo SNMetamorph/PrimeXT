@@ -33,7 +33,6 @@ void CGlockFireEvent::Execute()
 	{
 		GameEventUtils::SpawnMuzzleflash();
 		gEngfuncs.pEventAPI->EV_WeaponAnimation( ClipEmpty() ? GLOCK_SHOOT_EMPTY : GLOCK_SHOOT, 2 );
-		// V_PunchAxis( 0, -2.0 );
 	}
 
 	matrix3x3 cameraMatrix(GetAngles());

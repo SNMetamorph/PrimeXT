@@ -41,7 +41,6 @@ void CShotgunFireEvent::SingleShot()
 	{
 		GameEventUtils::SpawnMuzzleflash();
 		gEngfuncs.pEventAPI->EV_WeaponAnimation( SHOTGUN_FIRE, 2 );
-		// V_PunchAxis( 0, -5.0 );
 	}
 
 	matrix3x3 cameraMatrix(GetAngles());
@@ -62,7 +61,6 @@ void CShotgunFireEvent::DoubleShot()
 	{
 		GameEventUtils::SpawnMuzzleflash();
 		gEngfuncs.pEventAPI->EV_WeaponAnimation( SHOTGUN_FIRE2, 2 );
-		// V_PunchAxis( 0, -10.0 );
 	}
 
 	matrix3x3 cameraMatrix(GetAngles());

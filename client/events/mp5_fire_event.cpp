@@ -41,7 +41,6 @@ void CMP5FireEvent::HandleShot()
 	{
 		GameEventUtils::SpawnMuzzleflash();
 		gEngfuncs.pEventAPI->EV_WeaponAnimation( MP5_FIRE1 + gEngfuncs.pfnRandomLong(0,2), 2 );
-		// V_PunchAxis( 0, gEngfuncs.pfnRandomFloat( -2, 2 ) );
 	}
 
 	matrix3x3 cameraMatrix(GetAngles());
@@ -61,10 +60,8 @@ void CMP5FireEvent::HandleShot()
 
 void CMP5FireEvent::HandleGrenadeLaunch()
 {
-	if (IsEventLocal())
-	{
+	if (IsEventLocal()) {
 		gEngfuncs.pEventAPI->EV_WeaponAnimation( MP5_LAUNCH, 2 );
-		// V_PunchAxis( 0, -10 );
 	}
 
 	const char *soundName = gEngfuncs.pfnRandomLong(0, 1) == 0 ? "weapons/glauncher.wav" : "weapons/glauncher2.wav";

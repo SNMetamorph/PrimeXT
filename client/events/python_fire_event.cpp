@@ -33,7 +33,6 @@ void CPythonFireEvent::Execute()
 	{
 		GameEventUtils::SpawnMuzzleflash();
 		gEngfuncs.pEventAPI->EV_WeaponAnimation( PYTHON_FIRE1, 0 );
-		// V_PunchAxis( 0, -10.0 );
 	}
 
 	matrix3x3 cameraMatrix(GetAngles());

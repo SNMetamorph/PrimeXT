@@ -32,7 +32,6 @@ void CHornetgunFireEvent::Execute()
 	if (IsEventLocal())
 	{
 		gEngfuncs.pEventAPI->EV_WeaponAnimation( HGUN_SHOOT, 1 );
-		// V_PunchAxis( 0, gEngfuncs.pfnRandomLong ( 0, 2 ) );
 	}
 
 	const char *szSoundName = nullptr;

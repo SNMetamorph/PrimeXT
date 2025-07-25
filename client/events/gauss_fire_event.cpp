@@ -54,7 +54,6 @@ void CGaussFireEvent::Execute()
 
 	if (IsEventLocal())
 	{
-		// V_PunchAxis(0, -2.0);
 		gEngfuncs.pEventAPI->EV_WeaponAnimation(GAUSS_FIRE2, 2);
 	}
 

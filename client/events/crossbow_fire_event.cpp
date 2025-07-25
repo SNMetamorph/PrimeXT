@@ -38,8 +38,6 @@ void CCrossbowFireEvent::Execute()
 			gEngfuncs.pEventAPI->EV_WeaponAnimation(CROSSBOW_FIRE1, 1);
 		else if (!OutOfAmmo())
 			gEngfuncs.pEventAPI->EV_WeaponAnimation(CROSSBOW_FIRE3, 1);
-
-		// V_PunchAxis( 0, -2.0 );
 	}
 }
 
