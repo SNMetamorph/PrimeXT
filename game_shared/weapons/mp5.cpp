@@ -177,11 +177,10 @@ void CMP5WeaponContext::SecondaryAttack()
 		player->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 #endif
 
+	m_pLayer->AddPlayerPunchangle(-10.f, 0.f, 0.f);
 	m_flNextPrimaryAttack = GetNextPrimaryAttackDelay(1.0f);
 	m_flNextSecondaryAttack = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 1.f;
 	m_flTimeWeaponIdle = m_pLayer->GetWeaponTimeBase(UsePredicting()) + 5.f; // idle pretty soon after shooting.
-
-	// m_pPlayer->pev->punchangle.x -= 10;
 }
 
 void CMP5WeaponContext::Reload()
