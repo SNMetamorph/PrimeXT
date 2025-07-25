@@ -95,7 +95,7 @@ We have a minimum width of 1-320 - we could have the field widths scale with it?
 int CHudScoreboard :: Draw( float fTime )
 {
 	int i, j;
-	if( !m_iShowscoresHeld && gHUD.m_Health.m_iHealth > 0 && !gHUD.m_iIntermission )
+	if( !IsVisible() )
 		return 1;
 
 	GetAllPlayersInfo();
@@ -545,3 +545,10 @@ void CHudScoreboard :: UserCmd_HideScores( void )
 	m_iShowscoresHeld = FALSE;
 }
 
+bool CHudScoreboard::IsVisible() const
+{
+	if (m_iShowscoresHeld || gHUD.m_Health.m_iHealth <= 0 || gHUD.m_iIntermission)
+		return true;
+	else
+		return false;
+}

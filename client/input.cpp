@@ -717,8 +717,7 @@ int CL_ButtonBits( int bResetState )
 		bits |= IN_SCORE;
 	}
 
-	// dead or in intermission? Shore scoreboard, too
-	if( CL_IsDead() || gHUD.m_iIntermission )
+	if( gHUD.m_Scoreboard.IsVisible() )
 	{
 		bits |= IN_SCORE;
 	}

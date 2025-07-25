@@ -231,6 +231,7 @@ public:
 	int MsgFunc_TeamInfo( const char *pszName, int iSize, void *pbuf );
 	int MsgFunc_TeamScore( const char *pszName, int iSize, void *pbuf );
 	void DeathMsg( int killer, int victim );
+	bool IsVisible() const;
 
 	int m_iNumTeams;
 
