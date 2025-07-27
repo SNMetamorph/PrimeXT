@@ -229,13 +229,13 @@ _forceinline int ffsl( uint32_t mask )
 ==============
 fix_coord
 
-converts the reletive tex coords to absolute
+converts relative tex coords to absolute
 ==============
 */
 _forceinline uint fix_coord( vec_t in, uint width )
 {
 	if( in > 0 ) return (uint)in % width;
-	return width - ((uint)fabs( in ) % width);
+	return width - ((uint)fabsf( in ) % width) - 1;
 }
 
 bool VectorIsOnAxis( const vec3_t v );
