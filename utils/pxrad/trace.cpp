@@ -68,8 +68,8 @@ int SampleMiptex( const dface_t *face, const vec3_t point )
 	dt = DotProduct( point, tx->vecs[1] ) + tx->vecs[1][3];
 
 	// convert ST to real pixels position
-	x = fix_coord( ds, mt->width - 1 );
-	y = fix_coord( dt, mt->height - 1 );
+	x = fix_coord( ds, mt->width );
+	y = fix_coord( dt, mt->height );
 
 	ASSERT( x >= 0 && y >= 0 );
 
@@ -261,8 +261,8 @@ void ClipMoveToTriangle( tface_t *face, moveclip_t *clip )
 		float t = w * clip->mesh->verts[face->a].st[1] + u * clip->mesh->verts[face->b].st[1] + v * clip->mesh->verts[face->c].st[1];
 
 		// convert ST to real pixels position
-		int x = fix_coord( s * face->texture->width, face->texture->width - 1 );
-		int y = fix_coord( t * face->texture->height, face->texture->height - 1 );
+		int x = fix_coord( s * face->texture->width, face->texture->width );
+		int y = fix_coord( t * face->texture->height, face->texture->height );
 
 		// test pixel
 		if( face->texture->data[(face->texture->width * y) + x] == 255 )
