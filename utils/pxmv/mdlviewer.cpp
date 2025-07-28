@@ -117,7 +117,7 @@ static void AddPathToList( ViewerSettings &settings, const char *path )
 	if( settings.numModelPathes >= settings.modelPathList.size() )
 		return; // too many strings
 
-	Q_snprintf( modelPath, sizeof( modelPath ), "%s/%s", settings.oldModelPath, path );
+	Q_snprintf( modelPath, sizeof( modelPath ), "%s/%s", settings.oldModelPath.c_str(), path);
 
 	if( !ValidateModel( modelPath ))
 		return;
