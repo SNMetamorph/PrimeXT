@@ -558,8 +558,8 @@ static int StudioCreateMeshFromTriangles( entity_t *ent, studiohdr_t *phdr, cons
 
 			if( extex )
 			{
-				int	x = fix_coord( s * extex->width, extex->width - 1 );
-				int	y = fix_coord( t * extex->height, extex->height - 1 );
+				int	x = fix_coord( s * extex->width, extex->width );
+				int	y = fix_coord( t * extex->height, extex->height );
 				
 				weight_sum++;
 				for( k = 0; k < 3; k++ )
@@ -567,8 +567,8 @@ static int StudioCreateMeshFromTriangles( entity_t *ent, studiohdr_t *phdr, cons
 			}
 			else
 			{
-				int	x = fix_coord( s * tex->width, tex->width - 1 );
-				int	y = fix_coord( t * tex->height, tex->height - 1 );	
+				int	x = fix_coord( s * tex->width, tex->width );
+				int	y = fix_coord( t * tex->height, tex->height );	
 
 				color_id = *((byte *)phdr + tex->index + tex->width * y + x);			
 

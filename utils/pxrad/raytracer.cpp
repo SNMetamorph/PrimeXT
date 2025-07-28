@@ -348,8 +348,8 @@ bool CWorldRayTrace :: TraceTexture( const tface_t *face, float u, float v, floa
 	float	t = w * mesh->verts[face->a].st[1] + u * mesh->verts[face->b].st[1] + v * mesh->verts[face->c].st[1];
 
 	// convert ST to real pixels position
-	int	x = fix_coord( s * face->texture->width, face->texture->width - 1 );
-	int	y = fix_coord( t * face->texture->height, face->texture->height - 1 );
+	int	x = fix_coord( s * face->texture->width, face->texture->width );
+	int	y = fix_coord( t * face->texture->height, face->texture->height );
 
 	// test pixel
 	if( face->texture->data[(face->texture->width * y) + x] != 255 )
