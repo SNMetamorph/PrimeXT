@@ -24,6 +24,8 @@
 #include <mxTga.h>
 #include <fmt/format.h>
 #include <array>
+#include <algorithm>
+#include <utility>
 
 #include "mdlviewer.h"
 #include "GlWindow.h"
@@ -112,18 +114,18 @@ static bool ValidateModel( const char *path )
 
 static void AddPathToList( ViewerSettings &settings, const char *path )
 {
-	char	modelPath[256];
+	std::string modelPath;
 
 	if( settings.numModelPathes >= settings.modelPathList.size() )
 		return; // too many strings
 
-	Q_snprintf( modelPath, sizeof( modelPath ), "%s/%s", settings.oldModelPath.c_str(), path);
+	modelPath = fmt::format("{}/{}", settings.oldModelPath, path);
+	std::replace(modelPath.begin(), modelPath.end(), '\\', '/');
 
-	if( !ValidateModel( modelPath ))
+	if( !ValidateModel( modelPath.c_str() ))
 		return;
 
-	int i = settings.numModelPathes++;
-	settings.modelPathList[i] = modelPath;
+	settings.modelPathList[settings.numModelPathes++] = std::move(modelPath);
 }
 
 static void SortPathList( ViewerSettings &settings )
@@ -174,38 +176,44 @@ void ListDirectory( ViewerSettings &settings )
 const char *LoadNextModel( ViewerSettings &settings )
 {
 	int	i;
+	std::string modelPath = settings.modelPath;
+	std::replace(modelPath.begin(), modelPath.end(), '\\', '/');
 
-	for( i = 0; i < settings.numModelPathes; i++ )
+	for (i = 0; i < settings.numModelPathes; i++)
 	{
-		if (settings.modelPath.compare(settings.modelPathList[i]) == 0)
+		if (modelPath.compare(settings.modelPathList[i]) == 0)
 		{
 			i++;
 			break;
 		}
 	}
 
-	if( i == settings.numModelPathes )
+	if (i == settings.numModelPathes)
 		i = 0;
+
 	return settings.modelPathList[i].c_str();
 }
 
 const char *LoadPrevModel( ViewerSettings &settings )
 {
 	int	i;
+	std::string modelPath = settings.modelPath;
+	std::replace(modelPath.begin(), modelPath.end(), '\\', '/');
 
-	for( i = 0; i < settings.numModelPathes; i++ )
+	for (i = 0; i < settings.numModelPathes; i++)
 	{
-		if (settings.modelPath.compare(settings.modelPathList[i]) == 0)
+		if (modelPath.compare(settings.modelPathList[i]) == 0)
 		{
 			i--;
 			break;
 		}
 	}
 
-	if( i < 0 ) i = settings.numModelPathes - 1;
+	if (i < 0)
+		i = settings.numModelPathes - 1;
+
 	return settings.modelPathList[i].c_str();
 }
-
 
 void MDLViewer::initRecentFiles( void )
 {
