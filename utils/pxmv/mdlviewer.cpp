@@ -637,18 +637,19 @@ MDLViewer::handleEvent (mxEvent *event)
 		case IDC_HELP_ABOUT:
 			mxMessageBox(this, va(
 				APP_TITLE_STR " " APP_VERSION_STRING2 "\n"
-				"Based on Paranoia 2 Model Viewer code by g-cont\n"
+				"Based on \"Paranoia 2 Model Viewer\" made by g-cont\n"
 				"\n"
-				"Left mouse button and drag - to rotate\n"
-				"Right mouse button and drag - to zoom\n"
+				"Left mouse button and drag - to rotate model\n"
+				"Right mouse button and drag - to zoom camera\n"
 				"Shift + LMB and drag - to XY-pan\n"
 				"Ctrl + LMB and drag - to move light source\n"
+				"Left/Right Arrow - to switch between MDL files in current directory\n"
 				"\n"
-				"Build date: \t%s\n"
-				"Commit hash: \t%s\n"
+				"Build date:   \t%s\n"
+				"Commit hash:  \t%s\n"
 				"Architecture: \t%s\n"
-				"Platform: \t%s\n"
-				"Website: \t%s", 
+				"Platform:     \t%s\n"
+				"Website:      \t%s", 
 				BuildInfo::GetDate(), 
 				BuildInfo::GetCommitHash(),
 				BuildInfo::GetArchitecture(),
