@@ -1602,7 +1602,7 @@ static bool getEmitMode( const patch_t *patch )
 	else value = VectorAvg( patch->baselight );
 
 	// this patch is emitting surface
-	if( value >= DLIGHT_THRESHOLD )
+	if( value > DLIGHT_THRESHOLD )
 		emitmode = true;
 
 	return emitmode;
