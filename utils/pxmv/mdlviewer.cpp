@@ -136,7 +136,7 @@ static void SortPathList( ViewerSettings &settings )
 	{
 		for( int j = i + 1; j < settings.numModelPathes; j++ )
 		{
-			if( Q_strcmp( settings.modelPathList[i].c_str(), settings.modelPathList[j].c_str()) > 0)
+			if (stricmp(settings.modelPathList[i].c_str(), settings.modelPathList[j].c_str()) > 0)
 			{
 				temp = std::move(settings.modelPathList[i]);
 				settings.modelPathList[i] = std::move(settings.modelPathList[j]);
@@ -181,7 +181,7 @@ const char *LoadNextModel( ViewerSettings &settings )
 
 	for (i = 0; i < settings.numModelPathes; i++)
 	{
-		if (modelPath.compare(settings.modelPathList[i]) == 0)
+		if (stricmp(modelPath.c_str(), settings.modelPathList[i].c_str()) == 0)
 		{
 			i++;
 			break;
@@ -202,7 +202,7 @@ const char *LoadPrevModel( ViewerSettings &settings )
 
 	for (i = 0; i < settings.numModelPathes; i++)
 	{
-		if (modelPath.compare(settings.modelPathList[i]) == 0)
+		if (stricmp(modelPath.c_str(), settings.modelPathList[i].c_str()) == 0)
 		{
 			i--;
 			break;
