@@ -42,13 +42,6 @@ jobs:
       - name: Obtain running job information
         uses: qoomon/actions--context@v4
 
-      - name: Check for pull request
-        uses: 8BitJonny/gh-get-current-pr@2.2.0
-        id: pr-check
-        with:
-          # Verbose setting SHA when using Pull_Request event trigger to fix #16. (For push even trigger this is not necessary.)
-          sha: ${{ github.event.pull_request.head.sha }} 
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -145,7 +138,7 @@ jobs:
 
       - name: Saving vcpkg assets to cache
         uses: actions/cache/save@v4
-        if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
+        if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' && !github.event.pull_request }}
         with:
           path: |
             ${{ env.VCPKG_ROOT }}
@@ -206,21 +199,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-generic]
     steps:
-      - name: Check for pull request
-        uses: 8BitJonny/gh-get-current-pr@2.2.0
-        id: pr-check
-        with:
-          # Verbose setting SHA when using Pull_Request event trigger to fix #16. (For push even trigger this is not necessary.)
-          sha: ${{ github.event.pull_request.head.sha }} 
-
       - name: Fetch artifacts
-        if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
+        if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' && !github.event.pull_request }}
         uses: actions/download-artifact@v4
         with:
           path: artifacts/
 
       - name: Remove old release
-        if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
+        if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' && !github.event.pull_request }}
         uses: dev-drprasad/delete-tag-and-release@v0.2.1
         with:
           delete_release: true
@@ -229,7 +215,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Repackage binaries and allow GitHub to process removed release for few seconds
-        if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
+        if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' && !github.event.pull_request }}
         continue-on-error: true
         run: |
           cd artifacts/
@@ -242,7 +228,7 @@ jobs:
           sleep 20s
 
       - name: Upload new release
-        if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
+        if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' && !github.event.pull_request }}
         uses: softprops/action-gh-release@v0.1.15
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

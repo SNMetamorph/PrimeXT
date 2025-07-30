@@ -47,21 +47,14 @@ jobs:
           npm ci
           npm run build
 
-      - name: Check for pull request
-        uses: 8BitJonny/gh-get-current-pr@3.0.0
-        id: pr-check
-        with:
-          # Verbose setting SHA when using Pull_Request event trigger to fix #16. (For push even trigger this is not necessary.)
-          sha: ${{ github.event.pull_request.head.sha }} 
-
       - name: Upload artifact
-        if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
+        if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' && !github.event.pull_request }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: './documentation/build'
 
       - name: Deploy to GitHub Pages
-        if: ${{ always() && github.ref == 'refs/heads/master' && steps.pr-check.outputs.pr_found == 'false' }}
+        if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' && !github.event.pull_request }}
         id: deployment
         uses: actions/deploy-pages@v4
   
