@@ -95,7 +95,7 @@ void DecalGroupEntry :: PreloadTextures( void )
 
 	gl_diffuse_id = id;
 	if (FBitSet(gl_diffuse_id.GetFlags(), TF_HAS_ALPHA))
-		opaque = true;
+		has_alpha = true;
 
 	Q_snprintf( path, sizeof( path ), "gfx/decals/%s_norm", name );
 	if( IMAGE_EXISTS( path ))
@@ -382,7 +382,7 @@ static word R_ShaderDecalForward( brushdecal_t *decal )
 	if( CVAR_TO_BOOL( cv_specular ) && ( texinfo->gl_specular_id != tr.blackTexture ))
 		GL_AddShaderDirective( options, "HAS_GLOSSMAP" );
 
-	if( !texinfo->opaque )
+	if( !texinfo->has_alpha )
 	{
 		// GL_DST_COLOR, GL_SRC_COLOR
 		GL_AddShaderDirective( options, "APPLY_COLORBLEND" );
@@ -1497,10 +1497,10 @@ static void R_DrawSurfaceDecalsDebug( msurface_t *surf, drawlist_t drawlist_type
 		if( !p->surface || !p->texinfo )
 			continue; // bad decal?
 
-		if( drawlist_type == DRAWLIST_SOLID && !p->texinfo->opaque )
+		if( drawlist_type == DRAWLIST_SOLID && !p->texinfo->has_alpha )
 			continue;
 
-		if( drawlist_type == DRAWLIST_TRANS && p->texinfo->opaque )
+		if( drawlist_type == DRAWLIST_TRANS && p->texinfo->has_alpha )
 			continue;
 
 		DrawWireDecal( p );
@@ -1517,10 +1517,10 @@ static void R_RenderSurfaceDecals( msurface_t *surf, drawlist_t drawlist_type )
 		if( !p->surface || !p->texinfo )
 			continue; // bad decal?
 
-		if( drawlist_type == DRAWLIST_SOLID && !p->texinfo->opaque )
+		if( drawlist_type == DRAWLIST_SOLID && !p->texinfo->has_alpha )
 			continue;
 
-		if( drawlist_type == DRAWLIST_TRANS && p->texinfo->opaque )
+		if( drawlist_type == DRAWLIST_TRANS && p->texinfo->has_alpha )
 			continue;
 
 		// initialize decal shader
@@ -1529,7 +1529,7 @@ static void R_RenderSurfaceDecals( msurface_t *surf, drawlist_t drawlist_type )
 
 		R_SetDecalUniforms( p );
 
-		if( p->texinfo->opaque )
+		if( p->texinfo->has_alpha )
 			pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 		else pglBlendFunc( GL_DST_COLOR, GL_SRC_COLOR );
 
@@ -1825,9 +1825,9 @@ void DecalsInit( void )
 			if( token[0] == '$' )
 			{
 				Q_strncpy( token, token + 1, sizeof( token ));
-				tempentries[numtemp].opaque = true;// force solid
+				tempentries[numtemp].has_alpha = true;// force solid
 			}
-			else tempentries[numtemp].opaque = false;
+			else tempentries[numtemp].has_alpha = false;
 			Q_strncpy( tempentries[numtemp].m_DecalName, token, sizeof( tempentries[numtemp].m_DecalName ));
 			tempentries[numtemp].xsize = Q_atof( sz_xsize ) / 2.0f;
 			tempentries[numtemp].ysize = Q_atof( sz_ysize ) / 2.0f;

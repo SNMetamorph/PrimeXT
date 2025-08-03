@@ -844,7 +844,7 @@ word CStudioModelRenderer :: ShaderDecalForward( studiodecal_t *pDecal, bool ver
 	if (tr.fogEnabled && !RP_CUBEPASS())
 		GL_AddShaderDirective( options, "APPLY_FOG_EXP" );
 
-	if( !texinfo->opaque )
+	if( !texinfo->has_alpha )
 	{
 		// GL_DST_COLOR, GL_SRC_COLOR
 		GL_AddShaderDirective( options, "APPLY_COLORBLEND" );
@@ -858,7 +858,7 @@ word CStudioModelRenderer :: ShaderDecalForward( studiodecal_t *pDecal, bool ver
 			GL_AddShaderDirective( options, "PARALLAX_OCCLUSION" );
 	}
 
-	if (!texinfo->opaque || FBitSet(mat->flags, STUDIO_NF_FULLBRIGHT) || R_FullBright())
+	if (!texinfo->has_alpha || FBitSet(mat->flags, STUDIO_NF_FULLBRIGHT) || R_FullBright())
 	{
 		GL_AddShaderDirective( options, "LIGHTING_FULLBRIGHT" );
 	}
@@ -1757,7 +1757,7 @@ void CStudioModelRenderer :: DrawDecal( CSolidEntry *entry, GLenum cull_mode )
 				continue;
 
 			SetDecalUniforms( pDecal );
-			if( pDecal->texinfo->opaque )
+			if( pDecal->texinfo->has_alpha )
 				pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 			else pglBlendFunc( GL_DST_COLOR, GL_SRC_COLOR );
 			DrawMeshFromBuffer( &pDecal->mesh );
@@ -1774,7 +1774,7 @@ void CStudioModelRenderer :: DrawDecal( CSolidEntry *entry, GLenum cull_mode )
 				continue;
 
 			SetDecalUniforms( pDecal );
-			if( pDecal->texinfo->opaque )
+			if( pDecal->texinfo->has_alpha )
 				pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 			else pglBlendFunc( GL_DST_COLOR, GL_SRC_COLOR );
 			DrawMeshFromBuffer( &pDecal->mesh );

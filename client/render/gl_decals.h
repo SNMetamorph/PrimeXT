@@ -30,7 +30,7 @@ public:
 	int		xsize, ysize;
 	matdesc_t		*matdesc;	// pointer to settings
 	float		overlay;
-	bool		opaque;	// solid decal doesn't use blend
+	bool		has_alpha;	// solid decal doesn't use blend
 	const DecalGroup	*group;	// get group name
 	bool		m_init;
 
