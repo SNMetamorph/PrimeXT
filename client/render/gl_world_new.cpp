@@ -2932,11 +2932,12 @@ static int R_SortSolidBrushFaces( const CSolidEntry *a, const CSolidEntry *b )
 
 /*
 ================
-R_RenderDynLightList
+R_BuildFaceListsForLight
 
+fills solid/transparent/light lists for grass and world/models surfaces 
 ================
 */
-void R_BuildFaceListForLight( CDynLight *pl, bool solid )
+void R_BuildFaceListsForLight( CDynLight *pl, bool solid )
 {
 	RI->currententity = GET_ENTITY( 0 );
 	RI->currentmodel = RI->currententity->model;
@@ -3097,7 +3098,7 @@ void R_DrawLightForSurfList( CDynLight *pl )
 ================
 R_RenderDynLightList
 
-draw dynamic lights for world and bmodels
+draw dynamic lights for world, bmodels and grass
 ================
 */
 void R_RenderDynLightList( bool solid )
@@ -3144,7 +3145,7 @@ void R_RenderDynLightList( bool solid )
 		RI->currentlight = pl;
 
 		// draw world from light position
-		R_BuildFaceListForLight( pl, solid );
+		R_BuildFaceListsForLight( pl, solid );
 
 		if( !RI->frame.light_faces.Count() && !RI->frame.light_grass.Count() )
 			continue;	// no interaction with this light?
