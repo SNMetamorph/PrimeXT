@@ -566,7 +566,6 @@ typedef struct
 	bool		fogEnabled;
 	Vector		fogColor;
 	float		fogDensity;
-	float		fogSkyDensity;
 
 	// sky params
 	bool		ignore_2d_skybox;	// we already draw 3d skybox, so don't overwrite it in current pass
