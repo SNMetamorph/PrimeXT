@@ -880,6 +880,7 @@ terrain_t *R_FindTerrain( const char *texname );
 void R_InitShadowTextures( void );
 void R_FreeLandscapes( void );
 byte R_LightToTexGamma( byte input );
+void R_UpdateFogParameters();
 
 //
 // gl_rsurf.cpp

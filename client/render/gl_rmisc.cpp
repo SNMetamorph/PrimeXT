@@ -29,8 +29,10 @@ GNU General Public License for more details.
 #include "gl_unit_cube.h"
 #include "r_weather.h"
 
-#define DEFAULT_SMOOTHNESS	0.0f
-#define FILTER_SIZE		2
+#define DEFAULT_SMOOTHNESS			0.0f
+#define FILTER_SIZE					2
+#define SKY_FOG_DENSITY_FACTOR		0.00005f	// experimentally determined value (chislo s potolka)
+#define WATER_FOG_DENSITY_FACTOR	0.000025f
 
 // defined in cdll_int.cpp
 extern void CL_NewMap();
@@ -967,4 +969,50 @@ void GL_MapChanged( void )
 	g_StudioRenderer.VidInit();
 
 	GL_InitModelLightCache();
+}
+
+void R_UpdateFogParameters()
+{
+	cl_entity_t *waterEntity = nullptr;
+	if (tr.waterlevel >= 3)
+	{
+		// FIXME: how to allow fog on a world water?
+		int waterent = WATER_ENTITY(RI->view.origin);
+		if (waterent > 0 && waterent < tr.viewparams.max_entities)
+			waterEntity = GET_ENTITY(waterent);
+	}
+
+	if (waterEntity)
+	{
+		const entity_state_t *state = &waterEntity->curstate;
+		if( state->rendercolor.r || state->rendercolor.g || state->rendercolor.b )
+		{
+			// enable global exponential color fog
+			tr.fogColor[0] = state->rendercolor.r / 255.0f;
+			tr.fogColor[1] = state->rendercolor.g / 255.0f;
+			tr.fogColor[2] = state->rendercolor.b / 255.0f;
+			tr.fogDensity = state->renderamt * WATER_FOG_DENSITY_FACTOR;
+			tr.fogEnabled = true;
+		}
+	}
+	else if (tr.movevars->fog_settings != 0)
+	{
+		// enable global exponential color fog
+		// apply gamma-correction because user sets color in sRGB space
+		tr.fogColor[0] = pow((tr.movevars->fog_settings & 0xFF000000 >> 24) / 255.0f, 1.f / 2.2f);
+		tr.fogColor[1] = pow((tr.movevars->fog_settings & 0xFF0000 >> 16) / 255.0f, 1.f / 2.2f);
+		tr.fogColor[2] = pow((tr.movevars->fog_settings & 0xFF00 >> 8) / 255.0f, 1.f / 2.2f);
+
+		const float skyScaleMultiplier = FBitSet(RI->params, RP_SKYPORTALVIEW) ? tr.sky_camera->curstate.scale : 1.0f;
+		tr.fogDensity = (tr.movevars->fog_settings & 0xFF) * SKY_FOG_DENSITY_FACTOR * skyScaleMultiplier;
+		tr.fogEnabled = true;
+	}
+	else
+	{
+		tr.fogColor[0] = 0.0f;
+		tr.fogColor[1] = 0.0f;
+		tr.fogColor[2] = 0.0f;
+		tr.fogDensity = 0.0f;
+		tr.fogEnabled = false;
+	}
 }

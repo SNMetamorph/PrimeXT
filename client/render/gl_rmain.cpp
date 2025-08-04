@@ -957,6 +957,7 @@ void R_RenderScene( const ref_viewpass_t *rvp, RefParams params )
 	R_SetupGLstate();
 	R_Clear(~0, tr.ignore_2d_skybox);
 
+	R_UpdateFogParameters();
 	R_DrawSkyBox();
 	R_RenderSolidBrushList();
 	R_RenderSolidStudioList();

@@ -37,9 +37,6 @@ GNU General Public License for more details.
 #include "screenfade.h"
 #include "shake.h"
 
-#define SKY_FOG_DENSITY_FACTOR		0.00005f	// experimentally determined value (chislo s potolka)
-#define WATER_FOG_DENSITY_FACTOR	0.000025f
-
 /*
 ==============
 R_Speeds_Printf
@@ -375,42 +372,7 @@ bool GL_BackendStartFrame( ref_viewpass_t *rvp, RefParams params )
 	else tr.waterentity = NULL;
 
 	R_GrassSetupFrame();
-
-	// check for fog
-	if( tr.waterentity )
-	{
-		entity_state_t *state = &tr.waterentity->curstate;
-
-		if( state->rendercolor.r || state->rendercolor.g || state->rendercolor.b )
-		{
-			// enable global exponential color fog
-			tr.fogColor[0] = (state->rendercolor.r) / 255.0f;
-			tr.fogColor[1] = (state->rendercolor.g) / 255.0f;
-			tr.fogColor[2] = (state->rendercolor.b) / 255.0f;
-			tr.fogDensity = state->renderamt * WATER_FOG_DENSITY_FACTOR;
-			tr.fogEnabled = true;			
-		}
-	}
-	else if( tr.movevars->fog_settings != 0 )
-	{
-		// enable global exponential color fog
-		// apply gamma-correction because user sets color in sRGB space
-		tr.fogColor[0] = pow((tr.movevars->fog_settings & 0xFF000000 >> 24) / 255.0f, 1.f / 2.2f);
-		tr.fogColor[1] = pow((tr.movevars->fog_settings & 0xFF0000 >> 16) / 255.0f, 1.f / 2.2f);
-		tr.fogColor[2] = pow((tr.movevars->fog_settings & 0xFF00 >> 8) / 255.0f, 1.f / 2.2f);
-
-		const float skyScaleMultiplier = FBitSet(RI->params, RP_SKYPORTALVIEW) ? tr.sky_camera->curstate.scale : 1.0f;
-		tr.fogDensity = (tr.movevars->fog_settings & 0xFF) * SKY_FOG_DENSITY_FACTOR * skyScaleMultiplier;
-		tr.fogEnabled = true;
-	}
-	else
-	{
-		tr.fogColor[0] = 0.0f;
-		tr.fogColor[1] = 0.0f;
-		tr.fogColor[2] = 0.0f;
-		tr.fogDensity = 0.0f;
-		tr.fogEnabled = false;
-	}
+	// R_UpdateFogParameters();
 
 	// apply the underwater warp
 	if( tr.waterlevel >= 3 )
