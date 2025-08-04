@@ -2589,7 +2589,7 @@ vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool
 			VectorScale( add, 4.0f * g_indirect_sun / (float)g_numskynormals[skylevel], add );
 			VectorScale( add_direction, 4.0f * g_indirect_sun / (float)g_numskynormals[skylevel], add_direction );
 
-			AddSampleLight( threadnum, topatch, add, add_direction, LS_NORMAL, s_light, s_dir, s_occ, styles );	
+			AddSampleLight( threadnum, topatch, add, add_direction, g_skystyle, s_light, s_dir, s_occ, styles );	
 		}
 	}
 
@@ -4408,6 +4408,8 @@ void ReduceLightmap( void )
 	SetKeyValue( &g_entities[0], "_smooth", va( "%.2f", g_smoothvalue ));
 	if( g_hdrcompresslog )
 		SetKeyValue( &g_entities[0], "_hdr", "compress_log" );
+	if( g_skystyle )
+		SetKeyValue( &g_entities[0], "_skystyle", va( "%d", g_skystyle ));	
 
 	int	oldsize = g_lightdatasize;
 
