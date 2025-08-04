@@ -272,7 +272,7 @@ static void CalcRayAmbientLighting( int threadnum, const vec3_t vStart, const ve
 	if( trace.surface == STUDIO_SURFACE_HIT )
 	{
 		for (int i = 0; i < MAXLIGHTMAPS; i++ )
-			if( (trace.styles[i] == LS_NORMAL)||(trace.styles[i] == LS_SKY))	//only sun and default style
+			if( (trace.styles[i] == LS_NORMAL)||(trace.styles[i] == LS_SKY)||(trace.styles[i] == g_skystyle))	//only sun, sky and default style
 				VectorAdd( radcolor, trace.light[i], radcolor );	
 		//Msg( "model hit, color %f %f %f\n", radcolor[0], radcolor[1], radcolor[2] );
 		return;
@@ -296,7 +296,7 @@ static void CalcRayAmbientLighting( int threadnum, const vec3_t vStart, const ve
 	scaleAvg = 4.0f * M_PI / ((float)NUMVERTEXNORMALS * scaleAvg);	//ratio of ray cone and face solid angles
 	scaleAvg = bound( 0.0f, scaleAvg, 1.0f );
 	for (int i = 0; i < MAXLIGHTMAPS; i++ )
-		if( (info.styles[i] == LS_NORMAL)||(info.styles[i] == LS_SKY))	//only sun and default style
+		if( (info.styles[i] == LS_NORMAL)||(info.styles[i] == LS_SKY)||(info.styles[i] == g_skystyle))	//only sun, sky and default style
 		{	
 			VectorLerp( info.diffuse[i], scaleAvg, info.average[i], temp_color );	
 			VectorAdd( radcolor, temp_color, radcolor );	

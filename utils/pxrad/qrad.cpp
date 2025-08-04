@@ -76,11 +76,11 @@ rgbdata_t	*g_skytextures[6];
 vec_t		g_lightprobeepsilon = DEFAULT_LIGHTPROBE_EPSILON;
 bool		g_vertexblur = false;
 uint		g_numstudiobounce = DEFAULT_STUDIO_BOUNCE;
-int			g_studiogipasscounter = 0;
+int		g_studiogipasscounter = 0;
 vec3_t		*g_studioskynormals;
-int			g_numstudioskynormals;
+int		g_numstudioskynormals;
 bool		g_noemissive = false;
-
+int		g_skystyle = LS_NORMAL;
 
 
 bool		g_drawsample = false;
@@ -2761,6 +2761,7 @@ static void PrintRadUsage( void )
 	Msg( "    -studiobounce #: set number of studio model radiosity bounces. default is %d\n", DEFAULT_STUDIO_BOUNCE );
 	Msg( "    -vertexblur    : blur per-vertex lighting\n" );	
 	Msg( "    -noemissive    : do not add emissive textures to the lightmap\n" );
+	Msg( "    -skystyle #    : set lightstyle for sky lighting. default is %d\n", LS_NORMAL );	
 
 #ifdef HLRAD_PARANOIA_BUMP
 	Msg( "    -gammamode #   : gamma correction mode (0, 1, 2)\n" );
@@ -2925,7 +2926,12 @@ int main( int argc, char **argv )
 		else if( !Q_strcmp( argv[i], "-noemissive" ))
 		{
 			g_noemissive = true;
-		}				
+		}
+		else if( !Q_strcmp( argv[i], "-skystyle" ))
+		{
+			g_skystyle = atoi( argv[i+1] );
+			i++;
+		}			
 		else if( !Q_strcmp( argv[i], "-chop" ))
 		{
 			g_chop = (float)atof( argv[i+1] );

@@ -356,12 +356,12 @@ void VertexPatchLights( int indexnum, int threadnum = -1 )
 				continue;
 
 			for( lightstyles = 0; lightstyles < MAXLIGHTMAPS && newstyles[lightstyles] != 255; lightstyles++ )
-				if( newstyles[lightstyles] == LS_NORMAL )
+				if( newstyles[lightstyles] == g_skystyle )
 					break;
 			if( lightstyles == MAXLIGHTMAPS )	// overflowed
 				continue;
 			else if( newstyles[lightstyles] == 255 )
-				newstyles[lightstyles] = LS_NORMAL;
+				newstyles[lightstyles] = g_skystyle;
 
 			GetSkyColor( skynormals[j], temp_color );
 
