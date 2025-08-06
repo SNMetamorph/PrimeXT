@@ -2149,8 +2149,7 @@ static void MakeTransfers( int threadnum )
 			if( DotProduct( origin1, plane2->normal ) <= PatchPlaneDist( patch2 ) + MINIMUM_PATCH_DISTANCE )
 				continue;
 
-			// we ignore models here, brushes only
-			if( TestLine( threadnum, origin1, origin2, true ) != CONTENTS_EMPTY )
+			if( TestLine( threadnum, origin1, origin2, false ) != CONTENTS_EMPTY )
 				continue;
 
 			vispatches[count] = patch2;
