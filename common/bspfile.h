@@ -110,19 +110,19 @@ BRUSH MODELS
 #define HEADER_LUMPS		15
 
 // extra version 4
-#define LUMP_LIGHTVECS		0	// deluxemap data
-#define LUMP_FACEINFO		1	// landscape and lightmap resolution info
-#define LUMP_CUBEMAPS		2	// cubemap description
+#define LUMP_LIGHTVECS			0	// deluxemap data
+#define LUMP_FACEINFO			1	// landscape and lightmap resolution info
+#define LUMP_CUBEMAPS			2	// cubemap description
 #define LUMP_VERTNORMALS		3	// phong shaded vertex normals
 #define LUMP_LEAF_LIGHTING		4	// store vertex lighting for statics
 #define LUMP_WORLDLIGHTS		5	// list of all the virtual and real lights (used to relight models in-game)
-#define LUMP_COLLISION		6	// physics engine collision hull dump
-#define LUMP_AINODEGRAPH		7	// node graph that stored into the bsp
-#define LUMP_SHADOWMAP		8	// contains shadow map for direct light
+#define LUMP_EXTDATA_PRIMEXT	6	// extended information for forthcoming PrimeXT features (formerly LUMP_COLLISION, was unused)
+#define LUMP_AINODEGRAPH		7	// node graph that stored into the bsp (unused)
+#define LUMP_SHADOWMAP			8	// contains shadow map for direct light (unused in P2/PrimeXT)
 #define LUMP_VERTEX_LIGHT		9	// store vertex lighting for statics
 #define LUMP_VISLIGHTDATA		10	// how many lights affects to faces
 #define LUMP_SURFACE_LIGHT		11	// models lightmapping
-#define EXTRA_LUMPS			12	// count of the extra lumps
+#define EXTRA_LUMPS				12	// count of the extra lumps
 
 // texture flags
 #define TEX_SPECIAL			BIT( 0 )	// sky or slime, no lightmap or 256 subdivision
