@@ -355,6 +355,7 @@ typedef struct
 	sample_t		*samples;
 	vec3_t			average[MAXLIGHTMAPS];
 	vec3_t			texlight[MAXLIGHTMAPS];
+	short			width;
 } facelight_t;
 
 typedef struct
