@@ -2927,6 +2927,7 @@ static void CalcLightmap( int thread, lightinfo_t *l, facelight_t *fl )
 	// allocate light samples
 	fl->samples = (sample_t *)Mem_Alloc( l->numsurfpt * sizeof( sample_t ));
 	fl->numsamples = l->numsurfpt;
+	fl->width = w;
 
 	// stats
 	g_direct_luxels[thread] += fl->numsamples;
@@ -3122,6 +3123,7 @@ static void CalcLightmapAA( int thread, lightinfo_t *l, facelight_t *fl )
 	// allocate light samples
 	fl->samples = (sample_t *)Mem_Alloc( l->numsurfpt * sizeof( sample_t ));
 	fl->numsamples = l->numsurfpt;
+	fl->width = w;
 
 	plane = GetPlaneFromFace( f );	
 

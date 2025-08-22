@@ -155,7 +155,7 @@ bool R_GetDirectLightFromSurface( dface_t *surf, const vec3_t point, lightpoint_
 	faceneighbor_t	*fn = &g_faceneighbor[surf - g_dfaces];
 	int		texture_step = GetTextureStep( surf );
 	dtexinfo_t	*tex = g_texinfo + surf->texinfo;
-	int		map, size, smax, tmax;
+	int		map;
 	float		lmvecs[2][4];
 	vec_t		s, t;
 	byte		*lm;
@@ -181,14 +181,12 @@ bool R_GetDirectLightFromSurface( dface_t *surf, const vec3_t point, lightpoint_
 	if( surf->lightofs == -1 )
 		return false;
 
-	smax = (fn->lightextents[0] / texture_step) + 1;
-	tmax = (fn->lightextents[1] / texture_step) + 1;
 	s /= (vec_t)texture_step;
 	t /= (vec_t)texture_step;
 
 	facelight_t	*fl = &g_facelight[surf - g_dfaces];
 	sample_t	*samp = fl->samples;
-	int			offset = Q_rint( t ) * smax + Q_rint( s );
+	int			offset = Q_rint( t ) * fl->width + Q_rint( s );
 
 	for( map = 0; map < MAXLIGHTMAPS; map++ )
 	{
