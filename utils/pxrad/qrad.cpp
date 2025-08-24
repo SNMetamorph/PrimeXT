@@ -80,7 +80,7 @@ int		g_studiogipasscounter = 0;
 vec3_t		*g_studioskynormals;
 int		g_numstudioskynormals;
 bool		g_noemissive = false;
-int		g_skystyle = LS_NORMAL;
+int		g_skystyle = -1;
 
 
 bool		g_drawsample = false;
@@ -3071,9 +3071,13 @@ int main( int argc, char **argv )
 	if( !g_visdatasize && g_numbounce > 0 )
 		MsgDev( D_ERROR, "no vis information, compile time may be adversely affected.\n" );
 
+	if( g_skystyle < 0 )
+		g_skystyle = IntForKey( &g_entities[0], "zhlt_skystyle" );
+
 	// keep it in acceptable range
 	g_blur = bound( 1.0, g_blur, 8.0 );
 	g_gamma = bound( 0.3, g_gamma, 1.0 );
+	g_skystyle = bound( 0, g_skystyle, 254 );	
 
 	RadWorld ();
 
