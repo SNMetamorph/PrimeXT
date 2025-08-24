@@ -3656,9 +3656,14 @@ void PrecompLightmapOffsets( void )
 
 		byte	oldstyles[MAXLIGHTMAPS];
 		sample_t	*oldsamples = (sample_t *)Mem_Alloc( sizeof( sample_t ) * fl->numsamples );
+		vec3_t		oldtexlight[MAXLIGHTMAPS];
 
 		for( k = 0; k < MAXLIGHTMAPS; k++ )
+		{
 			oldstyles[k] = f->styles[k];
+			VectorCopy( fl->texlight[k], oldtexlight[k] );
+			VectorClear( fl->texlight[k] );
+		}
 
 		// make backup and clear the source
 		for( k = 0; k < fl->numsamples; k++ )
@@ -3710,6 +3715,8 @@ void PrecompLightmapOffsets( void )
 					if( oldstyles[i] == f->styles[k] )
 						break;
 				}
+
+				VectorCopy( oldtexlight[i], fl->texlight[k] );
 
 				if( i < MAXLIGHTMAPS && oldstyles[i] != 255 )
 				{
