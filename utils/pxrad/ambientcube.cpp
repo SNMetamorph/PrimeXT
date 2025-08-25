@@ -211,40 +211,11 @@ bool R_GetDirectLightFromSurface( dface_t *surf, const vec3_t point, lightpoint_
 }
 	
 
-
-//-----------------------------------------------------------------------------
-// Finds ambient sky lights
-//-----------------------------------------------------------------------------
-static dworldlight_t *FindAmbientSkyLight( void )
-{
-	static dworldlight_t *s_pCachedSkylight = NULL;
-
-	// Don't keep searching for the same light.
-	if( !s_pCachedSkylight )
-	{
-		// find any ambient lights
-		for( int iLight = 0; iLight < g_numworldlights; iLight++ )
-		{
-			dworldlight_t *wl = &g_dworldlights[iLight];
-
-			if( wl->emittype == emit_skylight )
-			{
-				s_pCachedSkylight = wl;
-				break;
-			}
-		}
-	}
-
-	return s_pCachedSkylight;
-}
-
-
-
 //-----------------------------------------------------------------------------
 // Computes ambient lighting along a specified ray.  
 // Ray represents a cone, tanTheta is the tan of the inner cone angle
 //-----------------------------------------------------------------------------
-static void CalcRayAmbientLighting( int threadnum, const vec3_t vStart, const vec3_t vEnd, dworldlight_t *pSkyLight, float tanTheta, vec3_t radcolor )
+static void CalcRayAmbientLighting( int threadnum, const vec3_t vStart, const vec3_t vEnd, vec3_t radcolor )
 {
 	lightpoint_t info;
 	vec3_t vDelta;
@@ -291,7 +262,7 @@ static void CalcRayAmbientLighting( int threadnum, const vec3_t vStart, const ve
 	//Msg( "solid angle %f\n", scaleAvg );
 	if( scaleAvg <= 0.0f )
 		return;
-	scaleAvg = 4.0f * M_PI / ((float)NUMVERTEXNORMALS * scaleAvg);	//ratio of ray cone and face solid angles
+	scaleAvg = 4.0f * M_PI / ((float)g_numskynormals[g_lightprobelevel] * scaleAvg);	//ratio of ray cone and face solid angles
 	scaleAvg = bound( 0.0f, scaleAvg, 1.0f );
 	for (int i = 0; i < MAXLIGHTMAPS; i++ )
 		if( (info.styles[i] == LS_NORMAL)||(info.styles[i] == LS_SKY)||(info.styles[i] == g_skystyle))	//only sun, sky and default style
@@ -305,38 +276,37 @@ static void CalcRayAmbientLighting( int threadnum, const vec3_t vStart, const ve
 static void ComputeAmbientFromSphericalSamples( int threadnum, const vec3_t p1, vec3_t lightBoxColor[6] )
 {
 	// Figure out the color that rays hit when shot out from this position.
-	float tanTheta = tan( VERTEXNORMAL_CONE_INNER_ANGLE );
-	dworldlight_t *pSkyLight = FindAmbientSkyLight();
-	vec3_t radcolor[NUMVERTEXNORMALS], p2;
+	vec3_t	p2;
+	vec_t	weight_sum[6];
 
-	for( int i = 0; i < NUMVERTEXNORMALS; i++ )
-	{
-		VectorMA( p1, (65536.0f * 1.74f), g_anorms[i], p2 );
-
-		// Now that we've got a ray, see what surface we've hit
-		CalcRayAmbientLighting( threadnum, p1, p2, pSkyLight, tanTheta, radcolor[i] );
-	}
-
-	// accumulate samples into radiant box
 	for ( int j = 0; j < 6; j++ )
 	{
-		float t = 0.0f;
-
 		VectorClear( lightBoxColor[j] );
+		weight_sum[j] = 0.0f;
+	}
 
-		for( int i = 0; i < NUMVERTEXNORMALS; i++ )
+	for( int i = 0; i < g_numskynormals[g_lightprobelevel]; i++ )
+	{
+		VectorMA( p1, (65536.0f * 1.74f), g_skynormals[g_lightprobelevel][i], p2 );
+
+		vec3_t temp_color;
+		CalcRayAmbientLighting( threadnum, p1, p2, temp_color);
+
+		for ( int j = 0; j < 6; j++ )
 		{
-			float c = DotProduct( g_anorms[i], g_BoxDirections[j] );
+			float c = DotProduct( g_skynormals[g_lightprobelevel][i], g_BoxDirections[j] ) ;
 
 			if( c > 0.0f )
 			{
-				VectorMA( lightBoxColor[j], c, radcolor[i], lightBoxColor[j] );
-				t += c;
+				VectorMA( lightBoxColor[j], c , temp_color, lightBoxColor[j] );
+				weight_sum[j] += c;
 			}
 		}
-		
-		VectorScale( lightBoxColor[j], ( 1.0 / t ), lightBoxColor[j] );
 	}
+
+	for ( int j = 0; j < 6; j++ )
+		if( weight_sum[j] > 0.0f )
+			VectorScale( lightBoxColor[j], 1.0f / weight_sum[j], lightBoxColor[j] );
 
 	// Now add direct light from the emit_surface lights. These go in the ambient cube because
 	// there are a ton of them and they are often so dim that they get filtered out by r_worldlightmin.
@@ -535,10 +505,13 @@ void ComputeAmbientForLeaf( int threadnum, int leafID, ambientlocallist_t *list 
 	int ySize = (g_dleafs[leafID].maxs[1] - g_dleafs[leafID].mins[1]) / 64;
 	int zSize = (g_dleafs[leafID].maxs[2] - g_dleafs[leafID].mins[2]) / 64;
 
-	xSize = Q_max( xSize, 1 );
-	ySize = Q_max( ySize, 1 );
-	zSize = Q_max( zSize, 1 );
-	
+	int xMin = xSize > 1 ? 2 : 1;
+	int yMin = ySize > 1 ? 2 : 1;
+	int zMin = zSize > 1 ? 2 : 1;	
+
+	xSize = Q_max( xSize, xMin );
+	ySize = Q_max( ySize, yMin );
+	zSize = Q_max( zSize, zMin );	
 
 	xSize = Q_min( xSize, MAX_LOCAL_SAMPLES );
 	ySize = Q_min( ySize, MAX_LOCAL_SAMPLES );
@@ -546,9 +519,9 @@ void ComputeAmbientForLeaf( int threadnum, int leafID, ambientlocallist_t *list 
 
 	while( xSize * ySize * zSize > MAX_LOCAL_SAMPLES )	//lazy way
 	{
-		xSize = Q_max( xSize - 1, 1 );
-		ySize = Q_max( ySize - 1, 1 );
-		zSize = Q_max( zSize - 1, 1 );	
+		xSize = Q_max( xSize - 1, xMin );
+		ySize = Q_max( ySize - 1, yMin );
+		zSize = Q_max( zSize - 1, zMin );
 	}
 	
 	vec3_t cube[6];

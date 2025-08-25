@@ -74,6 +74,7 @@ bool		g_studiolegacy = false;
 vec_t		g_scale = DEFAULT_GLOBAL_SCALE;
 rgbdata_t	*g_skytextures[6];
 vec_t		g_lightprobeepsilon = DEFAULT_LIGHTPROBE_EPSILON;
+int			g_lightprobelevel = 4;
 bool		g_vertexblur = false;
 uint		g_numstudiobounce = DEFAULT_STUDIO_BOUNCE;
 int		g_studiogipasscounter = 0;
@@ -2757,6 +2758,7 @@ static void PrintRadUsage( void )
 	Msg( "    -worldspace    : deluxe map in world space, not tangent space\n" );
 	Msg( "    -studiolegacy  : use legacy tree for studio models tracing instead of BVH\n" );
 	Msg( "    -lightprobeepsilon #.#: set light probe importance threshold value. default is %f\n", DEFAULT_LIGHTPROBE_EPSILON );
+	Msg( "    -lightprobelevel #: set number of rays for light probes baking, final number is 4^n. default is 4\n" );	
 	Msg( "    -studiobounce #: set number of studio model radiosity bounces. default is %d\n", DEFAULT_STUDIO_BOUNCE );
 	Msg( "    -vertexblur    : blur per-vertex lighting\n" );	
 	Msg( "    -noemissive    : do not add emissive textures to the lightmap\n" );
@@ -2912,7 +2914,12 @@ int main( int argc, char **argv )
 		{
 			g_lightprobeepsilon = (float)atof( argv[i+1] );
 			i++;
-		}	
+		}
+		else if( !Q_strcmp( argv[i], "-lightprobelevel" ))
+		{
+			g_lightprobelevel = atoi( argv[i+1] );
+			i++;
+		}			
 		else if( !Q_strcmp( argv[i], "-studiobounce" ))
 		{
 			g_numstudiobounce = atoi( argv[i+1] );
@@ -3077,7 +3084,8 @@ int main( int argc, char **argv )
 	// keep it in acceptable range
 	g_blur = bound( 1.0, g_blur, 8.0 );
 	g_gamma = bound( 0.3, g_gamma, 1.0 );
-	g_skystyle = bound( 0, g_skystyle, 254 );	
+	g_skystyle = bound( 0, g_skystyle, 254 );
+	g_lightprobelevel = bound( 1, g_lightprobelevel, SKYLEVELMAX );
 
 	RadWorld ();
 
