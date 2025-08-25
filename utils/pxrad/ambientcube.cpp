@@ -511,7 +511,7 @@ void ComputeAmbientForLeaf( int threadnum, int leafID, ambientlocallist_t *list 
 
 	xSize = Q_max( xSize, xMin );
 	ySize = Q_max( ySize, yMin );
-	zSize = Q_max( zSize, xMin );	
+	zSize = Q_max( zSize, zMin );	
 
 	xSize = Q_min( xSize, MAX_LOCAL_SAMPLES );
 	ySize = Q_min( ySize, MAX_LOCAL_SAMPLES );
