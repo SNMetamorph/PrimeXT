@@ -429,6 +429,7 @@ extern bool		g_studiolegacy;
 extern vec_t	g_scale;
 extern rgbdata_t	*g_skytextures[6];
 extern vec_t	g_lightprobeepsilon;
+extern int		g_lightprobelevel;
 extern directlight_t	*g_skylights[256];
 extern int		g_numskylights;
 extern uint		g_numstudiobounce;
