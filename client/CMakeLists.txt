@@ -69,6 +69,9 @@ list(APPEND CLDLL_SOURCES
 # render source files
 file(GLOB RENDER_SOURCES "render/*.cpp")
 
+# render visualizer source files
+file(GLOB RENDER_VISUALIZER_SOURCES "render/visualizer/*.cpp")
+
 # entity wrappers source files
 file(GLOB ENTITIES_SOURCES "entities/*.cpp")
 
@@ -93,6 +96,7 @@ if(NOT ENABLE_VGUI_COMPATIBILITY)
 endif()
 
 list(APPEND CLDLL_SOURCES ${RENDER_SOURCES})
+list(APPEND CLDLL_SOURCES ${RENDER_VISUALIZER_SOURCES})
 list(APPEND CLDLL_SOURCES ${ENTITIES_SOURCES})
 list(APPEND CLDLL_SOURCES ${GAME_EVENTS_SOURCES})
 list(APPEND CLDLL_SOURCES ${WEAPONS_SHARED_SOURCES})
