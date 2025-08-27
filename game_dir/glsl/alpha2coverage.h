@@ -31,7 +31,7 @@ float CalcMipLevel(sampler2D tex, in vec2 texCoords)
 
 float AlphaSharpening(in float alpha, in float cutoff)
 {
-    return (alpha - cutoff) / max(abs(dFdx(alpha)) + abs(dFdy(alpha)), 0.0001) + 0.5;
+    return clamp((alpha - cutoff) / max(abs(dFdx(alpha)) + abs(dFdy(alpha)), 0.0001) + 0.5, 0.0, 1.0);
 }
 
 float AlphaRescaling(sampler2D tex, in vec2 texCoords, in float alpha)
