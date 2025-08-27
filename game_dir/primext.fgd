@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 16 May 2025)
+// PrimeXT FGD (last updated 27 Aug 2025)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -3487,13 +3487,9 @@
 	[
 		-1 : "Random"
 		0 : "Glasses"
-		1 : "Ushanka"
-		2 : "Lys1"
+		1 : "Einstein"
+		2 : "Luther"
 		3 : "Slick"
-		8 : "Kaska1"
-		9 : "KaskaBel"
-		10 : "Kaska2"
-		11 : "NeLys"
 	]
 	sequence(Choices) : "Animation Sequence (editor)" : 13 =
 	[
