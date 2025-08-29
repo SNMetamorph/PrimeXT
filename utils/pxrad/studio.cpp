@@ -530,6 +530,9 @@ static int StudioCreateMeshFromTriangles( entity_t *ent, studiohdr_t *phdr, cons
 		vec3_t	temp_color = {0,0,0};
 		byte	weight_sum = 0;
 
+		if( FBitSet( tex->flags, STUDIO_NF_ADDITIVE ))
+			face->shadow = false;
+		
 		tv[0] = &mesh->verts[face->a];
 		tv[1] = &mesh->verts[face->b];
 		tv[2] = &mesh->verts[face->c];		
