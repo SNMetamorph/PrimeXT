@@ -519,6 +519,7 @@ void GetPhongNormal( int facenum, const vec3_t spot, vec3_t phongnormal )
 				VectorSubtract( s2, g_face_centroids[facenum], v2 );
 
 				VectorSubtract( spot, g_face_centroids[facenum], vspot );
+				VectorAdd( vspot, g_face_offset[facenum], vspot );
 
 				aa = DotProduct( v1, v1 );
 				bb = DotProduct( v2, v2 );
