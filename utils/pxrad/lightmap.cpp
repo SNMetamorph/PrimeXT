@@ -2334,6 +2334,10 @@ void LoadEnvSkyTextures( void )
 		else
 		{
 			Msg( "%s - failed to load\n", pszSkySideFileName);
+			Msg( "^3Warning:^7 failed to load skybox textures, light_environment will be used to get the sky color (if present)\n" );
+			FreeEnvSkyTextures();
+			g_envsky = false;
+			return;
 		}
 	}
 }
