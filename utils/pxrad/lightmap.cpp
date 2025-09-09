@@ -2312,6 +2312,14 @@ void LoadEnvSkyTextures( void )
 	rgbdata_t	*temp_image;
 
 	pszSkyName = ValueForKey( g_entities, "skyname" );
+	
+	if( !*pszSkyName )
+	{
+		Msg( "^3Warning:^7 no skyname specified, -envsky parameter will be ignored\n" );
+		g_envsky = false;
+		return;		
+	}
+
 	Msg( "sky name %s\n", pszSkyName );
 
 	for( int i = 0; i < 6; i++ )
