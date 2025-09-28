@@ -339,17 +339,6 @@ static int StudioCreateMeshFromTriangles( entity_t *ent, studiohdr_t *phdr, cons
 		Mem_Free( m_verts );
 	}
 
-	// perfomance warning
-	if( numFaces >= MAX_TRIANGLES )
-	{
-		MsgDev( D_ERROR, "%s have too many triangles (%i). Ignored\n", modname, numFaces );
-		Mem_Free( verts );
-		Mem_Free( faces );
-		return 0; // failed to build (too many triangles)
-	}
-	else if( numFaces >= (MAX_TRIANGLES>>1))
-		MsgDev( D_WARN, "%s have too many triangles (%i)\n", modname, numFaces );
-
 	size_t	texdata_size = sizeof( timage_t ) * phdr->numtextures;
 	char	diffuse[128], texname[128], mdlname[64];
 	rgbdata_t	*external_textures[256];

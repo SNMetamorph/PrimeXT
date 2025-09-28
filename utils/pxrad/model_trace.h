@@ -10,8 +10,6 @@
 
 #include "raytracer.h"
 
-#define MAX_TRIANGLES		524288		// studio triangles
-
 #define FMESH_VERTEX_LIGHTING		BIT( 0 )
 #define FMESH_MODEL_LIGHTMAPS		BIT( 1 )
 #define FMESH_CAST_SHADOW		BIT( 2 )
