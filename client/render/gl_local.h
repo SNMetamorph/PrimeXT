@@ -83,7 +83,6 @@ GNU General Public License for more details.
 #define SHADOW_SIZE		4096			// atlas size
 
 #define WORLD_MATRIX	0			// must be 0 always
-#define REFPVS_RADIUS	2.0f			// PVS radius for rendering
 #define Z_NEAR		4.0f
 #define Z_NEAR_LIGHT	0.1f
 #define BACKFACE_EPSILON	0.01f

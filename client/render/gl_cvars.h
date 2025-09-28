@@ -44,6 +44,7 @@ extern cvar_t *r_novis;
 extern cvar_t *r_nocull;
 extern cvar_t *r_lockpvs;
 extern cvar_t *r_lockfrustum;
+extern cvar_t *r_pvs_radius;
 extern cvar_t *gl_hdr;
 extern cvar_t *r_tonemap;
 extern cvar_t *r_bloom;

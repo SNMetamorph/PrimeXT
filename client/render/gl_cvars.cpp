@@ -50,6 +50,7 @@ cvar_t *r_dof_change_time;
 cvar_t *r_dof_focal_length;
 cvar_t *r_dof_fstop;
 cvar_t *r_dof_debug;
+cvar_t *r_pvs_radius;
 cvar_t *r_allow_mirrors;
 cvar_t *r_allow_portals;
 cvar_t *r_allow_screens;
@@ -136,6 +137,7 @@ void R_InitializeConVars()
 	r_nocull = CVAR_GET_POINTER("r_nocull");
 	r_lockpvs = CVAR_GET_POINTER("r_lockpvs");
 	r_lockfrustum = CVAR_GET_POINTER("r_lockfrustum");
+	r_pvs_radius = CVAR_GET_POINTER("r_pvs_radius");
 	r_wireframe = CVAR_GET_POINTER("gl_wireframe");
 	r_lightmap = CVAR_GET_POINTER("r_lightmap");
 	r_decals = CVAR_GET_POINTER("r_decals");

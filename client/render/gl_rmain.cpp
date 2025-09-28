@@ -182,6 +182,12 @@ const Vector gl_state_t :: GetModelOrigin( void )
 	return transform.VectorITransform( RI->view.origin );
 }
 
+float R_GetPVSRadius()
+{
+	const float defaultPvsRadius = 2.0f; // formerly REFPVS_RADIUS
+	return r_pvs_radius ? r_pvs_radius->value : defaultPvsRadius;
+}
+
 /*
 ===============
 GL_CacheState
@@ -421,7 +427,7 @@ static void R_SetupViewCache( const ref_viewpass_t *rvp )
 		if( CVAR_TO_BOOL( r_novis ) || FBitSet( RI->params, RP_DRAW_OVERVIEW ) || ( !RI->view.leaf ))
 			fullvis = true;
 
-		ENGINE_SET_PVS( RI->view.pvspoint, REFPVS_RADIUS, RI->view.pvsarray, mergevis, fullvis );
+		ENGINE_SET_PVS( RI->view.pvspoint, R_GetPVSRadius(), RI->view.pvsarray, mergevis, fullvis);
 		SetBits( RI->view.changed, RC_PVS_CHANGED );
 	}
 

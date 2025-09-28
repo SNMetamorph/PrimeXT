@@ -364,8 +364,9 @@ static void R_ShadowPassSetupViewCache( CDynLight *pl, int split = 0 )
 	RI->view.worldMatrix.CopyToArray( RI->glstate.modelviewMatrix );
 	
 	// TODO optimize it with caching last view leaf
+	const float pvsCullingRadius = 2.0f; // made it larger than default, to avoid disappearing shadows
 	RI->view.pvspoint = pl->origin;
-	ENGINE_SET_PVS( RI->view.pvspoint, REFPVS_RADIUS, RI->view.pvsarray, false, true ); 
+	ENGINE_SET_PVS( RI->view.pvspoint, pvsCullingRadius, RI->view.pvsarray, false, true ); 
 	R_MarkWorldVisibleFaces( worldmodel );
 
 	// add all studio models, mark visible bmodels
