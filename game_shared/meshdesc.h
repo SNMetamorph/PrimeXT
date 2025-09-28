@@ -26,7 +26,7 @@ GNU General Public License for more details.
 #define MAX_AREANODES	BIT( MAX_AREA_DEPTH + 1 )
 
 #define MAX_FACET_PLANES	32		// can be increased up to 255
-#define MAX_TRIANGLES	524288		// studio triangles
+#define MAX_TRIANGLES_SOFT	524288		// studio triangles
 #define PLANE_HASHES	m_iHashPlanes
 #define PACIFIER_STEP	40
 #define PACIFIER_REM	( PACIFIER_STEP / 10 )

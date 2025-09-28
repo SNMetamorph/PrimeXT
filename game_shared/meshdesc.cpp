@@ -1210,18 +1210,11 @@ bool CMeshDesc :: InitMeshBuild( int numTriangles )
 		return false;
 
 	// perfomance warning
-	if( numTriangles >= MAX_TRIANGLES )
-	{
-		ALERT( at_error, "%s have too many triangles (%i). Mesh cannot be build\n", m_debugName, numTriangles );
-		return false; // failed to build (too many triangles)
-	}
-	else if( numTriangles >= (MAX_TRIANGLES >> 1))
+	if( numTriangles >= (MAX_TRIANGLES_SOFT / 2))
 		ALERT( at_warning, "%s have too many triangles (%i)\n", m_debugName, numTriangles );
 
-	// show the pacifier for user is knowelege what engine is not hanging
-	if( numTriangles >= (MAX_TRIANGLES >> 3))
-		m_bShowPacifier = true;
-	else m_bShowPacifier = false;
+	// show the pacifier for user is knowledge what engine is not hanging
+	m_bShowPacifier = numTriangles >= (MAX_TRIANGLES_SOFT / 8);
 
 	if( numTriangles >= 256 )
 		has_tree = true;	// too many triangles invoke to build AABB tree
