@@ -18,15 +18,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: windows-latest
+          - os: windows-2022
             cmake_preset: windows-x86-debug
             build_conf: Debug
             devenv_arch: amd64_x86
-          - os: windows-latest
+          - os: windows-2022
             cmake_preset: windows-x64-debug
             build_conf: Debug
             devenv_arch: amd64
-          - os: windows-latest
+          - os: windows-2022
             cmake_preset: windows-x64-release
             build_conf: RelWithDebInfo
             devenv_arch: amd64
@@ -51,7 +51,7 @@ jobs:
       - name: Create build environment
         run: cmake -E make_directory ${{ github.workspace }}/build
 
-      - uses: ilammy/msvc-dev-cmd@v1.12.1
+      - uses: TheMrMilchmann/setup-msvc-dev@v4
         if: runner.os == 'Windows'
         with:
           arch: ${{ matrix.devenv_arch }}
