@@ -2609,8 +2609,12 @@ bool CStudioModelRenderer :: ComputeCustomFov( matrix4x4 &projMatrix, matrix4x4 
 	else if( m_pCvarViewmodelFov->value > 120 )
 		gEngfuncs.Cvar_SetValue( "cl_viewmodel_fov", 120 );
 
+	if (m_pCvarViewmodelZNear->value <= 0.0)
+		m_pCvarViewmodelZNear->value = 4.0f;
+
 	// Find the offset our current FOV is from the default value
-	float flFOVOffset = 90.0f - (float)RI->view.fov_x;
+	const float flFOVOffset = 90.0f - (float)RI->view.fov_x;
+	const float viewmodelZNear = m_pCvarViewmodelZNear->value;
 
 	switch( m_iDrawModelType )
 	{
@@ -2631,7 +2635,7 @@ bool CStudioModelRenderer :: ComputeCustomFov( matrix4x4 &projMatrix, matrix4x4 
 	{
 		projMatrix = RI->view.projectionMatrix;
 		worldViewProjMatrix = RI->view.worldProjectionMatrix;
-		R_SetupProjectionMatrix( fov_x, fov_y, RI->view.projectionMatrix );
+		R_SetupProjectionMatrix( fov_x, fov_y, RI->view.projectionMatrix, viewmodelZNear );
 		RI->view.worldProjectionMatrix = RI->view.projectionMatrix.Concat( RI->view.worldMatrix );
 		RI->view.worldProjectionMatrix.CopyToArray( RI->glstate.modelviewProjectionMatrix );
 		RI->view.projectionMatrix.CopyToArray( RI->glstate.projectionMatrix );

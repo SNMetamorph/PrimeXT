@@ -814,7 +814,7 @@ void R_Clear( int bitMask, bool skyPortalRendered )
 R_SetupProjectionMatrix
 =============
 */
-void R_SetupProjectionMatrix( float fov_x, float fov_y, matrix4x4 &m )
+void R_SetupProjectionMatrix( float fov_x, float fov_y, matrix4x4 &m, float z_near )
 {
 	GLdouble	xMax, yMax, zFar;
 
@@ -822,7 +822,7 @@ void R_SetupProjectionMatrix( float fov_x, float fov_y, matrix4x4 &m )
 	xMax = Z_NEAR * tan( fov_x * M_PI / 360.0 );
 	yMax = Z_NEAR * tan( fov_y * M_PI / 360.0 );
 
-	m.CreateProjection( xMax, -xMax, yMax, -yMax, Z_NEAR, zFar );
+	m.CreateProjection( xMax, -xMax, yMax, -yMax, z_near, zFar );
 }
 
 /*

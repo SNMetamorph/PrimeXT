@@ -857,7 +857,7 @@ void R_RenderScene( const ref_viewpass_t *rvp, RefParams params );
 qboolean R_AddEntity( struct cl_entity_s *clent, int entityType );
 bool R_WorldToScreen( const Vector &point, Vector &screen );
 void R_ScreenToWorld( const Vector &screen, Vector &point );
-void R_SetupProjectionMatrix( float fov_x, float fov_y, matrix4x4 &m );
+void R_SetupProjectionMatrix( float fov_x, float fov_y, matrix4x4 &m, float z_near = Z_NEAR );
 unsigned short GL_CacheState( const Vector &origin, const Vector &angles, bool skyentity = false );
 void R_MarkWorldVisibleFaces( model_t *model );
 gl_state_t *GL_GetCache( word hCachedMatrix );

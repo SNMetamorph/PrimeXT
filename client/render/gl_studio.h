@@ -545,6 +545,7 @@ private:
 	cvar_t			*m_pCvarDrawViewModel;
 	cvar_t			*m_pCvarHand;	// handness
 	cvar_t			*m_pCvarViewmodelFov;
+	cvar_t			*m_pCvarViewmodelZNear;
 	cvar_t			*m_pCvarCompatible;
 	cvar_t			*m_pCvarLodScale;
 	cvar_t			*m_pCvarLodBias;
