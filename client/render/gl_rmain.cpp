@@ -819,8 +819,8 @@ void R_SetupProjectionMatrix( float fov_x, float fov_y, matrix4x4 &m, float z_ne
 	GLdouble	xMax, yMax, zFar;
 
 	zFar = Q_max( 256.0, RI->view.farClip );
-	xMax = Z_NEAR * tan( fov_x * M_PI / 360.0 );
-	yMax = Z_NEAR * tan( fov_y * M_PI / 360.0 );
+	xMax = z_near * tan( fov_x * M_PI / 360.0 );
+	yMax = z_near * tan( fov_y * M_PI / 360.0 );
 
 	m.CreateProjection( xMax, -xMax, yMax, -yMax, z_near, zFar );
 }
