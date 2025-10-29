@@ -65,8 +65,8 @@ DEFINE_ENUM_BITOPS( WeaponEventFlags );
 struct WeaponEventParams
 {
 	WeaponEventFlags flags;
-	float *origin;
-	float *angles;
+	Vector origin;
+	Vector angles;
 	float delay;
 	float fparam1;
 	float fparam2; 
