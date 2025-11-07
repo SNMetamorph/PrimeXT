@@ -292,7 +292,7 @@ static void Mod_LoadWorldMaterials( void )
 			mat->impl->reflectScale = 1.0f; 
 			mat->impl->refractScale = 2.5f;
 			
-			if (tr.waterTextures[0].Initialized()) {
+			if (tr.waterTextures.Count() > 0) {
 				SetBits(mat->flags, BRUSH_HAS_BUMP);
 			}
 
@@ -2571,8 +2571,8 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 			else u->SetValue( mat->impl->gl_diffuse_id.ToInt() );
 			break;
 		case UT_NORMALMAP:
-			if( FBitSet( mat->flags, BRUSH_LIQUID ) && tr.waterTextures[0].Initialized() )
-				u->SetValue( tr.waterTextures[(int)( tr.time * WATER_ANIMTIME ) % WATER_TEXTURES].ToInt() );
+			if( FBitSet( mat->flags, BRUSH_LIQUID ) && tr.waterTextures.Count() > 0 )
+				u->SetValue( tr.waterTextures[(int)( tr.time * WATER_ANIMTIME ) % tr.waterTextures.Count()].ToInt());
 			else u->SetValue( mat->impl->gl_normalmap_id.ToInt() );
 			break;
 		case UT_GLOSSMAP:

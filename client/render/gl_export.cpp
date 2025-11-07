@@ -970,12 +970,19 @@ static void GL_InitTextures( void )
 		tr.normalsFitting = tr.whiteTexture; // fallback
 	}
 
-	// load water animation
-	for( int i = 0; i < WATER_TEXTURES; i++ )
+	// water normalmaps animation
+	for( int i = 0;; i++ )
 	{
 		char path[256];
 		Q_snprintf( path, sizeof( path ), "gfx/water/water_normal_%i", i );
-		tr.waterTextures[i] = LOAD_TEXTURE( path, NULL, 0, TF_NORMALMAP );
+
+		auto handle = LOAD_TEXTURE( path, NULL, 0, TF_NORMALMAP );
+		if (handle.Initialized()) {
+			tr.waterTextures.AddToTail(handle);
+		}
+		else {
+			break;
+		}
 	}
 
 	R_CreateSpotLightTexture ();
