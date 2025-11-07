@@ -108,6 +108,11 @@ vec_t g_anorms[NUMVERTEXNORMALS][3] =
 #include "anorms.h"
 };
 
+vec3_t	g_skynormals_random[SKYNORMALS_RANDOM] =
+{
+#include "anorms_rnd_16k.h"
+};
+
 /*
 ===================================================================
 
