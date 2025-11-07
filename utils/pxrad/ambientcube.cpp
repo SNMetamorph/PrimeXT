@@ -262,7 +262,7 @@ static void CalcRayAmbientLighting( int threadnum, const vec3_t vStart, const ve
 	//Msg( "solid angle %f\n", scaleAvg );
 	if( scaleAvg <= 0.0f )
 		return;
-	scaleAvg = 4.0f * M_PI / ((float)g_numskynormals[g_lightprobelevel] * scaleAvg);	//ratio of ray cone and face solid angles
+	scaleAvg = 4.0f * M_PI / ((float)g_lightprobesamples * scaleAvg);	//ratio of ray cone and face solid angles
 	scaleAvg = bound( 0.0f, scaleAvg, 1.0f );
 	for (int i = 0; i < MAXLIGHTMAPS; i++ )
 		if( (info.styles[i] == LS_NORMAL)||(info.styles[i] == LS_SKY)||(info.styles[i] == g_skystyle))	//only sun, sky and default style
