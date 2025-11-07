@@ -65,6 +65,7 @@
 #define SKYLEVEL_FASTSKY		6
 #define STUDIO_SAMPLES_PER_PASS	32
 #define STUDIO_SAMPLES_SKY		256
+#define SKYNORMALS_RANDOM		16384
 #define SUNSPREAD_SKYLEVEL		7
 #define SUNSPREAD_THRESHOLD		15.0
 #define NUMVERTEXNORMALS		162
@@ -435,8 +436,7 @@ extern int		g_numskylights;
 extern uint		g_numstudiobounce;
 extern bool		g_vertexblur;
 extern int		g_studiogipasscounter;
-extern vec3_t	*g_studioskynormals;
-extern int		g_numstudioskynormals;
+extern vec3_t	g_skynormals_random[SKYNORMALS_RANDOM];
 extern bool		g_noemissive;
 extern int		g_skystyle;
 
