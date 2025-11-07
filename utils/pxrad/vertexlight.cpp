@@ -289,7 +289,8 @@ void VertexPatchLights( int indexnum, int threadnum = -1 )
 {
 	int	modelnum = g_vertexlight_indexes[indexnum].modelnum;
 	int	vertexnum = g_vertexlight_indexes[indexnum].vertexnum;
-	vec3_t	*skynormals = &g_studioskynormals[g_numstudioskynormals * (g_studiogipasscounter - 1)];
+	vec3_t	*skynormals = &g_skynormals_random[STUDIO_SAMPLES_PER_PASS * (g_studiogipasscounter - 1)];
+	int		skynormalscount = (g_numstudiobounce > 0) ? STUDIO_SAMPLES_PER_PASS : STUDIO_SAMPLES_SKY;
 	entity_t	*mapent = g_vertexlight[modelnum];
 	entity_t	*ignoreent = NULL;	
 	vec3_t	sampled_light[MAXLIGHTMAPS];
@@ -327,19 +328,19 @@ void VertexPatchLights( int indexnum, int threadnum = -1 )
 	memset( sampled_dir, 0, sizeof( sampled_dir ));
 	total = 0;
 
-	for( int j = 0; j < g_numstudioskynormals; j++ )
+	for( int j = 0; j < skynormalscount; j++, skynormals++ )
 	{
-		dot = DotProduct( skynormals[j], tv->normal );
+		dot = DotProduct( *skynormals, tv->normal );
 
 		if( tv->twosided )
 			dot = 1.0f;
 
 		if( dot <= NORMAL_EPSILON ) continue;
 
-		VectorScale( skynormals[j], MAX_INDIRECT_DIST, delta );
+		VectorScale( *skynormals, MAX_INDIRECT_DIST, delta );
 		VectorAdd( tv->light->pos, delta, delta );
 
-		VectorMA( tv->light->pos, 0.5f, skynormals[j],  trace_pos );
+		VectorMA( tv->light->pos, 0.5f, *skynormals,  trace_pos );
 
 		if( !tv->twosided )
 		{		
@@ -363,13 +364,13 @@ void VertexPatchLights( int indexnum, int threadnum = -1 )
 			else if( newstyles[lightstyles] == 255 )
 				newstyles[lightstyles] = g_skystyle;
 
-			GetSkyColor( skynormals[j], temp_color );
+			GetSkyColor( *skynormals, temp_color );
 
 			VectorScale( temp_color, dot * g_indirect_sun, temp_color );				
 
 			VectorAdd( sampled_light[lightstyles], temp_color, sampled_light[lightstyles] ); 
 			avg = VectorAvg(temp_color);
-			VectorMA( sampled_dir[lightstyles], avg, skynormals[j], sampled_dir[lightstyles]);
+			VectorMA( sampled_dir[lightstyles], avg, *skynormals, sampled_dir[lightstyles]);
 		}
 		else if( trace.surface == -1 )
 			continue;
@@ -389,7 +390,7 @@ void VertexPatchLights( int indexnum, int threadnum = -1 )
 
 				VectorAdd( sampled_light[lightstyles], temp_color, sampled_light[lightstyles] ); 
 				avg = VectorAvg(temp_color);
-				VectorMA( sampled_dir[lightstyles], avg, skynormals[j], sampled_dir[lightstyles]);	
+				VectorMA( sampled_dir[lightstyles], avg, *skynormals, sampled_dir[lightstyles]);	
 			}
 		}
 		else if( g_numbounce > 0 )
@@ -410,7 +411,7 @@ void VertexPatchLights( int indexnum, int threadnum = -1 )
 
 			if( scaleAvg <= 0.0f )
 				continue;
-			scaleAvg = 4.0f * M_PI / ((float)g_numstudioskynormals * scaleAvg);	//ratio of ray cone and face solid angles
+			scaleAvg = 4.0f * M_PI / ((float)skynormalscount * scaleAvg);	//ratio of ray cone and face solid angles
 			scaleAvg = bound( 0.0f, scaleAvg, 1.0f );
 
 			for (int i = 0; i < MAXLIGHTMAPS; i++ )
@@ -429,7 +430,7 @@ void VertexPatchLights( int indexnum, int threadnum = -1 )
 
 				VectorAdd( sampled_light[lightstyles], temp_color, sampled_light[lightstyles] ); 
 				avg = VectorAvg(temp_color);
-				VectorMA( sampled_dir[lightstyles], avg, skynormals[j], sampled_dir[lightstyles]);	
+				VectorMA( sampled_dir[lightstyles], avg, *skynormals, sampled_dir[lightstyles]);	
 			}
 		}
 		
@@ -445,8 +446,8 @@ void VertexPatchLights( int indexnum, int threadnum = -1 )
 	// add light to vertex
 	for( int k = 0; k < MAXLIGHTMAPS && mesh->styles[k] != 255; k++ )
 	{
-		VectorScale( sampled_light[k], 4.0f / (float)g_numstudioskynormals, sampled_light[k] );
-		VectorScale( sampled_dir[k], 4.0f / (float)g_numstudioskynormals, sampled_dir[k] );
+		VectorScale( sampled_light[k], 4.0f / (float)skynormalscount, sampled_light[k] );
+		VectorScale( sampled_dir[k], 4.0f / (float)skynormalscount, sampled_dir[k] );
 
 		VectorLerp( tv->light->gi[k], 1.0f / (float)g_studiogipasscounter, sampled_light[k], tv->light->gi[k] );
 		VectorLerp( tv->light->gi_dlx[k], 1.0f / (float)g_studiogipasscounter, sampled_dir[k], tv->light->gi_dlx[k]);

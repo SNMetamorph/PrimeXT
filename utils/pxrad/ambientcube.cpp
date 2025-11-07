@@ -262,7 +262,7 @@ static void CalcRayAmbientLighting( int threadnum, const vec3_t vStart, const ve
 	//Msg( "solid angle %f\n", scaleAvg );
 	if( scaleAvg <= 0.0f )
 		return;
-	scaleAvg = 4.0f * M_PI / ((float)g_numskynormals[g_lightprobelevel] * scaleAvg);	//ratio of ray cone and face solid angles
+	scaleAvg = 4.0f * M_PI / ((float)g_lightprobesamples * scaleAvg);	//ratio of ray cone and face solid angles
 	scaleAvg = bound( 0.0f, scaleAvg, 1.0f );
 	for (int i = 0; i < MAXLIGHTMAPS; i++ )
 		if( (info.styles[i] == LS_NORMAL)||(info.styles[i] == LS_SKY)||(info.styles[i] == g_skystyle))	//only sun, sky and default style
@@ -278,6 +278,7 @@ static void ComputeAmbientFromSphericalSamples( int threadnum, const vec3_t p1, 
 	// Figure out the color that rays hit when shot out from this position.
 	vec3_t	p2;
 	vec_t	weight_sum[6];
+	vec3_t	*skynormals = g_skynormals_random;
 
 	for ( int j = 0; j < 6; j++ )
 	{
@@ -285,16 +286,16 @@ static void ComputeAmbientFromSphericalSamples( int threadnum, const vec3_t p1, 
 		weight_sum[j] = 0.0f;
 	}
 
-	for( int i = 0; i < g_numskynormals[g_lightprobelevel]; i++ )
+	for( int i = 0; i < g_lightprobesamples; i++, skynormals++ )
 	{
-		VectorMA( p1, (65536.0f * 1.74f), g_skynormals[g_lightprobelevel][i], p2 );
+		VectorMA( p1, (65536.0f * 1.74f), *skynormals, p2 );
 
 		vec3_t temp_color;
 		CalcRayAmbientLighting( threadnum, p1, p2, temp_color);
 
 		for ( int j = 0; j < 6; j++ )
 		{
-			float c = DotProduct( g_skynormals[g_lightprobelevel][i], g_BoxDirections[j] ) ;
+			float c = DotProduct( *skynormals, g_BoxDirections[j] ) ;
 
 			if( c > 0.0f )
 			{
