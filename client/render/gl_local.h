@@ -36,6 +36,7 @@ GNU General Public License for more details.
 #include "vector.h"
 #include <matrix.h>
 #include "material.h"
+#include "debug_visualizer.h"
 
 #define ACTUAL_GL_VERSION	30.0f
 
@@ -626,6 +627,7 @@ typedef struct
 
 	// cull info
 	Vector		modelorg;		// relative to viewpoint
+	CDebugVisualizer debugVisualizer;
 } ref_globals_t;
 
 typedef struct
