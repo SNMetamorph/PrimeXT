@@ -255,9 +255,11 @@ float HalfToFloat( unsigned short h );
 
 float AcosFast( float x );
 float Atan2Fast( float y, float x );
+vec_t TriangleArea( const vec3_t a, const vec3_t b, const vec3_t c );
 void TriangleIncenter( const vec3_t a, const vec3_t b, const vec3_t c, vec3_t out );
 void WorldToTangent( const vec3_t v, const vec3_t t, const vec3_t b, const vec3_t n, vec3_t out );
 void TangentToWorld( const vec3_t v, const vec3_t t, const vec3_t b, const vec3_t n, vec3_t out );
+float Halton(int base, int index);
 
 //
 // Bounding Box operations

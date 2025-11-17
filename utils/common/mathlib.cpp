@@ -237,6 +237,20 @@ float Atan2Fast( float y, float x )
 
 /*
 =================
+TriangleArea
+=================
+*/
+vec_t TriangleArea( const vec3_t a, const vec3_t b, const vec3_t c )
+{
+	vec3_t ba, ca, cro;
+	VectorSubtract( b, a, ba );
+	VectorSubtract( c, a, ca );
+	CrossProduct( ba, ca, cro );
+	return 0.5f * VectorLength( cro );
+}
+
+/*
+=================
 TriangleIncenter
 =================
 */
@@ -283,6 +297,25 @@ void TangentToWorld( const vec3_t v, const vec3_t t, const vec3_t b, const vec3_
 	out[1] = v[0] * t[1] + v[1] * b[1] + v[2] * n[1];
 	out[2] = v[0] * t[2] + v[1] * b[2] + v[2] * n[2];
 }
+
+/*
+=================
+Halton
+=================
+*/
+float Halton(int base, int index)
+{
+	float result = 0.0f;
+	float f = 1.0f;
+	while (index > 0)
+	{
+		f = f / float(base);
+		result += f * float(index % base);
+		index = index / base; 
+	}
+	return result;
+}
+
 
 /*
 ==============
