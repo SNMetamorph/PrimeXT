@@ -439,6 +439,7 @@ extern int		g_studiogipasscounter;
 extern vec3_t	g_skynormals_random[SKYNORMALS_RANDOM];
 extern bool		g_noemissive;
 extern int		g_skystyle;
+extern bool		g_usingpatches;
 
 //
 // ambientcube.c
