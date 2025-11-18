@@ -2548,7 +2548,7 @@ GatherSampleLight
 =============
 */
 void GatherSampleLight( int threadnum, int fn, const vec3_t pos, int leafnum, const vec3_t n,
-vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool topatch, entity_t *ignoreent, const vec_t sky_visibility )
+vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool topatch, entity_t *ignoreent )
 {
 	vec3_t	add, delta, add_one;
 	vec3_t	testline_origin;
@@ -2567,7 +2567,7 @@ vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool
 		// check light visibility
 		if( leafnum && g_fakeskylight.pvs && CHECKVISBIT( g_fakeskylight.pvs, leafnum - 1 ) )
 		{
-			int	skylevel = g_fastsky && (sky_visibility > 2.0f) ? SKYLEVEL_FASTSKY : SKYLEVEL_SOFTSKYON;		
+			int	skylevel = SKYLEVEL_SOFTSKYON;		
 
 			vec3_t	*skynormals = g_skynormals[skylevel];
 			vec3_t	sky_intensity;
@@ -3484,7 +3484,7 @@ void BuildFaceLights( int facenum, int thread )
 	{
 		int	leafnum = p->leafnum;
 #ifdef HLRAD_DELUXEMAPPING
-		GatherSampleLight( thread, l.surfnum, p->origin, leafnum, normal, p->totallight, p->totallight_dir, NULL, p->totalstyle, NULL, 1, NULL, M_PI - p->trans_sum );
+		GatherSampleLight( thread, l.surfnum, p->origin, leafnum, normal, p->totallight, p->totallight_dir, NULL, p->totalstyle, NULL, 1, NULL );
 #else
 		GatherSampleLight( thread, l.surfnum, p->origin, leafnum, normal, p->totallight, NULL, NULL, p->totalstyle, NULL, 1 );
 #endif

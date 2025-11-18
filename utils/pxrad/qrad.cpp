@@ -77,11 +77,10 @@ vec_t		g_lightprobeepsilon = DEFAULT_LIGHTPROBE_EPSILON;
 int			g_lightprobesamples = 256;
 bool		g_vertexblur = false;
 uint		g_numstudiobounce = DEFAULT_STUDIO_BOUNCE;
-int		g_studiogipasscounter = 0;
-vec3_t		*g_studioskynormals;
-int		g_numstudioskynormals;
+int			g_studiogipasscounter = 0;
 bool		g_noemissive = false;
-int		g_skystyle = -1;
+int			g_skystyle = -1;
+bool		g_usingpatches = true;
 
 
 bool		g_drawsample = false;
@@ -1918,8 +1917,7 @@ static void SortPatches( void )
 		}
 	}
 
-	// if we haven't patches we don't need bounces
-	if( g_num_patches <= 0 ) g_numbounce = 0;
+	if( g_num_patches <= 0 ) g_usingpatches = false;
 }
 
 /*
@@ -2516,8 +2514,6 @@ void RadWorld( void )
 	RunThreadsOnIndividual( g_numfaces, true, FindFacePositions );
 	CalcPositionsSize();
 
-	if( g_fastsky )
-		MakeTransfers();
 	if( g_envsky )
 		LoadEnvSkyTextures();
 
@@ -2529,7 +2525,7 @@ void RadWorld( void )
 #ifdef HLRAD_VERTEXLIGHTING
 	BuildVertexLights();	//BuildFaceLights will get single gi bounce from studiomodels
 
-	if( g_numstudiobounce > 0 || g_indirect_sun > 0.0f )
+	if( g_numstudiobounce > 0 )
 	{
 		g_studiogipasscounter = 1;		
 		VertexPatchLights();
@@ -2546,11 +2542,10 @@ void RadWorld( void )
 
 	CalcLuxelsCount();
 
-	if( g_numbounce > 0 )
+	if( g_numbounce > 0 && g_usingpatches )
 	{
 		// build transfer lists	
-		if(!g_fastsky)
-			MakeTransfers();
+		MakeTransfers();
 
 		emitlight = (vec3_t (*)[MAXLIGHTMAPS])Mem_Alloc(( g_num_patches + 1 ) * sizeof( vec3_t[MAXLIGHTMAPS] ));
 		addlight = (vec3_t (*)[MAXLIGHTMAPS])Mem_Alloc(( g_num_patches + 1 ) * sizeof( vec3_t[MAXLIGHTMAPS] ));
@@ -2574,10 +2569,9 @@ void RadWorld( void )
 		emitlight_dir = NULL;
 		addlight_dir = NULL;
 #endif
-	}
-
-	if( g_fastsky ||( g_numbounce > 0 ))
+		// transfers don't need anymore
 		FreeTransfers();
+	}
 
 	// remove direct light from patches
 	for( int i = 0; i < g_num_patches; i++ )
@@ -2597,13 +2591,13 @@ void RadWorld( void )
 		ScaleDirectLights();
 
 	// because fastmode uses patches instead of samples
-	if( g_numbounce > 0 || g_fastmode || g_indirect_sun > 0.0f )
+	if( g_usingpatches )
 		RunThreadsOnIndividual( g_numfaces, false, CreateTriangulations );
 
 	// blend bounced light into direct light and save
 	PrecompLightmapOffsets();
 
-	if( g_numbounce > 0 || g_fastmode || g_indirect_sun > 0.0f )
+	if( g_usingpatches )
 	{
 		CreateFacelightDependencyList();
 
@@ -2612,7 +2606,7 @@ void RadWorld( void )
 		FreeFacelightDependencyList();
 	}
 
-	if( g_numbounce > 0 || g_fastmode || g_indirect_sun > 0.0f )
+	if( g_usingpatches )
 		FreeTriangulations();
 
 	if( g_lightbalance )
@@ -2626,7 +2620,7 @@ void RadWorld( void )
 
 #ifdef HLRAD_VERTEXLIGHTING
 	g_studiogipasscounter = 0;
-	for( int i = 0; i < g_numstudiobounce; i++ )
+	for( int i = 0; i < Q_max( 1, g_numstudiobounce ); i++ )
 	{
 		g_studiogipasscounter++;		
 		VertexPatchLights();
@@ -3085,6 +3079,7 @@ int main( int argc, char **argv )
 
 	if( g_skystyle < 0 )
 		g_skystyle = IntForKey( &g_entities[0], "zhlt_skystyle" );
+	g_usingpatches = g_numbounce > 0 || g_fastmode || g_indirect_sun > 0.0f;
 
 	// keep it in acceptable range
 	g_blur = bound( 1.0, g_blur, 8.0 );
