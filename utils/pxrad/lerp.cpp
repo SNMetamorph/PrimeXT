@@ -1764,7 +1764,7 @@ void GetTriangulationPatches( int facenum, int *numpatches, const int **patches 
 {
 	const facetriangulation_t	*facetrian;
 
-	if( g_numbounce <= 0 && !g_fastmode && g_indirect_sun == 0.0f )
+	if( !g_usingpatches )
 	{
 		*numpatches = 0;
 		*patches = NULL;
