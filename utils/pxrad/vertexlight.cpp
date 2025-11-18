@@ -521,6 +521,7 @@ void FinalLightVertex( int modelnum, int threadnum = -1 )
 	vec3_t		lb, v, direction;
 	int			lightstyles;
 	vec_t		minlight;
+	bool		vertexblur;
 	tmesh_t		*mesh;
 	dmodelvertlight_t	*dml;
 	dvlightlump_t	*l;
@@ -558,8 +559,10 @@ void FinalLightVertex( int modelnum, int threadnum = -1 )
 		minlight *= g_direct_scale;
 	if( g_numbounce > 0 ) minlight = 0.0f; // ignore for radiosity
 
+	vertexblur = BoolForKey( mapent, "zhlt_vertexblur" );
+	vertexblur = vertexblur || g_vertexblur;
 
-	if( g_vertexblur )
+	if( vertexblur )
 	{
 		for( int i = 0; i < mesh->numverts; i++ )
 			mesh->verts[i].light->face_counter = 0;
