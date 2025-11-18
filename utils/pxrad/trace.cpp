@@ -648,7 +648,7 @@ static void LinkEdict( entity_t *ent, modtype_t modtype, const char *modname, in
 	}
 
 	// don't link into world if shadow was disabled
-	if(( ent->modtype == mod_studio || ent->modtype == mod_alias ) && !FBitSet( flags, FMESH_CAST_SHADOW ) && !FBitSet( flags, FMESH_SELF_SHADOW )) //nc add selfshadow
+	if(( ent->modtype == mod_studio || ent->modtype == mod_alias ) && !FBitSet( flags, FMESH_CAST_SHADOW ) && !FBitSet( flags, FMESH_SELF_SHADOW ))
 		return;
 
 #ifdef HLRAD_RAYTRACE
