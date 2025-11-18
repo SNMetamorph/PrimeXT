@@ -648,7 +648,7 @@ static void LinkEdict( entity_t *ent, modtype_t modtype, const char *modname, in
 	}
 
 	// don't link into world if shadow was disabled
-	if(( ent->modtype == mod_studio || ent->modtype == mod_alias ) && !FBitSet( flags, FMESH_CAST_SHADOW ))
+	if(( ent->modtype == mod_studio || ent->modtype == mod_alias ) && !FBitSet( flags, FMESH_CAST_SHADOW ) && !FBitSet( flags, FMESH_SELF_SHADOW )) //nc add selfshadow
 		return;
 
 #ifdef HLRAD_RAYTRACE
@@ -1059,8 +1059,23 @@ loc0:
 
 		touch = ENTITY_FROM_AREA( l );
 
-		if( touch == clip->ignore )
-			continue;
+		//hack for self shadowing without casting shadows
+		if( touch->modtype == mod_studio || touch->modtype == mod_alias )
+		{
+			tmesh_t	*mesh = (tmesh_t *)touch->cache;
+
+			if( touch == clip->ignore )
+			{
+				if( !FBitSet( mesh->flags, FMESH_SELF_SHADOW ) )
+					continue;
+			}
+			else
+				if( !FBitSet( mesh->flags, FMESH_CAST_SHADOW ) )
+					continue;			
+		}
+		else
+			if( touch == clip->ignore )
+				continue;
 
 		if( !BoundsIntersect( clip->boxmins, clip->boxmaxs, touch->absmin, touch->absmax ))
 			continue;
