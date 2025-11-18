@@ -62,7 +62,6 @@
 #define SKYLEVELMAX				8
 #define SKYLEVEL_SOFTSKYON		7
 #define SKYLEVEL_SOFTSKYOFF		4
-#define SKYLEVEL_FASTSKY		6
 #define STUDIO_SAMPLES_PER_PASS	32
 #define STUDIO_SAMPLES_SKY		256
 #define SKYNORMALS_RANDOM		16384
@@ -515,7 +514,7 @@ extern void FreeTriangulations( void );
 // lightmap.c
 //
 void GatherSampleLight( int threadnum, int fn, const vec3_t pos, int leafnum, const vec3_t normal,
-vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool topatch, entity_t *ignoreent = NULL, const vec_t sky_visibility = 0.0f );
+vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool topatch, entity_t *ignoreent = NULL );
 void TexelSpaceToWorld( const lightinfo_t *l, vec3_t world, const vec_t s, const vec_t t );
 void WorldToTexelSpace( const lightinfo_t *l, const vec3_t world, vec_t &s, vec_t &t );
 int ParseLightIntensity( const char *pLight, vec3_t intensity );
