@@ -192,8 +192,7 @@ void BuildVertexLights( int indexnum, int thread = -1 )
 	if( !mesh->verts || mesh->numverts <= 0 )
 		return; 
 
-	if( !FBitSet( mesh->flags, FMESH_SELF_SHADOW ))
-		ignoreent = mapent;
+	ignoreent = mapent;
 
 	GetStylesFromMesh( styles, mesh );
 
@@ -314,8 +313,7 @@ void VertexPatchLights( int indexnum, int threadnum = -1 )
 	if( !mesh->verts || mesh->numverts <= 0 )
 		return; 
 
-	if( !FBitSet( mesh->flags, FMESH_SELF_SHADOW ))
-		ignoreent = mapent;		
+	ignoreent = mapent;		
 
 	GetStylesFromMesh( newstyles, mesh );
 
