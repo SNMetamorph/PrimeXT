@@ -213,8 +213,7 @@ void BuildVertexLights( int indexnum, int thread = -1 )
 	NudgeVertexPosition( tv->light->pos ); // nudged vertexes will be used on indirect lighting too
 	VectorCopy( tv->normal, normal );
 
-	// calculate visibility for the sample
-	int	leaf = PointInLeaf( tv->light->pos ) - g_dleafs;
+
 
 	// two-sided verts pos will be adjusted later
 	if( tv->twosided )
@@ -223,7 +222,39 @@ void BuildVertexLights( int indexnum, int thread = -1 )
 	{
 		VectorMA( tv->light->pos, DEFAULT_HUNT_OFFSET, tv->normal, point );
 		VectorCopy( point, tv->light->pos );
+
+		//check overlapping by back faces
+		if( FBitSet( mesh->flags, FMESH_SELF_SHADOW )&&( !g_studiolegacy ) )
+		{
+			vec3_t	trace_end;
+			vec3_t	trace_dir;
+			trace_t	trace;		
+
+			VectorSubtract( point, tv->point, trace_dir );
+			VectorAdd( trace_dir, tv->normal, trace_dir );
+			VectorNormalize2( trace_dir );
+
+			VectorMA( point, 8.0f, trace_dir, trace_end );
+
+			for( int i = 0; i < 8; i++ )
+			{
+				trace.contents = CONTENTS_EMPTY;
+				mesh->rayBVH.TraceRay( point, trace_end, &trace, false );
+				if( (trace.contents == CONTENTS_SOLID)&&(trace.surface == -1) )
+				{	
+					VectorLerp( point, trace.fraction, trace_end, point );
+					VectorMA( point, DEFAULT_HUNT_OFFSET, trace_dir, point );
+				}
+				else
+					break;
+			}		
+
+			VectorCopy( point, tv->light->pos );
+		}
 	}
+	
+	// calculate visibility for the sample
+	int	leaf = PointInLeaf( tv->light->pos ) - g_dleafs;
 
 	memset( light, 0, sizeof( light ));
 	memset( delux, 0, sizeof( delux ));
@@ -521,6 +552,7 @@ void FinalLightVertex( int modelnum, int threadnum = -1 )
 	vec3_t		lb, v, direction;
 	int			lightstyles;
 	vec_t		minlight;
+	bool		vertexblur;
 	tmesh_t		*mesh;
 	dmodelvertlight_t	*dml;
 	dvlightlump_t	*l;
@@ -558,8 +590,10 @@ void FinalLightVertex( int modelnum, int threadnum = -1 )
 		minlight *= g_direct_scale;
 	if( g_numbounce > 0 ) minlight = 0.0f; // ignore for radiosity
 
+	vertexblur = BoolForKey( mapent, "zhlt_vertexblur" );
+	vertexblur = vertexblur || g_vertexblur;
 
-	if( g_vertexblur )
+	if( vertexblur )
 	{
 		for( int i = 0; i < mesh->numverts; i++ )
 			mesh->verts[i].light->face_counter = 0;
