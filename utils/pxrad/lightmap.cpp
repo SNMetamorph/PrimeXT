@@ -2552,7 +2552,7 @@ vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool
 {
 	vec3_t	add, delta, add_one;
 	vec3_t	testline_origin;
-	vec3_t	add_direction, add_one_direction;
+	vec3_t	add_direction;
 	float	dist, ratio;
 	float	dot, dot2;
 	vec3_t	direction;
