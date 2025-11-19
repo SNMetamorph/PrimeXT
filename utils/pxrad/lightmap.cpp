@@ -2547,98 +2547,151 @@ _forceinline void AddSampleLight( int threadnum, bool topatch, vec3_t add, vec3_
 GatherSampleLight
 =============
 */
-void GatherSampleLight( int threadnum, int fn, const vec3_t pos, int leafnum, const vec3_t n,
+void GatherSampleLight( int threadnum, int fn, vec3_t *pos, int leafnum, const vec3_t n,
 vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool topatch, entity_t *ignoreent )
 {
 	vec3_t	add, delta, add_one;
 	vec3_t	testline_origin;
-	vec3_t	add_direction;
+	vec3_t	add_direction, add_one_direction;
 	float	dist, ratio;
 	float	dot, dot2;
 	vec3_t	direction;
 	vec3_t	trace_pos;
 	vec_t	avg;
+	int		aa_samples = 0;
+	vec_t	aa_divider;
 	directlight_t *dl;
+	
+	bool	this_sample_uses_aa = g_aa && (fn >= 0) && (!topatch);
+	bool	need_gi_bounce_from_studiomodels = topatch && (g_numbounce > 0);
 
-	VectorCopy( pos, trace_pos );	//trace_pos keeps constant for non two-sided surfaces
+	VectorCopy( *pos, trace_pos );	//trace_pos keeps constant for non two-sided surfaces
 
-	if( topatch && (g_indirect_sun > 0.0) && (g_numskylights > 0 || g_envsky) )
+	if( this_sample_uses_aa )
+	{
+		for( int i = 0; i < 9; i++ )
+			if( pos[i][0] != FLT_MAX )
+				aa_samples++;
+			else
+				break;
+		if( aa_samples == 0 )
+			return;
+		aa_divider = 1.0f / (float)aa_samples;
+	}
+
+	if( (topatch != g_perpixelsky ) && (g_indirect_sun > 0.0) && (g_numskylights > 0 || g_envsky) && (fn >= 0) )
 	{	
 		// check light visibility
 		if( leafnum && g_fakeskylight.pvs && CHECKVISBIT( g_fakeskylight.pvs, leafnum - 1 ) )
 		{
-			int	skylevel = SKYLEVEL_SOFTSKYON;		
+			vec3_t	*skynormals = g_skynormals_random;
+			int		count = 0;
+			float	mean = 0.0f;
+			float	meanDistSquared = 0.0f;
 
-			vec3_t	*skynormals = g_skynormals[skylevel];
-			vec3_t	sky_intensity;
+			trace_t	trace;
+			vec_t	scale = 4.0f / (float)SKYNORMALS_PER_PASS;
 			
 			VectorClear( add_direction );
-			VectorClear( add );
-													
-			// loop over the normals				
-			for( int i = 0; i < g_numskynormals[skylevel]; i++ )
-			{
-				// make sure the angle is okay
-				dot = DotProduct( n, skynormals[i] );
-				if( dot <= NORMAL_EPSILON )
-					continue;
+			VectorClear( add );		
+		
+			// loop over the normals		
+			for( int k = 0; k < SKYNORMALS_PASSES; k++ )
+			{		
+				for( int i = 0; i < SKYNORMALS_PER_PASS; i++, skynormals++ )
+				{				
+					// make sure the angle is okay				
+					dot = DotProduct( n, *skynormals );	
+					if( dot <= NORMAL_EPSILON )
+						continue;
 
-				// search back to see if we can hit a sky brush
-				VectorScale( skynormals[i], BOGUS_RANGE, delta );
-				VectorAdd( pos, delta, delta );
+					// search back to see if we can hit a sky brush
+					VectorScale( *skynormals, BOGUS_RANGE, delta );
+					VectorAdd( *pos, delta, delta );
+					
+					if( topatch )
+						VectorCopy( pos[i % PATCH_MAX_TRACE_ORIGINS ], trace_pos );
 
-				if( TestLine( threadnum, pos, delta, false, ignoreent ) != CONTENTS_SKY )
-					continue; // occluded
+					TestLine( threadnum, trace_pos, delta, &trace, false, ignoreent );
 
-				GetSkyColor( skynormals[i], add_one );
+					if( trace.contents == CONTENTS_SKY )
+					{
+						GetSkyColor( *skynormals, add_one );
 
-				VectorScale( add_one, dot, add_one );
-				VectorAdd( add, add_one, add );
-				avg = VectorAvg( add_one );
-				VectorMA( add_direction, avg, skynormals[i], add_direction );
+						VectorScale( add_one, dot, add_one );
+						VectorAdd( add, add_one, add );
+						avg = VectorAvg( add_one );
+						VectorMA( add_direction, avg, *skynormals, add_direction );
+					}
+					else
+						avg = 0.0f;
+
+					count++;
+
+					if( g_fastsky )
+					{				
+						vec_t delta2 = avg - mean;
+						mean += delta2 / (float)count;
+						meanDistSquared += delta2 * (avg - mean);
+					}
+				}
+
+				if( g_fastsky )
+				{	
+					vec_t variance = meanDistSquared / (float)(count - 1);
+
+					// Accept 5% error using 95% confidence interval
+					vec_t threshold = 0.05f / 1.96f;
+					vec_t standardError = sqrtf( variance / (float)count );
+					if( standardError < (mean * threshold) )	//<= causes artifacts in the dark but why?
+						break;
+				}
 			}	
 
-			VectorScale( add, 4.0f * g_indirect_sun / (float)g_numskynormals[skylevel], add );
-			VectorScale( add_direction, 4.0f * g_indirect_sun / (float)g_numskynormals[skylevel], add_direction );
+			VectorScale( add, 2.0f * g_indirect_sun / (float)count, add );
+			VectorScale( add_direction, 2.0f * g_indirect_sun / (float)count, add_direction );
 
-			AddSampleLight( threadnum, topatch, add, add_direction, g_skystyle, s_light, s_dir, s_occ, styles );	
+			AddSampleLight( threadnum, topatch, add, add_direction, g_skystyle, s_light, s_dir, s_occ, styles );		
 		}
 	}
 
 	//single gi bounce from studiomodels on patches
-	if( topatch && (g_numbounce > 0) )
+	if( need_gi_bounce_from_studiomodels )
 	{
-		int		skylevel = SKYLEVEL_SOFTSKYOFF + 1;
-		vec3_t	*skynormals = g_skynormals[skylevel];
+		vec3_t	*skynormals = g_skynormals_random;
 		trace_t	trace;
-		vec3_t	sample_pos;	
-		vec_t	scale = 4.0f / (float)g_numskynormals[skylevel];
+		vec_t	scale = 4.0f / 1024.0f;
 
-		for( int j = 0; j < g_numskynormals[skylevel]; j++ )
+		for( int i = 0; i < 1024; i++, skynormals++ )
 		{
-			dot = DotProduct( skynormals[j], n );
+			dot = DotProduct( n, *skynormals );	
 			if( dot <= NORMAL_EPSILON ) continue;
 
-			VectorScale( skynormals[j], BOGUS_RANGE, delta );
-			VectorAdd( pos, delta, delta );
-			VectorMA( pos, 0.1f, skynormals[j],  sample_pos );
-			TestLine( threadnum, sample_pos, delta, &trace, false );
+			VectorScale( *skynormals, BOGUS_RANGE, delta );
+			VectorAdd( *pos, delta, delta );
+
+			VectorCopy( pos[i % PATCH_MAX_TRACE_ORIGINS ], trace_pos );
+
+			TestLine( threadnum, trace_pos, delta, &trace, false );
 
 			if( trace.surface == STUDIO_SURFACE_HIT )
 			{
-				for (int i = 0; i < MAXLIGHTMAPS; i++ )
+				for (int j = 0; j < MAXLIGHTMAPS; j++ )
 				{	
-					if( trace.styles[i] == 255 )
+					if( trace.styles[j] == 255 )
 						break;	
 
-					VectorScale( trace.light[i], dot * scale, add );
-					VectorScale( skynormals[j], VectorAvg(add), add_direction );
+					VectorScale( trace.light[j], dot * scale, add );
+					VectorScale( *skynormals, VectorAvg(add), add_direction );
 
-					AddSampleLight( threadnum, topatch, add, add_direction, trace.styles[i], s_light, s_dir, s_occ, styles );	
+					AddSampleLight( threadnum, topatch, add, add_direction, trace.styles[j], s_light, s_dir, s_occ, styles );	
 				}
 			}
 		}
 	}
+
+
+	VectorCopy( *pos, trace_pos );
 	
 
 	for( dl = g_directlights; dl != NULL; dl = dl->next )
@@ -2664,7 +2717,7 @@ vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool
 
 					if( fn == -2 )	//two-sided meshes
 					{
-						VectorMA( pos, dot > 0.0 ? DEFAULT_HUNT_OFFSET : -DEFAULT_HUNT_OFFSET, n, trace_pos );
+						VectorMA( *pos, dot > 0.0 ? DEFAULT_HUNT_OFFSET : -DEFAULT_HUNT_OFFSET, n, trace_pos );
 						dot = fabsf(dot) * 0.5f;
 						dot = 1.0f;
 					}						
@@ -2674,11 +2727,23 @@ vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool
 
 					// search back to see if we can hit a sky brush
 					VectorScale( dl->sunnormals[i], BOGUS_RANGE, delta );
-					VectorAdd( pos, delta, delta );
+					VectorAdd( *pos, delta, delta );
 
 
-					if( TestLine( threadnum, trace_pos, delta, dl->topatch, ignoreent ) != CONTENTS_SKY )
-						continue; // occluded
+					if( this_sample_uses_aa )
+					{
+						int lit = 0;
+						for( int k = 0; k < aa_samples; k++ )
+							lit += ( TestLine( threadnum, pos[k], delta, dl->topatch, ignoreent ) == CONTENTS_SKY );
+						
+						if( lit == 0 )
+							continue;
+
+						dot *= (float)lit * aa_divider;
+					}
+					else
+						if( TestLine( threadnum, trace_pos, delta, dl->topatch, ignoreent ) != CONTENTS_SKY )
+							continue; // occluded
 
 					VectorCopy( dl->sunnormals[i], direction );
 					VectorScale( dl->intensity, dot * dl->sunnormalweights[i], add_one );
@@ -2698,7 +2763,7 @@ vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool
 				continue;
 
 			VectorCopy( dl->origin, testline_origin );
-			VectorSubtract( dl->origin, pos, delta );
+			VectorSubtract( dl->origin, *pos, delta );
 
 			if( dl->type == emit_surface )	// move emitter back to its plane
 				VectorMA( delta, -DEFAULT_HUNT_OFFSET * 0.5, dl->normal, delta );
@@ -2719,7 +2784,7 @@ vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool
 
 			if( fn == -2 )	//two-sided meshes
 			{
-				VectorMA( pos, dot > 0.0 ? DEFAULT_HUNT_OFFSET : -DEFAULT_HUNT_OFFSET, n, trace_pos );
+				VectorMA( *pos, dot > 0.0 ? DEFAULT_HUNT_OFFSET : -DEFAULT_HUNT_OFFSET, n, trace_pos );
 				dot = fabsf(dot) * 0.5f;
 				dot = 1.0f;
 			}			
@@ -2736,7 +2801,6 @@ vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool
 				if( dot <= NORMAL_EPSILON )
 					continue;
 				ratio = dot / denominator;
-				VectorScale( dl->intensity, ratio, add );
 				break;
 			case emit_surface:
 				if( dot <= NORMAL_EPSILON )
@@ -2764,8 +2828,8 @@ vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool
 						dot = 0.0;
 					}
 
-					GetAlternateOrigin( pos, n, dl->patch, testline_origin );
-					sightarea = CalcSightArea( pos, n, dl->patch->winding, dl->patch->emitter_skylevel );
+					GetAlternateOrigin( *pos, n, dl->patch, testline_origin );
+					sightarea = CalcSightArea( *pos, n, dl->patch->winding, dl->patch->emitter_skylevel );
 
 					frac = dist / range;
 					frac = ( frac - 0.5 ) * 2.0; // make a smooth transition between the two methods
@@ -2778,7 +2842,6 @@ vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool
 				{
 					continue;
 				}
-				VectorScale( dl->intensity, ratio, add );
 				break;
 			case emit_spotlight:
 				if( dot <= NORMAL_EPSILON )
@@ -2789,21 +2852,34 @@ vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool
 				ratio = dot * dot2 / denominator;
 				if( dot2 <= dl->stopdot )
 					ratio *= (dot2 - dl->stopdot2) / (dl->stopdot - dl->stopdot2);
-				VectorScale( dl->intensity, ratio, add );
 				break;
 			default:
 				COM_FatalError( "bad dl->type\n" );
 				break;
 			}
 
-			if( TestLine( threadnum, trace_pos, testline_origin, dl->topatch, ignoreent ) != CONTENTS_EMPTY )
-				continue;	// occluded
 
+			if( this_sample_uses_aa )
+			{
+				int lit = 0;
+				for( int k = 0; k < aa_samples; k++ )
+					lit += ( TestLine( threadnum, pos[k], testline_origin, dl->topatch, ignoreent ) == CONTENTS_EMPTY );
+				
+				if( lit == 0 )
+					continue;
+
+				ratio *= (float)lit * aa_divider;
+			}
+			else
+				if( TestLine( threadnum, trace_pos, testline_origin, dl->topatch, ignoreent ) != CONTENTS_EMPTY )
+					continue;	// occluded
+
+			VectorScale( dl->intensity, ratio, add );
 			avg = VectorAvg( add );
 			VectorScale( direction, avg, add_direction );
 		}
 
-		AddSampleLight( threadnum, topatch, add, add_direction, dl->style, s_light, s_dir, s_occ, styles );	//nc add
+		AddSampleLight( threadnum, topatch, add, add_direction, dl->style, s_light, s_dir, s_occ, styles );
 
 #ifdef HLRAD_COMPUTE_VISLIGHTMATRIX
 		// no reason to set it again
@@ -3009,11 +3085,11 @@ static void CalcLightmap( int thread, lightinfo_t *l, facelight_t *fl )
 
 		// gather light
 #if defined( HLRAD_DELUXEMAPPING ) && defined( HLRAD_SHADOWMAPPING )
-		GatherSampleLight( thread, l->surfnum, spot, leaf, pointnormal, l->light[i], l->deluxe[i], l->shadow[i], f->styles, vislight, 0 );
+		GatherSampleLight( thread, l->surfnum, &spot, leaf, pointnormal, l->light[i], l->deluxe[i], l->shadow[i], f->styles, vislight, 0 );
 #elif defined( HLRAD_DELUXEMAPPING )
-		GatherSampleLight( thread, l->surfnum, spot, leaf, pointnormal, l->light[i], l->deluxe[i], NULL, f->styles, vislight, 0 );
+		GatherSampleLight( thread, l->surfnum, &spot, leaf, pointnormal, l->light[i], l->deluxe[i], NULL, f->styles, vislight, 0 );
 #else
-		GatherSampleLight( thread, l->surfnum, spot, leaf, pointnormal, l->light[i], NULL, NULL, f->styles, vislight, 0 );
+		GatherSampleLight( thread, l->surfnum, &spot, leaf, pointnormal, l->light[i], NULL, NULL, f->styles, vislight, 0 );
 #endif
 	}
 
@@ -3165,10 +3241,13 @@ static void CalcLightmapAA( int thread, lightinfo_t *l, facelight_t *fl )
 		int		surface;
 		bool	blocked = false;
 		vec_t	off_x, off_y;
-		vec_t	weight_sum = 0.0f;
 		vec3_t	orig_spot, orig_surfpt;
 		int		orig_surface;
 		bool	point_outside = false;
+		int		spot_count = 0;
+		vec3_t	spots_aa[9];
+		int		leaf;
+
 
 		// prepare input parameter and output parameter
 		s = ((i % l->lmcachewidth) - l->lmcache_offset) / (vec_t)l->lmcache_density;
@@ -3254,43 +3333,45 @@ static void CalcLightmapAA( int thread, lightinfo_t *l, facelight_t *fl )
 			}	
 
 			// calculate visibility for the sample			
-			int leaf = PointInLeaf( spot ) - g_dleafs;
+			leaf = PointInLeaf( spot ) - g_dleafs;
 
 			if(( g_dleafs[leaf].contents == CONTENTS_SKY ) || ( g_dleafs[leaf].contents == CONTENTS_SOLID ))
 				continue;
 
-			weight_sum += 1.0f;
-
-			// gather light
-	#if defined( HLRAD_DELUXEMAPPING ) && defined( HLRAD_SHADOWMAPPING )
-			GatherSampleLight( thread, l->surfnum, spot, leaf, pointnormal, l->light[i], l->deluxe[i], l->shadow[i], f->styles, vislight, 0 );
-	#elif defined( HLRAD_DELUXEMAPPING )
-			GatherSampleLight( thread, l->surfnum, spot, leaf, pointnormal, l->light[i], l->deluxe[i], NULL, f->styles, vislight, 0 );
-	#else
-			GatherSampleLight( thread, l->surfnum, spot, leaf, pointnormal, l->light[i], NULL, NULL, f->styles, vislight, 0 );
-	#endif
+			
+			if( k == 4 )	//center sample first
+			{
+				VectorCopy( spots_aa[0], spots_aa[spot_count] );
+				VectorCopy( spot, spots_aa[0] );
+			}
+			else
+				VectorCopy( spot, spots_aa[spot_count] );
+			spot_count++;
 		}
+
 
 	#ifdef HLRAD_DELUXEMAPPING
 		VectorAdd( pointnormal, l->normals[i], l->normals[i] );
-	#endif
-
-		if( weight_sum > 0.0f)
-		{
-			weight_sum = 1.0f / weight_sum;
-
-			for( j = 0; j < MAXLIGHTMAPS && f->styles[j] != 255; j++ )
-			{
-				VectorScale( l->light[i][j], weight_sum, l->light[i][j] );
-	#ifdef HLRAD_DELUXEMAPPING
-				VectorScale( l->deluxe[i][j], weight_sum, l->deluxe[i][j] );
-	#endif
-	#ifdef HLRAD_SHADOWMAPPING
-				VectorScale( l->shadow[i][j], weight_sum, l->shadow[i][j] );
 	#endif		
-			}
-		}		
-	}
+
+		if( spot_count == 0 )
+			continue;
+
+		//fill invalid spots with flt_max
+		for( int k = spot_count; k < 9; k++ )
+			spots_aa[k][0] = FLT_MAX;
+
+		leaf = PointInLeaf( spots_aa[0] ) - g_dleafs;
+
+			// gather light
+	#if defined( HLRAD_DELUXEMAPPING ) && defined( HLRAD_SHADOWMAPPING )
+		GatherSampleLight( thread, l->surfnum, spots_aa, leaf, pointnormal, l->light[i], l->deluxe[i], l->shadow[i], f->styles, vislight, 0 );
+	#elif defined( HLRAD_DELUXEMAPPING )
+		GatherSampleLight( thread, l->surfnum, spots_aa, leaf, pointnormal, l->light[i], l->deluxe[i], NULL, f->styles, vislight, 0 );
+	#else
+		GatherSampleLight( thread, l->surfnum, spots_aa, leaf, pointnormal, l->light[i], NULL, NULL, f->styles, vislight, 0 );
+	#endif
+
 
 	for( i = 0; i < fl->numsamples; i++ )
 	{
@@ -3484,7 +3565,7 @@ void BuildFaceLights( int facenum, int thread )
 	{
 		int	leafnum = p->leafnum;
 #ifdef HLRAD_DELUXEMAPPING
-		GatherSampleLight( thread, l.surfnum, p->origin, leafnum, normal, p->totallight, p->totallight_dir, NULL, p->totalstyle, NULL, 1, NULL );
+		GatherSampleLight( thread, l.surfnum, p->trace_origins, leafnum, normal, p->totallight, p->totallight_dir, NULL, p->totalstyle, NULL, 1, NULL );
 #else
 		GatherSampleLight( thread, l.surfnum, p->origin, leafnum, normal, p->totallight, NULL, NULL, p->totalstyle, NULL, 1 );
 #endif
@@ -4362,7 +4443,7 @@ void FinalLightFace( int facenum, int threadnum )
 #endif
 
 
-			ApplyLightPostprocess( lb, minlight );	//nc add
+			ApplyLightPostprocess( lb, minlight );
 	
 
 #ifdef HLRAD_RIGHTROUND	// when you go down, when you go down down!
