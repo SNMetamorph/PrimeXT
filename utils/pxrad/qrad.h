@@ -66,6 +66,8 @@
 #define STUDIO_SAMPLES_PER_PASS	32
 #define STUDIO_SAMPLES_SKY		256
 #define SKYNORMALS_RANDOM		16384
+#define SKYNORMALS_PER_PASS		2048
+#define SKYNORMALS_PASSES		8
 #define SUNSPREAD_SKYLEVEL		7
 #define SUNSPREAD_THRESHOLD		15.0
 #define NUMVERTEXNORMALS		162
@@ -516,7 +518,7 @@ extern void FreeTriangulations( void );
 //
 // lightmap.c
 //
-void GatherSampleLight( int threadnum, int fn, const vec3_t pos, int leafnum, const vec3_t normal,
+void GatherSampleLight( int threadnum, int fn, vec3_t *pos, int leafnum, const vec3_t normal,
 vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool topatch, entity_t *ignoreent = NULL );
 void TexelSpaceToWorld( const lightinfo_t *l, vec3_t world, const vec_t s, const vec_t t );
 void WorldToTexelSpace( const lightinfo_t *l, const vec3_t world, vec_t &s, vec_t &t );
