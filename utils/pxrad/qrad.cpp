@@ -80,6 +80,7 @@ uint		g_numstudiobounce = DEFAULT_STUDIO_BOUNCE;
 int			g_studiogipasscounter = 0;
 bool		g_noemissive = false;
 int			g_skystyle = -1;
+bool		g_perpixelsky = false;
 bool		g_usingpatches = true;
 bool		g_patchaa = false;
 
@@ -2821,7 +2822,9 @@ static void PrintRadUsage( void )
 	Msg( "    -studiobounce #: set number of studio model radiosity bounces. default is %d\n", DEFAULT_STUDIO_BOUNCE );
 	Msg( "    -vertexblur    : blur per-vertex lighting\n" );	
 	Msg( "    -noemissive    : do not add emissive textures to the lightmap\n" );
-	Msg( "    -skystyle #    : set lightstyle for sky lighting. default is %d\n", LS_NORMAL );	
+	Msg( "    -skystyle #    : set lightstyle for sky lighting. default is %d\n", LS_NORMAL );
+	Msg( "    -perpixelsky   : per pixel calculation of sky lighting\n" );
+	Msg( "    -patchaa       : use multiple samples for patch visibility\n" );
 
 #ifdef HLRAD_PARANOIA_BUMP
 	Msg( "    -gammamode #   : gamma correction mode (0, 1, 2)\n" );
@@ -2996,7 +2999,11 @@ int main( int argc, char **argv )
 		{
 			g_skystyle = atoi( argv[i+1] );
 			i++;
-		}			
+		}		
+		else if( !Q_strcmp( argv[i], "-perpixelsky" ))
+		{
+			g_perpixelsky = true;
+		}
 		else if( !Q_strcmp( argv[i], "-patchaa" ))
 		{
 			g_patchaa = true;
