@@ -45,6 +45,7 @@
 #define DEFAULT_GLOBAL_SCALE	0.5f
 #define DEFAULT_LIGHTPROBE_EPSILON	0.1f
 #define	STUDIO_SURFACE_HIT		-2
+#define PATCH_MAX_TRACE_ORIGINS	8
 	
 // worldcraft predefined angles
 #define ANGLE_UP			-1
@@ -295,6 +296,7 @@ typedef struct patch_s
 	transfer_data_t		*tData;
 
 	vec_t		trans_sum;
+	vec3_t		trace_origins[PATCH_MAX_TRACE_ORIGINS];
 
 	// output
 	byte		totalstyle[MAXLIGHTMAPS];	// gives the styles for use by the new switchable totallight values
@@ -439,6 +441,7 @@ extern vec3_t	g_skynormals_random[SKYNORMALS_RANDOM];
 extern bool		g_noemissive;
 extern int		g_skystyle;
 extern bool		g_usingpatches;
+extern bool		g_patchaa;
 
 //
 // ambientcube.c

@@ -81,6 +81,8 @@ int			g_studiogipasscounter = 0;
 bool		g_noemissive = false;
 int			g_skystyle = -1;
 bool		g_usingpatches = true;
+bool		g_patchaa = false;
+
 
 
 bool		g_drawsample = false;
@@ -1268,16 +1270,55 @@ static bool PlacePatchInside( patch_t *patch )
 	patch->exposure = pointsfound / pointstested;
 
 	if( found )
-	{
 		VectorCopy( bestpoint, patch->origin );
-		return true;
-	}
 	else
 	{
 		VectorMA( center, offset, plane->normal, patch->origin );
 		SetBits( patch->flags, PATCH_OUTSIDE );
-		return false;
 	}
+
+	//multiple trace origins for patch antialising
+	const vec3_t	*a, *b, *c;	//triangle vertices	
+	vec_t	sample_area = patch->area / (float)PATCH_MAX_TRACE_ORIGINS;
+	vec_t	area_counter = 0.0f;
+	int		counter = 1;
+	vec3_t	*trace_origin = &patch->trace_origins[counter];
+	
+	WindingCenter( patch->winding, center );
+	VectorCopy( patch->origin, patch->trace_origins[0]);
+
+	a = &center;
+
+	for( int j = 0; j < patch->winding->numpoints; j++ )
+	{
+		b = &patch->winding->p[j];
+		c = &patch->winding->p[(j + 1) % patch->winding->numpoints];
+
+		area_counter += TriangleArea( *a, *b, *c );
+		while( ((counter * sample_area) < area_counter) && ( counter < PATCH_MAX_TRACE_ORIGINS ) )
+		{
+			vec_t	sqrt_r1, r2;
+			sqrt_r1 = sqrtf( Halton( 2, counter ) );
+			r2 = Halton( 3, counter );
+
+			VectorClear( *trace_origin );
+			VectorMA( *trace_origin, 1.0f - sqrt_r1, *a, *trace_origin );
+			VectorMA( *trace_origin, sqrt_r1 * ( 1.0f - r2 ), *b, *trace_origin );
+			VectorMA( *trace_origin, sqrt_r1 * r2, *c, *trace_origin );
+
+			VectorMA( patch->trace_origins[counter], 0.5f, plane->normal, *trace_origin );
+		
+			dleaf_t	*leaf;
+			leaf = PointInLeaf2( *trace_origin );
+			if(( leaf->contents == CONTENTS_SKY ) || ( leaf->contents == CONTENTS_SOLID ))
+				VectorCopy( patch->origin, *trace_origin );
+
+			counter++;
+			trace_origin++;
+		}
+	}
+
+	return found;
 }
 
 // =====================================================================================
@@ -2079,6 +2120,7 @@ static void MakeTransfers( int threadnum )
 	transfer_data_t	*tData;
 	vec3_t		delta;
 	vec_t		trans_sum;
+	byte		*patch_shadowing = (byte *)Mem_Alloc( g_num_patches + 1 );
 
 	while( 1 )
 	{
@@ -2153,8 +2195,23 @@ static void MakeTransfers( int threadnum )
 			if( DotProduct( origin1, plane2->normal ) <= PatchPlaneDist( patch2 ) + MINIMUM_PATCH_DISTANCE )
 				continue;
 
-			if( TestLine( threadnum, origin1, origin2, false ) != CONTENTS_EMPTY )
-				continue;
+			if( g_patchaa )
+			{
+				byte shadowing = 0;
+				for( int k = 0; k < PATCH_MAX_TRACE_ORIGINS; k++ )
+					if( TestLine( threadnum, patch1->trace_origins[k], origin2, false ) == CONTENTS_EMPTY )
+						shadowing++;
+				if( shadowing == 0 )
+					continue;			
+				patch_shadowing[count] = shadowing;
+			}
+			else
+			{
+				VectorCopy( patch1->trace_origins[j % PATCH_MAX_TRACE_ORIGINS], origin1 );
+
+				if( TestLine( threadnum, origin1, origin2, false ) != CONTENTS_EMPTY )
+					continue;
+			}
 
 			vispatches[count] = patch2;
 			count++;
@@ -2240,6 +2297,8 @@ static void MakeTransfers( int threadnum )
 				trans *= patch2->area;
 			}
 
+			if( g_patchaa )
+				trans *= (float)patch_shadowing[j] / (float)PATCH_MAX_TRACE_ORIGINS;
 			trans_sum += trans;
 
 			// scale to 16 bit (black magic)
@@ -2285,6 +2344,7 @@ static void MakeTransfers( int threadnum )
 	Mem_Free( vispatches );
 	Mem_Free( tIndex_All );
 	Mem_Free( tData_All );
+	Mem_Free( patch_shadowing );	//nc add
 }
 
 /*
@@ -2937,6 +2997,10 @@ int main( int argc, char **argv )
 			g_skystyle = atoi( argv[i+1] );
 			i++;
 		}			
+		else if( !Q_strcmp( argv[i], "-patchaa" ))
+		{
+			g_patchaa = true;
+		}
 		else if( !Q_strcmp( argv[i], "-chop" ))
 		{
 			g_chop = (float)atof( argv[i+1] );
