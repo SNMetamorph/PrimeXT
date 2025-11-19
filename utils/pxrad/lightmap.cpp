@@ -3371,7 +3371,7 @@ static void CalcLightmapAA( int thread, lightinfo_t *l, facelight_t *fl )
 	#else
 		GatherSampleLight( thread, l->surfnum, spots_aa, leaf, pointnormal, l->light[i], NULL, NULL, f->styles, vislight, 0 );
 	#endif
-
+	}
 
 	for( i = 0; i < fl->numsamples; i++ )
 	{
