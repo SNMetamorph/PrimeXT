@@ -262,9 +262,9 @@ void BuildVertexLights( int indexnum, int thread = -1 )
 
 	// gather direct lighting for our vertex
 	if( tv->twosided )
-		GatherSampleLight( thread, -2, point, leaf, normal, light, delux, shadow, styles, vislight, 0, ignoreent );
+		GatherSampleLight( thread, -2, &point, leaf, normal, light, delux, shadow, styles, vislight, 0, ignoreent );
 	else
-		GatherSampleLight( thread, -1, point, leaf, normal, light, delux, shadow, styles, vislight, 0, ignoreent );
+		GatherSampleLight( thread, -1, &point, leaf, normal, light, delux, shadow, styles, vislight, 0, ignoreent );
 
 	// add an ambient term if desired
 	if( g_ambient[0] || g_ambient[1] || g_ambient[2] )

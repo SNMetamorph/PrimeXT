@@ -476,14 +476,14 @@ static void CalcModelLightmap( int thread, lightinfo_t *l, facelight_t *fl )
 
 		// gather light
 #if defined( HLRAD_DELUXEMAPPING ) && defined( HLRAD_SHADOWMAPPING )
-		GatherSampleLight( thread, -1, spot, leaf, pointnormal, l->light[i], l->deluxe[i], l->shadow[i], f->styles, vislight, 0, l->mapent );
-		GatherSampleLight( thread, -1, spot, leaf, pointnormal, l->light[i], l->deluxe[i], l->shadow[i], f->styles, vislight, 1, l->mapent );
+		GatherSampleLight( thread, -1, &spot, leaf, pointnormal, l->light[i], l->deluxe[i], l->shadow[i], f->styles, vislight, 0, l->mapent );
+		GatherSampleLight( thread, -1, &spot, leaf, pointnormal, l->light[i], l->deluxe[i], l->shadow[i], f->styles, vislight, 1, l->mapent );
 #elif defined( HLRAD_DELUXEMAPPING )
-		GatherSampleLight( thread, -1, spot, leaf, pointnormal, l->light[i], l->deluxe[i], NULL, f->styles, vislight, 0, l->mapent );
-		GatherSampleLight( thread, -1, spot, leaf, pointnormal, l->light[i], l->deluxe[i], NULL, f->styles, vislight, 1, l->mapent );
+		GatherSampleLight( thread, -1, &spot, leaf, pointnormal, l->light[i], l->deluxe[i], NULL, f->styles, vislight, 0, l->mapent );
+		GatherSampleLight( thread, -1, &spot, leaf, pointnormal, l->light[i], l->deluxe[i], NULL, f->styles, vislight, 1, l->mapent );
 #else
-		GatherSampleLight( thread, -1, spot, leaf, pointnormal, l->light[i], NULL, NULL, f->styles, vislight, 0, l->mapent );
-		GatherSampleLight( thread, -1, spot, leaf, pointnormal, l->light[i], NULL, NULL, f->styles, vislight, 1, l->mapent );
+		GatherSampleLight( thread, -1, &spot, leaf, pointnormal, l->light[i], NULL, NULL, f->styles, vislight, 0, l->mapent );
+		GatherSampleLight( thread, -1, &spot, leaf, pointnormal, l->light[i], NULL, NULL, f->styles, vislight, 1, l->mapent );
 #endif
 	}
 
