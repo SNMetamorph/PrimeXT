@@ -442,28 +442,22 @@ int GetSequenceFlags( void *pmodel, int sequence )
 
 int GetAnimationEvent( void *pmodel, int sequence, MonsterEvent_t *pMonsterEvent, float flStart, float flEnd, int index )
 {
-	studiohdr_t *pstudiohdr;
-	
-	pstudiohdr = (studiohdr_t *)pmodel;
+	studiohdr_t *pstudiohdr = (studiohdr_t *)pmodel;
 
 	if( !pstudiohdr || sequence >= pstudiohdr->numseq || !pMonsterEvent )
 		return 0;
 
 	int events = 0;
-
-	mstudioseqdesc_t *pseqdesc;
-	mstudioevent_t *pevent;
-
-	pseqdesc = (mstudioseqdesc_t *)((byte *)pstudiohdr + pstudiohdr->seqindex) + sequence;
-	pevent = (mstudioevent_t *)((byte *)pstudiohdr + pseqdesc->eventindex);
+	mstudioseqdesc_t *pseqdesc = (mstudioseqdesc_t *)((byte *)pstudiohdr + pstudiohdr->seqindex) + sequence;
+	mstudioevent_t *pevent = (mstudioevent_t *)((byte *)pstudiohdr + pseqdesc->eventindex);
 
 	if( pseqdesc->numevents == 0 || index > pseqdesc->numevents )
 		return 0;
 
 	if( pseqdesc->numframes > 1 )
 	{
-		flStart *= (pseqdesc->numframes - 1) / 256.0f;
-		flEnd *= (pseqdesc->numframes - 1) / 256.0f;
+		flStart *= (pseqdesc->numframes - 1) / 255.0f;
+		flEnd *= (pseqdesc->numframes - 1) / 255.0f;
 	}
 	else
 	{
