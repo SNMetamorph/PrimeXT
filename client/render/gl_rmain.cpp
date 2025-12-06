@@ -250,7 +250,8 @@ void R_MarkWorldVisibleFaces( model_t *model )
 	float		maxdist = 0.0f;
 	msurface_t	**mark;
 	mleaf_t		*leaf;
-	int		i, j;
+	int			i, j;
+	const bool  skipCulling = CVAR_TO_BOOL(r_nocull);
 
 	ZoneScoped;
 	memset( RI->view.visfaces, 0x00, (worldmodel->numsurfaces + 7) >> 3 );
@@ -266,7 +267,7 @@ void R_MarkWorldVisibleFaces( model_t *model )
 
 		if( CHECKVISBIT( RI->view.pvsarray, leaf->cluster ) && ( leaf->efrags || leaf->nummarksurfaces ))
 		{
-			if( RI->view.frustum.CullBoxFast( eleaf->mins, eleaf->maxs ))
+			if( !skipCulling && RI->view.frustum.CullBoxFast( eleaf->mins, eleaf->maxs ))
 				continue;
 
 			// do additional culling in dev_overview mode

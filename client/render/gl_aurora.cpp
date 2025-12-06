@@ -13,6 +13,7 @@
 #include "gl_local.h"
 #include "gl_studio.h"
 #include "gl_aurora.h"
+#include "gl_cvars.h"
 
 CParticleSystemManager	g_pParticleSystems; // buz - static single object
 
@@ -943,8 +944,12 @@ void CParticleSystem :: DrawSystem( void )
 
 bool CParticleSystem :: ParticleIsVisible( CParticle *part )
 {
+	if (CVAR_TO_BOOL(r_nocull))
+		return true;
+
 	if( R_CullSphere( part->origin, part->m_fSize + 1 ))
 		return false;
+
 	return true;
 }
 

@@ -24,7 +24,7 @@ GNU General Public License for more details.
 #include "r_studioint.h"
 #include "gl_framebuffer.h"
 #include "gl_cubemap.h"
-#include "gl_frustum.h"
+#include "frustum.h"
 #include "gl_viewport.h"
 #include "gl_primitive.h"
 #include "gl_shader.h"

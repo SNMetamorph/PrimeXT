@@ -401,10 +401,10 @@ void DBG_DrawLightFrustum( void )
 			{
 				if( pl->type == LIGHT_DIRECTIONAL )
 				{
-					for( int j = 0; j < NUM_SHADOW_SPLITS + 1; j++ )
-						pl->splitFrustum[j].DrawFrustumDebug();
+					for (int j = 0; j < NUM_SHADOW_SPLITS + 1; j++)
+						DBG_DrawFrustum( pl->splitFrustum[j] );
 				}
-				else pl->frustum.DrawFrustumDebug();
+				else DBG_DrawFrustum( pl->frustum );
 			}
 			else
 			{ 
@@ -412,6 +412,70 @@ void DBG_DrawLightFrustum( void )
 			}
 		}
 	}
+}
+
+void DBG_DrawFrustum(const CFrustum &frustum)
+{
+	Vector bbox[8];
+	frustum.ComputeFrustumCorners( bbox );
+
+	// g-cont. frustum must be yellow :-)
+	pglColor4f( 1.0f, 1.0f, 0.0f, 1.0f );
+	GL_Bind( GL_TEXTURE0, tr.whiteTexture );
+	pglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+	pglShadeModel( GL_SMOOTH );
+	pglBegin( GL_LINES );
+
+	for( int i = 0; i < 2; i += 1 )
+	{
+		pglVertex3fv( bbox[i+0] );
+		pglVertex3fv( bbox[i+2] );
+		pglVertex3fv( bbox[i+4] );
+		pglVertex3fv( bbox[i+6] );
+		pglVertex3fv( bbox[i+0] );
+		pglVertex3fv( bbox[i+4] );
+		pglVertex3fv( bbox[i+2] );
+		pglVertex3fv( bbox[i+6] );
+		pglVertex3fv( bbox[i*2+0] );
+		pglVertex3fv( bbox[i*2+1] );
+		pglVertex3fv( bbox[i*2+4] );
+		pglVertex3fv( bbox[i*2+5] );
+	}
+
+	// visualize plane normals 	
+	for (int i = 0; i < FRUSTUM_PLANES; i++)
+	{
+		Vector plane_midpoint;
+		switch (i)
+		{
+			case FRUSTUM_LEFT:
+				plane_midpoint = (bbox[0] + bbox[2] + bbox[4] + bbox[6]) * 0.25f;
+				break;
+			case FRUSTUM_RIGHT:
+				plane_midpoint = (bbox[1] + bbox[3] + bbox[5] + bbox[7]) * 0.25f;
+				break;
+			case FRUSTUM_BOTTOM:
+				plane_midpoint = (bbox[2] + bbox[3] + bbox[6] + bbox[7]) * 0.25f;
+				break;
+			case FRUSTUM_TOP:
+				plane_midpoint = (bbox[0] + bbox[1] + bbox[4] + bbox[5]) * 0.25f;
+				break;
+			case FRUSTUM_FAR:
+				plane_midpoint = (bbox[0] + bbox[1] + bbox[2] + bbox[3]) * 0.25f;
+				break;
+			case FRUSTUM_NEAR:
+				plane_midpoint = (bbox[4] + bbox[5] + bbox[6] + bbox[7]) * 0.25f;
+				break;
+		}
+
+		pglColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+		pglVertex3fv(plane_midpoint);
+		pglColor4f(1.0f, 0.0f, 0.0f, 1.0f);
+		pglVertex3fv(plane_midpoint + frustum.GetPlane(i)->normal * 32.0);
+	}
+
+	pglEnd();
+	pglColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
 }
 
 void DBG_DrawGlassScissors( void )

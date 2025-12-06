@@ -1,5 +1,5 @@
 /*
-gl_frustum.cpp - frustum test implementation class
+frustum.cpp - frustum test implementation class
 Copyright (C) 2014 Uncle Mike
 
 This program is free software: you can redistribute it and/or modify
@@ -13,12 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "hud.h"
-#include "utils.h"
+#include "frustum.h"
 #include "const.h"
-#include "ref_params.h"
-#include "gl_local.h"
-#include "gl_cvars.h"
+#include <assert.h>
 #include <mathlib.h>
 #include <stringlib.h>
 
@@ -30,7 +27,7 @@ void CFrustum :: ClearFrustum( void )
 
 void CFrustum :: EnablePlane( int side )
 {
-	ASSERT( side >= 0 && side < FRUSTUM_PLANES );
+	assert( side >= 0 && side < FRUSTUM_PLANES );
 
 	// make sure what plane is ready
 	if( planes[side].normal != g_vecZero )
@@ -39,7 +36,7 @@ void CFrustum :: EnablePlane( int side )
 
 void CFrustum :: DisablePlane( int side )
 {
-	ASSERT( side >= 0 && side < FRUSTUM_PLANES );
+	assert( side >= 0 && side < FRUSTUM_PLANES );
 	ClearBits( clipFlags, BIT( side ));
 }
 
@@ -158,7 +155,7 @@ void CFrustum :: InitProjectionFromMatrix( const matrix4x4 &projection )
 
 void CFrustum :: SetPlane( int side, const Vector &vecNormal, float flDist )
 {
-	ASSERT( side >= 0 && side < FRUSTUM_PLANES );
+	assert( side >= 0 && side < FRUSTUM_PLANES );
 
 	planes[side].type = PlaneTypeForNormal( vecNormal );
 	planes[side].signbits = SignbitsForPlane( vecNormal );
@@ -170,7 +167,7 @@ void CFrustum :: SetPlane( int side, const Vector &vecNormal, float flDist )
 
 void CFrustum :: NormalizePlane( int side )
 {
-	ASSERT( side >= 0 && side < FRUSTUM_PLANES );
+	assert( side >= 0 && side < FRUSTUM_PLANES );
 
 	// normalize
 	float length = planes[side].normal.Length();
@@ -190,7 +187,7 @@ void CFrustum :: NormalizePlane( int side )
 	clipFlags |= BIT( side );
 }
 
-void CFrustum :: ComputeFrustumCorners( Vector corners[8] )
+void CFrustum :: ComputeFrustumCorners( Vector corners[8] ) const
 {
 	memset( corners, 0, sizeof( Vector ) * 8 );
 
@@ -213,7 +210,7 @@ void CFrustum :: ComputeFrustumCorners( Vector corners[8] )
 	}
 }
 
-void CFrustum :: ComputeFrustumBounds( Vector &mins, Vector &maxs )
+void CFrustum :: ComputeFrustumBounds( Vector &mins, Vector &maxs ) const
 {
 	Vector	corners[8];
 
@@ -225,77 +222,10 @@ void CFrustum :: ComputeFrustumBounds( Vector &mins, Vector &maxs )
 		AddPointToBounds( corners[i], mins, maxs );
 }
 
-void CFrustum :: DrawFrustumDebug( void )
-{
-	Vector bbox[8];
-	ComputeFrustumCorners( bbox );
-
-	// g-cont. frustum must be yellow :-)
-	pglColor4f( 1.0f, 1.0f, 0.0f, 1.0f );
-	GL_Bind( GL_TEXTURE0, tr.whiteTexture );
-	pglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-	pglShadeModel( GL_SMOOTH );
-	pglBegin( GL_LINES );
-
-	for( int i = 0; i < 2; i += 1 )
-	{
-		pglVertex3fv( bbox[i+0] );
-		pglVertex3fv( bbox[i+2] );
-		pglVertex3fv( bbox[i+4] );
-		pglVertex3fv( bbox[i+6] );
-		pglVertex3fv( bbox[i+0] );
-		pglVertex3fv( bbox[i+4] );
-		pglVertex3fv( bbox[i+2] );
-		pglVertex3fv( bbox[i+6] );
-		pglVertex3fv( bbox[i*2+0] );
-		pglVertex3fv( bbox[i*2+1] );
-		pglVertex3fv( bbox[i*2+4] );
-		pglVertex3fv( bbox[i*2+5] );
-	}
-
-	// visualize plane normals 	
-	for (int i = 0; i < FRUSTUM_PLANES; i++)
-	{
-		Vector plane_midpoint;
-		switch (i)
-		{
-			case FRUSTUM_LEFT:
-				plane_midpoint = (bbox[0] + bbox[2] + bbox[4] + bbox[6]) * 0.25f;
-				break;
-			case FRUSTUM_RIGHT:
-				plane_midpoint = (bbox[1] + bbox[3] + bbox[5] + bbox[7]) * 0.25f;
-				break;
-			case FRUSTUM_BOTTOM:
-				plane_midpoint = (bbox[2] + bbox[3] + bbox[6] + bbox[7]) * 0.25f;
-				break;
-			case FRUSTUM_TOP:
-				plane_midpoint = (bbox[0] + bbox[1] + bbox[4] + bbox[5]) * 0.25f;
-				break;
-			case FRUSTUM_FAR:
-				plane_midpoint = (bbox[0] + bbox[1] + bbox[2] + bbox[3]) * 0.25f;
-				break;
-			case FRUSTUM_NEAR:
-				plane_midpoint = (bbox[4] + bbox[5] + bbox[6] + bbox[7]) * 0.25f;
-				break;
-		}
-
-		pglColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-		pglVertex3fv(plane_midpoint);
-		pglColor4f(1.0f, 0.0f, 0.0f, 1.0f);
-		pglVertex3fv(plane_midpoint + GetPlane(i)->normal * 32.0);
-	}
-
-	pglEnd();
-	pglColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-}
-
 // faster implementation, but may fail in case when frustum smaller than bounds
-bool CFrustum :: CullBoxFast( const Vector &mins, const Vector &maxs, int userClipFlags )
+bool CFrustum :: CullBoxFast( const Vector &mins, const Vector &maxs, int userClipFlags ) const
 {
 	int iClipFlags;
-
-	if (CVAR_TO_BOOL(r_nocull))
-		return false;
 
 	if( userClipFlags != 0 )
 		iClipFlags = userClipFlags;
@@ -350,12 +280,9 @@ bool CFrustum :: CullBoxFast( const Vector &mins, const Vector &maxs, int userCl
 	return false;
 }
 
-bool CFrustum::CullBoxSafe( const CBoundingBox &bounds )
+// https://iquilezles.org/articles/frustumcorrect/
+bool CFrustum::CullBoxSafe( const CBoundingBox &bounds ) const
 {
-	// https://iquilezles.org/articles/frustumcorrect/
-	if (CVAR_TO_BOOL(r_nocull))
-		return false;
-
 	const vec3_t &mins = bounds.GetMins();
 	const vec3_t &maxs = bounds.GetMaxs();
 
@@ -384,12 +311,9 @@ bool CFrustum::CullBoxSafe( const CBoundingBox &bounds )
 	return false;
 }
 
-bool CFrustum :: CullSphere( const Vector &centre, float radius, int userClipFlags )
+bool CFrustum :: CullSphere( const Vector &centre, float radius, int userClipFlags ) const
 {
 	int iClipFlags;
-
-	if( CVAR_TO_BOOL( r_nocull ))
-		return false;
 
 	if( userClipFlags != 0 )
 		iClipFlags = userClipFlags;
@@ -410,12 +334,9 @@ bool CFrustum :: CullSphere( const Vector &centre, float radius, int userClipFla
 }
 
 // FIXME: could be optimized?
-bool CFrustum :: CullFrustum( CFrustum *frustum )
+bool CFrustum :: CullFrustum( const CFrustum *frustum ) const
 {
 	Vector bbox[8];
-
-	if( CVAR_TO_BOOL( r_nocull ))
-		return false;
 
 	// check for self intersects other
 	frustum->ComputeFrustumCorners( bbox );

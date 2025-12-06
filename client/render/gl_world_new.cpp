@@ -3119,6 +3119,7 @@ void R_RenderDynLightList( bool solid )
 	GL_DepthMask( GL_FALSE );
 
 	CDynLight *pl = tr.dlights;
+	const bool skipCulling = CVAR_TO_BOOL(r_nocull);
 
 	for( int i = 0; i < MAX_DLIGHTS; i++, pl++ )
 	{
@@ -3126,13 +3127,17 @@ void R_RenderDynLightList( bool solid )
 
 		if( pl->type == LIGHT_SPOT || pl->type == LIGHT_OMNI )
 		{
-			if( !pl->Active( )) continue;
-
-			if( !Mod_CheckBoxVisible( pl->absmin, pl->absmax ))
+			if( !pl->Active( )) 
 				continue;
 
-			if( R_CullFrustum( &pl->frustum ))
-				continue;
+			if (!skipCulling)
+			{
+				if (!Mod_CheckBoxVisible(pl->absmin, pl->absmax))
+					continue;
+
+				if (R_CullFrustum(&pl->frustum))
+					continue;
+			}
 
 			pglEnable( GL_SCISSOR_TEST );
 		}

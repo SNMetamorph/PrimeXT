@@ -1,6 +1,5 @@
 /*
-gl_frustum.h - frustum test implementation class
-this code written for Paranoia 2: Savior modification
+frustum.h - frustum test implementation class
 Copyright (C) 2014 Uncle Mike
 
 This program is free software: you can redistribute it and/or modify
@@ -14,10 +13,11 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#ifndef GL_FRUSTUM_H
-#define GL_FRUSTUM_H
+#pragma once
 #include "matrix.h"
 #include "bounding_box.h"
+#include "com_model.h"
+#include <stdint.h>
 
 // don't change this order
 #define FRUSTUM_LEFT	0
@@ -38,26 +38,25 @@ public:
 	void SetPlane( int side, const mplane_t *plane ) { planes[side] = *plane; }
 	void SetPlane( int side, const Vector &vecNormal, float flDist );
 	void NormalizePlane( int side );
-	const mplane_t *GetPlane( int side ) const { return &planes[side]; }
-	const mplane_t *GetPlanes( void ) const { return &planes[0]; }
-	unsigned int GetClipFlags( void ) const { return clipFlags; }
-	void ComputeFrustumBounds( Vector &mins, Vector &maxs );
-	void ComputeFrustumCorners( Vector bbox[8] );
-	void DrawFrustumDebug( void );
 	void ClearFrustum( void );
-
-	// cull methods
-	bool CullBoxFast( const Vector &mins, const Vector &maxs, int userClipFlags = 0 );
-	bool CullBoxSafe( const CBoundingBox &bounds );
-	bool CullSphere( const Vector &centre, float radius, int userClipFlags = 0 );
-	bool CullFrustum( CFrustum *frustum );
 
 	// plane manipulating
 	void EnablePlane( int side );
 	void DisablePlane( int side );
-private:
-	mplane_t		planes[FRUSTUM_PLANES];
-	unsigned int 	clipFlags;
-};
 
-#endif//GL_FRUSTUM_H
+	const mplane_t *GetPlane( int side ) const { return &planes[side]; }
+	const mplane_t *GetPlanes( void ) const { return &planes[0]; }
+	unsigned int GetClipFlags( void ) const { return clipFlags; }
+	void ComputeFrustumBounds( Vector &mins, Vector &maxs ) const;
+	void ComputeFrustumCorners( Vector bbox[8] ) const;
+
+	// cull methods
+	bool CullBoxFast( const Vector &mins, const Vector &maxs, int userClipFlags = 0 ) const;
+	bool CullBoxSafe( const CBoundingBox &bounds ) const;
+	bool CullSphere( const Vector &centre, float radius, int userClipFlags = 0 ) const;
+	bool CullFrustum( const CFrustum *frustum ) const;
+
+private:
+	mplane_t	planes[FRUSTUM_PLANES];
+	uint32_t	clipFlags;
+};

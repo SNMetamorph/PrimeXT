@@ -1466,6 +1466,7 @@ void R_AddGrassToDrawList( msurface_t *s, drawlist_t drawlist_type )
 	mextrasurf_t *es = s->info;
 	cl_entity_t *e = es->parent;
 	Vector absmin, absmax;
+	const bool skipCulling = CVAR_TO_BOOL(r_nocull);
 
 	// do simple culling by distance
 	if( es->grasscount <= 0 ) return; // surface doesn't contain grass
@@ -1503,9 +1504,10 @@ void R_AddGrassToDrawList( msurface_t *s, drawlist_t drawlist_type )
 
 	if( RI->currentlight != NULL )
 		frustum = &RI->currentlight->frustum;
-	else frustum = &RI->view.frustum;
+	else 
+		frustum = &RI->view.frustum;
 
-	if( frustum && frustum->CullBoxFast( absmin, absmax ))
+	if( !skipCulling && frustum->CullBoxFast( absmin, absmax ))
 		return;
 
 	// NOTE: at this point we have surface that passed visibility and frustum tests

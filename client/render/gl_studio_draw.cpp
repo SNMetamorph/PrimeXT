@@ -2262,15 +2262,18 @@ AddMeshToDrawList
 void CStudioModelRenderer :: AddMeshToDrawList( studiohdr_t *phdr, vbomesh_t *mesh, bool lightpass )
 {
 	// static entities allows to cull each part individually
+	const bool skipCulling = CVAR_TO_BOOL(r_nocull);
 	if( FBitSet( RI->currententity->curstate.iuser1, CF_STATIC_ENTITY ) )
 	{
 		CBoundingBox meshBounds = StudioGetMeshBounds(m_pModelInstance, mesh);
+		if (!skipCulling)
+		{
+			if (!Mod_CheckBoxVisible(meshBounds.GetMins(), meshBounds.GetMaxs()))
+				return; // occulded
 
-		if( !Mod_CheckBoxVisible( meshBounds.GetMins(), meshBounds.GetMaxs() ))
-			return; // occulded
-
-		if( R_CullBox( meshBounds.GetMins(), meshBounds.GetMaxs() ))
-			return; // culled
+			if (R_CullBox(meshBounds.GetMins(), meshBounds.GetMaxs()))
+				return; // culled
+		}
 	}
 
 	int m_skinnum = bound( 0, RI->currententity->curstate.skin, phdr->numskinfamilies - 1 );
@@ -2744,8 +2747,9 @@ void CStudioModelRenderer :: DrawMeshFromBuffer( const vbomesh_t *mesh )
 
 void CStudioModelRenderer :: BuildMeshListForLight( CDynLight *pl, bool solid )
 {
-	RI->frame.light_meshes.RemoveAll();
 	Vector bounds[2];
+	const bool skipCulling = CVAR_TO_BOOL(r_nocull);
+	RI->frame.light_meshes.RemoveAll();
 
 	if( solid )
 	{
@@ -2755,7 +2759,7 @@ void CStudioModelRenderer :: BuildMeshListForLight( CDynLight *pl, bool solid )
 			CSolidEntry *entry = &RI->frame.solid_meshes[i];
 			StudioGetBounds( entry, bounds );
 
-			if( pl->frustum.CullBoxFast( bounds[0], bounds[1] ))
+			if( !skipCulling && pl->frustum.CullBoxFast( bounds[0], bounds[1] ))
 				continue;	// no interaction
 
 			// setup the global pointers
@@ -2779,7 +2783,7 @@ void CStudioModelRenderer :: BuildMeshListForLight( CDynLight *pl, bool solid )
 				continue;
 
 			StudioGetBounds( entry, bounds );
-			if( pl->frustum.CullBoxFast( bounds[0], bounds[1] ))
+			if( !skipCulling && pl->frustum.CullBoxFast( bounds[0], bounds[1] ))
 				continue;	// no interaction
 
 			// setup the global pointers

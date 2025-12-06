@@ -265,6 +265,7 @@ R_LightsForPoint
 Vector R_LightsForPoint( const Vector &point, float radius )
 {
 	Vector	lightColor;
+	const bool skipCulling = CVAR_TO_BOOL(r_nocull);
 
 	if( radius <= 0.0f )
 		radius = 1.0f;
@@ -288,7 +289,7 @@ Vector R_LightsForPoint( const Vector &point, float radius )
 		if( !dist || dist > ( dl->radius + radius ))
 			continue;
 
-		if( dl->frustum.CullSphere( point, radius ))
+		if( !skipCulling && dl->frustum.CullSphere( point, radius ))
 			continue;
 
 		atten = 1.0 - saturate( pow( dist * ( 1.0f / dl->radius ), 2.2f ));
