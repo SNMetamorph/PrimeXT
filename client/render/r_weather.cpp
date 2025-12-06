@@ -639,6 +639,8 @@ void DrawRain( void )
 	}
 	else if( Rain.weatherMode == MODE_SNOW )
 	{ 
+		const Vector up = RI->view.matrix.GetUp();
+		const Vector right = RI->view.matrix.GetRight();
 		while( Drip != NULL )
 		{
 			// cull invisible flakes
@@ -674,7 +676,7 @@ void DrawRain( void )
 			m_colorarray[m_iNumVerts][1] = 255;
 			m_colorarray[m_iNumVerts][2] = 255;
 			m_colorarray[m_iNumVerts][3] = alpha;
-			m_vertexarray[m_iNumVerts] = Drip->origin + RI->view.matrix.GetRight() * -SNOW_SPRITE_HALFSIZE + RI->view.matrix.GetUp() * -SNOW_SPRITE_HALFSIZE;
+			m_vertexarray[m_iNumVerts] = Drip->origin + right * SNOW_SPRITE_HALFSIZE + up * -SNOW_SPRITE_HALFSIZE;
 			m_indexarray[m_iNumIndex++] = m_iNumVerts++;
 
 			// set left top corner
@@ -684,7 +686,7 @@ void DrawRain( void )
 			m_colorarray[m_iNumVerts][1] = 255;
 			m_colorarray[m_iNumVerts][2] = 255;
 			m_colorarray[m_iNumVerts][3] = alpha;
-			m_vertexarray[m_iNumVerts] = Drip->origin + RI->view.matrix.GetRight() * -SNOW_SPRITE_HALFSIZE + RI->view.matrix.GetUp() * SNOW_SPRITE_HALFSIZE;
+			m_vertexarray[m_iNumVerts] = Drip->origin + right * SNOW_SPRITE_HALFSIZE + up * SNOW_SPRITE_HALFSIZE;
 			m_indexarray[m_iNumIndex++] = m_iNumVerts++;
 
 			// set right top corner
@@ -694,7 +696,7 @@ void DrawRain( void )
 			m_colorarray[m_iNumVerts][1] = 255;
 			m_colorarray[m_iNumVerts][2] = 255;
 			m_colorarray[m_iNumVerts][3] = alpha;
-			m_vertexarray[m_iNumVerts] = Drip->origin + RI->view.matrix.GetRight() * SNOW_SPRITE_HALFSIZE + RI->view.matrix.GetUp() * SNOW_SPRITE_HALFSIZE;
+			m_vertexarray[m_iNumVerts] = Drip->origin + right * -SNOW_SPRITE_HALFSIZE + up * SNOW_SPRITE_HALFSIZE;
 			m_indexarray[m_iNumIndex++] = m_iNumVerts++;
 
 			// set right bottom corner
@@ -704,7 +706,7 @@ void DrawRain( void )
 			m_colorarray[m_iNumVerts][1] = 255;
 			m_colorarray[m_iNumVerts][2] = 255;
 			m_colorarray[m_iNumVerts][3] = alpha;
-			m_vertexarray[m_iNumVerts] = Drip->origin + RI->view.matrix.GetRight() * SNOW_SPRITE_HALFSIZE + RI->view.matrix.GetUp() * -SNOW_SPRITE_HALFSIZE;
+			m_vertexarray[m_iNumVerts] = Drip->origin + right * -SNOW_SPRITE_HALFSIZE + up * -SNOW_SPRITE_HALFSIZE;
 			m_indexarray[m_iNumIndex++] = m_iNumVerts++;
 
 			g_dripsArray.MoveNext();
