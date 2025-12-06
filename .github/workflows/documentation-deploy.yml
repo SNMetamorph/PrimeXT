@@ -48,13 +48,13 @@ jobs:
           npm run build
 
       - name: Upload artifact
-        if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' && !github.event.pull_request }}
+        if: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: './documentation/build'
 
       - name: Deploy to GitHub Pages
-        if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' && !github.event.pull_request }}
+        if: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
         id: deployment
         uses: actions/deploy-pages@v4
   

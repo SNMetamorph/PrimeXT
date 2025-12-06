@@ -138,7 +138,7 @@ jobs:
 
       - name: Saving vcpkg assets to cache
         uses: actions/cache/save@v4
-        if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' && !github.event.pull_request }}
+        if: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
         with:
           path: |
             ${{ env.VCPKG_ROOT }}
@@ -200,13 +200,13 @@ jobs:
     needs: [build-generic]
     steps:
       - name: Fetch artifacts
-        if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' && !github.event.pull_request }}
+        if: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
         uses: actions/download-artifact@v4
         with:
           path: artifacts/
 
       - name: Remove old release
-        if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' && !github.event.pull_request }}
+        if: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
         uses: dev-drprasad/delete-tag-and-release@v0.2.1
         with:
           delete_release: true
@@ -215,7 +215,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Repackage binaries and allow GitHub to process removed release for few seconds
-        if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' && !github.event.pull_request }}
+        if: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
         continue-on-error: true
         run: |
           cd artifacts/
@@ -228,7 +228,7 @@ jobs:
           sleep 20s
 
       - name: Upload new release
-        if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' && !github.event.pull_request }}
+        if: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
         uses: softprops/action-gh-release@v0.1.15
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
