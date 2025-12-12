@@ -42,3 +42,8 @@ public:
 	float m_flStartThrow;
 	float m_flReleaseThrow;
 };
+
+template<>
+struct CBaseWeaponContext::AssignedWeaponID<CHandGrenadeWeaponContext> {
+	static constexpr int32_t value = WEAPON_HANDGRENADE;
+};

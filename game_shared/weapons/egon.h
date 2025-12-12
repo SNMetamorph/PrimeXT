@@ -107,3 +107,8 @@ public:
 	bool	m_deployed;
 	float	m_flAmmoUseTime; // since we use < 1 point of ammo per update, we subtract ammo on a timer.
 };
+
+template<>
+struct CBaseWeaponContext::AssignedWeaponID<CEgonWeaponContext> {
+	static constexpr int32_t value = WEAPON_EGON;
+};

@@ -68,3 +68,8 @@ public:
 	int m_fSpotActive;
 	uint16_t m_usRpg;
 };
+
+template<>
+struct CBaseWeaponContext::AssignedWeaponID<CRpgWeaponContext> {
+	static constexpr int32_t value = WEAPON_RPG;
+};

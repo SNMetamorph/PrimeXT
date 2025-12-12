@@ -58,3 +58,8 @@ private:
 	int m_iFirePhase; // don't save me.
 	uint16_t m_usHornetFire;
 };
+
+template<>
+struct CBaseWeaponContext::AssignedWeaponID<CHornetgunWeaponContext> {
+	static constexpr int32_t value = WEAPON_HORNETGUN;
+};

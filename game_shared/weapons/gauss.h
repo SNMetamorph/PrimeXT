@@ -72,3 +72,8 @@ public:
 	uint16_t m_usGaussFire;
 	uint16_t m_usGaussSpin;
 };
+
+template<>
+struct CBaseWeaponContext::AssignedWeaponID<CGaussWeaponContext> {
+	static constexpr int32_t value = WEAPON_GAUSS;
+};

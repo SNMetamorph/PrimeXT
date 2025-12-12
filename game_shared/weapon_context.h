@@ -24,6 +24,19 @@ GNU General Public License for more details.
 class CBaseWeaponContext
 {
 public:
+	template<class T> 
+	struct AssignedWeaponID {
+		static constexpr int32_t value = -1;
+	};
+
+	template<class T> inline T* As()
+	{
+		if (m_iId == AssignedWeaponID<T>::value) {
+			return static_cast<T*>(this);
+		}
+		std::terminate();
+	}
+
 	CBaseWeaponContext(std::unique_ptr<IWeaponLayer> &&layer);
 	virtual ~CBaseWeaponContext();
 

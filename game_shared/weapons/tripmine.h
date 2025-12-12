@@ -60,3 +60,8 @@ public:
 private:
 	uint16_t m_usTripFire;
 };
+
+template<>
+struct CBaseWeaponContext::AssignedWeaponID<CTripmineWeaponContext> {
+	static constexpr int32_t value = WEAPON_TRIPMINE;
+};

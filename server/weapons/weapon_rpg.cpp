@@ -24,12 +24,12 @@ LINK_ENTITY_TO_CLASS( weapon_rpg, CRpg );
 #define DEFINE_RPGWEAPON_FIELD( x, ft ) \
 	DEFINE_CUSTOM_FIELD( x, ft, [](CBaseEntity *pEntity, void *pData, size_t dataSize) { \
 		CBasePlayerWeapon *p = static_cast<CBasePlayerWeapon*>(pEntity); \
-		CRpgWeaponContext *ctx = static_cast<CRpgWeaponContext*>(p->m_pWeaponContext.get()); \
+		CRpgWeaponContext *ctx = p->m_pWeaponContext->As<CRpgWeaponContext>(); \
 		std::memcpy(pData, &ctx->x, dataSize); \
 	}, \
 	[](CBaseEntity *pEntity, const void *pData, size_t dataSize) { \
 		CBasePlayerWeapon *p = static_cast<CBasePlayerWeapon*>(pEntity); \
-		CRpgWeaponContext *ctx = static_cast<CRpgWeaponContext*>(p->m_pWeaponContext.get()); \
+		CRpgWeaponContext *ctx = p->m_pWeaponContext->As<CRpgWeaponContext>(); \
 		std::memcpy(&ctx->x, pData, dataSize); \
 	})
 
@@ -80,12 +80,12 @@ int CRpg::AddToPlayer(CBasePlayer *pPlayer)
 
 void CRpg::AddActiveRocket()
 {
-	CRpgWeaponContext *ctx = static_cast<CRpgWeaponContext*>(m_pWeaponContext.get());
+	CRpgWeaponContext *ctx = m_pWeaponContext->As<CRpgWeaponContext>();
 	ctx->m_cActiveRockets++;
 }
 
 void CRpg::RemoveActiveRocket()
 {
-	CRpgWeaponContext *ctx = static_cast<CRpgWeaponContext*>(m_pWeaponContext.get());
+	CRpgWeaponContext *ctx = m_pWeaponContext->As<CRpgWeaponContext>();
 	ctx->m_cActiveRockets--;
 }

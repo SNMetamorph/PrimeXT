@@ -44,3 +44,8 @@ public:
 
 	int m_chargeReady;
 };
+
+template<>
+struct CBaseWeaponContext::AssignedWeaponID<CSatchelWeaponContext> {
+	static constexpr int32_t value = WEAPON_SATCHEL;
+};

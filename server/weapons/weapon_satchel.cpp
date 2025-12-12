@@ -24,12 +24,12 @@ LINK_ENTITY_TO_CLASS( weapon_satchel, CSatchel );
 #define DEFINE_SATCHELWEAPON_FIELD( x, ft ) \
 	DEFINE_CUSTOM_FIELD( x, ft, [](CBaseEntity *pEntity, void *pData, size_t dataSize) { \
 		CBasePlayerWeapon *p = static_cast<CBasePlayerWeapon*>(pEntity); \
-		CSatchelWeaponContext *ctx = static_cast<CSatchelWeaponContext*>(p->m_pWeaponContext.get()); \
+		CSatchelWeaponContext *ctx = p->m_pWeaponContext->As<CSatchelWeaponContext>(); \
 		std::memcpy(pData, &ctx->x, dataSize); \
 	}, \
 	[](CBaseEntity *pEntity, const void *pData, size_t dataSize) { \
 		CBasePlayerWeapon *p = static_cast<CBasePlayerWeapon*>(pEntity); \
-		CSatchelWeaponContext *ctx = static_cast<CSatchelWeaponContext*>(p->m_pWeaponContext.get()); \
+		CSatchelWeaponContext *ctx = p->m_pWeaponContext->As<CSatchelWeaponContext>(); \
 		std::memcpy(&ctx->x, pData, dataSize); \
 	})
 	
@@ -65,7 +65,7 @@ void CSatchel::Precache( void )
 int CSatchel::AddToPlayer( CBasePlayer *pPlayer )
 {
 	int bResult = CBasePlayerItem::AddToPlayer( pPlayer );
-	CSatchelWeaponContext *ctx = static_cast<CSatchelWeaponContext*>(m_pWeaponContext.get());
+	CSatchelWeaponContext *ctx = m_pWeaponContext->As<CSatchelWeaponContext>();
 
 	pPlayer->AddWeapon( m_pWeaponContext->m_iId );
 	ctx->m_chargeReady = 0;// this satchel charge weapon now forgets that any satchels are deployed by it.
@@ -85,7 +85,7 @@ int CSatchel::AddDuplicate( CBasePlayerItem *pOriginal )
 	if ( g_pGameRules->IsMultiplayer() )
 	{
 		CSatchel *pSatchel = (CSatchel *)pOriginal;
-		CSatchelWeaponContext *ctx = static_cast<CSatchelWeaponContext*>(pSatchel->m_pWeaponContext.get());
+		CSatchelWeaponContext *ctx = m_pWeaponContext->As<CSatchelWeaponContext>();
 
 		if ( ctx->m_chargeReady != 0 )
 		{

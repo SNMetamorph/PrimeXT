@@ -149,14 +149,14 @@ void CWeaponPredictingContext::UpdateWeaponTimers(CBaseWeaponContext *weapon, co
 
 	if (weapon->m_iId == WEAPON_EGON)
 	{
-		CEgonWeaponContext *ctx = static_cast<CEgonWeaponContext*>(weapon);
+		CEgonWeaponContext *ctx = weapon->As<CEgonWeaponContext>();
 		ctx->m_flAttackCooldown -= cmd->msec / 1000.0;
 		if (ctx->m_flAttackCooldown < -0.001)
 			ctx->m_flAttackCooldown = -0.001;
 	}
 	else if (weapon->m_iId == WEAPON_GAUSS)
 	{
-		CGaussWeaponContext *ctx = static_cast<CGaussWeaponContext*>(weapon);
+		CGaussWeaponContext *ctx = weapon->As<CGaussWeaponContext>();
 		ctx->m_flNextAmmoBurn -= cmd->msec / 1000.0;
 		if (ctx->m_flNextAmmoBurn < -0.001)
 			ctx->m_flNextAmmoBurn = -0.001;
@@ -223,29 +223,29 @@ void CWeaponPredictingContext::ReadWeaponSpecificData(CBaseWeaponContext *weapon
 	const weapon_data_t &data = from->weapondata[weapon->m_iId];
 	if (weapon->m_iId == WEAPON_RPG)
 	{
-		CRpgWeaponContext *ctx = static_cast<CRpgWeaponContext*>(weapon);
+		CRpgWeaponContext *ctx = weapon->As<CRpgWeaponContext>();
 		ctx->m_fSpotActive = static_cast<int>(from->client.vuser2.y);
 		ctx->m_cActiveRockets = static_cast<int>(from->client.vuser2.z);
 	}
 	else if (weapon->m_iId == WEAPON_SATCHEL)
 	{
-		CSatchelWeaponContext *ctx = static_cast<CSatchelWeaponContext*>(weapon);
+		CSatchelWeaponContext *ctx = weapon->As<CSatchelWeaponContext>();
 		ctx->m_chargeReady = data.iuser1;
 	}
 	else if (weapon->m_iId == WEAPON_HANDGRENADE)
 	{
-		CHandGrenadeWeaponContext *ctx = static_cast<CHandGrenadeWeaponContext*>(weapon);
+		CHandGrenadeWeaponContext *ctx = weapon->As<CHandGrenadeWeaponContext>();
 		ctx->m_flStartThrow = data.fuser1;
 		ctx->m_flReleaseThrow = data.fuser2;
 	}
 	else if (weapon->m_iId == WEAPON_EGON)
 	{
-		CEgonWeaponContext *ctx = static_cast<CEgonWeaponContext*>(weapon);
+		CEgonWeaponContext *ctx = weapon->As<CEgonWeaponContext>();
 		ctx->m_flAttackCooldown = data.fuser1;
 	}
 	else if (weapon->m_iId == WEAPON_GAUSS)
 	{
-		CGaussWeaponContext *ctx = static_cast<CGaussWeaponContext*>(weapon);
+		CGaussWeaponContext *ctx = weapon->As<CGaussWeaponContext>();
 		ctx->m_flAmmoStartCharge = data.fuser1;
 		ctx->m_flNextAmmoBurn = data.fuser2;
 		ctx->m_fInAttack = data.iuser1;
@@ -257,29 +257,29 @@ void CWeaponPredictingContext::WriteWeaponSpecificData(CBaseWeaponContext *weapo
 	weapon_data_t &data = to->weapondata[weapon->m_iId];
 	if (weapon->m_iId == WEAPON_RPG)
 	{
-		CRpgWeaponContext *ctx = static_cast<CRpgWeaponContext*>(weapon);
+		CRpgWeaponContext *ctx = weapon->As<CRpgWeaponContext>();
 		to->client.vuser2.y = ctx->m_fSpotActive;
 		to->client.vuser2.z = ctx->m_cActiveRockets;
 	}
 	else if (weapon->m_iId == WEAPON_SATCHEL)
 	{
-		CSatchelWeaponContext *ctx = static_cast<CSatchelWeaponContext*>(weapon);
+		CSatchelWeaponContext *ctx = weapon->As<CSatchelWeaponContext>();
 		data.iuser1 = ctx->m_chargeReady;
 	}
 	else if (weapon->m_iId == WEAPON_HANDGRENADE)
 	{
-		CHandGrenadeWeaponContext *ctx = static_cast<CHandGrenadeWeaponContext*>(weapon);
+		CHandGrenadeWeaponContext *ctx = weapon->As<CHandGrenadeWeaponContext>();
 		data.fuser1 = ctx->m_flStartThrow;
 		data.fuser2 = ctx->m_flReleaseThrow;
 	}
 	else if (weapon->m_iId == WEAPON_EGON)
 	{
-		CEgonWeaponContext *ctx = static_cast<CEgonWeaponContext*>(weapon);
+		CEgonWeaponContext *ctx = weapon->As<CEgonWeaponContext>();
 		data.fuser1 = ctx->m_flAttackCooldown;
 	}
 	else if (weapon->m_iId == WEAPON_GAUSS)
 	{
-		CGaussWeaponContext *ctx = static_cast<CGaussWeaponContext*>(weapon);
+		CGaussWeaponContext *ctx = weapon->As<CGaussWeaponContext>();
 		data.fuser1 = ctx->m_flAmmoStartCharge;
 		data.fuser2 = ctx->m_flNextAmmoBurn;
 		data.iuser1 = ctx->m_fInAttack;

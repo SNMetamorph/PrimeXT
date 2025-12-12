@@ -57,3 +57,8 @@ public:
 	uint16_t m_usFireGlock1;
 	uint16_t m_usFireGlock2;
 };
+
+template<>
+struct CBaseWeaponContext::AssignedWeaponID<CGlockWeaponContext> {
+	static constexpr int32_t value = WEAPON_GLOCK;
+};

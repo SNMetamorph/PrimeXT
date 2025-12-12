@@ -57,3 +57,8 @@ public:
 	uint16_t m_usSingleFire;
 	uint16_t m_usDoubleFire;
 };
+
+template<>
+struct CBaseWeaponContext::AssignedWeaponID<CShotgunWeaponContext> {
+	static constexpr int32_t value = WEAPON_SHOTGUN;
+};

@@ -22,12 +22,12 @@
 #define DEFINE_GAUSSWEAPON_FIELD( x, ft ) \
 	DEFINE_CUSTOM_FIELD( x, ft, [](CBaseEntity *pEntity, void *pData, size_t dataSize) { \
 		CBasePlayerWeapon *p = static_cast<CBasePlayerWeapon*>(pEntity); \
-		CGaussWeaponContext *ctx = static_cast<CGaussWeaponContext*>(p->m_pWeaponContext.get()); \
+		CGaussWeaponContext *ctx = p->m_pWeaponContext->As<CGaussWeaponContext>(); \
 		std::memcpy(pData, &ctx->x, dataSize); \
 	}, \
 	[](CBaseEntity *pEntity, const void *pData, size_t dataSize) { \
 		CBasePlayerWeapon *p = static_cast<CBasePlayerWeapon*>(pEntity); \
-		CGaussWeaponContext *ctx = static_cast<CGaussWeaponContext*>(p->m_pWeaponContext.get()); \
+		CGaussWeaponContext *ctx = p->m_pWeaponContext->As<CGaussWeaponContext>(); \
 		std::memcpy(&ctx->x, pData, dataSize); \
 	})
 

@@ -56,3 +56,8 @@ public:
 	uint16_t m_usEvent1;
 	uint16_t m_usEvent2;
 };
+
+template<>
+struct CBaseWeaponContext::AssignedWeaponID<CMP5WeaponContext> {
+	static constexpr int32_t value = WEAPON_MP5;
+};

@@ -59,7 +59,7 @@ void CCrowbar::Precache()
 
 void CCrowbar::Smack()
 {
-	CCrowbarWeaponContext *ctx = static_cast<CCrowbarWeaponContext*>(m_pWeaponContext.get());
+	CCrowbarWeaponContext *ctx = m_pWeaponContext->As<CCrowbarWeaponContext>();
 	TraceResult *tr = &ctx->m_trHit;
 	Vector vecSrc = m_pPlayer->GetGunPosition();
 	Vector vecEnd = vecSrc + gpGlobals->v_forward * 32;
@@ -68,6 +68,6 @@ void CCrowbar::Smack()
 
 void CCrowbar::SwingAgain()
 {
-	CCrowbarWeaponContext *ctx = static_cast<CCrowbarWeaponContext*>(m_pWeaponContext.get());
+	CCrowbarWeaponContext *ctx = m_pWeaponContext->As<CCrowbarWeaponContext>();
 	ctx->Swing(false);
 }

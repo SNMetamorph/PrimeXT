@@ -62,3 +62,8 @@ public:
 	uint16_t m_usCrossbow;
 	uint16_t m_usCrossbow2;
 };
+
+template<>
+struct CBaseWeaponContext::AssignedWeaponID<CCrossbowWeaponContext> {
+	static constexpr int32_t value = WEAPON_CROSSBOW;
+};

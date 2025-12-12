@@ -56,3 +56,8 @@ public:
 	bool m_fInZoom;	// don't save this. 
 	uint16_t m_usFirePython;
 };
+
+template<>
+struct CBaseWeaponContext::AssignedWeaponID<CPythonWeaponContext> {
+	static constexpr int32_t value = WEAPON_PYTHON;
+};

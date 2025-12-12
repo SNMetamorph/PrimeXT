@@ -2620,7 +2620,7 @@ void CBasePlayer::UpdateWeaponTimers()
 
 					if (ctx->m_iId == WEAPON_EGON)
 					{
-						CEgonWeaponContext *pEgon = static_cast<CEgonWeaponContext*>(ctx);
+						CEgonWeaponContext *pEgon = ctx->As<CEgonWeaponContext>();
 						if (pEgon->m_flAttackCooldown != 1000)
 						{
 							pEgon->m_flAttackCooldown = std::max(pEgon->m_flAttackCooldown - gpGlobals->frametime, -0.001f);
@@ -2628,7 +2628,7 @@ void CBasePlayer::UpdateWeaponTimers()
 					}
 					else if (ctx->m_iId == WEAPON_GAUSS)
 					{
-						CGaussWeaponContext *pGauss = static_cast<CGaussWeaponContext*>(ctx);
+						CGaussWeaponContext *pGauss = ctx->As<CGaussWeaponContext>();
 						if (pGauss->m_flNextAmmoBurn != 1000) {
 							pGauss->m_flNextAmmoBurn = std::max(pGauss->m_flNextAmmoBurn - gpGlobals->frametime, -0.001f);
 						}

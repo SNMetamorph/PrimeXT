@@ -62,3 +62,8 @@ public:
 	TraceResult m_trHit;
 #endif
 };
+
+template<>
+struct CBaseWeaponContext::AssignedWeaponID<CCrowbarWeaponContext> {
+	static constexpr int32_t value = WEAPON_CROWBAR;
+};

@@ -30,12 +30,12 @@ LINK_ENTITY_TO_CLASS( weapon_question, CWeaponCycler );	// saverestore issues
 #define DEFINE_CYCLERWEAPON_FIELD( x, ft ) \
 	DEFINE_CUSTOM_FIELD( x, ft, [](CBaseEntity *pEntity, void *pData, size_t dataSize) { \
 		CBasePlayerWeapon *p = static_cast<CBasePlayerWeapon*>(pEntity); \
-		CCyclerWeaponContext *ctx = static_cast<CCyclerWeaponContext*>(p->m_pWeaponContext.get()); \
+		CCyclerWeaponContext *ctx = p->m_pWeaponContext->As<CCyclerWeaponContext>(); \
 		std::memcpy(pData, &ctx->x, dataSize); \
 	}, \
 	[](CBaseEntity *pEntity, const void *pData, size_t dataSize) { \
 		CBasePlayerWeapon *p = static_cast<CBasePlayerWeapon*>(pEntity); \
-		CCyclerWeaponContext *ctx = static_cast<CCyclerWeaponContext*>(p->m_pWeaponContext.get()); \
+		CCyclerWeaponContext *ctx = p->m_pWeaponContext->As<CCyclerWeaponContext>(); \
 		std::memcpy(&ctx->x, pData, dataSize); \
 	})
 	
@@ -120,7 +120,7 @@ void CWeaponCycler::Spawn()
 	pev->movetype = MOVETYPE_NONE;
 
 	char basemodel[80], v_path[80], p_path[80], w_path[80];
-	CCyclerWeaponContext *pContext = static_cast<CCyclerWeaponContext*>(m_pWeaponContext.get());
+	CCyclerWeaponContext *pContext = m_pWeaponContext->As<CCyclerWeaponContext>();
 
 	strncpy( basemodel, (char *)STRING(pev->model), sizeof( basemodel ) - 1 ); 
 
@@ -172,7 +172,7 @@ void CWeaponCycler::Spawn()
 
 void CWeaponCycler::KeyValue( KeyValueData *pkvd )
 {
-	CCyclerWeaponContext *pContext = static_cast<CCyclerWeaponContext*>(m_pWeaponContext.get());
+	CCyclerWeaponContext *pContext = m_pWeaponContext->As<CCyclerWeaponContext>();
 	if (FStrEq(pkvd->szKeyName, "deploy"))
 	{
 		pev->impulse = atoi(pkvd->szValue);

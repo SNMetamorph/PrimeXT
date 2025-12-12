@@ -59,3 +59,8 @@ private:
 	bool m_fJustThrown;
 	uint16_t m_usSnarkFire;
 };
+
+template<>
+struct CBaseWeaponContext::AssignedWeaponID<CSqueakWeaponContext> {
+	static constexpr int32_t value = WEAPON_SNARK;
+};

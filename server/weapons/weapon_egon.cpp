@@ -21,12 +21,12 @@
 #define DEFINE_EGONWEAPON_FIELD( x, ft ) \
 	DEFINE_CUSTOM_FIELD( x, ft, [](CBaseEntity *pEntity, void *pData, size_t dataSize) { \
 		CBasePlayerWeapon *p = static_cast<CBasePlayerWeapon*>(pEntity); \
-		CEgonWeaponContext *ctx = static_cast<CEgonWeaponContext*>(p->m_pWeaponContext.get()); \
+		CEgonWeaponContext *ctx = p->m_pWeaponContext->As<CEgonWeaponContext>(); \
 		std::memcpy(pData, &ctx->x, dataSize); \
 	}, \
 	[](CBaseEntity *pEntity, const void *pData, size_t dataSize) { \
 		CBasePlayerWeapon *p = static_cast<CBasePlayerWeapon*>(pEntity); \
-		CEgonWeaponContext *ctx = static_cast<CEgonWeaponContext*>(p->m_pWeaponContext.get()); \
+		CEgonWeaponContext *ctx = p->m_pWeaponContext->As<CEgonWeaponContext>(); \
 		std::memcpy(&ctx->x, pData, dataSize); \
 	})
 

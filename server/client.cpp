@@ -1643,23 +1643,23 @@ int GetWeaponData( struct edict_s *player, struct weapon_data_s *info )
 
 						if (itemInfo.iId == WEAPON_SATCHEL)
 						{
-							CSatchelWeaponContext *pSatchel = static_cast<CSatchelWeaponContext*>(ctx);
+							CSatchelWeaponContext *pSatchel = ctx->As<CSatchelWeaponContext>();
 							data->iuser1 = pSatchel->m_chargeReady;
 						}
 						else if (itemInfo.iId == WEAPON_HANDGRENADE)
 						{
-							CHandGrenadeWeaponContext *pHandGrenade = static_cast<CHandGrenadeWeaponContext*>(ctx);
+							CHandGrenadeWeaponContext *pHandGrenade = ctx->As<CHandGrenadeWeaponContext>();
 							data->fuser1 = pHandGrenade->m_flStartThrow;
 							data->fuser2 = pHandGrenade->m_flReleaseThrow;
 						}
 						else if (itemInfo.iId == WEAPON_EGON)
 						{
-							CEgonWeaponContext *pEgon = static_cast<CEgonWeaponContext*>(ctx);
+							CEgonWeaponContext *pEgon = ctx->As<CEgonWeaponContext>();
 							data->fuser1 = std::max(pEgon->m_flAttackCooldown, -0.001f);
 						}
 						else if (itemInfo.iId == WEAPON_GAUSS)
 						{
-							CGaussWeaponContext *pGauss = static_cast<CGaussWeaponContext*>(ctx);
+							CGaussWeaponContext *pGauss = ctx->As<CGaussWeaponContext>();
 							data->fuser1 = std::max(pGauss->m_flAmmoStartCharge, -0.001f);
 							data->fuser2 = std::max(pGauss->m_flNextAmmoBurn, -0.001f);
 							data->iuser1 = pGauss->m_fInAttack;
@@ -1737,7 +1737,7 @@ void UpdateClientData ( const struct edict_s *ent, int sendweapons, struct clien
 
 				if (itemInfo.iId == WEAPON_RPG)
 				{
-					CRpgWeaponContext *ctx = static_cast<CRpgWeaponContext*>(weapon->m_pWeaponContext.get());
+					CRpgWeaponContext *ctx = weapon->m_pWeaponContext->As<CRpgWeaponContext>();
 					cd->vuser2.y = ctx->m_fSpotActive;
 					cd->vuser2.z = ctx->m_cActiveRockets;
 				}
