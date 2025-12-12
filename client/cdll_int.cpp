@@ -34,14 +34,15 @@
 #include "pm_shared.h"
 #include "filesystem_utils.h"
 #include "build_info.h"
+#include <memory>
 
 int developer_level;
 int g_iXashEngineBuildNumber;
 cl_enginefunc_t gEngfuncs;
 mobile_engfuncs_t gMobileAPI;
 render_api_t gRenderfuncs;
-static CGameEventManager *g_pEventManager = nullptr;
-static CWeaponPredictingContext *g_pWeaponPredicting = nullptr;
+static std::unique_ptr<CGameEventManager> g_pEventManager;
+static std::unique_ptr<CWeaponPredictingContext> g_pWeaponPredicting;
 CHud gHUD;
 
 /*
@@ -154,7 +155,7 @@ int Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion )
 		BuildInfo::GetPlatform()
 	);
 
-	g_pEventManager = new CGameEventManager();
+	g_pEventManager = std::make_unique<CGameEventManager>();
 	return 1;
 }
 
@@ -200,16 +201,12 @@ void DLLEXPORT HUD_Shutdown( void )
 	if (g_fRenderInitialized)
 		GL_Shutdown();
 
-	if (g_pEventManager) 
-	{
-		delete g_pEventManager;
-		g_pEventManager = nullptr;
+	if (g_pEventManager) {
+		g_pEventManager.reset();
 	}
 
-	if (g_pWeaponPredicting) 
-	{
-		delete g_pWeaponPredicting;
-		g_pWeaponPredicting = nullptr;
+	if (g_pWeaponPredicting) {
+		g_pWeaponPredicting.reset();
 	}
 }
 
@@ -419,9 +416,9 @@ void CL_NewMap()
 	meshDescFactory.ClearCache();
 
 	if (g_pWeaponPredicting) {
-		delete g_pWeaponPredicting;
+		g_pWeaponPredicting.reset();
 	}
-	g_pWeaponPredicting = new CWeaponPredictingContext();
+	g_pWeaponPredicting = std::make_unique<CWeaponPredictingContext>();
 }
 
 cldll_func_t cldll_func = 
