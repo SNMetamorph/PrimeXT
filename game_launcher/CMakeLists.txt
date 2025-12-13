@@ -12,6 +12,7 @@ list(APPEND DIR_SOURCES
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	list(APPEND DIR_SOURCES
 		"game.rc"
+		"game.manifest"
 	)
 endif()
 

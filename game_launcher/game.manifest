@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0" xmlns:asmv3="urn:schemas-microsoft-com:asm.v3">
+  <assemblyIdentity type="win32" name="PrimeXT" version="1.0.0.0" />
+  <description>PrimeXT Launcher</description>
+  <!-- Use Common Controls v6 (theming) -->
+  <dependency>
+    <dependentAssembly>
+      <assemblyIdentity 
+          type="win32" 
+          name="Microsoft.Windows.Common-Controls" 
+          version="6.0.0.0" 
+          processorArchitecture="*" 
+          publicKeyToken="6595b64144ccf1df" 
+          language="*" />
+    </dependentAssembly>
+  </dependency>
+  <!-- Security: Run as standard user (not admin) -->
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
+    <security>
+      <requestedPrivileges>
+        <requestedExecutionLevel level="asInvoker" uiAccess="false" />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+  <!-- High-DPI: Per-Monitor v2 (Win10 1703+), best practice -->
+  <asmv3:application>
+    <asmv3:windowsSettings>
+      <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">
+        PerMonitorV2, PMv2
+      </dpiAwareness>
+    </asmv3:windowsSettings>
+  </asmv3:application>
+</assembly>
