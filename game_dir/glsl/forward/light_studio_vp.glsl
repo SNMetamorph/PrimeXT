@@ -25,6 +25,8 @@ uniform vec4	u_LightOrigin;
 uniform vec2	u_DetailScale;
 uniform vec3	u_ViewOrigin;
 uniform vec3	u_ViewRight;
+uniform float	u_SwayHeight;
+uniform float	u_RealTime;
 
 varying vec2	var_TexDiffuse;
 varying vec3	var_LightVec;
@@ -55,6 +57,13 @@ varying vec4	var_ShadowCoord;
 void main( void )
 {
 	vec4 position = vec4( attr_Position, 1.0 );
+
+	if( bool( u_SwayHeight != 0.0 ) && position.z > u_SwayHeight )
+    {
+        position.x += position.z * 0.025 * sin( position.z + u_RealTime * 0.25 );
+        position.y += position.z * 0.025 * cos( position.z + u_RealTime * 0.25 );
+    }
+
 	mat4 boneMatrix = ComputeSkinningMatrix();
 	vec4 worldpos = boneMatrix * position;
 

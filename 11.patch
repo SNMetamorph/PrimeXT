@@ -1,0 +1,212 @@
+From 46a25ba156e77169cdced5d222641ed6eac81325 Mon Sep 17 00:00:00 2001
+From: Aynekko <5f@mail.ru>
+Date: Thu, 18 Dec 2025 19:19:11 +0300
+Subject: [PATCH] Added studio model swaying based on grass animation code
+
+---
+ client/render/gl_decals.cpp                |  3 +++
+ client/render/gl_shader.cpp                |  1 +
+ client/render/gl_shader.h                  |  1 +
+ client/render/gl_studio_draw.cpp           |  3 +++
+ client/render/gl_studio_init.cpp           |  1 +
+ client/studio_material.h                   |  1 +
+ game_dir/glsl/forward/depth_studio_vp.glsl | 10 ++++++++++
+ game_dir/glsl/forward/light_studio_vp.glsl |  9 +++++++++
+ game_dir/glsl/forward/scene_studio_vp.glsl |  9 +++++++++
+ game_shared/material.cpp                   | 11 +++++++++++
+ game_shared/material.h                     |  1 +
+ 11 files changed, 50 insertions(+)
+
+diff --git a/client/render/gl_decals.cpp b/client/render/gl_decals.cpp
+index ec2ee9a..1268939 100644
+--- a/client/render/gl_decals.cpp
++++ b/client/render/gl_decals.cpp
+@@ -1441,6 +1441,9 @@ void R_SetDecalUniforms( brushdecal_t *decal )
+ 			height = decal->texinfo->gl_heightmap_id.GetHeight();
+ 			u->SetValue( (float)width, (float)height, desc->reliefScale, cv_shadow_offset->value );
+ 			break;
++		case UT_SWAYHEIGHT:
++			u->SetValue(desc->swayHeight);
++			break;
+ 		default:
+ 			ALERT( at_error, "%s: unhandled uniform %s\n", RI->currentshader->name, u->name );
+ 			break;
+diff --git a/client/render/gl_shader.cpp b/client/render/gl_shader.cpp
+index 56dd554..e444823 100644
+--- a/client/render/gl_shader.cpp
++++ b/client/render/gl_shader.cpp
+@@ -280,6 +280,7 @@ static uniformTable_t glsl_uniformTable[] =
+ { "u_LerpFactor",		UT_LERPFACTOR,		0 },
+ { "u_RefractScale",		UT_REFRACTSCALE,		0 },
+ { "u_ReflectScale",		UT_REFLECTSCALE,		0 },
++{ "u_SwayHeight",		UT_SWAYHEIGHT,			0 },
+ { "u_AberrationScale",	UT_ABERRATIONSCALE,		0 },
+ { "u_BoxMins",		UT_BOXMINS,		0 },
+ { "u_BoxMaxs",		UT_BOXMAXS,		0 },
+diff --git a/client/render/gl_shader.h b/client/render/gl_shader.h
+index 11d1b11..56d7ad3 100644
+--- a/client/render/gl_shader.h
++++ b/client/render/gl_shader.h
+@@ -138,6 +138,7 @@ typedef enum
+ 	UT_LERPFACTOR,
+ 	UT_REFRACTSCALE,
+ 	UT_REFLECTSCALE,
++	UT_SWAYHEIGHT,
+ 	UT_ABERRATIONSCALE,
+ 	UT_BOXMINS,
+ 	UT_BOXMAXS,
+diff --git a/client/render/gl_studio_draw.cpp b/client/render/gl_studio_draw.cpp
+index aed284b..62a83a8 100644
+--- a/client/render/gl_studio_draw.cpp
++++ b/client/render/gl_studio_draw.cpp
+@@ -3704,6 +3704,9 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force, boo
+ 		case UT_LIGHTTHRESHOLD:
+ 			u->SetValue( tr.light_threshold );
+ 			break;
++		case UT_SWAYHEIGHT:
++			u->SetValue(mat->swayHeight);
++			break;
+ 		default:
+ 			ALERT( at_error, "%s: unhandled uniform %s\n", RI->currentshader->name, u->name );
+ 			break;
+diff --git a/client/render/gl_studio_init.cpp b/client/render/gl_studio_init.cpp
+index a3f3d58..a805b13 100644
+--- a/client/render/gl_studio_init.cpp
++++ b/client/render/gl_studio_init.cpp
+@@ -665,6 +665,7 @@ void CStudioModelRenderer :: LoadStudioMaterials( void )
+ 		pmaterial->aberrationScale = desc->aberrationScale;
+ 		pmaterial->reliefScale = desc->reliefScale;
+ 		pmaterial->effects = desc->effects;
++		pmaterial->swayHeight = desc->swayHeight;
+ 
+ 		if( pmaterial->gl_detailmap_id.Initialized() && pmaterial->gl_detailmap_id != tr.grayTexture)
+ 			SetBits( pmaterial->flags, STUDIO_NF_HAS_DETAIL );
+diff --git a/client/studio_material.h b/client/studio_material.h
+index 463479a..413762d 100644
+--- a/client/studio_material.h
++++ b/client/studio_material.h
+@@ -38,6 +38,7 @@ typedef struct mstudiomat_s
+ 	float		refractScale;		// refraction scale for mirrors, windows, water
+ 	float		aberrationScale;		// chromatic abberation
+ 	float		reliefScale;		// relief-mapping
++	float       swayHeight;    // height from model origin for swaying, 0 - disabled
+ 	struct matdef_t	*effects;			// hit, impact, particle effects etc
+ 	int		flags;			// mstudiotexture_t->flags
+ 
+diff --git a/game_dir/glsl/forward/depth_studio_vp.glsl b/game_dir/glsl/forward/depth_studio_vp.glsl
+index 8469578..57e1b9f 100644
+--- a/game_dir/glsl/forward/depth_studio_vp.glsl
++++ b/game_dir/glsl/forward/depth_studio_vp.glsl
+@@ -19,11 +19,21 @@ GNU General Public License for more details.
+ attribute vec3		attr_Position;
+ attribute vec2		attr_TexCoord0;
+ 
++uniform float	u_SwayHeight;
++uniform float	u_RealTime;
++
+ varying vec2		var_TexDiffuse;
+ 
+ void main( void )
+ {
+ 	vec4 position = vec4( attr_Position, 1.0 );
++
++	if( bool( u_SwayHeight != 0.0 ) && position.z > u_SwayHeight )
++    {
++        position.x += position.z * 0.025 * sin( position.z + u_RealTime * 0.25 );
++        position.y += position.z * 0.025 * cos( position.z + u_RealTime * 0.25 );
++    }
++
+ 	mat4 boneMatrix = ComputeSkinningMatrix();
+ 	vec4 worldpos = boneMatrix * position;
+ 
+diff --git a/game_dir/glsl/forward/light_studio_vp.glsl b/game_dir/glsl/forward/light_studio_vp.glsl
+index 8c1348b..d61c126 100644
+--- a/game_dir/glsl/forward/light_studio_vp.glsl
++++ b/game_dir/glsl/forward/light_studio_vp.glsl
+@@ -25,6 +25,8 @@ uniform vec4	u_LightOrigin;
+ uniform vec2	u_DetailScale;
+ uniform vec3	u_ViewOrigin;
+ uniform vec3	u_ViewRight;
++uniform float	u_SwayHeight;
++uniform float	u_RealTime;
+ 
+ varying vec2	var_TexDiffuse;
+ varying vec3	var_LightVec;
+@@ -55,6 +57,13 @@ varying vec4	var_ShadowCoord;
+ void main( void )
+ {
+ 	vec4 position = vec4( attr_Position, 1.0 );
++
++	if( bool( u_SwayHeight != 0.0 ) && position.z > u_SwayHeight )
++    {
++        position.x += position.z * 0.025 * sin( position.z + u_RealTime * 0.25 );
++        position.y += position.z * 0.025 * cos( position.z + u_RealTime * 0.25 );
++    }
++
+ 	mat4 boneMatrix = ComputeSkinningMatrix();
+ 	vec4 worldpos = boneMatrix * position;
+ 
+diff --git a/game_dir/glsl/forward/scene_studio_vp.glsl b/game_dir/glsl/forward/scene_studio_vp.glsl
+index d5fed72..e6dc24a 100644
+--- a/game_dir/glsl/forward/scene_studio_vp.glsl
++++ b/game_dir/glsl/forward/scene_studio_vp.glsl
+@@ -43,6 +43,8 @@ uniform float	u_Smoothness;
+ uniform vec3	u_LightDiffuse;
+ uniform vec2	u_LightShade; // x is ambientlight, y is shadelight
+ uniform vec3	u_LightDir;
++uniform float	u_SwayHeight;
++uniform float	u_RealTime;
+ 
+ uniform float	u_LightStyleValues[MAX_LIGHTSTYLES];
+ uniform float	u_LightGamma;
+@@ -76,6 +78,13 @@ varying mat3	var_MatrixTBN;
+ void main( void )
+ {
+ 	vec4 position = vec4( attr_Position, 1.0 );
++
++	if( bool( u_SwayHeight != 0.0 ) && position.z > u_SwayHeight )
++    {
++        position.x += position.z * 0.025 * sin( position.z + u_RealTime * 0.25 );
++        position.y += position.z * 0.025 * cos( position.z + u_RealTime * 0.25 );
++    }
++
+ 	mat4 boneMatrix = ComputeSkinningMatrix();
+ 	vec4 worldpos = boneMatrix * position;
+ 
+diff --git a/game_shared/material.cpp b/game_shared/material.cpp
+index 2608c54..2211ffd 100644
+--- a/game_shared/material.cpp
++++ b/game_shared/material.cpp
+@@ -591,6 +591,17 @@ void COM_LoadMaterials(const char *path)
+ 				mat->refractScale = Q_atof(token);
+ 				mat->refractScale = bound(0.0f, mat->refractScale, 1.0f);
+ 			}
++			else if (!Q_stricmp(token, "SwayHeight"))
++			{
++				pfile = COM_ParseFile(pfile, token);
++				if (!pfile)
++				{
++					ALERT(at_error, "COM_LoadMaterials: hit EOF while parsing 'SwayHeight'\n");
++					goto getout;
++				}
++
++				mat->swayHeight = Q_atoi(token);
++			}
+ 			else if (!Q_stricmp(token, "ReliefScale"))
+ 			{
+ 				pfile = COM_ParseFile(pfile, token);
+diff --git a/game_shared/material.h b/game_shared/material.h
+index 5c5a4c3..ded1749 100644
+--- a/game_shared/material.h
++++ b/game_shared/material.h
+@@ -46,6 +46,7 @@ struct matdesc_t
+ 	float		refractScale;		// refraction scale for mirrors, windows, water
+ 	float		aberrationScale;	// chromatic abberation
+ 	float		reliefScale;		// relief-mapping
++	float       swayHeight;    // height from model origin for swaying, 0 - disabled
+ 	matdef_t	*effects;			// hit, impact, particle effects etc
+ 	char		name[64];			// just a name of material
+ 	uint32_t	hash;
+-- 
+2.33.0.windows.2
+

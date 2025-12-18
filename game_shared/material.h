@@ -46,6 +46,7 @@ struct matdesc_t
 	float		refractScale;		// refraction scale for mirrors, windows, water
 	float		aberrationScale;	// chromatic abberation
 	float		reliefScale;		// relief-mapping
+	float       swayHeight;    // height from model origin for swaying, 0 - disabled
 	matdef_t	*effects;			// hit, impact, particle effects etc
 	char		name[64];			// just a name of material
 	uint32_t	hash;
