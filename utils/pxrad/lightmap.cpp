@@ -3589,7 +3589,7 @@ void BuildFaceLights( int facenum, int thread )
 					VectorAdd( s->light[j], g_ambient, s->light[j] );
 #ifdef HLRAD_DELUXEMAPPING
 					vec_t avg = VectorAvg( g_ambient );
-					VectorMA( s->deluxe[j], -DIFFUSE_DIRECTION_SCALE * avg, s->normal, s->deluxe[j] );
+					VectorMA( s->deluxe[j], DIFFUSE_DIRECTION_SCALE * avg, s->normal, s->deluxe[j] );
 #endif
 				}
 				break;
