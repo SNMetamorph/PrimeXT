@@ -75,9 +75,9 @@ public:
 	void	UpdateEntityAABB( CBaseEntity *pEntity );
 	bool	UpdateActorPos( CBaseEntity *pEntity );
 	void	SetupWorld( void );	
+	void	FreeWorld( void );
 	void	DebugDraw( void );
 	void	DrawPSpeeds( void );
-	void	FreeAllBodies( void );
 
 	void	TeleportCharacter( CBaseEntity *pEntity );
 	void	TeleportActor( CBaseEntity *pEntity );

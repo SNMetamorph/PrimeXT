@@ -54,9 +54,9 @@ public:
 	virtual void	UpdateEntityAABB( CBaseEntity *pEntity ) = 0;
 	virtual bool	UpdateActorPos( CBaseEntity *pEntity ) = 0;
 	virtual void	SetupWorld( void ) = 0;	
+	virtual void	FreeWorld( void ) = 0;
 	virtual void	DebugDraw( void ) = 0;
 	virtual void	DrawPSpeeds( void ) = 0;
-	virtual void	FreeAllBodies( void ) = 0;
 	virtual void	TeleportCharacter( CBaseEntity *pEntity ) = 0;
 	virtual void	TeleportActor( CBaseEntity *pEntity ) = 0;
 	virtual void	MoveCharacter( CBaseEntity *pEntity ) = 0;

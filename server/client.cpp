@@ -578,7 +578,7 @@ void ServerDeactivate( void )
 	g_serveractive = 0;
 
 	// Peform any shutdown operations here...
-	WorldPhysic->FreeAllBodies();
+	WorldPhysic->FreeWorld();
 
 	// purge all strings
 	g_GameStringPool.FreeAll();

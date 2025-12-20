@@ -86,10 +86,10 @@ public:
 	virtual bool	UpdateEntityTransform( CBaseEntity *pEntity ) { return false; }
 	virtual void	UpdateEntityAABB( CBaseEntity *pEntity ) {}
 	virtual bool	UpdateActorPos( CBaseEntity *pEntity ) { return false; };
-	virtual void	SetupWorld( void ) {}	
+	virtual void	SetupWorld( void ) {}
+	virtual void	FreeWorld( void ) {}
 	virtual void	DebugDraw( void ) {}
 	virtual void	DrawPSpeeds( void ) {}
-	virtual void	FreeAllBodies( void ) {}
 	virtual void	TeleportCharacter( CBaseEntity *pEntity ) {}
 	virtual void	TeleportActor( CBaseEntity *pEntity ) {}
 	virtual void	MoveCharacter( CBaseEntity *pEntity ) {}

@@ -61,32 +61,28 @@ using namespace physx;
 CPhysicPhysX	g_physicPhysX;
 IPhysicLayer	*WorldPhysic = &g_physicPhysX;
 
-CPhysicPhysX::CPhysicPhysX()
+CPhysicPhysX::CPhysicPhysX() : 
+	m_pPhysics(nullptr),
+	m_pFoundation(nullptr),
+	m_pDispatcher(nullptr),
+	m_pScene(nullptr),
+	m_pWorldModel(nullptr),
+	m_pSceneMesh(nullptr),
+	m_pSceneActor(nullptr),
+	m_pDefaultMaterial(nullptr),
+	m_pConveyorMaterial(nullptr),
+	m_pCooking(nullptr),
+	m_pVisualDebugger(nullptr),
+	m_fLoaded(false),
+	m_fDisableWarning(false),
+	m_fWorldChanged(false),
+	m_traceStateChanges(false),
+	m_flAccumulator(0.0)
 {
-	m_pPhysics = nullptr;
-	m_pFoundation = nullptr;
-	m_pDispatcher = nullptr;
-	m_pScene = nullptr;	
-	m_pWorldModel = nullptr;
-	m_pSceneMesh = nullptr;
-	m_pSceneActor = nullptr;
-	m_pDefaultMaterial = nullptr;
-	m_pConveyorMaterial = nullptr;
-	m_pCooking = nullptr;
-	m_pVisualDebugger = nullptr;
-	
-	m_fLoaded = false;
-	m_fDisableWarning = false;
-	m_fWorldChanged = false;
-	m_traceStateChanges = false;
-	m_flAccumulator = 0.0;
-
 	m_szMapName[0] = '\0';
 	p_speeds_msg[0] = '\0';
-
-	m_debugRenderer = std::make_unique<DebugRenderer>();
-	m_eventHandler = std::make_unique<EventHandler>();
-	m_contactModifyCallback = std::make_unique<ContactModifyCallback>();
+	m_worldBounds.minimum = PxVec3(-32768, -32768, -32768);
+	m_worldBounds.maximum = PxVec3(32768, 32768, 32768);
 }
 
 void CPhysicPhysX :: InitPhysic( void )
@@ -143,6 +139,11 @@ void CPhysicPhysX :: InitPhysic( void )
 		ALERT( at_warning, "InitPhysic: failed to initalize extensions\n" );
 	}
 
+	// create objects needed for scene creation
+	m_debugRenderer = std::make_unique<DebugRenderer>();
+	m_eventHandler = std::make_unique<EventHandler>();
+	m_contactModifyCallback = std::make_unique<ContactModifyCallback>();
+
 	// create a scene
 	PxSceneDesc sceneDesc(scale);
 	sceneDesc.simulationEventCallback = m_eventHandler.get();
@@ -150,6 +151,7 @@ void CPhysicPhysX :: InitPhysic( void )
 	sceneDesc.gravity = PxVec3(0.0f, 0.0f, -800.0f);
 	sceneDesc.flags = PxSceneFlag::eENABLE_CCD;
 	sceneDesc.cpuDispatcher = m_pDispatcher;
+	sceneDesc.sanityBounds = m_worldBounds;
 	sceneDesc.filterShader = [](
 		PxFilterObjectAttributes attributes0, PxFilterData filterData0,
 		PxFilterObjectAttributes attributes1, PxFilterData filterData1,
@@ -176,10 +178,7 @@ void CPhysicPhysX :: InitPhysic( void )
 
 			return PxFilterFlag::eDEFAULT;
 		};
-
-	m_worldBounds.minimum = PxVec3(-32768, -32768, -32768);
-	m_worldBounds.maximum = PxVec3(32768, 32768, 32768);
-	sceneDesc.sanityBounds = m_worldBounds;
+	
 	m_pScene = m_pPhysics->createScene(sceneDesc);
 
 	if (DebugEnabled())
@@ -220,6 +219,10 @@ void CPhysicPhysX :: FreePhysic( void )
 
 	PxCloseExtensions();
 	if (m_pFoundation) m_pFoundation->release();
+
+	m_debugRenderer.reset();
+	m_eventHandler.reset();
+	m_contactModifyCallback.reset();
 
 	m_pScene = nullptr;
 	m_pCooking = nullptr;
@@ -2278,8 +2281,9 @@ void CPhysicPhysX::SetupWorld(void)
 
 	m_pScene->addActor(*pActor);
 	m_pSceneActor = pActor;
-	m_fLoaded = true;
 	m_worldBounds = pActor->getWorldBounds();
+	m_eventHandler->onWorldInit();
+	m_fLoaded = true;
 }
 	
 void CPhysicPhysX :: DebugDraw( void )
@@ -2344,9 +2348,9 @@ void CPhysicPhysX :: DrawPSpeeds( void )
 	}
 }
 
-void CPhysicPhysX :: FreeAllBodies()
+void CPhysicPhysX :: FreeWorld()
 {
-	if( !m_pScene ) 
+	if( !m_pScene )
 		return;
 
 	PxActorTypeFlags actorFlags = (
@@ -2368,7 +2372,9 @@ void CPhysicPhysX :: FreeAllBodies()
 		m_pScene->removeActor(*actor);
 		actor->release();
 	}
-	m_pSceneActor = NULL;
+
+	m_eventHandler->onWorldShutdown();
+	m_pSceneActor = nullptr;
 }
 
 void CPhysicPhysX :: TeleportCharacter( CBaseEntity *pEntity )
