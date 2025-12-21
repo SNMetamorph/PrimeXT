@@ -1268,7 +1268,7 @@ void *CPhysicPhysX::CreateTriggerFromEntity(CBaseEntity *pEntity)
 	PxBoxGeometry boxGeometry;
 	boxGeometry.halfExtents = pEntity->pev->size / 2.0f;
 	Vector centerOrigin = pEntity->pev->mins + pEntity->pev->size / 2.0f;
-	PxRigidStatic *pActor = m_pPhysics->createRigidStatic(PxTransform(centerOrigin));
+	PxRigidDynamic *pActor = m_pPhysics->createRigidDynamic(PxTransform(centerOrigin));
 	PxShape *pShape = PxRigidActorExt::createExclusiveShape(*pActor, boxGeometry, *m_pDefaultMaterial);
 
 	if (!pActor)
