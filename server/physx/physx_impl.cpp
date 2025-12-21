@@ -2129,7 +2129,10 @@ void CPhysicPhysX::HandleEvents()
 	{
 		edict_t *entity = reinterpret_cast<edict_t*>(pair.objectActor->userData);
 		physx::PxRigidDynamic *dynamicActor = pair.objectActor->is<PxRigidDynamic>();
-		physx::PxRigidStatic *triggerActor = pair.waterTriggerActor->is<PxRigidStatic>();
+		physx::PxRigidDynamic *triggerActor = pair.waterTriggerActor->is<PxRigidDynamic>();
+
+		if (!entity || !dynamicActor || !triggerActor)
+			continue;
 
 		if (!FBitSet(dynamicActor->getRigidBodyFlags(), PxRigidBodyFlag::eKINEMATIC))
 		{
