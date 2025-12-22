@@ -142,7 +142,6 @@ bool TEX_CheckMiptex( const char *name )
 bool TEX_LoadMiptex( const char *name, mipentry_t *tex )
 {
 	char		texname[64];
-	shaderInfo_t	*shader;
 
 	Q_snprintf( texname, sizeof( texname ), "%s.mip", name );
 	Q_strncpy( tex->name, name, sizeof( tex->name ));
@@ -176,13 +175,13 @@ bool TEX_LoadMiptex( const char *name, mipentry_t *tex )
 		return true;
 	}
 #endif
-	shader = ShaderInfoForShader( name );
-
 	// maybe it's tga path?
-	if( FS_FileExists( shader->imagePath, false ))
+	Q_snprintf( texname, sizeof( texname ), "textures/%s.tga", name );
+
+	if( FS_FileExists(texname, false ))
 	{
 		// texture is loaded, wad is not used
-		TEX_LoadTGA( shader->imagePath, tex );
+		TEX_LoadTGA( texname, tex );
 
 		// FIXME: add loader for dds
 		return true;

@@ -9,7 +9,6 @@
 ****/
 
 #include "csg.h"
-#include "aselib.h"
 #include "imagelib.h"
 
 /*
@@ -56,55 +55,3 @@ void TEX_LoadTGA( const char *texname, mipentry_t *tex )
 //	Msg( "%s width %d, height %d\n", texname, tex->width, tex->height );
 }
 
-/*
-============
-InsertASEModel
-
-Convert a model entity to raw geometry surfaces and insert it in the tree
-============
-*/
-bool InsertASEModel( const char *modelName, mapent_t *mapent, short entindex, short faceinfo )
-{
-	side_t		modelSide;
-	int		numSurfaces;
-	const char	*name;
-	polyset_t		*pset;
-	int		numFrames;
-
-//return false;	// temporary disabled
-
-	// load the model
-	if( !ASE_Load( modelName, false ))
-		return false;
-
-	// each ase surface will become a new bsp surface
-	numSurfaces = ASE_GetNumSurfaces();
-
-	// expand, translate, and rotate the vertexes
-	// swap all the surfaces
-	for( int i = 0; i < numSurfaces; i++ )
-	{
-		name = ASE_GetSurfaceName( i );
-
-		pset = ASE_GetSurfaceAnimation( i, &numFrames, -1, -1, -1 );
-		if( !name || !pset ) continue;
-
-		memset( &modelSide, 0, sizeof( modelSide ));
-
-		Q_strncpy( modelSide.name, pset->materialname, sizeof( modelSide.name ));
-		modelSide.shader = ShaderInfoForShader( pset->materialname );
-		modelSide.contents = CONTENTS_EMPTY;
-		modelSide.faceinfo = faceinfo;
-
-		// emit the vertexes
-		for( int j = 0; j < pset->numtriangles; j++ )
-		{
-			poly_t	*tri = &pset->triangles[j];
-
-			MakeBrushFor3Points( mapent, &modelSide, entindex, &tri->verts[0], &tri->verts[1], &tri->verts[2] );
-		}
-	}
-
-	ASE_Free();
-	return true;
-}

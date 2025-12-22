@@ -9,7 +9,6 @@
 ****/
 
 #include "csg.h"
-#include "aselib.h"
 
 // don't modify these!
 #define MIN_PATCH_EDGE_LENGTH		(1.0 / (vec_t)PATCH_SUBDIVISION)
@@ -924,7 +923,6 @@ void ParsePatch( mapent_t *mapent, short entindex, short faceinfo, short &brush_
 
 	memset( &patchSide, 0, sizeof( patchSide ));
 	Q_strncpy( patchSide.name, token, sizeof( patchSide.name ));
-	patchSide.shader = ShaderInfoForShader( token );
 	SetBits( patchSide.flags, FSIDE_PATCH );
 	patchSide.contents = CONTENTS_EMPTY;
 	patchSide.faceinfo = faceinfo;
