@@ -17,7 +17,6 @@
 #include "polylib.h"
 #include "threads.h"
 #include "bspfile.h"
-#include "shaders.h"
 #include "port.h"
 #include "utlarray.h"
 #include <stdint.h>
@@ -98,10 +97,9 @@ typedef union
 
 typedef struct side_s
 {
-	char		name[64];		// path to texture or shader
+	char		name[64];		// path to texture
 	vec_t		vecs[2][4];	// texture vectors
 	vec_t		planepts[3][3];	// source points
-	shaderInfo_t	*shader;		// shader settings
 	short		faceinfo;		// terrain stuff
 	int		planenum;		// plane from points
 	int		contents;		// side contents
@@ -224,10 +222,18 @@ void FreeHullFaces( void );
 // patch.c
 void ParsePatch( mapent_t *mapent, short entindex, short faceinfo, short &brush_type );
 
+typedef struct
+{
+	vec3_t	point;
+	vec2_t	coord;
+} trivert_t;
+
+bool MakeBrushFor3Points(mapent_t *mapent, side_t *mainSide, short entindex, trivert_t *a, trivert_t *b, trivert_t *c);
+bool MakeBrushFor4Points(mapent_t *mapent, side_t *mainSide, short entindex, trivert_t *a, trivert_t *b, trivert_t *c, trivert_t *d);
+
 //=============================================================================
 // utils.c
 
-bool InsertASEModel( const char *modelName, mapent_t *mapent, short entindex, short faceinfo );
 void TEX_LoadTGA( const char *texname, mipentry_t *tex );
 
 // map.c

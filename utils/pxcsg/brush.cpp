@@ -295,8 +295,7 @@ void BrushCheckSides( mapent_t *mapent, brush_t *b )
 		if( FBitSet( s->flags, FSIDE_NODRAW ))
 			nodraw_faces++;
 
-		// count only non-shaders skip
-		if( FBitSet( s->flags, FSIDE_SKIP ) && FBitSet( s->shader->flags, FSHADER_DEFAULTED ))
+		if( FBitSet( s->flags, FSIDE_SKIP ) )
 			skip_faces++;
 
 		if( FBitSet( s->flags, FSIDE_HINT|FSIDE_SOLIDHINT ))

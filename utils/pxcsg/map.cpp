@@ -367,7 +367,7 @@ static void SetupSideContents( brush_t *brush, side_t *side )
 =================
 SetupSideParams
 
-load shader, apply side flags
+Apply side flags
 =================
 */
 static void SetupSideParams( mapent_t *mapent, brush_t *brush, side_t *side )
@@ -379,50 +379,6 @@ static void SetupSideParams( mapent_t *mapent, brush_t *brush, side_t *side )
 		side->name[0] = '!';
 
 	SetupSideContents( brush, side );
-
-	// try to find shader for this side
-	side->shader = ShaderInfoForShader( side->name );
-
-	// no user shader specified, ignore it
-	if( !FBitSet( side->shader->flags, FSHADER_DEFAULTED ))
-	{
-		// update contents from shader
-		if( side->shader->contents )
-			side->contents = side->shader->contents;
-
-		if( side->shader->contents == CONTENTS_SKY )
-			SetBits( side->flags, FSIDE_SKY );
-
-		if( FBitSet( side->shader->flags, FSHADER_NOCLIP ))
-			SetBits( brush->flags, FBRUSH_NOCLIP );
-
-		if( FBitSet( side->shader->flags, FSHADER_TRIGGER ))
-			SetBits( brush->flags, FBRUSH_CLIPONLY );
-
-		if( FBitSet( side->shader->flags, FSHADER_NODRAW ))
-			SetBits( side->flags, FSIDE_NODRAW );
-
-		if( FBitSet( side->shader->flags, FSHADER_DETAIL ))
-			brush->detaillevel = 1;
-
-		if( FBitSet( side->shader->flags, FSHADER_NOLIGHTMAP ))
-			SetBits( side->flags, FSIDE_NOLIGHTMAP );
-
-		if( FBitSet( side->shader->flags, FSHADER_SKIP ))
-			SetBits( side->flags, FSIDE_SKIP );
-
-		if( FBitSet( side->shader->flags, FSHADER_CLIP ))
-			SetBits( brush->flags, FBRUSH_CLIPONLY );
-
-		if( FBitSet( side->shader->flags, FSHADER_HINT ))
-		{
-			Q_strncpy( side->name, "HINT", sizeof( side->name ));
-			SetBits( side->flags, FSIDE_HINT );
-		}
-
-		if( FBitSet( side->shader->flags, FSHADER_REMOVE ))
-			SetBits( brush->flags, FBRUSH_REMOVE );
-	}
 
 	// don't compute lightmaps for sky and triggers
 	if( side->contents == CONTENTS_SKY )
@@ -693,7 +649,7 @@ static void SetupTextureVectors( mapent_t *mapent, brush_t *brush, side_t *side,
 		int	width, height;
 		vec3_t	axis[2];
 
-		TEX_GetSize( side->shader->imagePath, &width, &height );
+		TEX_GetSize( side->name, &width, &height );
 		TextureAxisFromSide( side, axis[0], axis[1], true );
 
 		side->vecs[0][0] = width * ((axis[0][0] * tex_vects.matrix[0][0]) + (axis[1][0] * tex_vects.matrix[0][1]));
@@ -1258,37 +1214,11 @@ bool IncludeMapFile( const char *filename, CUtlArray<mapent_t> *entities, int in
 	char		path[256];
 	int		i;
 
-	// only .ase and .map is allowed
-	if( Q_stricmp( ext, "ase" ) && Q_stricmp( ext, "map" ))
+	// only .map is allowed
+	if( Q_stricmp( ext, "map" ))
 		return false;
 
 	int spawnflags = IntForKey((entity_t *)mapent, "spawnflags" );
-
-	if( InsertASEModel( filename, mapent, index, -1 ))
-	{
-		MsgDev( D_INFO, "include: %s\n", filename );
-
-		for( int i = 0; i < mapent->brushes.Count(); i++ )
-		{
-			brush_t	*b = &mapent->brushes[i];
-
-			if( !FBitSet( spawnflags, 2 ))
-				SetBits( b->flags, FBRUSH_NOCLIP );
-			SetBits( b->flags, FBRUSH_NOCSG );
-		}
-
-		// all the remaining brushes it our included model. transform it
-		EntityApplyTransform( mapent, mapent, true, false, -90.0 );
-
-		// find the corresponding entity which we send brushes from this model
-		target = FindTargetMapEntity( entities, ValueForKey((entity_t *)mapent, "target" ));
-		if( !target ) target = &entities->Element( 0 ); // move to world as default
-
-		// moving our transformed brushes into supposed entity
-		MoveBrushesToEntity( entities, target, mapent );
-
-		return true;
-	}
 
 	Q_strncpy( path, filename, sizeof( path ));
 	COM_ReplaceExtension( path, ".map" );
