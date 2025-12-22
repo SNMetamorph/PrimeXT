@@ -173,6 +173,7 @@ bool TEX_LoadMiptex( const char *name, mipentry_t *tex )
 
 	if( nonwadtex )
 	{
+		tex->datasize = nonwadtex->size;
 		tex->width = nonwadtex->width;
 		tex->height = nonwadtex->height;
 		tex->wadnum = -1; // wad is not used
