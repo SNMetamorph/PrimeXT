@@ -231,11 +231,6 @@ typedef struct
 bool MakeBrushFor3Points(mapent_t *mapent, side_t *mainSide, short entindex, trivert_t *a, trivert_t *b, trivert_t *c);
 bool MakeBrushFor4Points(mapent_t *mapent, side_t *mainSide, short entindex, trivert_t *a, trivert_t *b, trivert_t *c, trivert_t *d);
 
-//=============================================================================
-// utils.c
-
-void TEX_LoadTGA( const char *texname, mipentry_t *tex );
-
 // map.c
 
 void LoadMapFile( const char *filename );

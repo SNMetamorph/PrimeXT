@@ -18,13 +18,13 @@ list(APPEND DIR_SOURCES
 	"../common/wadfile.cpp"
 	"../common/zone.cpp"
 	"../common/crashhandler.cpp"
+	"${CMAKE_SOURCE_DIR}/public/crclib.cpp"
 	"brush.cpp"
 	"csg4.cpp"
 	"map.cpp"
 	"patch.cpp"
 	"qcsg.cpp"
 	"textures.cpp"
-	"utils.cpp"
 )
 
 # add version info
@@ -108,6 +108,11 @@ else()
 		dbghelp
 	)
 endif()
+
+# link dependency libraries
+target_link_libraries(${PROJECT_NAME} PRIVATE
+	imagelib
+)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)
