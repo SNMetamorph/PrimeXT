@@ -10,6 +10,7 @@
 
 #include "csg.h"
 #include "compatibility_mode.h"
+#include "imagelib.h"
 #include <string>
 #include <cstring>
 #include <unordered_map>
@@ -130,10 +131,10 @@ bool TEX_CheckMiptex( const char *name )
 			return true;
 	}
 
-	// maybe it's tga path?
-	Q_snprintf( texname, sizeof( texname ), "textures/%s.tga", name );
+	// maybe it has non-quake format and lies in textures folder?
+	Q_snprintf( texname, sizeof( texname ), "textures/%s", name );
 
-	if( FS_FileExists( texname, false ))
+	if( COM_LoadImage(texname, false, FS_LoadFile) )
 		return true;
 
 	return false;
@@ -142,6 +143,7 @@ bool TEX_CheckMiptex( const char *name )
 bool TEX_LoadMiptex( const char *name, mipentry_t *tex )
 {
 	char		texname[64];
+	rgbdata_t	*nonwadtex;
 
 	Q_snprintf( texname, sizeof( texname ), "%s.mip", name );
 	Q_strncpy( tex->name, name, sizeof( tex->name ));
@@ -163,27 +165,19 @@ bool TEX_LoadMiptex( const char *name, mipentry_t *tex )
 			return true;
 		}
 	}
-#if 0	// this is no longer support by engine
-	// wadpath is not specified
-	if( FS_FileExists( texname, false ))
-	{
-		// texture is loaded, wad is used
-		tex->data = FS_LoadFile( texname, &tex->datasize, false );
-		tex->width = ((miptex_t *)tex->data)->width;
-		tex->height = ((miptex_t *)tex->data)->height;
-		tex->wadnum = -1; // wad where the tex is located
-		return true;
-	}
-#endif
-	// maybe it's tga path?
-	Q_snprintf( texname, sizeof( texname ), "textures/%s.tga", name );
 
-	if( FS_FileExists(texname, false ))
-	{
-		// texture is loaded, wad is not used
-		TEX_LoadTGA( texname, tex );
+	// maybe it has non-quake format and lies in textures folder?
+	Q_snprintf(texname, sizeof(texname), "textures/%s", name);
 
-		// FIXME: add loader for dds
+	nonwadtex = COM_LoadImage(texname, true, FS_LoadFile);
+
+	if( nonwadtex )
+	{
+		tex->datasize = nonwadtex->size;
+		tex->width = nonwadtex->width;
+		tex->height = nonwadtex->height;
+		tex->wadnum = -1; // wad is not used
+		Msg("%s width %d, height %d\n", texname, tex->width, tex->height);
 		return true;
 	}
 
