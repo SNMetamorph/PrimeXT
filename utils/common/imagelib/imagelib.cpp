@@ -1809,7 +1809,8 @@ bool Image_SavePNG( const char *name, rgbdata_t *pix )
 	if( !pix->buffer )
 		return false;
 
-	pixel_size = 4;
+	pixel_size = (pix->flags & IMAGE_HAS_ALPHA) ? 4 : 3;
+
 	rowsize = pix->width * pixel_size;
 
 	// get filtered image size
@@ -1819,16 +1820,35 @@ bool Image_SavePNG( const char *name, rgbdata_t *pix )
 	// apply adaptive filter to image
 	for( y = 0; y < pix->height; y++ )
 	{
-		in = pix->buffer + y * pix->width * pixel_size;
 		*out++ = PNG_F_NONE;
-		rowend = in + rowsize;
-		for( ; in < rowend; in += pixel_size )
+		
+		if( pix->flags & IMAGE_QUANTIZED)
 		{
-			*out++ = in[0];
-			*out++ = in[1];
-			*out++ = in[2];
-			if( pix->flags & IMAGE_HAS_ALPHA )
-				*out++ = in[3];
+			in = pix->buffer + y * pix->width;
+			rowend = in + pix->width;
+			for (; in < rowend; in++)
+			{
+				*out++ = pix->palette[*in * 4 + 0];
+				*out++ = pix->palette[*in * 4 + 1];
+				*out++ = pix->palette[*in * 4 + 2];
+
+				if (pix->flags & IMAGE_HAS_ALPHA)
+					*out++ = pix->palette[*in * 4 + 3];
+			}
+		}
+		else
+		{
+			in = pix->buffer + y * pix->width * pixel_size;
+			rowend = in + rowsize;
+			for( ; in < rowend; in += pixel_size )
+			{
+				*out++ = in[0];
+				*out++ = in[1];
+				*out++ = in[2];
+
+				if( pix->flags & IMAGE_HAS_ALPHA )
+					*out++ = in[3];
+			}
 		}
 	}
 
