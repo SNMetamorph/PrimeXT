@@ -80,4 +80,29 @@ enum
 #define DXT_ENCODE_ALPHA_SDF		0x1A04	// signed distance field
 #define DXT_ENCODE_NORMAL_AG_PARABOLOID	0x1A07	// paraboloid projection
 
+#define Swap32( x ) (((uint32_t)((( x ) & 255 ) << 24 )) + ((uint32_t)(((( x ) >> 8 ) & 255 ) << 16 )) + ((uint32_t)((( x ) >> 16 ) & 255 ) << 8 ) + ((( x ) >> 24 ) & 255 ))
+#define Swap16( x ) ((uint16_t)((((uint16_t)( x ) >> 8 ) & 255 ) + (((uint16_t)( x ) & 255 ) << 8 )))
+#define Swap32Store( x ) ( x = Swap32( x ))
+#define Swap16Store( x ) ( x = Swap16( x ))
+
+#ifdef XASH_BIG_ENDIAN
+	#define LittleLong( x )    Swap32( x )
+	#define LittleShort( x )   Swap16( x )
+	#define LittleLongSW( x )  Swap32Store( x )
+	#define LittleShortSW( x ) Swap16Store( x )
+	#define LittleFloat( x )   SwapFloat( x )
+	#define BigLong( x )  ( x )
+	#define BigShort( x ) ( x )
+	#define BigFloat( x ) ( x )
+#else
+	#define LittleLong( x )  ( x )
+	#define LittleShort( x )  ( x )
+	#define LittleFloat( x )  ( x )
+	#define LittleLongSW( x )
+	#define LittleShortSW( x )
+	#define BigLong( x )  Swap32( x )
+	#define BigShort( x ) Swap16( x )
+	#define BigFloat( x ) SwapFloat( x )
+#endif
+
 #endif // BASETYPES_H
