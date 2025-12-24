@@ -280,6 +280,7 @@ static uniformTable_t glsl_uniformTable[] =
 { "u_LerpFactor",		UT_LERPFACTOR,		0 },
 { "u_RefractScale",		UT_REFRACTSCALE,		0 },
 { "u_ReflectScale",		UT_REFLECTSCALE,		0 },
+{ "u_SwayHeight",		UT_SWAYHEIGHT,			0 },
 { "u_AberrationScale",	UT_ABERRATIONSCALE,		0 },
 { "u_BoxMins",		UT_BOXMINS,		0 },
 { "u_BoxMaxs",		UT_BOXMAXS,		0 },

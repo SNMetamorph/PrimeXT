@@ -43,6 +43,8 @@ uniform float	u_Smoothness;
 uniform vec3	u_LightDiffuse;
 uniform vec2	u_LightShade; // x is ambientlight, y is shadelight
 uniform vec3	u_LightDir;
+uniform float	u_SwayHeight;
+uniform float	u_RealTime;
 
 uniform float	u_LightStyleValues[MAX_LIGHTSTYLES];
 uniform float	u_LightGamma;
@@ -76,6 +78,13 @@ varying mat3	var_MatrixTBN;
 void main( void )
 {
 	vec4 position = vec4( attr_Position, 1.0 );
+
+	if( bool( u_SwayHeight != 0.0 ) && position.z > u_SwayHeight )
+    {
+        position.x += position.z * 0.025 * sin( position.z + u_RealTime * 0.25 );
+        position.y += position.z * 0.025 * cos( position.z + u_RealTime * 0.25 );
+    }
+
 	mat4 boneMatrix = ComputeSkinningMatrix();
 	vec4 worldpos = boneMatrix * position;
 

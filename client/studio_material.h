@@ -38,6 +38,7 @@ typedef struct mstudiomat_s
 	float		refractScale;		// refraction scale for mirrors, windows, water
 	float		aberrationScale;		// chromatic abberation
 	float		reliefScale;		// relief-mapping
+	float       swayHeight;    // height from model origin for swaying, 0 - disabled
 	struct matdef_t	*effects;			// hit, impact, particle effects etc
 	int		flags;			// mstudiotexture_t->flags
 

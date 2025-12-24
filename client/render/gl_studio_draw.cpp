@@ -3704,6 +3704,9 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force, boo
 		case UT_LIGHTTHRESHOLD:
 			u->SetValue( tr.light_threshold );
 			break;
+		case UT_SWAYHEIGHT:
+			u->SetValue(mat->swayHeight);
+			break;
 		default:
 			ALERT( at_error, "%s: unhandled uniform %s\n", RI->currentshader->name, u->name );
 			break;

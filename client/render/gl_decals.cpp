@@ -1441,6 +1441,9 @@ void R_SetDecalUniforms( brushdecal_t *decal )
 			height = decal->texinfo->gl_heightmap_id.GetHeight();
 			u->SetValue( (float)width, (float)height, desc->reliefScale, cv_shadow_offset->value );
 			break;
+		case UT_SWAYHEIGHT:
+			u->SetValue(desc->swayHeight);
+			break;
 		default:
 			ALERT( at_error, "%s: unhandled uniform %s\n", RI->currentshader->name, u->name );
 			break;
