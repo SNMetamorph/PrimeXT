@@ -1869,16 +1869,16 @@ bool Image_SavePNG( const char *name, rgbdata_t *pix )
 	memcpy( png_hdr.sign, png_sign, sizeof( png_sign ) );
 
 	// write IHDR chunk length
-	png_hdr.ihdr_len = htonl( ihdr_len );
+	png_hdr.ihdr_len = BigLong( ihdr_len );
 
 	// write IHDR chunk signature
 	memcpy( png_hdr.ihdr_sign, ihdr_sign, sizeof( ihdr_sign ) );
 
 	// write image width
-	png_hdr.ihdr_chunk.width = htonl( pix->width );
+	png_hdr.ihdr_chunk.width = BigLong( pix->width );
 
 	// write image height
-	png_hdr.ihdr_chunk.height = htonl( pix->height );
+	png_hdr.ihdr_chunk.height = BigLong( pix->height );
 
 	// write image bitdepth
 	png_hdr.ihdr_chunk.bitdepth = 8;
@@ -1901,7 +1901,7 @@ bool Image_SavePNG( const char *name, rgbdata_t *pix )
 	crc32 = CRC32_Final( crc32 );
 
 	// write IHDR chunk CRC
-	png_hdr.ihdr_crc32 = htonl( crc32 );
+	png_hdr.ihdr_crc32 = BigLong( crc32 );
 
 	out = buffer = (byte *)Mem_Alloc( outsize );
 
@@ -1941,7 +1941,7 @@ bool Image_SavePNG( const char *name, rgbdata_t *pix )
 	out += sizeof( png_t );
 
 	// convert IDAT chunk length to big endian
-	big_idat_len = htonl( idat_len );
+	big_idat_len = BigLong( idat_len );
 
 	// write IDAT chunk length
 	memcpy( out, &big_idat_len, sizeof( idat_len ) );
@@ -1960,7 +1960,7 @@ bool Image_SavePNG( const char *name, rgbdata_t *pix )
 	out += idat_len;
 
 	// write IDAT chunk CRC
-	png_ftr.idat_crc32 = htonl( crc32 );
+	png_ftr.idat_crc32 = BigLong( crc32 );
 
 	// write IEND chunk length
 	png_ftr.iend_len = 0;
@@ -1969,7 +1969,7 @@ bool Image_SavePNG( const char *name, rgbdata_t *pix )
 	memcpy( png_ftr.iend_sign, iend_sign, sizeof( iend_sign ) );
 
 	// write IEND chunk CRC
-	png_ftr.iend_crc32 = htonl( iend_crc32 );
+	png_ftr.iend_crc32 = BigLong( iend_crc32 );
 
 	// write PNG footer to buffer
 	memcpy( out, &png_ftr, sizeof( png_ftr ) );
