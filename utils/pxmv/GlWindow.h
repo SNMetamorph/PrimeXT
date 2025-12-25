@@ -87,7 +87,7 @@ public:
 	void setControlPanel( ControlPanel *panel ) { d_cpl = panel; }
 
 	mxImage *readBmpFromBuffer(const byte *buffer, size_t size);
-	mxImage *readBmpFromFile(const char *filename);
+	mxImage *readTextureFromFile(const char *filename);
 	void imageFree(mxImage *image);
 
 	// ACCESSORS

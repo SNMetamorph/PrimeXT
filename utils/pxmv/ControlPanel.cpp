@@ -773,29 +773,25 @@ ControlPanel::handleEvent (mxEvent *event)
 
 		case IDC_IMPORTTEXTURE:
 		{
-			char *ptr = (char *) mxGetOpenFileName (this, "", "Windows Bitmap (*.bmp)");
+			char *ptr = (char *) mxGetOpenFileName (this, "", "Any supported texture (*.bmp);;(*.tga);;(*.dds);;(*.png)");
 			if (!ptr)
 				break;
 
 			char filename[256];
-			char ext[16];
 
 			strcpy (filename, ptr);
-			strcpy (ext, mx_getextension (filename));
-			if (mx_strcasecmp (ext, ".bmp"))
-				strcat (filename, ".bmp");
 
-			mxImage *image = d_GlWindow->readBmpFromFile(filename);
+			mxImage *image = d_GlWindow->readTextureFromFile(filename);
 			if (!image)
 			{
-				mxMessageBox (this, "Error loading .BMP texture.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
+				mxMessageBox (this, "Error loading texture.", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 				return 1;
 			}
 
 			if (!image->palette)
 			{
 				d_GlWindow->imageFree(image);
-				mxMessageBox (this, "Error loading .BMP texture.  Must be 8-bit!", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
+				mxMessageBox (this, "Error loading texture. Must be 8-bit!", APP_TITLE_STR, MX_MB_OK | MX_MB_ERROR);
 				return 1;
 			}
 

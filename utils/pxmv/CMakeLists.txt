@@ -17,6 +17,7 @@ list(APPEND DIR_SOURCES
 	"../common/file_system.cpp"
 	"../common/cmdlib.cpp"
 	"../common/zone.cpp"
+	"${CMAKE_SOURCE_DIR}/public/crclib.cpp"
 	"ControlPanel.cpp"
 	"FileAssociation.cpp"
     "GlWindow.cpp"
@@ -45,6 +46,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"../../common"
 	"../../public"
 	"../common"
+	"../common/imagelib"
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
@@ -85,6 +87,7 @@ endif()
 # link dependencies libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE
 	mxtk
+	imagelib
 )
 
 find_package(RapidJSON CONFIG REQUIRED)
