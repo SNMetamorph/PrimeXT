@@ -37,6 +37,7 @@
 #include "muzzle1.h"
 #include "muzzle2.h"
 #include "muzzle3.h"
+#include "imagelib.h"
 
 extern bool g_bStopPlaying;
 extern bool bUseWeaponOrigin;
@@ -991,214 +992,82 @@ GetOut:
 	return image;
 }
 
-
-mxImage *GlWindow::readBmpFromFile(const char *filename)
+bool ImageLib_Alloc(mxImage *image, int w, int h, int pixelSize) 
 {
-	int i;
-	FILE *pfile = 0;
-	mxBitmapFileHeader bmfh;
-	mxBitmapInfoHeader bmih;
-	mxBitmapRGBQuad rgrgbPalette[256];
-	int cbBmpBits;
-	byte *pbBmpBits;
-	byte *pb, *pbHold;
-	int cbPalBytes;
-	int biTrueWidth;
+	if (image->data)
+		Mem_Free(image->data);
+
+	if (image->palette)
+		Mem_Free(image->palette);
+
+	image->data = Mem_Alloc(w * h * pixelSize / 8);
+	if (!image->data)
+		return false;
+
+	// allocate a palette for 8-bit images
+	if (pixelSize == 8)
+	{
+		image->palette = Mem_Alloc(3 * 256);
+		if (!image->palette)
+		{
+			//delete[] data;
+			Mem_Free(image->data);
+			return false;
+		}
+	}
+	else {
+		image->palette = nullptr;
+	}
+
+	image->width = w;
+	image->height = h;
+	image->bpp = pixelSize;
+	return true;
+};
+
+mxImage *GlWindow::readTextureFromFile(const char *filename)
+{
 	mxImage *image = nullptr;
+	rgbdata_t *imageData = nullptr;
 
-	// File exists?
-	if ((pfile = fopen (filename, "rb")) == 0)
-		return 0;
-	
-	// Read file header
-	if (fread(&bmfh, sizeof bmfh, 1/*count*/, pfile) != 1) {
-		if (pfile) {
-			fclose(pfile);
-		}
-		return nullptr;
-	}
-
-	// Bogus file header check
-	if (!(bmfh.bfReserved1 == 0 && bmfh.bfReserved2 == 0)) {
-		if (pfile) {
-			fclose(pfile);
-		}
-		return nullptr;
-	}
-
-	// Read info header
-	if (fread(&bmih, sizeof bmih, 1/*count*/, pfile) != 1) {
-		if (pfile) {
-			fclose(pfile);
-		}
-		return nullptr;
-	}
-
-	// Bogus info header check
-	if (!(bmih.biSize == sizeof bmih && bmih.biPlanes == 1)) {
-		if (pfile) {
-			fclose(pfile);
-		}
-		return nullptr;
-	}
-
-	// Bogus bit depth?  Only 8-bit supported.
-	if (bmih.biBitCount != 8) {
-		if (pfile) {
-			fclose(pfile);
-		}
-		return nullptr;
-	}
-
-	// Bogus compression?  Only non-compressed supported.
-	if (bmih.biCompression != 0) { //BI_RGB) 
-		if (pfile) {
-			fclose(pfile);
-		}
-		return nullptr;
-	}
-
-	// Figure out how many entires are actually in the table
-	if (bmih.biClrUsed == 0)
+	imageData = COM_LoadImage(filename, true);
+	if (!imageData)
 	{
-		bmih.biClrUsed = 256;
-		cbPalBytes = (1 << bmih.biBitCount) * sizeof (mxBitmapRGBQuad);
-	}
-	else 
-	{
-		cbPalBytes = bmih.biClrUsed * sizeof (mxBitmapRGBQuad);
+		return nullptr; // File didn't exist, or can't be reached
 	}
 
-	// Read palette (bmih.biClrUsed entries)
-	if (fread(rgrgbPalette, cbPalBytes, 1/*count*/, pfile) != 1) {
-		if (pfile) {
-			fclose(pfile);
-		}
-		return nullptr;
+	imageData = Image_Quantize(imageData);
+	if (!(imageData->flags & IMAGE_QUANTIZED))
+	{
+		return nullptr; // Quantizer failed
 	}
 
 	image = (mxImage *)Mem_Alloc(sizeof(mxImage));
 	new (image) mxImage();
 
-	if (!image) 
+	if (!image)
 	{
-		if (pfile) {
-			fclose(pfile);
-		}
-		return nullptr;
+		return nullptr; // image can't be allocated for some reason
 	}
 
-	auto imageAlloc = [](mxImage *image, int w, int h, int pixelSize) {
-		if (image->data)
-			Mem_Free(image->data);
-
-		if (image->palette)
-			Mem_Free(image->palette);
-
-		image->data = Mem_Alloc(w * h * pixelSize / 8);
-		if (!image->data)
-			return false;
-
-		// allocate a palette for 8-bit images
-		if (pixelSize == 8)
-		{
-			image->palette = Mem_Alloc(3 * 256);
-			if (!image->palette)
-			{
-				//delete[] data;
-				Mem_Free(image->data);
-				return false;
-			}
-		}
-		else {
-			image->palette = nullptr;
-		}
-
-		image->width = w;
-		image->height = h;
-		image->bpp = pixelSize;
-		return true;
-	};
-
-	if (!imageAlloc(image, bmih.biWidth, bmih.biHeight, 8))
+	if (!ImageLib_Alloc(image, imageData->width, imageData->height, 8))
 	{
 		imageFree(image);
-		if (pfile) {
-			fclose(pfile);
-		}
 		return nullptr;
 	}
 
-	pb = (byte *) image->palette;
+	byte *paletteBuffer = (byte *) image->palette;
 
 	// Copy over used entries
-	for (i = 0; i < (int) bmih.biClrUsed; i++)
+	for (int i = 0; i < 256; i++)
 	{
-		*pb++ = rgrgbPalette[i].rgbRed;
-		*pb++ = rgrgbPalette[i].rgbGreen;
-		*pb++ = rgrgbPalette[i].rgbBlue;
+		*paletteBuffer++ = imageData->palette[i * 4 + 0];
+		*paletteBuffer++ = imageData->palette[i * 4 + 1];
+		*paletteBuffer++ = imageData->palette[i * 4 + 2];
 	}
 
-	// Fill in unused entires will 0,0,0
-	for (i = bmih.biClrUsed; i < 256; i++) 
-	{
-		*pb++ = 0;
-		*pb++ = 0;
-		*pb++ = 0;
-	}
-
-	// Read bitmap bits (remainder of file)
-	cbBmpBits = bmfh.bfSize - ftell (pfile);
-
-	pbHold = pb = (byte *) Mem_Alloc(cbBmpBits * sizeof (byte));
-	if (pb == 0)
-	{
-		imageFree(image);
-		if (pfile) {
-			fclose(pfile);
-		}
-		return nullptr;
-	}
-
-	if (fread (pb, cbBmpBits, 1/*count*/, pfile) != 1)
-	{
-		Mem_Free(pbHold);
-		imageFree(image);
-		if (pfile) {
-			fclose(pfile);
-		}
-		return nullptr;
-	}
-/*
-	pbBmpBits = malloc(cbBmpBits);
-	if (pbBmpBits == 0)
-	{
-		free (pb);
-		free (pbPal);
-		if (pfile) {
-			fclose(pfile);
-		}
-		return nullptr;
-	}
-*/
-	pbBmpBits = (byte *) image->data;
-
-	// data is actually stored with the width being rounded up to a multiple of 4
-	biTrueWidth = (bmih.biWidth + 3) & ~3;
-
-	// reverse the order of the data.
-	pb += (bmih.biHeight - 1) * biTrueWidth;
-	for(i = 0; i < bmih.biHeight; i++)
-	{
-		memmove (&pbBmpBits[bmih.biWidth * i], pb, bmih.biWidth);
-		pb -= biTrueWidth;
-	}
-
-	//pb += biTrueWidth;
-	Mem_Free(pbHold);
-
-	if (pfile) 
-		fclose (pfile);
+	memcpy(image->data, imageData->buffer, imageData->width * imageData->height);
+	Image_Free(imageData);
 
 	return image;
 }
