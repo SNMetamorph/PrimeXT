@@ -91,6 +91,7 @@ static const loadimage_t load_hint[] =
 { "%s%s.%s", "bmp", Image_LoadBMP },	// Windows Bitmap
 { "%s%s.%s", "tga", Image_LoadTGA },	// TrueVision Targa
 { "%s%s.%s", "dds", Image_LoadDDS },	// DirectDraw Surface
+{ "%s%s.%s", "png", Image_LoadPNG },	// Portable Network Graphics
 { NULL, NULL, NULL }
 };
 
@@ -100,6 +101,7 @@ static const saveimage_t save_hint[] =
 { "%s%s.%s", "bmp", Image_SaveBMP },	// Windows Bitmap
 { "%s%s.%s", "tga", Image_SaveTGA },	// TrueVision Targa
 { "%s%s.%s", "dds", Image_SaveDDS },	// DirectDraw Surface
+{ "%s%s.%s", "png", Image_SavePNG },	// Portable Network Graphics
 { NULL, NULL, NULL }
 };
 
