@@ -773,7 +773,7 @@ ControlPanel::handleEvent (mxEvent *event)
 
 		case IDC_IMPORTTEXTURE:
 		{
-			char *ptr = (char *) mxGetOpenFileName (this, "", "Any supported texture (*.bmp);;(*.tga);;(*.dds);;(*.png)");
+			char *ptr = (char *) mxGetOpenFileName (this, "", "Any supported texture (*.bmp; *.tga; *.dds; *.png)");
 			if (!ptr)
 				break;
 
