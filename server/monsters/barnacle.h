@@ -47,8 +47,10 @@ public:
 	void WaitTillDead ( void );
 	void Killed( entvars_t *pevAttacker, int iGib );
 	int TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType );
+	void SetObjectCollisionBox();
 
 	float m_flAltitude;
+	float m_flCachedLength;
 	float m_flKillVictimTime;
 	int m_cGibs;		// barnacle loads up on gibs each time it kills something.
 	BOOL m_fTongueExtended;

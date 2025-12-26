@@ -22,6 +22,7 @@ LINK_ENTITY_TO_CLASS( monster_barnacle, CBarnacle );
 
 BEGIN_DATADESC( CBarnacle )
 	DEFINE_FIELD( m_flAltitude, FIELD_FLOAT ),
+	DEFINE_FIELD( m_flCachedLength, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flKillVictimTime, FIELD_TIME ),
 	DEFINE_FIELD( m_cGibs, FIELD_INTEGER ),// barnacle loads up on gibs each time it kills something.
 	DEFINE_FIELD( m_fTongueExtended, FIELD_BOOLEAN ),
@@ -86,6 +87,7 @@ void CBarnacle :: Spawn()
 	m_cGibs			= 0;
 	m_fLiftingPrey		= FALSE;
 	m_flTongueAdj		= -100;
+	m_flCachedLength	= 32.0f;
 
 	InitBoneControllers();
 
@@ -116,6 +118,13 @@ void CBarnacle :: BarnacleThink ( void )
 	float flLength;
 
 	pev->nextthink = gpGlobals->time + 0.1;
+
+	if( m_flCachedLength != ( m_flAltitude + m_flTongueAdj ) || ( pev->absmin.z != pev->origin.z + -m_flCachedLength ) )
+	{
+		// recalc collision box here to avoid barnacle disappears bug
+		m_flCachedLength = m_flAltitude + m_flTongueAdj;
+		UTIL_SetOrigin( this, pev->origin );
+	}
 
 	if ( m_hEnemy != NULL )
 	{
@@ -402,3 +411,12 @@ CBaseEntity *CBarnacle :: TongueTouchEnt ( float *pflLength )
 	return NULL;
 }
 
+void CBarnacle::SetObjectCollisionBox()
+{
+	// FIXME: need a custom barnacle model with non-generic hitgroup
+	// otherwise we can apply to damage to tongue instead of body
+	// and another option is to check how far shot was from body, and
+	// rejecting it if it does not meets our expectations
+	pev->absmin = pev->origin + Vector( -16.0f, -16.0f, -m_flCachedLength );
+	pev->absmax = pev->origin + Vector( 16.0f, 16.0f, 0.0f );
+}
