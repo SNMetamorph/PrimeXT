@@ -43,7 +43,7 @@ Vector CClientWeaponLayerImpl::GetGunPosition()
 
 matrix3x3 CClientWeaponLayerImpl::GetCameraOrientation()
 {
-	return matrix3x3(m_playerState.viewAngles);
+	return matrix3x3(m_playerState.viewAngles + m_playerState.punchAngle);
 }
 
 Vector CClientWeaponLayerImpl::GetViewAngles()
@@ -53,7 +53,7 @@ Vector CClientWeaponLayerImpl::GetViewAngles()
 
 Vector CClientWeaponLayerImpl::GetAutoaimVector(float delta)
 {
-	matrix3x3 camera(m_playerState.viewAngles);
+	const matrix3x3 camera = GetCameraOrientation();
 	return camera.GetForward(); // stub
 }
 
