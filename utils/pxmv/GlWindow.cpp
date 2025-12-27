@@ -797,21 +797,21 @@ void GlWindow :: dumpViewport( const char *filename )
 	if (!image)
 		return;
 
-	byte *glPixelData = (byte*)Mem_Alloc(w * h * 4);
-	if (!glPixelData)
+	byte *framebufferData = static_cast<byte*>(Mem_Alloc(w * h * 4));
+	if (!framebufferData)
 	{
 		Image_Free(image);
 		return;
 	}
 
 	image->flags |= IMAGE_HAS_8BIT_ALPHA;
-	glReadBuffer( GL_FRONT );
-	glReadPixels( 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, glPixelData);
+	glReadBuffer(GL_FRONT);
+	glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, framebufferData);
 
 	byte *imagePixel = image->buffer;
 	for (int y = h - 1; y > 0; y--)
 	{
-		byte *in = glPixelData + (y * w * 4);
+		byte *in = framebufferData + (y * w * 4);
 		byte *rowend = in + (w * 4);
 		for (; in < rowend; in+=4)
 		{
@@ -823,7 +823,7 @@ void GlWindow :: dumpViewport( const char *filename )
 	}
 
 	if (!COM_SaveImage(filename, image))
-		mxMessageBox( this, "Error writing screenshot.", APP_TITLE_STR, MX_MB_OK|MX_MB_ERROR );
+		mxMessageBox( this, "Failed to save screenshot file. Try to change file name.", APP_TITLE_STR, MX_MB_OK|MX_MB_ERROR );
 
 	Image_Free(image);
 }

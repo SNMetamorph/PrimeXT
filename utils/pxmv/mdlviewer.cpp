@@ -590,13 +590,14 @@ MDLViewer::handleEvent (mxEvent *event)
 
 		case IDC_OPTIONS_MAKESCREENSHOT:
 		{
-			std::time_t currTime = std::time(nullptr);
-			char screenshotName[std::size("pxmv_yyyy-mm-dd_hh-mm-ss.png")];
-			std::strftime(screenshotName, sizeof(screenshotName), "pxmv_%F_%H-%M-%S.png", std::gmtime(&currTime));
-			char *ptr = (char *)mxGetSaveFileName( this, screenshotName, "Any supported format (*.bmp; *.tga; *.dds; *.png)");
-			if( ptr )
+			std::array<char, 128> nameBuffer;
+			std::time_t currentTime = std::time(nullptr);
+			std::strftime(nameBuffer.data(), nameBuffer.size(), "pxmv_%F_%H-%M-%S.png", std::gmtime(&currentTime));
+			const char *fileName = (char *)mxGetSaveFileName( this, nameBuffer.data(), "Any supported format (*.bmp; *.tga; *.dds; *.png)");
+
+			if (fileName)
 			{
-				d_GlWindow->dumpViewport( ptr );
+				d_GlWindow->dumpViewport(fileName);
 			}
 		}
 		break;
