@@ -792,21 +792,40 @@ void GlWindow :: dumpViewport( const char *filename )
 	int w = w2();
 	int h = h2();
 
-	mxImage *image = (mxImage *)Mem_Alloc(sizeof(mxImage));
-	new (image) mxImage();
+	rgbdata_t *image = Image_Alloc( w, h, false );
 
-	if (image && image->create( w, h, 24 ))
+	if (!image)
+		return;
+
+	byte *glPixelData = (byte*)Mem_Alloc(w * h * 4);
+	if (!glPixelData)
 	{
-		glReadBuffer( GL_FRONT );
-		glReadPixels( 0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, image->data );
-
-		image->flip_vertical();
-
-		if (!mxBmpWrite( filename, image ))
-			mxMessageBox( this, "Error writing screenshot.", APP_TITLE_STR, MX_MB_OK|MX_MB_ERROR );
-
-		Mem_Free(image);
+		Image_Free(image);
+		return;
 	}
+
+	image->flags |= IMAGE_HAS_8BIT_ALPHA;
+	glReadBuffer( GL_FRONT );
+	glReadPixels( 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, glPixelData);
+
+	byte *imagePixel = image->buffer;
+	for (int y = h - 1; y > 0; y--)
+	{
+		byte *in = glPixelData + (y * w * 4);
+		byte *rowend = in + (w * 4);
+		for (; in < rowend; in+=4)
+		{
+			*imagePixel++ = in[0];
+			*imagePixel++ = in[1];
+			*imagePixel++ = in[2];
+			*imagePixel++ = in[3];
+		}
+	}
+
+	if (!COM_SaveImage(filename, image))
+		mxMessageBox( this, "Error writing screenshot.", APP_TITLE_STR, MX_MB_OK|MX_MB_ERROR );
+
+	Image_Free(image);
 }
 
 mxImage *GlWindow::readBmpFromBuffer(const byte * buffer, size_t size)
