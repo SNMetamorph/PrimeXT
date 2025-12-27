@@ -126,7 +126,7 @@ mxGlWindow::mxGlWindow (mxWindow *parent, int x, int y, int w, int h, const char
 		 PFD_TYPE_RGBA,	// RGBA type
 		 32,		// 24-bit color depth
 		 0, 0, 0, 0, 0, 0,	// color bits ignored
-		 0,		// no alpha buffer
+		 8,		// 8-bit alpha buffer
 		 0,		// shift bit ignored
 		 0,		// no accumulation buffer
 		 0, 0, 0, 0,	// accum bits ignored
