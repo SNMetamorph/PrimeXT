@@ -26,6 +26,7 @@
 #include <array>
 #include <algorithm>
 #include <utility>
+#include <ctime>
 
 #include "mdlviewer.h"
 #include "GlWindow.h"
@@ -589,7 +590,10 @@ MDLViewer::handleEvent (mxEvent *event)
 
 		case IDC_OPTIONS_MAKESCREENSHOT:
 		{
-			char *ptr = (char *)mxGetSaveFileName( this, "screenshot.png", "Any supported format (*.bmp; *.tga; *.dds; *.png)");
+			std::time_t currTime = std::time(nullptr);
+			char screenshotName[std::size("pxmv_yyyy-mm-dd_hh-mm-ss.png")];
+			std::strftime(screenshotName, sizeof(screenshotName), "pxmv_%F_%H-%M-%S.png", std::gmtime(&currTime));
+			char *ptr = (char *)mxGetSaveFileName( this, screenshotName, "Any supported format (*.bmp; *.tga; *.dds; *.png)");
 			if( ptr )
 			{
 				d_GlWindow->dumpViewport( ptr );
