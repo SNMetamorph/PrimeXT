@@ -589,11 +589,9 @@ MDLViewer::handleEvent (mxEvent *event)
 
 		case IDC_OPTIONS_MAKESCREENSHOT:
 		{
-			char *ptr = (char *)mxGetSaveFileName( this, "", "Windows Bitmap (*.bmp)" );
+			char *ptr = (char *)mxGetSaveFileName( this, "screenshot.png", "Any supported format (*.bmp; *.tga; *.dds; *.png)");
 			if( ptr )
 			{
-				if( !strstr( ptr, ".bmp" ))
-					strcat( ptr, ".bmp" );
 				d_GlWindow->dumpViewport( ptr );
 			}
 		}
