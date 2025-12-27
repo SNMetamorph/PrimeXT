@@ -19,6 +19,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <filesystem>
 
 
 
@@ -82,15 +83,20 @@ mxGetOpenFileName (mxWindow *parent, const char *path, const char *filter)
 const char *
 mxGetSaveFileName (mxWindow *parent, const char *path, const char *filter)
 {
-	char szPath[_MAX_PATH] = {0}, szFilter[_MAX_PATH] = {0};
+	std::filesystem::path filePath;
+	char szPath[_MAX_PATH] = { 0 }, szFilter[_MAX_PATH] = { 0 }, szDefExt[_MAX_PATH] = { 0 };
 	char *pos;
-        size_t len, i = 0;
+    size_t len, i = 0;
 
 	sd_path[0] = '\0';
 
 	if (path)
-		strcpy (szPath, path);
+		filePath = path;
 
+	strcpy(szPath, filePath.parent_path().string().c_str());
+	strcpy(sd_path, filePath.filename().string().c_str());
+	strcpy(szDefExt, filePath.extension().string().c_str());
+	
 	if (filter)
 	{
 		while ((pos = (char *)strstr (filter, ";;")))
@@ -119,6 +125,7 @@ mxGetSaveFileName (mxWindow *parent, const char *path, const char *filter)
 	ofn.lpstrFilter = szFilter;
 	ofn.lpstrFile = sd_path;
 	ofn.nMaxFile = _MAX_PATH;
+	ofn.lpstrDefExt = szDefExt;
 	if (path && strlen (path))
 		ofn.lpstrInitialDir = szPath;
 	ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
