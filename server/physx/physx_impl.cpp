@@ -41,7 +41,7 @@ GNU General Public License for more details.
 #include <PxMat44.h>
 #include <vector>
 #include <thread>
-#include <sstream>
+#include <fmt/format.h>
 
 #if defined (HAS_PHYSIC_VEHICLE)
 #include "NxVehicle.h"
@@ -2053,12 +2053,15 @@ void CPhysicPhysX::CacheNameForModel( model_t *model, fs::Path &hullfile, uint32
 	if (!model->name || model->name[0] == '\0')
 		return;
 
-	std::stringstream stream;
-	std::string pathStr = model->name;
-	pathStr.erase(0, pathStr.find_first_of("/\\") + 1);
-	fs::Path modelPath = pathStr;
-	stream << std::nouppercase << std::setfill('0') << std::setw(8) << std::hex << hash;
-	hullfile = "cache" / modelPath.parent_path() / (modelPath.stem().string() + "_" + stream.str() + suffix);
+	std::string pathString = model->name;
+    const size_t pos = pathString.find_first_of("/\\");
+    if (pos != std::string::npos) {
+        pathString.erase(0, pos + 1);
+    }
+
+	fs::Path modelPath{ pathString };
+	std::string fileName = fmt::format("{}_{:08x}{}", modelPath.stem().string(), hash, suffix);
+	hullfile = "cache" / modelPath.parent_path() / fileName;
 }
 
 uint32_t CPhysicPhysX::GetHashForModelState( model_t *model, int32_t body, int32_t skin )
