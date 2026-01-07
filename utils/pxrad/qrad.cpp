@@ -448,13 +448,7 @@ void InitWorldLightFromPatch( dworldlight_t *wl, patch_t *p )
 	VectorScale( wl->intensity, p->exposure, wl->intensity );
 
 	if( !VectorIsNull( p->reflectivity ))
-	{
 		VectorMultiply( wl->intensity, p->reflectivity, wl->intensity );
-	}
-	else
-	{
-		VectorScale( wl->intensity, DIRECT_SCALE, wl->intensity );
-	}
 
 	VectorCopy( GetPlaneFromFace( p->faceNumber )->normal, wl->normal );
 	wl->stopdot = wl->stopdot2 = 0.0f;	// not used
