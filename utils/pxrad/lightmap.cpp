@@ -2235,14 +2235,7 @@ void CreateDirectLights( void )
 			g_directlights = dl;
 
 			if( !VectorIsNull( p->reflectivity ))
-			{
-				VectorScale( dl->intensity, 0.5 / M_PI, dl->intensity );
 				VectorMultiply( dl->intensity, p->reflectivity, dl->intensity );
-			}
-			else
-			{
-				VectorScale( dl->intensity, DIRECT_SCALE, dl->intensity );
-			}
 
 			if( !FBitSet( p->flags, PATCH_EMITLIGHT ) || g_fastmode )
 				dl->topatch = true;

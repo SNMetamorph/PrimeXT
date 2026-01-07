@@ -448,13 +448,7 @@ void InitWorldLightFromPatch( dworldlight_t *wl, patch_t *p )
 	VectorScale( wl->intensity, p->exposure, wl->intensity );
 
 	if( !VectorIsNull( p->reflectivity ))
-	{
 		VectorMultiply( wl->intensity, p->reflectivity, wl->intensity );
-	}
-	else
-	{
-		VectorScale( wl->intensity, DIRECT_SCALE, wl->intensity );
-	}
 
 	VectorCopy( GetPlaneFromFace( p->faceNumber )->normal, wl->normal );
 	wl->stopdot = wl->stopdot2 = 0.0f;	// not used
@@ -984,6 +978,11 @@ void ReadLightFile( const char *filename, bool use_direct_path )
 		r = powf( r / 255.0f, 2.2f );
 		g = powf( g / 255.0f, 2.2f );
 		b = powf( b / 255.0f, 2.2f );
+
+		//moved here from CreateDirectLights and InitWorldLightFromPatch
+		r *= 0.5f / M_PI;
+		g *= 0.5f / M_PI;
+		b *= 0.5f / M_PI;		
 
 		if( argCnt == 2 )
 		{
