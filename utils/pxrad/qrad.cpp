@@ -979,6 +979,11 @@ void ReadLightFile( const char *filename, bool use_direct_path )
 		g = powf( g / 255.0f, 2.2f );
 		b = powf( b / 255.0f, 2.2f );
 
+		//moved here from CreateDirectLights and InitWorldLightFromPatch
+		r *= 0.5f / M_PI;
+		g *= 0.5f / M_PI;
+		b *= 0.5f / M_PI;		
+
 		if( argCnt == 2 )
 		{
 			// eith 1+1 args, the R,G,B values are all equal to the first value
