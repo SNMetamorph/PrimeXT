@@ -92,6 +92,7 @@ static const loadimage_t load_hint[] =
 { "%s%s.%s", "tga", Image_LoadTGA },	// TrueVision Targa
 { "%s%s.%s", "dds", Image_LoadDDS },	// DirectDraw Surface
 { "%s%s.%s", "png", Image_LoadPNG },	// Portable Network Graphics
+{ "%s%s.%s", "mip", Image_LoadMIP },	// Quake 1's MipMap Textures
 { NULL, NULL, NULL }
 };
 

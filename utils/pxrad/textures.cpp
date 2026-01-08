@@ -54,6 +54,36 @@ void TEX_LoadTextures( void )
 	}
 }
 
+rgbdata_t* TryLoadMiptex(const char* name)
+{
+	char		texname[64];
+	rgbdata_t	*texture = NULL;
+
+	Q_snprintf(texname, sizeof(texname), "textures/%s", name);
+	texture = COM_LoadImage(texname, false, FS_LoadFile);
+
+	if (!texture)
+	{
+		Q_strncpy(texname, name, sizeof(texname));
+		// check wads in reverse order
+		for (int i = wadlist.count - 1; i >= 0; i--)
+		{
+			char	*texpath = va("%s.wad/%s.mip", wadlist.wadnames[i], texname);
+
+			if (FS_FileExists(texpath, false))
+			{
+				texture = COM_LoadImage(texpath, true, FS_LoadFile);
+				break;
+			}
+		}
+	}
+
+	if (!texture)
+		return NULL;
+
+	return texture;
+}
+
 miptex_t *GetTextureByMiptex( int miptex )
 {
 	ASSERT( g_dtexdata != NULL );
@@ -77,18 +107,29 @@ miptex_t *GetTextureByMiptex( int miptex )
 	// trying wad texture (force while g_wadtextures is 1)
 	if( g_wadtextures || mt->offsets[0] <= 0 )
 	{
-		Q_snprintf( texname, sizeof( texname ), "%s.mip", mt->name );
-
-		// check wads in reverse order
-		for( int i = wadlist.count - 1; i >= 0; i-- )
+		rgbdata_t* texture = TryLoadMiptex(mt->name);
+		if (texture)
 		{
-			char	*texpath = va( "%s.wad/%s", wadlist.wadnames[i], texname );
+			texture = Image_Quantize(texture);
+			miptex_t	*newMip = static_cast<miptex_t*>(Mem_Alloc(sizeof(miptex_t) + ((texture->width * texture->height * 85) >> 6) + sizeof(short) + 768));
+			memcpy(newMip, mt->name, 16); // Miptex name
+			newMip->width = texture->width;
+			newMip->height = texture->height;
+			newMip->offsets[0] = sizeof(miptex_t);
+			
+			byte	*buf = ((byte *)newMip) + newMip->offsets[0];
+			byte	*pal = ((byte *)newMip) + newMip->offsets[0] + (((newMip->width * newMip->height) * 85) >> 6);
 
-			if( FS_FileExists( texpath, false ))
+			memcpy(buf, texture->buffer, newMip->width * newMip->height);
+			for (int i = 0; i < 256; i++)
 			{
-				g_textures[miptex] = (miptex_t *)FS_LoadFile( texpath, NULL, false );
-				break;
+				*pal++ = texture->palette[i * 4 + 0];
+				*pal++ = texture->palette[i * 4 + 1];
+				*pal++ = texture->palette[i * 4 + 2];
 			}
+
+			g_textures[miptex] = newMip;
+			Image_Free(texture);
 		}
 	}
 
