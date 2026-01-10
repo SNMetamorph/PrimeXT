@@ -591,6 +591,17 @@ void COM_LoadMaterials(const char *path)
 				mat->refractScale = Q_atof(token);
 				mat->refractScale = bound(0.0f, mat->refractScale, 1.0f);
 			}
+			else if (!Q_stricmp(token, "SwayHeight"))
+			{
+				pfile = COM_ParseFile(pfile, token);
+				if (!pfile)
+				{
+					ALERT(at_error, "COM_LoadMaterials: hit EOF while parsing 'SwayHeight'\n");
+					goto getout;
+				}
+
+				mat->swayHeight = Q_atoi(token);
+			}
 			else if (!Q_stricmp(token, "ReliefScale"))
 			{
 				pfile = COM_ParseFile(pfile, token);
