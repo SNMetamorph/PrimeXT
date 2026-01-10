@@ -665,6 +665,7 @@ void CStudioModelRenderer :: LoadStudioMaterials( void )
 		pmaterial->aberrationScale = desc->aberrationScale;
 		pmaterial->reliefScale = desc->reliefScale;
 		pmaterial->effects = desc->effects;
+		pmaterial->swayHeight = desc->swayHeight;
 
 		if( pmaterial->gl_detailmap_id.Initialized() && pmaterial->gl_detailmap_id != tr.grayTexture)
 			SetBits( pmaterial->flags, STUDIO_NF_HAS_DETAIL );
