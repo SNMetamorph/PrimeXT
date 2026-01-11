@@ -3051,7 +3051,7 @@
 [
 	_cone(integer) : "Inner (bright) angle" : 30
 	_cone2(integer) : "Outer (fading) angle" : 45
-	pitch(integer) : "Pitch" : -90
+	pitch(integer) : "Pitch"
 	_sky(Choices) : "Is Sky" : 0 = 
 	[ 
 		0 : "No"
