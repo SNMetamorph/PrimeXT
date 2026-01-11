@@ -4395,7 +4395,7 @@
 ]
 
 
-@PointClass base(Targetname, Targetx) iconsprite("sprites/fgd/player_freez.spr") = trigger_playerfreeze : "Trigger Player Freeze" []
+@PointClass base(Targetname, Targetx) iconsprite("sprites/fgd/player_freeze.spr") = trigger_playerfreeze : "Trigger Player Freeze" []
 
 @SolidClass base(Targetname, Angles, Parent) = trigger_push : "Trigger player push"
 [
