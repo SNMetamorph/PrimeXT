@@ -1045,7 +1045,7 @@ void CFuncTrackTrain :: OverrideReset( void )
 CFuncTrackTrain *CFuncTrackTrain :: Instance( edict_t *pent )
 { 
 	CBaseEntity *pEntity = CBaseEntity::Instance( pent );
-	if( FClassnameIs( pEntity, "func_tracktrain" ))
+	if( pEntity && FClassnameIs( pEntity, "func_tracktrain" ))
 		return (CFuncTrackTrain *)pEntity;
 	return NULL;
 }
