@@ -2813,6 +2813,7 @@ vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool
 				{
 					vec_t	sightarea;
 					vec_t	ratio2, frac;
+					vec3_t	sightareadirection;
 
 					// do things slow
 					if( light_behind_surface )
@@ -2822,7 +2823,8 @@ vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool
 					}
 
 					GetAlternateOrigin( *pos, n, dl->patch, testline_origin );
-					sightarea = CalcSightArea( *pos, n, dl->patch->winding, dl->patch->emitter_skylevel );
+
+					sightarea = CalcSightArea( *pos, n, dl->patch->winding, dl->patch->emitter_skylevel, &sightareadirection );
 
 					frac = dist / range;
 					frac = ( frac - 0.5 ) * 2.0; // make a smooth transition between the two methods
@@ -2830,6 +2832,8 @@ vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool
 					// because dl->patch_area has been multiplied into dl->intensity
 					ratio2 = (sightarea / dl->patch_area);
 					ratio = frac * ratio + (1.0 - frac) * ratio2;
+
+					VectorLerp( sightareadirection, frac, direction, direction );
 				}
 				else if( light_behind_surface )
 				{
