@@ -867,7 +867,10 @@ void InitWorldTrace( void )
 #ifdef HLRAD_RAYTRACE
 	int dispatch = 0, total = 0;
 	double start = I_FloatTime();
-	Msg( "Build KD-Trees:\n" );
+	if( g_studiolegacy )
+		Msg( "Build KD-Trees:\n" );
+	else
+		Msg( "Build BVH-Trees:\n" );
 	StartPacifier();
 
 	for( i = 1; i < g_numentities; i++ )
