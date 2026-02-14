@@ -474,7 +474,7 @@ float GatherSampleDirt( int threadnum, int fn, const vec3_t pos, const vec3_t no
 const dplane_t *GetPlaneFromFace( const dface_t *face );
 const dplane_t *GetPlaneFromFace( const uint facenum );
 dleaf_t *HuntForWorld( vec3_t point, const vec3_t plane_offset, const dplane_t *plane, int hunt_size, vec_t hunt_scale, vec_t hunt_offset );
-vec_t CalcSightArea( const vec3_t receiver_origin, const vec3_t receiver_normal, const winding_t *emitter_winding, int skylevel );
+vec_t CalcSightArea( const vec3_t receiver_origin, const vec3_t receiver_normal, const winding_t *emitter_winding, int skylevel, vec3_t* avg_direction = NULL );
 void GetAlternateOrigin( const vec3_t pos, const vec3_t normal, const patch_t *patch, vec3_t origin );
 vec_t BaseLightForFace( dface_t *f, vec3_t light, vec3_t reflectivity );
 void InitWorldLightFromPatch( dworldlight_t *wl, patch_t *p );
