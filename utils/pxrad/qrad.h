@@ -539,10 +539,10 @@ void CalcLuxelsCount( void );
 //
 // vertexlight.c
 //
-void BuildVertexLights( void );
-void VertexPatchLights( void );
+void VertexDirectLighting( void );
+void VertexIndirectGather( void );
 void FinalLightVertex( void );
-void VertexBlendGI( void );
+void VertexIndirectBlend( void );
 
 //
 // model_lightmaps.c

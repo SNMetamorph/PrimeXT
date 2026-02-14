@@ -169,7 +169,7 @@ void SmoothModelNormals( int modelnum, int threadnum = -1 )
 	Mem_Free( normals );
 }
 
-void BuildVertexLights( int indexnum, int thread = -1 )
+void VertexDirectLighting( int indexnum, int thread = -1 )
 {
 	int	modelnum = g_vertexlight_indexes[indexnum].modelnum;
 	int	vertexnum = g_vertexlight_indexes[indexnum].vertexnum;
@@ -310,12 +310,12 @@ void BuildVertexLights( int indexnum, int thread = -1 )
 
 /*
 ============
-VertexPatchLights
+VertexIndirectGather
 
 This function is run multithreaded
 ============
 */
-void VertexPatchLights( int indexnum, int threadnum = -1 )
+void VertexIndirectGather( int indexnum, int threadnum = -1 )
 {
 	int	modelnum = g_vertexlight_indexes[indexnum].modelnum;
 	int	vertexnum = g_vertexlight_indexes[indexnum].vertexnum;
@@ -485,7 +485,7 @@ void VertexPatchLights( int indexnum, int threadnum = -1 )
 	AddStylesToMesh( mesh, newstyles );
 }
 
-void VertexBlendGI( int modelnum, int threadnum = -1 )
+void VertexIndirectBlend( int modelnum, int threadnum = -1 )
 {
 	entity_t	*mapent = g_vertexlight[modelnum];
 	tmesh_t		*mesh;
@@ -924,27 +924,27 @@ static void AllocVertexLighting( void )
 	// otherwise it's valid
 }
 
-void BuildVertexLights( void )
+void VertexDirectLighting( void )
 {
 	GenerateLightCacheNumbers();
 
 	if( !g_vertexlight_numindexes ) return;
 
-	RunThreadsOnIndividual( g_vertexlight_numindexes, true, BuildVertexLights );
+	RunThreadsOnIndividual( g_vertexlight_numindexes, true, VertexDirectLighting );
 }
 
-void VertexPatchLights( void )
+void VertexIndirectGather( void )
 {
 	if( !g_vertexlight_numindexes ) return;
 
-	RunThreadsOnIndividual( g_vertexlight_numindexes, true, VertexPatchLights );
+	RunThreadsOnIndividual( g_vertexlight_numindexes, true, VertexIndirectGather );
 }
 
-void VertexBlendGI( void )
+void VertexIndirectBlend( void )
 {
 	if( !g_vertexlight_modnum ) return;
 
-	RunThreadsOnIndividual( g_vertexlight_modnum, true, VertexBlendGI );
+	RunThreadsOnIndividual( g_vertexlight_modnum, true, VertexIndirectBlend );
 }
 
 void FinalLightVertex( void )

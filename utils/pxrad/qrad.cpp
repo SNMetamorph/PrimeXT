@@ -2593,14 +2593,17 @@ void RadWorld( void )
 #endif
 
 #ifdef HLRAD_VERTEXLIGHTING
-	BuildVertexLights();	//BuildFaceLights will get single gi bounce from studiomodels
+	Msg( "\n" );	
+	VertexDirectLighting();	//BuildFaceLights will get single gi bounce from studiomodels
 
 	if( g_numstudiobounce > 0 )
 	{
-		g_studiogipasscounter = 1;		
-		VertexPatchLights();
-		VertexBlendGI();
+		g_studiogipasscounter = 1;
+		Msg( "VertexIndirectLighting Prepass\n" );
+		VertexIndirectGather();
+		VertexIndirectBlend();
 	}
+	Msg( "\n" );
 #endif
 
 
@@ -2689,15 +2692,19 @@ void RadWorld( void )
 
 
 #ifdef HLRAD_VERTEXLIGHTING
+	Msg( "\n" );
 	g_studiogipasscounter = 0;
 	for( int i = 0; i < Q_max( 1, g_numstudiobounce ); i++ )
 	{
-		g_studiogipasscounter++;		
-		VertexPatchLights();
-		VertexBlendGI();
+		g_studiogipasscounter++;
+		Msg( "VertexIndirectLighting Pass %d/%d\n", g_studiogipasscounter, g_numstudiobounce );
+		VertexIndirectGather();
+		VertexIndirectBlend();
+		Msg( "\n" );
 	}
 	
 	FinalLightVertex();
+	Msg( "\n" );
 #endif
 
 #ifdef HLRAD_AMBIENTCUBES
