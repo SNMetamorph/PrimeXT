@@ -227,7 +227,7 @@ float Atan2Fast( float y, float x )
 	float ydivx = y / x;	
 	
 	float res = AcosFast( 1.0f / sqrtf( 1.0f + ydivx * ydivx ) );
-	res = ( x >= 0.0f ) ? res : - res;
+	res = ( ydivx >= 0.0f ) ? res : - res;
 
 	if( x < 0.0f )
 		res += (y >= 0.0f) ? M_PI : - M_PI;
