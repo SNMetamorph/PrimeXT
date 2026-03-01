@@ -791,6 +791,11 @@ int ParseInfoTexlights( entity_t *mapent )
 		g = powf( g / 255.0f, 2.2f );
 		b = powf( b / 255.0f, 2.2f );
 
+		//moved here from CreateDirectLights and InitWorldLightFromPatch
+		r *= 0.5f / M_PI;
+		g *= 0.5f / M_PI;
+		b *= 0.5f / M_PI;			
+
 		if( values == 1 )
 		{  
 			g = b = r;
