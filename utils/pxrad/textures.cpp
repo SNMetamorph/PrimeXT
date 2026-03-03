@@ -59,23 +59,23 @@ rgbdata_t* TryLoadMiptex(const char* name)
 	char		texname[64];
 	rgbdata_t	*texture = NULL;
 
-	Q_snprintf(texname, sizeof(texname), "textures/%s", name);
-	texture = COM_LoadImage(texname, false, FS_LoadFile);
+	Q_snprintf(texname, sizeof(texname), "%s.mip", name);
+	// check wads in reverse order
+	for (int i = wadlist.count - 1; i >= 0; i--)
+	{
+		char	*texpath = va("%s.wad/%s", wadlist.wadnames[i], texname);
+
+		if (FS_FileExists(texpath, false))
+		{
+			texture = COM_LoadImage(texpath, true, FS_LoadFile);
+			break;
+		}
+	}
 
 	if (!texture)
 	{
-		Q_strncpy(texname, name, sizeof(texname));
-		// check wads in reverse order
-		for (int i = wadlist.count - 1; i >= 0; i--)
-		{
-			char	*texpath = va("%s.wad/%s.mip", wadlist.wadnames[i], texname);
-
-			if (FS_FileExists(texpath, false))
-			{
-				texture = COM_LoadImage(texpath, true, FS_LoadFile);
-				break;
-			}
-		}
+		Q_snprintf(texname, sizeof(texname), "textures/%s", name);
+		texture = COM_LoadImage(texname, false, FS_LoadFile);
 	}
 
 	if (!texture)
