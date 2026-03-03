@@ -118,7 +118,7 @@ miptex_t *GetTextureByMiptex( int miptex )
 			newMip->offsets[0] = sizeof(miptex_t);
 			
 			byte	*buf = ((byte *)newMip) + newMip->offsets[0];
-			byte	*pal = ((byte *)newMip) + newMip->offsets[0] + (((newMip->width * newMip->height) * 85) >> 6);
+			byte	*pal = ((byte *)newMip) + newMip->offsets[0] + (((newMip->width * newMip->height) * 85) >> 6) + sizeof(short);
 
 			memcpy(buf, texture->buffer, newMip->width * newMip->height);
 			for (int i = 0; i < 256; i++)
