@@ -2878,14 +2878,11 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 		{
 			GLdouble	clip[4];
 			mplane_t	*p = &RI->clipPlane;
-			
-			clip[0] = p->normal[0];
-			clip[1] = p->normal[1];
-			clip[2] = p->normal[2];
-			clip[3] = -p->dist;
-			
+
+			GL_InitClipPlane(p, clip);
+
 			u->SetValue(clip);
-			
+
 			break;
 		}
 		default:
