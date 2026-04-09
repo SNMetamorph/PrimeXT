@@ -311,6 +311,9 @@ static uniformTable_t glsl_uniformTable[] =
 { "u_LightScale",		UT_LIGHTSCALE,		UFL_GLOBAL_PARM },
 { "u_LightThreshold",	UT_LIGHTTHRESHOLD,		UFL_GLOBAL_PARM },
 { "u_NumVisibleModels",	UT_NUMVISIBLEMODELS,	UFL_GLOBAL_PARM },
+{ "u_ModelViewMatrix", UT_MODELVIEWMATRIX,	0 },
+{ "u_ModelViewProjectionMatrix", UT_MODELVIEWPROJECTIONMATRIX,	0 },
+{ "u_ClipPlane", UT_CLIPPLANE, 0 },
 { "u_Undefined",		UT_UNDEFINED,		0 },
 };
 
@@ -717,6 +720,7 @@ static bool GL_ProcessShader( glsl_program_t *program, const char *filename, GLe
 
 	// add internal defines
 	outputFile->Printf("#version 130\n"); // OpenGL 3.0 required (because bit operations support needed)
+	outputFile->Printf("#extension GL_ARB_uniform_buffer_object : enable\n");
 	outputFile->Printf("#ifndef M_PI\n#define M_PI 3.14159265358979323846\n#endif\n");
 	outputFile->Printf("#ifndef M_PI2\n#define M_PI2 6.28318530717958647692\n#endif\n");
 
