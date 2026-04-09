@@ -974,6 +974,18 @@ void GL_ClipPlane( bool enable )
 	}
 }
 
+/*
+=================
+GL_InitClipPlane
+=================
+*/
+void GL_InitClipPlane( const mplane_t *in, GLdouble *out )
+{
+	out[0] = in->normal[0];
+	out[1] = in->normal[1];
+	out[2] = in->normal[2];
+	out[3] = -in->dist;
+}
 
 /*
 =================

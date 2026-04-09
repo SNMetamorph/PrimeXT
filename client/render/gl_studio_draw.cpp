@@ -3706,6 +3706,7 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force, boo
 			break;
 		case UT_SWAYHEIGHT:
 			u->SetValue(mat->swayHeight);
+			break;
 		case UT_MODELVIEWMATRIX:
 			u->SetValue( &RI->view.worldMatrix );
 			break;
@@ -3716,14 +3717,11 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force, boo
 		{
 			GLdouble	clip[4];
 			mplane_t	*p = &RI->clipPlane;
-			
-			clip[0] = p->normal[0];
-			clip[1] = p->normal[1];
-			clip[2] = p->normal[2];
-			clip[3] = -p->dist;
-			
+
+			GL_InitClipPlane(p, clip);
+
 			u->SetValue(clip);
-			
+
 			break;
 		}
 		default:

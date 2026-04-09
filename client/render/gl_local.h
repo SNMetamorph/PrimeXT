@@ -764,6 +764,7 @@ void GL_DisableAllTexGens(void);
 void GL_DepthMask(GLint enable);
 void GL_FrontFace(GLenum front);
 void GL_ClipPlane(bool enable);
+void GL_InitClipPlane( const mplane_t *in, GLdouble *out );
 void GL_BindFBO(GLuint buffer);
 void GL_AlphaTest(GLint enable);
 void GL_AlphaToCoverage(bool enable);
