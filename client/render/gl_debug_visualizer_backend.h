@@ -14,18 +14,44 @@ GNU General Public License for more details.
 */
 
 #pragma once
+#include "gl_export.h"
+#include "shader.h"
+#include "visualizer/debug_visualizer.h"
+#include <vector>
 
 class CDebugVisualizerBackend
 {
 public:
-	CDebugVisualizerBackend();
-	~CDebugVisualizerBackend();
+	static CDebugVisualizerBackend& GetInstance();
 
+	void Initialize();
+	void Shutdown();
 	void DrawFrame();
 
 private:
+	struct SLineVertex
+	{
+		Vector position;
+		Vector color;
+	};
+
+	CDebugVisualizerBackend() = default;
+	~CDebugVisualizerBackend() = default;
 	CDebugVisualizerBackend(const CDebugVisualizerBackend&) = delete;
 	CDebugVisualizerBackend(CDebugVisualizerBackend&&) = delete;
 	CDebugVisualizerBackend& operator=(const CDebugVisualizerBackend&) = delete;
 	CDebugVisualizerBackend& operator=(CDebugVisualizerBackend&&) = delete;
+
+	void TessellateAABB(const CDebugVisualizer::AABBData &data, const Vector &color, std::vector<SLineVertex> &out);
+	void TessellateSphere(const CDebugVisualizer::SphereData &data, const Vector &color, std::vector<SLineVertex> &out);
+	void TessellateVector(const CDebugVisualizer::VectorData &data, const Vector &color, std::vector<SLineVertex> &out);
+	void TessellateFrustum(const CDebugVisualizer::FrustumData &data, const Vector &color, std::vector<SLineVertex> &out);
+	void RenderLines(const std::vector<SLineVertex> &lines, bool depthEnabled);
+
+	std::vector<SLineVertex> m_depthLines;
+	std::vector<SLineVertex> m_noDepthLines;
+	shader_t m_DebugShader;
+	GLuint m_iVAO = 0;
+	GLuint m_iVBO = 0;
+	bool m_bInitialized = false;
 };
