@@ -14,7 +14,7 @@ GNU General Public License for more details.
 */
 
 attribute vec3	attr_Position;
-attribute vec3  attr_Normal; // Color
+attribute vec3  attr_LightColor;
 
 uniform mat4    u_ModelMatrix; // model-view matrix
 uniform mat4    u_ProjectionMatrix; // projection matrix
@@ -23,6 +23,6 @@ varying vec3 	var_Color;
 
 void main()
 {
-    var_Color = attr_Normal;
+    var_Color = attr_LightColor;
 	gl_Position = u_ProjectionMatrix * u_ModelMatrix * vec4(attr_Position, 1.0);
 }
