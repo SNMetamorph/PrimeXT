@@ -17,6 +17,7 @@ GNU General Public License for more details.
 #include "gl_export.h"
 #include "shader.h"
 #include "visualizer/debug_visualizer.h"
+#include <map>
 #include <vector>
 
 class CDebugVisualizerBackend
@@ -29,10 +30,11 @@ public:
 	void DrawFrame();
 
 private:
-	struct SLineVertex
+	struct SVertex
 	{
 		Vector position;
 		Vector color;
+		float alpha;
 	};
 
 	CDebugVisualizerBackend() = default;
@@ -42,14 +44,30 @@ private:
 	CDebugVisualizerBackend& operator=(const CDebugVisualizerBackend&) = delete;
 	CDebugVisualizerBackend& operator=(CDebugVisualizerBackend&&) = delete;
 
-	void TessellateAABB(const CDebugVisualizer::AABBData &data, const Vector &color, std::vector<SLineVertex> &out);
-	void TessellateSphere(const CDebugVisualizer::SphereData &data, const Vector &color, std::vector<SLineVertex> &out);
-	void TessellateVector(const CDebugVisualizer::VectorData &data, const Vector &color, std::vector<SLineVertex> &out);
-	void TessellateFrustum(const CDebugVisualizer::FrustumData &data, const Vector &color, std::vector<SLineVertex> &out);
-	void RenderLines(const std::vector<SLineVertex> &lines, bool depthEnabled);
+	struct LineBucketKey { bool depthTest; float lineWidth; };
+	struct LineBucketKeyLess {
+		bool operator()(const LineBucketKey &a, const LineBucketKey &b) const {
+			if (a.depthTest != b.depthTest) return a.depthTest < b.depthTest;
+			return a.lineWidth < b.lineWidth;
+		}
+	};
+	struct TriBucketKey { bool depthTest; CDebugVisualizer::BlendMode blendMode; };
+	struct TriBucketKeyLess {
+		bool operator()(const TriBucketKey &a, const TriBucketKey &b) const {
+			if (a.depthTest != b.depthTest) return a.depthTest < b.depthTest;
+			return static_cast<int>(a.blendMode) < static_cast<int>(b.blendMode);
+		}
+	};
 
-	std::vector<SLineVertex> m_depthLines;
-	std::vector<SLineVertex> m_noDepthLines;
+	void TessellateAABB(const CDebugVisualizer::AABBData &data, const Vector &color, std::vector<SVertex> &out);
+	void TessellateSphere(const CDebugVisualizer::SphereData &data, const Vector &color, std::vector<SVertex> &out);
+	void TessellateVector(const CDebugVisualizer::VectorData &data, const Vector &color, std::vector<SVertex> &out);
+	void TessellateFrustum(const CDebugVisualizer::FrustumData &data, const Vector &color, std::vector<SVertex> &out);
+	void TessellateFilledBox(const CDebugVisualizer::FilledBoxData &data, std::vector<SVertex> &out);
+	void RenderPrimitives(const std::vector<SVertex> &verts, GLenum topology);
+
+	std::map<LineBucketKey, std::vector<SVertex>, LineBucketKeyLess> m_lineBuckets;
+	std::map<TriBucketKey, std::vector<SVertex>, TriBucketKeyLess> m_triBuckets;
 	shader_t m_DebugShader;
 	GLuint m_iVAO = 0;
 	GLuint m_iVBO = 0;

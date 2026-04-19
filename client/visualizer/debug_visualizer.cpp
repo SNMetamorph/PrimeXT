@@ -17,12 +17,13 @@ GNU General Public License for more details.
 #include "hud.h"
 #include <algorithm>
 
-CDebugVisualizer::Primitive::Primitive(Class type, Vector color, std::optional<float> lifespan, bool depthTest, DataVariant data) :
+CDebugVisualizer::Primitive::Primitive(Class type, Vector color, std::optional<float> lifespan, bool depthTest, DataVariant data, float lineWidth) :
 	type(type),
-	color(color),
 	depthTest(depthTest),
-	rendered(false), 
-	data(std::move(data)) 
+	rendered(false),
+	lineWidth(lineWidth),
+	color(color),
+	data(std::move(data))
 {
 	const float currentTime = gEngfuncs.GetClientTime();
 	if (lifespan.has_value()) {
@@ -54,22 +55,27 @@ void CDebugVisualizer::RunFrame()
 	m_primitives.erase(std::remove_if(m_primitives.begin(), m_primitives.end(), predicate), m_primitives.end());
 }
 
-void CDebugVisualizer::DrawAABB(const Vector &mins, const Vector &maxs, Vector color, std::optional<float> lifespan, bool depthTest)
+void CDebugVisualizer::DrawAABB(const Vector &mins, const Vector &maxs, Vector color, std::optional<float> lifespan, bool depthTest, float lineWidth)
 {
-	m_primitives.emplace_back(Primitive::Class::AABB, color, lifespan, depthTest, AABBData{mins, maxs});
+	m_primitives.emplace_back(Primitive::Class::AABB, color, lifespan, depthTest, AABBData{mins, maxs}, lineWidth);
 }
 
-void CDebugVisualizer::DrawSphere(const Vector &center, float radius, Vector color, std::optional<float> lifespan, bool depthTest)
+void CDebugVisualizer::DrawSphere(const Vector &center, float radius, Vector color, std::optional<float> lifespan, bool depthTest, float lineWidth)
 {
-	m_primitives.emplace_back(Primitive::Class::Sphere, color, lifespan, depthTest, SphereData{ center, radius });
+	m_primitives.emplace_back(Primitive::Class::Sphere, color, lifespan, depthTest, SphereData{ center, radius }, lineWidth);
 }
 
-void CDebugVisualizer::DrawVector(const Vector &position, const Vector &direction, Vector color, std::optional<float> lifespan, bool depthTest)
+void CDebugVisualizer::DrawVector(const Vector &position, const Vector &direction, Vector color, std::optional<float> lifespan, bool depthTest, float lineWidth)
 {
-	m_primitives.emplace_back(Primitive::Class::Vector, color, lifespan, depthTest, VectorData{ position, direction });
+	m_primitives.emplace_back(Primitive::Class::Vector, color, lifespan, depthTest, VectorData{ position, direction }, lineWidth);
 }
 
-void CDebugVisualizer::DrawFrustum(const CFrustum &frustum, Vector color, std::optional<float> lifespan, bool depthTest)
+void CDebugVisualizer::DrawFrustum(const CFrustum &frustum, Vector color, std::optional<float> lifespan, bool depthTest, float lineWidth)
 {
-	m_primitives.emplace_back(Primitive::Class::Frustum, color, lifespan, depthTest, FrustumData{ frustum });
+	m_primitives.emplace_back(Primitive::Class::Frustum, color, lifespan, depthTest, FrustumData{ frustum }, lineWidth);
+}
+
+void CDebugVisualizer::DrawFilledBox(const std::array<Vector, 8> &corners, const std::array<Vector, 6> &faceColors, float alpha, std::optional<float> lifespan, bool depthTest, BlendMode blendMode)
+{
+	m_primitives.emplace_back(Primitive::Class::FilledBox, Vector(1.f, 1.f, 1.f), lifespan, depthTest, FilledBoxData{ corners, faceColors, alpha, blendMode });
 }

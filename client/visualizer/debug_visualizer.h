@@ -16,6 +16,7 @@ GNU General Public License for more details.
 #pragma once
 #include "vector.h"
 #include "frustum.h"
+#include <array>
 #include <vector>
 #include <optional>
 #include <variant>
@@ -23,15 +24,23 @@ GNU General Public License for more details.
 class CDebugVisualizer
 {
 public:
+	enum class BlendMode { Alpha, Additive };
+
 	struct AABBData { Vector mins, maxs; };
 	struct SphereData { Vector center; float radius; };
 	struct VectorData { Vector position, direction; };
 	struct FrustumData { CFrustum frustum; };
+	struct FilledBoxData {
+		std::array<Vector, 8> corners;
+		std::array<Vector, 6> faceColors;
+		float alpha;
+		BlendMode blendMode;
+	};
 
 	class Primitive
 	{
 	public:
-		using DataVariant = std::variant<AABBData, SphereData, VectorData, FrustumData>;
+		using DataVariant = std::variant<AABBData, SphereData, VectorData, FrustumData, FilledBoxData>;
 
 		enum class Class
 		{
@@ -39,13 +48,15 @@ public:
 			Sphere,
 			Vector,
 			Frustum,
+			FilledBox,
 		};
 
-		Primitive(Class type, Vector color, std::optional<float> lifespan, bool depthTest, DataVariant data);
+		Primitive(Class type, Vector color, std::optional<float> lifespan, bool depthTest, DataVariant data, float lineWidth = 1.0f);
 
 		Class type;
 		bool depthTest;
 		bool rendered;
+		float lineWidth;
 		Vector color;
 		std::optional<float> expirationTime;
 		DataVariant data;
@@ -55,10 +66,11 @@ public:
 	const std::vector<Primitive>& GetPrimitives() const { return m_primitives; }
 	void RunFrame();
 
-	void DrawAABB(const Vector &mins, const Vector &maxs, Vector color, std::optional<float> lifespan, bool depthTest);
-	void DrawSphere(const Vector &center, float radius, Vector color, std::optional<float> lifespan, bool depthTest);
-	void DrawVector(const Vector &position, const Vector& direction, Vector color, std::optional<float> lifespan, bool depthTest);
-	void DrawFrustum(const CFrustum &frustum, Vector color, std::optional<float> lifespan, bool depthTest);
+	void DrawAABB(const Vector &mins, const Vector &maxs, Vector color, std::optional<float> lifespan, bool depthTest, float lineWidth = 1.0f);
+	void DrawSphere(const Vector &center, float radius, Vector color, std::optional<float> lifespan, bool depthTest, float lineWidth = 1.0f);
+	void DrawVector(const Vector &position, const Vector& direction, Vector color, std::optional<float> lifespan, bool depthTest, float lineWidth = 1.0f);
+	void DrawFrustum(const CFrustum &frustum, Vector color, std::optional<float> lifespan, bool depthTest, float lineWidth = 1.0f);
+	void DrawFilledBox(const std::array<Vector, 8> &corners, const std::array<Vector, 6> &faceColors, float alpha, std::optional<float> lifespan, bool depthTest, BlendMode blendMode = BlendMode::Alpha);
 	// ...and other geometric primitives as needed
 
 private:

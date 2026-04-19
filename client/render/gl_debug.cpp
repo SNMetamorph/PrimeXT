@@ -102,67 +102,60 @@ void DBG_PrintVertexVBOSizes( void )
 	ALERT( at_console, "sizeof( svert_v8_gl30_t ) == %d bytes\n", sizeof( svert_v8_gl30_t ));
 }
 
-// some simple helpers to draw a cube in the special way the ambient visualization wants
-static float *CubeSide( const vec3_t pos, float size, int vert )
+// Build the 8 corners of an axis-aligned cube centered at `pos` with the given
+// half-size `rad`. Uses the engine's HL corner convention: bit 0 set = -X, bit 1 = -Y, bit 2 = -Z.
+static void CubeCorners( const Vector &pos, float rad, std::array<Vector, 8> &out )
 {
-	static vec3_t	side;
-
-	VectorCopy( pos, side );
-	side[0] += (vert & 1) ? -size : size;
-	side[1] += (vert & 2) ? -size : size;
-	side[2] += (vert & 4) ? -size : size;
-
-	return side;
+	for (int i = 0; i < 8; i++) {
+		out[i].x = pos.x + ((i & 1) ? -rad : rad);
+		out[i].y = pos.y + ((i & 2) ? -rad : rad);
+		out[i].z = pos.z + ((i & 4) ? -rad : rad);
+	}
 }
 
-static void CubeFace( const vec3_t org, int v0, int v1, int v2, int v3, float size, const byte *color )
-{
-	vec3_t col;
-	float scale = tr.lightstyle[0] / 264.0f;
-	float gamma = 1.0f / tr.light_gamma;
-
-	col[0] = powf( color[0] / 255.0f, gamma ) * scale;
-	col[1] = powf( color[1] / 255.0f, gamma ) * scale;
-	col[2] = powf( color[2] / 255.0f, gamma ) * scale;
-
-	pglColor3fv( col );
-	pglVertex3fv( CubeSide( org, size, v0 ));
-	pglVertex3fv( CubeSide( org, size, v1 ));
-	pglVertex3fv( CubeSide( org, size, v2 ));
-	pglVertex3fv( CubeSide( org, size, v3 ));
-}
-		
 void R_RenderLightProbe( mlightprobe_t *probe )
 {
-	float	rad = 4.0f;
+	const float rad = 4.0f;
+	const float scale = tr.lightstyle[0] / 264.0f;
+	const float gamma = 1.0f / tr.light_gamma;
 
-	pglBegin( GL_QUADS );
+	auto toLinear = [&]( const byte *c ) {
+		return Vector(
+			powf( c[0] / 255.0f, gamma ) * scale,
+			powf( c[1] / 255.0f, gamma ) * scale,
+			powf( c[2] / 255.0f, gamma ) * scale );
+	};
 
-	CubeFace( probe->origin, 4, 6, 2, 0, rad, probe->cube.color[0] );
-	CubeFace( probe->origin, 7, 5, 1, 3, rad, probe->cube.color[1] );
-	CubeFace( probe->origin, 0, 1, 5, 4, rad, probe->cube.color[2] );
-	CubeFace( probe->origin, 3, 2, 6, 7, rad, probe->cube.color[3] );
-	CubeFace( probe->origin, 2, 3, 1, 0, rad, probe->cube.color[4] );
-	CubeFace( probe->origin, 4, 5, 7, 6, rad, probe->cube.color[5] );
+	// probe->cube.color is indexed +X, -X, +Y, -Y, +Z, -Z;
+	// g_boxpnt (backend face order) is +X, +Y, +Z, -X, -Y, -Z.
+	std::array<Vector, 6> faceColors = {
+		toLinear( probe->cube.color[0] ), // +X
+		toLinear( probe->cube.color[2] ), // +Y
+		toLinear( probe->cube.color[4] ), // +Z
+		toLinear( probe->cube.color[1] ), // -X
+		toLinear( probe->cube.color[3] ), // -Y
+		toLinear( probe->cube.color[5] ), // -Z
+	};
 
-	pglEnd ();
+	std::array<Vector, 8> corners;
+	CubeCorners( probe->origin, rad, corners );
+
+	CDebugVisualizer::GetInstance().DrawFilledBox( corners, faceColors, 1.0f, std::nullopt, true );
 }
 
 void R_RenderCubemap( mcubemap_t *cube )
 {
-	float	rad = (float)cube->size * 0.1f;
-	byte	color[3] = { 127, 127, 127 };
+	const float rad = (float)cube->size * 0.1f;
+	const float scale = tr.lightstyle[0] / 264.0f;
+	const float gamma = 1.0f / tr.light_gamma;
+	const float gray = powf( 127.0f / 255.0f, gamma ) * scale;
+	const Vector color( gray, gray, gray );
+	const std::array<Vector, 6> faceColors = { color, color, color, color, color, color };
 
-	pglBegin( GL_QUADS );
+	std::array<Vector, 8> corners;
+	CubeCorners( cube->origin, rad, corners );
 
-	CubeFace( cube->origin, 4, 6, 2, 0, rad, color );
-	CubeFace( cube->origin, 7, 5, 1, 3, rad, color );
-	CubeFace( cube->origin, 0, 1, 5, 4, rad, color );
-	CubeFace( cube->origin, 3, 2, 6, 7, rad, color );
-	CubeFace( cube->origin, 2, 3, 1, 0, rad, color );
-	CubeFace( cube->origin, 4, 5, 7, 6, rad, color );
-
-	pglEnd ();
+	CDebugVisualizer::GetInstance().DrawFilledBox( corners, faceColors, 1.0f, std::nullopt, true );
 }
 
 void R_RenderLightProbeInternal( const Vector &origin, const Vector lightCube[] )
@@ -439,38 +432,21 @@ void DrawWireFrame( void )
 
 void DrawWirePoly( msurface_t *surf )
 {
-	if( !surf ) 
+	if( !surf )
 		return;
 
 	GL_DEBUG_SCOPE();
-	pglEnable( GL_BLEND );
-	pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-	pglPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-	pglColor4f( 0.5f, 1.0f, 0.36f, 0.99f ); 
-	pglLineWidth( 4.0f );
-
-	pglDisable( GL_DEPTH_TEST );
-	pglEnable( GL_LINE_SMOOTH );
-	pglEnable( GL_POLYGON_SMOOTH );
-	pglHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
-	pglHint( GL_POLYGON_SMOOTH_HINT, GL_NICEST );
-
+	auto &visualizer = CDebugVisualizer::GetInstance();
+	const Vector color( 0.5f, 1.0f, 0.36f );
 	mextrasurf_t *es = surf->info;
-
-	pglBegin( GL_POLYGON );
 	for( int j = 0; j < es->numverts; j++ )
 	{
-		bvert_t *v = &world->vertexes[es->firstvertex + j];
-		pglVertex3fv( v->vertex + Vector( v->normal ) * 0.1f );
+		bvert_t *va = &world->vertexes[es->firstvertex + j];
+		bvert_t *vb = &world->vertexes[es->firstvertex + ((j + 1) % es->numverts)];
+		const Vector a = Vector(va->vertex) + Vector(va->normal) * 0.1f;
+		const Vector b = Vector(vb->vertex) + Vector(vb->normal) * 0.1f;
+		visualizer.DrawVector( a, b - a, color, std::nullopt, false, 4.0f );
 	}
-	pglEnd();
-
-	pglPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-	pglDisable( GL_POLYGON_SMOOTH );
-	pglDisable( GL_LINE_SMOOTH );
-	pglEnable( GL_DEPTH_TEST );
-	pglDisable( GL_BLEND );
-	pglLineWidth( 1.0f );
 }
 
 void R_ShowLightMaps( void )

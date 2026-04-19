@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-varying vec3        var_Color;
+varying vec4        var_Color;
 
 void main()
 {
-    gl_FragColor = vec4(var_Color, 1.0);
+    gl_FragColor = var_Color;
 }
