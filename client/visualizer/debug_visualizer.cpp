@@ -15,6 +15,7 @@ GNU General Public License for more details.
 
 #include "debug_visualizer.h"
 #include "hud.h"
+#include <algorithm>
 
 CDebugVisualizer::Primitive::Primitive(Class type, Vector color, std::optional<float> lifespan, bool depthTest, DataVariant data) :
 	type(type),
@@ -45,7 +46,10 @@ void CDebugVisualizer::RunFrame()
 		if (prim.expirationTime.has_value()) {
 			return currentTime >= prim.expirationTime.value();
 		}
-		return prim.rendered;
+		// No lifespan: single-shot, evict on next tick. Deliberately not
+		// waiting on Primitive::rendered — that would require mutating
+		// primitives through the const GetPrimitives() view.
+		return true;
 	};
 	m_primitives.erase(std::remove_if(m_primitives.begin(), m_primitives.end(), predicate), m_primitives.end());
 }

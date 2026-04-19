@@ -34,6 +34,7 @@
 #include "pm_shared.h"
 #include "filesystem_utils.h"
 #include "build_info.h"
+#include "visualizer/debug_visualizer.h"
 #include <memory>
 
 int developer_level;
@@ -331,6 +332,7 @@ extern "C" void DLLEXPORT HUD_Frame( double time )
 {
 	// run anti (_-=ZhekA=-_) system for Xash3D engine
 	gEngfuncs.VGui_ViewportPaintBackground( VGUI_GetRect( ));
+	CDebugVisualizer::GetInstance().RunFrame();
 }
 
 extern "C" int DLLEXPORT HUD_Key_Event( int down, int keynum, const char *pszCurrentBinding )
