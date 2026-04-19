@@ -1900,54 +1900,44 @@ StudioDrawHulls
 */
 void CStudioModelRenderer :: StudioDrawHulls( int iHitbox )
 {
-	float	alpha, lv;
-	int	i, j;
-
-	if( r_drawentities->value == 4 )
-		alpha = 0.5f;
-	else alpha = 1.0f;
+	const float alpha = (r_drawentities->value == 4) ? 0.5f : 1.0f;
 
 	// setup bone lighting
-	for( i = 0; i < m_pStudioHeader->numbones; i++ )
+	for( int i = 0; i < m_pStudioHeader->numbones; i++ )
 		m_bonelightvecs[i] = m_pModelInstance->m_pbones[i].VectorIRotate( -m_pModelInstance->light.normal );
 
-	GL_Bind( GL_TEXTURE0, tr.whiteTexture );
-	pglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+	auto &visualizer = CDebugVisualizer::GetInstance();
 
-	for( i = 0; i < m_pStudioHeader->numhitboxes; i++ )
+	for( int i = 0; i < m_pStudioHeader->numhitboxes; i++ )
 	{
-		mstudiobbox_t	*pbbox = (mstudiobbox_t *)((byte *)m_pStudioHeader + m_pStudioHeader->hitboxindex);
-		vec3_t		tmp, p[8];
-
+		mstudiobbox_t *pbbox = (mstudiobbox_t *)((byte *)m_pStudioHeader + m_pStudioHeader->hitboxindex);
 		if( iHitbox >= 0 && iHitbox != i )
 			continue;
 
-		for( j = 0; j < 8; j++ )
+		std::array<Vector, 8> corners;
+		for( int k = 0; k < 8; k++ )
 		{
-			tmp[0] = (j & 1) ? pbbox[i].bbmin[0] : pbbox[i].bbmax[0];
-			tmp[1] = (j & 2) ? pbbox[i].bbmin[1] : pbbox[i].bbmax[1];
-			tmp[2] = (j & 4) ? pbbox[i].bbmin[2] : pbbox[i].bbmax[2];
-			p[j] = m_pModelInstance->m_pbones[pbbox[i].bone].VectorTransform( tmp );
+			vec3_t tmp;
+			tmp[0] = (k & 1) ? pbbox[i].bbmin[0] : pbbox[i].bbmax[0];
+			tmp[1] = (k & 2) ? pbbox[i].bbmin[1] : pbbox[i].bbmax[1];
+			tmp[2] = (k & 4) ? pbbox[i].bbmin[2] : pbbox[i].bbmax[2];
+			corners[k] = m_pModelInstance->m_pbones[pbbox[i].bone].VectorTransform( tmp );
 		}
 
-		j = (pbbox[i].group % ARRAYSIZE( g_hullcolor ));
+		const int colorIdx = pbbox[i].group % ARRAYSIZE( g_hullcolor );
+		const Vector baseColor( g_hullcolor[colorIdx][0], g_hullcolor[colorIdx][1], g_hullcolor[colorIdx][2] );
 
-		gEngfuncs.pTriAPI->Begin( TRI_QUADS );
-		gEngfuncs.pTriAPI->Color4f( g_hullcolor[j][0], g_hullcolor[j][1], g_hullcolor[j][2], alpha );
-
-		for( j = 0; j < 6; j++ )
+		std::array<Vector, 6> faceColors;
+		for( int j = 0; j < 6; j++ )
 		{
-			tmp = g_vecZero;
-			tmp[j % 3] = (j < 3) ? 1.0f : -1.0f;
-			StudioLighting( &lv, pbbox[i].bone, 0, tmp );
-
-			gEngfuncs.pTriAPI->Brightness( Q_max( lv, tr.ambientFactor ));
-			gEngfuncs.pTriAPI->Vertex3fv( p[g_boxpnt[j][0]] );
-			gEngfuncs.pTriAPI->Vertex3fv( p[g_boxpnt[j][1]] );
-			gEngfuncs.pTriAPI->Vertex3fv( p[g_boxpnt[j][2]] );
-			gEngfuncs.pTriAPI->Vertex3fv( p[g_boxpnt[j][3]] );
+			vec3_t normal = { 0.f, 0.f, 0.f };
+			normal[j % 3] = (j < 3) ? 1.0f : -1.0f;
+			float lv;
+			StudioLighting( &lv, pbbox[i].bone, 0, normal );
+			faceColors[j] = baseColor * Q_max( lv, tr.ambientFactor );
 		}
-		gEngfuncs.pTriAPI->End();
+
+		visualizer.DrawFilledBox( corners, faceColors, alpha, std::nullopt, true );
 	}
 }
 
@@ -1959,42 +1949,30 @@ StudioDrawAbsBBox
 */
 void CStudioModelRenderer :: StudioDrawAbsBBox( void )
 {
-	Vector p[8], tmp;
-	float lv;
-	int i;
-
 	// looks ugly, skip
 	if( RI->currententity == GET_VIEWMODEL( ))
 		return;
 
-	// compute a full bounding box
-	for( i = 0; i < 8; i++ )
+	std::array<Vector, 8> corners;
+	for( int i = 0; i < 8; i++ )
 	{
-  		p[i][0] = ( i & 1 ) ? m_pModelInstance->absmin[0] : m_pModelInstance->absmax[0];
-  		p[i][1] = ( i & 2 ) ? m_pModelInstance->absmin[1] : m_pModelInstance->absmax[1];
-  		p[i][2] = ( i & 4 ) ? m_pModelInstance->absmin[2] : m_pModelInstance->absmax[2];
+		corners[i].x = (i & 1) ? m_pModelInstance->absmin[0] : m_pModelInstance->absmax[0];
+		corners[i].y = (i & 2) ? m_pModelInstance->absmin[1] : m_pModelInstance->absmax[1];
+		corners[i].z = (i & 4) ? m_pModelInstance->absmin[2] : m_pModelInstance->absmax[2];
 	}
 
-	GL_Bind( GL_TEXTURE0, tr.whiteTexture );
-	gEngfuncs.pTriAPI->Color4f( 0.5f, 0.5f, 1.0f, 0.5f );
-	gEngfuncs.pTriAPI->RenderMode( kRenderTransAdd );
-
-	gEngfuncs.pTriAPI->Begin( TRI_QUADS );
-
-	for( i = 0; i < 6; i++ )
+	const Vector baseColor( 0.5f, 0.5f, 1.0f );
+	std::array<Vector, 6> faceColors;
+	for( int j = 0; j < 6; j++ )
 	{
-		tmp = g_vecZero;
-		tmp[i % 3] = (i < 3) ? 1.0f : -1.0f;
-		StudioLighting( &lv, -1, 0, tmp );
-
-		gEngfuncs.pTriAPI->Brightness( Q_max( lv, tr.ambientFactor ));
-		gEngfuncs.pTriAPI->Vertex3fv( p[g_boxpnt[i][0]] );
-		gEngfuncs.pTriAPI->Vertex3fv( p[g_boxpnt[i][1]] );
-		gEngfuncs.pTriAPI->Vertex3fv( p[g_boxpnt[i][2]] );
-		gEngfuncs.pTriAPI->Vertex3fv( p[g_boxpnt[i][3]] );
+		vec3_t normal = { 0.f, 0.f, 0.f };
+		normal[j % 3] = (j < 3) ? 1.0f : -1.0f;
+		float lv;
+		StudioLighting( &lv, -1, 0, normal );
+		faceColors[j] = baseColor * Q_max( lv, tr.ambientFactor );
 	}
 
-	gEngfuncs.pTriAPI->End();
+	CDebugVisualizer::GetInstance().DrawFilledBox( corners, faceColors, 0.5f, std::nullopt, true, CDebugVisualizer::BlendMode::Additive );
 }
 
 void CStudioModelRenderer :: StudioDrawAttachments( bool bCustomFov )

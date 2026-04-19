@@ -15,6 +15,7 @@ GNU General Public License for more details.
 
 #include "gl_debug_visualizer_backend.h"
 #include "gl_local.h"
+#include "utils.h"
 #include "mathlib.h"
 #include <algorithm>
 #include <cmath>
@@ -33,9 +34,6 @@ void CDebugVisualizerBackend::Initialize()
 	if (m_bInitialized)
 		return;
 
-	m_depthLines.reserve(1024);
-	m_noDepthLines.reserve(1024);
-
 	word shaderHandle = GL_FindShader("common/debug_draw", "common/debug_draw", "common/debug_draw");
 	m_DebugShader.SetShader(shaderHandle);
 
@@ -43,15 +41,15 @@ void CDebugVisualizerBackend::Initialize()
 	pglGenBuffersARB(1, &m_iVBO);
 
 	pglBindBufferARB(GL_ARRAY_BUFFER_ARB, m_iVBO);
-	pglBufferDataARB(GL_ARRAY_BUFFER_ARB, MAX_DEBUG_VBO_SIZE * sizeof(SLineVertex), nullptr, GL_DYNAMIC_DRAW_ARB);
+	pglBufferDataARB(GL_ARRAY_BUFFER_ARB, MAX_DEBUG_VBO_SIZE * sizeof(SVertex), nullptr, GL_DYNAMIC_DRAW_ARB);
 
 	pglBindVertexArray(m_iVAO);
 
 	pglEnableVertexAttribArrayARB(ATTR_INDEX_POSITION);
-	pglVertexAttribPointerARB(ATTR_INDEX_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(SLineVertex), (void *)0);
+	pglVertexAttribPointerARB(ATTR_INDEX_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(SVertex), (void *)0);
 
 	pglEnableVertexAttribArrayARB(ATTR_INDEX_LIGHT_COLOR);
-	pglVertexAttribPointerARB(ATTR_INDEX_LIGHT_COLOR, 3, GL_FLOAT, GL_FALSE, sizeof(SLineVertex), (void *)(3 * sizeof(float)));
+	pglVertexAttribPointerARB(ATTR_INDEX_LIGHT_COLOR, 4, GL_FLOAT, GL_FALSE, sizeof(SVertex), (void *)(3 * sizeof(float)));
 
 	pglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 	pglBindVertexArray(0);
@@ -81,23 +79,30 @@ void CDebugVisualizerBackend::DrawFrame()
 	if (!m_bInitialized)
 		return;
 
-	m_depthLines.clear();
-	m_noDepthLines.clear();
+	for (auto &kv : m_lineBuckets) kv.second.clear();
+	for (auto &kv : m_triBuckets)  kv.second.clear();
 
 	const auto &primitives = CDebugVisualizer::GetInstance().GetPrimitives();
 	for (const CDebugVisualizer::Primitive &primitive : primitives)
 	{
-		std::vector<SLineVertex> &bucket = primitive.depthTest ? m_depthLines : m_noDepthLines;
 		std::visit([&](const auto &payload) {
 			using T = std::decay_t<decltype(payload)>;
-			if constexpr (std::is_same_v<T, CDebugVisualizer::AABBData>)
-				TessellateAABB(payload, primitive.color, bucket);
-			else if constexpr (std::is_same_v<T, CDebugVisualizer::SphereData>)
-				TessellateSphere(payload, primitive.color, bucket);
-			else if constexpr (std::is_same_v<T, CDebugVisualizer::VectorData>)
-				TessellateVector(payload, primitive.color, bucket);
-			else if constexpr (std::is_same_v<T, CDebugVisualizer::FrustumData>)
-				TessellateFrustum(payload, primitive.color, bucket);
+			if constexpr (std::is_same_v<T, CDebugVisualizer::FilledBoxData>) {
+				TriBucketKey key { primitive.depthTest, payload.blendMode };
+				TessellateFilledBox(payload, m_triBuckets[key]);
+			}
+			else {
+				LineBucketKey key { primitive.depthTest, primitive.lineWidth };
+				std::vector<SVertex> &bucket = m_lineBuckets[key];
+				if constexpr (std::is_same_v<T, CDebugVisualizer::AABBData>)
+					TessellateAABB(payload, primitive.color, bucket);
+				else if constexpr (std::is_same_v<T, CDebugVisualizer::SphereData>)
+					TessellateSphere(payload, primitive.color, bucket);
+				else if constexpr (std::is_same_v<T, CDebugVisualizer::VectorData>)
+					TessellateVector(payload, primitive.color, bucket);
+				else if constexpr (std::is_same_v<T, CDebugVisualizer::FrustumData>)
+					TessellateFrustum(payload, primitive.color, bucket);
+			}
 		}, primitive.data);
 	}
 
@@ -123,41 +128,73 @@ void CDebugVisualizerBackend::DrawFrame()
 	}
 
 	const GLboolean depthWasEnabled = pglIsEnabled(GL_DEPTH_TEST);
-	RenderLines(m_depthLines, true);
-	RenderLines(m_noDepthLines, false);
+	const GLboolean blendWasEnabled = pglIsEnabled(GL_BLEND);
+	// GL_BLEND_SRC_RGB (0x80C9) and GL_BLEND_DST_RGB (0x80C8) aren't declared in
+	// this project's gl_export.h, but the constants are standard since GL 1.4.
+	GLint srcBlendRGB = GL_ONE, dstBlendRGB = GL_ZERO;
+	GLint srcBlendA = GL_ONE, dstBlendA = GL_ZERO;
+	pglGetIntegerv(0x80C9, &srcBlendRGB);
+	pglGetIntegerv(0x80C8, &dstBlendRGB);
+	pglGetIntegerv(0x80CB, &srcBlendA);
+	pglGetIntegerv(0x80CA, &dstBlendA);
+
+	pglDisable(GL_BLEND);
+	pglBindVertexArray(m_iVAO);
+	pglBindBufferARB(GL_ARRAY_BUFFER_ARB, m_iVBO);
+
+	// Opaque line passes first, bucketed by depthTest and lineWidth.
+	for (auto &kv : m_lineBuckets) {
+		if (kv.second.empty()) continue;
+		if (kv.first.depthTest) pglEnable(GL_DEPTH_TEST);
+		else                    pglDisable(GL_DEPTH_TEST);
+		pglLineWidth(kv.first.lineWidth);
+		RenderPrimitives(kv.second, GL_LINES);
+	}
+	pglLineWidth(1.0f);
+
+	// Filled translucent passes last, bucketed by depthTest and blendMode.
+	for (auto &kv : m_triBuckets) {
+		if (kv.second.empty()) continue;
+		if (kv.first.depthTest) pglEnable(GL_DEPTH_TEST);
+		else                    pglDisable(GL_DEPTH_TEST);
+		pglEnable(GL_BLEND);
+		if (kv.first.blendMode == CDebugVisualizer::BlendMode::Additive)
+			pglBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		else
+			pglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		RenderPrimitives(kv.second, GL_TRIANGLES);
+	}
+
+	if (blendWasEnabled)
+		pglEnable(GL_BLEND);
+	else
+		pglDisable(GL_BLEND);
+	pglBlendFuncSeparate(srcBlendRGB, dstBlendRGB, srcBlendA, dstBlendA);
 	if (depthWasEnabled)
 		pglEnable(GL_DEPTH_TEST);
 	else
 		pglDisable(GL_DEPTH_TEST);
 }
 
-void CDebugVisualizerBackend::RenderLines(const std::vector<SLineVertex> &lines, bool depthEnabled)
+void CDebugVisualizerBackend::RenderPrimitives(const std::vector<SVertex> &verts, GLenum topology)
 {
-	if (lines.empty())
+	if (verts.empty())
 		return;
 
-	if (depthEnabled)
-		pglEnable(GL_DEPTH_TEST);
-	else
-		pglDisable(GL_DEPTH_TEST);
-
-	pglBindVertexArray(m_iVAO);
-	pglBindBufferARB(GL_ARRAY_BUFFER_ARB, m_iVBO);
-
 	size_t offset = 0;
-	while (offset < lines.size())
+	while (offset < verts.size())
 	{
-		const size_t kLineVertexLimit = MAX_DEBUG_VBO_SIZE;
-		size_t drawCount = std::min(kLineVertexLimit, lines.size() - offset);
+		const size_t kBatchLimit = MAX_DEBUG_VBO_SIZE;
+		size_t drawCount = std::min(kBatchLimit, verts.size() - offset);
 
-		pglBufferSubDataARB(GL_ARRAY_BUFFER_ARB, 0, drawCount * sizeof(SLineVertex), lines.data() + offset);
-		pglDrawArrays(GL_LINES, 0, drawCount);
+		pglBufferSubDataARB(GL_ARRAY_BUFFER_ARB, 0, drawCount * sizeof(SVertex), verts.data() + offset);
+		pglDrawArrays(topology, 0, drawCount);
 
 		offset += drawCount;
 	}
 }
 
-void CDebugVisualizerBackend::TessellateAABB(const CDebugVisualizer::AABBData &data, const Vector &color, std::vector<SLineVertex> &out)
+void CDebugVisualizerBackend::TessellateAABB(const CDebugVisualizer::AABBData &data, const Vector &color, std::vector<SVertex> &out)
 {
 	Vector from = data.mins;
 	Vector to = data.maxs;
@@ -180,8 +217,8 @@ void CDebugVisualizerBackend::TessellateAABB(const CDebugVisualizer::AABBData &d
 				edgecoord[2] * halfExtents[2]);
 			pb += center;
 
-			out.push_back({ pa, color });
-			out.push_back({ pb, color });
+			out.push_back({ pa, color, 1.0f });
+			out.push_back({ pb, color, 1.0f });
 		}
 
 		edgecoord = Vector(-1.f, -1.f, -1.f);
@@ -190,7 +227,7 @@ void CDebugVisualizerBackend::TessellateAABB(const CDebugVisualizer::AABBData &d
 	}
 }
 
-void CDebugVisualizerBackend::TessellateSphere(const CDebugVisualizer::SphereData &data, const Vector &color, std::vector<SLineVertex> &out)
+void CDebugVisualizerBackend::TessellateSphere(const CDebugVisualizer::SphereData &data, const Vector &color, std::vector<SVertex> &out)
 {
 	const unsigned int latitudeDivisions = 8;
 	const unsigned int longitudeDivisions = 8;
@@ -206,21 +243,21 @@ void CDebugVisualizerBackend::TessellateSphere(const CDebugVisualizer::SphereDat
 
 	for (unsigned int lat = 0; lat < latitudeDivisions; ++lat) {
 		for (unsigned int lon = 0; lon < longitudeDivisions; ++lon) {
-			out.push_back({ pointAt(lat, lon),     color });
-			out.push_back({ pointAt(lat, lon + 1), color });
-			out.push_back({ pointAt(lat, lon),     color });
-			out.push_back({ pointAt(lat + 1, lon), color });
+			out.push_back({ pointAt(lat, lon),     color, 1.0f });
+			out.push_back({ pointAt(lat, lon + 1), color, 1.0f });
+			out.push_back({ pointAt(lat, lon),     color, 1.0f });
+			out.push_back({ pointAt(lat + 1, lon), color, 1.0f });
 		}
 	}
 }
 
-void CDebugVisualizerBackend::TessellateVector(const CDebugVisualizer::VectorData &data, const Vector &color, std::vector<SLineVertex> &out)
+void CDebugVisualizerBackend::TessellateVector(const CDebugVisualizer::VectorData &data, const Vector &color, std::vector<SVertex> &out)
 {
-	out.push_back({ data.position, color });
-	out.push_back({ data.position + data.direction, color });
+	out.push_back({ data.position, color, 1.0f });
+	out.push_back({ data.position + data.direction, color, 1.0f });
 }
 
-void CDebugVisualizerBackend::TessellateFrustum(const CDebugVisualizer::FrustumData &data, const Vector &color, std::vector<SLineVertex> &out)
+void CDebugVisualizerBackend::TessellateFrustum(const CDebugVisualizer::FrustumData &data, const Vector &color, std::vector<SVertex> &out)
 {
 	Vector corners[8];
 	data.frustum.ComputeFrustumCorners(corners);
@@ -234,7 +271,28 @@ void CDebugVisualizerBackend::TessellateFrustum(const CDebugVisualizer::FrustumD
 	};
 
 	for (const auto &edge : edges) {
-		out.push_back({ corners[edge[0]], color });
-		out.push_back({ corners[edge[1]], color });
+		out.push_back({ corners[edge[0]], color, 1.0f });
+		out.push_back({ corners[edge[1]], color, 1.0f });
+	}
+}
+
+void CDebugVisualizerBackend::TessellateFilledBox(const CDebugVisualizer::FilledBoxData &data, std::vector<SVertex> &out)
+{
+	// Face ordering matches engine-wide g_boxpnt: +X, +Y, +Z, -X, -Y, -Z.
+	// Corners use HL convention: bit 0 set = min-X, bit 1 set = min-Y, bit 2 set = min-Z.
+	for (int f = 0; f < 6; f++) {
+		const Vector &c = data.faceColors[f];
+		const float a = data.alpha;
+		const Vector &p0 = data.corners[g_boxpnt[f][0]];
+		const Vector &p1 = data.corners[g_boxpnt[f][1]];
+		const Vector &p2 = data.corners[g_boxpnt[f][2]];
+		const Vector &p3 = data.corners[g_boxpnt[f][3]];
+		// two triangles per quad
+		out.push_back({ p0, c, a });
+		out.push_back({ p1, c, a });
+		out.push_back({ p2, c, a });
+		out.push_back({ p0, c, a });
+		out.push_back({ p2, c, a });
+		out.push_back({ p3, c, a });
 	}
 }

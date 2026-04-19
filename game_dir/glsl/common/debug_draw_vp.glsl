@@ -14,12 +14,12 @@ GNU General Public License for more details.
 */
 
 attribute vec3	attr_Position;
-attribute vec3  attr_LightColor;
+attribute vec4  attr_LightColor;
 
 uniform mat4    u_ModelMatrix; // model-view matrix
 uniform mat4    u_ProjectionMatrix; // projection matrix
 
-varying vec3 	var_Color;
+varying vec4 	var_Color;
 
 void main()
 {
