@@ -28,6 +28,7 @@ GNU General Public License for more details.
 #include "gl_debug.h"
 #include "gl_unit_cube.h"
 #include "gl_debug_visualizer_backend.h"
+#include "gl_debug_overlay_2d.h"
 #include "r_weather.h"
 
 #define DEFAULT_SMOOTHNESS			0.0f
@@ -919,6 +920,7 @@ void R_VidInit( void )
 
 	COpenGLUnitCube::GetInstance().Initialize();
 	CDebugVisualizerBackend::GetInstance().Initialize();
+	CDebugOverlay2D::GetInstance().Initialize();
 	R_InitCommonTextures();
 	R_InitCubemapShaders();
 
