@@ -23,6 +23,7 @@
 #include "gl_cvars.h"
 #include "mathlib.h"
 #include "visualizer/debug_visualizer.h"
+#include "gl_debug_overlay_2d.h"
 
 void GL_GpuMemUsage_f( void )
 {
@@ -451,29 +452,14 @@ void DrawWirePoly( msurface_t *surf )
 
 void R_ShowLightMaps( void )
 {
-	int	index = 0;
-
 	if( !CVAR_TO_BOOL( r_showlightmaps ))
 		return;
 
-	index = r_showlightmaps->value - 1.0f;
+	int index = r_showlightmaps->value - 1.0f;
 	if( tr.lightmaps[index].state == LM_FREE )
 		return;
 
-	GL_Bind( GL_TEXTURE0, tr.lightmaps[index].lightmap );
-	pglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
-	GL_Setup2D();
-
-	pglBegin( GL_QUADS );
-		pglTexCoord2f( 0.0f, 0.0f );
-		pglVertex2f( 0.0f, 0.0f );
-		pglTexCoord2f( 1.0f, 0.0f );
-		pglVertex2f( glState.width, 0.0f );
-		pglTexCoord2f( 1.0f, 1.0f );
-		pglVertex2f( glState.width, glState.height );
-		pglTexCoord2f( 0.0f, 1.0f );
-		pglVertex2f( 0.0f, glState.height );
-	pglEnd();
-
-	GL_Setup3D();
+	CDebugOverlay2D::GetInstance().DrawTexturedRect(
+		0.0f, 0.0f, (float)glState.width, (float)glState.height,
+		tr.lightmaps[index].lightmap);
 }

@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #include "r_efx.h"
 #include "trace.h"
 #include "gl_studio.h"
+#include "render/gl_debug_overlay_2d.h"
 #include "meshdesc_factory.h"
 
 /*
@@ -1020,24 +1021,7 @@ void R_BoundsForAABB( const Vector &absmin, const Vector &absmax, Vector bbox[8]
 // debug thing
 void R_DrawScissorRectangle(float x, float y, float w, float h)
 {
-	GL_Bind(GL_TEXTURE0, tr.whiteTexture);
-	pglTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	GL_Setup2D();
-
-	pglColor3f(1, 0.5, 0);
-
-	pglBegin(GL_LINES);
-	pglVertex2f(x, y);
-	pglVertex2f(x + w, y);
-	pglVertex2f(x, y);
-	pglVertex2f(x, y + h);
-	pglVertex2f(x + w, y);
-	pglVertex2f(x + w, y + h);
-	pglVertex2f(x, y + h);
-	pglVertex2f(x + w, y + h);
-	pglEnd();
-
-	GL_Setup3D();
+	CDebugOverlay2D::GetInstance().DrawWireRect(x, y, w, h, Vector(1.0f, 0.5f, 0.0f));
 }
 
 bool R_ScissorForAABB( const Vector &absmin, const Vector &absmax, float *x, float *y, float *w, float *h )
