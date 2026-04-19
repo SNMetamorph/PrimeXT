@@ -30,6 +30,7 @@ GNU General Public License for more details.
 #include "gl_shader.h"
 #include "gl_world.h"
 #include "gl_cvars.h"
+#include "visualizer/debug_visualizer.h"
 
 #define LIGHT_INTERP_UPDATE	0.1f
 #define LIGHT_INTERP_FACTOR	(1.0f / LIGHT_INTERP_UPDATE)
@@ -1861,55 +1862,34 @@ StudioDrawBones
 */
 void CStudioModelRenderer :: StudioDrawBones( void )
 {
-	mstudiobone_t	*pbones = (mstudiobone_t *) ((byte *)m_pStudioHeader + m_pStudioHeader->boneindex);
-	Vector		point;
+	mstudiobone_t *pbones = (mstudiobone_t *) ((byte *)m_pStudioHeader + m_pStudioHeader->boneindex);
+	auto &visualizer = CDebugVisualizer::GetInstance();
 
-	GL_Bind( GL_TEXTURE0, tr.whiteTexture );
-	pglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+	const Vector limbColor( 1.0f, 0.7f, 0.0f );       // orange: bone -> parent segment
+	const Vector jointColor( 0.0f, 0.0f, 0.8f );      // blue:   interior joint markers
+	const Vector rootColor( 0.8f, 0.0f, 0.0f );       // red:    root-bone marker
+	const float jointRadius = 1.5f;
+	const float rootRadius = 2.5f;
 
+	Vector origin, parentOrigin;
 	for( int i = 0; i < m_pStudioHeader->numbones; i++ )
 	{
+		m_pModelInstance->m_pbones[i].GetOrigin( origin );
+
 		if( pbones[i].parent >= 0 )
 		{
-			pglPointSize( 3.0f );
-			pglColor3f( 1, 0.7f, 0 );
-			pglBegin( GL_LINES );
-			
-			m_pModelInstance->m_pbones[pbones[i].parent].GetOrigin( point );
-			pglVertex3fv( point );
-
-			m_pModelInstance->m_pbones[i].GetOrigin( point );
-			pglVertex3fv( point );
-			
-			pglEnd();
-
-			pglColor3f( 0, 0, 0.8f );
-			pglBegin( GL_POINTS );
+			m_pModelInstance->m_pbones[pbones[i].parent].GetOrigin( parentOrigin );
+			visualizer.DrawVector( parentOrigin, origin - parentOrigin, limbColor, std::nullopt, true );
 
 			if( pbones[pbones[i].parent].parent != -1 )
-			{
-				m_pModelInstance->m_pbones[pbones[i].parent].GetOrigin( point );
-				pglVertex3fv( point );
-			}
-
-			m_pModelInstance->m_pbones[i].GetOrigin( point );
-			pglVertex3fv( point );
-			pglEnd();
+				visualizer.DrawSphere( parentOrigin, jointRadius, jointColor, std::nullopt, true );
+			visualizer.DrawSphere( origin, jointRadius, jointColor, std::nullopt, true );
 		}
 		else
 		{
-			// draw parent bone node
-			pglPointSize( 5.0f );
-			pglColor3f( 0.8f, 0, 0 );
-			pglBegin( GL_POINTS );
-
-			m_pModelInstance->m_pbones[i].GetOrigin( point );
-			pglVertex3fv( point );
-			pglEnd();
+			visualizer.DrawSphere( origin, rootRadius, rootColor, std::nullopt, true );
 		}
 	}
-
-	pglPointSize( 1.0f );
 }
 
 /*
@@ -2019,16 +1999,15 @@ void CStudioModelRenderer :: StudioDrawAbsBBox( void )
 
 void CStudioModelRenderer :: StudioDrawAttachments( bool bCustomFov )
 {
-	GL_Bind( GL_TEXTURE0, tr.whiteTexture );
-	pglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-	pglDisable( GL_DEPTH_TEST );
-	
+	auto &visualizer = CDebugVisualizer::GetInstance();
+	const Vector axisColor( 1.0f, 0.0f, 0.0f );    // red: attachment axes
+	const Vector originColor( 0.0f, 1.0f, 0.0f );  // green: attachment origin marker
+	const float originRadius = 2.5f;
+
 	for( int i = 0; i < m_pStudioHeader->numattachments; i++ )
 	{
-		mstudioattachment_t	*pattachments;
+		mstudioattachment_t *pattachments = (mstudioattachment_t *) ((byte *)m_pStudioHeader + m_pStudioHeader->attachmentindex);
 		Vector v[4];
-
-		pattachments = (mstudioattachment_t *) ((byte *)m_pStudioHeader + m_pStudioHeader->attachmentindex);		
 
 		v[0] = m_pModelInstance->m_pbones[pattachments[i].bone].VectorTransform( pattachments[i].org );
 		v[1] = m_pModelInstance->m_pbones[pattachments[i].bone].VectorTransform( g_vecZero );
@@ -2038,30 +2017,11 @@ void CStudioModelRenderer :: StudioDrawAttachments( bool bCustomFov )
 		for( int j = 0; j < 4 && bCustomFov; j++ )
 			StudioFormatAttachment( v[j] );
 
-		pglBegin( GL_LINES );
-		pglColor3f( 1, 0, 0 );
-		pglVertex3fv( v[0] );
-		pglColor3f( 1, 1, 1 );
-		pglVertex3fv( v[1] );
-		pglColor3f( 1, 0, 0 );
-		pglVertex3fv( v[0] );
-		pglColor3f( 1, 1, 1 );
-		pglVertex3fv (v[2] );
-		pglColor3f( 1, 0, 0 );
-		pglVertex3fv( v[0] );
-		pglColor3f( 1, 1, 1 );
-		pglVertex3fv( v[3] );
-		pglEnd();
-
-		pglPointSize( 5.0f );
-		pglColor3f( 0, 1, 0 );
-		pglBegin( GL_POINTS );
-		pglVertex3fv( v[0] );
-		pglEnd();
-		pglPointSize( 1.0f );
+		visualizer.DrawVector( v[0], v[1] - v[0], axisColor, std::nullopt, false );
+		visualizer.DrawVector( v[0], v[2] - v[0], axisColor, std::nullopt, false );
+		visualizer.DrawVector( v[0], v[3] - v[0], axisColor, std::nullopt, false );
+		visualizer.DrawSphere( v[0], originRadius, originColor, std::nullopt, false );
 	}
-
-	pglEnable( GL_DEPTH_TEST );
 }
 
 void CStudioModelRenderer::StudioDrawBodyPartsBBox()
@@ -2096,36 +2056,11 @@ void CStudioModelRenderer::StudioDrawBodyPartsBBox()
 
 		for (int j = 0; j < pSubModel->meshes.size(); j++)
 		{
-			Vector p[8];
 			vbomesh_t *mesh = &pSubModel->meshes[j];
-
-			// compute a full bounding box
 			CBoundingBox meshBounds = StudioGetMeshBounds(m_pModelInstance, mesh);
-			for (int k = 0; k < 8; k++)
-			{
-				p[k].x = (k & 1) ? meshBounds.GetMins().x : meshBounds.GetMaxs().x;
-				p[k].y = (k & 2) ? meshBounds.GetMins().y : meshBounds.GetMaxs().y;
-				p[k].z = (k & 4) ? meshBounds.GetMins().z : meshBounds.GetMaxs().z;
-			}
-
-			GL_Bind(GL_TEXTURE0, tr.whiteTexture);
-			gEngfuncs.pTriAPI->Color4f(0.2f, 1.0f, 0.2f, 1.0f);
-			gEngfuncs.pTriAPI->RenderMode(kRenderTransColor);
-			gEngfuncs.pTriAPI->Begin(TRI_LINES);
-
-			for (int k = 0; k < 6; k++)
-			{				
-				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][0]]);
-				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][1]]);
-				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][1]]);
-				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][2]]);
-				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][2]]);
-				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][3]]);
-				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][3]]);
-				gEngfuncs.pTriAPI->Vertex3fv(p[g_boxpnt[k][0]]);
-			}
-
-			gEngfuncs.pTriAPI->End();
+			CDebugVisualizer::GetInstance().DrawAABB(
+				meshBounds.GetMins(), meshBounds.GetMaxs(),
+				Vector(0.2f, 1.0f, 0.2f), std::nullopt, true);
 		}
 	}
 }
