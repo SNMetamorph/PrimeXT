@@ -33,6 +33,7 @@ GNU General Public License for more details.
 #include "gl_shader.h"
 #include "gl_cvars.h"
 #include "gl_debug.h"
+#include "gl_debug_visualizer_backend.h"
 #include "imgui_manager.h"
 #include "screenfade.h"
 #include "shake.h"
@@ -462,6 +463,9 @@ void GL_BackendEndFrame( ref_viewpass_t *rvp, RefParams params )
 	DrawWirePoly( r_stats.debug_surface );	// 3D
 
 	DBG_DrawLightFrustum();		// 3D
+
+	if( RP_NORMALPASS( ))
+		CDebugVisualizerBackend::GetInstance().DrawFrame();
 
 	R_PushRefState();
 	RI->params = params;

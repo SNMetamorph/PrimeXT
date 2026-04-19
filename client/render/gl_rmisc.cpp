@@ -27,6 +27,7 @@ GNU General Public License for more details.
 #include "gl_cvars.h"
 #include "gl_debug.h"
 #include "gl_unit_cube.h"
+#include "gl_debug_visualizer_backend.h"
 #include "r_weather.h"
 
 #define DEFAULT_SMOOTHNESS			0.0f
@@ -917,6 +918,7 @@ void R_VidInit( void )
 	glState.height = RENDER_GET_PARM( PARM_SCREEN_HEIGHT, 0 );
 
 	COpenGLUnitCube::GetInstance().Initialize();
+	CDebugVisualizerBackend::GetInstance().Initialize();
 	R_InitCommonTextures();
 	R_InitCubemapShaders();
 
