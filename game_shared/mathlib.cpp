@@ -7,6 +7,7 @@
 #include "const.h"
 #include "com_model.h"
 #include <math.h>
+#include <algorithm>
 
 const Vector g_vecZero( 0, 0, 0 );
 const Radian g_radZero( 0, 0, 0 );
@@ -945,6 +946,23 @@ void QuaternionConjugate( const Vector4D &p, Vector4D &q )
 	q.y = -p.y;
 	q.z = -p.z;
 	q.w = p.w;
+}
+
+void QuaternionToAxisAngle( const Vector4D &q, Vector &axis, float &angle )
+{
+	angle = 2.0f * acos( std::clamp( q.w, -1.0f, 1.0f ) );
+	float sinHalf = sin( angle * 0.5f );
+	if( sinHalf > 0.0001f )
+	{
+		axis = Vector( q.x, q.y, q.z ) / sinHalf;
+	}
+	else
+	{
+		axis = Vector( 1, 0, 0 );  // zero rotation, arbitrary axis
+	}
+	// normalise to [-π, π]
+	if( angle > M_PI ) angle -= 2.0f * M_PI;
+	if( angle < -M_PI ) angle += 2.0f * M_PI;
 }
 
 //-----------------------------------------------------------------------------

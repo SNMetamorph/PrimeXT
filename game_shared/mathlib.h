@@ -176,6 +176,7 @@ void QuaternionAdd( const Vector4D &p, const Vector4D &q, Vector4D &qt );
 float QuaternionAngleDiff( const Vector4D &p, const Vector4D &q );
 void QuaternionScale( const Vector4D &p, float t, Vector4D &q );
 void QuaternionConjugate( const Vector4D &p, Vector4D &q );
+void QuaternionToAxisAngle( const Vector4D &q, Vector &axis, float &angle );
 
 //
 // lerping stuff
