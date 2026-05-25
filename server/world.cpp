@@ -77,6 +77,8 @@ public:
 	virtual void	SetLinearMomentum( CBaseEntity *pEntity, const Vector &velocity ) {}
 	virtual void	AddImpulse( CBaseEntity *pEntity, const Vector &impulse, const Vector &position, float factor ) {}
 	virtual void	AddForce( CBaseEntity *pEntity, const Vector &force ) {}
+	virtual void	AddTorque( CBaseEntity *pEntity, const Vector &torque, TorqueMode mode ) {}
+	virtual void	GetTransform( CBaseEntity *pEntity, matrix4x4 &out ) override {}
 	virtual void	EnableCollision( CBaseEntity *pEntity, int fEnable ) {}
 	virtual void	MakeKinematic( CBaseEntity *pEntity, int fEnable ) {}
 	virtual void	UpdateVehicle( CBaseEntity *pObject ) {}

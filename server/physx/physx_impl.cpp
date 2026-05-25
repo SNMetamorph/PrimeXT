@@ -1980,6 +1980,32 @@ void CPhysicPhysX :: AddForce( CBaseEntity *pEntity, const Vector &force )
 	pRigidBody->addForce(force);
 }
 
+void CPhysicPhysX :: AddTorque( CBaseEntity *pEntity, const Vector &torque, TorqueMode mode )
+{
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if( !pActor ) 
+		return;
+
+	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
+	PxForceMode::Enum pxMode = (mode == TorqueMode::Force) ? PxForceMode::eFORCE : PxForceMode::eACCELERATION;
+	pRigidBody->addTorque(torque, pxMode);
+}
+
+void CPhysicPhysX :: GetTransform( CBaseEntity *pEntity, matrix4x4 &out )
+{
+	PxActor *pActor = ActorFromEntity( pEntity );
+	if( !pActor )
+		return;
+
+	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
+	if( !pRigidBody )
+		return;
+
+	PxTransform pose = pRigidBody->getGlobalPose();
+	matrix4x4 m( PxMat44(pose).front() );
+	out = m;
+}
+
 int CPhysicPhysX :: FLoadTree( char *szMapName )
 {
 	if( !szMapName || !*szMapName || !m_pPhysics )

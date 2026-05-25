@@ -65,6 +65,8 @@ public:
 	void	SetLinearMomentum( CBaseEntity *pEntity, const Vector &velocity );
 	void	AddImpulse( CBaseEntity *pEntity, const Vector &impulse, const Vector &position, float factor );
 	void	AddForce( CBaseEntity *pEntity, const Vector &force );
+	void	AddTorque( CBaseEntity *pEntity, const Vector &torque, TorqueMode mode );
+	void	GetTransform( CBaseEntity *pEntity, matrix4x4 &out );
 	void	EnableCollision( CBaseEntity *pEntity, int fEnable );
 	void	MakeKinematic( CBaseEntity *pEntity, int fEnable );
 	void	UpdateVehicle( CBaseEntity *pObject );

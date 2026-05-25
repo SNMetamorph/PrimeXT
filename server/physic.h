@@ -17,10 +17,17 @@ GNU General Public License for more details.
 
 class Vector;
 class CBaseEntity;
+class matrix4x4;
 
 class IPhysicLayer
 {
 public:
+	enum class TorqueMode
+	{
+		Force,			// parameter is torque (Nm) - depends on moment of inertia
+		Acceleration	// parameter is angular acceleration (rad/s²) - inertia-independent
+	};
+
 	virtual void	InitPhysic( void ) = 0;
 	virtual void	FreePhysic( void ) = 0;
 	virtual void	Update( float flTime ) = 0;
@@ -44,6 +51,8 @@ public:
 	virtual void	SetLinearMomentum( CBaseEntity *pEntity, const Vector &velocity ) = 0;
 	virtual void	AddImpulse( CBaseEntity *pEntity, const Vector &impulse, const Vector &position, float factor ) = 0;
 	virtual void	AddForce( CBaseEntity *pEntity, const Vector &force ) = 0;
+	virtual void	AddTorque( CBaseEntity *pEntity, const Vector &torque, TorqueMode mode ) = 0;
+	virtual void	GetTransform( CBaseEntity *pEntity, matrix4x4 &out ) = 0;
 	virtual void	EnableCollision( CBaseEntity *pEntity, int fEnable ) = 0;
 	virtual void	MakeKinematic( CBaseEntity *pEntity, int fEnable ) = 0;
 	virtual void	UpdateVehicle( CBaseEntity *pObject ) = 0;
