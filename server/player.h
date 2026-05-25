@@ -386,6 +386,7 @@ public:
  
 	float	m_flHoldableItemDistance;
 	Vector	m_vecHoldableItemPosition;
+	Vector4D m_quatHoldableRelative; // camera-to-object relative rotation at pickup
 	CRope*	m_pRope;
 
 	float	m_flLastClimbTime;
