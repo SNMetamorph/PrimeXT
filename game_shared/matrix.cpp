@@ -32,15 +32,14 @@ void matrix3x3 :: FromVector( const Vector &forward )
 matrix3x3& matrix3x3 :: operator=(const matrix3x4 &vOther)
 {
 	mat[0][0] = vOther[0][0];
+	mat[0][1] = vOther[0][1];
+	mat[0][2] = vOther[0][2];
+	mat[1][0] = vOther[1][0];
 	mat[1][1] = vOther[1][1];
+	mat[1][2] = vOther[1][2];
+	mat[2][0] = vOther[2][0];
+	mat[2][1] = vOther[2][1];
 	mat[2][2] = vOther[2][2];
-	mat[0][1] = vOther[1][0];
-	mat[0][2] = vOther[1][0];
-	mat[1][0] = vOther[0][1];
-	mat[1][2] = vOther[2][1];
-	mat[2][0] = vOther[0][2];
-	mat[2][1] = vOther[1][2];
-
 	return *this;
 }
 
@@ -48,14 +47,14 @@ matrix3x3& matrix3x3 :: operator=(const matrix3x4 &vOther)
 matrix3x3& matrix3x3 :: operator=(const matrix4x4 &vOther)
 {
 	mat[0][0] = vOther[0][0];
+	mat[0][1] = vOther[0][1];
+	mat[0][2] = vOther[0][2];
+	mat[1][0] = vOther[1][0];
 	mat[1][1] = vOther[1][1];
+	mat[1][2] = vOther[1][2];
+	mat[2][0] = vOther[2][0];
+	mat[2][1] = vOther[2][1];
 	mat[2][2] = vOther[2][2];
-	mat[0][1] = vOther[1][0];
-	mat[0][2] = vOther[1][0];
-	mat[1][0] = vOther[0][1];
-	mat[1][2] = vOther[2][1];
-	mat[2][0] = vOther[0][2];
-	mat[2][1] = vOther[1][2];
 	return *this;
 }
 
