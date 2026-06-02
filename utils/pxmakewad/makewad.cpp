@@ -279,7 +279,7 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 
 			// fit to the replacement
 			image = Image_Resample(image, mipwidth, mipheight);
-			image = Image_Quantize(image); // just in case.
+			image = Image_Quantize(image, DITHER_FLOYD_STEINBERG); // just in case.
 
 			if (extensionMip)
 				result = MIP_WriteMiptex(lumpname, image);
@@ -339,7 +339,7 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 			if (imageHasAlpha) {
 				alphaMask = Image_ExtractAlphaMask(image);
 			}
-			image = Image_Quantize(image); // now quantize image
+			image = Image_Quantize(image, DITHER_FLOYD_STEINBERG); // now quantize image
 			if (imageHasAlpha) 
 			{
 				Image_ApplyAlphaMask(image, alphaMask, alpha_threshold);
@@ -379,7 +379,7 @@ FileStatusCode WAD_CreateTexture( const char *filename )
 			if (imageHasAlpha) {
 				alphaMask = Image_ExtractAlphaMask(image);
 			}
-			image = Image_Quantize(image); // now quantize image
+			image = Image_Quantize(image, DITHER_FLOYD_STEINBERG); // now quantize image
 			if (imageHasAlpha) 
 			{
 				Image_ApplyAlphaMask(image, alphaMask, alpha_threshold);
