@@ -2763,17 +2763,14 @@ void Image_BuildMipMap( byte *in, int width, int height, bool isNormalMap, bool 
 	}
 	else
 	{
-#if 0
-		Image_BuildMipMapLinear( (uint *)in, width, height );
-#else
-		width <<= 2;
-		height >>= 1;
-
-		for( y = 0; y < height; y++, in += width )
+		if( gammaCorrect )
 		{
-			for( x = 0; x < width; x += 8, in += 8, out += 4 )
+			width <<= 2;
+			height >>= 1;
+
+			for( y = 0; y < height; y++, in += width )
 			{
-				if( gammaCorrect )
+				for( x = 0; x < width; x += 8, in += 8, out += 4 )
 				{
 					for( int i = 0; i < 3; i++ )
 					{
@@ -2783,18 +2780,22 @@ void Image_BuildMipMap( byte *in, int width, int height, bool isNormalMap, bool 
 						col += TextureToLinear( in[width+i+4] );
 						out[i] = LinearToTexture( col * 0.25f );
 					}
-					out[3] = (in[3] + in[7] + in[width+3] + in[width+7]) >> 2;	//filter alpha in linear space
-				} 
-				else
-				{
-					out[0] = (in[0] + in[4] + in[width+0] + in[width+4]) >> 2;
-					out[1] = (in[1] + in[5] + in[width+1] + in[width+5]) >> 2;
-					out[2] = (in[2] + in[6] + in[width+2] + in[width+6]) >> 2;
-					out[3] = (in[3] + in[7] + in[width+3] + in[width+7]) >> 2;
+					out[3] = (byte)((in[3] + in[7] + in[width+3] + in[width+7] + 2) >> 2);
 				}
 			}
 		}
-#endif
+		else
+		{
+			int	outW, outH;
+			byte	*temp;
+
+			outW = width >> 1;
+			outH = height >> 1;
+			temp = (byte *)Mem_Alloc( outW * outH * 4 );
+			Image_Resample32Mitchell( in, width, height, temp, outW, outH );
+			memcpy( in, temp, outW * outH * 4 );
+			Mem_Free( temp );
+		}
 	}
 }
 
