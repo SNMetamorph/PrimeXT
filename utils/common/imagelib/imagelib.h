@@ -213,6 +213,12 @@ typedef struct saveimage_s
 	bool		(*savefunc)( const char *name, rgbdata_t *pix );
 } saveimage_t;
 
+typedef enum
+{
+	DITHER_NONE = 0,
+	DITHER_FLOYD_STEINBERG
+} ditherType_t;
+
 typedef byte* (*pfnLoadFileInternal)(const char*, size_t*, bool);
 
 // image loading
@@ -249,7 +255,7 @@ rgbdata_t *Image_CreateCubemap( rgbdata_t *images[6], bool skybox = false, bool 
 void Image_ConvertBumpStalker( rgbdata_t *bump, rgbdata_t *gloss );
 rgbdata_t *Image_ExtractAlphaMask( rgbdata_t *pic );
 bool Image_ApplyAlphaMask( rgbdata_t *pic, rgbdata_t *alphaMask, float alphaThreshold );
-rgbdata_t *Image_Quantize( rgbdata_t *pic );
+rgbdata_t *Image_Quantize( rgbdata_t *pic, ditherType_t ditherType = DITHER_NONE );
 void Image_ApplyGamma( rgbdata_t *pic );
 
 extern float	g_gamma;

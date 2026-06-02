@@ -427,7 +427,7 @@ void learn( void )
 }
 
 // returns the actual number of palette entries.
-rgbdata_t *Image_Quantize( rgbdata_t *pic )
+rgbdata_t *Image_Quantize( rgbdata_t *pic, ditherType_t ditherType )
 {
 	rgbdata_t	*out;
 	int	i, samples;
@@ -458,8 +458,99 @@ rgbdata_t *Image_Quantize( rgbdata_t *pic )
 
 	inxbuild();
 
-	for( i = 0; i < pic->width * pic->height; i++ )
-		out->buffer[i] = inxsearch( pic->buffer[i*4+0], pic->buffer[i*4+1], pic->buffer[i*4+2] );
+	if( ditherType == DITHER_NONE )
+	{
+		for( i = 0; i < pic->width * pic->height; i++ )
+			out->buffer[i] = inxsearch( pic->buffer[i*4+0], pic->buffer[i*4+1], pic->buffer[i*4+2] );
+	}
+	else if( ditherType == DITHER_FLOYD_STEINBERG )
+	{
+		const int width = pic->width;
+		const int height = pic->height;
+		constexpr float colorBleedReductionCoeff = 0.75f;
+
+		// full-image FP32 error accumulator: each pixel gets its own isolated slot
+		// eliminates row-cycling artifacts from reuse of 2-row buffer
+		float *err = (float *)Mem_Alloc( width * height * 3 * sizeof( float ));
+		if( !err ) 
+			return NULL;
+
+		memset( err, 0, width * height * 3 * sizeof( float ));
+
+		for( int y = 0; y < height; y++ )
+		{
+			const bool leftToRight = (y % 2 == 0);
+			const int startX = leftToRight ? 0 : width - 1;
+			const int endX = leftToRight ? width : -1;
+			const int step = leftToRight ? 1 : -1;
+
+			for( int x = startX; x != endX; x += step )
+			{
+				const int idx = y * width + x;
+				const int cx = ( y * width + x ) * 3;
+
+				const float raw_r = pic->buffer[idx*4+0] + err[cx+0];
+				const float raw_g = pic->buffer[idx*4+1] + err[cx+1];
+				const float raw_b = pic->buffer[idx*4+2] + err[cx+2];
+
+				const int r = bound( 0, (int)(raw_r + 0.5f), 255 );
+				const int g = bound( 0, (int)(raw_g + 0.5f), 255 );
+				const int b = bound( 0, (int)(raw_b + 0.5f), 255 );
+
+				int bestIdx = inxsearch( r, g, b );
+				out->buffer[idx] = bestIdx;
+
+				float er = raw_r - (float)out->palette[bestIdx*4+0];
+				float eg = raw_g - (float)out->palette[bestIdx*4+1];
+				float eb = raw_b - (float)out->palette[bestIdx*4+2];
+
+				// color bleed reduction: fixes "worms" artifacts
+				er *= colorBleedReductionCoeff;
+				eg *= colorBleedReductionCoeff;
+				eb *= colorBleedReductionCoeff;
+
+				// serpentine scanning: mirror neighbor offsets based on scan direction
+				const int x_next = leftToRight ? x + 1 : x - 1;
+				const int x_prev = leftToRight ? x - 1 : x + 1;
+				const bool hasNext = leftToRight ? (x + 1 < width) : (x > 0);
+				const bool hasPrev = leftToRight ? (x > 0) : (x + 1 < width);
+
+				if( hasNext )
+				{
+					const int nc = ( y * width + x_next ) * 3;
+					err[nc+0] += er * 7.0f / 16.0f;
+					err[nc+1] += eg * 7.0f / 16.0f;
+					err[nc+2] += eb * 7.0f / 16.0f;
+				}
+
+				if( y + 1 < height )
+				{
+					if( hasPrev )
+					{
+						const int nd = (( y + 1 ) * width + x_prev ) * 3;
+						err[nd+0] += er * 3.0f / 16.0f;
+						err[nd+1] += eg * 3.0f / 16.0f;
+						err[nd+2] += eb * 3.0f / 16.0f;
+					}
+
+					const int nd = (( y + 1 ) * width + x ) * 3;
+					err[nd+0] += er * 5.0f / 16.0f;
+					err[nd+1] += eg * 5.0f / 16.0f;
+					err[nd+2] += eb * 5.0f / 16.0f;
+
+					if( hasNext )
+					{
+						const int nd = (( y + 1 ) * width + x_next ) * 3;
+						err[nd+0] += er * 1.0f / 16.0f;
+						err[nd+1] += eg * 1.0f / 16.0f;
+						err[nd+2] += eb * 1.0f / 16.0f;
+					}
+				}
+			}
+		}
+
+		Mem_Free( err );
+	}
 
 	Image_Free( pic ); // release RGBA image
 	return out;
