@@ -1055,7 +1055,7 @@ mxImage *GlWindow::readTextureFromFile(const char *filename)
 		return nullptr; // File didn't exist, or can't be reached
 	}
 
-	imageData = Image_Quantize(imageData);
+	imageData = Image_Quantize(imageData, DITHER_FLOYD_STEINBERG);
 	if (!(imageData->flags & IMAGE_QUANTIZED))
 	{
 		return nullptr; // Quantizer failed
