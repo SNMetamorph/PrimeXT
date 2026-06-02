@@ -19,7 +19,7 @@ GNU General Public License for more details.
 #include "mathlib.h"
 #include "imagelib.h"
 
-#define netsize		256			// number of colours used
+#define netsize		255			// number of colours used
 #define prime1		499
 #define prime2		491
 #define prime3		487
