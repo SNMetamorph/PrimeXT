@@ -2172,6 +2172,220 @@ static void Image_Resample32Lerp( const void *indata, int inwidth, int inheight,
 	Mem_Free( resamplerow1 );
 }
 
+/*
+================
+Image_MitchellFilter
+
+Mitchell-Netrevalli reconstruction filter with B=1/3, C=1/3
+================
+*/
+static float Image_MitchellFilter( float x )
+{
+	x = ( x < 0.0f ) ? -x : x;
+
+	if( x < 1.0f )
+		return ( 21.0f * x * x * x - 36.0f * x * x + 16.0f ) * ( 1.0f / 18.0f );
+
+	if( x < 2.0f )
+		return ( -7.0f * x * x * x + 36.0f * x * x - 60.0f * x + 32.0f ) * ( 1.0f / 18.0f );
+
+	return 0.0f;
+}
+
+/*
+================
+Image_ResampleHorizontal_Mitchell
+
+Resample a single row horizontally using Mitchell filter with premultiplied alpha
+================
+*/
+static void Image_ResampleHorizontal_Mitchell( const byte *in, int inW, int outW, byte *out )
+{
+	float	scale, radius;
+	int	x;
+
+	scale = (float)inW / (float)outW;
+	radius = ( inW > outW ) ? 2.0f * scale : 2.0f;
+
+	for( x = 0; x < outW; x++ )
+	{
+		float	center;
+		int	i, left, right, si;
+		float	sumW, sumRp, sumGp, sumBp, sumA;
+
+		center = ( (float)x + 0.5f ) * scale - 0.5f;
+		left = (int)ceil( center - radius );
+		right = (int)floor( center + radius );
+
+		sumW = 0.0f;
+		sumRp = sumGp = sumBp = sumA = 0.0f;
+
+		for( i = left; i <= right; i++ )
+		{
+			float	d, weight;
+			float	r, g, b, a;
+
+			si = bound( 0, i, inW - 1 );
+			d = (float)( i - center );
+
+			if( inW > outW )
+				weight = Image_MitchellFilter( d / scale ) / scale;
+			else
+				weight = Image_MitchellFilter( d );
+
+			r = in[si * 4 + 0];
+			g = in[si * 4 + 1];
+			b = in[si * 4 + 2];
+			a = in[si * 4 + 3];
+
+			// premultiplied alpha: r * a / 255
+			sumRp += r * a * ( 1.0f / 255.0f ) * weight;
+			sumGp += g * a * ( 1.0f / 255.0f ) * weight;
+			sumBp += b * a * ( 1.0f / 255.0f ) * weight;
+			sumA += a * weight;
+			sumW += weight;
+		}
+
+		if( sumW > 0.0f )
+		{
+			sumRp /= sumW;
+			sumGp /= sumW;
+			sumBp /= sumW;
+			sumA /= sumW;
+		}
+
+		if( sumA > 0.0f )
+		{
+			float	invA = 255.0f / sumA;
+
+			out[x * 4 + 0] = (byte)bound( 0, (int)( sumRp * invA + 0.5f ), 255 );
+			out[x * 4 + 1] = (byte)bound( 0, (int)( sumGp * invA + 0.5f ), 255 );
+			out[x * 4 + 2] = (byte)bound( 0, (int)( sumBp * invA + 0.5f ), 255 );
+		}
+		else
+		{
+			out[x * 4 + 0] = out[x * 4 + 1] = out[x * 4 + 2] = 0;
+		}
+		out[x * 4 + 3] = (byte)bound( 0, (int)( sumA + 0.5f ), 255 );
+	}
+}
+
+/*
+================
+Image_ResampleVertical_Mitchell
+
+Resample image columns using Mitchell filter with premultiplied alpha
+================
+*/
+static void Image_ResampleVertical_Mitchell( const byte *in, int inH, int outH, byte *out, int outW )
+{
+	float	scale, radius;
+	int	x;
+
+	scale = (float)inH / (float)outH;
+	radius = ( inH > outH ) ? 2.0f * scale : 2.0f;
+
+	for( x = 0; x < outW; x++ )
+	{
+		int	y;
+
+		for( y = 0; y < outH; y++ )
+		{
+			float	center;
+			int	i, top, bottom, si;
+			float	sumW, sumRp, sumGp, sumBp, sumA;
+
+			center = ( (float)y + 0.5f ) * scale - 0.5f;
+			top = (int)ceil( center - radius );
+			bottom = (int)floor( center + radius );
+
+			sumW = 0.0f;
+			sumRp = sumGp = sumBp = sumA = 0.0f;
+
+			for( i = top; i <= bottom; i++ )
+			{
+				float	d, weight;
+				float	r, g, b, a;
+
+				si = bound( 0, i, inH - 1 );
+				d = (float)( i - center );
+
+				if( inH > outH )
+					weight = Image_MitchellFilter( d / scale ) / scale;
+				else
+					weight = Image_MitchellFilter( d );
+
+				r = in[si * outW * 4 + x * 4 + 0];
+				g = in[si * outW * 4 + x * 4 + 1];
+				b = in[si * outW * 4 + x * 4 + 2];
+				a = in[si * outW * 4 + x * 4 + 3];
+
+				sumRp += r * a * ( 1.0f / 255.0f ) * weight;
+				sumGp += g * a * ( 1.0f / 255.0f ) * weight;
+				sumBp += b * a * ( 1.0f / 255.0f ) * weight;
+				sumA += a * weight;
+				sumW += weight;
+			}
+
+			if( sumW > 0.0f )
+			{
+				sumRp /= sumW;
+				sumGp /= sumW;
+				sumBp /= sumW;
+				sumA /= sumW;
+			}
+
+			if( sumA > 0.0f )
+			{
+				float	invA = 255.0f / sumA;
+
+				out[y * outW * 4 + x * 4 + 0] = (byte)bound( 0, (int)( sumRp * invA + 0.5f ), 255 );
+				out[y * outW * 4 + x * 4 + 1] = (byte)bound( 0, (int)( sumGp * invA + 0.5f ), 255 );
+				out[y * outW * 4 + x * 4 + 2] = (byte)bound( 0, (int)( sumBp * invA + 0.5f ), 255 );
+			}
+			else
+			{
+				out[y * outW * 4 + x * 4 + 0] = out[y * outW * 4 + x * 4 + 1] = out[y * outW * 4 + x * 4 + 2] = 0;
+			}
+			out[y * outW * 4 + x * 4 + 3] = (byte)bound( 0, (int)( sumA + 0.5f ), 255 );
+		}
+	}
+}
+
+/*
+================
+Image_Resample32Mitchell
+
+Arbitrary image resampling using separable Mitchell-Netrevalli filter
+
+Handles premultiplied alpha for correct compositing at transparency boundaries
+================
+*/
+static void Image_Resample32Mitchell( const void *indata, int inW, int inH, void *outdata, int outW, int outH )
+{
+	byte	*temp;
+	int	y;
+
+	// allocate temporary buffer for horizontal pass
+	temp = (byte *)Mem_Alloc( outW * inH * 4 );
+
+	// horizontal pass: resample each row from inW to outW
+	for( y = 0; y < inH; y++ )
+	{
+		const byte	*inRow;
+		byte	*outRow;
+
+		inRow = (const byte *)indata + y * inW * 4;
+		outRow = temp + y * outW * 4;
+		Image_ResampleHorizontal_Mitchell( inRow, inW, outW, outRow );
+	}
+
+	// vertical pass: resample each column from inH to outH
+	Image_ResampleVertical_Mitchell( temp, inH, outH, (byte *)outdata, outW );
+
+	Mem_Free( temp );
+}
+
 static void Image_Resample8Nolerp( const void *indata, int inwidth, int inheight, void *outdata, int outwidth, int outheight )
 {
 	int	i, j;
@@ -2215,7 +2429,7 @@ rgbdata_t *Image_Resample( rgbdata_t *pic, int new_width, int new_height )
 	if (FBitSet(pic->flags, IMAGE_QUANTIZED))
 		Image_Resample8Nolerp(pic->buffer, pic->width, pic->height, out->buffer, out->width, out->height);
 	else
-		Image_Resample32Lerp(pic->buffer, pic->width, pic->height, out->buffer, out->width, out->height);
+		Image_Resample32Mitchell(pic->buffer, pic->width, pic->height, out->buffer, out->width, out->height);
 
 	// copy remaining data from source
 	if (FBitSet(pic->flags, IMAGE_QUANTIZED))
