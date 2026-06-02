@@ -110,7 +110,7 @@ miptex_t *GetTextureByMiptex( int miptex )
 		rgbdata_t* texture = TryLoadMiptex(mt->name);
 		if (texture)
 		{
-			texture = Image_Quantize(texture);
+			texture = Image_Quantize(texture, DITHER_FLOYD_STEINBERG);
 			miptex_t	*newMip = static_cast<miptex_t*>(Mem_Alloc(sizeof(miptex_t) + ((texture->width * texture->height * 85) >> 6) + sizeof(short) + 768));
 			memcpy(newMip, mt->name, 16); // Miptex name
 			newMip->width = texture->width;
