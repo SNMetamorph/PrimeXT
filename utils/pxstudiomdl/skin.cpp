@@ -103,7 +103,7 @@ void Grab_Skin( s_texture_t *ptexture )
 	if (transparent) {
 		alphaMask = Image_ExtractAlphaMask(pic);
 	}
-	pic = Image_Quantize(pic); // quantize if needs
+	pic = Image_Quantize(pic, DITHER_FLOYD_STEINBERG); // quantize if needs
 
 	if (transparent)
 	{
