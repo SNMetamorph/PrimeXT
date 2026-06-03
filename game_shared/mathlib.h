@@ -86,6 +86,24 @@ void VectorAngles( const Vector &forward, Vector &angles );
 void VectorAnglesSQB(const Vector &forward, Vector &angles);
 void UTIL_MoveBounds(const Vector &start, const Vector &mins, const Vector &maxs, const Vector &end, Vector &outmins, Vector &outmaxs);
 
+// density conversions: kg per cubic meter <-> kg per cubic inch
+constexpr inline float CubicInchesPerCubicMeter() 
+{ 
+	return 1.0f / ( METERS_PER_INCH * METERS_PER_INCH * METERS_PER_INCH ); 
+}
+
+// kg/m³ -> kg/unit³
+constexpr inline float MetricDensityToEngine(float densityMetric) 
+{ 
+	return densityMetric / CubicInchesPerCubicMeter(); 
+}
+
+// kg/unit³ -> kg/m³
+constexpr inline float EngineDensityToMetric(float densityEngine) 
+{ 
+	return densityEngine * CubicInchesPerCubicMeter(); 
+}
+
 // Remap a value in the range [A,B] to [C,D].
 inline float RemapVal( float val, float A, float B, float C, float D)
 {
