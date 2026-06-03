@@ -1,4 +1,4 @@
-// PrimeXT FGD (last updated 27 Aug 2025)
+// PrimeXT FGD (last updated 4 June 2026)
 // Please report any found errors at: https://github.com/SNMetamorph/PrimeXT/issues (Subject: "FGD error")
 
 //
@@ -1579,6 +1579,7 @@
 		8: "Rocks"
 	]
 	gibmodel(studio) : "Gib Model" : ""
+	density(string) : "Density (kg/m^3)" : "900"
 	spawnflags(Flags) = 
 	[
 		128 : "Breakable" 	: 0
@@ -2134,6 +2135,7 @@
 		8: "Rocks"
 	]
 	gibmodel(studio) : "Gib Model" : ""
+	density(string) : "Density (kg/m^3)" : "900"
 	spawnflags(Flags) = 
 	[
 		128 : "Breakable" 	: 0
