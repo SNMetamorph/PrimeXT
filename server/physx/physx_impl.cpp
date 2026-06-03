@@ -1284,6 +1284,7 @@ void *CPhysicPhysX::CreateTriggerFromEntity(CBaseEntity *pEntity)
 
 	pShape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
 	pShape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
+	pActor->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
 	pActor->setName(pEntity->GetClassname());
 	pActor->userData = pEntity->edict();
 	m_pScene->addActor(*pActor);
