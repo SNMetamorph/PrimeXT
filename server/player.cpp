@@ -3167,10 +3167,10 @@ void CBasePlayer::UpdateHoldableItem( void )
 	constexpr float cancelDistOffset = 64.0f;
 	// linear spring constant (force per unit displacement toward target)
 	// must be >> gravity (~800 u/s^2) * mass to overcome weight
-	constexpr float spring = 100000.0f;
+	constexpr float spring = 70000.0f;
 	// linear damping constant (force per unit velocity)
 	// prevents oscillation; higher = less wiggly, more sluggish
-	constexpr float damping = 17000.0f;
+	constexpr float damping = 6000.0f;
 	// angular spring constant (rad/s² per rad of orientation error)
 	// PD torque toward target rotation extracted from delta quaternion
 	constexpr float angSpring = 500.0f;
