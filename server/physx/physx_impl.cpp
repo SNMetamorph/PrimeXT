@@ -49,8 +49,8 @@ GNU General Public License for more details.
 #endif
 
 constexpr float k_PaddingFactor = 0.49f;
-constexpr float k_DensityFactor = 0.05f;
-constexpr float k_WaterDensity = 0.030f;
+constexpr float k_DefaultDensity = MetricDensityToEngine(900.f); // like wood
+constexpr float k_WaterDensity = MetricDensityToEngine(1000.f);
 constexpr float k_WaterLinearDragFactor = 500.f;
 constexpr float k_WaterAngularDragFactor = 1.0f;
 constexpr uint32_t k_SolverIterationCount = 4;
@@ -109,7 +109,7 @@ void CPhysicPhysX :: InitPhysic( void )
 	}
 
 	PxTolerancesScale scale;
-	scale.length = 39.3701;   // typical length of an object
+	scale.length = 1.0f / METERS_PER_INCH;   // typical length of an object
 	scale.speed = 800.0;   // typical speed of an object, gravity*1s is a reasonable choice
 	
 	if (DebugEnabled()) 
@@ -1139,7 +1139,12 @@ void *CPhysicPhysX :: CreateBodyFromEntity( CBaseEntity *pObject )
 	pActor->setMaxLinearVelocity(maxVelocity);
 	pActor->setMaxAngularVelocity(720.0);
 	pActor->userData = pObject->edict();
-	PxRigidBodyExt::updateMassAndInertia(*pActor, k_DensityFactor);
+
+	float density = pObject->GetDensity();
+	if (density <= 0.0f)
+		density = k_DefaultDensity;
+
+	PxRigidBodyExt::updateMassAndInertia(*pActor, density);
 
 	m_pScene->addActor(*pActor);
 	pObject->m_iActorType = ACTOR_DYNAMIC;
@@ -1822,7 +1827,11 @@ void *CPhysicPhysX :: RestoreBody( CBaseEntity *pEntity )
 			pRigidBody->setAngularVelocity(pEntity->GetAbsAvelocity());
 		}
 
-		PxRigidBodyExt::updateMassAndInertia(*pRigidBody, k_DensityFactor);
+		float density = pEntity->GetDensity();
+		if (density <= 0.0f)
+			density = k_DefaultDensity;
+
+		PxRigidBodyExt::updateMassAndInertia(*pRigidBody, density);
 		if (pEntity->m_fFreezed && pEntity->m_iActorType == ACTOR_DYNAMIC) {
 			pRigidBody->putToSleep();
 		}

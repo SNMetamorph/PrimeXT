@@ -389,6 +389,7 @@ public:
 	virtual int Classify ( void ) { return CLASS_NONE; };
 	virtual void DeathNotice ( entvars_t *pevChild ) { } // monster maker children use this to tell the monster maker that they have died.
 	virtual BOOL IsRigidBody( void ) { return (m_iActorType == ACTOR_DYNAMIC); } 
+	virtual float GetDensity( void ) const { return 0.0f; }
 
 	void SetMoveDir( const Vector& v ) { pev->movedir = v; }
 	void SetBaseVelocity( const Vector& v ) { pev->basevelocity = v; }

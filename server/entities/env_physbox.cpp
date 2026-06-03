@@ -23,6 +23,7 @@ LINK_ENTITY_TO_CLASS( env_physbox, CPhysEntity );		// just an alias for VHE
 BEGIN_DATADESC( CPhysEntity )
 	DEFINE_FIELD( m_Material, FIELD_INTEGER ),
 	DEFINE_KEYFIELD( m_iszGibModel, FIELD_STRING, "gibmodel" ),
+	DEFINE_KEYFIELD( m_flDensity, FIELD_FLOAT, "density" ),
 END_DATADESC()
 
 void CPhysEntity :: Precache( void )
@@ -104,6 +105,11 @@ void CPhysEntity::KeyValue( KeyValueData* pkvd )
 	else if (FStrEq(pkvd->szKeyName, "gibmodel") )
 	{
 		m_iszGibModel = ALLOC_STRING(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "density") )
+	{
+		m_flDensity = MetricDensityToEngine( atof( pkvd->szValue ) );
 		pkvd->fHandled = TRUE;
 	}
 	else
