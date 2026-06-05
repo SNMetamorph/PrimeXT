@@ -3165,12 +3165,11 @@ void CBasePlayer::UpdateHoldableItem( void )
 {
 	// max distance from eye before drag cancels (initial distance + this offset)
 	constexpr float cancelDistOffset = 64.0f;
-	// linear spring constant (force per unit displacement toward target)
-	// must be >> gravity (~800 u/s^2) * mass to overcome weight
-	constexpr float spring = 70000.0f;
-	// linear damping constant (force per unit velocity)
-	// prevents oscillation; higher = less wiggly, more sluggish
-	constexpr float damping = 6000.0f;
+	// linear spring gain in acceleration-space (in/s² per inch of displacement)
+	// acceleration = spring * error - damping * velocity → mass-independent
+	constexpr float spring = 100.0f;
+	// linear damping gain in acceleration-space (in/s² per in/s of velocity)
+	constexpr float damping = 9.0f;
 	// angular spring constant (rad/s² per rad of orientation error)
 	// PD torque toward target rotation extracted from delta quaternion
 	constexpr float angSpring = 500.0f;
@@ -3201,10 +3200,10 @@ void CBasePlayer::UpdateHoldableItem( void )
 			return;
 		}
 
-		// spring-damper force toward target position
+		// spring-damper toward target position (acceleration-space, mass-independent)
 		Vector vecDisplacement = vecDst - vecItemPos;
-		Vector vecForce = vecDisplacement * spring - vecItemVel * damping;
-		WorldPhysic->AddForce( m_pHoldableItem, vecForce );
+		Vector desiredAccel = vecDisplacement * spring - vecItemVel * damping;
+		WorldPhysic->AddForce( m_pHoldableItem, desiredAccel, IPhysicLayer::ForceMode::Acceleration );
 
 		// full quaternion-based orientation control
 		matrix3x3 camMat(Vector(0.f, pev->v_angle.y, 0.f));
@@ -3231,7 +3230,7 @@ void CBasePlayer::UpdateHoldableItem( void )
 		// PD torque around rotation axis + perpendicular damping
 		Vector torque = rotAxis * ( flAngle * angSpring - flVelProj * angDamping );
 		torque -= ( angVel - rotAxis * flVelProj ) * angDamping;
-		WorldPhysic->AddTorque( m_pHoldableItem, torque, IPhysicLayer::TorqueMode::Acceleration );
+		WorldPhysic->AddTorque( m_pHoldableItem, torque, IPhysicLayer::ForceMode::Acceleration );
 
 		// refresh the last valid position
 		m_vecHoldableItemPosition = vecItemPos;
