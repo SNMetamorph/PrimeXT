@@ -64,8 +64,8 @@ public:
 	void	RotateObject( CBaseEntity *pEntity, const Vector &finalAngle );
 	void	SetLinearMomentum( CBaseEntity *pEntity, const Vector &velocity );
 	void	AddImpulse( CBaseEntity *pEntity, const Vector &impulse, const Vector &position, float factor );
-	void	AddForce( CBaseEntity *pEntity, const Vector &force );
-	void	AddTorque( CBaseEntity *pEntity, const Vector &torque, TorqueMode mode );
+	void	AddForce( CBaseEntity *pEntity, const Vector &force, ForceMode mode = ForceMode::Force );
+	void	AddTorque( CBaseEntity *pEntity, const Vector &torque, ForceMode mode = ForceMode::Force );
 	void	GetTransform( CBaseEntity *pEntity, matrix4x4 &out );
 	void	EnableCollision( CBaseEntity *pEntity, int fEnable );
 	void	MakeKinematic( CBaseEntity *pEntity, int fEnable );

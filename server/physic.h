@@ -22,10 +22,12 @@ class matrix4x4;
 class IPhysicLayer
 {
 public:
-	enum class TorqueMode
+	enum class ForceMode
 	{
-		Force,			// parameter is torque (Nm) - depends on moment of inertia
-		Acceleration	// parameter is angular acceleration (rad/s²) - inertia-independent
+		Force,			//!< parameter is a force (N) or torque (Nm) — depends on mass/inertia
+		Impulse,		//!< parameter is an impulse (N·s) or angular impulse (Nm·s) — mass/inertia dependent
+		VelocityChange,	//!< parameter is a velocity change (distance/time) or angular velocity change (rad/s) — mass/inertia independent
+		Acceleration	//!< parameter is an acceleration (distance/time²) or angular acceleration (rad/s²) — mass/inertia independent
 	};
 
 	virtual void	InitPhysic( void ) = 0;
@@ -50,8 +52,8 @@ public:
 	virtual void	RotateObject( CBaseEntity *pEntity, const Vector &finalAngle ) = 0;
 	virtual void	SetLinearMomentum( CBaseEntity *pEntity, const Vector &velocity ) = 0;
 	virtual void	AddImpulse( CBaseEntity *pEntity, const Vector &impulse, const Vector &position, float factor ) = 0;
-	virtual void	AddForce( CBaseEntity *pEntity, const Vector &force ) = 0;
-	virtual void	AddTorque( CBaseEntity *pEntity, const Vector &torque, TorqueMode mode ) = 0;
+	virtual void	AddForce( CBaseEntity *pEntity, const Vector &force, ForceMode mode = ForceMode::Force ) = 0;
+	virtual void	AddTorque( CBaseEntity *pEntity, const Vector &torque, ForceMode mode = ForceMode::Force ) = 0;
 	virtual void	GetTransform( CBaseEntity *pEntity, matrix4x4 &out ) = 0;
 	virtual void	EnableCollision( CBaseEntity *pEntity, int fEnable ) = 0;
 	virtual void	MakeKinematic( CBaseEntity *pEntity, int fEnable ) = 0;

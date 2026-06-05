@@ -1980,25 +1980,42 @@ void CPhysicPhysX :: AddImpulse( CBaseEntity *pEntity, const Vector &impulse, co
 	PxRigidBodyExt::addForceAtPos(*pRigidBody, PxVec3(impulse * coeff), position, PxForceMode::eIMPULSE);
 }
 
-void CPhysicPhysX :: AddForce( CBaseEntity *pEntity, const Vector &force )
+void CPhysicPhysX :: AddForce( CBaseEntity *pEntity, const Vector &force, ForceMode mode )
 {
 	PxActor *pActor = ActorFromEntity( pEntity );
 	if( !pActor ) 
 		return;
 
 	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
-	pRigidBody->addForce(force);
+	if( !pRigidBody ) 
+		return;
+
+	switch( mode )
+	{
+		case ForceMode::Impulse: pRigidBody->addForce( force, PxForceMode::eIMPULSE ); break;
+		case ForceMode::VelocityChange: pRigidBody->addForce( force, PxForceMode::eVELOCITY_CHANGE ); break;
+		case ForceMode::Acceleration: pRigidBody->addForce( force, PxForceMode::eACCELERATION ); break;
+		default: pRigidBody->addForce( force, PxForceMode::eFORCE ); break;
+	}
 }
 
-void CPhysicPhysX :: AddTorque( CBaseEntity *pEntity, const Vector &torque, TorqueMode mode )
+void CPhysicPhysX :: AddTorque( CBaseEntity *pEntity, const Vector &torque, ForceMode mode )
 {
 	PxActor *pActor = ActorFromEntity( pEntity );
 	if( !pActor ) 
 		return;
 
 	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
-	PxForceMode::Enum pxMode = (mode == TorqueMode::Force) ? PxForceMode::eFORCE : PxForceMode::eACCELERATION;
-	pRigidBody->addTorque(torque, pxMode);
+	if( !pRigidBody ) 
+		return;
+
+	switch( mode )
+	{
+		case ForceMode::Impulse: pRigidBody->addTorque( torque, PxForceMode::eIMPULSE ); break;
+		case ForceMode::VelocityChange: pRigidBody->addTorque( torque, PxForceMode::eVELOCITY_CHANGE ); break;
+		case ForceMode::Acceleration: pRigidBody->addTorque( torque, PxForceMode::eACCELERATION ); break;
+		default: pRigidBody->addTorque( torque, PxForceMode::eFORCE ); break;
+	}
 }
 
 void CPhysicPhysX :: GetTransform( CBaseEntity *pEntity, matrix4x4 &out )
