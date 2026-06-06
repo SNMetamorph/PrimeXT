@@ -21,6 +21,7 @@ uniform sampler2DShadow	u_ShadowMap1;
 uniform sampler2DShadow	u_ShadowMap2;
 uniform sampler2DShadow	u_ShadowMap3;
 
+uniform mat4		u_ModelViewMatrix;
 uniform mat4		u_ShadowMatrix[MAX_SHADOWMAPS];
 uniform vec4		u_ShadowSplitDist;
 uniform vec4		u_TexelSize;	// shadowmap resolution
@@ -43,7 +44,7 @@ float ShadowProj( const in vec3 world )
 	float shadow = 0.0;
 
 	// transform to camera space
-	vec4 cam = gl_ModelViewMatrix * vec4( world.xyz, 1.0 );
+	vec4 cam = u_ModelViewMatrix * vec4( world.xyz, 1.0 );
 	float vertexDistanceToCamera = -cam.z;
 	vec3 shadowVert;
 

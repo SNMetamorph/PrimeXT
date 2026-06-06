@@ -3620,6 +3620,23 @@ void CStudioModelRenderer :: DrawSingleMesh( CSolidEntry *entry, bool force, boo
 		case UT_SWAYHEIGHT:
 			u->SetValue(mat->swayHeight);
 			break;
+		case UT_MODELVIEWMATRIX:
+			u->SetValue( &RI->view.worldMatrix );
+			break;
+		case UT_MODELVIEWPROJECTIONMATRIX:
+			u->SetValue( &RI->view.worldProjectionMatrix );
+			break;
+		case UT_CLIPPLANE:
+		{
+			GLdouble	clip[4];
+			mplane_t	*p = &RI->clipPlane;
+
+			GL_InitClipPlane(p, clip);
+
+			u->SetValue(clip);
+
+			break;
+		}
 		default:
 			ALERT( at_error, "%s: unhandled uniform %s\n", RI->currentshader->name, u->name );
 			break;

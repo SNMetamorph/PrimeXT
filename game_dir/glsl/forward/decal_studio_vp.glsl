@@ -34,6 +34,9 @@ uniform float	u_Smoothness;
 uniform vec3	u_LightDiffuse;
 uniform vec2	u_LightShade;
 uniform vec3	u_LightDir;
+uniform mat4	u_ModelViewMatrix;
+uniform mat4	u_ModelViewProjectionMatrix;
+uniform vec4	u_ClipPlane;
 
 #if defined (VERTEX_LIGHTING)
 uniform float 	u_LightGamma;
@@ -59,8 +62,8 @@ void main( void )
 	mat4 boneMatrix = ComputeSkinningMatrix();
 	vec4 worldpos = boneMatrix * position;
 
-	gl_Position = gl_ModelViewProjectionMatrix * worldpos;
-	gl_ClipVertex = gl_ModelViewMatrix * worldpos;
+	gl_Position = u_ModelViewProjectionMatrix * worldpos;
+	gl_ClipDistance[0] = dot( worldpos, u_ClipPlane );
 
 	// compute TBN
 	mat3 tbn = ComputeTBN( boneMatrix );

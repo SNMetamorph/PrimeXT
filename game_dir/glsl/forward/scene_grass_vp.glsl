@@ -24,6 +24,7 @@ attribute vec4		attr_LightVecs;
 attribute vec4		attr_LightStyles;
 
 uniform mat4		u_ModelMatrix;
+uniform mat4		u_ModelViewMatrix;
 uniform float		u_LightStyleValues[MAX_LIGHTSTYLES];
 uniform vec3		u_GrassParams;
 uniform vec3		u_ViewOrigin;

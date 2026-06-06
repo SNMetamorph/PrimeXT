@@ -431,6 +431,7 @@ enum
 {
 	R_OPENGL_110 = 0,		// base
 	R_OPENGL_200,
+	R_OPENGL_310,
 	R_WGL_PROCADDRESS,
 	R_ARB_VERTEX_BUFFER_OBJECT_EXT,
 	R_ARB_VERTEX_ARRAY_OBJECT_EXT,
@@ -763,6 +764,7 @@ void GL_DisableAllTexGens(void);
 void GL_DepthMask(GLint enable);
 void GL_FrontFace(GLenum front);
 void GL_ClipPlane(bool enable);
+void GL_InitClipPlane( const mplane_t *in, GLdouble *out );
 void GL_BindFBO(GLuint buffer);
 void GL_AlphaTest(GLint enable);
 void GL_AlphaToCoverage(bool enable);
