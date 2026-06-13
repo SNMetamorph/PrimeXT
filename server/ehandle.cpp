@@ -18,6 +18,36 @@
 #include "util.h"
 #include "cbase.h"
 
+EHANDLE::EHANDLE( CBaseEntity *pEntity )
+{
+	if (pEntity)
+	{
+		m_pent = ENT(pEntity);
+		if (m_pent)
+			m_serialnumber = m_pent->serialnumber;
+	}
+	else
+	{
+		m_pent = NULL;
+		m_serialnumber = 0;
+	}
+}
+
+EHANDLE::EHANDLE( int entityIndex )
+{
+	if (entityIndex > 0)
+	{
+		m_pent = INDEXENT(entityIndex);
+		if (m_pent)
+			m_serialnumber = m_pent->serialnumber;
+	}
+	else
+	{
+		m_pent = NULL;
+		m_serialnumber = 0;
+	}
+}
+
 edict_t *EHANDLE::Get(void)
 {
 	if (m_pent)

@@ -27,6 +27,10 @@ private:
 	edict_t	*m_pent;
 	int	m_serialnumber;
 public:
+	EHANDLE() : m_pent( NULL ), m_serialnumber( 0 ) {}
+	EHANDLE( CBaseEntity *pEntity );
+	explicit EHANDLE( int entityIndex );
+
 	edict_t *Get( void );
 	edict_t *Set( edict_t *pent );
 	CBaseEntity *GetPointer();
