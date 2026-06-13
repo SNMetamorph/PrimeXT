@@ -16,6 +16,7 @@ GNU General Public License for more details.
 #define PHYSIC_H
 
 class Vector;
+class Vector4D;
 class CBaseEntity;
 class matrix4x4;
 
@@ -54,6 +55,8 @@ public:
 	virtual void	AddImpulse( CBaseEntity *pEntity, const Vector &impulse, const Vector &position, float factor ) = 0;
 	virtual void	AddForce( CBaseEntity *pEntity, const Vector &force, ForceMode mode = ForceMode::Force ) = 0;
 	virtual void	AddTorque( CBaseEntity *pEntity, const Vector &torque, ForceMode mode = ForceMode::Force ) = 0;
+	virtual void	SetHoldableTarget( CBaseEntity *pEntity, const Vector &targetOrigin, const Vector4D &targetQuat ) = 0;
+	virtual void	ClearHoldableTarget( CBaseEntity *pEntity ) = 0;
 	virtual void	GetTransform( CBaseEntity *pEntity, matrix4x4 &out ) = 0;
 	virtual void	EnableCollision( CBaseEntity *pEntity, int fEnable ) = 0;
 	virtual void	MakeKinematic( CBaseEntity *pEntity, int fEnable ) = 0;

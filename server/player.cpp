@@ -3165,18 +3165,6 @@ void CBasePlayer::UpdateHoldableItem( void )
 {
 	// max distance from eye before drag cancels (initial distance + this offset)
 	constexpr float cancelDistOffset = 64.0f;
-	// linear spring gain in acceleration-space (in/s² per inch of displacement)
-	// acceleration = spring * error - damping * velocity → mass-independent
-	constexpr float spring = 100.0f;
-	// linear damping gain in acceleration-space (in/s² per in/s of velocity)
-	constexpr float damping = 9.0f;
-	// angular spring constant (rad/s² per rad of orientation error)
-	// PD torque toward target rotation extracted from delta quaternion
-	constexpr float angSpring = 500.0f;
-	// angular damping torque factor (rad/s² per rad/s of angular velocity per axis)
-	// tuned for critical damping: k_d = 2*sqrt(k_p) ≈ 44.7
-	// damps all three axes to suppress tumbling from collisions
-	constexpr float angDamping = 45.0f;
 
 	if (m_pHoldableItem == NULL )
 		return;
@@ -3189,7 +3177,6 @@ void CBasePlayer::UpdateHoldableItem( void )
 	if( m_pHoldableItem->m_iActorType == ACTOR_DYNAMIC )
 	{
 		Vector vecItemPos = m_pHoldableItem->GetAbsOrigin();
-		Vector vecItemVel = m_pHoldableItem->GetAbsVelocity();
 
 		// cancel dragging if item is too far from player (e.g. stuck on geometry)
 		Vector vecToItem = vecItemPos - vecSrc;
@@ -3200,37 +3187,13 @@ void CBasePlayer::UpdateHoldableItem( void )
 			return;
 		}
 
-		// spring-damper toward target position (acceleration-space, mass-independent)
-		Vector vecDisplacement = vecDst - vecItemPos;
-		Vector desiredAccel = vecDisplacement * spring - vecItemVel * damping;
-		WorldPhysic->AddForce( m_pHoldableItem, desiredAccel, IPhysicLayer::ForceMode::Acceleration );
-
-		// full quaternion-based orientation control
+		// build target quaternion from camera + stored relative rotation
 		matrix3x3 camMat(Vector(0.f, pev->v_angle.y, 0.f));
-		Vector4D camQuat, targetQuat, objQuat, conjObj, deltaQuat;
+		Vector4D camQuat, targetQuat;
 		camMat.GetQuaternion( camQuat );
 		QuaternionMultiply( camQuat, m_quatHoldableRelative, targetQuat );
 
-		matrix4x4 objTransform;
-		WorldPhysic->GetTransform( m_pHoldableItem, objTransform );
-		matrix3x3 objMat;
-		objMat = objTransform;
-		objMat.GetQuaternion( objQuat );
-
-		QuaternionConjugate( objQuat, conjObj );
-		QuaternionMultiply( targetQuat, conjObj, deltaQuat );
-
-		Vector rotAxis;
-		float flAngle;
-		QuaternionToAxisAngle( deltaQuat, rotAxis, flAngle );
-
-		Vector angVel = m_pHoldableItem->GetLocalAvelocity();
-		float flVelProj = DotProduct( angVel, rotAxis );
-
-		// PD torque around rotation axis + perpendicular damping
-		Vector torque = rotAxis * ( flAngle * angSpring - flVelProj * angDamping );
-		torque -= ( angVel - rotAxis * flVelProj ) * angDamping;
-		WorldPhysic->AddTorque( m_pHoldableItem, torque, IPhysicLayer::ForceMode::Acceleration );
+		WorldPhysic->SetHoldableTarget( m_pHoldableItem, vecDst, targetQuat );
 
 		// refresh the last valid position
 		m_vecHoldableItemPosition = vecItemPos;
@@ -3324,6 +3287,7 @@ void CBasePlayer::DropHoldableItem( void )
 
 	if( pObject->m_iActorType == ACTOR_DYNAMIC )
 	{
+		WorldPhysic->ClearHoldableTarget( pObject );
 		WorldPhysic->MakeKinematic( pObject, FALSE );
 		WorldPhysic->AddForce( pObject, GetAbsVelocity() * 3000.0f );
 	}
@@ -3403,7 +3367,7 @@ void CBasePlayer::SelectNextItem( int iItem )
 	if (pItem == m_pActiveItem)
 	{
 		// select the next one in the chain
-		pItem = m_pActiveItem->m_pNext; 
+		pItem = m_pActiveItem->m_pNext;  
 		if (! pItem)
 		{
 			return;

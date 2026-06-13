@@ -30,6 +30,7 @@ GNU General Public License for more details.
 #include "build.h"
 #include "error_stream.h"
 #include "event_handler.h"
+#include "holdable_item_controller.h"
 #include "assert_handler.h"
 #include "debug_renderer.h"
 #include "contact_modify_callback.h"
@@ -143,6 +144,7 @@ void CPhysicPhysX :: InitPhysic( void )
 	m_debugRenderer = std::make_unique<DebugRenderer>();
 	m_eventHandler = std::make_unique<EventHandler>();
 	m_contactModifyCallback = std::make_unique<ContactModifyCallback>();
+	m_holdableController = std::make_unique<HoldableItemController>();
 
 	// create a scene
 	PxSceneDesc sceneDesc(scale);
@@ -223,6 +225,7 @@ void CPhysicPhysX :: FreePhysic( void )
 	m_debugRenderer.reset();
 	m_eventHandler.reset();
 	m_contactModifyCallback.reset();
+	m_holdableController.reset();
 
 	m_pScene = nullptr;
 	m_pCooking = nullptr;
@@ -259,6 +262,7 @@ void CPhysicPhysX :: Update( float flTimeDelta )
 	while (m_flAccumulator > k_SimulationStepSize)
 	{
 		m_flAccumulator -= k_SimulationStepSize;
+		m_holdableController->ApplyForces();
 		m_pScene->simulate(k_SimulationStepSize);
 		m_pScene->fetchResults(true);
 	}
@@ -2018,6 +2022,16 @@ void CPhysicPhysX :: AddTorque( CBaseEntity *pEntity, const Vector &torque, Forc
 	}
 }
 
+void CPhysicPhysX :: SetHoldableTarget( CBaseEntity *pEntity, const Vector &targetOrigin, const Vector4D &targetQuat )
+{
+	m_holdableController->SetTarget( pEntity, targetOrigin, targetQuat );
+}
+
+void CPhysicPhysX :: ClearHoldableTarget( CBaseEntity *pEntity )
+{
+	m_holdableController->ClearTarget( pEntity );
+}
+
 void CPhysicPhysX :: GetTransform( CBaseEntity *pEntity, matrix4x4 &out )
 {
 	PxActor *pActor = ActorFromEntity( pEntity );
@@ -2432,6 +2446,7 @@ void CPhysicPhysX :: FreeWorld()
 		actor->release();
 	}
 
+	m_holdableController->ClearAllTargets();
 	m_eventHandler->onWorldShutdown();
 	m_pSceneActor = nullptr;
 }

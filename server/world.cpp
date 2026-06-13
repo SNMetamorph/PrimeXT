@@ -78,6 +78,8 @@ public:
 	virtual void	AddImpulse( CBaseEntity *pEntity, const Vector &impulse, const Vector &position, float factor ) {}
 	virtual void	AddForce( CBaseEntity *pEntity, const Vector &force, ForceMode mode ) {}
 	virtual void	AddTorque( CBaseEntity *pEntity, const Vector &torque, ForceMode mode ) {}
+	virtual void	SetHoldableTarget( CBaseEntity *pEntity, const Vector &targetOrigin, const Vector4D &targetQuat ) {}
+	virtual void	ClearHoldableTarget( CBaseEntity *pEntity ) {}
 	virtual void	GetTransform( CBaseEntity *pEntity, matrix4x4 &out ) override {}
 	virtual void	EnableCollision( CBaseEntity *pEntity, int fEnable ) {}
 	virtual void	MakeKinematic( CBaseEntity *pEntity, int fEnable ) {}

@@ -85,6 +85,7 @@ if(ENABLE_PHYSX)
 		"physx/contact_modify_callback.cpp"
 		"physx/debug_renderer.cpp"
 		"physx/decomposed_shape.cpp"
+		"physx/holdable_item_controller.cpp"
 		"physx/io_streams.cpp"
 		"physx/error_stream.cpp"
 	)

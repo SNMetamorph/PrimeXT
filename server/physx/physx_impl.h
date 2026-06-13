@@ -37,6 +37,7 @@ GNU General Public License for more details.
 class DebugRenderer;
 class EventHandler;
 class ContactModifyCallback;
+class HoldableItemController;
 
 class CPhysicPhysX : public IPhysicLayer
 {
@@ -66,6 +67,8 @@ public:
 	void	AddImpulse( CBaseEntity *pEntity, const Vector &impulse, const Vector &position, float factor );
 	void	AddForce( CBaseEntity *pEntity, const Vector &force, ForceMode mode = ForceMode::Force );
 	void	AddTorque( CBaseEntity *pEntity, const Vector &torque, ForceMode mode = ForceMode::Force );
+	void	SetHoldableTarget( CBaseEntity *pEntity, const Vector &targetOrigin, const Vector4D &targetQuat ) override;
+	void	ClearHoldableTarget( CBaseEntity *pEntity ) override;
 	void	GetTransform( CBaseEntity *pEntity, matrix4x4 &out );
 	void	EnableCollision( CBaseEntity *pEntity, int fEnable );
 	void	MakeKinematic( CBaseEntity *pEntity, int fEnable );
@@ -144,6 +147,7 @@ private:
 	std::unique_ptr<DebugRenderer> m_debugRenderer;
 	std::unique_ptr<EventHandler> m_eventHandler;
 	std::unique_ptr<ContactModifyCallback> m_contactModifyCallback;
+	std::unique_ptr<HoldableItemController> m_holdableController;
 	physx::PxCooking *m_pCooking;
 	physx::PxDefaultAllocator m_Allocator;
 	physx::PxPvd *m_pVisualDebugger;
