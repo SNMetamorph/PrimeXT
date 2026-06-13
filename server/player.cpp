@@ -3237,8 +3237,9 @@ void CBasePlayer::PickHoldableItem( CBaseEntity *pObject )
 	}
 
 	// member distance and the last valid origin
+	constexpr float minimalDistance = 56.0f;
 	m_vecHoldableItemPosition = pObject->GetAbsOrigin();
-	m_flHoldableItemDistance = (m_vecHoldableItemPosition - EyePosition()).Length();
+	m_flHoldableItemDistance = std::max((m_vecHoldableItemPosition - EyePosition()).Length(), minimalDistance);
 
 	pObject->ClearGroundEntity ();
 	m_pHoldableItem = pObject;
