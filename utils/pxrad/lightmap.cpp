@@ -2669,12 +2669,13 @@ vec3_t *s_light, vec3_t *s_dir, vec_t *s_occ, byte *styles, byte *vislight, bool
 
 			if( trace.surface == STUDIO_SURFACE_HIT )
 			{
+				dot *= scale;
 				for (int j = 0; j < MAXLIGHTMAPS; j++ )
 				{	
 					if( trace.styles[j] == 255 )
 						break;	
 
-					VectorScale( trace.light[j], dot * scale, add );
+					VectorScale( trace.light[j], dot, add );
 					VectorScale( *skynormals, VectorAvg(add), add_direction );
 
 					AddSampleLight( threadnum, topatch, add, add_direction, trace.styles[j], s_light, s_dir, s_occ, styles );	
