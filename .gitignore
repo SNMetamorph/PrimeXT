@@ -11,6 +11,9 @@
 *.user*
 *~
 
+# AGENTS.md
+AGENTS.md
+
 ### Xcode ###
 build/
 *.pbxuser
@@ -331,3 +334,15 @@ __pycache__
 
 # Visual Studio Code
 .vscode/
+
+# Windows thumbnail cache
+Thumbs.db
+
+# CMake compilation database (may appear at project root for LSP/tooling)
+compile_commands.json
+
+# clangd LSP cache
+.cache/
+
+# KDevelop/Kate project directory metadata
+.directory
