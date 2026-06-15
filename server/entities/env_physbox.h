@@ -47,6 +47,7 @@ public:
 
 	int	m_idShard;
 	int	m_iszGibModel;
+	int	m_iszSpawnObject;
 	float m_flDensity;
 	Materials m_Material;
 };

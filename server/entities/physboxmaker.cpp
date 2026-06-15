@@ -160,6 +160,8 @@ void CPhysBoxMaker :: MakePhysBox( void )
 	pBox->pev->skin = pev->skin;
 	pBox->m_Material = m_Material;
 	pBox->m_iszGibModel = m_iszGibModel;
+	pBox->m_iszSpawnObject = m_iszSpawnObject;
+	pBox->pev->impulse = pev->impulse;
 	pBox->m_flDelay = m_flDelay;	// BUGBUG: delay already used. Try m_flWait instead?
 
 	pBox->SetAbsOrigin( GetAbsOrigin() );

@@ -28,7 +28,7 @@ extern DLL_GLOBAL Vector		g_vecAttackDir;
 // Just add more items to the bottom of this array and they will automagically be supported
 // This is done instead of just a classname in the FGD so we can control which entities can
 // be spawned, and still remain fairly flexible
-const char *CBreakable::pSpawnObjects[] =
+const char *CBreakable::pSpawnObjects[MAX_SPAWN_OBJECTS] =
 {
 	NULL,				// 0
 	"item_battery",		// 1
