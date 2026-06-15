@@ -745,8 +745,9 @@ PxTriangleMesh *CPhysicPhysX::TriangleMeshFromStudio(entvars_t *pev, int modelin
 	for (int i = 0; i < phdr->numtextures; i++)
 	{
 		// skip this mesh it's probably foliage or somewhat
-		if (ptexture[i].flags & STUDIO_NF_MASKED)
+		if (FBitSet(ptexture[i].flags, STUDIO_NF_MASKED) && !FBitSet(ptexture[i].flags, STUDIO_NF_SOLIDGEOM))
 			continue;
+
 		solidMeshes++;
 	}
 
@@ -875,7 +876,8 @@ PxTriangleMesh *CPhysicPhysX::TriangleMeshFromStudio(entvars_t *pev, int modelin
 			if (phdr->numtextures != 0 && phdr->textureindex != 0)
 			{
 				// skip this mesh it's probably foliage or somewhat
-				if (ptexture[pskinref[pmesh->skinref]].flags & STUDIO_NF_MASKED)
+				const int flags = ptexture[pskinref[pmesh->skinref]].flags;
+				if (FBitSet(flags, STUDIO_NF_MASKED) && !FBitSet(flags, STUDIO_NF_SOLIDGEOM))
 					continue;
 			}
 
