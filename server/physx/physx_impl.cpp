@@ -1958,14 +1958,19 @@ void CPhysicPhysX :: RotateObject( CBaseEntity *pEntity, const Vector &finalAngl
 	pRigidDynamic->setKinematicTarget(pose);
 }
 
-void CPhysicPhysX :: SetLinearMomentum( CBaseEntity *pEntity, const Vector &velocity )
+void CPhysicPhysX :: SetLinearMomentum( CBaseEntity *pEntity, const Vector &momentum )
 {
 	PxActor *pActor = ActorFromEntity(pEntity);
 	if (!pActor)
 		return;
 
-	PxRigidDynamic *pRigidDynamic = pActor->is<PxRigidDynamic>();
-	pRigidDynamic->setForceAndTorque(velocity, PxVec3(0.f), PxForceMode::eIMPULSE);
+	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
+	if (!pRigidBody)
+		return;
+
+	PxVec3 targetMomentum( momentum );
+	PxVec3 currentMomentum = pRigidBody->getLinearVelocity() * pRigidBody->getMass();
+	pRigidBody->addForce( targetMomentum - currentMomentum, PxForceMode::eIMPULSE );
 }
 
 void CPhysicPhysX :: AddImpulse( CBaseEntity *pEntity, const Vector &impulse, const Vector &position, float factor )

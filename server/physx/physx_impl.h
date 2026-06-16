@@ -63,7 +63,7 @@ public:
 	void	SetAvelocity( CBaseEntity *pEntity, const Vector &velocity );
 	void	MoveObject( CBaseEntity *pEntity, const Vector &finalPos );
 	void	RotateObject( CBaseEntity *pEntity, const Vector &finalAngle );
-	void	SetLinearMomentum( CBaseEntity *pEntity, const Vector &velocity );
+	void	SetLinearMomentum( CBaseEntity *pEntity, const Vector &momentum );
 	void	AddImpulse( CBaseEntity *pEntity, const Vector &impulse, const Vector &position, float factor );
 	void	AddForce( CBaseEntity *pEntity, const Vector &force, ForceMode mode = ForceMode::Force );
 	void	AddTorque( CBaseEntity *pEntity, const Vector &torque, ForceMode mode = ForceMode::Force );
