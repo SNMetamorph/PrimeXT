@@ -1980,6 +1980,9 @@ void CPhysicPhysX :: AddImpulse( CBaseEntity *pEntity, const Vector &impulse, co
 		return;
 
 	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
+	if (!pRigidBody)
+		return;
+
 	PxRigidBodyExt::addForceAtPos(*pRigidBody, PxVec3(impulse * factor), position, PxForceMode::eIMPULSE);
 }
 
