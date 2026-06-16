@@ -1980,15 +1980,7 @@ void CPhysicPhysX :: AddImpulse( CBaseEntity *pEntity, const Vector &impulse, co
 		return;
 
 	PxRigidBody *pRigidBody = pActor->is<PxRigidBody>();
-	PxF32 coeff = (1000.0f / pRigidBody->getMass()) * factor;
-
-	// prevent to apply too much impulse
-	if (pRigidBody->getMass() < 8.0f)
-	{
-		coeff *= 0.0001f;
-	}
-
-	PxRigidBodyExt::addForceAtPos(*pRigidBody, PxVec3(impulse * coeff), position, PxForceMode::eIMPULSE);
+	PxRigidBodyExt::addForceAtPos(*pRigidBody, PxVec3(impulse * factor), position, PxForceMode::eIMPULSE);
 }
 
 void CPhysicPhysX :: AddForce( CBaseEntity *pEntity, const Vector &force, ForceMode mode )
