@@ -194,11 +194,11 @@ void CPhysEntity :: TraceAttack( entvars_t *pevAttacker, float flDamage, Vector 
 	float factor = 0.0f;
 
 	if( bitsDamageType & DMG_CLUB )
-		factor = 80.0f;
+		factor = 4000.0f;
 	else if( bitsDamageType & DMG_BULLET )
-		factor = 45.0f;
-	else if( bitsDamageType & DMG_BLAST )
 		factor = 1000.0f;
+	else if( bitsDamageType & DMG_BLAST )
+		factor = 30000.0f;
 
 	if( factor > 0.0f )
 		WorldPhysic->AddImpulse( this, vecDir, vecOrigin, factor );
@@ -249,8 +249,8 @@ void CPhysEntity :: Touch( CBaseEntity *pOther )
 		if( gpGlobals->trace_plane_normal.z > 0.7f )
 			return;	// if we standing on
 
-		// get the quad part of frametime to apply impulse
-		vecVelocity = pOther->GetAbsVelocity() * (1.0f / gpGlobals->frametime) * 0.25f;
+		// convert player velocity to impulse
+		vecVelocity = pOther->GetAbsVelocity() * 15.0f;
 		if( vecVelocity.z < 0.0f || vecVelocity.z > 0.0f )
 			vecVelocity.z = 0; // don't stress the solver
 
@@ -258,7 +258,7 @@ void CPhysEntity :: Touch( CBaseEntity *pOther )
 		{
 			// NOTE: don't entity origin because it's center of mass!
 			Vector vecDir = (Center() - pOther->GetAbsOrigin()).Normalize();
-			vecVelocity = vecDir * UNSTICK_VELOCITY * (1.0f / gpGlobals->frametime) * 0.25f;
+			vecVelocity = vecDir * UNSTICK_VELOCITY * 15.0f;
 		}
 	}
 
