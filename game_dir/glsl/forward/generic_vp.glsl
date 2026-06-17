@@ -16,11 +16,14 @@ GNU General Public License for more details.
 varying vec4	var_Vertex;
 varying vec2	var_TexCoord;
 
+uniform mat4		u_ModelViewMatrix;
+uniform mat4		u_ModelViewProjectionMatrix;
+
 void main( void )
 {
 	var_Vertex = gl_Vertex;
 
 	var_TexCoord = gl_MultiTexCoord0.xy;
 
-	gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+	gl_Position = u_ModelViewProjectionMatrix * gl_Vertex;
 }
