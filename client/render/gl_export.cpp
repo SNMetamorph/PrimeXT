@@ -486,14 +486,6 @@ static void GL_CheckExtension( const char *name, const dllfunc_t *funcs, const c
 
 	ALERT( at_aiconsole, "GL_CheckExtension: %s ", name );
 
-	// ugly hack for p1 opengl32.dll
-	if(( name[0] == 'P' || name[2] == '_' || name[3] == '_' ) && !Q_strstr( glConfig.extensions_string, name ))
-	{
-		GL_SetExtension( r_ext, false );	// update render info
-		ALERT( at_aiconsole, "- ^1failed\n" );
-		return;
-	}
-
 	if( cvarname )
 	{
 		// NOTE: engine will be ignore cvar value if variable already exitsts (e.g. created on exec opengl.cfg)
@@ -710,9 +702,6 @@ static void GL_InitExtensions( void )
 
 	// FBO support
 	GL_CheckExtension( "GL_ARB_framebuffer_object", fbofuncs, "gl_framebuffers", R_FRAMEBUFFER_OBJECT );
-
-	// Paranoia OpenGL32.dll may be eliminate shadows. Run special check for it
-	GL_CheckExtension( "PARANOIA_HACKS_V1", NULL, NULL, R_PARANOIA_EXT );
 
 	GL_CheckExtension( "GL_ARB_seamless_cube_map", NULL, "gl_seamless_cubemap", R_SEAMLESS_CUBEMAP );
 
