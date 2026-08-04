@@ -486,6 +486,14 @@ static void GL_CheckExtension( const char *name, const dllfunc_t *funcs, const c
 
 	ALERT( at_aiconsole, "GL_CheckExtension: %s ", name );
 
+	// check if name is a name of OpenGL extension and look for it in extensions string
+	if(( name[2] == '_' || name[3] == '_' ) && !Q_strstr( glConfig.extensions_string, name ))
+	{
+		GL_SetExtension( r_ext, false );	// update render info
+		ALERT( at_aiconsole, "- ^1failed\n" );
+		return;
+	}
+
 	if( cvarname )
 	{
 		// NOTE: engine will be ignore cvar value if variable already exitsts (e.g. created on exec opengl.cfg)
