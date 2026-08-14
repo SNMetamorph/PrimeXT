@@ -118,6 +118,10 @@ void uniform_t :: SetValue( const void *pdata, int count )
 		if( FBitSet( flags, UFL_GLOBAL_PARM ) && frame_uploaded == tr.realframecount )
 			return;
 
+		// entity-dependent arrays (bones etc.) are uploaded once per entity per frame
+		if( FBitSet( flags, UFL_ENTITY_PARM ) && frame_uploaded == tr.realframecount && upload_key == pdata )
+			return;
+
 		// handle arrays
 		if( count == -1 )
 			count = size;
@@ -147,8 +151,11 @@ void uniform_t :: SetValue( const void *pdata, int count )
 			break;
 		}
 
-		if( FBitSet( flags, UFL_GLOBAL_PARM ))
+		if( FBitSet( flags, UFL_GLOBAL_PARM ) || FBitSet( flags, UFL_ENTITY_PARM ))
+		{
 			frame_uploaded = tr.realframecount;
+			upload_key = pdata;
+		}
 	}
 	else
 	{
@@ -256,9 +263,9 @@ static uniformTable_t glsl_uniformTable[] =
 { "u_FitNormalMap",		UT_FITNORMALMAP,		UFL_TEXTURE_UNIT },
 { "u_ModelMatrix",		UT_MODELMATRIX,		0 },
 { "u_ReflectMatrix",	UT_REFLECTMATRIX,		0 },
-{ "u_BonesArray",		UT_BONESARRAY,		0 },	
-{ "u_BoneQuaternion",	UT_BONEQUATERNION,		0 },
-{ "u_BonePosition",		UT_BONEPOSITION,		0 },
+{ "u_BonesArray",		UT_BONESARRAY,		UFL_ENTITY_PARM },	
+{ "u_BoneQuaternion",	UT_BONEQUATERNION,		UFL_ENTITY_PARM },
+{ "u_BonePosition",		UT_BONEPOSITION,		UFL_ENTITY_PARM },
 { "u_ScreenSizeInv",	UT_SCREENSIZEINV,		UFL_GLOBAL_PARM },
 { "u_zFar",				UT_ZFAR,			UFL_GLOBAL_PARM },
 { "u_LightStyleValues",	UT_LIGHTSTYLEVALUES,	UFL_GLOBAL_PARM },
@@ -1129,6 +1136,7 @@ static void GL_ParseProgramUniforms( glsl_program_t *shader )
 		uniform->format = format;
 		uniform->size = size;
 		uniform->frame_uploaded = -1;
+		uniform->upload_key = NULL;
 
 		if( FBitSet( uniform->flags, UFL_TEXTURE_UNIT ))
 		{

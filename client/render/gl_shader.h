@@ -72,6 +72,7 @@ enum
 // uniform->flags
 #define UFL_GLOBAL_PARM		BIT( 0 )
 #define UFL_TEXTURE_UNIT		BIT( 1 )
+#define UFL_ENTITY_PARM		BIT( 2 )	// array depends only on the current entity (bones etc.)
 
 // uniform->type
 typedef enum
@@ -197,7 +198,8 @@ public:
 	int		location;
 	int		unit;	// texture unit
 	int		flags;	// hints
-	int		frame_uploaded;	// frame global-parm arrays were last uploaded
+	int		frame_uploaded;	// frame global-parm/entity-parm arrays were last uploaded
+	const void	*upload_key;	// entity key for entity-parm arrays
 	unicache_t	cache;
 
 	// helpers
