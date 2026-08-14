@@ -7,6 +7,7 @@
 # so an unchanged commit hash does not trigger recompilation of dependents.
 
 set(_hash "notset")
+set(_branch "notset")
 
 if(GIT_EXECUTABLE)
 	execute_process(
@@ -20,9 +21,21 @@ if(GIT_EXECUTABLE)
 	if(NOT _result EQUAL 0 OR NOT _hash)
 		set(_hash "notset")
 	endif()
+
+	execute_process(
+		COMMAND "${GIT_EXECUTABLE}" rev-parse --abbrev-ref HEAD
+		WORKING_DIRECTORY "${SOURCE_DIR}"
+		OUTPUT_VARIABLE _branch
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+		ERROR_QUIET
+		RESULT_VARIABLE _result
+	)
+	if(NOT _result EQUAL 0 OR NOT _branch)
+		set(_branch "notset")
+	endif()
 endif()
 
-set(_content "#pragma once\n#define XASH_BUILD_COMMIT \"${_hash}\"\n")
+set(_content "#pragma once\n#define XASH_BUILD_COMMIT \"${_hash}\"\n#define XASH_BUILD_BRANCH \"${_branch}\"\n")
 
 set(_tmp "${OUTPUT_FILE}.tmp")
 file(WRITE "${_tmp}" "${_content}")

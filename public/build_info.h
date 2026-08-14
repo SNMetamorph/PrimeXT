@@ -140,6 +140,17 @@ namespace BuildInfo
 #endif
 	}
 
+	// Returns current branch name in VCS as string.
+	// XASH_BUILD_BRANCH must be passed in quotes
+	constexpr const char *GetBranchName()
+	{
+#ifdef XASH_BUILD_BRANCH
+		return XASH_BUILD_BRANCH;
+#else
+		return "notset";
+#endif
+	}
+
 	// Returns project GitHub repository URL.
 	constexpr const char *GetGitHubLink()
 	{
