@@ -51,6 +51,7 @@ void CSolidEntry :: SetRenderSurface( msurface_t *surface, word hProgram )
 	m_sortShader2 = es->forwardScene[1].GetHandle();
 	m_sortTexture = surface->texinfo->texture->gl_texturenum;
 	m_sortLightmap = es->lightmaptexturenum;
+	m_sortMatrix = (es->parent != NULL) ? es->parent->hCachedMatrix : 0;
 }
 
 void CSolidEntry :: SetRenderMesh( vbomesh_t *mesh, word hProgram )

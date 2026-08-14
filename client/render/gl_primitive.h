@@ -58,6 +58,7 @@ public:
 	uint16_t	m_sortShader2;		// forwardScene[1] shader handle
 	int32_t		m_sortTexture;		// texture gl_texturenum
 	uint16_t	m_sortLightmap;		// lightmaptexturenum
+	uint16_t	m_sortMatrix;		// parent hCachedMatrix
 
 	union
 	{

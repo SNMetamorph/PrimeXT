@@ -3417,6 +3417,27 @@ int R_RenderTransSurfaces( int startIndex )
 
 /*
 ================
+R_SortShadowBrushFaces
+
+group shadow faces by depth shader, matrix and material to minimize flushes
+================
+*/
+static bool R_SortShadowBrushFaces( const CSolidEntry &a, const CSolidEntry &b )
+{
+	if( a.m_hProgram != b.m_hProgram )
+		return a.m_hProgram < b.m_hProgram;
+
+	if( a.m_sortMatrix != b.m_sortMatrix )
+		return a.m_sortMatrix < b.m_sortMatrix;
+
+	if( a.m_sortTexture != b.m_sortTexture )
+		return a.m_sortTexture < b.m_sortTexture;
+
+	return a.m_pParentEntity < b.m_pParentEntity;
+}
+
+/*
+================
 R_RenderShadowBrushList
 
 ================
@@ -3430,6 +3451,8 @@ void R_RenderShadowBrushList( void )
 
 	if( !RI->frame.solid_faces.Count() )
 		return;
+
+	std::sort( RI->frame.solid_faces.Base(), RI->frame.solid_faces.Base() + RI->frame.solid_faces.Count(), R_SortShadowBrushFaces );
 
 	GL_DEBUG_SCOPE();
 	pglBindVertexArray( world->vertex_array_object );
