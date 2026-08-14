@@ -197,6 +197,7 @@ public:
 	int		location;
 	int		unit;	// texture unit
 	int		flags;	// hints
+	int		frame_uploaded;	// frame global-parm arrays were last uploaded
 	unicache_t	cache;
 
 	// helpers

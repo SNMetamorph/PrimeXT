@@ -114,6 +114,10 @@ void uniform_t :: SetValue( const void *pdata, int count )
 	}
 	else if( size > 1 )
 	{
+		// frame-constant arrays (lightstyles etc.) are uploaded only once per frame
+		if( FBitSet( flags, UFL_GLOBAL_PARM ) && frame_uploaded == tr.realframecount )
+			return;
+
 		// handle arrays
 		if( count == -1 )
 			count = size;
@@ -142,6 +146,9 @@ void uniform_t :: SetValue( const void *pdata, int count )
 			pglUniformMatrix4fvARB( location, count, GL_FALSE, (const float *)pdata );
 			break;
 		}
+
+		if( FBitSet( flags, UFL_GLOBAL_PARM ))
+			frame_uploaded = tr.realframecount;
 	}
 	else
 	{
@@ -1121,6 +1128,7 @@ static void GL_ParseProgramUniforms( glsl_program_t *shader )
 		uniform->type = desc->type;
 		uniform->format = format;
 		uniform->size = size;
+		uniform->frame_uploaded = -1;
 
 		if( FBitSet( uniform->flags, UFL_TEXTURE_UNIT ))
 		{
