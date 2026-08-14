@@ -147,8 +147,8 @@ void uniform_t :: SetValue( const void *pdata, int count )
 	{
 		int testSize = GetSizeInBytes();
 
-		// some values could be cached
-		if( testSize <= 16 && !memcmp( &cache, check, testSize ))
+		// some values could be cached (up to a full 4x4 matrix)
+		if( testSize <= (int)sizeof( unicache_t ) && !memcmp( &cache, check, testSize ))
 			return;
 
 		// single cached values
@@ -207,9 +207,11 @@ void uniform_t :: SetValue( const void *pdata, int count )
 			break;
 		case GL_FLOAT_MAT3_ARB:
 			pglUniformMatrix3fvARB( location, 1, GL_FALSE, (const float *)pdata );
+			memcpy( &cache, check, sizeof( float ) * 9 );
 			break;
 		case GL_FLOAT_MAT4_ARB:
 			pglUniformMatrix4fvARB( location, 1, GL_FALSE, (const float *)pdata );
+			memcpy( &cache, check, sizeof( float ) * 16 );
 			break;
 		}
 	}

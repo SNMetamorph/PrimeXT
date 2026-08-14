@@ -174,17 +174,17 @@ typedef enum
 
 union unicache_t
 {
-	unicache_t( int v0 ) { iValue[0] = v0; iValue[1] = iValue[2] = iValue[3] = 0; }
-	unicache_t( int v0, int v1 ) { iValue[0] = v0; iValue[1] = v1; iValue[2] = iValue[3] = 0; }
-	unicache_t( int v0, int v1, int v2 ) { iValue[0] = v0; iValue[1] = v1; iValue[2] = v2; iValue[3] = 0; }
-	unicache_t( int v0, int v1, int v2, int v3 ) { iValue[0] = v0; iValue[1] = v1; iValue[2] = v2; iValue[3] = v3; }
-	unicache_t( float v0 ) { fValue[0] = v0; fValue[1] = fValue[2] = fValue[3] = 0.0f; }
-	unicache_t( float v0, float v1 ) { fValue[0] = v0; fValue[1] = v1; fValue[2] = fValue[3] = 0.0f; }
-	unicache_t( float v0, float v1, float v2 ) { fValue[0] = v0; fValue[1] = v1; fValue[2] = v2; fValue[3] = 0.0f; }
-	unicache_t( float v0, float v1, float v2, float v3 ) { fValue[0] = v0; fValue[1] = v1; fValue[2] = v2; fValue[3] = v3; }
+	unicache_t( int v0 ) { memset(iValue, 0, sizeof(iValue)); iValue[0] = v0; }
+	unicache_t( int v0, int v1 ) { memset(iValue, 0, sizeof(iValue)); iValue[0] = v0; iValue[1] = v1; }
+	unicache_t( int v0, int v1, int v2 ) { memset(iValue, 0, sizeof(iValue)); iValue[0] = v0; iValue[1] = v1; iValue[2] = v2; }
+	unicache_t( int v0, int v1, int v2, int v3 ) { memset(iValue, 0, sizeof(iValue)); iValue[0] = v0; iValue[1] = v1; iValue[2] = v2; iValue[3] = v3; }
+	unicache_t( float v0 ) { memset(fValue, 0, sizeof(fValue)); fValue[0] = v0; }
+	unicache_t( float v0, float v1 ) { memset(fValue, 0, sizeof(fValue)); fValue[0] = v0; fValue[1] = v1; }
+	unicache_t( float v0, float v1, float v2 ) { memset(fValue, 0, sizeof(fValue)); fValue[0] = v0; fValue[1] = v1; fValue[2] = v2; }
+	unicache_t( float v0, float v1, float v2, float v3 ) { memset(fValue, 0, sizeof(fValue)); fValue[0] = v0; fValue[1] = v1; fValue[2] = v2; fValue[3] = v3; }
 
-	float	fValue[4];
-	int	iValue[4];
+	float	fValue[16];
+	int	iValue[16];
 };
 
 class uniform_t
