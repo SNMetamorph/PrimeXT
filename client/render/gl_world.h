@@ -51,6 +51,7 @@ typedef struct bvert_s
 	byte		lights0[4];		// packed light numbers
 	byte		lights1[4];		// packed light numbers
 	unsigned short	matrixIndex;		// entity matrix index (submodel)
+	unsigned short	materialIndex;		// material params index
 } bvert_t;
 
 typedef struct
@@ -171,6 +172,7 @@ typedef struct
 	unsigned short	*surface_submodel;	// surface index -> submodel index
 	GLfloat		*modelMatrices;		// [numsubmodels * 16] model matrices (CPU-side)
 	uint		modelMatricesUBO;		// uniform buffer object holding the matrices
+	uint		materialParamsUBO;		// uniform buffer object holding per-material params
 
 	unsigned short	*sortedfaces;	// surfaces sorted through all models
 	unsigned short	numsortedfaces;

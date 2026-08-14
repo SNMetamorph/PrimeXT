@@ -26,6 +26,7 @@ GNU General Public License for more details.
 #include "material.h"
 #include "fog.h"
 #include "alpha2coverage.h"
+#include "materialparams.h"
 
 // texture units
 #if defined( APPLY_TERRAIN )
@@ -44,7 +45,6 @@ uniform sampler2D		u_DepthMap;
 
 // uniforms
 uniform vec3		u_ViewOrigin;
-uniform float		u_ReflectScale;
 uniform vec4		u_RenderColor;
 uniform vec4		u_FogParams;
 uniform float		u_RealTime;
@@ -266,7 +266,7 @@ void main( void )
 #if defined( REFLECTION_CUBEMAP )
 	// blend refracted and reflected part together 
 	float fresnel = GetFresnel( V, N, WATER_F0_VALUE, FRESNEL_FACTOR );
-	result.rgb = refracted + reflected * fresnel * waterBorderFactor * u_ReflectScale; 
+	result.rgb = refracted + reflected * fresnel * waterBorderFactor * GetMaterialParams( var_MaterialIndex ).z; 
 #else
 	result.rgb = refracted;
 #endif // REFLECTION_CUBEMAP
@@ -278,7 +278,7 @@ void main( void )
 #else // !USING_SCREENCOPY
 #if defined( REFLECTION_CUBEMAP )
 	float fresnel = GetFresnel( V, N, GENERIC_F0_VALUE, FRESNEL_FACTOR );
-	result.rgb += reflected * fresnel * u_ReflectScale * mat.smoothness;
+	result.rgb += reflected * fresnel * GetMaterialParams( var_MaterialIndex ).z * mat.smoothness;
 #endif
 #endif // USING_SCREENCOPY
 

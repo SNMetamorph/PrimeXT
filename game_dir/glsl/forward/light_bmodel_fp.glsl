@@ -20,6 +20,7 @@ GNU General Public License for more details.
 #include "terrain.h"
 #include "parallax.h"
 #include "material.h"
+#include "materialparams.h"
 
 // texture units
 #if defined( APPLY_TERRAIN )

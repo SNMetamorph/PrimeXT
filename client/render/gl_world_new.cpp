@@ -1000,6 +1000,7 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 	}
 
 	GL_AddShaderDirective( options, va( "MAX_MODEL_MATRICES %i", worldmodel->numsubmodels ));
+	GL_AddShaderDirective( options, va( "MAX_MATERIALS %i", worldmodel->numtextures ));
 
 	word shaderNum = GL_FindUberShader( glname, options );
 
@@ -1169,6 +1170,7 @@ static word Mod_ShaderLightForward( CDynLight *dl, msurface_t *s )
 	}
 
 	GL_AddShaderDirective( options, va( "MAX_MODEL_MATRICES %i", worldmodel->numsubmodels ));
+	GL_AddShaderDirective( options, va( "MAX_MATERIALS %i", worldmodel->numtextures ));
 
 	word shaderNum = GL_FindUberShader( glname, options );
 
@@ -1218,6 +1220,7 @@ static word Mod_ShaderSceneDepth( msurface_t *s )
 	char options[MAX_OPTIONS_LENGTH];
 	memset( options, 0, sizeof( options ));
 	GL_AddShaderDirective( options, va( "MAX_MODEL_MATRICES %i", worldmodel->numsubmodels ));
+	GL_AddShaderDirective( options, va( "MAX_MATERIALS %i", worldmodel->numtextures ));
 
 	word shaderNum = GL_FindUberShader( "forward/depth_bmodel", options );
 	es->forwardDepth.SetShader( shaderNum );
@@ -1680,6 +1683,7 @@ static void CreateBufferBaseGL21( bvert_t *arrayxvert )
 		arraybvert[i].lmcoord1[3] = arrayxvert[i].lmcoord1[3];
 		memcpy( arraybvert[i].styles, arrayxvert[i].styles, MAXLIGHTMAPS );
 		arraybvert[i].matrixIndex = arrayxvert[i].matrixIndex;
+		arraybvert[i].materialIndex = arrayxvert[i].materialIndex;
 	}
 
 	world->cacheSize = world->numvertexes * sizeof( bvert_v0_gl21_t );
@@ -1721,6 +1725,9 @@ static void BindBufferBaseGL21( void )
 
 	pglVertexAttribPointerARB( ATTR_INDEX_MATRIX, 1, GL_UNSIGNED_SHORT, 0, sizeof( bvert_v0_gl21_t ), (void *)offsetof( bvert_v0_gl21_t, matrixIndex ));
 	pglEnableVertexAttribArrayARB( ATTR_INDEX_MATRIX );
+
+	pglVertexAttribPointerARB( ATTR_INDEX_MATERIAL, 1, GL_UNSIGNED_SHORT, 0, sizeof( bvert_v0_gl21_t ), (void *)offsetof( bvert_v0_gl21_t, materialIndex ));
+	pglEnableVertexAttribArrayARB( ATTR_INDEX_MATERIAL );
 }
 
 static void CreateBufferBaseGL30( bvert_t *arrayxvert )
@@ -1753,6 +1760,7 @@ static void CreateBufferBaseGL30( bvert_t *arrayxvert )
 		memcpy( arraybvert[i].lights0, arrayxvert[i].lights0, MAXLIGHTMAPS );
 		memcpy( arraybvert[i].lights1, arrayxvert[i].lights1, MAXLIGHTMAPS );
 		arraybvert[i].matrixIndex = arrayxvert[i].matrixIndex;
+		arraybvert[i].materialIndex = arrayxvert[i].materialIndex;
 	}
 
 	world->cacheSize = world->numvertexes * sizeof( bvert_v0_gl30_t );
@@ -1800,6 +1808,9 @@ static void BindBufferBaseGL30( void )
 
 	pglVertexAttribPointerARB( ATTR_INDEX_MATRIX, 1, GL_UNSIGNED_SHORT, 0, sizeof( bvert_v0_gl30_t ), (void *)offsetof( bvert_v0_gl30_t, matrixIndex ));
 	pglEnableVertexAttribArrayARB( ATTR_INDEX_MATRIX );
+
+	pglVertexAttribPointerARB( ATTR_INDEX_MATERIAL, 1, GL_UNSIGNED_SHORT, 0, sizeof( bvert_v0_gl30_t ), (void *)offsetof( bvert_v0_gl30_t, materialIndex ));
+	pglEnableVertexAttribArrayARB( ATTR_INDEX_MATERIAL );
 }
 
 /*
@@ -1847,6 +1858,8 @@ static void Mod_CreateBufferObject( void )
 	{
 		Vector t, b, n;
 		unsigned short submodel = world->surface_submodel[i];
+		unsigned short materialIndex = (surf->texinfo && surf->texinfo->texture && surf->texinfo->texture->material)
+			? (unsigned short)(surf->texinfo->texture->material - world->materials) : 0;
 
 		if( FBitSet( surf->flags, SURF_DRAWSKY ))
 			continue;	// ignore sky polys it was never be drawed
@@ -1868,6 +1881,7 @@ static void Mod_CreateBufferObject( void )
 			dv = &worldmodel->vertexes[vert];
 			currVertex->vertex = dv->position;
 			currVertex->matrixIndex = submodel;
+			currVertex->materialIndex = materialIndex;
 
 			R_TextureCoords( surf, currVertex->vertex, currVertex->stcoord0 );
 			R_LightmapCoords( surf, currVertex->vertex, currVertex->lmcoord0, 0 );	// styles 0-1
@@ -1973,6 +1987,36 @@ static void Mod_CreateBufferObject( void )
 		pglBufferDataARB( GL_UNIFORM_BUFFER, worldmodel->numsubmodels * 16 * sizeof( GLfloat ), world->modelMatrices, GL_DYNAMIC_DRAW_ARB );
 		pglBindBufferARB( GL_UNIFORM_BUFFER, 0 );
 	}
+
+	// allocate + upload the per-material params UBO (detailScale, reflectScale, refractScale)
+	GLfloat *materialParams = (GLfloat *)Mem_Alloc( worldmodel->numtextures * 4 * sizeof( GLfloat ));
+	for( int i = 0; i < worldmodel->numtextures; i++ )
+	{
+		material_t *mat = &world->materials[i];
+		GLfloat *dst = &materialParams[i * 4];
+
+		if( mat->impl )
+		{
+			dst[0] = mat->impl->detailScale[0];
+			dst[1] = mat->impl->detailScale[1];
+			dst[2] = bound( 0.0f, mat->impl->reflectScale, 1.0f );
+			dst[3] = bound( 0.0f, mat->impl->refractScale, 1.0f );
+		}
+		else
+		{
+			dst[0] = dst[1] = dst[2] = dst[3] = 0.0f;
+		}
+	}
+
+	if( GL_Support( R_ARB_UNIFORM_BUFFER_OBJECT ))
+	{
+		pglGenBuffersARB( 1, &world->materialParamsUBO );
+		pglBindBufferARB( GL_UNIFORM_BUFFER, world->materialParamsUBO );
+		pglBufferDataARB( GL_UNIFORM_BUFFER, worldmodel->numtextures * 4 * sizeof( GLfloat ), materialParams, GL_STATIC_DRAW_ARB );
+		pglBindBufferARB( GL_UNIFORM_BUFFER, 0 );
+	}
+
+	Mem_Free( materialParams );
 }
 
 /*
@@ -2209,6 +2253,10 @@ static void Mod_FreeWorld( model_t *mod )
 	if( world->modelMatricesUBO )
 		pglDeleteBuffersARB( 1, &world->modelMatricesUBO );
 	world->modelMatricesUBO = 0;
+
+	if( world->materialParamsUBO )
+		pglDeleteBuffersARB( 1, &world->materialParamsUBO );
+	world->materialParamsUBO = 0;
 
 	if( world->vertex_lighting )
 		Mem_Free( world->vertex_lighting );
@@ -2779,9 +2827,6 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 		case UT_REALTIME:
 			u->SetValue( (float)tr.time );
 			break;
-		case UT_DETAILSCALE:
-			u->SetValue( mat->impl->detailScale[0], mat->impl->detailScale[1] );
-			break;
 		case UT_FOGPARAMS:
 			u->SetValue( tr.fogColor[0], tr.fogColor[1], tr.fogColor[2], tr.fogDensity );
 			break;
@@ -2889,9 +2934,6 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 			break;
 		case UT_REFRACTSCALE:
 			u->SetValue( bound( 0.0f, mat->impl->refractScale, 1.0f ));
-			break;
-		case UT_REFLECTSCALE:
-			u->SetValue( bound( 0.0f, mat->impl->reflectScale, 1.0f ));
 			break;
 		case UT_ABERRATIONSCALE:
 			u->SetValue( bound( 0.0f, mat->impl->aberrationScale, 1.0f ));

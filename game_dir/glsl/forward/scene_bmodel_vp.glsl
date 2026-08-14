@@ -16,9 +16,11 @@ GNU General Public License for more details.
 #include "matrix.h"
 #include "tnbasis.h"
 #include "modelmatrix.h"
+#include "materialparams.h"
 
 attribute vec3	attr_Position;
 attribute float	attr_MatrixIndex;
+attribute float	attr_MaterialIndex;
 attribute vec4	attr_TexCoord0;	// diffuse\terrain
 attribute vec4	attr_TexCoord1;	// lightmap 0-1
 attribute vec4	attr_TexCoord2;	// lightmap 2-3
@@ -27,7 +29,6 @@ attribute vec4	attr_LightStyles;
 uniform float	u_LightStyleValues[MAX_LIGHTSTYLES];
 uniform mat4	u_ReflectMatrix;
 uniform vec3	u_ViewOrigin;	// already in modelspace
-uniform vec2	u_DetailScale;
 uniform vec2	u_TexOffset;	// conveyor stuff
 
 centroid varying vec2	var_TexDiffuse;
@@ -59,6 +60,8 @@ centroid varying vec3	var_TangentViewDir;
 void main( void )
 {
 	mat4 modelMatrix = GetModelMatrix( attr_MatrixIndex );
+	vec4 materialParams = GetMaterialParams( attr_MaterialIndex );
+	var_MaterialIndex = attr_MaterialIndex;
 	vec4 position = vec4( attr_Position, 1.0 ); // in object space
 	vec4 worldpos = modelMatrix * position;
 
@@ -71,7 +74,7 @@ void main( void )
 
 	// used for diffuse, normalmap, specular and height map
 	var_TexDiffuse = ( attr_TexCoord0.xy + u_TexOffset );
-	var_TexDetail = var_TexDiffuse * u_DetailScale;
+	var_TexDetail = var_TexDiffuse * materialParams.xy;
 	var_TexGlobal = attr_TexCoord0.zw;
 	var_Position = worldpos.xyz;
 

@@ -1191,6 +1191,7 @@ static void GL_SetDefaultVertexAttribs( glsl_program_t *shader )
 	pglBindAttribLocationARB( shader->handle, ATTR_INDEX_LIGHT_NUMS0, "attr_LightNums0" );
 	pglBindAttribLocationARB( shader->handle, ATTR_INDEX_LIGHT_NUMS1, "attr_LightNums1" );
 	pglBindAttribLocationARB( shader->handle, ATTR_INDEX_MATRIX, "attr_MatrixIndex" );
+	pglBindAttribLocationARB( shader->handle, ATTR_INDEX_MATERIAL, "attr_MaterialIndex" );
 }
 
 static void GL_ParseProgramVertexAttribs( glsl_program_t *shader )
@@ -1351,6 +1352,10 @@ static glsl_program_t *GL_CreateUberShader( GLint slot, const char *glname, cons
 			GLuint blockIndex = pglGetUniformBlockIndex( shader->handle, "ModelMatrices" );
 			if( blockIndex != GL_INVALID_INDEX )
 				pglUniformBlockBinding( shader->handle, blockIndex, MODEL_MATRICES_UBO_BINDING );
+
+			blockIndex = pglGetUniformBlockIndex( shader->handle, "MaterialParams" );
+			if( blockIndex != GL_INVALID_INDEX )
+				pglUniformBlockBinding( shader->handle, blockIndex, MATERIAL_PARAMS_UBO_BINDING );
 		}
 
 		GL_ValidateProgram( shader );

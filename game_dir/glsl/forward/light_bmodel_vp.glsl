@@ -16,14 +16,15 @@ GNU General Public License for more details.
 #include "matrix.h"
 #include "tnbasis.h"
 #include "modelmatrix.h"
+#include "materialparams.h"
 
 attribute vec3	attr_Position;
 attribute float	attr_MatrixIndex;
+attribute float	attr_MaterialIndex;
 attribute vec4	attr_TexCoord0;
 
 uniform mat4	u_LightViewProjMatrix;
 uniform vec4	u_LightOrigin;
-uniform vec2	u_DetailScale;
 uniform vec3	u_ViewOrigin;
 uniform mat4	u_ReflectMatrix;
 uniform vec2	u_TexOffset;
@@ -66,6 +67,8 @@ varying vec3	var_TangentLightDir;
 void main( void )
 {
 	mat4 modelMatrix = GetModelMatrix( attr_MatrixIndex );
+	vec4 materialParams = GetMaterialParams( attr_MaterialIndex );
+	var_MaterialIndex = attr_MaterialIndex;
 	vec4 position = vec4( attr_Position, 1.0 ); // in object space
 	vec4 worldpos = modelMatrix * position;
 
@@ -78,7 +81,7 @@ void main( void )
 	// used for diffuse, normalmap, specular and height map
 	var_TexDiffuse = ( attr_TexCoord0.xy + u_TexOffset );
 #if defined( HAS_DETAIL )
-	var_TexDetail = var_TexDiffuse * u_DetailScale;
+	var_TexDetail = var_TexDiffuse * materialParams.xy;
 #endif
 
 #if defined( APPLY_TERRAIN )

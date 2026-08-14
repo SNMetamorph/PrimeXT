@@ -52,6 +52,7 @@ enum
 	ATTR_INDEX_LIGHT_NUMS0,	// brushmodels only
 	ATTR_INDEX_LIGHT_NUMS1,	// brushmodels only
 	ATTR_INDEX_MATRIX,	// brushmodels only: entity matrix index
+	ATTR_INDEX_MATERIAL,	// brushmodels only: material params index
 };
 
 // shader->attribs
