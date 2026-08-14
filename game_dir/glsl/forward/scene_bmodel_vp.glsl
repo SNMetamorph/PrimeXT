@@ -15,15 +15,16 @@ GNU General Public License for more details.
 
 #include "matrix.h"
 #include "tnbasis.h"
+#include "modelmatrix.h"
 
 attribute vec3	attr_Position;
+attribute float	attr_MatrixIndex;
 attribute vec4	attr_TexCoord0;	// diffuse\terrain
 attribute vec4	attr_TexCoord1;	// lightmap 0-1
 attribute vec4	attr_TexCoord2;	// lightmap 2-3
 attribute vec4	attr_LightStyles;
 
 uniform float	u_LightStyleValues[MAX_LIGHTSTYLES];
-uniform mat4	u_ModelMatrix;
 uniform mat4	u_ReflectMatrix;
 uniform vec3	u_ViewOrigin;	// already in modelspace
 uniform vec2	u_DetailScale;
@@ -57,14 +58,15 @@ centroid varying vec3	var_TangentViewDir;
 
 void main( void )
 {
+	mat4 modelMatrix = GetModelMatrix( attr_MatrixIndex );
 	vec4 position = vec4( attr_Position, 1.0 ); // in object space
-	vec4 worldpos = u_ModelMatrix * position;
+	vec4 worldpos = modelMatrix * position;
 
 	gl_Position = gl_ModelViewProjectionMatrix * worldpos;
 	gl_ClipVertex = gl_ModelViewMatrix * worldpos;
 
 	// compute TBN
-	mat3 tbn = ComputeTBN( u_ModelMatrix );
+	mat3 tbn = ComputeTBN( modelMatrix );
 	vec3 N = tbn[2];
 
 	// used for diffuse, normalmap, specular and height map

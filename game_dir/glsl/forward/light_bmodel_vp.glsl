@@ -15,15 +15,16 @@ GNU General Public License for more details.
 
 #include "matrix.h"
 #include "tnbasis.h"
+#include "modelmatrix.h"
 
 attribute vec3	attr_Position;
+attribute float	attr_MatrixIndex;
 attribute vec4	attr_TexCoord0;
 
 uniform mat4	u_LightViewProjMatrix;
 uniform vec4	u_LightOrigin;
 uniform vec2	u_DetailScale;
 uniform vec3	u_ViewOrigin;
-uniform mat4	u_ModelMatrix;
 uniform mat4	u_ReflectMatrix;
 uniform vec2	u_TexOffset;
 
@@ -64,14 +65,15 @@ varying vec3	var_TangentLightDir;
 
 void main( void )
 {
+	mat4 modelMatrix = GetModelMatrix( attr_MatrixIndex );
 	vec4 position = vec4( attr_Position, 1.0 ); // in object space
-	vec4 worldpos = u_ModelMatrix * position;
+	vec4 worldpos = modelMatrix * position;
 
 	gl_Position = gl_ModelViewProjectionMatrix * worldpos;
 	gl_ClipVertex = gl_ModelViewMatrix * worldpos;
 
 	// compute TBN
-	mat3 tbn = ComputeTBN( u_ModelMatrix );
+	mat3 tbn = ComputeTBN( modelMatrix );
 
 	// used for diffuse, normalmap, specular and height map
 	var_TexDiffuse = ( attr_TexCoord0.xy + u_TexOffset );

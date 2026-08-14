@@ -262,6 +262,7 @@ static uniformTable_t glsl_uniformTable[] =
 { "u_LayerMap",		UT_LAYERMAP,		UFL_TEXTURE_UNIT },
 { "u_FitNormalMap",		UT_FITNORMALMAP,		UFL_TEXTURE_UNIT },
 { "u_ModelMatrix",		UT_MODELMATRIX,		0 },
+{ "u_ModelMatrices",	UT_MODELMATRICES,		UFL_TEXTURE_UNIT },
 { "u_ReflectMatrix",	UT_REFLECTMATRIX,		0 },
 { "u_BonesArray",		UT_BONESARRAY,		UFL_ENTITY_PARM },	
 { "u_BoneQuaternion",	UT_BONEQUATERNION,		UFL_ENTITY_PARM },
@@ -1185,6 +1186,7 @@ static void GL_SetDefaultVertexAttribs( glsl_program_t *shader )
 	pglBindAttribLocationARB( shader->handle, ATTR_INDEX_LIGHT_VECS, "attr_LightVecs" );
 	pglBindAttribLocationARB( shader->handle, ATTR_INDEX_LIGHT_NUMS0, "attr_LightNums0" );
 	pglBindAttribLocationARB( shader->handle, ATTR_INDEX_LIGHT_NUMS1, "attr_LightNums1" );
+	pglBindAttribLocationARB( shader->handle, ATTR_INDEX_MATRIX, "attr_MatrixIndex" );
 }
 
 static void GL_ParseProgramVertexAttribs( glsl_program_t *shader )

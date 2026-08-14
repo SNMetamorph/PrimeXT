@@ -50,6 +50,7 @@ typedef struct bvert_s
 	byte		styles[MAXLIGHTMAPS];	// light styles
 	byte		lights0[4];		// packed light numbers
 	byte		lights1[4];		// packed light numbers
+	unsigned short	matrixIndex;		// entity matrix index (submodel)
 } bvert_t;
 
 typedef struct
@@ -165,6 +166,11 @@ typedef struct
 	uint		vertex_buffer_object;
 	uint		vertex_array_object;
 	uint		cacheSize;
+
+	// instancing: per-submodel model matrices, indexed by the per-vertex matrixIndex
+	unsigned short	*surface_submodel;	// surface index -> submodel index
+	GLfloat		*modelMatrices;		// [numsubmodels * 16] model matrices (CPU-side)
+	TextureHandle	modelMatricesTexture;	// RGBA32F texture holding the matrices
 
 	unsigned short	*sortedfaces;	// surfaces sorted through all models
 	unsigned short	numsortedfaces;

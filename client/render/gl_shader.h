@@ -51,6 +51,7 @@ enum
 	ATTR_INDEX_LIGHT_VECS,	// studio & grass
 	ATTR_INDEX_LIGHT_NUMS0,	// brushmodels only
 	ATTR_INDEX_LIGHT_NUMS1,	// brushmodels only
+	ATTR_INDEX_MATRIX,	// brushmodels only: entity matrix index
 };
 
 // shader->attribs
@@ -105,6 +106,7 @@ typedef enum
 	UT_LAYERMAP,
 	UT_FITNORMALMAP,
 	UT_MODELMATRIX,
+	UT_MODELMATRICES,	// float texture holding per-submodel model matrices
 	UT_REFLECTMATRIX,
 	UT_BONESARRAY,
 	UT_BONEQUATERNION,

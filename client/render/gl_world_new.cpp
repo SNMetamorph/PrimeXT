@@ -1671,6 +1671,7 @@ static void CreateBufferBaseGL21( bvert_t *arrayxvert )
 		arraybvert[i].lmcoord1[2] = arrayxvert[i].lmcoord1[2];
 		arraybvert[i].lmcoord1[3] = arrayxvert[i].lmcoord1[3];
 		memcpy( arraybvert[i].styles, arrayxvert[i].styles, MAXLIGHTMAPS );
+		arraybvert[i].matrixIndex = arrayxvert[i].matrixIndex;
 	}
 
 	world->cacheSize = world->numvertexes * sizeof( bvert_v0_gl21_t );
@@ -1709,6 +1710,9 @@ static void BindBufferBaseGL21( void )
 
 	pglVertexAttribPointerARB( ATTR_INDEX_LIGHT_STYLES, 4, GL_UNSIGNED_BYTE, 0, sizeof( bvert_v0_gl21_t ), (void *)offsetof( bvert_v0_gl21_t, styles ));
 	pglEnableVertexAttribArrayARB( ATTR_INDEX_LIGHT_STYLES );
+
+	pglVertexAttribPointerARB( ATTR_INDEX_MATRIX, 1, GL_UNSIGNED_SHORT, 0, sizeof( bvert_v0_gl21_t ), (void *)offsetof( bvert_v0_gl21_t, matrixIndex ));
+	pglEnableVertexAttribArrayARB( ATTR_INDEX_MATRIX );
 }
 
 static void CreateBufferBaseGL30( bvert_t *arrayxvert )
@@ -1740,6 +1744,7 @@ static void CreateBufferBaseGL30( bvert_t *arrayxvert )
 		memcpy( arraybvert[i].styles, arrayxvert[i].styles, MAXLIGHTMAPS );
 		memcpy( arraybvert[i].lights0, arrayxvert[i].lights0, MAXLIGHTMAPS );
 		memcpy( arraybvert[i].lights1, arrayxvert[i].lights1, MAXLIGHTMAPS );
+		arraybvert[i].matrixIndex = arrayxvert[i].matrixIndex;
 	}
 
 	world->cacheSize = world->numvertexes * sizeof( bvert_v0_gl30_t );
@@ -1784,6 +1789,9 @@ static void BindBufferBaseGL30( void )
 
 	pglVertexAttribPointerARB( ATTR_INDEX_LIGHT_NUMS1, 4, GL_UNSIGNED_BYTE, 0, sizeof( bvert_v0_gl30_t ), (void *)offsetof( bvert_v0_gl30_t, lights1 ));
 	pglEnableVertexAttribArrayARB( ATTR_INDEX_LIGHT_NUMS1 );
+
+	pglVertexAttribPointerARB( ATTR_INDEX_MATRIX, 1, GL_UNSIGNED_SHORT, 0, sizeof( bvert_v0_gl30_t ), (void *)offsetof( bvert_v0_gl30_t, matrixIndex ));
+	pglEnableVertexAttribArrayARB( ATTR_INDEX_MATRIX );
 }
 
 /*
@@ -1795,6 +1803,15 @@ static void Mod_CreateBufferObject( void )
 {
 	if( world->vertex_buffer_object )
 		return; // already created
+
+	// build surface -> submodel lookup, used to bake a stable per-vertex
+	// matrix index that maps to the entity transform at render time
+	world->surface_submodel = (unsigned short *)Mem_Alloc( worldmodel->numsurfaces * sizeof( unsigned short ));
+	for( int s = 0; s < worldmodel->numsubmodels; s++ )
+	{
+		for( int f = 0; f < worldmodel->submodels[s].numfaces; f++ )
+			world->surface_submodel[worldmodel->submodels[s].firstface + f] = (unsigned short)s;
+	}
 
 	// calculate number of used faces and vertexes
 	msurface_t *surf = worldmodel->surfaces;
@@ -1821,6 +1838,7 @@ static void Mod_CreateBufferObject( void )
 	for (int i = 0; i < worldmodel->numsurfaces; i++, surf++ )
 	{
 		Vector t, b, n;
+		unsigned short submodel = world->surface_submodel[i];
 
 		if( FBitSet( surf->flags, SURF_DRAWSKY ))
 			continue;	// ignore sky polys it was never be drawed
@@ -1841,6 +1859,7 @@ static void Mod_CreateBufferObject( void )
 			memcpy( currVertex->lights0, surf->info->lights, sizeof( surf->info->lights ));
 			dv = &worldmodel->vertexes[vert];
 			currVertex->vertex = dv->position;
+			currVertex->matrixIndex = submodel;
 
 			R_TextureCoords( surf, currVertex->vertex, currVertex->stcoord0 );
 			R_LightmapCoords( surf, currVertex->vertex, currVertex->lmcoord0, 0 );	// styles 0-1
@@ -1930,6 +1949,21 @@ static void Mod_CreateBufferObject( void )
 
 	// update stats
 	tr.total_vbo_memory += world->cacheSize;
+
+	// allocate the CPU-side model matrices and the float texture that holds them.
+	// each submodel gets a 4x4 matrix stored as 4 RGBA32F texels (one per column)
+	world->modelMatrices = (GLfloat *)Mem_Alloc( worldmodel->numsubmodels * 16 * sizeof( GLfloat ));
+
+	// submodel 0 (the world) uses the identity matrix
+	memset( world->modelMatrices, 0, 16 * sizeof( GLfloat ));
+	world->modelMatrices[0] = world->modelMatrices[5] = world->modelMatrices[10] = world->modelMatrices[15] = 1.0f;
+
+	world->modelMatricesTexture = CREATE_TEXTURE( "*modelmatrices", worldmodel->numsubmodels, 4, NULL,
+		TF_NEAREST | TF_NOMIPMAP | TF_CLAMP | TF_HAS_ALPHA | TF_ARB_FLOAT | TF_UPDATE );
+
+	// upload the initial (identity world) matrices
+	GL_Bind( GL_TEXTURE0, world->modelMatricesTexture );
+	pglTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, worldmodel->numsubmodels, 4, GL_RGBA, GL_FLOAT, world->modelMatrices );
 }
 
 /*
@@ -2155,6 +2189,18 @@ static void Mod_FreeWorld( model_t *mod )
 		Mem_Free( world->vertexes );
 	world->vertexes = NULL;
 
+	if( world->surface_submodel )
+		Mem_Free( world->surface_submodel );
+	world->surface_submodel = NULL;
+
+	if( world->modelMatrices )
+		Mem_Free( world->modelMatrices );
+	world->modelMatrices = NULL;
+
+	if( world->modelMatricesTexture.Initialized() )
+		FREE_TEXTURE( world->modelMatricesTexture );
+	world->modelMatricesTexture = TextureHandle::Null();
+
 	if( world->vertex_lighting )
 		Mem_Free( world->vertex_lighting );
 	world->vertex_lighting = NULL;
@@ -2285,6 +2331,10 @@ void R_MarkSubmodelVisibleFaces( void )
 	// grab the transformed vieworg
 	glm = GL_GetCache( e->hCachedMatrix );
 
+	// store the entity transform in the per-submodel matrix array
+	if( world->surface_submodel && world->modelMatrices )
+		memcpy( &world->modelMatrices[world->surface_submodel[model->firstmodelsurface] * 16], glm->modelMatrix, 16 * sizeof( GLfloat ));
+
 	if( e->angles != g_vecZero )
 	{
 		TransformAABB( glm->transform, model->mins, model->maxs, absmin, absmax );
@@ -2400,6 +2450,15 @@ _forceinline void R_DrawSurface( mextrasurf_t *es )
 		tempElems[numTempElems++] = es->firstvertex + j + 1;
 		tempElems[numTempElems++] = es->firstvertex + j + 2;
 	}
+}
+
+static void R_UploadModelMatrices( void )
+{
+	if( !world->modelMatricesTexture.Initialized() || !world->modelMatrices )
+		return;
+
+	GL_Bind( GL_TEXTURE0, world->modelMatricesTexture );
+	pglTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, worldmodel->numsubmodels, 4, GL_RGBA, GL_FLOAT, world->modelMatrices );
 }
 
 void R_MarkVisibleLights( byte lights[MAXDYNLIGHTS] )
@@ -2684,6 +2743,9 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 		case UT_MODELMATRIX:
 			u->SetValue( &glm->modelMatrix[0] );
 			break;
+		case UT_MODELMATRICES:
+			u->SetValue( world->modelMatricesTexture.ToInt() );
+			break;
 		case UT_REFLECTMATRIX:
 			if( Surf_CheckSubview( es ))
 				Surf_GetSubview( es )->matrix.CopyToArray( viewMatrix );
@@ -2890,11 +2952,7 @@ static bool R_SortSolidBrushFaces( const CSolidEntry &a, const CSolidEntry &b )
 	if( a.m_sortShader2 != b.m_sortShader2 )
 		return a.m_sortShader2 < b.m_sortShader2;
 
-	// group by entity transform matrix before texture/lightmap so each entity's
-	// faces stay contiguous and matrix switches dominate less than material ones
-	if( a.m_sortMatrix != b.m_sortMatrix )
-		return a.m_sortMatrix < b.m_sortMatrix;
-
+	// model matrix is now per-vertex (instancing), so batch purely by material
 	if( a.m_sortTexture != b.m_sortTexture )
 		return a.m_sortTexture < b.m_sortTexture;
 
@@ -2993,7 +3051,6 @@ setup light projection for each
 void R_DrawLightForSurfList( CDynLight *pl )
 {
 	material_t	*cached_material = NULL;
-	int		cached_matrix = -1;
 	int		cached_rendercolor = -1;
 	int		cached_renderamt = -1;
 	int		cached_body = -1;
@@ -3026,7 +3083,7 @@ void R_DrawLightForSurfList( CDynLight *pl )
 		if(( i == 0 ) || ( RI->currentshader != &glsl_programs[entry->m_hProgram] ))
 			flush_buffer = true;
 
-		if (cached_matrix != es->parent->hCachedMatrix || cached_rendercolor != rendercolor || cached_renderamt != e->curstate.renderamt || cached_body != e->curstate.body)
+		if (cached_rendercolor != rendercolor || cached_renderamt != e->curstate.renderamt || cached_body != e->curstate.body)
 			flush_buffer = true;
 
 		if( cached_material != mat )
@@ -3048,7 +3105,6 @@ void R_DrawLightForSurfList( CDynLight *pl )
 		}
 
 		// now cache values
-		cached_matrix = es->parent->hCachedMatrix;
 		cached_rendercolor = rendercolor;
 		cached_renderamt = e->curstate.renderamt;
 		cached_body = e->curstate.body;
@@ -3153,7 +3209,6 @@ void R_RenderSolidBrushList( void )
 {
 	ZoneScoped;
 
-	int		cached_matrix = -1;
 	int		cached_rendercolor = -1;
 	int		cached_renderamt = -1;
 	int		cached_body = -1;
@@ -3168,6 +3223,7 @@ void R_RenderSolidBrushList( void )
 		return;
 
 	std::sort( RI->frame.solid_faces.Base(), RI->frame.solid_faces.Base() + RI->frame.solid_faces.Count(), R_SortSolidBrushFaces );
+	R_UploadModelMatrices();
 	GL_DEBUG_SCOPE();
 	GL_Blend( GL_FALSE );
 	GL_AlphaTest( GL_FALSE );
@@ -3204,7 +3260,7 @@ void R_RenderSolidBrushList( void )
 			r_stats.solid_brush_list_flushes.num_flushes_shader++;
 		}
 
-		if (cached_matrix != es->parent->hCachedMatrix || cached_rendercolor != rendercolor || cached_renderamt != e->curstate.renderamt || cached_body != e->curstate.body) {
+		if (cached_rendercolor != rendercolor || cached_renderamt != e->curstate.renderamt || cached_body != e->curstate.body) {
 			flush_buffer = true;
 			r_stats.solid_brush_list_flushes.num_flushes_entity++;
 		}
@@ -3245,7 +3301,6 @@ void R_RenderSolidBrushList( void )
 		}
 
 		// now cache values
-		cached_matrix = es->parent->hCachedMatrix;
 		cached_rendercolor = rendercolor;
 		cached_renderamt = e->curstate.renderamt;
 		cached_body = e->curstate.body;
@@ -3434,16 +3489,13 @@ int R_RenderTransSurfaces( int startIndex )
 ================
 R_SortShadowBrushFaces
 
-group shadow faces by depth shader, matrix and material to minimize flushes
+group shadow faces by depth shader and material to minimize flushes
 ================
 */
 static bool R_SortShadowBrushFaces( const CSolidEntry &a, const CSolidEntry &b )
 {
 	if( a.m_hProgram != b.m_hProgram )
 		return a.m_hProgram < b.m_hProgram;
-
-	if( a.m_sortMatrix != b.m_sortMatrix )
-		return a.m_sortMatrix < b.m_sortMatrix;
 
 	if( a.m_sortTexture != b.m_sortTexture )
 		return a.m_sortTexture < b.m_sortTexture;
@@ -3459,7 +3511,6 @@ R_RenderShadowBrushList
 */
 void R_RenderShadowBrushList( void )
 {
-	int			cached_matrix = -1;
 	material_t *cached_material = NULL;
 	qboolean	flush_buffer = false;
 	int			startv, endv;
@@ -3468,6 +3519,7 @@ void R_RenderShadowBrushList( void )
 		return;
 
 	std::sort( RI->frame.solid_faces.Base(), RI->frame.solid_faces.Base() + RI->frame.solid_faces.Count(), R_SortShadowBrushFaces );
+	R_UploadModelMatrices();
 
 	GL_DEBUG_SCOPE();
 	pglBindVertexArray( world->vertex_array_object );
@@ -3493,9 +3545,6 @@ void R_RenderShadowBrushList( void )
 		if ((i == 0) || (RI->currentshader != &glsl_programs[entry->m_hProgram]))
 			flush_buffer = true;
 
-		if (cached_matrix != esurf->parent->hCachedMatrix)
-			flush_buffer = true;
-
 		if (cached_material != mat)
 			flush_buffer = true;
 
@@ -3515,7 +3564,6 @@ void R_RenderShadowBrushList( void )
 		}
 
 		// now cache values
-		cached_matrix = esurf->parent->hCachedMatrix;
 		cached_material = mat;
 
 		if( numTempElems == 0 ) // new chain has started, apply uniforms

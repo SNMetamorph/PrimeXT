@@ -49,6 +49,7 @@ typedef struct
 	float		lmcoord0[4];		// LM texture coords for styles 0-1
 	float		lmcoord1[4];		// LM texture coords for styles 2-3
 	byte		styles[MAXLIGHTMAPS];	// light styles
+	unsigned short	matrixIndex;		// entity matrix index (submodel)
 } bvert_v0_gl21_t;
 
 #pragma pack(1)
@@ -65,6 +66,7 @@ no_align typedef struct
 	byte		styles[MAXLIGHTMAPS];	// light styles
 	byte		lights0[4];		// packed light numbers
 	byte		lights1[4];		// packed light numbers
+	unsigned short	matrixIndex;		// entity matrix index (submodel)
 } bvert_v0_gl30_t;
 #pragma pack()
 /*

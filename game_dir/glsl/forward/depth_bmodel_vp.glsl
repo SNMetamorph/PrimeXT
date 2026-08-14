@@ -13,18 +13,21 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#include "modelmatrix.h"
+
 attribute vec3		attr_Position;
+attribute float		attr_MatrixIndex;
 attribute vec2		attr_TexCoord0;
 
-uniform mat4		u_ModelMatrix;
 uniform vec2		u_TexOffset;
 
 varying vec2		var_TexCoord;	// for alpha-testing
 
 void main( void )
 {
+	mat4 modelMatrix = GetModelMatrix( attr_MatrixIndex );
 	vec4 position = vec4( attr_Position, 1.0 );
-	vec4 worldpos = u_ModelMatrix * position;
+	vec4 worldpos = modelMatrix * position;
 
 	// transform vertex position into homogenous clip-space
 	gl_Position = gl_ModelViewProjectionMatrix * worldpos;
