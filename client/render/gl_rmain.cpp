@@ -190,26 +190,66 @@ float R_GetPVSRadius()
 
 /*
 ===============
-GL_CacheState
+GL_HashMatrix
 
-build matrix pack or find already existed
+hash a 4x4 matrix for the cached-state lookup
 ===============
 */
+static uint GL_HashMatrix( const GLfloat *matrix )
+{
+	const uint	*d = (const uint *)matrix;
+	uint	hash = 0;
+
+	for( int i = 0; i < 16; i++ )
+	{
+		hash += d[i];
+		hash += (hash << 10);
+		hash ^= (hash >> 6);
+	}
+
+	hash += (hash << 3);
+	hash ^= (hash >> 11);
+	hash += (hash << 15);
+
+	return hash;
+}
+
 unsigned short GL_CacheState( const Vector &origin, const Vector &angles, bool skyentity )
 {
 	gl_state_t state;
 	state.transform = matrix4x4( origin, angles, 1.0f );
 	state.transform.CopyToArray( state.modelMatrix );
 
-	for (int i = 0; i < tr.cached_state.Count(); i++)
+	const uint mask = CACHED_STATE_HASH_SIZE - 1;
+	uint slot = GL_HashMatrix( state.modelMatrix ) & mask;
+
+	// open-addressing lookup: stored value is index+1 (0 means empty)
+	for( int i = 0; i < CACHED_STATE_HASH_SIZE; i++ )
 	{
-		// NOTE: (MVP == MV == M). So no reason to compare all the matrices
-		if( !memcmp( tr.cached_state[i].modelMatrix, state.modelMatrix, sizeof( state.modelMatrix ))) {
-			return i;
+		int index = tr.cached_state_hash[slot];
+
+		if( index == 0 )
+		{
+			// empty slot: append and record
+			tr.cached_state.AddToTail( state );
+			index = tr.cached_state.Count();
+			tr.cached_state_hash[slot] = index;
+			return index - 1;
 		}
+
+		if( !memcmp( tr.cached_state[index - 1].modelMatrix, state.modelMatrix, sizeof( state.modelMatrix )))
+			return index - 1;
+
+		slot = (slot + 1) & mask;
 	}
 
-	// store results
+	// table exhausted (shouldn't happen): fallback to linear scan
+	for( int i = 0; i < tr.cached_state.Count(); i++ )
+	{
+		if( !memcmp( tr.cached_state[i].modelMatrix, state.modelMatrix, sizeof( state.modelMatrix )))
+			return i;
+	}
+
 	tr.cached_state.AddToTail( state );
 
 	return tr.cached_state.Count() - 1;

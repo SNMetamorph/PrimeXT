@@ -42,6 +42,8 @@ GNU General Public License for more details.
 // limits
 #define MAX_REF_STACK		8			// pass depth
 #define MAX_VISIBLE_ENTS	4096			// total pack of frame ents
+#define MAX_CACHED_STATES	(MAX_VISIBLE_ENTS + 1)	// cached model matrices (world + brush ents)
+#define CACHED_STATE_HASH_SIZE	8192			// power of two, open-addressing hash for GL_CacheState
 #define MAX_SORTED_FACES	32768			// bmodels only
 #define MAX_SUBVIEW_FACES	1024			// mirrors, portals, monitors, water, puddles. NOTE: multipass faces can merge view passes
 #define MAX_OCCLUDED_FACES	1024			// mirrors + water
@@ -526,6 +528,7 @@ typedef struct
 	TextureHandle		screenTexture;
 
 	CUtlArray<gl_state_t>	cached_state;
+	int			cached_state_hash[CACHED_STATE_HASH_SIZE];	// maps matrix hash -> cached_state index+1 (0 = empty)
 
 	gl_lightmap_t	lightmaps[MAX_LIGHTMAPS];
 	uint32_t	current_lightmap_texture;
