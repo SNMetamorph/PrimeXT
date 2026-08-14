@@ -52,6 +52,13 @@ public:
 	uint32_t m_hProgram;			// handle to glsl program (may be 0)
 	TextureHandle	m_hTexture;	// texture for primitive (OpenGL texture handle)
 
+	// cached sort keys (surface entries only) to avoid scattered memory
+	// access in the per-frame sort comparator
+	uint16_t	m_sortShader;		// forwardScene[0] shader handle
+	uint16_t	m_sortShader2;		// forwardScene[1] shader handle
+	int32_t		m_sortTexture;		// texture gl_texturenum
+	uint16_t	m_sortLightmap;		// lightmaptexturenum
+
 	union
 	{
 		struct vbomesh_t	*m_pMesh;		// NULL or mesh

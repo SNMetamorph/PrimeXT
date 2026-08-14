@@ -38,11 +38,19 @@ void CSolidEntry :: SetRenderPrimitive( const Vector verts[4], const Vector4D &c
 
 void CSolidEntry :: SetRenderSurface( msurface_t *surface, word hProgram )
 {
+	mextrasurf_t *es = surface->info;
+
 	m_bDrawType = DRAWTYPE_SURFACE;
 	m_pSurf = surface;
 	m_pParentEntity = RI->currententity;
 	m_pRenderModel = RI->currentmodel;
 	m_hProgram = hProgram;
+
+	// cache the sort keys to avoid scattered memory access in the frame sort
+	m_sortShader = es->forwardScene[0].GetHandle();
+	m_sortShader2 = es->forwardScene[1].GetHandle();
+	m_sortTexture = surface->texinfo->texture->gl_texturenum;
+	m_sortLightmap = es->lightmaptexturenum;
 }
 
 void CSolidEntry :: SetRenderMesh( vbomesh_t *mesh, word hProgram )
