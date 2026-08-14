@@ -52,8 +52,6 @@ uniform float		u_zFar;
 
 #if defined( APPLY_TERRAIN )
 uniform float		u_Smoothness[TERRAIN_NUM_LAYERS];
-#else
-uniform float		u_Smoothness;
 #endif
 
 // shared variables
@@ -128,7 +126,7 @@ void main( void )
 #if defined( APPLY_TERRAIN )
 	mat.smoothness = TerrainMixSmoothness( u_Smoothness, mask0, mask1, mask2, mask3 );
 #else
-	mat.smoothness = u_Smoothness;
+	mat.smoothness = GetMaterialParams2( var_MaterialIndex ).x;
 #endif
 	// default params 
 	mat.metalness = 0.0;
@@ -157,7 +155,7 @@ void main( void )
 
 // compute the result term
 #if defined( PLANAR_REFLECTION ) || defined( PORTAL_SURFACE )
-	albedo = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, u_RefractScale );
+	albedo = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, GetMaterialParams( var_MaterialIndex ).w );
 #elif defined( APPLY_TERRAIN )
 	albedo = TerrainMixDiffuse( u_ColorMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 #elif defined( MONITOR_BRUSH )
@@ -251,11 +249,13 @@ void main( void )
 	float distortScale = 1.0;
 #endif
 	// prohibits displaying in refractions objects, that are closer to camera than brush surface
-	float distortedDepth = texture(u_DepthMap, GetDistortedTexCoords(N, distortScale)).r;
+	vec4 materialParams = GetMaterialParams( var_MaterialIndex );
+	vec4 materialParams2 = GetMaterialParams2( var_MaterialIndex );
+	float distortedDepth = texture(u_DepthMap, GetDistortedTexCoords(N, distortScale, materialParams.w)).r;
 	distortScale *= step(gl_FragCoord.z, distortedDepth);
 
 	// fetch color for saved screencopy
-	vec3 screenmap = GetScreenColor( N, distortScale );
+	vec3 screenmap = GetScreenColor( N, distortScale, materialParams.w, materialParams2.y );
 #if defined( PLANAR_REFLECTION ) || defined( PORTAL_SURFACE )
 	result.a = GetFresnel( saturate(dot(V, N)), WATER_F0_VALUE, FRESNEL_FACTOR );
 #endif // PLANAR_REFLECTION

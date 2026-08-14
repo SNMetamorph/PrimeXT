@@ -18,21 +18,19 @@ GNU General Public License for more details.
 
 uniform sampler2D	u_ScreenMap;
 uniform vec2		u_ScreenSizeInv;
-uniform float		u_RefractScale;
-uniform float		u_AberrationScale;
 
-vec2 GetDistortedTexCoords(in vec3 N, float fade)
+vec2 GetDistortedTexCoords(in vec3 N, float fade, float refractScale)
 {
 	vec2 screenCoord = gl_FragCoord.xy * u_ScreenSizeInv;
-	screenCoord.x += N.x * u_RefractScale * screenCoord.x * fade;
-	screenCoord.y -= N.y * u_RefractScale * screenCoord.y * fade;
+	screenCoord.x += N.x * refractScale * screenCoord.x * fade;
+	screenCoord.y -= N.y * refractScale * screenCoord.y * fade;
 	return screenCoord;
 }
 
-vec3 GetScreenColor(in vec3 N, float fade)
+vec3 GetScreenColor(in vec3 N, float fade, float refractScale, float aberrationScale)
 {
 #if defined( APPLY_REFRACTION )
-	vec2 screenCoord = GetDistortedTexCoords(N, fade);
+	vec2 screenCoord = GetDistortedTexCoords(N, fade, refractScale);
 #else
 	vec2 screenCoord = gl_FragCoord.xy * u_ScreenSizeInv;
 #endif
@@ -41,7 +39,7 @@ vec3 GetScreenColor(in vec3 N, float fade)
 	screenCoord.y = clamp( screenCoord.y, 0.01, 0.99 );
 
 #if defined( APPLY_ABERRATION )
-	return chromemap2D(u_ScreenMap, screenCoord, N, u_AberrationScale * fade);
+	return chromemap2D(u_ScreenMap, screenCoord, N, aberrationScale * fade);
 #else
 	return texture(u_ScreenMap, screenCoord).rgb;
 #endif

@@ -50,14 +50,11 @@ uniform vec4		u_LightDir;
 uniform vec3		u_LightDiffuse;
 uniform vec4		u_LightOrigin;
 uniform vec4		u_ShadowParams;
-uniform float		u_RefractScale;
 uniform float		u_AmbientFactor;
 uniform float		u_SunRefract;
 
 #if defined( APPLY_TERRAIN )
 uniform float		u_Smoothness[TERRAIN_NUM_LAYERS];
-#else
-uniform float		u_Smoothness;
 #endif
 
 varying vec2		var_TexDiffuse;
@@ -168,7 +165,7 @@ void main()
 #if defined( APPLY_TERRAIN )
 	mat.smoothness = TerrainMixSmoothness( u_Smoothness, mask0, mask1, mask2, mask3 );
 #else
-	mat.smoothness = u_Smoothness;
+	mat.smoothness = GetMaterialParams2( var_MaterialIndex ).x;
 #endif
 
 #if defined( LIQUID_SURFACE )
@@ -188,7 +185,7 @@ void main()
 #if defined( LIGHTMAP_DEBUG ) || defined( LIQUID_SURFACE )
 	vec4 albedo = vec4(1.0);
 #elif defined( PLANAR_REFLECTION ) && !defined( LIQUID_UNDERWATER ) // HACKHACK
-	vec4 albedo = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, u_RefractScale );
+	vec4 albedo = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, GetMaterialParams( var_MaterialIndex ).w );
 #elif defined( APPLY_TERRAIN )
 	vec4 albedo = TerrainMixDiffuse( u_ColorMap, vec_TexDiffuse, mask0, mask1, mask2, mask3 );
 #else

@@ -1988,12 +1988,14 @@ static void Mod_CreateBufferObject( void )
 		pglBindBufferARB( GL_UNIFORM_BUFFER, 0 );
 	}
 
-	// allocate + upload the per-material params UBO (detailScale, reflectScale, refractScale)
-	GLfloat *materialParams = (GLfloat *)Mem_Alloc( worldmodel->numtextures * 4 * sizeof( GLfloat ));
+	// allocate + upload the per-material params UBO
+	// vec4[0] = (detailScale.x, detailScale.y, reflectScale, refractScale)
+	// vec4[1] = (smoothness, aberrationScale, reliefScale, 0)
+	GLfloat *materialParams = (GLfloat *)Mem_Alloc( worldmodel->numtextures * 8 * sizeof( GLfloat ));
 	for( int i = 0; i < worldmodel->numtextures; i++ )
 	{
 		material_t *mat = &world->materials[i];
-		GLfloat *dst = &materialParams[i * 4];
+		GLfloat *dst = &materialParams[i * 8];
 
 		if( mat->impl )
 		{
@@ -2001,10 +2003,14 @@ static void Mod_CreateBufferObject( void )
 			dst[1] = mat->impl->detailScale[1];
 			dst[2] = bound( 0.0f, mat->impl->reflectScale, 1.0f );
 			dst[3] = bound( 0.0f, mat->impl->refractScale, 1.0f );
+			dst[4] = mat->impl->smoothness;
+			dst[5] = bound( 0.0f, mat->impl->aberrationScale, 1.0f );
+			dst[6] = mat->impl->reliefScale;
+			dst[7] = 0.0f;
 		}
 		else
 		{
-			dst[0] = dst[1] = dst[2] = dst[3] = 0.0f;
+			memset( dst, 0, 8 * sizeof( GLfloat ));
 		}
 	}
 
@@ -2012,7 +2018,7 @@ static void Mod_CreateBufferObject( void )
 	{
 		pglGenBuffersARB( 1, &world->materialParamsUBO );
 		pglBindBufferARB( GL_UNIFORM_BUFFER, world->materialParamsUBO );
-		pglBufferDataARB( GL_UNIFORM_BUFFER, worldmodel->numtextures * 4 * sizeof( GLfloat ), materialParams, GL_STATIC_DRAW_ARB );
+		pglBufferDataARB( GL_UNIFORM_BUFFER, worldmodel->numtextures * 8 * sizeof( GLfloat ), materialParams, GL_STATIC_DRAW_ARB );
 		pglBindBufferARB( GL_UNIFORM_BUFFER, 0 );
 		pglBindBufferBase( GL_UNIFORM_BUFFER, MATERIAL_PARAMS_UBO_BINDING, world->materialParamsUBO );
 	}
@@ -2885,7 +2891,6 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 				terrain_t *terra = land->terrain;
 				u->SetValue( &terra->layermap.smoothness[0], terra->numLayers );
 			}
-			else u->SetValue( mat->impl->smoothness );
 			break;
 		case UT_SHADOWMATRIX:
 			if( pl ) u->SetValue( &pl->gl_shadowMatrix[0][0], MAX_SHADOWMAPS );
@@ -2932,12 +2937,6 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 			break;
 		case UT_LERPFACTOR:
 			u->SetValue( es->lerpFactor );
-			break;
-		case UT_REFRACTSCALE:
-			u->SetValue( bound( 0.0f, mat->impl->refractScale, 1.0f ));
-			break;
-		case UT_ABERRATIONSCALE:
-			u->SetValue( bound( 0.0f, mat->impl->aberrationScale, 1.0f ));
 			break;
 		case UT_BOXMINS:
 			if( world->num_cubemaps > 0 )
