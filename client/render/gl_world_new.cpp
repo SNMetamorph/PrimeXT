@@ -3219,7 +3219,6 @@ void R_RenderSolidBrushList( void )
 	ZoneScoped;
 
 	int		cached_rendercolor = -1;
-	int		cached_renderamt = -1;
 	int		cached_body = -1;
 	material_t	*cached_material = NULL;
 	int		cached_mirror = -1;
@@ -3264,7 +3263,6 @@ void R_RenderSolidBrushList( void )
 		material_t *mat = R_TextureAnimation( s )->material;
 		bool entityColor = ( e->curstate.rendermode != kRenderNormal );
 		int rendercolor = entityColor ? ((e->curstate.rendercolor.r << 16) | (e->curstate.rendercolor.g << 8) | e->curstate.rendercolor.b) : 0;
-		int renderamt = entityColor ? e->curstate.renderamt : 0;
 		int body = FBitSet( s->flags, SURF_MOVIE ) ? e->curstate.body : 0;
 
 		if ((i == 0) || (RI->currentshader != &glsl_programs[entry->m_hProgram])) {
@@ -3272,9 +3270,11 @@ void R_RenderSolidBrushList( void )
 			r_stats.solid_brush_list_flushes.num_flushes_shader++;
 		}
 
-		if (cached_rendercolor != rendercolor || cached_renderamt != renderamt || cached_body != body) {
+		if (cached_rendercolor != rendercolor || cached_body != body) {
 			flush_buffer = true;
 			r_stats.solid_brush_list_flushes.num_flushes_entity++;
+			if (cached_rendercolor != rendercolor) r_stats.solid_brush_list_flushes.num_flushes_entity_color++;
+			if (cached_body != body) r_stats.solid_brush_list_flushes.num_flushes_entity_body++;
 		}
 
 		if (cached_material != mat) {
@@ -3314,7 +3314,6 @@ void R_RenderSolidBrushList( void )
 
 		// now cache values
 		cached_rendercolor = rendercolor;
-		cached_renderamt = renderamt;
 		cached_body = body;
 		cached_lightmap = es->lightmaptexturenum;
 		cached_mirror = es->subtexture[glState.stack_position];

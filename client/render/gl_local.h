@@ -265,6 +265,8 @@ struct gl_buffer_flush_stats_t
 	uint32_t num_flushes_lightmap;
 	uint32_t num_flushes_mirrortex;
 	uint32_t num_flushes_cubemap;
+	uint32_t num_flushes_entity_color;
+	uint32_t num_flushes_entity_body;
 };
 
 typedef enum

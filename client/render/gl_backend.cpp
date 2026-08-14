@@ -85,10 +85,12 @@ static void GL_PrintStats( int params )
 		R_Speeds_Printf( "DIP count %3i\nShader bind %3i\n", r_stats.num_flushes_total, r_stats.num_shader_binds );
 		R_Speeds_Printf( "Frame total tris %3i\n", r_stats.c_total_tris );
 		R_Speeds_Printf( "Total GLSL shaders %3i\n", num_glsl_programs - 1 );
-		R_Speeds_Printf( "\nSolid brush drawcall flushes:\n  shader %3i\n  material %3i\n  entity %3i\n  cubemap %3i\n  mirror %3i\n  lightmap %3i",
+		R_Speeds_Printf( "\nSolid brush drawcall flushes:\n  shader %3i\n  material %3i\n  entity %3i (color %3i, body %3i)\n  cubemap %3i\n  mirror %3i\n  lightmap %3i",
 			r_stats.solid_brush_list_flushes.num_flushes_shader, 
 			r_stats.solid_brush_list_flushes.num_flushes_material,
 			r_stats.solid_brush_list_flushes.num_flushes_entity,
+			r_stats.solid_brush_list_flushes.num_flushes_entity_color,
+			r_stats.solid_brush_list_flushes.num_flushes_entity_body,
 			r_stats.solid_brush_list_flushes.num_flushes_cubemap,
 			r_stats.solid_brush_list_flushes.num_flushes_mirrortex,
 			r_stats.solid_brush_list_flushes.num_flushes_lightmap
