@@ -3084,12 +3084,15 @@ void R_DrawLightForSurfList( CDynLight *pl )
 		if( !entry->m_hProgram ) continue;
 
 		material_t *mat = R_TextureAnimation( s )->material;
-		int rendercolor = (e->curstate.rendercolor.r << 16) | (e->curstate.rendercolor.g << 8) | e->curstate.rendercolor.b;
+		bool entityColor = ( e->curstate.rendermode != kRenderNormal );
+		int rendercolor = entityColor ? ((e->curstate.rendercolor.r << 16) | (e->curstate.rendercolor.g << 8) | e->curstate.rendercolor.b) : 0;
+		int renderamt = entityColor ? e->curstate.renderamt : 0;
+		int body = FBitSet( s->flags, SURF_MOVIE ) ? e->curstate.body : 0;
 
 		if(( i == 0 ) || ( RI->currentshader != &glsl_programs[entry->m_hProgram] ))
 			flush_buffer = true;
 
-		if (cached_rendercolor != rendercolor || cached_renderamt != e->curstate.renderamt || cached_body != e->curstate.body)
+		if (cached_rendercolor != rendercolor || cached_renderamt != renderamt || cached_body != body)
 			flush_buffer = true;
 
 		if( cached_material != mat )
@@ -3112,8 +3115,8 @@ void R_DrawLightForSurfList( CDynLight *pl )
 
 		// now cache values
 		cached_rendercolor = rendercolor;
-		cached_renderamt = e->curstate.renderamt;
-		cached_body = e->curstate.body;
+		cached_renderamt = renderamt;
+		cached_body = body;
 		cached_material = mat;
 
 		if( numTempElems == 0 ) // new chain has started, apply uniforms
@@ -3259,14 +3262,17 @@ void R_RenderSolidBrushList( void )
 		if( !entry->m_hProgram ) continue;
 
 		material_t *mat = R_TextureAnimation( s )->material;
-		int rendercolor = (e->curstate.rendercolor.r << 16) | (e->curstate.rendercolor.g << 8) | e->curstate.rendercolor.b;
+		bool entityColor = ( e->curstate.rendermode != kRenderNormal );
+		int rendercolor = entityColor ? ((e->curstate.rendercolor.r << 16) | (e->curstate.rendercolor.g << 8) | e->curstate.rendercolor.b) : 0;
+		int renderamt = entityColor ? e->curstate.renderamt : 0;
+		int body = FBitSet( s->flags, SURF_MOVIE ) ? e->curstate.body : 0;
 
 		if ((i == 0) || (RI->currentshader != &glsl_programs[entry->m_hProgram])) {
 			flush_buffer = true;
 			r_stats.solid_brush_list_flushes.num_flushes_shader++;
 		}
 
-		if (cached_rendercolor != rendercolor || cached_renderamt != e->curstate.renderamt || cached_body != e->curstate.body) {
+		if (cached_rendercolor != rendercolor || cached_renderamt != renderamt || cached_body != body) {
 			flush_buffer = true;
 			r_stats.solid_brush_list_flushes.num_flushes_entity++;
 		}
@@ -3308,8 +3314,8 @@ void R_RenderSolidBrushList( void )
 
 		// now cache values
 		cached_rendercolor = rendercolor;
-		cached_renderamt = e->curstate.renderamt;
-		cached_body = e->curstate.body;
+		cached_renderamt = renderamt;
+		cached_body = body;
 		cached_lightmap = es->lightmaptexturenum;
 		cached_mirror = es->subtexture[glState.stack_position];
 		cached_cubemap[0] = es->cubemap[0];
