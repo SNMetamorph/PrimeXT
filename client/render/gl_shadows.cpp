@@ -481,7 +481,7 @@ static void R_ShadowPassSetupGL( const CDynLight *pl )
 
 	// HACKHACK to ignore paranoia opengl32.dll	
 	GL_DepthRange( 0.0001f, 1.0f );
-	pglEnable( GL_DEPTH_TEST );
+	GL_DepthTest( GL_TRUE );
 	GL_AlphaTest( GL_FALSE );
 	GL_DepthMask( GL_TRUE );
 	GL_Blend( GL_FALSE );

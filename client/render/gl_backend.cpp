@@ -227,6 +227,13 @@ bool GL_BackendStartFrame( ref_viewpass_t *rvp, RefParams params )
 	memset( &r_stats, 0, sizeof( r_stats ));
 	tr.sunlight = NULL;
 
+	// invalidate cached GL state: the engine may have altered it while drawing
+	// its own HUD/console between frames, so we can't trust last frame's values
+	glState.alphaTest = glState.alphaToCoverage = glState.depthTest = glState.blend = -1;
+	glState.depthmask = -1;
+	glState.faceCull = -1;
+	glState.frontFace = -1;
+
 	if( r_buildstats.total_buildtime > 0.0 && RENDER_GET_PARM( PARM_CLIENT_ACTIVE, 0 ))
 	{
 		// display time to building some stuff: lighting, VBO, shaders etc
@@ -621,7 +628,7 @@ void R_RenderQuadPrimitive( CSolidEntry *entry )
 		GL_DepthMask( GL_FALSE );
 		break;
 	case kRenderGlow:
-		pglDisable( GL_DEPTH_TEST );
+		GL_DepthTest( GL_FALSE );
 	case kRenderTransAdd:
 		GL_Blend( GL_TRUE );
 		pglBlendFunc( GL_SRC_ALPHA, GL_ONE );
@@ -657,7 +664,7 @@ void R_RenderQuadPrimitive( CSolidEntry *entry )
 	pglEnd();
 
 	if( entry->m_iRenderMode == kRenderGlow )
-		pglEnable( GL_DEPTH_TEST );
+		GL_DepthTest( GL_TRUE );
 
 	if( entry->m_iRenderMode == kRenderTransAlpha )
 		GL_AlphaTest( GL_FALSE );
@@ -811,9 +818,8 @@ GL_DepthMask
 */
 void GL_DepthMask( GLint enable )
 {
-// it's won't work anyway
-//	if( glState.depthmask == enable )
-//		return;
+	if( glState.depthmask == enable )
+		return;
 
 	glState.depthmask = enable;
 	pglDepthMask( enable );
@@ -826,8 +832,10 @@ GL_AlphaTest
 */
 void GL_AlphaTest( GLint enable )
 {
-	if( pglIsEnabled( GL_ALPHA_TEST ) == enable )
+	if( glState.alphaTest == enable )
 		return;
+
+	glState.alphaTest = enable;
 
 	if( enable ) pglEnable( GL_ALPHA_TEST );
 	else pglDisable( GL_ALPHA_TEST );
@@ -840,17 +848,15 @@ GL_AlphaToCoverage
 */
 void GL_AlphaToCoverage(bool enable)
 {
-	// TODO store state locally to avoid GL-calls to get current state
-	if (pglIsEnabled(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB) == enable) {
-		return;
-	}
+	GLint state = (enable && CVAR_TO_BOOL(gl_alpha2coverage)) ? 1 : 0;
 
-	if (enable && CVAR_TO_BOOL(gl_alpha2coverage)) {
-		pglEnable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
-	}
-	else {
-		pglDisable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
-	}
+	if( glState.alphaToCoverage == state )
+		return;
+
+	glState.alphaToCoverage = state;
+
+	if( state ) pglEnable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
+	else pglDisable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
 }
 
 /*
@@ -870,8 +876,10 @@ GL_DepthTest
 */
 void GL_DepthTest( GLint enable )
 {
-	if( pglIsEnabled( GL_DEPTH_TEST ) == enable )
+	if( glState.depthTest == enable )
 		return;
+
+	glState.depthTest = enable;
 
 	if( enable ) pglEnable( GL_DEPTH_TEST );
 	else pglDisable( GL_DEPTH_TEST );
@@ -884,8 +892,10 @@ GL_Blend
 */
 void GL_Blend( GLint enable )
 {
-	if( pglIsEnabled( GL_BLEND ) == enable )
+	if( glState.blend == enable )
 		return;
+
+	glState.blend = enable;
 
 	if( enable ) pglEnable( GL_BLEND );
 	else pglDisable( GL_BLEND );
@@ -986,6 +996,9 @@ GL_Cull
 */
 void GL_Cull( GLenum cull )
 {
+	if( glState.faceCull == cull )
+		return;
+
 	if( !cull )
 	{
 		pglDisable( GL_CULL_FACE );
@@ -1005,6 +1018,9 @@ GL_FrontFace
 */
 void GL_FrontFace( GLenum front )
 {
+	if( glState.frontFace == front )
+		return;
+
 	pglFrontFace( front ? GL_CW : GL_CCW );
 	glState.frontFace = front;
 }
@@ -1051,7 +1067,7 @@ void GL_Setup2D( void )
 	pglMatrixMode( GL_MODELVIEW );
 	pglLoadIdentity();
 
-	pglDisable( GL_DEPTH_TEST );
+	GL_DepthTest( GL_FALSE );
 	GL_AlphaTest( GL_FALSE );
 	GL_DepthMask( GL_FALSE );
 	GL_Blend( GL_FALSE );
@@ -1076,7 +1092,7 @@ void GL_Setup3D( void )
 	pglMatrixMode( GL_MODELVIEW );
 	GL_LoadMatrix( RI->glstate.modelviewMatrix );
 
-	pglEnable( GL_DEPTH_TEST );
+	GL_DepthTest( GL_TRUE );
 	GL_DepthMask( GL_TRUE );
 	GL_Cull( GL_FRONT );
 }

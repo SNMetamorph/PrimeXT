@@ -1456,7 +1456,7 @@ static void DrawWireDecal( brushdecal_t *decal )
 	mextrasurf_t *es = decal->surface;
 	cl_entity_t *e = es->parent;
 
-	pglEnable( GL_BLEND );
+	GL_Blend( GL_TRUE );
 	pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	pglPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	if( FBitSet( decal->flags, FDECAL_DONTSAVE ))
@@ -1464,7 +1464,7 @@ static void DrawWireDecal( brushdecal_t *decal )
 	else pglColor4f( 0.5f, 1.0f, 0.36f, 0.99f ); 
 	pglLineWidth( 4.0f );
 
-	pglDisable( GL_DEPTH_TEST );
+	GL_DepthTest( GL_FALSE );
 	pglEnable( GL_LINE_SMOOTH );
 	pglEnable( GL_POLYGON_SMOOTH );
 	pglHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
@@ -1485,8 +1485,8 @@ static void DrawWireDecal( brushdecal_t *decal )
 	pglPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	pglDisable( GL_POLYGON_SMOOTH );
 	pglDisable( GL_LINE_SMOOTH );
-	pglEnable( GL_DEPTH_TEST );
-	pglDisable( GL_BLEND );
+	GL_DepthTest( GL_TRUE );
+	GL_Blend( GL_FALSE );
 	pglLineWidth( 1.0f );
 }
 

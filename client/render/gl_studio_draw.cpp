@@ -3709,12 +3709,12 @@ void CStudioModelRenderer :: RenderTransMesh( CTransEntry *entry )
 	{
 		pglBlendFunc( GL_ONE, GL_ONE );
 		if( FBitSet( entry->m_pParentEntity->curstate.effects, EF_NODEPTHTEST ))
-			pglDisable( GL_DEPTH_TEST );
+			GL_DepthTest( GL_FALSE );
 	}
 	else
 	{
 		pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-		pglEnable( GL_DEPTH_TEST );
+		GL_DepthTest( GL_TRUE );
 	}
 
 	// draw decals behind the glass
@@ -3726,7 +3726,7 @@ void CStudioModelRenderer :: RenderTransMesh( CTransEntry *entry )
 	// draw decals that lies on glass
 	DrawDecal( entry, GL_FRONT );
 
-	pglEnable( GL_DEPTH_TEST );
+	GL_DepthTest( GL_TRUE );
 	GL_Blend( GL_FALSE );
 	GL_ClipPlane( true );
 }

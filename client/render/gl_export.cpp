@@ -773,6 +773,9 @@ void GL_SetDefaultState( void )
 {
 	glState.depthmin = glState.depthmax = -1.0f;
 	glState.depthmask = -1;
+	glState.alphaTest = glState.alphaToCoverage = glState.depthTest = glState.blend = -1;
+	glState.faceCull = -1;
+	glState.frontFace = -1;
 
 	GL_CleanupAllTextureUnits();
 	pglBindVertexArray( GL_FALSE ); // should be first!

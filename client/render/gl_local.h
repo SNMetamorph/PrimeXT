@@ -682,6 +682,11 @@ typedef struct
 	int		frontFace;
 	int		frameBuffer;
 
+	GLint		alphaTest;		// GL_ALPHA_TEST enable state
+	GLint		alphaToCoverage;	// GL_SAMPLE_ALPHA_TO_COVERAGE enable state
+	GLint		depthTest;		// GL_DEPTH_TEST enable state
+	GLint		blend;			// GL_BLEND enable state
+
 	GLfloat		depthmin;
 	GLfloat		depthmax;
 	GLint		depthmask;

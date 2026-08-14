@@ -125,8 +125,8 @@ void CDebugOverlay2D::DrawWireRect(float x, float y, float w, float h, Vector co
 	pglBindVertexArray(m_iVAO);
 	pglBindBufferARB(GL_ARRAY_BUFFER_ARB, m_iVBO);
 	pglBufferSubDataARB(GL_ARRAY_BUFFER_ARB, 0, sizeof(verts), verts);
-	pglDisable(GL_DEPTH_TEST);
-	pglDisable(GL_BLEND);
+	GL_DepthTest(GL_FALSE);
+	GL_Blend(GL_FALSE);
 	pglLineWidth(4.0f);
 	pglDrawArrays(GL_LINES, 0, 8);
 	pglLineWidth(1.0f);
@@ -168,7 +168,7 @@ void CDebugOverlay2D::DrawTexturedRect(float x, float y, float w, float h, Textu
 	pglBindVertexArray(m_iVAO);
 	pglBindBufferARB(GL_ARRAY_BUFFER_ARB, m_iVBO);
 	pglBufferSubDataARB(GL_ARRAY_BUFFER_ARB, 0, sizeof(verts), verts);
-	pglDisable(GL_DEPTH_TEST);
-	pglDisable(GL_BLEND);
+	GL_DepthTest(GL_FALSE);
+	GL_Blend(GL_FALSE);
 	pglDrawArrays(GL_TRIANGLES, 0, 6);
 }
