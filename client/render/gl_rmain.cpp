@@ -948,7 +948,7 @@ void R_RenderTransList( void )
 		switch( entry->m_bDrawType )
 		{
 		case DRAWTYPE_SURFACE:
-			R_RenderTransSurface( entry );
+			i = R_RenderTransSurfaces( i ) - 1;
 			break;
 		case DRAWTYPE_MESH:
 			R_RenderTransMesh( entry );

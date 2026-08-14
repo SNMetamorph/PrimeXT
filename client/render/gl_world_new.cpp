@@ -3311,56 +3311,121 @@ void R_RenderSolidBrushList( void )
 	R_RenderDecalsSolidList( DRAWLIST_TRANS );
 }
 
-void R_RenderTransSurface( CTransEntry *entry )
+int R_RenderTransSurfaces( int startIndex )
 {
-	if( entry->m_bDrawType != DRAWTYPE_SURFACE )
-		return;
+	cl_entity_t	*cached_entity = NULL;
+	material_t	*cached_material = NULL;
+	int		cached_mirror = -1;
+	int		cached_lightmap = -1;
+	qboolean		flush_buffer = false;
+	mcubemap_t	*cached_cubemap[2];
+	int		startv, endv, i;
+	int		count = RI->frame.trans_list.Count();
 
-	if( !entry->m_hProgram ) 
-		return;
+	// find the extent of the contiguous surface run
+	int end = startIndex;
+	while( end < count && RI->frame.trans_list[end].m_bDrawType == DRAWTYPE_SURFACE )
+		end++;
 
-	mextrasurf_t *es = entry->m_pSurf->info;
-	cl_entity_t *e = RI->currententity = es->parent;
-	msurface_t *s = entry->m_pSurf;
-	RI->currentmodel = e->model;
-	int startv = MAX_MAP_ELEMS;
-	numTempElems = 0;
-	int endv = 0;
-	bool screenCopyRequired = ScreenCopyRequired(&glsl_programs[entry->m_hProgram]);
+	if( end == startIndex )
+		return startIndex;
 
 	GL_DEBUG_SCOPE();
-	if (screenCopyRequired)
-	{
-		if( !FBitSet( s->flags, SURF_OCCLUDED ))
-		{
-			entry->RequestScreencopy();
-			r_stats.c_screen_copy++;
-		}
-	}
+	numTempElems = 0;
+	cached_cubemap[0] = &world->defaultCubemap;
+	cached_cubemap[1] = &world->defaultCubemap;
 
 	pglBindVertexArray( world->vertex_array_object );
-	R_SetSurfaceUniforms( entry->m_hProgram, entry->m_pSurf, true );
-	startv = Q_min( startv, es->firstvertex );
-	endv = Q_max( es->firstvertex + es->numverts, endv );
 
-	GL_AlphaTest(GL_FALSE);
-	if( FBitSet( glsl_programs[entry->m_hProgram].status, SHADER_ADDITIVE ))
+	for( i = startIndex; i < end; i++ )
 	{
-		GL_DepthMask( GL_FALSE );
-		GL_Blend( GL_TRUE );
-		pglBlendFunc( GL_SRC_ALPHA, GL_ONE );
-	}
-	else
-	{
-		pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-		GL_DepthMask( GL_TRUE );
+		CTransEntry *entry = &RI->frame.trans_list[i];
 
-		if (screenCopyRequired)
-			GL_Blend(GL_FALSE);
-		else
-			GL_Blend(GL_TRUE);
+		if( !entry->m_hProgram )
+			continue;
+
+		mextrasurf_t *es = entry->m_pSurf->info;
+		cl_entity_t *e = RI->currententity = es->parent;
+		msurface_t *s = entry->m_pSurf;
+		RI->currentmodel = e->model;
+
+		material_t *mat = R_TextureAnimation( s )->material;
+		bool screenCopyRequired = ScreenCopyRequired( &glsl_programs[entry->m_hProgram] );
+
+		if( ( i == startIndex ) || ( RI->currentshader != &glsl_programs[entry->m_hProgram] ))
+			flush_buffer = true;
+		if( cached_entity != RI->currententity )
+			flush_buffer = true;
+		if( cached_material != mat )
+			flush_buffer = true;
+		if( cached_lightmap != es->lightmaptexturenum )
+			flush_buffer = true;
+		if( cached_mirror != es->subtexture[glState.stack_position] )
+			flush_buffer = true;
+		if( ShaderUseCubemaps( RI->currentshader ) && ( cached_cubemap[0] != es->cubemap[0] || cached_cubemap[1] != es->cubemap[1] ))
+			flush_buffer = true;
+
+		// refractive surfaces need a per-surface screen copy and a dedicated blend
+		// state, so they are never batched together with neighbours
+		if( screenCopyRequired )
+			flush_buffer = true;
+
+		if( flush_buffer )
+		{
+			if( numTempElems )
+			{
+				pglDrawRangeElements( GL_TRIANGLES, startv, endv - 1, numTempElems, GL_UNSIGNED_INT, tempElems );
+				r_stats.c_total_tris += (numTempElems / 3);
+				r_stats.num_flushes_total++;
+				numTempElems = 0;
+			}
+
+			flush_buffer = false;
+			startv = MAX_MAP_ELEMS;
+			endv = 0;
+		}
+
+		// now cache values
+		cached_entity = RI->currententity;
+		cached_lightmap = es->lightmaptexturenum;
+		cached_mirror = es->subtexture[glState.stack_position];
+		cached_cubemap[0] = es->cubemap[0];
+		cached_cubemap[1] = es->cubemap[1];
+		cached_material = mat;
+
+		if( numTempElems == 0 ) // new chain has started, apply uniforms and blend state
+		{
+			if( screenCopyRequired && !FBitSet( s->flags, SURF_OCCLUDED ))
+			{
+				entry->RequestScreencopy();
+				r_stats.c_screen_copy++;
+			}
+
+			R_SetSurfaceUniforms( entry->m_hProgram, entry->m_pSurf, ( i == startIndex ));
+
+			GL_AlphaTest( GL_FALSE );
+			if( FBitSet( glsl_programs[entry->m_hProgram].status, SHADER_ADDITIVE ))
+			{
+				GL_DepthMask( GL_FALSE );
+				GL_Blend( GL_TRUE );
+				pglBlendFunc( GL_SRC_ALPHA, GL_ONE );
+			}
+			else
+			{
+				pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+				GL_DepthMask( GL_TRUE );
+
+				if( screenCopyRequired )
+					GL_Blend( GL_FALSE );
+				else GL_Blend( GL_TRUE );
+			}
+		}
+
+		startv = Q_min( startv, es->firstvertex );
+		endv = Q_max( es->firstvertex + es->numverts, endv );
+
+		R_DrawSurface( es );
 	}
-	R_DrawSurface( es );
 
 	if( numTempElems )
 	{
@@ -3374,6 +3439,8 @@ void R_RenderTransSurface( CTransEntry *entry )
 	GL_Blend( GL_FALSE );
 	GL_ClipPlane( true );
 	GL_Cull( GL_FRONT );
+
+	return end;
 }
 
 /*

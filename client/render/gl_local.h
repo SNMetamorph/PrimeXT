@@ -974,7 +974,7 @@ void R_ProcessWorldData( model_t *mod, qboolean create, const byte *buffer );
 bool R_AddSurfaceToDrawList( msurface_t *surf, drawlist_t type );
 void R_MarkVisibleLights( byte lights[MAXDYNLIGHTS] );
 gl_texbuffer_t *Surf_GetSubview( mextrasurf_t *es );
-void R_RenderTransSurface( CTransEntry *entry );
+int R_RenderTransSurfaces( int startIndex );
 int Mod_SampleSizeForFace( msurface_t *surf );
 bool Surf_CheckSubview( mextrasurf_t *es, bool puddle = false );
 void R_RenderDynLightList( bool solid );
