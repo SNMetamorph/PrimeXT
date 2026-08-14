@@ -53,6 +53,11 @@ if(BUILD_PXSV)
 endif()
 
 message(STATUS "Utility binaries output directory: ${DIR_UTILS_OUTPUT}")
+
+foreach(target ${UTILS_TARGETS})
+	add_dependencies(${target} build_info)
+endforeach()
+
 set_target_properties(${UTILS_TARGETS} PROPERTIES 
     ARCHIVE_OUTPUT_DIRECTORY ${DIR_UTILS_OUTPUT}
     LIBRARY_OUTPUT_DIRECTORY ${DIR_UTILS_OUTPUT}

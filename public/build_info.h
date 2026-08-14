@@ -16,6 +16,7 @@ GNU General Public License for more details.
 #pragma once
 #include "build.h"
 #include "build_enums.h"
+#include "build_info_gen.h"
 #include <stdint.h>
 
 namespace BuildInfo

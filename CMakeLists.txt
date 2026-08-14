@@ -49,19 +49,23 @@ else()
 	message(STATUS "Building for 32-bit")
 endif()
 
-# get current git commit short hash
-execute_process(COMMAND "git" "describe" "--always" "--dirty" "--abbrev=7"
+# get current git commit short hash at build time
+find_package(Git QUIET)
+
+set(GENERATED_BUILD_INFO "${CMAKE_BINARY_DIR}/build_info_gen.h")
+
+add_custom_target(build_info ALL
+	COMMAND ${CMAKE_COMMAND}
+		-DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+		-DGIT_EXECUTABLE=${GIT_EXECUTABLE}
+		-DOUTPUT_FILE=${GENERATED_BUILD_INFO}
+		-P ${CMAKE_SOURCE_DIR}/cmake/GenerateBuildInfo.cmake
 	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-	OUTPUT_VARIABLE SHORT_HASH
-	OUTPUT_STRIP_TRAILING_WHITESPACE
+	COMMENT "Updating build info"
+	VERBATIM
 )
 
-if(SHORT_HASH)
-	message(STATUS "Current Git commit hash: ${SHORT_HASH}")
-	add_definitions(-DXASH_BUILD_COMMIT="${SHORT_HASH}")
-else()
-	message(STATUS "Failed to set current Git commit hash")
-endif()
+include_directories(${CMAKE_BINARY_DIR})
 
 # multithreaded build flag for MSVC
 add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>) 
