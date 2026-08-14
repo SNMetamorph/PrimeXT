@@ -106,7 +106,6 @@ typedef enum
 	UT_LAYERMAP,
 	UT_FITNORMALMAP,
 	UT_MODELMATRIX,
-	UT_MODELMATRICES,	// float texture holding per-submodel model matrices
 	UT_REFLECTMATRIX,
 	UT_BONESARRAY,
 	UT_BONEQUATERNION,

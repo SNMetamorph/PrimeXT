@@ -670,6 +670,10 @@ typedef unsigned int GLhandleARB;
 #define GL_DYNAMIC_DRAW_ARB			0x88E8
 #define GL_DYNAMIC_READ_ARB			0x88E9
 #define GL_DYNAMIC_COPY_ARB			0x88EA
+#define GL_UNIFORM_BUFFER			0x8A11
+#define GL_UNIFORM_BUFFER_BINDING		0x8A28
+#define GL_MAX_UNIFORM_BLOCK_SIZE		0x8A30
+#define GL_INVALID_INDEX			0xFFFFFFFFu
 #define GL_READ_ONLY_ARB			0x88B8
 #define GL_WRITE_ONLY_ARB			0x88B9
 #define GL_READ_WRITE_ARB			0x88BA
@@ -1370,6 +1374,9 @@ EXTERN void* ( APIENTRY *pglMapBufferARB) (GLenum target, GLenum access);
 EXTERN GLboolean ( APIENTRY *pglUnmapBufferARB) (GLenum target);
 EXTERN void ( APIENTRY *pglBufferDataARB) (GLenum target, GLsizeiptrARB size, const void *data, GLenum usage);
 EXTERN void ( APIENTRY *pglBufferSubDataARB) (GLenum target, GLintptrARB offset, GLsizeiptrARB size, const void *data);
+EXTERN void ( APIENTRY *pglBindBufferBase) (GLenum target, GLuint index, GLuint buffer);
+EXTERN GLuint ( APIENTRY *pglGetUniformBlockIndex) (GLuint program, const GLcharARB *uniformBlockName);
+EXTERN void ( APIENTRY *pglUniformBlockBinding) (GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding);
 EXTERN void ( APIENTRY *pglGenQueriesARB) (GLsizei n, GLuint *ids);
 EXTERN void ( APIENTRY *pglDeleteQueriesARB) (GLsizei n, const GLuint *ids);
 EXTERN GLboolean ( APIENTRY *pglIsQueryARB) (GLuint id);

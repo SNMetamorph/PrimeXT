@@ -2,25 +2,22 @@
 modelmatrix.h - per-submodel model matrix lookup
 Copyright (C) 2026
 
-The entity model matrices are stored in a RGBA32F float texture, one
-submodel per column (4 texels, one per matrix column). The per-vertex
-attr_MatrixIndex attribute selects the submodel.
+The entity model matrices are stored in a uniform buffer object (std140),
+one mat4 per submodel, indexed by the per-vertex attr_MatrixIndex attribute.
+MAX_MODEL_MATRICES is defined from the shader options (per map).
 */
 
 #ifndef MODELMATRIX_H
 #define MODELMATRIX_H
 
-uniform sampler2D	u_ModelMatrices;
+layout(std140) uniform ModelMatrices
+{
+	mat4 u_ModelMatrices[MAX_MODEL_MATRICES];
+};
 
 mat4 GetModelMatrix( const float index )
 {
-	int i = int( index );
-
-	return mat4(
-		texelFetch( u_ModelMatrices, ivec2( i, 0 ), 0 ),
-		texelFetch( u_ModelMatrices, ivec2( i, 1 ), 0 ),
-		texelFetch( u_ModelMatrices, ivec2( i, 2 ), 0 ),
-		texelFetch( u_ModelMatrices, ivec2( i, 3 ), 0 ));
+	return u_ModelMatrices[int( index )];
 }
 
 #endif//MODELMATRIX_H

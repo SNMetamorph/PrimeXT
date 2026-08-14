@@ -262,7 +262,6 @@ static uniformTable_t glsl_uniformTable[] =
 { "u_LayerMap",		UT_LAYERMAP,		UFL_TEXTURE_UNIT },
 { "u_FitNormalMap",		UT_FITNORMALMAP,		UFL_TEXTURE_UNIT },
 { "u_ModelMatrix",		UT_MODELMATRIX,		0 },
-{ "u_ModelMatrices",	UT_MODELMATRICES,		UFL_TEXTURE_UNIT },
 { "u_ReflectMatrix",	UT_REFLECTMATRIX,		0 },
 { "u_BonesArray",		UT_BONESARRAY,		UFL_ENTITY_PARM },	
 { "u_BoneQuaternion",	UT_BONEQUATERNION,		UFL_ENTITY_PARM },
@@ -747,6 +746,11 @@ static bool GL_ProcessShader( glsl_program_t *program, const char *filename, GLe
 	if( GL_Support( R_TEXTURE_2D_RECT_EXT ))
 	{
 		outputFile->Printf("#extension GL_ARB_texture_rectangle : enable\n"); // support texture rectangle
+	}
+
+	if( GL_Support( R_ARB_UNIFORM_BUFFER_OBJECT ))
+	{
+		outputFile->Printf("#extension GL_ARB_uniform_buffer_object : require\n"); // support uniform buffer objects
 	}
 
 	if( defines ) outputFile->Print( defines );
@@ -1340,6 +1344,15 @@ static glsl_program_t *GL_CreateUberShader( GLint slot, const char *glname, cons
 		// register shader uniforms
 		GL_ParseProgramVertexAttribs( shader );
 		GL_ParseProgramUniforms( shader );
+
+		// bind the per-submodel model matrices block to a fixed binding point
+		if( GL_Support( R_ARB_UNIFORM_BUFFER_OBJECT ))
+		{
+			GLuint blockIndex = pglGetUniformBlockIndex( shader->handle, "ModelMatrices" );
+			if( blockIndex != GL_INVALID_INDEX )
+				pglUniformBlockBinding( shader->handle, blockIndex, MODEL_MATRICES_UBO_BINDING );
+		}
+
 		GL_ValidateProgram( shader );
 	}
 

@@ -291,6 +291,14 @@ static dllfunc_t vbofuncs[] =
 { NULL, NULL }
 };
 
+static dllfunc_t ubofuncs[] =
+{
+{ "glBindBufferBase"      , (void **)&pglBindBufferBase },
+{ "glGetUniformBlockIndex", (void **)&pglGetUniformBlockIndex },
+{ "glUniformBlockBinding" , (void **)&pglUniformBlockBinding },
+{ NULL, NULL }
+};
+
 static dllfunc_t vaofuncs[] =
 {
 { "glBindVertexArray"    , (void **)&pglBindVertexArray },
@@ -684,6 +692,22 @@ static void GL_InitExtensions( void )
 	}
 
 	GL_CheckExtension("GL_ARB_get_program_binary", binaryshaderfuncs, "gl_binaryshader", R_BINARY_SHADER_EXT);
+	GL_CheckExtension("GL_ARB_uniform_buffer_object", ubofuncs, "gl_uniform_buffer_object", R_ARB_UNIFORM_BUFFER_OBJECT);
+
+	// UBO is core in OpenGL 3.1+, where the extension string may not advertise it
+	if( !GL_Support( R_ARB_UNIFORM_BUFFER_OBJECT ) && glConfig.version >= 31.0f )
+	{
+		const dllfunc_t	*func;
+		bool		valid = true;
+
+		for( func = ubofuncs; func && func->name; func++ )
+		{
+			if( !(*func->func = (void *)GL_GetProcAddress( func->name )))
+				valid = false;
+		}
+
+		if( valid ) GL_SetExtension( R_ARB_UNIFORM_BUFFER_OBJECT, true );
+	}
 	GL_CheckExtension("GL_ARB_depth_texture", NULL, "gl_depthtexture", R_DEPTH_TEXTURE);
 	GL_CheckExtension("GL_ARB_shadow", NULL, "gl_arb_shadow", R_SHADOW_EXT);
 	GL_CheckExtension("GL_ARB_texture_rectangle", NULL, "gl_texture_rectangle", R_TEXTURE_2D_RECT_EXT, true);

@@ -999,6 +999,8 @@ static word Mod_ShaderSceneForward( msurface_t *s )
 		GL_AddShaderDirective(options, "APPLY_FOG_EXP");
 	}
 
+	GL_AddShaderDirective( options, va( "MAX_MODEL_MATRICES %i", worldmodel->numsubmodels ));
+
 	word shaderNum = GL_FindUberShader( glname, options );
 
 	if( !shaderNum )
@@ -1166,6 +1168,8 @@ static word Mod_ShaderLightForward( CDynLight *dl, msurface_t *s )
 		}
 	}
 
+	GL_AddShaderDirective( options, va( "MAX_MODEL_MATRICES %i", worldmodel->numsubmodels ));
+
 	word shaderNum = GL_FindUberShader( glname, options );
 
 	if( !shaderNum )
@@ -1211,7 +1215,11 @@ static word Mod_ShaderSceneDepth( msurface_t *s )
 	if( es->forwardDepth.IsValid( ))
 		return es->forwardDepth.GetHandle();
 
-	word shaderNum = GL_FindUberShader( "forward/depth_bmodel" );
+	char options[MAX_OPTIONS_LENGTH];
+	memset( options, 0, sizeof( options ));
+	GL_AddShaderDirective( options, va( "MAX_MODEL_MATRICES %i", worldmodel->numsubmodels ));
+
+	word shaderNum = GL_FindUberShader( "forward/depth_bmodel", options );
 	es->forwardDepth.SetShader( shaderNum );
 
 	return shaderNum;
@@ -1950,20 +1958,21 @@ static void Mod_CreateBufferObject( void )
 	// update stats
 	tr.total_vbo_memory += world->cacheSize;
 
-	// allocate the CPU-side model matrices and the float texture that holds them.
-	// each submodel gets a 4x4 matrix stored as 4 RGBA32F texels (one per column)
+	// allocate the CPU-side model matrices and the UBO that holds them.
+	// each submodel gets a 4x4 matrix (64 bytes, std140 mat4)
 	world->modelMatrices = (GLfloat *)Mem_Alloc( worldmodel->numsubmodels * 16 * sizeof( GLfloat ));
 
 	// submodel 0 (the world) uses the identity matrix
 	memset( world->modelMatrices, 0, 16 * sizeof( GLfloat ));
 	world->modelMatrices[0] = world->modelMatrices[5] = world->modelMatrices[10] = world->modelMatrices[15] = 1.0f;
 
-	world->modelMatricesTexture = CREATE_TEXTURE( "*modelmatrices", worldmodel->numsubmodels, 4, NULL,
-		TF_NEAREST | TF_NOMIPMAP | TF_CLAMP | TF_HAS_ALPHA | TF_ARB_FLOAT | TF_UPDATE );
-
-	// upload the initial (identity world) matrices
-	GL_Bind( GL_TEXTURE0, world->modelMatricesTexture );
-	pglTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, worldmodel->numsubmodels, 4, GL_RGBA, GL_FLOAT, world->modelMatrices );
+	if( GL_Support( R_ARB_UNIFORM_BUFFER_OBJECT ))
+	{
+		pglGenBuffersARB( 1, &world->modelMatricesUBO );
+		pglBindBufferARB( GL_UNIFORM_BUFFER, world->modelMatricesUBO );
+		pglBufferDataARB( GL_UNIFORM_BUFFER, worldmodel->numsubmodels * 16 * sizeof( GLfloat ), world->modelMatrices, GL_DYNAMIC_DRAW_ARB );
+		pglBindBufferARB( GL_UNIFORM_BUFFER, 0 );
+	}
 }
 
 /*
@@ -2197,9 +2206,9 @@ static void Mod_FreeWorld( model_t *mod )
 		Mem_Free( world->modelMatrices );
 	world->modelMatrices = NULL;
 
-	if( world->modelMatricesTexture.Initialized() )
-		FREE_TEXTURE( world->modelMatricesTexture );
-	world->modelMatricesTexture = TextureHandle::Null();
+	if( world->modelMatricesUBO )
+		pglDeleteBuffersARB( 1, &world->modelMatricesUBO );
+	world->modelMatricesUBO = 0;
 
 	if( world->vertex_lighting )
 		Mem_Free( world->vertex_lighting );
@@ -2454,11 +2463,11 @@ _forceinline void R_DrawSurface( mextrasurf_t *es )
 
 static void R_UploadModelMatrices( void )
 {
-	if( !world->modelMatricesTexture.Initialized() || !world->modelMatrices )
+	if( !world->modelMatricesUBO || !world->modelMatrices )
 		return;
 
-	GL_Bind( GL_TEXTURE0, world->modelMatricesTexture );
-	pglTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, worldmodel->numsubmodels, 4, GL_RGBA, GL_FLOAT, world->modelMatrices );
+	pglBindBufferBase( GL_UNIFORM_BUFFER, MODEL_MATRICES_UBO_BINDING, world->modelMatricesUBO );
+	pglBufferSubDataARB( GL_UNIFORM_BUFFER, 0, worldmodel->numsubmodels * 16 * sizeof( GLfloat ), world->modelMatrices );
 }
 
 void R_MarkVisibleLights( byte lights[MAXDYNLIGHTS] )
@@ -2742,9 +2751,6 @@ void R_SetSurfaceUniforms( word hProgram, msurface_t *surface, bool force )
 			break;
 		case UT_MODELMATRIX:
 			u->SetValue( &glm->modelMatrix[0] );
-			break;
-		case UT_MODELMATRICES:
-			u->SetValue( world->modelMatricesTexture.ToInt() );
 			break;
 		case UT_REFLECTMATRIX:
 			if( Surf_CheckSubview( es ))

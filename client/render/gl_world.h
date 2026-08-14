@@ -170,7 +170,7 @@ typedef struct
 	// instancing: per-submodel model matrices, indexed by the per-vertex matrixIndex
 	unsigned short	*surface_submodel;	// surface index -> submodel index
 	GLfloat		*modelMatrices;		// [numsubmodels * 16] model matrices (CPU-side)
-	TextureHandle	modelMatricesTexture;	// RGBA32F texture holding the matrices
+	uint		modelMatricesUBO;		// uniform buffer object holding the matrices
 
 	unsigned short	*sortedfaces;	// surfaces sorted through all models
 	unsigned short	numsortedfaces;
