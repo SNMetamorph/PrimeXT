@@ -2890,16 +2890,18 @@ static bool R_SortSolidBrushFaces( const CSolidEntry &a, const CSolidEntry &b )
 	if( a.m_sortShader2 != b.m_sortShader2 )
 		return a.m_sortShader2 < b.m_sortShader2;
 
+	// group by entity transform matrix before texture/lightmap so each entity's
+	// faces stay contiguous and matrix switches dominate less than material ones
+	if( a.m_sortMatrix != b.m_sortMatrix )
+		return a.m_sortMatrix < b.m_sortMatrix;
+
 	if( a.m_sortTexture != b.m_sortTexture )
 		return a.m_sortTexture < b.m_sortTexture;
 
 	if( a.m_sortLightmap != b.m_sortLightmap )
 		return a.m_sortLightmap < b.m_sortLightmap;
 
-	if( !a.m_pParentEntity || !b.m_pParentEntity )
-		return false;
-
-	return a.m_pParentEntity < b.m_pParentEntity;
+	return false;
 }
 
 /*
@@ -2991,7 +2993,10 @@ setup light projection for each
 void R_DrawLightForSurfList( CDynLight *pl )
 {
 	material_t	*cached_material = NULL;
-	cl_entity_t	*cached_entity = NULL;
+	int		cached_matrix = -1;
+	int		cached_rendercolor = -1;
+	int		cached_renderamt = -1;
+	int		cached_body = -1;
 	bool		flush_buffer = false;
 	int		startv, endv;
 
@@ -3016,11 +3021,12 @@ void R_DrawLightForSurfList( CDynLight *pl )
 		if( !entry->m_hProgram ) continue;
 
 		material_t *mat = R_TextureAnimation( s )->material;
+		int rendercolor = (e->curstate.rendercolor.r << 16) | (e->curstate.rendercolor.g << 8) | e->curstate.rendercolor.b;
 
 		if(( i == 0 ) || ( RI->currentshader != &glsl_programs[entry->m_hProgram] ))
 			flush_buffer = true;
 
-		if( cached_entity != RI->currententity )
+		if (cached_matrix != es->parent->hCachedMatrix || cached_rendercolor != rendercolor || cached_renderamt != e->curstate.renderamt || cached_body != e->curstate.body)
 			flush_buffer = true;
 
 		if( cached_material != mat )
@@ -3042,7 +3048,10 @@ void R_DrawLightForSurfList( CDynLight *pl )
 		}
 
 		// now cache values
-		cached_entity = RI->currententity;
+		cached_matrix = es->parent->hCachedMatrix;
+		cached_rendercolor = rendercolor;
+		cached_renderamt = e->curstate.renderamt;
+		cached_body = e->curstate.body;
 		cached_material = mat;
 
 		if( numTempElems == 0 ) // new chain has started, apply uniforms
@@ -3144,7 +3153,10 @@ void R_RenderSolidBrushList( void )
 {
 	ZoneScoped;
 
-	cl_entity_t	*cached_entity = NULL;
+	int		cached_matrix = -1;
+	int		cached_rendercolor = -1;
+	int		cached_renderamt = -1;
+	int		cached_body = -1;
 	material_t	*cached_material = NULL;
 	int		cached_mirror = -1;
 	int		cached_lightmap = -1;
@@ -3185,13 +3197,14 @@ void R_RenderSolidBrushList( void )
 		if( !entry->m_hProgram ) continue;
 
 		material_t *mat = R_TextureAnimation( s )->material;
+		int rendercolor = (e->curstate.rendercolor.r << 16) | (e->curstate.rendercolor.g << 8) | e->curstate.rendercolor.b;
 
 		if ((i == 0) || (RI->currentshader != &glsl_programs[entry->m_hProgram])) {
 			flush_buffer = true;
 			r_stats.solid_brush_list_flushes.num_flushes_shader++;
 		}
 
-		if (cached_entity != RI->currententity) {
+		if (cached_matrix != es->parent->hCachedMatrix || cached_rendercolor != rendercolor || cached_renderamt != e->curstate.renderamt || cached_body != e->curstate.body) {
 			flush_buffer = true;
 			r_stats.solid_brush_list_flushes.num_flushes_entity++;
 		}
@@ -3232,9 +3245,11 @@ void R_RenderSolidBrushList( void )
 		}
 
 		// now cache values
-		cached_entity = RI->currententity = es->parent;
+		cached_matrix = es->parent->hCachedMatrix;
+		cached_rendercolor = rendercolor;
+		cached_renderamt = e->curstate.renderamt;
+		cached_body = e->curstate.body;
 		cached_lightmap = es->lightmaptexturenum;
-		RI->currentmodel = es->parent->model;
 		cached_mirror = es->subtexture[glState.stack_position];
 		cached_cubemap[0] = es->cubemap[0];
 		cached_cubemap[1] = es->cubemap[1];
