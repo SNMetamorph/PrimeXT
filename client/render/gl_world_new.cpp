@@ -2014,6 +2014,7 @@ static void Mod_CreateBufferObject( void )
 		pglBindBufferARB( GL_UNIFORM_BUFFER, world->materialParamsUBO );
 		pglBufferDataARB( GL_UNIFORM_BUFFER, worldmodel->numtextures * 4 * sizeof( GLfloat ), materialParams, GL_STATIC_DRAW_ARB );
 		pglBindBufferARB( GL_UNIFORM_BUFFER, 0 );
+		pglBindBufferBase( GL_UNIFORM_BUFFER, MATERIAL_PARAMS_UBO_BINDING, world->materialParamsUBO );
 	}
 
 	Mem_Free( materialParams );
