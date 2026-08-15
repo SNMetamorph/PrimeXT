@@ -3025,6 +3025,12 @@ void R_BuildFaceListsForLight( CDynLight *pl, bool solid )
 	RI->frame.light_grass.RemoveAll();
 	tr.modelorg = pl->origin;
 
+	// localized lights (spot/omni) have finite world bounds, so cheaply reject
+	// surfaces whose world-space AABB doesn't overlap the light's AABB before
+	// the expensive per-surface frustum test. directional lights have cleared
+	// (bogus) bounds, so skip the reject for them.
+	const bool boundedLight = ( pl->type != LIGHT_DIRECTIONAL );
+
 	if( solid )
 	{
 		// only visible polys passed through the light list
@@ -3036,6 +3042,17 @@ void R_BuildFaceListsForLight( CDynLight *pl, bool solid )
 				continue;
 
 			mextrasurf_t *es = entry->m_pSurf->info;
+			bool worldpos = R_StaticEntity( es->parent ) ? true : false;
+
+			// static entities have surface bounds already in world space
+			if( boundedLight && worldpos )
+			{
+				if( es->mins.x > pl->absmax.x || es->maxs.x < pl->absmin.x
+					|| es->mins.y > pl->absmax.y || es->maxs.y < pl->absmin.y
+					|| es->mins.z > pl->absmax.z || es->maxs.z < pl->absmin.z )
+					continue;
+			}
+
 			gl_state_t *glm = GL_GetCache( es->parent->hCachedMatrix );
 			RI->currententity = es->parent;
 			RI->currentmodel = RI->currententity->model;
@@ -3043,7 +3060,6 @@ void R_BuildFaceListsForLight( CDynLight *pl, bool solid )
 			if( FBitSet( RI->currententity->curstate.effects, EF_FULLBRIGHT ))
 				continue;
 
-			bool worldpos = R_StaticEntity( es->parent ) ? true : false;
 			CFrustum	*frustum = (worldpos) ? &pl->frustum : NULL;
 			tr.modelorg = glm->GetModelOrigin();
 
@@ -3067,6 +3083,16 @@ void R_BuildFaceListsForLight( CDynLight *pl, bool solid )
 				continue;
 
 			mextrasurf_t *es = entry->m_pSurf->info;
+			bool worldpos = R_StaticEntity( es->parent ) ? true : false;
+
+			if( boundedLight && worldpos )
+			{
+				if( es->mins.x > pl->absmax.x || es->maxs.x < pl->absmin.x
+					|| es->mins.y > pl->absmax.y || es->maxs.y < pl->absmin.y
+					|| es->mins.z > pl->absmax.z || es->maxs.z < pl->absmin.z )
+					continue;
+			}
+
 			gl_state_t *glm = GL_GetCache( es->parent->hCachedMatrix );
 			RI->currententity = es->parent;
 			RI->currentmodel = RI->currententity->model;
@@ -3074,7 +3100,6 @@ void R_BuildFaceListsForLight( CDynLight *pl, bool solid )
 			if( FBitSet( RI->currententity->curstate.effects, EF_FULLBRIGHT ))
 				continue;
 
-			bool worldpos = R_StaticEntity( es->parent ) ? true : false;
 			CFrustum	*frustum = (worldpos) ? &pl->frustum : NULL;
 			tr.modelorg = glm->GetModelOrigin();
 
