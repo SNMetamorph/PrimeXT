@@ -17,7 +17,7 @@ varying vec2      var_TexCoord;
 void main()
 {
     if (u_UseTexture > 0.5)
-        gl_FragColor = texture2D(u_ColorMap, var_TexCoord) * u_Color;
+        gl_FragColor = texture(u_ColorMap, var_TexCoord) * u_Color;
     else
         gl_FragColor = u_Color;
 }

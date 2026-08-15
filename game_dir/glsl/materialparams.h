@@ -20,7 +20,11 @@ layout(std140) uniform MaterialParams
 	vec4 u_MaterialParams[MAX_MATERIALS * 2];
 };
 
-varying float	var_MaterialIndex;
+#if defined( GLSL_SHADER_VERTEX )
+flat out float	var_MaterialIndex;
+#else
+flat in float	var_MaterialIndex;
+#endif
 
 vec4 GetMaterialParams( const float index )
 {

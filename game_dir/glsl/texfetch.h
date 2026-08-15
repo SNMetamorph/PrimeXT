@@ -31,14 +31,14 @@ vec4 decalmap2D(sampler2D tex, vec2 uv)
 
 vec4 colormap2DArray(sampler2DArray tex, vec2 uv, float layer)
 {
-	vec4 sample = texture(tex, vec3(uv, layer));
-	return vec4(ConvertSRGBToLinear(sample.rgb), sample.a);
+	vec4 texel = texture(tex, vec3(uv, layer));
+	return vec4(ConvertSRGBToLinear(texel.rgb), texel.a);
 }
 
 vec4 colormap2D(sampler2D tex, vec2 uv)
 {
-	vec4 sample = texture(tex, uv);
-	return vec4(ConvertSRGBToLinear(sample.rgb), sample.a);
+	vec4 texel = texture(tex, uv);
+	return vec4(ConvertSRGBToLinear(texel.rgb), texel.a);
 }
 
 vec4 reflectmap2D( sampler2D tex, vec4 projTC, vec3 N, vec3 fragCoord, float refraction )
@@ -87,8 +87,8 @@ vec3 chromemap2D( sampler2D tex, vec2 screenCoord, vec3 N, float aberration )
 
 vec4 lightmap2D(sampler2D tex, const vec2 uv, float lightmapGamma)
 {
-	vec4 sample = texture(tex, uv);
-	return vec4(pow(sample.rgb, vec3(1.0 / lightmapGamma)), sample.a);
+	vec4 texel = texture(tex, uv);
+	return vec4(pow(texel.rgb, vec3(1.0 / lightmapGamma)), texel.a);
 }
 
 vec3 deluxemap2D( sampler2D tex, const vec2 uv )

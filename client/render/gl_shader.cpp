@@ -732,7 +732,7 @@ static bool GL_ProcessShader( glsl_program_t *program, const char *filename, GLe
 		return false;
 
 	// add internal defines
-	outputFile->Printf("#version 130\n"); // OpenGL 3.0 required (because bit operations support needed)
+	outputFile->Printf("#version 430 compatibility\n"); // GL 4.3+ required
 	outputFile->Printf("#ifndef M_PI\n#define M_PI 3.14159265358979323846\n#endif\n");
 	outputFile->Printf("#ifndef M_PI2\n#define M_PI2 6.28318530717958647692\n#endif\n");
 
@@ -741,16 +741,6 @@ static bool GL_ProcessShader( glsl_program_t *program, const char *filename, GLe
 	}
 	else if (shaderType == GL_VERTEX_SHADER_ARB) {
 		outputFile->Printf("#define GLSL_SHADER_VERTEX\n");
-	}
-
-	if( GL_Support( R_TEXTURE_2D_RECT_EXT ))
-	{
-		outputFile->Printf("#extension GL_ARB_texture_rectangle : enable\n"); // support texture rectangle
-	}
-
-	if( GL_Support( R_ARB_UNIFORM_BUFFER_OBJECT ))
-	{
-		outputFile->Printf("#extension GL_ARB_uniform_buffer_object : require\n"); // support uniform buffer objects
 	}
 
 	if( defines ) outputFile->Print( defines );
