@@ -308,6 +308,12 @@ static dllfunc_t vaofuncs[] =
 { NULL, NULL }
 };
 
+static dllfunc_t drawbasevertexfuncs[] =
+{
+{ "glDrawElementsBaseVertex", (void **)&pglDrawElementsBaseVertex },
+{ NULL, NULL }
+};
+
 static dllfunc_t fbofuncs[] =
 {
 { "glIsRenderbuffer"                      , (void **)&pglIsRenderbuffer },
@@ -648,6 +654,23 @@ static void GL_InitExtensions( void )
 		ALERT( at_error, "GL_ARB_vertex_array_object not support. Custom renderer disabled\n" );
 		g_fRenderInitialized = FALSE;
 		return;
+	}
+
+	GL_CheckExtension( "GL_ARB_draw_elements_base_vertex", drawbasevertexfuncs, "gl_draw_elements_base_vertex", R_DRAW_ELEMENTS_BASE_VERTEX );
+
+	// core in OpenGL 3.2+, where the extension string may not advertise it
+	if( !GL_Support( R_DRAW_ELEMENTS_BASE_VERTEX ) && glConfig.version >= 32.0f )
+	{
+		const dllfunc_t	*func;
+		bool		valid = true;
+
+		for( func = drawbasevertexfuncs; func && func->name; func++ )
+		{
+			if( !(*func->func = (void *)GL_GetProcAddress( func->name )))
+				valid = false;
+		}
+
+		if( valid ) GL_SetExtension( R_DRAW_ELEMENTS_BASE_VERTEX, true );
 	}
 
 	GL_CheckExtension("GL_ARB_debug_output", debugoutputfuncs, "gl_debug_output", R_DEBUG_OUTPUT);

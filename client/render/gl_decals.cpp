@@ -224,6 +224,11 @@ static word		g_decalIndexCache[MAX_DECAL_ELEMS];	// 1.5 mbytes here if max decal
 static unsigned int		g_decalVertUsed;
 static unsigned int		g_decalElemUsed;
 
+static GLuint		g_decalVBO = 0;
+static GLuint		g_decalIBO = 0;
+static GLuint		g_decalVAO = 0;
+static bool		g_decalCacheDirty = false;
+
 static brushdecal_t		gDecalPool[MAX_BRUSH_DECALS];
 static int		gDecalCycle;
 static int		gDecalCount;
@@ -732,6 +737,7 @@ static void R_AddDecal( decalClip_t *clip, msurface_t *surf )
 	}
 
 	R_DecalComputeTBN( newdecal );
+	g_decalCacheDirty = true;
 	R_ClearDecalClip( clip );
 }
 
@@ -1212,16 +1218,74 @@ end_serialize:
 	return total;
 }
 
-inline void R_DecalSetupVertex( dvert_t *vert )
+static void R_DecalCreateBuffers( void )
 {
-	pglVertexAttrib4fvARB( ATTR_INDEX_TANGENT, vert->tangent );
-	pglVertexAttrib4fvARB( ATTR_INDEX_BINORMAL, vert->binormal );
-	pglVertexAttrib4fvARB( ATTR_INDEX_NORMAL, vert->normal );
-	pglVertexAttrib4fvARB( ATTR_INDEX_TEXCOORD0, vert->stcoord0 );
-	pglVertexAttrib4fvARB( ATTR_INDEX_TEXCOORD1, vert->lmcoord0 );
-	pglVertexAttrib4fvARB( ATTR_INDEX_TEXCOORD2, vert->lmcoord1 );
-	pglVertexAttrib4ubvARB( ATTR_INDEX_LIGHT_STYLES, vert->styles );
-	pglVertexAttrib3fvARB( ATTR_INDEX_POSITION, vert->vertex );
+	// bind the VAO first so the element buffer binding below is captured by it
+	pglGenVertexArrays( 1, &g_decalVAO );
+	pglBindVertexArray( g_decalVAO );
+
+	// vertex buffer for the whole decal vertex cache
+	pglGenBuffersARB( 1, &g_decalVBO );
+	pglBindBufferARB( GL_ARRAY_BUFFER_ARB, g_decalVBO );
+	pglBufferDataARB( GL_ARRAY_BUFFER_ARB, sizeof( g_decalVertexCache ), NULL, GL_DYNAMIC_DRAW_ARB );
+
+	// index buffer for the whole decal index cache
+	pglGenBuffersARB( 1, &g_decalIBO );
+	pglBindBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, g_decalIBO );
+	pglBufferDataARB( GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof( g_decalIndexCache ), NULL, GL_DYNAMIC_DRAW_ARB );
+
+	pglEnableVertexAttribArrayARB( ATTR_INDEX_POSITION );
+	pglVertexAttribPointerARB( ATTR_INDEX_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof( dvert_t ), (void *)offsetof( dvert_t, vertex ));
+
+	pglEnableVertexAttribArrayARB( ATTR_INDEX_TANGENT );
+	pglVertexAttribPointerARB( ATTR_INDEX_TANGENT, 3, GL_FLOAT, GL_FALSE, sizeof( dvert_t ), (void *)offsetof( dvert_t, tangent ));
+
+	pglEnableVertexAttribArrayARB( ATTR_INDEX_BINORMAL );
+	pglVertexAttribPointerARB( ATTR_INDEX_BINORMAL, 3, GL_FLOAT, GL_FALSE, sizeof( dvert_t ), (void *)offsetof( dvert_t, binormal ));
+
+	pglEnableVertexAttribArrayARB( ATTR_INDEX_NORMAL );
+	pglVertexAttribPointerARB( ATTR_INDEX_NORMAL, 3, GL_FLOAT, GL_FALSE, sizeof( dvert_t ), (void *)offsetof( dvert_t, normal ));
+
+	pglEnableVertexAttribArrayARB( ATTR_INDEX_TEXCOORD0 );
+	pglVertexAttribPointerARB( ATTR_INDEX_TEXCOORD0, 4, GL_FLOAT, GL_FALSE, sizeof( dvert_t ), (void *)offsetof( dvert_t, stcoord0 ));
+
+	pglEnableVertexAttribArrayARB( ATTR_INDEX_TEXCOORD1 );
+	pglVertexAttribPointerARB( ATTR_INDEX_TEXCOORD1, 4, GL_FLOAT, GL_FALSE, sizeof( dvert_t ), (void *)offsetof( dvert_t, lmcoord0 ));
+
+	pglEnableVertexAttribArrayARB( ATTR_INDEX_TEXCOORD2 );
+	pglVertexAttribPointerARB( ATTR_INDEX_TEXCOORD2, 4, GL_FLOAT, GL_FALSE, sizeof( dvert_t ), (void *)offsetof( dvert_t, lmcoord1 ));
+
+	pglEnableVertexAttribArrayARB( ATTR_INDEX_LIGHT_STYLES );
+	pglVertexAttribPointerARB( ATTR_INDEX_LIGHT_STYLES, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof( dvert_t ), (void *)offsetof( dvert_t, styles ));
+
+	pglBindVertexArray( GL_FALSE );
+	pglBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 );
+	pglBindBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
+
+	tr.total_vbo_memory += sizeof( g_decalVertexCache ) + sizeof( g_decalIndexCache );
+}
+
+static void R_DecalUploadCache( void )
+{
+	if( !g_decalVBO )
+		R_DecalCreateBuffers();
+
+	if( !g_decalCacheDirty )
+		return;
+
+	// bind the decal VAO first: the element buffer upload below must not
+	// touch whatever VAO was left active by the previous render pass
+	pglBindVertexArray( g_decalVAO );
+
+	pglBindBufferARB( GL_ARRAY_BUFFER_ARB, g_decalVBO );
+	pglBufferSubDataARB( GL_ARRAY_BUFFER_ARB, 0, g_decalVertUsed * sizeof( dvert_t ), g_decalVertexCache );
+
+	// g_decalIBO is bound as the element array buffer through the VAO
+	pglBufferSubDataARB( GL_ELEMENT_ARRAY_BUFFER_ARB, 0, g_decalElemUsed * sizeof( word ), g_decalIndexCache );
+
+	pglBindVertexArray( GL_FALSE );
+
+	g_decalCacheDirty = false;
 }
 
 /*
@@ -1515,6 +1579,11 @@ static void R_RenderSurfaceDecals( msurface_t *surf, drawlist_t drawlist_type )
 	mextrasurf_t *fa = surf->info;
 	brushdecal_t *p;
 
+	// upload the changed decal cache into the VBO/IBO
+	R_DecalUploadCache();
+
+	pglBindVertexArray( g_decalVAO );
+
 	for( p = fa->pdecals; p; p = p->pnext )
 	{
 		if( !p->surface || !p->texinfo )
@@ -1538,16 +1607,13 @@ static void R_RenderSurfaceDecals( msurface_t *surf, drawlist_t drawlist_type )
 
 		r_stats.c_total_tris += (p->numElems / 3);
 
-		// draw decal from cache
-		for( int k = 0; k < p->numElems; k += 3 )
-		{
-			pglBegin( GL_TRIANGLES );
-				R_DecalSetupVertex( &p->verts[p->elems[k+0]] );
-				R_DecalSetupVertex( &p->verts[p->elems[k+1]] );
-				R_DecalSetupVertex( &p->verts[p->elems[k+2]] );
-			pglEnd();
-		}
+		// draw decal from cache (indices are relative to the decal vertex block)
+		pglDrawElementsBaseVertex( GL_TRIANGLES, p->numElems, GL_UNSIGNED_SHORT,
+			(void *)(( p->elems - g_decalIndexCache ) * sizeof( word )),
+			(GLint)( p->verts - g_decalVertexCache ));
 	}
+
+	pglBindVertexArray( GL_FALSE );
 }
 
 static void R_RenderSolidListDecalsDebug( drawlist_t drawlist_type )
@@ -1748,6 +1814,7 @@ void ClearDecals( void )
 	memset( gDecalPool, 0, sizeof( gDecalPool ));
 	g_decalVertUsed = g_decalElemUsed = 0;
 	gDecalCount = gDecalCycle = 0;
+	g_decalCacheDirty = true;
 }
 
 // ===========================
@@ -1867,6 +1934,11 @@ getout:
 
 void DecalsShutdown( void )
 {
+	if( g_decalVAO ) pglDeleteVertexArrays( 1, &g_decalVAO );
+	if( g_decalVBO ) pglDeleteBuffersARB( 1, &g_decalVBO );
+	if( g_decalIBO ) pglDeleteBuffersARB( 1, &g_decalIBO );
+	g_decalVAO = g_decalVBO = g_decalIBO = 0;
+
 	if( !pDecalGroupList )
 		return;
 
