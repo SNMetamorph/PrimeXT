@@ -1346,6 +1346,10 @@ static glsl_program_t *GL_CreateUberShader( GLint slot, const char *glname, cons
 			blockIndex = pglGetUniformBlockIndex( shader->handle, "MaterialParams" );
 			if( blockIndex != GL_INVALID_INDEX )
 				pglUniformBlockBinding( shader->handle, blockIndex, MATERIAL_PARAMS_UBO_BINDING );
+
+			blockIndex = pglGetUniformBlockIndex( shader->handle, "DecalMaterialParams" );
+			if( blockIndex != GL_INVALID_INDEX )
+				pglUniformBlockBinding( shader->handle, blockIndex, DECAL_MATERIAL_PARAMS_UBO_BINDING );
 		}
 
 		GL_ValidateProgram( shader );

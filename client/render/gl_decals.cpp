@@ -227,11 +227,15 @@ static unsigned int		g_decalElemUsed;
 static GLuint		g_decalVBO = 0;
 static GLuint		g_decalIBO = 0;
 static GLuint		g_decalVAO = 0;
+static GLuint		g_decalMaterialParamsUBO = 0;
 static bool		g_decalCacheDirty = false;
 
 static brushdecal_t		gDecalPool[MAX_BRUSH_DECALS];
 static int		gDecalCycle;
 static int		gDecalCount;
+
+// forward declarations
+static unsigned short R_GetDecalMaterialIndex( const matdesc_t *desc );
 
 // ===========================
 // Decals creation
@@ -419,6 +423,10 @@ static word R_ShaderDecalForward( brushdecal_t *decal )
 
 	if (tr.fogEnabled && !RP_CUBEPASS())
 		GL_AddShaderDirective( options, "APPLY_FOG_EXP" );
+
+	// UBO array sizes
+	GL_AddShaderDirective( options, va( "MAX_MODEL_MATRICES %i", worldmodel->numsubmodels ));
+	GL_AddShaderDirective( options, va( "MAX_MATERIALS %i", tr.matcount + 1 ));
 
 	word shaderNum = GL_FindUberShader( glname, options );
 	if( !shaderNum ) return 0; // something bad happens
@@ -714,6 +722,11 @@ static void R_AddDecal( decalClip_t *clip, msurface_t *surf )
 
 	mtexinfo_t *tex = surf->texinfo;
 
+	// entity transform index (submodel) and decal material params index
+	unsigned short matrixIndex = (world->surface_submodel && world->modelMatrices)
+		? world->surface_submodel[surf - worldmodel->surfaces] : 0;
+	unsigned short materialIndex = R_GetDecalMaterialIndex( newdecal->texinfo->matdesc );
+
 	// set up the vertices
 	for( int i = 0; i < clip->numVertices; i++ )
 	{
@@ -731,6 +744,8 @@ static void R_AddDecal( decalClip_t *clip, msurface_t *surf )
 		// NOTE: i can to place styles is outside but i'm leave it here to keep vertex aligned
 		memcpy( v->styles, surf->styles, sizeof( surf->styles ));
 		v->vertex = point;
+		v->matrixIndex = matrixIndex;
+		v->materialIndex = materialIndex;
 		if( FBitSet( surf->flags, SURF_PLANEBACK ))
 			v->normal = -surf->plane->normal;
 		else v->normal = surf->plane->normal;
@@ -1218,6 +1233,60 @@ end_serialize:
 	return total;
 }
 
+// map a decal material description to an index into the decal material params UBO.
+// entry 0 is the fallback default material, entries 1..tr.matcount are tr.materials[]
+static unsigned short R_GetDecalMaterialIndex( const matdesc_t *desc )
+{
+	if( desc >= tr.materials && desc < ( tr.materials + tr.matcount ))
+		return (unsigned short)(( desc - tr.materials ) + 1 );
+	return 0; // default material
+}
+
+static void R_DecalCreateMaterialParamsUBO( void )
+{
+	if( g_decalMaterialParamsUBO )
+		return;
+
+	// entry 0 = default material, entries 1..matcount = tr.materials[]
+	int numMaterials = tr.matcount + 1;
+	GLfloat *params = (GLfloat *)Mem_Alloc( numMaterials * 8 * sizeof( GLfloat ));
+
+	const matdesc_t *def = COM_DefaultMatdesc();
+	params[0] = def->detailScale[0];
+	params[1] = def->detailScale[1];
+	params[2] = bound( 0.0f, def->reflectScale, 1.0f );
+	params[3] = bound( 0.0f, def->refractScale, 1.0f );
+	params[4] = def->smoothness;
+	params[5] = bound( 0.0f, def->aberrationScale, 1.0f );
+	params[6] = def->reliefScale;
+	params[7] = 0.0f;
+
+	for( int i = 0; i < tr.matcount; i++ )
+	{
+		const matdesc_t *mat = &tr.materials[i];
+		GLfloat *dst = &params[( i + 1 ) * 8];
+
+		dst[0] = mat->detailScale[0];
+		dst[1] = mat->detailScale[1];
+		dst[2] = bound( 0.0f, mat->reflectScale, 1.0f );
+		dst[3] = bound( 0.0f, mat->refractScale, 1.0f );
+		dst[4] = mat->smoothness;
+		dst[5] = bound( 0.0f, mat->aberrationScale, 1.0f );
+		dst[6] = mat->reliefScale;
+		dst[7] = 0.0f;
+	}
+
+	pglGenBuffersARB( 1, &g_decalMaterialParamsUBO );
+	pglBindBufferARB( GL_UNIFORM_BUFFER, g_decalMaterialParamsUBO );
+	pglBufferDataARB( GL_UNIFORM_BUFFER, numMaterials * 8 * sizeof( GLfloat ), params, GL_STATIC_DRAW_ARB );
+	pglBindBufferARB( GL_UNIFORM_BUFFER, 0 );
+	pglBindBufferBase( GL_UNIFORM_BUFFER, DECAL_MATERIAL_PARAMS_UBO_BINDING, g_decalMaterialParamsUBO );
+
+	Mem_Free( params );
+
+	tr.total_vbo_memory += numMaterials * 8 * sizeof( GLfloat );
+}
+
 static void R_DecalCreateBuffers( void )
 {
 	// bind the VAO first so the element buffer binding below is captured by it
@@ -1258,6 +1327,12 @@ static void R_DecalCreateBuffers( void )
 	pglEnableVertexAttribArrayARB( ATTR_INDEX_LIGHT_STYLES );
 	pglVertexAttribPointerARB( ATTR_INDEX_LIGHT_STYLES, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof( dvert_t ), (void *)offsetof( dvert_t, styles ));
 
+	pglEnableVertexAttribArrayARB( ATTR_INDEX_MATRIX );
+	pglVertexAttribPointerARB( ATTR_INDEX_MATRIX, 1, GL_UNSIGNED_SHORT, GL_FALSE, sizeof( dvert_t ), (void *)offsetof( dvert_t, matrixIndex ));
+
+	pglEnableVertexAttribArrayARB( ATTR_INDEX_MATERIAL );
+	pglVertexAttribPointerARB( ATTR_INDEX_MATERIAL, 1, GL_UNSIGNED_SHORT, GL_FALSE, sizeof( dvert_t ), (void *)offsetof( dvert_t, materialIndex ));
+
 	pglBindVertexArray( GL_FALSE );
 	pglBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 );
 	pglBindBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
@@ -1269,6 +1344,9 @@ static void R_DecalUploadCache( void )
 {
 	if( !g_decalVBO )
 		R_DecalCreateBuffers();
+
+	// material params UBO is static, created on first use
+	R_DecalCreateMaterialParamsUBO();
 
 	if( !g_decalCacheDirty )
 		return;
@@ -1399,9 +1477,6 @@ void R_SetDecalUniforms( brushdecal_t *decal )
 		case UT_FITNORMALMAP:
 			u->SetValue( tr.normalsFitting.ToInt() );
 			break;
-		case UT_MODELMATRIX:
-			u->SetValue( &glm->modelMatrix[0] );
-			break;
 		case UT_REFLECTMATRIX:
 			if( Surf_CheckSubview( es, true ))
 				Surf_GetSubview( es )->matrix.CopyToArray( viewMatrix );
@@ -1441,17 +1516,8 @@ void R_SetDecalUniforms( brushdecal_t *decal )
 		case UT_VIEWORIGIN:
 			u->SetValue( tr.modelorg.x, tr.modelorg.y, tr.modelorg.z, e->hCachedMatrix ? 1.0f : 0.0f );
 			break;
-		case UT_SMOOTHNESS:
-			u->SetValue( desc->smoothness );
-			break;
 		case UT_AMBIENTFACTOR:
 			u->SetValue( tr.ambientFactor );
-			break;
-		case UT_REFRACTSCALE:
-			u->SetValue( bound( 0.0f, desc->refractScale, 1.0f ));
-			break;
-		case UT_REFLECTSCALE:
-			u->SetValue( bound( 0.0f, desc->reflectScale, 1.0f ));
 			break;
 		case UT_ABERRATIONSCALE:
 			u->SetValue( bound( 0.0f, desc->aberrationScale, 1.0f ));
@@ -1937,7 +2003,8 @@ void DecalsShutdown( void )
 	if( g_decalVAO ) pglDeleteVertexArrays( 1, &g_decalVAO );
 	if( g_decalVBO ) pglDeleteBuffersARB( 1, &g_decalVBO );
 	if( g_decalIBO ) pglDeleteBuffersARB( 1, &g_decalIBO );
-	g_decalVAO = g_decalVBO = g_decalIBO = 0;
+	if( g_decalMaterialParamsUBO ) pglDeleteBuffersARB( 1, &g_decalMaterialParamsUBO );
+	g_decalVAO = g_decalVBO = g_decalIBO = g_decalMaterialParamsUBO = 0;
 
 	if( !pDecalGroupList )
 		return;

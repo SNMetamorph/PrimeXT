@@ -23,19 +23,19 @@ GNU General Public License for more details.
 #include "parallax.h"
 #include "material.h"
 #include "fog.h"
+#include "decalmaterialparams.h"
 
 uniform sampler2D	u_DecalMap;
 uniform sampler2D	u_ColorMap;	// surface under decal
 uniform sampler2D	u_GlossMap;
 uniform sampler2D	u_NormalMap;	// refraction
 
-uniform float	u_Smoothness;
-uniform float	u_RefractScale;
-uniform float	u_ReflectScale;
 uniform vec4	u_FogParams;
 uniform vec3	u_ViewOrigin;
 uniform float	u_RealTime;
 uniform vec3	u_LightDir;	// already in tangent space
+
+flat in float	var_MaterialIndex;
 
 varying vec4	var_TexDiffuse;
 varying vec3	var_TexLight0;
@@ -111,7 +111,7 @@ void main( void )
 	mat = MaterialFetchTexture(colormap2D( u_GlossMap, vecTexCoord ));
 #else // !HAS_GLOSSMAP
 	// use default parameter values
-	mat.smoothness = u_Smoothness;
+	mat.smoothness = GetDecalMaterialParams2( var_MaterialIndex ).x;
 	mat.metalness = 0.0;
 	mat.ambientOcclusion = 1.0;
 	mat.specularIntensity = 1.0;
@@ -146,12 +146,12 @@ void main( void )
 
 #if defined( PLANAR_REFLECTION ) || defined( REFLECTION_CUBEMAP )
 #if defined( REFLECTION_CUBEMAP )
-	vec3 waveNormal = N * 0.02 * u_RefractScale; // puddles are always placed on floor so we skip rotation from tangentspace to worldspace
+	vec3 waveNormal = N * 0.02 * GetDecalMaterialParams( var_MaterialIndex ).w; // puddles are always placed on floor so we skip rotation from tangentspace to worldspace
 	vec3 mirror = CubemapReflectionProbe( var_Position, u_ViewOrigin, PUDDLE_NORMAL + waveNormal, 1.0 );
 #elif defined( PLANAR_REFLECTION )
-	vec3 mirror = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, u_RefractScale ).rgb;
+	vec3 mirror = reflectmap2D( u_ColorMap, var_TexMirror, N, gl_FragCoord.xyz, GetDecalMaterialParams( var_MaterialIndex ).w ).rgb;
 #endif
-	float eta = GetFresnel( V, PUDDLE_NORMAL, WATER_F0_VALUE, FRESNEL_FACTOR ) * u_ReflectScale;
+	float eta = GetFresnel( V, PUDDLE_NORMAL, WATER_F0_VALUE, FRESNEL_FACTOR ) * GetDecalMaterialParams( var_MaterialIndex ).z;
 	result.rgb = mix( result.rgb, mirror.rgb, eta );
 #if defined( APPLY_COLORBLEND )
 	result.rgb = mix( result.rgb, vec3( 0.5 ), alpha );

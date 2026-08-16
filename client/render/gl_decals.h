@@ -68,6 +68,8 @@ typedef struct dvert_s
 	float		lmcoord0[4];	// LM texture coords for styles 0-1
 	float		lmcoord1[4];	// LM texture coords for styles 2-3
 	byte		styles[4];	// lightstyles
+	unsigned short	matrixIndex;	// entity matrix index (submodel)
+	unsigned short	materialIndex;	// decal material params index
 } dvert_t;
 
 // decal entry
