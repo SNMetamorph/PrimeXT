@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "texture_handle.h"
 
 class DecalGroup;
+class CDynLight;
 class DecalGroupEntry
 {
 public:
@@ -91,6 +92,9 @@ typedef struct brushdecal_s
 
 	// shader cache
 	shader_t			forwardScene;
+	shader_t			forwardLightSpot[2];
+	shader_t			forwardLightOmni[2];
+	shader_t			forwardLightProj;
 	mextrasurf_t		*surface;
 	struct brushdecal_s		*pnext;	// linked list for each surface
 	model_t			*model;
@@ -102,6 +106,7 @@ void DecalsShutdown( void );
 void R_RenderDecalsSolidList( drawlist_t drawlist_type );
 void R_RenderDecalsTransList( drawlist_t drawlist_type );
 void R_RenderDecalsTransEntry( CTransEntry *entry, drawlist_t drawlist_type );
+void R_RenderDecalsForLight( CDynLight *pl );
 int SaveDecalList( decallist_t *pBaseList, int count );
 
 #endif//GL_DECALS_H

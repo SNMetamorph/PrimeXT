@@ -24,6 +24,7 @@ GNU General Public License for more details.
 #include "gl_shader.h"
 #include "gl_world.h"
 #include "gl_grass.h"
+#include "gl_decals.h"
 #include "gl_occlusion.h"
 #include "gl_cvars.h"
 #include "vertex_fmt.h"
@@ -3205,6 +3206,7 @@ void R_DrawLightForSurfList( CDynLight *pl )
 	}
 
 	R_DrawLightForGrass( pl );
+	R_RenderDecalsForLight( pl );
 }
 
 /*

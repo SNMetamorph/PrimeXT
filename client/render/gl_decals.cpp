@@ -437,6 +437,80 @@ static word R_ShaderDecalForward( brushdecal_t *decal )
 }
 
 /*
+===============
+R_ShaderDecalLightForward
+
+select the program for decal dynamic lighting
+===============
+*/
+static word R_ShaderDecalLightForward( CDynLight *dl, brushdecal_t *decal )
+{
+	char glname[64];
+	char options[MAX_OPTIONS_LENGTH];
+	const DecalGroupEntry *texinfo = decal->texinfo;
+	int32_t lightShadowType = !FBitSet( dl->flags, DLF_NOSHADOWS ) ? 0 : 1;
+
+	switch( dl->type )
+	{
+	case LIGHT_SPOT:
+		if( decal->forwardLightSpot[lightShadowType].IsValid( ))
+			return decal->forwardLightSpot[lightShadowType].GetHandle(); // valid
+		break;
+	case LIGHT_OMNI:
+		if( decal->forwardLightOmni[lightShadowType].IsValid( ))
+			return decal->forwardLightOmni[lightShadowType].GetHandle(); // valid
+		break;
+	case LIGHT_DIRECTIONAL:
+		if( decal->forwardLightProj.IsValid( ))
+			return decal->forwardLightProj.GetHandle(); // valid
+		break;
+	}
+
+	Q_strncpy( glname, "forward/light_decal_bmodel", sizeof( glname ));
+	memset( options, 0, sizeof( options ));
+
+	switch( dl->type )
+	{
+	case LIGHT_SPOT:
+		GL_AddShaderDirective( options, "LIGHT_SPOT" );
+		break;
+	case LIGHT_OMNI:
+		GL_AddShaderDirective( options, "LIGHT_OMNI" );
+		break;
+	case LIGHT_DIRECTIONAL:
+		GL_AddShaderDirective( options, "LIGHT_PROJ" );
+		break;
+	}
+
+	if(( texinfo->gl_normalmap_id != tr.normalmapTexture ) && CVAR_TO_BOOL( cv_bump ))
+	{
+		GL_AddShaderDirective( options, "HAS_NORMALMAP" );
+		GL_AddShaderDirective( options, "COMPUTE_TBN" );
+		GL_EncodeNormal( options, texinfo->gl_normalmap_id );
+	}
+
+	GL_AddShaderDirective( options, va( "MAX_MODEL_MATRICES %i", worldmodel->numsubmodels ));
+
+	word shaderNum = GL_FindUberShader( glname, options );
+	if( !shaderNum ) return 0; // something bad happens
+
+	switch( dl->type )
+	{
+	case LIGHT_SPOT:
+		decal->forwardLightSpot[lightShadowType].SetShader( shaderNum );
+		break;
+	case LIGHT_OMNI:
+		decal->forwardLightOmni[lightShadowType].SetShader( shaderNum );
+		break;
+	case LIGHT_DIRECTIONAL:
+		decal->forwardLightProj.SetShader( shaderNum );
+		break;
+	}
+
+	return shaderNum;
+}
+
+/*
 ==============================================================================
 
  DECAL CLIPPING
@@ -1581,6 +1655,91 @@ void R_SetDecalUniforms( brushdecal_t *decal )
 	}
 }
 
+/*
+===============
+R_SetDecalLightUniforms
+
+setup uniforms for decal dynamic lighting pass
+===============
+*/
+static void R_SetDecalLightUniforms( brushdecal_t *decal, CDynLight *pl )
+{
+	mextrasurf_t *es = decal->surface;
+	cl_entity_t *e = es->parent;
+	gl_state_t *glm = GL_GetCache( e->hCachedMatrix );
+	Vector4D lightdir;
+	GLfloat gl_lightViewProjMatrix[16];
+
+	// bind the light shader (cached per decal & light type)
+	int32_t lightShadowType = !FBitSet( pl->flags, DLF_NOSHADOWS ) ? 0 : 1;
+	shader_t *lightShader = NULL;
+
+	switch( pl->type )
+	{
+	case LIGHT_SPOT: lightShader = &decal->forwardLightSpot[lightShadowType]; break;
+	case LIGHT_OMNI: lightShader = &decal->forwardLightOmni[lightShadowType]; break;
+	case LIGHT_DIRECTIONAL: lightShader = &decal->forwardLightProj; break;
+	default: return;
+	}
+
+	if( RI->currentshader != lightShader->GetShader( ))
+		GL_BindShader( lightShader->GetShader( ));
+
+	glsl_program_t *shader = RI->currentshader;
+
+	material_t *mat = R_TextureAnimation( es->surf )->material;
+
+	tr.modelorg = glm->GetModelOrigin();
+
+	for( int i = 0; i < shader->numUniforms; i++ )
+	{
+		uniform_t *u = &shader->uniforms[i];
+
+		switch( u->type )
+		{
+		case UT_COLORMAP:
+			if( Surf_CheckSubview( es, true ) && FBitSet( decal->flags, FDECAL_PUDDLE ))
+				u->SetValue( Surf_GetSubview( es )->texturenum.ToInt() );
+			else u->SetValue( mat->impl->gl_diffuse_id.ToInt() );
+			break;
+		case UT_DECALMAP:
+			u->SetValue( decal->texinfo->gl_diffuse_id.ToInt() );
+			break;
+		case UT_NORMALMAP:
+			u->SetValue( decal->texinfo->gl_normalmap_id.ToInt() );
+			break;
+		case UT_PROJECTMAP:
+			if( pl && pl->type == LIGHT_SPOT )
+				u->SetValue( pl->spotlightTexture.ToInt() );
+			else u->SetValue( tr.whiteTexture.ToInt() );
+			break;
+		case UT_LIGHTDIR:
+			if( pl )
+			{
+				if( pl->type == LIGHT_DIRECTIONAL ) lightdir = -tr.sky_normal;
+				else lightdir = pl->frustum.GetPlane( FRUSTUM_FAR )->normal;
+				u->SetValue( lightdir.x, lightdir.y, lightdir.z, pl->fov );
+			}
+			break;
+		case UT_LIGHTDIFFUSE:
+			if( pl ) u->SetValue( pl->color.x, pl->color.y, pl->color.z );
+			break;
+		case UT_LIGHTORIGIN:
+			if( pl ) u->SetValue( pl->origin.x, pl->origin.y, pl->origin.z, ( 1.0f / pl->radius ));
+			break;
+		case UT_LIGHTVIEWPROJMATRIX:
+			if( pl )
+			{
+				pl->lightviewProjMatrix.CopyToArray( gl_lightViewProjMatrix );
+				u->SetValue( &gl_lightViewProjMatrix[0] );
+			}
+			break;
+		default:
+			break;
+		}
+	}
+}
+
 static void DrawWireDecal( brushdecal_t *decal )
 {
 	mextrasurf_t *es = decal->surface;
@@ -1680,6 +1839,77 @@ static void R_RenderSurfaceDecals( msurface_t *surf, drawlist_t drawlist_type )
 	}
 
 	pglBindVertexArray( GL_FALSE );
+}
+
+static void R_RenderSurfaceDecalsLight( msurface_t *surf, CDynLight *pl )
+{
+	mextrasurf_t *fa = surf->info;
+	brushdecal_t *p;
+
+	pglBindVertexArray( g_decalVAO );
+
+	for( p = fa->pdecals; p; p = p->pnext )
+	{
+		if( !p->surface || !p->texinfo )
+			continue; // bad decal?
+
+		// color-blend decals modulate the surface light through their forward
+		// pass (rendered after the light pass), so skip them here
+		if( !p->texinfo->has_alpha )
+			continue;
+
+		// initialize decal light shader
+		if( !R_ShaderDecalLightForward( pl, p ))
+			continue;
+
+		R_SetDecalLightUniforms( p, pl );
+
+		r_stats.c_total_tris += (p->numElems / 3);
+
+		pglDrawElementsBaseVertex( GL_TRIANGLES, p->numElems, GL_UNSIGNED_SHORT,
+			(void *)(( p->elems - g_decalIndexCache ) * sizeof( word )),
+			(GLint)( p->verts - g_decalVertexCache ));
+	}
+
+	pglBindVertexArray( GL_FALSE );
+}
+
+void R_RenderDecalsForLight( CDynLight *pl )
+{
+	if( !gDecalCount || !CVAR_TO_BOOL( cv_decals ))
+		return;
+
+	if( !RI->frame.light_faces.Count() )
+		return;
+
+	// upload the changed decal cache into the VBO/IBO
+	R_DecalUploadCache();
+
+	// decals are coplanar with the surface they sit on, so pull them
+	// toward the camera to avoid z-fighting with the surface light pass
+	if( CVAR_TO_BOOL( r_polyoffset ))
+	{
+		pglEnable( GL_POLYGON_OFFSET_FILL );
+		pglPolygonOffset( -1.0f, -r_polyoffset->value );
+	}
+
+	for( int i = 0; i < RI->frame.light_faces.Count(); i++ )
+	{
+		CSolidEntry *entry = &RI->frame.light_faces[i];
+
+		if( entry->m_bDrawType != DRAWTYPE_SURFACE )
+			continue;
+
+		msurface_t *s = entry->m_pSurf;
+
+		if( !FBitSet( s->flags, SURF_HAS_DECALS ))
+			continue;
+
+		R_RenderSurfaceDecalsLight( s, pl );
+	}
+
+	if( CVAR_TO_BOOL( r_polyoffset ))
+		pglDisable( GL_POLYGON_OFFSET_FILL );
 }
 
 static void R_RenderSolidListDecalsDebug( drawlist_t drawlist_type )
