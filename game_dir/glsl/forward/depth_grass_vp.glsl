@@ -20,10 +20,13 @@ GNU General Public License for more details.
 attribute vec4		attr_Position;
 attribute vec4		attr_Normal;
 
+uniform mat4		u_ModelViewMatrix;
+uniform mat4		u_ModelViewProjectionMatrix;
 uniform mat4		u_ModelMatrix;
 uniform vec3		u_GrassParams;
 uniform vec3		u_ViewOrigin;
 uniform float		u_RealTime;
+uniform vec4		u_ClipPlane;
 
 varying vec2		var_TexDiffuse;
 
@@ -46,7 +49,7 @@ void main( void )
 	}
 
 	vec4 worldpos = u_ModelMatrix * position;
-	gl_Position = gl_ModelViewProjectionMatrix * worldpos;
+	gl_Position = u_ModelViewProjectionMatrix * worldpos;
 	var_TexDiffuse = GetTexCoordsForVertex( int( attr_Normal.w ));
-	gl_ClipVertex = gl_ModelViewMatrix * worldpos;
+	gl_ClipDistance[0] = dot( worldpos, u_ClipPlane );
 }

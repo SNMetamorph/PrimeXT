@@ -311,6 +311,23 @@ static void GL_DrawSkySide( word hProgram, int skyside )
 		case UT_ZFAR:
 			u->SetValue( RI->view.farClip );
 			break;
+		case UT_MODELVIEWMATRIX:
+			u->SetValue(&RI->view.worldMatrix);
+			break;
+		case UT_MODELVIEWPROJECTIONMATRIX:
+			u->SetValue(&RI->view.worldProjectionMatrix);
+			break;
+		case UT_CLIPPLANE:
+		{
+			GLdouble	clip[4];
+			mplane_t	*p = &RI->clipPlane;
+
+			GL_InitClipPlane(p, clip);
+
+			u->SetValue(clip);
+
+			break;
+		}
 		default:
 			ALERT( at_error, "%s: unhandled uniform %s\n", RI->currentshader->name, u->name );
 			break;

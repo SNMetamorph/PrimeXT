@@ -229,6 +229,13 @@ static dllfunc_t opengl_200funcs[] =
 { NULL, NULL }
 };
 
+static dllfunc_t opengl_310funcs[] =
+{
+{ "glGetUniformBlockIndex"		, (void **)&pglGetUniformBlockIndex },
+{ "glUniformBlockBinding"		, (void **)&pglUniformBlockBinding },
+{ NULL, NULL }
+};
+
 static dllfunc_t drawrangeelementsextfuncs[] =
 {
 { "glDrawRangeElementsEXT" , (void **)&pglDrawRangeElements },
@@ -533,6 +540,7 @@ static void GL_InitExtensions( void )
 	// initialize gl extensions
 	GL_CheckExtension("OpenGL 1.1.0", opengl_110funcs, NULL, R_OPENGL_110);
 	GL_CheckExtension("OpenGL 2.0", opengl_200funcs, NULL, R_OPENGL_200);
+	GL_CheckExtension("OpenGL 3.1", opengl_310funcs, NULL, R_OPENGL_310);
 
 	if (!GL_Support(R_OPENGL_110))
 	{

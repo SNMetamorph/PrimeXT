@@ -935,6 +935,12 @@ typedef unsigned int GLhandleARB;
 #define GL_ACTIVE_UNIFORMS			0x8B86
 #define GL_SHADER_SOURCE_LENGTH		0x8B88
 
+#define GL_UNIFORM_BUFFER			0x8A11
+#define GL_UNIFORM_BUFFER_BINDING	0x8A28
+#define GL_UNIFORM_BUFFER_START		0x8A29
+#define GL_UNIFORM_BUFFER_SIZE		0x8A2A
+#define GL_INVALID_INDEX			0xFFFFFFFFu
+
 // GL_NV_alpha_to_coverage_dither_control
 #define GL_ALPHA_TO_COVERAGE_DITHER_DEFAULT_NV	0x934D
 #define GL_ALPHA_TO_COVERAGE_DITHER_ENABLE_NV	0x934E
@@ -1311,6 +1317,8 @@ EXTERN void (APIENTRY *pglGetShaderInfoLog)(GLuint shader, GLsizei maxLength, GL
 EXTERN void (APIENTRY *pglGetProgramInfoLog)(GLuint program, GLsizei maxLength, GLsizei *length, GLcharARB *infoLog);
 EXTERN void (APIENTRY *pglGetActiveUniform)(GLuint program, GLuint index, GLsizei bufSize, GLsizei *length, GLint *size, GLenum *type, GLcharARB *name);
 EXTERN GLint (APIENTRY *pglGetUniformLocation)(GLuint program, const GLcharARB *name);
+EXTERN GLuint (APIENTRY *pglGetUniformBlockIndex)(GLuint program, const GLcharARB *uniformBlockName);
+EXTERN void (APIENTRY *pglUniformBlockBinding)(GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding);
 
 EXTERN void ( APIENTRY *pglProgramStringARB)(GLenum target, GLenum format, GLsizei len, const void *string);
 EXTERN void ( APIENTRY *pglProgramEnvParameter4fARB)(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
