@@ -406,11 +406,13 @@ void SetLightStyles( void )
 		const char	*classname = ValueForKey( (entity_t *)e, "classname" );
 		const char	*t = NULL;
 
-		if( Q_strncmp( classname, "light", 5 ))
+		if( Q_strcmp( classname, "light" ) != 0 &&
+			Q_strcmp( classname, "light_spot" ) != 0 &&
+			Q_strcmp( classname, "light_environment" ) != 0)
 		{
 			// if it's not a normal light entity, allocate it a new style if necessary.
 			// xash func_light (a simple prefab for switchable texlight)
-			if( !Q_strncmp( classname, "func_light", 10 ))
+			if( !Q_strcmp( classname, "func_light" ))
 			{
 				// func_light always has style -1
 				t = "-1";
