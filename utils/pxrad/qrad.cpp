@@ -32,7 +32,6 @@ static vec3_t	(*emitlight)[MAXLIGHTMAPS];
 static vec3_t	(*addlight)[MAXLIGHTMAPS];
 static byte	(*newstyles)[MAXLIGHTMAPS];
 #ifdef HLRAD_DELUXEMAPPING
-static vec3_t	(*emitlight_dir)[MAXLIGHTMAPS];
 static vec3_t	(*addlight_dir)[MAXLIGHTMAPS];
 #endif
 vec3_t		g_face_offset[MAX_MAP_FACES];		// for rotating bmodels
@@ -2409,7 +2408,6 @@ void CollectLight( void )
 			VectorClear( addlight[i][j] );
 #ifdef HLRAD_DELUXEMAPPING
 			VectorAdd( patch->totallight_dir[j], addlight_dir[i][j], patch->totallight_dir[j] );
-			VectorCopy( addlight_dir[i][j], emitlight_dir[i][j] );
 			VectorClear( addlight_dir[i][j] );
 #endif
 		}
@@ -2533,9 +2531,6 @@ void BounceLight( void )
 		for( j = 0; j < MAXLIGHTMAPS && g_patches[i].totalstyle[j] != 255; j++ )
 		{
 			VectorScale( patch->totallight[j], TRANSFER_SCALE, emitlight[i][j] );
-#ifdef HLRAD_DELUXEMAPPING
-			VectorCopy( patch->totallight_dir[j], emitlight_dir[i][j] );
-#endif
 		}
 		memcpy( newstyles[i], g_patches[i].totalstyle, sizeof( byte[MAXLIGHTMAPS] ));
 	}
@@ -2629,7 +2624,6 @@ void RadWorld( void )
 		addlight = (vec3_t (*)[MAXLIGHTMAPS])Mem_Alloc(( g_num_patches + 1 ) * sizeof( vec3_t[MAXLIGHTMAPS] ));
 		newstyles = (byte (*)[MAXLIGHTMAPS])Mem_Alloc(( g_num_patches + 1 ) * sizeof( byte[MAXLIGHTMAPS] ));
 #ifdef HLRAD_DELUXEMAPPING
-		emitlight_dir = (vec3_t (*)[MAXLIGHTMAPS])Mem_Alloc(( g_num_patches + 1 ) * sizeof( vec3_t[MAXLIGHTMAPS] ));
 		addlight_dir = (vec3_t (*)[MAXLIGHTMAPS])Mem_Alloc(( g_num_patches + 1 ) * sizeof( vec3_t[MAXLIGHTMAPS] ));
 #endif
 		// spread light around
@@ -2642,9 +2636,7 @@ void RadWorld( void )
 		addlight = NULL;
 		newstyles = NULL;
 #ifdef HLRAD_DELUXEMAPPING
-		Mem_Free( emitlight_dir );
 		Mem_Free( addlight_dir );
-		emitlight_dir = NULL;
 		addlight_dir = NULL;
 #endif
 		// transfers don't need anymore
