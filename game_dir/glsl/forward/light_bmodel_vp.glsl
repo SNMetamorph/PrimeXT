@@ -26,6 +26,9 @@ uniform vec3	u_ViewOrigin;
 uniform mat4	u_ModelMatrix;
 uniform mat4	u_ReflectMatrix;
 uniform vec2	u_TexOffset;
+uniform mat4	u_ModelViewMatrix;
+uniform mat4	u_ModelViewProjectionMatrix;
+uniform vec4	u_ClipPlane;
 
 varying vec2	var_TexDiffuse;
 varying vec3	var_LightVec;
@@ -67,8 +70,8 @@ void main( void )
 	vec4 position = vec4( attr_Position, 1.0 ); // in object space
 	vec4 worldpos = u_ModelMatrix * position;
 
-	gl_Position = gl_ModelViewProjectionMatrix * worldpos;
-	gl_ClipVertex = gl_ModelViewMatrix * worldpos;
+	gl_Position = u_ModelViewProjectionMatrix * worldpos;
+	gl_ClipDistance[0] = dot( worldpos, u_ClipPlane );
 
 	// compute TBN
 	mat3 tbn = ComputeTBN( u_ModelMatrix );
