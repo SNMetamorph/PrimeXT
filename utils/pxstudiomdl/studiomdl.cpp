@@ -27,6 +27,7 @@ GNU General Public License for more details.
 #include "crashhandler.h"
 #include "app_info.h"
 #include "build_info.h"
+#include "model_source.h"
 
 CUtlArray< char >	g_KeyValueText;
 char		filename[1024];
@@ -199,13 +200,6 @@ bool GetLineInput( void )
 	return false;
 }
 
-bool IsEnd( char const *pLine )
-{
-	if( !Q_strncmp( "end", pLine, 3 )) 
-		return true;
-	return ( pLine[3] == '\0' ) || ( pLine[3] == '\n' );
-}
-
 int verify_atoi_dbg( const char *token, const int line )
 {
 	if( token[0] != '-' && ( token[0] < '0' || token[0] > '9' ))
@@ -336,76 +330,6 @@ int findGlobalBoneXSI( const char *name )
 	return -1;
 }
 
-int SortAndBalanceBones( int iCount, int iMaxCount, int bones[], float weights[] )
-{
-	int	i, bShouldSort;
-	float	w, t;
-
-	// collapse duplicate bone weights
-	for( i = 0; i < iCount-1; i++ )
-	{
-		for( int j = i + 1; j < iCount; j++ )
-		{
-			if( bones[i] == bones[j] )
-			{
-				weights[i] += weights[j];
-				weights[j] = 0.0;
-			}
-		}
-	}
-
-	// do sleazy bubble sort
-	do {
-		bShouldSort = false;
-		for( i = 0; i < iCount-1; i++ )
-		{
-			if( weights[i+1] > weights[i] )
-			{
-				int j = bones[i+1];
-				bones[i+1] = bones[i];
-				bones[i] = j;
-				w = weights[i+1];
-				weights[i+1] = weights[i];
-				weights[i] = w;
-				bShouldSort = true;
-			}
-		}
-	} while( bShouldSort );
-
-	// throw away all weights less than 1/20th
-	while( iCount > 1 && weights[iCount-1] < 0.005 )
-		iCount--;
-
-	// clip to the top iMaxCount bones
-	if( iCount > iMaxCount )
-		iCount = iMaxCount;
-
-	t = 0.0f;
-
-	for( i = 0; i < iCount; i++ )
-		t += weights[i];
-
-	if( t <= 0.0f )
-	{
-		// missing weights?, go ahead and evenly share?
-		// FIXME: shouldn't this error out?
-		t = 1.0 / iCount;
-
-		for( i = 0; i < iCount; i++ )
-			weights[i] = t;
-	}
-	else
-	{
-		// scale to sum to 1.0
-		t = 1.0 / t;
-
-		for( i = 0; i < iCount; i++ )
-			weights[i] = weights[i] * t;
-	}
-
-	return iCount;
-}
-
 int LookupControl( const char *string )
 {
 	if( !Q_stricmp( string, "X" )) return STUDIO_X;
@@ -490,74 +414,6 @@ int LookupAttachment( const char *name )
 	}
 
 	return -1;
-}
-
-int LookupTexture( const char *texturename )
-{
-	int	i;
-
-	for( i = 0; i < g_numtextures; i++ )
-	{
-		if( !Q_stricmp( g_texture[i].name, texturename ))
-			return i;
-	}
-
-	Q_strncpy( g_texture[i].name, texturename, sizeof( g_texture[0].name ));
-
-	// XDM: allow such names as "tex_chrome_bright" - chrome and full brightness effects
-	if( Q_stristr( texturename, "chrome" ) != NULL )
-		g_texture[i].flags |= STUDIO_NF_FLATSHADE | STUDIO_NF_CHROME;
-	if( Q_stristr( texturename, "bright" ) != NULL )
-		g_texture[i].flags |= STUDIO_NF_FULLBRIGHT;
-	g_numtextures++;
-
-	return i;
-}
-
-s_mesh_t *LookupMesh( s_model_t *pmodel, char *texturename )
-{
-	int	i, j;
-
-	j = LookupTexture( texturename );
-
-	for( i = 0; i < pmodel->nummesh; i++ )
-	{
-		if( pmodel->pmesh[i]->skinref == j )
-			return pmodel->pmesh[i];
-	}
-	
-	if( i >= MAXSTUDIOMESHES )
-		COM_FatalError( "too many meshes in model: \"%s\"\n", pmodel->name );
-
-	pmodel->nummesh = i + 1;
-	pmodel->pmesh[i] = (s_mesh_t *)Mem_Alloc( sizeof( s_mesh_t ));
-	pmodel->pmesh[i]->skinref = j;
-
-	return pmodel->pmesh[i];
-}
-
-s_trianglevert_t *LookupTriangle( s_mesh_t *pmesh, int index )
-{
-	if( index >= MAXSTUDIOTRIANGLES )
-		COM_FatalError( "max studio triangles exceeds 65536\n" );
-
-	if( index >= pmesh->alloctris )
-	{
-		int start = pmesh->alloctris;
-		pmesh->alloctris = index + 256;
-
-		if( pmesh->triangle )
-		{
-			pmesh->triangle = (s_trianglevert_t (*)[3])Mem_Realloc( pmesh->triangle, pmesh->alloctris * sizeof( *pmesh->triangle ));
-			memset( &pmesh->triangle[start], 0, ( pmesh->alloctris - start ) * sizeof( *pmesh->triangle ));
-		} 
-		else
-		{
-			pmesh->triangle = (s_trianglevert_t (*)[3])Mem_Alloc( pmesh->alloctris * sizeof( *pmesh->triangle ));
-		}
-	}
-
-	return pmesh->triangle[index];
 }
 
 int LookupNormal( s_model_t *pmodel, s_srcvertex_t *srcv )
@@ -666,525 +522,22 @@ void scale_animation( s_animation_t *panim )
 	}
 }
 
-void Build_Reference( s_model_t *pmodel )
-{
-	for( int i = 0; i < pmodel->numbones; i++ )
-	{
-		matrix3x4	bonematrix = matrix3x4( pmodel->skeleton[i].pos, pmodel->skeleton[i].rot );
-		int parent = pmodel->localBone[i].parent;
-
-		if( parent == -1 )
-		{
-			// scale the done pos.
-			// calc rotational matrices
-			pmodel->boneToPose[i] = bonematrix;
-
-		}
-		else
-		{
-			// calc compound rotational matrices
-			pmodel->boneToPose[i] = pmodel->boneToPose[parent].ConcatTransforms( bonematrix );
-		}
-	}
-}
-
-void Grab_Triangles( s_model_t *pmodel )
-{
-	int	i, j, k;
-	int	ncount = 0;
-	float	vmin = 9999.0f;
-
-	// load the base triangles
-	while( 1 ) 
-	{
-		if( !GetLineInput( )) 
-			break;
-
-		// check for end
-		if( IsEnd( line )) 
-			break;
-
-		char		texturename[64];
-		s_mesh_t		*pmesh;
-		s_trianglevert_t	*ptriv;
-		int		bone;
-		Vector		vert[3];
-		Vector		norm[3];
-
-		Q_strncpy( texturename, line, sizeof( texturename ));
-
-		// strip off trailing smag
-		for( i = Q_strlen( texturename ) - 1; i >= 0 && !isgraph( texturename[i] ); i-- );
-		texturename[i + 1] = '\0';
-
-		// funky texture overrides
-		for( i = 0; i < numrep; i++ )  
-		{
-			if( sourcetexture[i][0] == '\0' ) 
-			{
-				Q_strncpy( texturename, defaulttexture[i], sizeof( texturename ));
-				break;
-			}
-
-			if( !Q_stricmp( texturename, sourcetexture[i] )) 
-			{
-				Q_strncpy( texturename, defaulttexture[i], sizeof( texturename ));
-				break;
-			}
-		}
-
-		if( texturename[0] == '\0' )
-		{
-			// weird model problem, skip them
-			GetLineInput();
-			GetLineInput();
-			GetLineInput();
-			continue;
-		}
-
-		if( Q_stristr( texturename, "null.bmp" ) || Q_stristr( texturename, "null.tga" ))
-		{
-			// skip all faces with the null texture on them.
-			GetLineInput();
-			GetLineInput();
-			GetLineInput();
-			continue;
-		}
-
-		COM_DefaultExtension( texturename, ".tga" ); // Crowbar decompiler issues
-		pmesh = LookupMesh( pmodel, texturename );
-
-		for( j = 0; j < 3; j++ ) 
-		{
-			if( pmodel->flip_triangles )
-				ptriv = LookupTriangle( pmesh, pmesh->numtris ) + 2 - j; // quake wants them in the reverse order
-			else ptriv = LookupTriangle( pmesh, pmesh->numtris ) + j;
-
-			if( !GetLineInput( )) 
-			{
-				COM_FatalError( "%s: error on line %d: %s", filename, linecount, line );
-			}
-
-			pmodel->srcvert.AddToTail();
-			s_srcvertex_t	*srcv = &pmodel->srcvert[pmodel->srcvert.Count() - 1];
-			int		iCount = 0, bones[MAXSTUDIOSRCBONES];
-			float		weights[MAXSTUDIOSRCBONES];
-			s_boneweight_t	boneWeight;
-
-			// clean memory before use to avoid bug
-			memset(srcv, 0, sizeof(*srcv));
-
-			// get support for Source bone weights description
-			i = sscanf( line, "%d %f %f %f %f %f %f %f %f %d %d %f %d %f %d %f %d %f",
-			&bone, 
-			&srcv->vert[0], &srcv->vert[1], &srcv->vert[2], 
-			&srcv->norm[0], &srcv->norm[1], &srcv->norm[2], 
-			&ptriv->u, &ptriv->v,
-			&iCount,
-			&bones[0], &weights[0], &bones[1], &weights[1], &bones[2], &weights[2], &bones[3], &weights[3] );
-
-			if( i < 9 ) continue; 
-
-			if( bone < 0 || bone >= pmodel->numbones ) 
-			{
-				COM_FatalError( "bogus bone index\n%d %s :\n%s", linecount, filename, line );
-			}
-
-			// continue parsing more bones.
-			if( iCount > MAXSTUDIOBONEWEIGHTS )
-			{
-				char	*token;
-				int	ctr = 0;
-
-				for( k = 0; k < 18; k++ )
-				{
-					while( line[ctr] == ' ' )
-					{
-						ctr++;
-					}
-
-					token = strtok( &line[ctr], " " );
-					ctr += Q_strlen( token ) + 1;
-				}
-
-				for( k = 4; k < iCount && k < MAXSTUDIOSRCBONES; k++ )
-				{
-					while( line[ctr] == ' ' )
-					{
-						ctr++;
-					}
-
-					token = strtok( &line[ctr], " " );
-					ctr += Q_strlen( token ) + 1;
-
-					bones[k] = verify_atoi( token );
-
-					token = strtok( &line[ctr], " " );
-					ctr += strlen( token ) + 1;
-			
-					weights[k] = verify_atof( token );
-				}
-			}
-
-			vmin = Q_min( srcv->vert.z, vmin );
-			srcv->skinref = pmesh->skinref;
-			srcv->vert *= pmodel->scale;
-
-			vert[j] = srcv->vert;
-			norm[j] = srcv->norm;
-
-			// initialize boneweigts
-			for( k = 0; k < MAXSTUDIOBONEWEIGHTS; k++ )
-			{
-				boneWeight.weight[k] = 0.0f;
-				boneWeight.bone[k] = -1;
-			}
-
-			if( i == 9 || iCount == 0 )
-			{
-				boneWeight.weight[0] = 1.0f;
-				boneWeight.bone[0] = bone;
-				boneWeight.numbones = 1;
-			}
-			else
-			{
-				iCount = SortAndBalanceBones( iCount, MAXSTUDIOBONEWEIGHTS, bones, weights );
-
-				if( allow_boneweights )
-				{
-					for( k = 0; k < iCount; k++ )
-					{
-						boneWeight.bone[k] = bound( 0, bones[k], MAXSTUDIOBONES - 1 );
-						boneWeight.weight[k] = weights[k];
-					}
-
-					boneWeight.numbones = iCount;
-					has_boneweights = true;
-				}
-				else
-				{
-					boneWeight.bone[0] = bones[0];
-					boneWeight.weight[0] = 1.0f;
-					boneWeight.numbones = 1;
-				}
-			}
-
-			srcv->localWeight = boneWeight;
-			ptriv->vertindex = ptriv->normindex = pmodel->srcvert.Count() - 1;
-
-			// tag bone as being used
-			// pmodel->bone[bone].ref = 1;
-		}
-
-		if( tag_reversed || tag_normals )
-		{
-			// check triangle direction
-			if( DotProduct( norm[0], norm[1] ) < 0 || DotProduct( norm[1], norm[2] ) < 0 || DotProduct( norm[2], norm[0] ) < 0 )
-			{
-				ncount++;
-
-				if( tag_normals ) 
-				{
-					// steal the triangle and make it white
-					s_trianglevert_t	*ptriv2;
-
-					pmesh = LookupMesh( pmodel, "#white.bmp" );
-					ptriv2 = LookupTriangle( pmesh, pmesh->numtris );
-
-					ptriv2[0] = ptriv[0];
-					ptriv2[1] = ptriv[1];
-					ptriv2[2] = ptriv[2];
-				}
-			} 
-			else 
-			{
-				Vector	a1, a2, sn;
-				float	x, y, z;
-
-				a1 = vert[1] - vert[0];
-				a2 = vert[2] - vert[0];
-				sn = CrossProduct( a1, a2 ).Normalize();
-
-				x = DotProduct( sn, norm[0] );
-				y = DotProduct( sn, norm[1] );
-				z = DotProduct( sn, norm[2] );
-
-				if( x < 0.0 || y < 0.0 || z < 0.0 ) 
-				{
-					if( tag_reversed ) 
-					{
-						// steal the triangle and make it white
-						s_trianglevert_t	*ptriv2;
-
-						MsgDev( D_INFO, "triangle reversed (%f %f %f)\n",
-							DotProduct( norm[0], norm[1] ),
-							DotProduct( norm[1], norm[2] ),
-							DotProduct( norm[2], norm[0] ));
-
-						pmesh = LookupMesh( pmodel, "#white.bmp" );
-						ptriv2 = LookupTriangle( pmesh, pmesh->numtris );
-
-						ptriv2[0] = ptriv[0];
-						ptriv2[1] = ptriv[1];
-						ptriv2[2] = ptriv[2];
-					}
-				}
-			}
-		}
-
-		pmesh->numtris++;
-	}
-
-	if( ncount ) MsgDev( D_WARN, "%d triangles with misdirected normals\n", ncount );
-	if( vmin != 0.0 ) MsgDev( D_REPORT, "lowest vector at %f\n", vmin );
-}
-
-bool Grab_AnimFrames( s_animation_t *panim )
-{
-	Vector	pos;
-	Radian	rot;
-	char	cmd[1024];
-	int	index, size;
-	int	t = -99999999;
-
-	size = panim->numbones * sizeof( s_bone_t );
-	panim->source.startframe = -1;
-	panim->source.endframe = 0;
-
-	while( GetLineInput( ))
-	{
-		if( sscanf( line, "%d %f %f %f %f %f %f", &index, &pos[0], &pos[1], &pos[2], &rot[0], &rot[1], &rot[2] ) == 7 )
-		{
-			if( panim->source.startframe < 0 )
-				COM_FatalError( "missing frame start(%d) : %s\n", linecount, line );
-
-			panim->rawanim[t][index].pos = pos;
-			panim->rawanim[t][index].rot = rot;
-			continue;
-		}
-
-		if( sscanf( line, "%1023s %d", cmd, &index ) == 0 )
-		{
-			COM_FatalError( "(%d) : %s", linecount, line );
-			continue;
-		}
-
-		if( !Q_stricmp( cmd, "time" )) 
-		{
-			t = index;
-
-			if( panim->source.startframe == -1 )
-				panim->source.startframe = t;
-
-			if( t < panim->source.startframe )
-				COM_FatalError( "frame error(%d) : %s\n", linecount, line );
-
-			if( t > panim->source.endframe )
-				panim->source.endframe = t;
-
-			t -= panim->source.startframe;
-
-			if( t > MAXSTUDIOANIMFRAMES )
-			{
-				MsgDev( D_ERROR, "animation %s has too many frames. Cutted at %d\n", panim->name, MAXSTUDIOANIMFRAMES );
-				panim->source.numframes = MAXSTUDIOANIMFRAMES - 1;
-				panim->source.endframe = MAXSTUDIOANIMFRAMES - 1;
-				return false;
-			}
-
-			if( panim->rawanim[t] != NULL )
-				continue;
-
-			panim->rawanim[t] = (s_bone_t *)Mem_Alloc( size );
-
-			// duplicate previous frames keys
-			if( t > 0 && panim->rawanim[t-1] )
-			{
-				for( int j = 0; j < panim->numbones; j++ )
-				{
-					panim->rawanim[t][j].pos = panim->rawanim[t-1][j].pos;
-					panim->rawanim[t][j].rot = panim->rawanim[t-1][j].rot;
-				}
-			}
-			continue;
-		}
-
-		if( !Q_stricmp( cmd, "end" )) 
-		{
-			panim->source.numframes = panim->source.endframe - panim->source.startframe + 1;
-
-			for( t = 0; t < panim->source.numframes; t++ )
-			{
-				if( panim->rawanim[t] == NULL )
-					COM_FatalError( "%s is missing frame %d\n", panim->name, t + panim->source.startframe );
-			}
-			return true;
-		}
-
-		COM_FatalError( "(%d) : %s", linecount, line );
-	}
-
-	COM_FatalError( "unexpected EOF: %s\n", panim->name );
-
-	return true;
-}
-
-void Grab_Skeleton( s_model_t *pmodel )
-{
-	Vector	pos;
-	Radian	rot;
-	char	cmd[1024];
-	int	index;
-
-	while( GetLineInput( ))
-	{
-		if( sscanf( line, "%d %f %f %f %f %f %f", &index, &pos.x, &pos.y, &pos.z, &rot.x, &rot.y, &rot.z ) == 7 )
-		{
-			pos *= pmodel->scale;
-			pmodel->skeleton[index].pos = pos;
-			pmodel->skeleton[index].rot = rot;
-		}
-		else if( sscanf( line, "%s %d", cmd, &index ))
-		{
-			if( !Q_strcmp( cmd, "time" )) 
-			{
-				// begin building skeleton
-			}
-			else if( !Q_strcmp( cmd, "end" )) 
-			{
-				Build_Reference( pmodel );
-				return;
-			}
-		}
-	}
-}
-
-int Grab_Nodes( s_node_t *pnodes )
-{
-	int	index, parent;
-	int	numbones = 0;
-	char	name[1024];
-
-	for( index = 0; index < MAXSTUDIOSRCBONES; index++ )
-		pnodes[index].parent = -1;
-
-	while( GetLineInput( ))
-	{
-		if( sscanf( line, "%d \"%[^\"]\" %d", &index, name, &parent ) == 3 )
-		{
-			Q_strncpy( pnodes[index].name, name, sizeof( pnodes[0].name ));
-			pnodes[index].parent = parent;
-			numbones = Q_max( numbones, index );
-		}
-		else 
-		{
-			return numbones + 1;
-		}
-	}
-
-	COM_FatalError( "Unexpected EOF at line %d\n", linecount );
-
-	return 0;
-}
-
+//-----------------------------------------------------------------------------
+// Purpose: import reference mesh through format-agnostic source interface
+//-----------------------------------------------------------------------------
 void Grab_Studio( s_model_t *pmodel )
 {
-	char	cmd[1024];
-	int	option;
-
-	Q_snprintf( filename, sizeof( filename ), "%s/%s", cddir[numdirs], pmodel->name );
-	COM_DefaultExtension( filename, ".smd" );
-
-	if( !COM_FileExists( filename ))
-		COM_FatalError( "%s doesn't exist\n", filename );
-
-	if(( input = fopen( filename, "r" )) == 0 )
-		COM_FatalError( "%s couldn't be open\n", filename );
-
-	MsgDev( D_INFO, "grabbing: %s.smd\t\t[^1mesh^7]\n", pmodel->name );
-	linecount = 0;
-
-	while( GetLineInput( ))
-	{
-		int	numRead = sscanf( line, "%s %d", cmd, &option );
-
-		// blank line
-		if(( numRead == EOF ) || ( numRead == 0 ))
-			continue;
-
-		if( !Q_strcmp( cmd, "version" ))
-		{
-			if( option != 1 )
-				COM_FatalError( "%s version %i should be 1\n", filename, option );
-		}
-		else if( !Q_strcmp( cmd, "nodes" ))
-		{
-			pmodel->numbones = Grab_Nodes( pmodel->localBone );
-		}
-		else if( !Q_strcmp( cmd, "skeleton" ))
-		{
-			Grab_Skeleton( pmodel );
-		}
-		else if( !Q_strcmp( cmd, "triangles" ))
-		{
-			Grab_Triangles( pmodel );
-		}
-		else 
-		{
-			MsgDev( D_WARN, "unknown studio command\n" );
-		}
-	}
-
-	fclose( input );
+	CSourcePtr source = CreateStudioSource( pmodel->name );
+	source->GrabStudio( pmodel );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: import animation through format-agnostic source interface
+//-----------------------------------------------------------------------------
 void Grab_Animation( const char *name, s_animation_t *panim )
 {
-	char	cmd[1024];
-	int	option;
-
-	Q_snprintf( filename, sizeof( filename ), "%s/%s", cddir[numdirs], name );
-	COM_DefaultExtension( filename, ".smd" );
-
-	if( !COM_FileExists( filename ))
-		COM_FatalError ("%s doesn't exist\n", filename);
-
-	if(( input = fopen( filename, "r" )) == 0 )
-		COM_FatalError( "%s couldn't be open\n", filename );
-	linecount = 0;
-
-	while( GetLineInput( ))
-	{
-		sscanf( line, "%s %d", cmd, &option );
-		if( !Q_strcmp( cmd, "version" ))
-		{
-			if( option != 1 )
-				COM_FatalError( "%s version %i should be 1\n", filename, option );
-		}
-		else if( !Q_strcmp( cmd, "nodes" ))
-		{
-			panim->numbones = Grab_Nodes( panim->localBone );
-		}
-		else if( !Q_strcmp( cmd, "skeleton" ))
-		{
-			if( !Grab_AnimFrames( panim ))
-				break; // animation was cutted
-		}
-		else 
-		{
-			// some artists use mesh reference as default animation
-			if( Q_strcmp( cmd, "triangles" ))
-				MsgDev( D_WARN, "unknown studio command\n" );
-
-			while( GetLineInput( ))
-			{
-				if( IsEnd( line ))
-					break;
-			}
-		}
-	}
-
-	fclose( input );
+	CSourcePtr source = CreateStudioSource( name );
+	source->GrabAnimation( panim );
 }
 
 void Cmd_Eyeposition( void )
@@ -5487,7 +4840,7 @@ static void WaitForKey()
 	Sys_WaitForKeyInput();
 }
 
-static vfile_t *GenerateModelScript(const char *modelName)
+static vfile_t *GenerateModelScript(const char *modelName, const char *extension)
 {
 	vfile_t *file = VFS_Create( NULL, 0 );
 	if (file)
@@ -5502,8 +4855,8 @@ static vfile_t *GenerateModelScript(const char *modelName)
 		VFS_Printf( file, "\n$freecoords\n" );
 		VFS_Printf( file, "\n$origin 0 0 0\n\n" );
 		VFS_Printf( file, "\n//reference mesh(es)" );
-		VFS_Printf( file, "\n$body \"body\" \"%s.smd\"", modelName );
-		VFS_Printf( file, "\n$sequence \"%s\" \"%s\" fps 30 loop", modelName, modelName );
+		VFS_Printf( file, "\n$body \"body\" \"%s.%s\"", modelName, extension );
+		VFS_Printf( file, "\n$sequence \"%s\" \"%s.%s\" fps 30 loop", modelName, modelName, extension );
 		VFS_Printf( file, "\n\n" );
 		VFS_Printf( file, "// End of QC script.\n" );
 	}
@@ -5622,13 +4975,15 @@ int main( int argc, char **argv )
 	COM_DefaultExtension( path, ".qc" );
 	COM_StripExtension( outname );
 
-	if (Q_strcmp(COM_FileExtension(path), "smd") == 0) 
+	const char *extension = COM_FileExtension( path );
+
+	if( !Q_stricmp( extension, "smd" ) || !Q_stricmp( extension, "gltf" ) || !Q_stricmp( extension, "glb" ))
 	{	
 		char modelName[64];
 		COM_FileBase(path, modelName);
-		MsgDev(D_INFO, "Single SMD-file mode, autogenerating QC-script\n");
+		MsgDev(D_INFO, "Single %s-file mode, autogenerating QC-script\n", extension);
 
-		vfile_t *file = GenerateModelScript(modelName);
+		vfile_t *file = GenerateModelScript(modelName, extension);
 		if (!file) {
 			COM_FatalError("failed to autogenerate QC-script");
 		}
