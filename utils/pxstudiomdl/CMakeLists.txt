@@ -16,10 +16,13 @@ list(APPEND DIR_SOURCES
 	"../common/virtualfs.cpp"
 	"../common/zone.cpp"
 	"${CMAKE_SOURCE_DIR}/public/crclib.cpp"
+	"gltf_source.cpp"
 	"image_utils.cpp"
+	"model_source.cpp"
 	"optimize.cpp"
     "simpilfy.cpp"
     "skin.cpp"
+    "smd_source.cpp"
     "studiomdl.cpp"
     "write.cpp"
 )
@@ -88,6 +91,9 @@ endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE
 	imagelib
 )
+
+find_path(CGLTF_INCLUDE_DIRS "cgltf.h")
+target_include_directories(${PROJECT_NAME} PRIVATE ${CGLTF_INCLUDE_DIRS})
 
 # link platform-specific depedency libraries
 if(NOT XASH_WIN32)

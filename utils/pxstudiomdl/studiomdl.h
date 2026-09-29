@@ -1,3 +1,5 @@
+#pragma once
+
 #include <utlarray.h>
 #include "mathlib.h"
 #include <cstring>
@@ -24,6 +26,10 @@
 
 #define verify_atof( a )		verify_atof_dbg( a, __LINE__ )
 #define verify_atoi( a )		verify_atoi_dbg( a, __LINE__ )
+
+int verify_atoi_dbg( const char *token, const int line );
+float verify_atof_dbg( const char *token, const int line );
+float verify_atof_with_null( const char *token );
 
 EXTERN	char	outname[1024];
 EXTERN	bool	cdset;
