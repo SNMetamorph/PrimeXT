@@ -40,6 +40,12 @@ void Grab_Skin( s_texture_t *ptexture )
 	{
 		pic = ImageUtils::LoadImageMemory( ptexture->name, white_bmp, sizeof( white_bmp ));
 	}
+	else if( ptexture->pembedded )
+	{
+		// texture data is embedded in the source file (glTF/GLB bufferView)
+		pic = ImageUtils::LoadImageMemoryAuto( ptexture->name, ptexture->pembedded, ptexture->embeddsize );
+		if( !pic ) MsgDev( D_ERROR, "unable to decode embedded texture %s\n", ptexture->name );
+	}
 	else
 	{
 		if( cdtextureset )

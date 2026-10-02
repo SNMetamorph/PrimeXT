@@ -96,6 +96,39 @@ static void GetTextureName( const cgltf_mesh *mesh, const cgltf_primitive *prim,
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: attach a base-color image embedded in the source file (bufferView)
+//          to the given texture so Grab_Skin can decode it without a file
+//-----------------------------------------------------------------------------
+static void AttachEmbeddedImage( int texIndex, const cgltf_material *material )
+{
+	if( texIndex < 0 || texIndex >= g_numtextures || g_texture[texIndex].pembedded != nullptr )
+		return;
+
+	if( material == nullptr || !material->has_pbr_metallic_roughness )
+		return;
+
+	const cgltf_texture *tex = material->pbr_metallic_roughness.base_color_texture.texture;
+
+	if( tex == nullptr || tex->image == nullptr || tex->image->buffer_view == nullptr )
+		return;
+
+	const cgltf_buffer_view *view = tex->image->buffer_view;
+	const uint8_t *data = cgltf_buffer_view_data( view );
+
+	if( data == nullptr || view->size == 0 )
+		return;
+
+	byte *copy = (byte *)Mem_Alloc( view->size );
+	memcpy( copy, data, view->size );
+
+	g_texture[texIndex].pembedded = copy;
+	g_texture[texIndex].embeddsize = (int)view->size;
+
+	MsgDev( D_INFO, "embedded texture: %s (%i bytes, %s)\n", g_texture[texIndex].name, (int)view->size,
+		( tex->image->mime_type && tex->image->mime_type[0] ) ? tex->image->mime_type : "unknown" );
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: convert glTF node world matrix (Y-up, column-major) to GoldSrc matrix3x4 (Z-up)
 //-----------------------------------------------------------------------------
 static matrix3x4 GlTFNodeWorldGold( const cgltf_node *node )
@@ -389,6 +422,7 @@ void CGltfSource::GrabStudio( s_model_t *pmodel )
 
 			GetTextureName( mesh, prim, texturename, sizeof( texturename ));
 			pmesh = LookupMesh( pmodel, texturename );
+			AttachEmbeddedImage( pmesh->skinref, prim->material );
 
 			cgltf_size indexCount = prim->indices ? prim->indices->count : posAcc->count;
 
