@@ -132,7 +132,10 @@ void ClearModel( void )
 		Mem_Free( g_xnodename[i] );
 
 	for( i = 0; i < g_numtextures; i++ )
+	{
 		Mem_Free( g_texture[i].pdata );
+		Mem_Free( g_texture[i].pembedded );
+	}
 
 	memset( g_xnode, 0, sizeof( g_xnode ));
 	memset( g_xnodename, 0, sizeof( g_xnodename ));

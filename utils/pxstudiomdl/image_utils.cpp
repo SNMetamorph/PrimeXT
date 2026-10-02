@@ -94,6 +94,42 @@ rgbdata_t *ImageUtils::LoadImageMemory( const char *filename, const byte *buf, s
 
 /*
 ================
+ImageUtils::LoadImageMemoryAuto
+
+detect the image format by its magic bytes; required for embedded
+textures that carry no meaningful file extension (e.g. from .glb)
+================
+*/
+rgbdata_t *ImageUtils::LoadImageMemoryAuto( const char *filename, const byte *buf, size_t fileSize )
+{
+	if( !buf || fileSize < 4 )
+		return NULL;
+
+	// PNG
+	if( fileSize >= 8 && buf[0] == 0x89 && buf[1] == 'P' && buf[2] == 'N' && buf[3] == 'G' )
+		return Image_LoadPNG( filename, buf, fileSize );
+
+	// BMP
+	if( buf[0] == 'B' && buf[1] == 'M' )
+		return Image_LoadBMP( filename, buf, fileSize );
+
+	// DDS
+	if( buf[0] == 'D' && buf[1] == 'D' && buf[2] == 'S' && buf[3] == ' ' )
+		return Image_LoadDDS( filename, buf, fileSize );
+
+	// JPEG (not supported by imagelib)
+	if( buf[0] == 0xFF && buf[1] == 0xD8 && buf[2] == 0xFF )
+	{
+		MsgDev( D_ERROR, "LoadImageMemoryAuto: JPEG textures are not supported (%s)\n", filename );
+		return NULL;
+	}
+
+	// fall back to extension-based detection
+	return LoadImageMemory( filename, buf, fileSize );
+}
+
+/*
+================
 Image_ApplyPaletteGamma
 
 we can't store alpha-channel into 8-bit texture

@@ -23,6 +23,7 @@ namespace ImageUtils
 {
 	rgbdata_t *LoadImageFile(const char *filename);
 	rgbdata_t *LoadImageMemory(const char *filename, const byte *buf, size_t fileSize);
+	rgbdata_t *LoadImageMemoryAuto(const char *filename, const byte *buf, size_t fileSize);
 	void ApplyPaletteGamma(rgbdata_t *pic);
 };
 

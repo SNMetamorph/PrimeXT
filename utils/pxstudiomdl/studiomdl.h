@@ -668,6 +668,8 @@ typedef struct
 	float		fskinwidth = 0.0f;
 	float		fskinheight = 0.0f;
 	void		*pdata = nullptr;
+	byte		*pembedded = nullptr;	// raw encoded image embedded in a source file (glTF/GLB bufferView)
+	int		embeddsize = 0;
 	int		size = 0;
 	int		parent = 0;
 } s_texture_t;
