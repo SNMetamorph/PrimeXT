@@ -650,26 +650,26 @@ EXTERN int		g_numxnodeskips;
 // FIXME: what about texture overrides inline with loading models
 typedef struct 
 {
-	char		name[MAXSRCSTUDIONAME];
-	int		flags;
-	int		srcwidth;
-	int		srcheight;
-	struct rgbdata_s	*psrc;
-	float		max_s;
-	float		min_s;
-	float		max_t;
-	float		min_t;
-	int		skintop;
-	int		skinleft;
-	int		skinwidth;
-	int		skinheight;
-	float		fskintop;
-	float		fskinleft;
-	float		fskinwidth;
-	float		fskinheight;
-	void		*pdata;
-	int		size;
-	int		parent;
+	char		name[MAXSRCSTUDIONAME] = {};
+	int		flags = 0;
+	int		srcwidth = 0;
+	int		srcheight = 0;
+	struct rgbdata_s	*psrc = nullptr;
+	float		max_s = 0.0f;
+	float		min_s = 0.0f;
+	float		max_t = 0.0f;
+	float		min_t = 0.0f;
+	int		skintop = 0;
+	int		skinleft = 0;
+	int		skinwidth = 0;
+	int		skinheight = 0;
+	float		fskintop = 0.0f;
+	float		fskinleft = 0.0f;
+	float		fskinwidth = 0.0f;
+	float		fskinheight = 0.0f;
+	void		*pdata = nullptr;
+	int		size = 0;
+	int		parent = 0;
 } s_texture_t;
 
 EXTERN s_texture_t		g_texture[MAXSTUDIOSKINS];
