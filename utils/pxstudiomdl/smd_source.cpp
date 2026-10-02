@@ -160,7 +160,7 @@ void CSmdSource::Grab_Skeleton( s_model_t *pmodel )
 			pmodel->skeleton[index].pos = pos;
 			pmodel->skeleton[index].rot = rot;
 		}
-		else if( sscanf( m_line.data(), "%s %d", cmd, &index ))
+		else if( sscanf( m_line.data(), "%s %d", cmd, &index ) == 2 )
 		{
 			if( !Q_strcmp( cmd, "time" )) 
 			{
@@ -450,7 +450,7 @@ bool CSmdSource::Grab_AnimFrames( s_animation_t *panim )
 			continue;
 		}
 
-		if( sscanf( m_line.data(), "%1023s %d", cmd, &index ) == 0 )
+		if( sscanf( m_line.data(), "%1023s %d", cmd, &index ) < 1 )
 		{
 			COM_FatalError( "(%d) : %s", m_linecount, m_line.data());
 			continue;
