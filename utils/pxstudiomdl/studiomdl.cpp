@@ -139,7 +139,9 @@ void ClearModel( void )
 	memset( g_xnodeskip, 0, sizeof( g_xnodeskip ));
 	g_numxnodes = g_numxnodeskips = 0;
 
-	memset( g_texture, 0, sizeof( g_texture ));
+	for( i = 0; i < MAXSTUDIOSKINS; i++ )
+		g_texture[i] = s_texture_t();
+
 	g_numtextures = 0;
 
 	memset( g_sequencegroup, 0, sizeof( g_sequencegroup ));
