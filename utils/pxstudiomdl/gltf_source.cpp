@@ -46,6 +46,13 @@ namespace
 		float r[4];
 		float s[3];
 	};
+
+	struct GltfMeshInstance
+	{
+		const cgltf_node *node;
+		const cgltf_mesh *mesh;
+		matrix3x4 worldGold;
+	};
 }
 
 //-----------------------------------------------------------------------------
@@ -143,6 +150,121 @@ static matrix3x4 GlTFNodeWorldGold( const cgltf_node *node )
 		m[4],  -m[6],  m[5],
 		m[8],  -m[10], m[9],
 		m[12], -m[14], m[13] );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: find the bone (skin joint) a node is attached to, by walking up its
+//          parents; returns 0 (root bone) when the node isn't under any joint
+//-----------------------------------------------------------------------------
+static int FindAncestorJoint( const cgltf_node *node, const cgltf_skin *skin )
+{
+	for( const cgltf_node *p = node->parent; p != nullptr; p = p->parent )
+	{
+		for( cgltf_size i = 0; i < skin->joints_count; i++ )
+		{
+			if( skin->joints[i] == p )
+				return (int)i;
+		}
+	}
+
+	return 0;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: transform a normal by a general affine transform: normals use the
+//          inverse of the linear part (not the transpose), then normalize
+//-----------------------------------------------------------------------------
+static Vector TransformNormal( const matrix3x4 &m, const Vector &n )
+{
+	const Vector &a = m.mat[0];
+	const Vector &b = m.mat[1];
+	const Vector &c = m.mat[2];
+	float det = DotProduct( a, CrossProduct( b, c ));
+	Vector out;
+
+	if( fabs( det ) < 1e-8f )
+	{
+		out = m.VectorRotate( n );
+	}
+	else
+	{
+		out = ( CrossProduct( b, c ) * n.x + CrossProduct( c, a ) * n.y + CrossProduct( a, b ) * n.z ) * ( 1.0f / det );
+	}
+
+	float len = out.Length();
+	if( len > 1e-8f )
+		out = out * ( 1.0f / len );
+
+	return out;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: collect mesh instances reachable from the default scene, each with
+//          its node world transform (glTF meshes are templates placed by nodes)
+//-----------------------------------------------------------------------------
+static void AddMeshInstance( const cgltf_node *node, std::vector<GltfMeshInstance> &out )
+{
+	GltfMeshInstance inst;
+	inst.node = node;
+	inst.mesh = node->mesh;
+	inst.worldGold = GlTFNodeWorldGold( node );
+	out.push_back( inst );
+}
+
+static void CollectMeshInstancesFromNode( const cgltf_data *data, const cgltf_node *node, std::vector<bool> &visited, std::vector<GltfMeshInstance> &out )
+{
+	if( node == nullptr )
+		return;
+
+	cgltf_size index = (cgltf_size)( node - data->nodes );
+	if( index >= data->nodes_count || visited[index] )
+		return;
+
+	visited[index] = true;
+
+	if( node->mesh )
+		AddMeshInstance( node, out );
+
+	for( cgltf_size i = 0; i < node->children_count; i++ )
+		CollectMeshInstancesFromNode( data, node->children[i], visited, out );
+}
+
+static void CollectMeshInstances( const cgltf_data *data, const matrix3x4 &fallback, std::vector<GltfMeshInstance> &out )
+{
+	const cgltf_scene *scene = data->scene;
+	if( scene == nullptr && data->scenes_count > 0 )
+		scene = &data->scenes[0];
+
+	if( scene != nullptr )
+	{
+		std::vector<bool> visited( data->nodes_count, false );
+
+		for( cgltf_size i = 0; i < scene->nodes_count; i++ )
+			CollectMeshInstancesFromNode( data, scene->nodes[i], visited, out );
+	}
+
+	// fallback: nodes not reachable from the default scene
+	if( out.empty() )
+	{
+		for( cgltf_size i = 0; i < data->nodes_count; i++ )
+		{
+			if( data->nodes[i].mesh )
+				AddMeshInstance( &data->nodes[i], out );
+		}
+	}
+
+	// ultimate fallback: file has meshes but no node references them
+	if( out.empty() )
+	{
+		for( cgltf_size i = 0; i < data->meshes_count; i++ )
+		{
+			GltfMeshInstance inst;
+			inst.node = nullptr;
+			inst.mesh = &data->meshes[i];
+			inst.worldGold = fallback;
+			out.push_back( inst );
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -366,6 +488,12 @@ void CGltfSource::GrabStudio( s_model_t *pmodel )
 		COM_FatalError( "glTF file %s was not loaded\n", m_filename.c_str());
 
 	cgltf_data *data = m_data.get();
+
+	if( data->skins_count > 1 )
+	{
+		COM_FatalError( "glTF file %s has %d skins, but only a single skin is supported\n", m_filename.c_str(), (int)data->skins_count );
+	}
+
 	const cgltf_skin *skin = ( data->skins_count > 0 ) ? &data->skins[0] : nullptr;
 
 	if( !skin || !BuildSkinSkeleton( skin, pmodel->localBone, pmodel->skeleton, pmodel->numbones ))
@@ -383,9 +511,13 @@ void CGltfSource::GrabStudio( s_model_t *pmodel )
 	// glTF is Y-up while GoldSrc is Z-up: rotate all geometry 90 degrees around X
 	matrix3x4 convert = matrix3x4( g_vecZero, Radian( M_PI / 2.0f, 0.0f, 0.0f ));
 
-	for( cgltf_size mi = 0; mi < data->meshes_count; mi++ )
+	std::vector<GltfMeshInstance> instances;
+	CollectMeshInstances( data, convert, instances );
+
+	for( size_t ii = 0; ii < instances.size(); ii++ )
 	{
-		const cgltf_mesh *mesh = &data->meshes[mi];
+		const cgltf_node *node = instances[ii].node;
+		const cgltf_mesh *mesh = instances[ii].mesh;
 
 		for( cgltf_size pi = 0; pi < mesh->primitives_count; pi++ )
 		{
@@ -415,7 +547,14 @@ void CGltfSource::GrabStudio( s_model_t *pmodel )
 			if( posAcc == nullptr )
 				continue;
 
-			bool skinned = ( skin != nullptr && jointAcc != nullptr && weightAcc != nullptr );
+			bool skinned = ( skin != nullptr && jointAcc != nullptr && weightAcc != nullptr &&
+				( node == nullptr || node->skin == skin ));
+			matrix3x4 xform = skinned ? convert : instances[ii].worldGold;
+
+			// a non-skinned mesh placed under a joint follows that bone rigidly
+			int attachBone = 0;
+			if( !skinned && skin != nullptr && node != nullptr )
+				attachBone = FindAncestorJoint( node, skin );
 
 			char		texturename[64];
 			s_mesh_t	*pmesh;
@@ -461,10 +600,14 @@ void CGltfSource::GrabStudio( s_model_t *pmodel )
 						uv[j][1] = 0.0f; 
 					}
 
-					vpos[j] = convert.VectorTransform( Vector( p[0], p[1], p[2] ));
-					vnorm[j] = convert.VectorRotate( Vector( n[0], n[1], n[2] ));
+					vpos[j] = xform.VectorTransform( Vector( p[0], p[1], p[2] ));
 
-					bones[j][0] = 0;
+					if( skinned )
+						vnorm[j] = convert.VectorRotate( Vector( n[0], n[1], n[2] ));
+					else
+						vnorm[j] = TransformNormal( xform, Vector( n[0], n[1], n[2] ));
+
+					bones[j][0] = attachBone;
 					weights[j][0] = 1.0f;
 
 					if( skinned )
