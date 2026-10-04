@@ -368,7 +368,7 @@ void CGltfSource::GrabStudio( s_model_t *pmodel )
 	cgltf_data *data = m_data.get();
 	const cgltf_skin *skin = ( data->skins_count > 0 ) ? &data->skins[0] : nullptr;
 
-	if( !BuildSkinSkeleton( skin, pmodel->localBone, pmodel->skeleton, pmodel->numbones ))
+	if( !skin || !BuildSkinSkeleton( skin, pmodel->localBone, pmodel->skeleton, pmodel->numbones ))
 	{
 		// no skeleton: bind everything to a single root bone
 		pmodel->numbones = 1;
