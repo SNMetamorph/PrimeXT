@@ -40,7 +40,7 @@ int		g_smodels_total;			// cookie
 sortedmesh_t	g_sorted_meshes[1024];		// sorted meshes
 
 matrix3x4		m_protationmatrix;
-Vector2D		g_chrome[MAXSTUDIOVERTS];		// texture coords for surface normals
+CUtlArray<Vector2D>	g_chrome;			// texture coords for surface normals
 int		g_chromeage[MAXSTUDIOBONES];		// last time chrome vectors were updated
 Vector		g_chromeup[MAXSTUDIOBONES];		// chrome vector "up" in bone reference frames
 Vector		g_chromeright[MAXSTUDIOBONES];	// chrome vector "right" in bone reference frames
@@ -1249,6 +1249,7 @@ void StudioModel::DrawPoints ( bool bWireframe )
 	g_xformverts.SetSize(m_pmodel->numverts);
 	g_xformnorms.SetSize(m_pmodel->numnorms);
 	g_lightvalues.SetSize(m_pmodel->numnorms);
+	g_chrome.SetSize(m_pmodel->numnorms);
 
 	if( FBitSet( m_pstudiohdr->flags, STUDIO_HAS_BONEWEIGHTS ) && m_pmodel->blendvertinfoindex != 0 && m_pmodel->blendnorminfoindex != 0 )
 	{
