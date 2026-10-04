@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#include <limits.h>
 #include "port.h"
 #include "cmdlib.h"
 #include "mathlib.h"
@@ -436,8 +437,14 @@ int LookupNormal( s_model_t *pmodel, s_srcvertex_t *srcv )
 	pmodel->norm[k].globalWeight = srcv->globalWeight;
 	pmodel->norm[k].skinref = srcv->skinref;
 
-	if (k == MAXSTUDIOVERTS) {
-		MsgDev(D_WARN, "exceed MAXSTUDIOVERTS limit in model: \"%s\"\nModel may not work with some mods or software (except PrimeXT)\n", pmodel->name);
+	if( k == MAXSTUDIOVERTS ) {
+		Msg( "exceed MAXSTUDIOVERTS limit in model \"%s\"\: it may not work properly anywhere but in PrimeXT\n", pmodel->name );
+	}
+
+	// the studio command list stores vertex/normal indices as 16-bit signed values,
+	// so a submodel can't reference more than SHRT_MAX + 1 unique entries
+	if( k > SHRT_MAX ) {
+		COM_FatalError( "too many unique normals in model \"%s\": %d (max %d)\n", pmodel->name, k + 1, SHRT_MAX + 1 );
 	}
 
 	return k;
@@ -460,8 +467,14 @@ int LookupVertex( s_model_t *pmodel, s_srcvertex_t *srcv )
 	pmodel->vert[k].org = srcv->vert;
 	pmodel->vert[k].globalWeight = srcv->globalWeight;
 
-	if (k == MAXSTUDIOVERTS) {
-		MsgDev(D_WARN, "exceed MAXSTUDIOVERTS limit in model: \"%s\"\nModel may not work with some mods or software (except PrimeXT)\n", pmodel->name);
+	if( k == MAXSTUDIOVERTS ) {
+		Msg( "exceed MAXSTUDIOVERTS limit in model \"%s\"\: it may not work properly anywhere but in PrimeXT\n", pmodel->name );
+	}
+
+	// the studio command list stores vertex/normal indices as 16-bit signed values,
+	// so a submodel can't reference more than SHRT_MAX + 1 unique entries
+	if( k > SHRT_MAX ) {
+		COM_FatalError( "too many unique vertices in model \"%s\": %d (max %d). Reduce the mesh or split it into multiple bodyparts\n", pmodel->name, k + 1, SHRT_MAX + 1 );
 	}
 
 	return k;
