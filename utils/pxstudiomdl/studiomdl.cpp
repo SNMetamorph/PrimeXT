@@ -4999,6 +4999,7 @@ int main( int argc, char **argv )
 	{	
 		char modelName[64];
 		COM_FileBase(path, modelName);
+		g_singlefilemode = true;
 		MsgDev(D_INFO, "Single %s-file mode, autogenerating QC-script\n", extension);
 
 		vfile_t *file = GenerateModelScript(modelName, extension);
