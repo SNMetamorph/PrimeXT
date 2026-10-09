@@ -28,7 +28,6 @@ int			g_numskynormals[SKYLEVELMAX+1];
 vec3_t		*g_skynormals[SKYLEVELMAX+1];
 patch_t		*g_patches;
 uint		g_num_patches;
-static vec3_t	(*emitlight)[MAXLIGHTMAPS];
 static vec3_t	(*addlight)[MAXLIGHTMAPS];
 static byte	(*newstyles)[MAXLIGHTMAPS];
 #ifdef HLRAD_DELUXEMAPPING
@@ -82,6 +81,7 @@ int			g_skystyle = -1;
 bool		g_perpixelsky = false;
 bool		g_usingpatches = true;
 bool		g_patchaa = false;
+int			g_curbounce = 0;
 
 
 
@@ -2399,21 +2399,31 @@ void CollectLight( void )
 	patch_t	*patch;
 	int	i, j;
 
-	for( i = 0, patch = g_patches; i < g_num_patches; i++, patch++ )
-	{
-		for( j = 0; j < MAXLIGHTMAPS && newstyles[i][j] != 255; j++ )
+	if( g_curbounce == g_numbounce )
+	{		
+		for( i = 0, patch = g_patches; i < g_num_patches; i++, patch++ )
 		{
-			VectorAdd( patch->totallight[j], addlight[i][j], patch->totallight[j] );
-			VectorScale( addlight[i][j], TRANSFER_SCALE, emitlight[i][j] );
-			VectorClear( addlight[i][j] );
+			for( j = 0; j < MAXLIGHTMAPS && newstyles[i][j] != 255; j++ )
+			{
+				VectorAdd( patch->directlight[j], addlight[i][j], patch->totallight[j] );
 #ifdef HLRAD_DELUXEMAPPING
-			VectorAdd( patch->totallight_dir[j], addlight_dir[i][j], patch->totallight_dir[j] );
-			VectorClear( addlight_dir[i][j] );
+				VectorAdd( patch->directlight_dir[j], addlight_dir[i][j], patch->totallight_dir[j] );
 #endif
-		}
-
-		// store new styles back into patch
-		memcpy( g_patches[i].totalstyle, newstyles[i], sizeof( byte[MAXLIGHTMAPS] ));
+			}
+			memcpy( g_patches[i].totalstyle, newstyles[i], sizeof( byte[MAXLIGHTMAPS] ));
+		}	
+	}
+	else
+	{
+		for( i = 0, patch = g_patches; i < g_num_patches; i++, patch++ )
+		{
+			for( j = 0; j < MAXLIGHTMAPS && newstyles[i][j] != 255; j++ )
+			{
+				VectorAdd( patch->directlight[j], addlight[i][j], patch->totallight[j] );
+				VectorMultiply( patch->totallight[j], patch->reflectivity, patch->totallight[j] );
+			}
+			memcpy( g_patches[i].totalstyle, newstyles[i], sizeof( byte[MAXLIGHTMAPS] ));
+		}			
 	}
 }
 
@@ -2430,6 +2440,9 @@ void BounceLight( int threadnum )
 	int	j, k, m;
 	patch_t	*patch;
 	vec3_t	v;
+#ifdef HLRAD_DELUXEMAPPING
+	vec3_t	direction;
+#endif	
 
 	while( 1 )
 	{
@@ -2445,7 +2458,7 @@ void BounceLight( int threadnum )
 
 		const dplane_t *plane1 = GetPlaneFromFace( patch->faceNumber );
 
-		for( m = 0; m < MAXLIGHTMAPS && newstyles[j][m] != 255; m++ )
+		for( m = 0; m < MAXLIGHTMAPS; m++ )
 			VectorClear( addlight[j][m] );
 
 		for( k = 0; k < iIndex; k++, tIndex++ )
@@ -2464,18 +2477,19 @@ void BounceLight( int threadnum )
 
 				patch_t	*emitpatch = &g_patches[patchnum];
 #ifdef HLRAD_DELUXEMAPPING
-				vec3_t	direction;
-
-				VectorSubtract( emitpatch->origin, patch->origin, direction );
-
-				if( DotProduct( direction, plane1->normal ) <= 0.0f )	//vector between origins can be negative, have to fix it
-				{
-					vec3_t	origin2;
-					GetAlternateOrigin( patch->origin, plane1->normal, emitpatch, origin2 );
-					VectorSubtract( origin2, patch->origin, direction );
+				if( g_curbounce == g_numbounce )
+				{				
+					VectorSubtract( emitpatch->origin, patch->origin, direction );
+	
+					if( DotProduct( direction, plane1->normal ) <= 0.0f )	//vector between origins can be negative, have to fix it
+					{
+						vec3_t	origin2;
+						GetAlternateOrigin( patch->origin, plane1->normal, emitpatch, origin2 );
+						VectorSubtract( origin2, patch->origin, direction );
+					}
+	
+					VectorNormalize( direction );
 				}
-
-				VectorNormalize( direction );
 #endif
 				// for each style on the emitting patch
 				for( int emitstyle = 0; emitstyle < MAXLIGHTMAPS && emitpatch->totalstyle[emitstyle] != 255; emitstyle++ )
@@ -2489,8 +2503,7 @@ void BounceLight( int threadnum )
 
 					if( m < MAXLIGHTMAPS )
 					{
-						VectorScale( emitlight[patchnum][emitstyle], (float)(*tData), v );
-						VectorMultiply( v, emitpatch->reflectivity, v );
+						VectorScale( emitpatch->totallight[emitstyle], (float)(*tData), v );
 
 						if( !VectorIsFinite( v )) continue;
 
@@ -2499,8 +2512,11 @@ void BounceLight( int threadnum )
 
 						VectorAdd( addlight[j][m], v, addlight[j][m] );
 #ifdef HLRAD_DELUXEMAPPING
-						vec_t	brightness = VectorAvg( v );
-						VectorMA( addlight_dir[j][m], brightness, direction, addlight_dir[j][m] );
+						if( g_curbounce == g_numbounce )
+						{						
+							vec_t	brightness = VectorAvg( v );
+							VectorMA( addlight_dir[j][m], brightness, direction, addlight_dir[j][m] );
+						}
 #endif
 					}
 					else
@@ -2530,13 +2546,17 @@ void BounceLight( void )
 
 		for( j = 0; j < MAXLIGHTMAPS && g_patches[i].totalstyle[j] != 255; j++ )
 		{
-			VectorScale( patch->totallight[j], TRANSFER_SCALE, emitlight[i][j] );
+			VectorCopy( patch->directlight[j], patch->totallight[j] );
+#ifdef HLRAD_DELUXEMAPPING
+			VectorClear( addlight_dir[i][j] );
+#endif
 		}
 		memcpy( newstyles[i], g_patches[i].totalstyle, sizeof( byte[MAXLIGHTMAPS] ));
 	}
 
 	for( i = 0; i < g_numbounce; i++ )
 	{
+		g_curbounce = i + 1;
 		RunThreadsOnIncremental( g_num_patches, true, BounceLight, i + 1 );
 		CollectLight();
 	}
@@ -2620,7 +2640,6 @@ void RadWorld( void )
 		// build transfer lists	
 		MakeTransfers();
 
-		emitlight = (vec3_t (*)[MAXLIGHTMAPS])Mem_Alloc(( g_num_patches + 1 ) * sizeof( vec3_t[MAXLIGHTMAPS] ));
 		addlight = (vec3_t (*)[MAXLIGHTMAPS])Mem_Alloc(( g_num_patches + 1 ) * sizeof( vec3_t[MAXLIGHTMAPS] ));
 		newstyles = (byte (*)[MAXLIGHTMAPS])Mem_Alloc(( g_num_patches + 1 ) * sizeof( byte[MAXLIGHTMAPS] ));
 #ifdef HLRAD_DELUXEMAPPING
@@ -2629,10 +2648,8 @@ void RadWorld( void )
 		// spread light around
 		BounceLight ();
 
-		Mem_Free( emitlight );
 		Mem_Free( addlight );
 		Mem_Free( newstyles );
-		emitlight = NULL;
 		addlight = NULL;
 		newstyles = NULL;
 #ifdef HLRAD_DELUXEMAPPING
