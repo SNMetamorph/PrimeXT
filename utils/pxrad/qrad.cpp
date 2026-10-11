@@ -2406,8 +2406,10 @@ void CollectLight( void )
 			for( j = 0; j < MAXLIGHTMAPS && newstyles[i][j] != 255; j++ )
 			{
 				VectorAdd( patch->directlight[j], addlight[i][j], patch->totallight[j] );
+				VectorAdd( patch->totallight[j], patch->samplelight[j], patch->totallight[j] );
 #ifdef HLRAD_DELUXEMAPPING
 				VectorAdd( patch->directlight_dir[j], addlight_dir[i][j], patch->totallight_dir[j] );
+				VectorAdd( patch->totallight_dir[j], patch->samplelight_dir[j], patch->totallight_dir[j] );
 #endif
 			}
 			memcpy( g_patches[i].totalstyle, newstyles[i], sizeof( byte[MAXLIGHTMAPS] ));
@@ -2420,6 +2422,7 @@ void CollectLight( void )
 			for( j = 0; j < MAXLIGHTMAPS && newstyles[i][j] != 255; j++ )
 			{
 				VectorAdd( patch->directlight[j], addlight[i][j], patch->totallight[j] );
+				VectorAdd( patch->totallight[j], patch->samplelight[j], patch->totallight[j] );
 				VectorMultiply( patch->totallight[j], patch->reflectivity, patch->totallight[j] );
 			}
 			memcpy( g_patches[i].totalstyle, newstyles[i], sizeof( byte[MAXLIGHTMAPS] ));
@@ -2546,8 +2549,9 @@ void BounceLight( void )
 
 		for( j = 0; j < MAXLIGHTMAPS && g_patches[i].totalstyle[j] != 255; j++ )
 		{
-			VectorCopy( patch->directlight[j], patch->totallight[j] );
+			VectorSubtract( patch->totallight[j], patch->directlight[j], patch->samplelight[j] );	//use samplelight for patch lighting (sky, fastlights, etc.) 
 #ifdef HLRAD_DELUXEMAPPING
+			VectorSubtract( patch->totallight_dir[j], patch->directlight_dir[j], patch->samplelight_dir[j] );
 			VectorClear( addlight_dir[i][j] );
 #endif
 		}
