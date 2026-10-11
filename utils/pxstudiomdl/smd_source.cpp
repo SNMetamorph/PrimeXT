@@ -160,7 +160,7 @@ void CSmdSource::Grab_Skeleton( s_model_t *pmodel )
 			pmodel->skeleton[index].pos = pos;
 			pmodel->skeleton[index].rot = rot;
 		}
-		else if( sscanf( m_line.data(), "%s %d", cmd, &index ) == 2 )
+		else if( sscanf( m_line.data(), "%s %d", cmd, &index ) >= 1 )
 		{
 			if( !Q_strcmp( cmd, "time" )) 
 			{
