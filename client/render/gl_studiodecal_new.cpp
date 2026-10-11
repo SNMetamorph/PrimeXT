@@ -1712,6 +1712,23 @@ void CStudioModelRenderer :: SetDecalUniforms( studiodecal_t *pDecal )
 			height = pDecal->texinfo->gl_heightmap_id.GetHeight();
 			u->SetValue( (float)width, (float)height, pDecal->texinfo->matdesc->reliefScale, cv_shadow_offset->value );
 			break;
+		case UT_MODELVIEWMATRIX:
+			u->SetValue(&RI->view.worldMatrix);
+			break;
+		case UT_MODELVIEWPROJECTIONMATRIX:
+			u->SetValue(&RI->view.worldProjectionMatrix);
+			break;
+		case UT_CLIPPLANE:
+		{
+			GLdouble	clip[4];
+			mplane_t	*p = &RI->clipPlane;
+
+			GL_InitClipPlane(p, clip);
+
+			u->SetValue(clip);
+
+			break;
+		}
 		default:
 			ALERT( at_error, "Unhandled uniform %s\n", u->name );
 			break;

@@ -56,8 +56,8 @@ vec3 CubemapProbeInternal( const vec3 vPos, const vec3 vView, const vec3 nWorld,
 	vec3 wRef = normalize( reflect( I, NW ));
 	vec3 R1 = CubemapBoxParallaxCorrected( wRef, vPos, u_CubeOrigin[0], u_BoxMins[0], u_BoxMaxs[0] );
 	vec3 R2 = CubemapBoxParallaxCorrected( wRef, vPos, u_CubeOrigin[1], u_BoxMins[1], u_BoxMaxs[1] );
-	vec3 srcColor0 = textureCubeLod( cubemap0, R1, u_CubeMipCount.x - smoothness * u_CubeMipCount.x ).rgb;
-	vec3 srcColor1 = textureCubeLod( cubemap1, R2, u_CubeMipCount.y - smoothness * u_CubeMipCount.y ).rgb;
+	vec3 srcColor0 = textureLod( cubemap0, R1, u_CubeMipCount.x - smoothness * u_CubeMipCount.x ).rgb;
+	vec3 srcColor1 = textureLod( cubemap1, R2, u_CubeMipCount.y - smoothness * u_CubeMipCount.y ).rgb;
 	vec3 reflectance = mix( srcColor0, srcColor1, u_LerpFactor );
 	return reflectance;
 }

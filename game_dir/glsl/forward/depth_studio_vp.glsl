@@ -24,6 +24,10 @@ uniform float	u_RealTime;
 
 varying vec2		var_TexDiffuse;
 
+uniform mat4		u_ModelViewMatrix;
+uniform mat4		u_ModelViewProjectionMatrix;
+uniform vec4		u_ClipPlane;
+
 void main( void )
 {
 	vec4 position = vec4( attr_Position, 1.0 );
@@ -38,8 +42,8 @@ void main( void )
 	vec4 worldpos = boneMatrix * position;
 
 	// transform vertex position into homogenous clip-space
-	gl_Position = gl_ModelViewProjectionMatrix * worldpos;
-	gl_ClipVertex = gl_ModelViewMatrix * worldpos;
+	gl_Position = u_ModelViewProjectionMatrix * worldpos;
+	gl_ClipDistance[0] = dot( worldpos, u_ClipPlane );
 
 	var_TexDiffuse = attr_TexCoord0;
 }

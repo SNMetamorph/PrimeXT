@@ -45,6 +45,9 @@ uniform vec2	u_LightShade; // x is ambientlight, y is shadelight
 uniform vec3	u_LightDir;
 uniform float	u_SwayHeight;
 uniform float	u_RealTime;
+uniform mat4	u_ModelViewMatrix;
+uniform mat4	u_ModelViewProjectionMatrix;
+uniform vec4	u_ClipPlane;
 
 uniform float	u_LightStyleValues[MAX_LIGHTSTYLES];
 uniform float	u_LightGamma;
@@ -89,8 +92,8 @@ void main( void )
 	vec4 worldpos = boneMatrix * position;
 
 	// transform vertex position into homogenous clip-space
-	gl_Position = gl_ModelViewProjectionMatrix * worldpos;
-	gl_ClipVertex = gl_ModelViewMatrix * worldpos;
+	gl_Position = u_ModelViewProjectionMatrix * worldpos;
+	gl_ClipDistance[0] = dot( worldpos, u_ClipPlane );
 
 	// compute TBN
 	mat3 tbn = ComputeTBN( boneMatrix );
