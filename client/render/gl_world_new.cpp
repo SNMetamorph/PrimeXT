@@ -301,7 +301,9 @@ static void Mod_LoadWorldMaterials( void )
 			}
 		}
 
-		if( !Q_strncmp( tx->name, "sky", 3 ))
+		// Xash3D marks sky surfaces by case-sensitive texture name check,
+		// but P2 maps use uppercase "SKY" texture name for sky brushes
+		if( !Q_strnicmp( tx->name, "sky", 3 ))
 			SetBits( world->features, WORLD_HAS_SKYBOX );
 	}
 }
@@ -2049,6 +2051,18 @@ static void Mod_LoadWorld( model_t *mod, const byte *buf )
 		msurface_t *surf = worldmodel->surfaces + bm->firstface;
 		for( int j = 0; j < bm->numfaces; j++, surf++ )
 			SetBits( surf->flags, SURF_LOCAL_SPACE );
+	}
+
+	// Xash3D marks sky surfaces by case-sensitive texture name check,
+	// but P2 maps use uppercase "SKY" texture name for sky brushes,
+	// so mark such surfaces ourselves
+	for( i = 0; i < worldmodel->numsurfaces; i++ )
+	{
+		msurface_t *surf = &worldmodel->surfaces[i];
+		texture_t *tex = surf->texinfo->texture;
+
+		if( !FBitSet( surf->flags, SURF_DRAWSKY ) && !Q_strnicmp( tex->name, "sky", 3 ))
+			SetBits( surf->flags, SURF_DRAWSKY );
 	}
 
 	if( extrahdr->id == IDEXTRAHEADER )
