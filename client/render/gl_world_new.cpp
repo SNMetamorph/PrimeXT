@@ -277,14 +277,14 @@ static void Mod_LoadWorldMaterials( void )
 		if( !Q_strnicmp( tx->name, "{scroll", 7 ))
 			SetBits( mat->flags, BRUSH_CONVEYOR|BRUSH_TRANSPARENT );
 
-		if( !Q_strncmp( tx->name, "mirror", 6 ) || !Q_strncmp( tx->name, "reflect", 7 ))
+		if( !Q_strnicmp( tx->name, "mirror", 6 ) || !Q_strnicmp( tx->name, "reflect", 7 ))
 			SetBits( mat->flags, BRUSH_REFLECT );
 
-		if( !Q_strncmp( tx->name, "movie", 5 ))
+		if( !Q_strnicmp( tx->name, "movie", 5 ))
 			SetBits( mat->flags, BRUSH_FULLBRIGHT );
 
-		bool liquidScrollFlag = !Q_strncmp(tx->name, "!scroll", 7);
-		if (tx->name[0] == '!' || !Q_strncmp(tx->name, "water", 5) || liquidScrollFlag)
+		bool liquidScrollFlag = !Q_strnicmp(tx->name, "!scroll", 7);
+		if (tx->name[0] == '!' || !Q_strnicmp(tx->name, "water", 5) || liquidScrollFlag)
 		{
 			// liquid surface should be smooth and reflective
 			SetBits(mat->flags, BRUSH_REFLECT | BRUSH_LIQUID);
@@ -2099,28 +2099,28 @@ static void Mod_LoadWorld( model_t *mod, const byte *buf )
 		if( FBitSet( surf->flags, SURF_DRAWSKY ))
 			SetBits( world->features, WORLD_HAS_SKYBOX );
 
-		if( !Q_strncmp(tex->name, "movie", 5 ))
+		if( !Q_strnicmp(tex->name, "movie", 5 ))
 		{
 			SetBits( world->features, WORLD_HAS_MOVIES );
 			SetBits( surf->flags, SURF_MOVIE );
 		}
 
-		if( !Q_strncmp(tex->name, "mirror", 6)
-			|| !Q_strncmp(tex->name, "reflect", 7)
-			|| !Q_strncmp(tex->name, "reflect1", 8)
-			|| !Q_strncmp(tex->name, "!reflect", 8))
+		if( !Q_strnicmp(tex->name, "mirror", 6)
+			|| !Q_strnicmp(tex->name, "reflect", 7)
+			|| !Q_strnicmp(tex->name, "reflect1", 8)
+			|| !Q_strnicmp(tex->name, "!reflect", 8))
 		{
 			SetBits(world->features, WORLD_HAS_MIRRORS);
 			SetBits(surf->flags, SURF_REFLECT);
 		}
 
-		if (!Q_strncmp(tex->name, "portal", 6))
+		if (!Q_strnicmp(tex->name, "portal", 6))
 		{
 			SetBits(world->features, WORLD_HAS_PORTALS);
 			SetBits(surf->flags, SURF_PORTAL);
 		}
 
-		if (!Q_strncmp(tex->name, "monitor", 7))
+		if (!Q_strnicmp(tex->name, "monitor", 7))
 		{
 			SetBits(world->features, WORLD_HAS_SCREENS);
 			SetBits(surf->flags, SURF_SCREEN);
