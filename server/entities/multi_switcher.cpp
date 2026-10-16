@@ -31,17 +31,19 @@ void CSwitcher :: KeyValue( KeyValueData *pkvd )
 		pev->button = Q_atoi( pkvd->szValue );
 		pkvd->fHandled = TRUE;
 	}
-	else if( m_cTargets < MAX_MULTI_TARGETS ) 
+	else
 	{
-		// add this field to the target list
-		// this assumes that additional fields are targetnames and their values are delay values.
-		
-		char tmp[128];
-		UTIL_StripToken( pkvd->szKeyName, tmp );
-		m_iTargetName[m_cTargets] = ALLOC_STRING( tmp );
-		m_iTargetOrder[m_cTargets] = Q_atoi( pkvd->szValue ); 
-		m_cTargets++;
-		pkvd->fHandled = TRUE;
+		BaseClass::KeyValue(pkvd);
+		if (!pkvd->fHandled && m_cTargets < MAX_MULTI_TARGETS)
+		{
+			// only unhandled keys are custom target entries.
+			char tmp[128];
+			UTIL_StripToken(pkvd->szKeyName, tmp);
+			m_iTargetName[m_cTargets] = ALLOC_STRING(tmp);
+			m_iTargetOrder[m_cTargets] = Q_atoi(pkvd->szValue);
+			m_cTargets++;
+			pkvd->fHandled = TRUE;
+		}
 	}
 }
 
