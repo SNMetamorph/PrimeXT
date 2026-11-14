@@ -23,12 +23,19 @@ set( CMAKE_CXX_EXTENSIONS OFF )
 
 enable_testing()
 
-# primext_add_test( <name> SOURCES <files...> [LIBS <libs...>] )
+# primext_add_test( <name> SOURCES <files...> [INCLUDES <dirs...>] [LIBS <libs...>] )
 function( primext_add_test name )
-	cmake_parse_arguments( ARG "" "" "SOURCES;LIBS" ${ARGN} )
+	cmake_parse_arguments( ARG "" "" "SOURCES;INCLUDES;LIBS" ${ARGN} )
 
 	add_executable( ${name} ${ARG_SOURCES} )
 	target_include_directories( ${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} )
+
+	# headers of the asset compilers, shared with the tests
+	if( ARG_INCLUDES )
+		foreach( dir ${ARG_INCLUDES} )
+			target_include_directories( ${name} PRIVATE ${dir} )
+		endforeach()
+	endif()
 
 	if( ARG_LIBS )
 		target_link_libraries( ${name} PRIVATE ${ARG_LIBS} )
@@ -52,3 +59,8 @@ add_test( NAME vcpkg_android_triplets
 	COMMAND ${CMAKE_COMMAND}
 		-DREPO_ROOT=${CMAKE_CURRENT_SOURCE_DIR}/..
 		-P ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_ports/check_android_triplets.cmake )
+
+primext_add_test( test_smd_extension
+	SOURCES test_smd_extension.cpp
+	INCLUDES ${CMAKE_CURRENT_LIST_DIR}/../utils/common
+)
