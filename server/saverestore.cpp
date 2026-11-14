@@ -455,9 +455,8 @@ void CSave :: Log( DATAMAP *pMap, const char *pName, const char *pFieldName, FIE
 			}
 		case FIELD_FUNCTION:
 			{
-				void **pValue = (void **)value;
-				const char *funcName = UTIL_FunctionToName( pMap, *pValue );
-				Q_snprintf( szTempBuf, sizeof( szTempBuf ), "%s", funcName );
+				const char *funcName = UTIL_FunctionToName( pMap, MemberFunctionIdentityOfField( value ) );
+				Q_snprintf( szTempBuf, sizeof( szTempBuf ), "%s", funcName ? funcName : "" );
 				Q_strncat( szBuf, szTempBuf, sizeof( szTempBuf ));
 				break;
 			}
@@ -594,7 +593,7 @@ void CSave :: WritePositionVector( const char *pname, const float *value, int co
 
 void CSave :: WriteFunction( DATAMAP *pRootMap, const char *pname, void **data, int count )
 {
-	const char *functionName = UTIL_FunctionToName( pRootMap, *data );
+	const char *functionName = UTIL_FunctionToName( pRootMap, MemberFunctionIdentityOfField( data ) );
 
 	if ( functionName )
 		BufferField( pname, strlen(functionName) + 1, functionName );
@@ -1190,10 +1189,12 @@ void CRestore::BufferReadBytes( char *pOutput, int size )
 
 int CRestore :: ReadFunction( DATAMAP *pMap, void **pValue, const char *pszFunctionName )
 {
+	// The whole pointer has to be restored: besides the address of the function
+	// it holds the adjustment of the "this" pointer.
 	if ( strlen( (char *)pszFunctionName ) == 0 )
-		*pValue = NULL;
+		memset( pValue, 0, sizeof( func_t ) );
 	else
-		*pValue = UTIL_FunctionFromName( pMap, pszFunctionName );
+		CopyMemberFunction( *(func_t *)pValue, UTIL_FunctionFromName( pMap, pszFunctionName ) );
 
 	return 0;
 }

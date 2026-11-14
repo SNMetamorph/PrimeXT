@@ -561,38 +561,38 @@ public:
 			ALERT( at_warning, "No EXPORT: %s:%s (%08lx)\n", GetClassname(), name, (size_t)pFunction );
 	}
 
-	BASEPTR ThinkSet( BASEPTR func, char *name ) 
-	{ 
-		m_pfnThink = func; 
-		FunctionCheck( *(reinterpret_cast<void **>(&m_pfnThink)), name ); 
+	BASEPTR ThinkSet( BASEPTR func, char *name )
+	{
+		m_pfnThink = func;
+		FunctionCheck( MemberFunctionIdentity( m_pfnThink ), name );
 		return func;
 	}
 
-	ENTITYFUNCPTR TouchSet( ENTITYFUNCPTR func, char *name ) 
-	{ 
-		m_pfnTouch = func; 
-		FunctionCheck( *(reinterpret_cast<void **>(&m_pfnTouch)), name ); 
+	ENTITYFUNCPTR TouchSet( ENTITYFUNCPTR func, char *name )
+	{
+		m_pfnTouch = func;
+		FunctionCheck( MemberFunctionIdentity( m_pfnTouch ), name );
 		return func;
 	}
 
-	USEPTR UseSet( USEPTR func, char *name ) 
-	{ 
-		m_pfnUse = func; 
-		FunctionCheck( *(reinterpret_cast<void **>(&m_pfnUse)), name ); 
+	USEPTR UseSet( USEPTR func, char *name )
+	{
+		m_pfnUse = func;
+		FunctionCheck( MemberFunctionIdentity( m_pfnUse ), name );
 		return func;
 	}
 
-	ENTITYFUNCPTR BlockedSet( ENTITYFUNCPTR func, char *name ) 
-	{ 
-		m_pfnBlocked = func; 
-		FunctionCheck( *(reinterpret_cast<void **>(&m_pfnBlocked)), name ); 
+	ENTITYFUNCPTR BlockedSet( ENTITYFUNCPTR func, char *name )
+	{
+		m_pfnBlocked = func;
+		FunctionCheck( MemberFunctionIdentity( m_pfnBlocked ), name );
 		return func;
 	}
 
 	BASEPTR MoveDoneSet( BASEPTR func, char *name )
 	{
 		m_pfnMoveDone = func;
-		FunctionCheck( *(reinterpret_cast<void **>(&m_pfnMoveDone)), name );
+		FunctionCheck( MemberFunctionIdentity( m_pfnMoveDone ), name );
 		return func;
 	}
 #endif

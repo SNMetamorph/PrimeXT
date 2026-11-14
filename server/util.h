@@ -28,6 +28,7 @@
 #endif
 
 #include "datamap.h"
+#include "functionptr.h"
 #include "xashxt_strings.h"
 #include "extdll.h"
 #include "com_model.h"
@@ -694,6 +695,6 @@ void UTIL_WaterMove( CBaseEntity *pEntity );
 int UTIL_LoadSoundPreset( int iString );
 
 const char *UTIL_FunctionToName( DATAMAP *pMap, void *function );
-void *UTIL_FunctionFromName( DATAMAP *pMap, const char *pName );
+func_t UTIL_FunctionFromName( DATAMAP *pMap, const char *pName );
 
 string_t GetStdLightStyle( int iStyle );
