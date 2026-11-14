@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "mathlib.h"
 #include "stringlib.h"
 #include "file_system.h"
+#include "extension.h"
 #include "smd_source.h"
 #include <cctype>
 
@@ -523,7 +524,7 @@ void CSmdSource::GrabStudio( s_model_t *pmodel )
 	char	path[1024];
 
 	Q_snprintf( path, sizeof( path ), "%s/%s", cddir[numdirs], pmodel->name );
-	COM_DefaultExtension( path, ".smd" );
+	FileDefaultExtension( path, sizeof( path ), ".smd" );
 	m_filename = path;
 
 	if( !COM_FileExists( path ))
@@ -575,7 +576,7 @@ void CSmdSource::GrabAnimation( s_animation_t *panim )
 	char	path[1024];
 
 	Q_snprintf( path, sizeof( path ), "%s/%s", cddir[numdirs], panim->filename );
-	COM_DefaultExtension( path, ".smd" );
+	FileDefaultExtension( path, sizeof( path ), ".smd" );
 	m_filename = path;
 
 	if( !COM_FileExists( path ))
