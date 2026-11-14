@@ -38,3 +38,10 @@ function( primext_add_test name )
 endfunction()
 
 primext_add_test( test_smoke SOURCES test_smoke.cpp )
+
+# the vcpkg PhysX port must not depend on patches downloaded from GitHub,
+# see vcpkg_ports/physx and vcpkg_ports/check_physx_port.cmake
+add_test( NAME vcpkg_physx_port
+	COMMAND ${CMAKE_COMMAND}
+		-DREPO_ROOT=${CMAKE_CURRENT_SOURCE_DIR}/..
+		-P ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_ports/check_physx_port.cmake )
