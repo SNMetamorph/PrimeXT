@@ -105,6 +105,10 @@ jobs:
         working-directory: ${{ github.workspace }}/build
         run: cmake --build . --parallel $(nproc)
 
+      - name: Run unit tests
+        working-directory: ${{ github.workspace }}/build
+        run: ctest --output-on-failure -C ${{ matrix.build_conf }}
+
       - name: Prepare artifacts
         shell: bash
         run: |
