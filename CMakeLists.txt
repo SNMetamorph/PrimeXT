@@ -11,6 +11,7 @@ option(BUILD_CLIENT "Build client library" ON)
 option(BUILD_SERVER "Build server library" ON)
 option(BUILD_UTILS "Build developer utilities (map/models compilers, etc.)" ON)
 option(BUILD_GAME_LAUNCHER "Build game launcher executable" ON)
+option(BUILD_TESTS "Build unit tests" ON)
 option(ENABLE_PHYSX "Enable PhysX support" ON)
 option(ENABLE_ASAN "Enable AddressSanitizer globally" OFF)
 option(ENABLE_STATIC_CRT_LINKING "Enable static runtime linking for project targets" ON)
@@ -108,6 +109,12 @@ endif()
 
 if(BUILD_GAME_LAUNCHER)
 	add_subdirectory(game_launcher)
+endif()
+
+# unit tests, see tests/CMakeLists.txt
+if(BUILD_TESTS AND NOT VCPKG_TARGET_ANDROID)
+	enable_testing()
+	add_subdirectory(tests)
 endif()
 
 # set build output directory
