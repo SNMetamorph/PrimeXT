@@ -189,6 +189,10 @@ jobs:
         working-directory: android
         env:
           ANDROID_NDK_ROOT: /usr/local/lib/android/sdk/ndk/26.1.10909125
+          # cmake/VcpkgAndroid.cmake chainloads $ANDROID_NDK_HOME, which defaults to the runner's
+          # preinstalled NDK. It must match ndkVersion in android/app/build.gradle, otherwise the vcpkg
+          # libraries are built against newer NDK headers and fail to link with undefined symbols (stderr, __fwrite_chk).
+          ANDROID_NDK_HOME: /usr/local/lib/android/sdk/ndk/26.1.10909125
 
       - name: Prepare artifacts
         run: |
