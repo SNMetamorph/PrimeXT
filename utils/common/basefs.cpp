@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "mathlib.h"
 #include "stringlib.h"
 #include "file_system.h"
+#include "fs_readbuffer.h"
 #include "bspfile.h"
 #include "build.h"
 
@@ -1039,30 +1040,12 @@ size_t FS_Read( file_t *file, void *buffer, size_t buffersize )
 	if( buffersize == 0 ) 
 		return 1;
 
-	// Get rid of the ungetc character
-	if( file->ungetc != EOF )
-	{
-		((char*)buffer)[0] = file->ungetc;
-		buffersize--;
-		file->ungetc = EOF;
-		done = 1;
-	}
-	else {
-		done = 0;
-	}
+	// Get rid of the ungetc character and copy as many bytes as we can from "buff"
+	done = FS_CopyFromReadBuffer( buffer, buffersize, file->buff, &file->buff_ind, file->buff_len, &file->ungetc );
 
-	// first, we copy as many bytes as we can from "buff"
-	if( file->buff_ind < file->buff_len )
-	{
-		count = file->buff_len - file->buff_ind;
-		done += (buffersize > count) ? count : buffersize;
-		memcpy(buffer, &file->buff[file->buff_ind], done);
-		file->buff_ind += done;
-
-		buffersize -= done;
-		if( buffersize == 0 )
-			return done;
-	}
+	buffersize -= done;
+	if( buffersize == 0 )
+		return done;
 
 	// NOTE: at this point, the read buffer is always empty
 	// we must take care to not read after the end of the file
@@ -1210,30 +1193,10 @@ Same as fgets
 */
 int FS_Gets( file_t *file, byte *string, size_t bufsize )
 {
-	int	c, end = 0;
-
-	while( 1 )
-	{
-		c = FS_Getc( file );
-
-		if( c == '\r' || c == '\n' || c < 0 )
-			break;
-
-		if( end < bufsize - 1 )
-			string[end++] = c;
-	}
-	string[end] = 0;
-
-	// remove \n following \r
-	if( c == '\r' )
-	{
-		c = FS_Getc( file );
-
-		if( c != '\n' )
-			FS_UnGetc( file, (byte)c );
-	}
-
-	return c;
+	return FS_ReadLine(
+		[file]() { return FS_Getc( file ); },
+		[file]( int c ) { FS_UnGetc( file, (byte)c ); },
+		string, bufsize );
 }
 
 /*
