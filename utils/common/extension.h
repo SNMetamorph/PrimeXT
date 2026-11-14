@@ -57,26 +57,17 @@ inline bool FileHasExtension( const char *path, const char *extension )
 //
 // Appends the extension to the path, unless the path already ends with it.
 //
-// NOTE: this is the behavior of COM_DefaultExtension(), extracted into a helper
-// so that it can be tested and reused. It treats every dot in the file name as
-// the beginning of an extension.
+// Unlike COM_DefaultExtension(), this doesn't treat every dot in the file name
+// as the beginning of an extension: a submodel named "my.mesh" has to become
+// "my.mesh.smd" and not stay "my.mesh" (see issue #229).
 //
 inline void FileDefaultExtension( char *path, size_t pathSize, const char *extension )
 {
 	if( !path || !extension || pathSize == 0 )
 		return;
 
-	// if path doesn't have a .EXT, append extension
-	// (extension should include the .)
-	const char *src = path + strlen( path ) - 1;
-
-	while( *src != '/' && *src != '\\' && src != path )
-	{
-		// it has an extension
-		if( *src == '.' )
-			return;
-		src--;
-	}
+	if( FileHasExtension( path, extension ) )
+		return;
 
 	const size_t	len = strlen( path );
 	const size_t	extLen = strlen( extension );
