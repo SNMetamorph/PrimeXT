@@ -83,13 +83,20 @@ inline fs_openmode_t FS_ParseOpenMode( const char *mode )
 			result.mod = O_RDWR;
 			break;
 		case 'b':
-			result.binary = true;
 			break;
 		default:
 			result.invalid = mode[ind];
 			break;
 		}
 	}
+
+	// The filesystem layer is a binary layer: the files are never translated.
+	//
+	// The C runtime translates the line endings of the files opened in the text
+	// mode on Windows, so the amount of the data in such a file is less than
+	// the size of the file, the bookkeeping of the file positions breaks, and
+	// the last line of the file is read wrong (issue #103).
+	result.binary = true;
 
 	return result;
 }
