@@ -18,6 +18,9 @@
 #   client_$arch.$ext       - Win/Lin/Mac with non-x86
 #   client_$os_$arch.$ext   - everything else (Android, consoles, ...)
 #
+# The "lib" prefix on Android is added by the CMake toolchain, the engine adds
+# it on its side too (see COM_GenerateCommonLibraryName in the engine).
+#
 # The postfix is computed in a separate module so that it can be checked by a
 # unit test (tests/cmake/library_naming_test.cmake) without having to configure
 # the whole project.
@@ -28,11 +31,7 @@
 # Sets <result_var> to the library name postfix for the given operating system
 # and architecture.
 function( xash_set_build_postfix os arch result_var )
-	if( os STREQUAL "android" )
-		# force disable for Android, as Android ports aren't distributed in normal
-		# way and doesn't follow library naming
-		set( ${result_var} "" PARENT_SCOPE )
-	elseif( os AND arch )
+	if( os AND arch )
 		set( ${result_var} "_${os}_${arch}" PARENT_SCOPE )
 	elseif( arch )
 		set( ${result_var} "_${arch}" PARENT_SCOPE )
