@@ -35,6 +35,7 @@
 #include "utldict.h"
 #include "render_api.h"
 #include "user_messages.h"
+#include "functionptr.h"
 
 //-----------------------------------------------------------------------------
 // Entity creation factory
@@ -178,7 +179,6 @@ extern "C" DLLEXPORT void custom(entvars_t *pev)
 
 // This does the necessary casting / extract to grab a pointer to a member function as a void *
 // UNDONE: Cast to BASEPTR or something else here?
-#define EXTRACT_VOID_FUNCTIONPTR(x)		(*(void **)(&(x)))
 //-----------------------------------------------------------------------------
 // Purpose: Search this datamap for the name of this member function
 //			This is used to save/restore function pointers (convert pointer to text)
@@ -194,7 +194,7 @@ const char *UTIL_FunctionToName( DATAMAP *pMap, void *function )
 			if( pMap->dataDesc[i].flags & FTYPEDESC_FUNCTIONTABLE )
 			{
 				ASSERT( sizeof(pMap->dataDesc[i].func) == sizeof(void *));
-				void *pTest = EXTRACT_VOID_FUNCTIONPTR( pMap->dataDesc[i].func );
+				void *pTest = MemberFunctionIdentity( pMap->dataDesc[i].func );
 				if( pTest == function )
 					return pMap->dataDesc[i].fieldName;
 			}
@@ -222,7 +222,7 @@ void *UTIL_FunctionFromName( DATAMAP *pMap, const char *pName )
 			{
 				if( FStrEq( pName, pMap->dataDesc[i].fieldName ))
 				{
-					return EXTRACT_VOID_FUNCTIONPTR( pMap->dataDesc[i].func );
+					return MemberFunctionIdentity( pMap->dataDesc[i].func );
 				}
 			}
 		}
