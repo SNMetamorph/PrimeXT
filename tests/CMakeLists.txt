@@ -52,3 +52,8 @@ add_test( NAME vcpkg_android_triplets
 	COMMAND ${CMAKE_COMMAND}
 		-DREPO_ROOT=${CMAKE_CURRENT_SOURCE_DIR}/..
 		-P ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_ports/check_android_triplets.cmake )
+
+# cmake -P scripts, they don't need a compiler
+add_test( NAME test_library_naming
+	COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_LIST_DIR}/cmake/library_naming_test.cmake
+)
