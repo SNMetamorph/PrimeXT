@@ -41,24 +41,29 @@ inline size_t FS_CopyFromReadBuffer( void *dest, size_t destSize,
 {
 	unsigned char *out = (unsigned char *)dest;
 	size_t done = 0;
-	size_t remaining = destSize;
 
 	// the pushed back character comes first
 	if( *ungetc != EOF )
 	{
+		if( destSize == 0 )
+			return 0;
+
 		out[0] = (unsigned char)*ungetc;
 		*ungetc = EOF;
 		done = 1;
-		remaining--;
 	}
 
 	if( *buff_ind < buff_len )
 	{
 		size_t count = buff_len - *buff_ind;
 
-		done += ( remaining > count ) ? count : remaining;
-		memcpy( out, buff + *buff_ind, done );
-		*buff_ind += done;
+		if( count > destSize - done )
+			count = destSize - done;
+
+		// the data of the buffer goes after the pushed back character
+		memcpy( out + done, buff + *buff_ind, count );
+		*buff_ind += count;
+		done += count;
 	}
 
 	return done;
@@ -97,7 +102,8 @@ inline int FS_ReadLine( GetChar getchar, UnGetChar ungetchar, unsigned char *str
 	{
 		c = getchar();
 
-		if( c != '\n' )
+		// EOF must not be pushed back: it would be read as a regular character
+		if( c != '\n' && c != EOF )
 			ungetchar( c );
 	}
 

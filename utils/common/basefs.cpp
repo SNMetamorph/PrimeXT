@@ -1174,7 +1174,7 @@ FS_UnGetc
 Put a character back into the read buffer (only supports one character!)
 ====================
 */
-int FS_UnGetc( file_t *file, byte c )
+int FS_UnGetc( file_t *file, int c )
 {
 	// If there's already a character waiting to be read
 	if( file->ungetc != EOF )
@@ -1195,7 +1195,7 @@ int FS_Gets( file_t *file, byte *string, size_t bufsize )
 {
 	return FS_ReadLine(
 		[file]() { return FS_Getc( file ); },
-		[file]( int c ) { FS_UnGetc( file, (byte)c ); },
+		[file]( int c ) { FS_UnGetc( file, c ); },
 		string, bufsize );
 }
 
