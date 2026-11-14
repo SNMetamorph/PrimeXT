@@ -180,6 +180,9 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # the default is 'tools platform-tools', but the legacy 'tools' package no longer exists
+          packages: platform-tools
 
       - name: Build
         run: chmod +x ./gradlew && ./gradlew assembleDebug
