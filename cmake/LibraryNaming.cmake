@@ -182,14 +182,8 @@ else()
 	message(SEND_ERROR "Place your architecture name here! If this is a mistake, try to fix conditions above and report a bug")
 endif()
 
-if(BUILDOS STREQUAL "android")
-	set(XASH_BUILD_POSTFIX  "") # force disable for Android, as Android ports aren't distributed in normal way and doesn't follow library naming
-elseif(BUILDOS AND BUILDARCH)
-	set(XASH_BUILD_POSTFIX  "_${BUILDOS}_${BUILDARCH}")
-elseif(BUILDARCH)
-	set(XASH_BUILD_POSTFIX  "_${BUILDARCH}")
-else()
-	set(XASH_BUILD_POSTFIX  "")
-endif()
-
+# the postfix computation lives in a separate module, so that it can be checked
+# by a unit test (tests/cmake/library_naming_test.cmake)
+include( "${CMAKE_CURRENT_LIST_DIR}/LibraryNamingPostfix.cmake" )
+xash_set_build_postfix( "${BUILDOS}" "${BUILDARCH}" XASH_BUILD_POSTFIX )
 message(STATUS "Library postfix: " ${XASH_BUILD_POSTFIX})
