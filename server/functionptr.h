@@ -44,21 +44,34 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 template<typename T>
 inline void *MemberFunctionIdentity( T func )
 {
-	// The pointer to a member function is assumed to be a plain pointer.
-	if( sizeof(T) != sizeof(void *) )
-		return nullptr;
+	static_assert( sizeof(T) == sizeof(void *) || sizeof(T) == 2 * sizeof(void *),
+		"unsupported pointer-to-member-function representation" );
 
 	void *identity = nullptr;
 	memcpy( &identity, &func, sizeof( identity ) );
 	return identity;
 }
 
+// Returns the identity of the function stored in the given field of an entity.
+// The type of the field is not known here, so only the first word is read.
+inline void *MemberFunctionIdentityOfField( const void *field )
+{
+	void *identity = nullptr;
+	memcpy( &identity, field, sizeof( identity ) );
+	return identity;
+}
+
 // Copies a member function pointer into the field of an entity.
+//
+// The datamap stores all the callbacks as func_t, while the entities use the
+// exact type of the callback, so the pointer is copied as a whole: copying
+// only the address of the function would leave the adjustment of the "this"
+// pointer of the destination untouched.
 template<typename Dst, typename Src>
 inline void CopyMemberFunction( Dst &dst, const Src &src )
 {
-	// Only the address of the function is copied, the adjustment of the
-	// "this" pointer is lost.
-	void *identity = MemberFunctionIdentity( src );
-	memcpy( &dst, &identity, sizeof( identity ) );
+	static_assert( sizeof(Dst) == sizeof(Src),
+		"member function pointers of different size" );
+
+	memcpy( &dst, &src, sizeof( dst ) );
 }

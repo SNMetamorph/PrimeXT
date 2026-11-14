@@ -178,7 +178,9 @@ extern "C" DLLEXPORT void custom(entvars_t *pev)
 }
 
 // This does the necessary casting / extract to grab a pointer to a member function as a void *
-// UNDONE: Cast to BASEPTR or something else here?
+// The extraction of the address of a member function is done by MemberFunctionIdentity(),
+// see functionptr.h: the size of a pointer to a member function is not the size of a
+// plain pointer, so the assumption that it is one used to abort 64-bit builds (#209).
 //-----------------------------------------------------------------------------
 // Purpose: Search this datamap for the name of this member function
 //			This is used to save/restore function pointers (convert pointer to text)
@@ -193,7 +195,6 @@ const char *UTIL_FunctionToName( DATAMAP *pMap, void *function )
 		{
 			if( pMap->dataDesc[i].flags & FTYPEDESC_FUNCTIONTABLE )
 			{
-				ASSERT( sizeof(pMap->dataDesc[i].func) == sizeof(void *));
 				void *pTest = MemberFunctionIdentity( pMap->dataDesc[i].func );
 				if( pTest == function )
 					return pMap->dataDesc[i].fieldName;
@@ -210,19 +211,17 @@ const char *UTIL_FunctionToName( DATAMAP *pMap, void *function )
 //			This is used to save/restore function pointers (convert text back to pointer)
 // Input  : *pName - name of the member function
 //-----------------------------------------------------------------------------
-void *UTIL_FunctionFromName( DATAMAP *pMap, const char *pName )
+func_t UTIL_FunctionFromName( DATAMAP *pMap, const char *pName )
 {
 	while( pMap )
 	{
 		for( int i = 0; i < pMap->dataNumFields; i++ )
 		{
-			ASSERT( sizeof(pMap->dataDesc[i].func) == sizeof(void *));
-
 			if( pMap->dataDesc[i].flags & FTYPEDESC_FUNCTIONTABLE )
 			{
 				if( FStrEq( pName, pMap->dataDesc[i].fieldName ))
 				{
-					return MemberFunctionIdentity( pMap->dataDesc[i].func );
+					return pMap->dataDesc[i].func;
 				}
 			}
 		}
@@ -231,7 +230,7 @@ void *UTIL_FunctionFromName( DATAMAP *pMap, const char *pName )
 
 	ALERT( at_error, "Failed to find function %s\n", pName );
 
-	return NULL;
+	return nullptr;
 }
  
 void Msg( const char *szText, ... )
