@@ -45,3 +45,10 @@ add_test( NAME vcpkg_physx_port
 	COMMAND ${CMAKE_COMMAND}
 		-DREPO_ROOT=${CMAKE_CURRENT_SOURCE_DIR}/..
 		-P ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_ports/check_physx_port.cmake )
+
+# the overlay Android triplets must build the vcpkg dependencies against the same
+# API level as the app, see vcpkg_triplets and vcpkg_ports/check_android_triplets.cmake
+add_test( NAME vcpkg_android_triplets
+	COMMAND ${CMAKE_COMMAND}
+		-DREPO_ROOT=${CMAKE_CURRENT_SOURCE_DIR}/..
+		-P ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_ports/check_android_triplets.cmake )
