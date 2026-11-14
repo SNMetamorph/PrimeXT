@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "mathlib.h"
 #include "stringlib.h"
 #include "file_system.h"
+#include "fs_openmode.h"
 #include "bspfile.h"
 #include "build.h"
 
@@ -678,54 +679,27 @@ Internal function used to create a file_t and open the relevant non-packed file 
 static file_t *FS_SysOpen( const char *filepath, const char *mode )
 {
 	file_t	*file;
-	int	mod, opt;
-	uint	ind;
+	int	flags;
 
 	// Parse the mode string
-	switch( mode[0] )
+	fs_openmode_t om = FS_ParseOpenMode( mode );
+
+	if( om.mod < 0 )
 	{
-	case 'r':	// read
-		mod = O_RDONLY;
-		opt = 0;
-		break;
-	case 'w': // write
-		mod = O_WRONLY;
-		opt = O_CREAT | O_TRUNC;
-		break;
-	case 'a': // append
-		mod = O_WRONLY;
-		opt = O_CREAT | O_APPEND;
-		break;
-	case 'e': // edit
-		mod = O_WRONLY;
-		opt = O_CREAT;
-		break;
-	default:
 		MsgDev( D_ERROR, "FS_SysOpen(%s, %s): invalid mode\n", filepath, mode );
 		return NULL;
 	}
 
-	for( ind = 1; mode[ind] != '\0'; ind++ )
-	{
-		switch( mode[ind] )
-		{
-		case '+':
-			mod = O_RDWR;
-			break;
-		case 'b':
-			opt |= O_BINARY;
-			break;
-		default:
-			MsgDev( D_ERROR, "FS_SysOpen: %s: unknown char in mode (%c)\n", filepath, mode, mode[ind] );
-			break;
-		}
-	}
+	if( om.invalid )
+		MsgDev( D_ERROR, "FS_SysOpen: %s: unknown char in mode (%c)\n", filepath, om.invalid );
+
+	flags = FS_OpenFlags( om );
 
 	file = (file_t *)Mem_Alloc( sizeof( *file ), C_FILESYSTEM );
 	file->filetime = COM_FileTime( filepath );
 	file->ungetc = EOF;
 
-	file->handle = open( filepath, mod|opt, 0666 );
+	file->handle = open( filepath, flags, 0666 );
 
 	if( file->handle < 0 )
 	{
@@ -736,7 +710,7 @@ static file_t *FS_SysOpen( const char *filepath, const char *mode )
 	file->real_length = lseek( file->handle, 0, SEEK_END );
 
 	// For files opened in append mode, we start at the end of the file
-	if( mod & O_APPEND ) file->position = file->real_length;
+	if( om.append ) file->position = file->real_length;
 	else lseek( file->handle, 0, SEEK_SET );
 
 	return file;
